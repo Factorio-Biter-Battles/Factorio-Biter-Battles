@@ -417,6 +417,25 @@ Public.wake_up_sleepy_groups = function()
 	end
 end
 
+Public.unlock_satelite = function()
+    if game.forces.north.technologies['speed-module-3'].researched 
+    and not game.forces.north.technologies['rocket-silo'].researched == true then
+
+               game.forces.north.technologies['rocket-silo'].researched=true 
+               game.forces.north.technologies['space-science-pack'].researched=true
+    
+    end   
+     
+     if game.forces.south.technologies['speed-module-3'].researched 
+     and not game.forces.south.technologies['rocket-silo'].researched == true then
+
+               game.forces.south.technologies['space-science-pack'].researched=true
+               game.forces.south.technologies['rocket-silo'].researched=true
+    
+      
+    end
+end
+
 Public.raise_evo = function()
 	if global.freeze_players then return end
 	if not global.training_mode and (#game.forces.north.connected_players == 0 or #game.forces.south.connected_players == 0) then return end	
