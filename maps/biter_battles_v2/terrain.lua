@@ -248,7 +248,7 @@ local function generate_starting_area(pos, distance_to_center, surface)
 					if math_random(1, 16) == 1 then
 						if surface.can_place_entity({name = "gun-turret", position = pos}) then
 							local e = surface.create_entity({name = "gun-turret", position = pos, force = "neutral"})
-							e.insert({name = "firearm-magazine", count = math_random(6,12)})
+							e.insert({name = "firearm-magazine", count = math_random(2,16)})
 							e.active = false
 						end
 					else
