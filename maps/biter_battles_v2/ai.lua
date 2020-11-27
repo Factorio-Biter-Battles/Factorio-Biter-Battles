@@ -450,3 +450,19 @@ function Public.subtract_threat(entity)
 end
 
 return Public
+
+--By Maksiu1000 skip the last two tech 
+Public.unlock_satelite = function()
+    if game.forces.north.technologies['speed-module-3'].researched 
+    and not game.forces.north.technologies['rocket-silo'].researched == true then
+
+               game.forces.north.technologies['rocket-silo'].researched=true 
+               game.forces.north.technologies['space-science-pack'].researched=true
+
+    end
+
+     if game.forces.south.technologies['speed-module-3'].researched 
+     and not game.forces.south.technologies['rocket-silo'].researched == true then
+
+               game.forces.south.technologies['space-science-pack'].researched=true
+               game.forces.south.technologies['rocket-silo'].researched=true
