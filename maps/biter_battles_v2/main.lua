@@ -137,6 +137,25 @@ local function on_init()
 	Init.load_spawn()
 end
 
+Public.unlock_satelite = function()
+    if game.forces.north.technologies['speed-module-3'].researched 
+    and not game.forces.north.technologies['rocket-silo'].researched == true then
+
+               game.forces.north.technologies['rocket-silo'].researched=true 
+               game.forces.north.technologies['space-science-pack'].researched=true
+    
+    end   
+     
+     if game.forces.south.technologies['speed-module-3'].researched 
+     and not game.forces.south.technologies['rocket-silo'].researched == true then
+
+               game.forces.south.technologies['space-science-pack'].researched=true
+               game.forces.south.technologies['rocket-silo'].researched=true
+    
+      
+    end
+end
+
 local Event = require 'utils.event'
 Event.add(defines.events.on_built_entity, on_built_entity)
 Event.add(defines.events.on_chunk_generated, on_chunk_generated)
