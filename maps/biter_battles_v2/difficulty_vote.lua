@@ -5,7 +5,7 @@ local Server = require 'utils.server'
 local difficulties = {
 	
 	[1] = {name = "Sleepy", str = "35%", value = 0.35, color = {r=0.00, g=0.45, b=0.00}, print_color = {r=0.00, g=0.9, b=0.00}},
-	[2] = {name = "Passive", str = "45%", value = 0.45, color = {r=0.00, g=0.35, b=0.00}, print_color = {r=0.00, g=0.7, b=0.00}},
+	[2] = {name = "Passive", str = "45%", value = 0.45, color = {r=0.00, g=0.35, b=0.00}, print_color = {r=0.00, g=0.8, b=0.00}},
 	[3] = {name = "Piece of cake", str = "60%", value = 0.6, color = {r=0.00, g=0.25, b=0.00}, print_color = {r=0.00, g=0.7, b=0.00}},
 	[4] = {name = "Easy", str = "75%", value = 0.75, color = {r=0.00, g=0.25, b=0.00}, print_color = {r=0.00, g=0.5, b=0.00}},
 	[5] = {name = "Normal", str = "100%", value = 1, color = {r=0.00, g=0.00, b=0.25}, print_color = {r=0.0, g=0.0, b=0.7}},
