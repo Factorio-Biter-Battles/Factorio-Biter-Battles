@@ -109,13 +109,13 @@ function Public.source_surface()
 	map_gen_settings.terrain_segmentation = math.random(30, 40) * 0.1
 	map_gen_settings.cliff_settings = {cliff_elevation_interval = 0, cliff_elevation_0 = 0}
 	map_gen_settings.autoplace_controls = {
-		["coal"] = {frequency = 2.5, size = 0.65, richness = 0.5},
-		["stone"] = {frequency = 2.5, size = 0.65, richness = 0.5},
-		["copper-ore"] = {frequency = 3.5, size = 0.65, richness = 0.5},
-		["iron-ore"] = {frequency = 3.5, size = 0.65, richness = 0.5},
+		["coal"] = {frequency = 6.5, size = 0.24, richness = 0.24},
+		["stone"] = {frequency = 5, size = 0.28, richness = 0.15},
+		["copper-ore"] = {frequency = 5.5, size = 0.25, richness = 0.3},
+		["iron-ore"] = {frequency = 7.8, size = 0.75, richness = 0.21},
 		["uranium-ore"] = {frequency = 2, size = 1, richness = 1},
-		["crude-oil"] = {frequency = 3, size = 1, richness = 0.75},
-		["trees"] = {frequency = math.random(4, 32) * 0.1, size = math.random(4, 16) * 0.1, richness = math.random(1, 10) * 0.1},
+		["crude-oil"] = {frequency = 7.5, size = 1.4, richness = 0.28},
+		["trees"] = {frequency = math.random(8, 28) * 0.1, size = math.random(6, 14) * 0.1, richness = math.random(2, 4) * 0.1},
 		["enemy-base"] = {frequency = 0, size = 0, richness = 0}
 	}
 	local surface = game.create_surface("bb_source", map_gen_settings)
