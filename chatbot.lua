@@ -10,14 +10,14 @@ local font = 'default-game'
 local format = string.format
 
 local brain = {
-    [1] = {'Our Discord server is at: https://getcomfy.eu/discord'},
+    [1] = {'Our Discord server is at: https://discord.gg/KvDN8tn5sF'},
     [2] = {
-        'Need an admin? Join our discord at: https://getcomfy.eu/discord,',
+        'Need an admin? Join our discord at: https://discord.gg/KvDN8tn5sF,',
         'and report it in #i-need-halp',
         'If you have played for more than 5h in our maps then,',
         'you are eligible to run the command /jail and /free'
     },
-    [3] = {'Scenario repository for download:', 'https://github.com/M3wM3w/ComfyFactorio'},
+    [3] = {'Scenario repository for download:', 'https://github.com/1pulse/factorio_biter_battles'},
     [4] = {
         'If you feel like the server is lagging, run the following command:',
         '/server-ups',
@@ -53,7 +53,7 @@ local links = {
 
 local function on_player_created(event)
     local player = game.players[event.player_index]
-    player.print('[font=' .. font .. ']' .. 'Join the comfy discord >> getcomfy.eu/discord' .. '[/font]', font_welcome)
+    player.print('[font=' .. font .. ']' .. 'Join the comfy discord >> https://discord.gg/KvDN8tn5sF' .. '[/font]', font_welcome)
 end
 
 commands.add_command(
