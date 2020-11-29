@@ -57,24 +57,24 @@ Event.add(
         label.visible = false
     end
 )
-
+-- no wrapper
 -- Update the value each second
-Event.on_nth_tick(
-    60,
-    function()
-        local ups = Server.get_ups()
-        local caption = 'SUPS = ' .. ups
-        local players = game.connected_players
-        for i = 1, #players do
-            local player = players[i]
-            local label = player.gui.screen[ups_label]
-            if label and label.valid then
-                label.caption = caption
-                set_location(player)
-            end
-        end
-    end
-)
+--Event.on_nth_tick(
+--    60,
+--    function()
+--        local ups = Server.get_ups()
+--        local caption = 'SUPS = ' .. ups
+--        local players = game.connected_players
+--        for i = 1, #players do
+--            local player = players[i]
+--            local label = player.gui.screen[ups_label]
+--            if label and label.valid then
+--                label.caption = caption
+--                set_location(player)
+--            end
+--        end
+--    end
+--)
 
 commands.add_command(
     'server-ups',
