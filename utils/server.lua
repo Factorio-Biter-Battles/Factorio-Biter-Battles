@@ -697,18 +697,20 @@ function Public.get_time_data_raw()
     return server_time
 end
 
+
+-- have no wrapper
 --- Called by the web server to set the ups value.
 -- @param  tick<number> tick
-function Public.set_ups(tick)
-    server_ups.ups = tick
-end
+--function Public.set_ups(tick)
+--    server_ups.ups = tick
+--end
 
 --- Gets a the estimated UPS from the web panel that is sent to the server.
 -- This is calculated and measured in the wrapper.
 -- @return number
-function Public.get_ups()
-    return server_ups.ups
-end
+--function Public.get_ups()
+--    return server_ups.ups
+--end
 
 --- Gets an estimate of the current server time as a unix epoch timestamp.
 -- If the server time has not been set returns nil.
