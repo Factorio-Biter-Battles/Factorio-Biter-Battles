@@ -4,14 +4,13 @@ local Server = require 'utils.server'
 
 local difficulties = {
 	
-	[1] = {name = "Sleepy", str = "35%", value = 0.35, color = {r=0.00, g=0.45, b=0.00}, print_color = {r=0.00, g=0.9, b=0.00}},
-	[2] = {name = "Passive", str = "45%", value = 0.45, color = {r=0.00, g=0.35, b=0.00}, print_color = {r=0.00, g=0.8, b=0.00}},
-	[3] = {name = "Piece of cake", str = "60%", value = 0.6, color = {r=0.00, g=0.25, b=0.00}, print_color = {r=0.00, g=0.7, b=0.00}},
-	[4] = {name = "Easy", str = "75%", value = 0.75, color = {r=0.00, g=0.25, b=0.00}, print_color = {r=0.00, g=0.5, b=0.00}},
-	[5] = {name = "Normal", str = "100%", value = 1, color = {r=0.00, g=0.00, b=0.25}, print_color = {r=0.0, g=0.0, b=0.7}},
-	[6] = {name = "Hard", str = "125%", value = 1.25, color = {r=0.25, g=0.00, b=0.00}, print_color = {r=0.5, g=0.0, b=0.00}},
-	[7] = {name = "Nightmare", str = "175%", value = 1.75, color = {r=0.35, g=0.00, b=0.00}, print_color = {r=0.7, g=0.0, b=0.00}},
-	[8] = {name = "Insane", str = "250%", value = 2.5, color = {r=0.45, g=0.00, b=0.00}, print_color = {r=0.9, g=0.0, b=0.00}}
+	[1] = {name = "Sleepy", str = "40%", value = 0.40, color = {r=0.00, g=0.45, b=0.00}, print_color = {r=0.00, g=0.9, b=0.00}},
+	[2] = {name = "Piece of cake", str = "60%", value = 0.6, color = {r=0.00, g=0.25, b=0.00}, print_color = {r=0.00, g=0.7, b=0.00}},
+	[3] = {name = "Easy", str = "75%", value = 0.75, color = {r=0.00, g=0.25, b=0.00}, print_color = {r=0.00, g=0.5, b=0.00}},
+	[4] = {name = "Normal", str = "100%", value = 1, color = {r=0.00, g=0.00, b=0.25}, print_color = {r=0.0, g=0.0, b=0.7}},
+	[5] = {name = "Hard", str = "125%", value = 1.25, color = {r=0.25, g=0.00, b=0.00}, print_color = {r=0.5, g=0.0, b=0.00}},
+	[6] = {name = "Absurd", str = "175%", value = 1.75, color = {r=0.35, g=0.00, b=0.00}, print_color = {r=0.7, g=0.0, b=0.00}},
+	[7] = {name = "Nightmare", str = "250%", value = 2.5, color = {r=0.45, g=0.00, b=0.00}, print_color = {r=0.9, g=0.0, b=0.00}}
 }
 
 local timeout = 18000
