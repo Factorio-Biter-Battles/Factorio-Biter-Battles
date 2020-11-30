@@ -18,7 +18,7 @@ local balance_functions = {
 		game.forces[force_name].set_ammo_damage_modifier("flamethrower", global.combat_balance[force_name].flamethrower_damage)
 	end,
 	["land-mine"] = function(force_name)
-		if not global.combat_balance[force_name].land_mine then global.combat_balance[force_name].land_mine = -.92 end
+		if not global.combat_balance[force_name].land_mine then global.combat_balance[force_name].land_mine = -.9 end
 		game.forces[force_name].set_ammo_damage_modifier("landmine", global.combat_balance[force_name].land_mine)
 	end,
 	
