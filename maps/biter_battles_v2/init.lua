@@ -114,7 +114,7 @@ function Public.source_surface()
 		["copper-ore"] = {frequency = 5.5, size = 0.25, richness = 0.3},
 		["iron-ore"] = {frequency = 7.8, size = 0.75, richness = 0.21},
 		["uranium-ore"] = {frequency = 2, size = 1, richness = 1},
-		["crude-oil"] = {frequency = 7.5, size = 1.4, richness = 0.28},
+		["crude-oil"] = {frequency = 8, size = 1.5, richness = 0.28},
 		["trees"] = {frequency = math.random(8, 28) * 0.1, size = math.random(6, 14) * 0.1, richness = math.random(2, 4) * 0.1},
 		["enemy-base"] = {frequency = 0, size = 0, richness = 0}
 	}
