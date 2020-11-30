@@ -36,7 +36,7 @@ local balance_functions = {
 	end,
 
 	["physical-projectile-damage"] = function(force_name)
-		global.combat_balance[force_name].shotgun = global.combat_balance[force_name].shotgun + 0.4
+		global.combat_balance[force_name].shotgun = global.combat_balance[force_name].shotgun + 0.6
 		game.forces[force_name].set_ammo_damage_modifier("shotgun-shell", global.combat_balance[force_name].shotgun)
 		
 	end,
