@@ -3,7 +3,7 @@ local Public = {}
 Public.food_values = {
 	["automation-science-pack"] =		{value = 0.000505, name = "automation science", color = "255, 50, 50"},
 	["logistic-science-pack"] =		{value = 0.00165, name = "logistic science", color = "50, 255, 50"},
-	["military-science-pack"] =		{value = 0.00655, name = "military science", color = "105, 105, 105"},
+	["military-science-pack"] =		{value = 0.00705, name = "military science", color = "105, 105, 105"},
 	["chemical-science-pack"] = 		{value = 0.0250, name = "chemical science", color = "100, 200, 255"},
 	["production-science-pack"] =		{value = 0.125, name = "production science", color = "150, 25, 255"},
 	["utility-science-pack"] =		{value = 0.16, name = "utility science", color = "210, 210, 60"},
