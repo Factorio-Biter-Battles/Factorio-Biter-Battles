@@ -111,7 +111,7 @@ function Public.source_surface()
 	map_gen_settings.autoplace_controls = {
 		["coal"] = {frequency = 6.5, size = 0.24, richness = 0.24},
 		["stone"] = {frequency = 5, size = 0.28, richness = 0.15},
-		["copper-ore"] = {frequency = 5.5, size = 0.25, richness = 0.3},
+		["copper-ore"] = {frequency = 5.5, size = 0.26, richness = 0.3},
 		["iron-ore"] = {frequency = 7.8, size = 0.75, richness = 0.21},
 		["uranium-ore"] = {frequency = 2, size = 1, richness = 1},
 		["crude-oil"] = {frequency = 8, size = 1.5, richness = 0.27},
