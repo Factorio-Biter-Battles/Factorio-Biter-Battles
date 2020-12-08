@@ -13,6 +13,7 @@ local GetNoise = require "utils.get_noise"
 local simplex_noise = require 'utils.simplex_noise'.d2
 local spawn_circle_size = 39
 local ores = {"copper-ore", "iron-ore", "stone", "coal"}
+local mixed_ore_multiplier = {0.2, 1, 0.1, 0.1}
 local rocks = {"sand-rock-big","sand-rock-big","rock-big","rock-big","rock-big","rock-big", "rock-huge"}
 
 local chunk_tile_vectors = {}
@@ -404,8 +405,8 @@ local function mixed_ore(surface, left_top_x, left_top_y)
 			if surface.can_place_entity({name = "iron-ore", position = pos}) then
 				local noise = GetNoise("bb_ore", pos, seed)
 				if noise > 0.72 then
-					local amount = math_random(800, 1000) + math_sqrt(pos.x ^ 2 + pos.y ^ 2) * 3
 					local i = math_floor(noise * 25 + math_abs(pos.x) * 0.05) % 4 + 1
+					local amount = (math_random(800, 1000) + math_sqrt(pos.x ^ 2 + pos.y ^ 2) * 3) * mixed_ore_multiplier[i]
 					surface.create_entity({name = ores[i], position = pos, amount = amount})
 				end
 			end
