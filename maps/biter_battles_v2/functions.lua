@@ -26,7 +26,7 @@ local balance_functions = {
 		global.combat_balance[force_name].grenade_damage = global.combat_balance[force_name].grenade_damage + 0.4					
 		game.forces[force_name].set_ammo_damage_modifier("grenade", global.combat_balance[force_name].grenade_damage)
 
-		if not global.combat_balance[force_name].land_mine then global.combat_balance[force_name].land_mine = -0.8 end
+		if not global.combat_balance[force_name].land_mine then global.combat_balance[force_name].land_mine = -0.9 end
 		global.combat_balance[force_name].land_mine = global.combat_balance[force_name].land_mine + 0.03								
 		game.forces[force_name].set_ammo_damage_modifier("landmine", global.combat_balance[force_name].land_mine)
 	end,
