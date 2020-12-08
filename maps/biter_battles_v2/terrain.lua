@@ -13,7 +13,8 @@ local GetNoise = require "utils.get_noise"
 local simplex_noise = require 'utils.simplex_noise'.d2
 local spawn_circle_size = 39
 local ores = {"copper-ore", "iron-ore", "stone", "coal"}
-local mixed_ore_multiplier = {0.2, 1, 0.1, 0.1}
+-- mixed_ore_multiplier order is based on the ores variable
+local mixed_ore_multiplier = {1, 1, 1, 1}
 local rocks = {"sand-rock-big","sand-rock-big","rock-big","rock-big","rock-big","rock-big", "rock-huge"}
 
 local chunk_tile_vectors = {}
