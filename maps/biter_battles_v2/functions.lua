@@ -1,3 +1,4 @@
+local Server = require 'utils.server'
 local string_sub = string.sub
 local math_random = math.random
 local math_round = math.round
@@ -229,6 +230,8 @@ function Public.share_chat(event)
 	local tag = player.tag
 	if not tag then tag = "" end
 	local color = player.chat_color
+
+	local msg = player.name .. tag .. " (" .. player.force.name .. "): ".. event.message
 	
 	if player.force.name == "north" then
 		game.forces.spectator.print(player.name .. tag .. " (north): ".. event.message, color)		
@@ -253,6 +256,8 @@ function Public.share_chat(event)
 		game.forces.north.print(player.name .. tag .. " (spectator): ".. event.message, color)
 		game.forces.south.print(player.name .. tag .. " (spectator): ".. event.message, color)
 	end
+
+	Server.to_discord_player_chat(msg)
 end
 
 function Public.spy_fish(player)
