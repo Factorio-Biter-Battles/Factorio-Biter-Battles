@@ -1,29 +1,46 @@
 <p align="center">
-  <a href="https://getcomfy.eu/">
-    <img alt="logo" src="https://cdn.discordapp.com/icons/433039858794233858/a_ca6daa1189d44955478d0e0ba6e2effb.gif?size=128" width="120">
-  </a>
+  
+  <img src="https://i.imgur.com/1ElMTc2.png" alt="raven" width="400" height="400">
+
   <br>
-  <a href="https://github.com/M3wM3w/ComfyFactorio/tags">
-    <img src="https://img.shields.io/github/tag/M3wM3w/ComfyFactorio.svg?label=Release" alt="Release">
+
+  <a href="https://github.com/1pulse/factorio_biter_battles/issues?q=is%3Aopen+is%3Aissue">
+    <img alt="GitHub issues" src="https://img.shields.io/github/issues-raw/1pulse/factorio_biter_battles">
   </a>
-    <img alt="GitHub last commit" src="https://img.shields.io/github/last-commit/m3wm3w/ComfyFactorio.svg">
-  <a href="http://github.com/M3wM3w/ComfyFactorio/fork">
-    <img src="https://img.shields.io/github/forks/M3wM3w/ComfyFactorio.svg?label=Forks" alt="Fork">
+
+  <a href="https://github.com/1pulse/factorio_biter_battles/issues?q=is%3Aissue+is%3Aclosed">
+    <img alt="GitHub closed issues" src="https://img.shields.io/github/issues-closed-raw/1pulse/factorio_biter_battles">
   </a>
-  <a href="https://getcomfy.eu/discord">
-    <img src="https://discordapp.com/api/guilds/433039858794233858/widget.png?style=shield" alt="Discord">
+
+  <a href = "https://github.com/1pulse/factorio_biter_battles/pulls?q=is%3Aopen+is%3Apr">
+    <img alt="GitHub pull requests" src="https://img.shields.io/github/issues-pr-raw/1pulse/factorio_biter_battles">
+  </a>
+
+  <a href = "https://github.com/1pulse/factorio_biter_battles/pulls?q=is%3Apr+is%3Aclosed">
+    <img alt="GitHub closed pull requests" src="https://img.shields.io/github/issues-pr-closed-raw/1pulse/factorio_biter_battles">
+  </a>
+
+  <a>
+    <img alt="GitHub repo size" src="https://img.shields.io/github/repo-size/1pulse/factorio_biter_battles">
+  </a>
+
+  <a href="https://discord.gg/zwtBDnSTS5">
+    <img alt="Discord" src="https://img.shields.io/discord/662768298655744013">
   </a>
 </p>
-<h2 align="center">Comfy Repository</h2>
 
+<br>
 
-# ComfyFactorio
-A factorio scenario.
+# Raven Biter Battles
+A team vs team factorio scenario. Duke it out on a mirrored map, advancing through technologies whilst fending off natural biters and those sent from the other team.
 
 ## Using Comfy maps
-- Check out the [wiki](https://github.com/M3wM3w/ComfyFactorio/wiki) for getting started.
-- We're also live at [discord](https://getcomfy.eu/discord). Don't hesitate to reach out if you're having issues getting started!
+- Check our sister repository's the [wiki](https://github.com/M3wM3w/ComfyFactorio/wiki) to get started.
+- We're also live at [discord](https://discord.gg/zwtBDnSTS5). Don't hesitate to reach out if you're having issues getting started!
 - The scenario is free to play, host or modify, however, you are welcome to visit our servers.
 
 ### Factorio Version
-- We always try to use the latest experimental branch, meaning - if you want to play our maps then you need to be on the experimental branch.
+- The version used will tend to be the one used by the largest majority of the playerbase, to ensure that servers are always available to the most players. We are currently using stable 1.0.
+
+<br>
+<p style="font-size:10px">Read-me courtesy of DashieCee &lt;3</p>
