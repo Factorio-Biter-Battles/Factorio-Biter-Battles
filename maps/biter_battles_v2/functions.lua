@@ -250,8 +250,14 @@ function Public.share_chat(event)
 		local a, b = string_find(event.message, "gps=", 1, false)
 		if a then return end	
 		
-		game.forces.north.print(player.name .. tag .. " (spectator): ".. event.message, color)
-		game.forces.south.print(player.name .. tag .. " (spectator): ".. event.message, color)
+		if (event.message:find("^-n ")) then
+			game.forces.north.print(player.name .. tag .. " (spectator): ".. event.message, color)
+		elseif (event.message:find("^-s ")) then 
+			game.forces.south.print(player.name .. tag .. " (spectator): ".. event.message, color)
+		else 
+			game.forces.north.print(player.name .. tag .. " (spectator): ".. event.message, color)
+			game.forces.south.print(player.name .. tag .. " (spectator): ".. event.message, color)
+		end
 	end
 end
 
