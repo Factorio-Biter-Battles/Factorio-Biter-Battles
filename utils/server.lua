@@ -54,6 +54,7 @@ local ban_sync_tag = '[BAN-SYNC]'
 local unbanned_sync_tag = '[UNBANNED-SYNC]'
 local query_players_tag = '[QUERY-PLAYERS]'
 local player_join_tag = '[PLAYER-JOIN]'
+local player_chat_tag = '[PLAYER-CHAT]'
 local player_leave_tag = '[PLAYER-LEAVE]'
 
 Public.raw_print = raw_print
@@ -81,6 +82,10 @@ Public.events = {on_server_started = Event.generate_event_name('on_server_starte
 -- Server.to_discord('Hello from scenario script!')
 function Public.to_discord(message)
     raw_print(discord_tag .. message)
+end
+
+function Public.to_discord_player_chat(message)
+    raw_print(player_chat_tag .. message)
 end
 
 --- Sends a message to the linked discord channel. The message is not sanitized of markdown.
