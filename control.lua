@@ -8,7 +8,7 @@ require 'utils.server_commands'
 require 'utils.utils'
 require 'utils.table'
 require 'utils.freeplay'
-require 'utils.datastore.server_ups'
+--require 'utils.datastore.server_ups'
 require 'utils.datastore.color_data'
 require 'utils.datastore.session_data'
 require 'utils.datastore.jail_data'
@@ -83,7 +83,7 @@ require 'modules.autostash'
 --!All lines with the "require" keyword are different maps.
 
 --![[North VS South Survival PVP, feed the opposing team's biters with science flasks. Disable Autostash, Group and Poll modules.]]--
---require 'maps.biter_battles_v2.main'
+require 'maps.biter_battles_v2.main'
 --require 'maps.biter_battles.biter_battles'
 
 --![[Guide a Train through rough terrain, while defending it from the biters]]--
