@@ -31,13 +31,12 @@
 
 <br>
 
-# Raven Biter Battles
+# Factorio Biter Battles
 A team vs team factorio scenario. Duke it out on a mirrored map, advancing through technologies whilst fending off natural biters and those sent from the other team.
 
-## Using Comfy maps
-- Check our sister repository's the [wiki](https://github.com/M3wM3w/ComfyFactorio/wiki) to get started.
-- We're also live at [discord](https://discord.gg/zwtBDnSTS5). Don't hesitate to reach out if you're having issues getting started!
-- The scenario is free to play, host or modify, however, you are welcome to visit our servers.
+## Original Comfy Reop
+- https://github.com/M3wM3w/ComfyFactorio
+- Comfy discord [discord](https://discord.gg/zwtBDnSTS5)
 
 ### Factorio Version
 - The version used will tend to be the one used by the largest majority of the playerbase, to ensure that servers are always available to the most players. We are currently using stable 1.0.
