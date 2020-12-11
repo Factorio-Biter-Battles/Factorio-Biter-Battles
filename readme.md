@@ -116,7 +116,8 @@ Commit your changes: run ```git commit -m <your custom commit message>```
 Once you are happy with your changes: run ```git push```
 This will send the changes in your local branch to your branch in github. 
 
-In github:
-- click ```Pull Request```
+In github, click ```Pull Request```
 - base repository: ```1pulse/factorio_biter_battles```
 - base: ``master``
+- head repository: ``` your repo```
+- compare: ```your branch```
