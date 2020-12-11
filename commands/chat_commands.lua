@@ -28,7 +28,7 @@ local function chat_with_team(message, team)
     Server.to_discord_player_chat(msg)
 end
 
-commands.add_command('sth', 'chat with south', function(cmd)
+commands.add_command('sth', 'Chat with south. Same as /south-chat', function(cmd)
     local message = tostring(cmd.parameter)
    chat_with_team(message,'south')
 end)
