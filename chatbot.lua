@@ -28,7 +28,7 @@ local brain = {
     },
     [6] = {
         'Need a guide to help learn the server?',
-        'Check out one of our guides over at shorturl.at/cvyGX, or join our discord to see our full list of guides.'
+        'Check out one of our guides over at shorturl.at/demsB, or join our discord to see our full list of guides.'
     }
 }
 
