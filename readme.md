@@ -34,7 +34,7 @@
 # Factorio Biter Battles
 A team vs team factorio scenario. Duke it out on a mirrored map, advancing through technologies whilst fending off natural biters and those sent from the other team.
 
-## Original Comfy Reop
+## Original Comfy Repo
 - https://github.com/M3wM3w/ComfyFactorio
 - Comfy discord [discord](https://discord.gg/zwtBDnSTS5)
 
