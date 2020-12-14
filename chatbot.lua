@@ -10,9 +10,9 @@ local font = 'default-game'
 local format = string.format
 
 local brain = {
-    [1] = {'Our Discord server is at: https://discord.gg/KvDN8tn5sF'},
+    [1] = {'Our Discord server is at: https://discord.gg/fBKvBENj2d'},
     [2] = {
-        'Need an admin? Join our discord at: https://discord.gg/KvDN8tn5sF,',
+        'Need an admin? Join our discord at: https://discord.gg/fBKvBENj2d,',
         'and report it in #i-need-halp',
         'If you have played for more than 5h in our maps then,',
         'you are eligible to run the command /jail and /free'
@@ -25,6 +25,10 @@ local brain = {
     },
     [5] = {
         "If you're not trusted - ask a trusted player or an admin to trust you."
+    },
+    [6] = {
+        'Need a guide to help learn the server?',
+        'Check out one of our guides over at shorturl.at/demsB, or join our discord to see our full list of guides.'
     }
 }
 
@@ -48,12 +52,14 @@ local links = {
     ['lagging'] = brain[4],
     ['trust'] = brain[5],
     ['trusted'] = brain[5],
-    ['untrusted'] = brain[5]
+    ['untrusted'] = brain[5],
+    ['guide'] = brain[6],
+    ['meta'] = brain[6],
 }
 
 local function on_player_created(event)
     local player = game.players[event.player_index]
-    player.print('[font=' .. font .. ']' .. 'Join us on discord >> https://discord.gg/KvDN8tn5sF' .. '[/font]', font_welcome)
+    player.print('[font=' .. font .. ']' .. 'Join us on discord >> discord.gg/zwtBDnSTS5' .. '[/font]', font_welcome)
 end
 
 commands.add_command(

@@ -32,17 +32,26 @@
 <br>
 
 # Factorio Biter Battles
-A team vs team factorio scenario. Duke it out on a mirrored map, advancing through technologies whilst fending off natural biters and those sent from the other team.
+A team vs team factorio scenario. Duke it out on a mirrored map, advancing through technologies whilst fending off natural biters and those sent from the other team. This is a forked project of from [ComfyFactorio](https://github.com/M3wM3w/ComfyFactorio)
 
-## Original Comfy Reop
-- https://github.com/M3wM3w/ComfyFactorio
-- Comfy discord [discord](https://discord.gg/zwtBDnSTS5)
+<br>
+
+### Join the community
+- We're live on [discord](https://discord.gg/fBKvBENj2d)!
+
+<br>
+
+### Learn how to play
+- Multiple guides are avilable for viewing on our discord in the #learning channel, to help get you started on our servers. A few are listed below:
+- [DashieCee's Biter Battle meta guide](https://pdfhost.io/v/t1vQW8ac5_Biter_Battles_Meta_Guidepdf.pdf)
+<!-- Add the guides included in the in-game menu with the owner name, description of content etc -->
+
+<br>
 
 ### Factorio Version
 - The version used will tend to be the one used by the largest majority of the playerbase, to ensure that servers are always available to the most players. We are currently using stable 1.0.
 
 <br>
-<p style="font-size:10px">Read-me courtesy of DashieCee &lt;3</p>
 <br>
 
 ---
