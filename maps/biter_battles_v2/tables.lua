@@ -5,8 +5,8 @@ Public.food_values = {
 	["logistic-science-pack"] =		{value = 0.00205, name = "logistic science", color = "50, 255, 50"},
 	["military-science-pack"] =		{value = 0.00755, name = "military science", color = "105, 105, 105"},
 	["chemical-science-pack"] = 		{value = 0.0325, name = "chemical science", color = "100, 200, 255"},
-	["production-science-pack"] =		{value = 0.15, name = "production science", color = "150, 25, 255"},
-	["utility-science-pack"] =		{value = 0.2, name = "utility science", color = "210, 210, 60"},
+	["production-science-pack"] =		{value = 0.18, name = "production science", color = "150, 25, 255"},
+	["utility-science-pack"] =		{value = 0.26, name = "utility science", color = "210, 210, 60"},
 	["space-science-pack"] = 		{value = 1.0, name = "space science", color = "255, 255, 255"},
 }
 
