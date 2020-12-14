@@ -8,9 +8,9 @@ local difficulties = {
 	[2] = {name = "Piece of Cake", str = "100%", value = 1, color = {r=0.00, g=0.35, b=0.00}, print_color = {r=0.00, g=0.7, b=0.00}},
 	[3] = {name = "Easy", str = "125%", value = 1.25, color = {r=0.00, g=0.25, b=0.00}, print_color = {r=0.00, g=0.5, b=0.00}},
 	[4] = {name = "Normal", str = "150%", value = 1.5, color = {r=0.00, g=0.00, b=0.25}, print_color = {r=0.0, g=0.0, b=0.7}},
-	[5] = {name = "Hard", str = "175%", value = 1.75, color = {r=0.25, g=0.00, b=0.00}, print_color = {r=0.5, g=0.0, b=0.00}},
-	[6] = {name = "Nightmare", str = "200%", value = 2, color = {r=0.35, g=0.00, b=0.00}, print_color = {r=0.7, g=0.0, b=0.00}},
-	[7] = {name = "Hellscape", str = "250%", value = 2.5, color = {r=0.45, g=0.00, b=0.00}, print_color = {r=0.7, g=0.0, b=0.00}},
+	[5] = {name = "Hard", str = "200%", value = 2, color = {r=0.25, g=0.00, b=0.00}, print_color = {r=0.5, g=0.0, b=0.00}},
+	[6] = {name = "Nightmare", str = "250%", value = 2.5, color = {r=0.35, g=0.00, b=0.00}, print_color = {r=0.7, g=0.0, b=0.00}},
+	[7] = {name = "Hellscape", str = "300%", value = 3, color = {r=0.45, g=0.00, b=0.00}, print_color = {r=0.7, g=0.0, b=0.00}},
 	[8] = {name = "Impossible", str = "500%", value = 5, color = {r=0.55, g=0.00, b=0.00}, print_color = {r=0.9, g=0.0, b=0.00}}
 }
 
