@@ -44,6 +44,7 @@ A team vs team factorio scenario. Duke it out on a mirrored map, advancing throu
 ### Learn how to play
 - Multiple guides are avilable for viewing on our discord in the #learning channel, to help get you started on our servers. A few are listed below:
 - [DashieCee's Biter Battle meta guide](https://pdfhost.io/v/t1vQW8ac5_Biter_Battles_Meta_Guidepdf.pdf)
+- [cogito's Ultimate Biter Battles Guide](https://pdfhost.io/v/3~ISTWV4t_Ultimate_Biter_Battles_Guidepdf.pdf)
 <!-- Add the guides included in the in-game menu with the owner name, description of content etc -->
 
 <br>
