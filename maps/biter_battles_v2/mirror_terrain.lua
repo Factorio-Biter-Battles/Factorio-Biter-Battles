@@ -172,7 +172,7 @@ local function mirror_chunk(chunk)
 	local target_surface = game.surfaces.biter_battles
 	
 	local source_surface = game.surfaces.bb_source
-	local source_chunk_position = {chunk[1][1] - 1, chunk[1][2] * -1 - 1}
+	local source_chunk_position = {chunk[1][1], chunk[1][2] * -1 - 1}
 	local source_left_top = {x = source_chunk_position[1] * 32, y = source_chunk_position[2] * 32}
 	local source_area = {{source_left_top.x, source_left_top.y}, {source_left_top.x + 32, source_left_top.y + 32}}
 	
