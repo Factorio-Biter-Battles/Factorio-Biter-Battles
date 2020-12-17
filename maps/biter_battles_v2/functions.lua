@@ -232,6 +232,7 @@ function Public.share_chat(event)
 	local color = player.chat_color
 
 	local msg = player.name .. tag .. " (" .. player.force.name .. "): ".. event.message
+	Server.to_discord_player_chat(msg)
 	
 	if player.force.name == "north" then
 		game.forces.spectator.print(player.name .. tag .. " (north): ".. event.message, color)		
@@ -263,7 +264,7 @@ function Public.share_chat(event)
 		end
 	end
 
-	Server.to_discord_player_chat(msg)
+
 end
 
 function Public.spy_fish(player)
