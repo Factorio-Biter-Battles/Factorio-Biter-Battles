@@ -111,7 +111,7 @@ local function process_entity(surface, entity, force_name)
 	if force_name == "north" then
 		target_position = entity.position
 	else
-		target_position = {x = entity.position.x * -1, y = entity.position.y * -1}
+		target_position = {x = entity.position.x, y = entity.position.y * -1}
 	end
  
 	entity_copy_functions[entity.type](surface, entity, target_position, force_name)
@@ -172,7 +172,7 @@ local function mirror_chunk(chunk)
 	local target_surface = game.surfaces.biter_battles
 	
 	local source_surface = game.surfaces.bb_source
-	local source_chunk_position = {chunk[1][1] * -1 - 1, chunk[1][2] * -1 - 1}
+	local source_chunk_position = {chunk[1][1], chunk[1][2] * -1 - 1}
 	local source_left_top = {x = source_chunk_position[1] * 32, y = source_chunk_position[2] * 32}
 	local source_area = {{source_left_top.x, source_left_top.y}, {source_left_top.x + 32, source_left_top.y + 32}}
 	
@@ -184,7 +184,7 @@ local function mirror_chunk(chunk)
 	if chunk[2] == 1 then
 		local tiles = {}
 		for k, tile in pairs(source_surface.find_tiles_filtered({area = source_area})) do
-			tiles[k] = {name = tile.name, position = {tile.position.x * -1 - 1 , tile.position.y * -1 - 1}}			
+			tiles[k] = {name = tile.name, position = {tile.position.x, tile.position.y * -1 - 1}}			
 		end
 		target_surface.set_tiles(tiles, true)
 		chunk[2] = chunk[2] + 1
@@ -201,7 +201,7 @@ local function mirror_chunk(chunk)
 	
 	local decoratives = {}
 	for k, decorative in pairs(source_surface.find_decoratives_filtered{area = source_area}) do 
-		decoratives[k] = {name = decorative.decorative.name, position = {(decorative.position.x * -1) - 1, (decorative.position.y * -1) - 1}, amount = decorative.amount}
+		decoratives[k] = {name = decorative.decorative.name, position = {decorative.position.x, decorative.position.y * -1}, amount = decorative.amount}
 	end
 	target_surface.create_decoratives({check_collision = false, decoratives = decoratives})
 	
