@@ -342,7 +342,8 @@ function Public.silo_death(event)
 		
 		Server.to_discord_embed(c .. " has won!")
 		Server.to_discord_embed(global.victory_time)
-		
+		global.results_sent_south = false
+		global.results_sent_north = false
 		silo_kaboom(entity)
 		
 		freeze_all_biters(entity.surface)
