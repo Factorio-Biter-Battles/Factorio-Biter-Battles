@@ -59,7 +59,7 @@ local links = {
 
 local function on_player_created(event)
     local player = game.players[event.player_index]
-    player.print('[font=' .. font .. ']' .. 'Join us on discord >> discord.gg/zwtBDnSTS5' .. '[/font]', font_welcome)
+    player.print('[font=' .. font .. ']' .. 'Hi, join us on discord >> discord.gg/zwtBDnSTS5' .. '[/font]', font_welcome)
 end
 
 commands.add_command(
