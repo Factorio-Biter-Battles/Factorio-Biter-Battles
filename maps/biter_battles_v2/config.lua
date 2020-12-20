@@ -6,7 +6,7 @@ local bb_config = {
 	["south_side_team_name"] = "Team South",
 
 	--TERRAIN OPTIONS--
-	["border_river_width"] = 36,						--Approximate width of the horizontal impassable river seperating the teams. (values up to 100)
+	["border_river_width"] = 44,						--Approximate width of the horizontal impassable river seperating the teams. (values up to 100)
 	["builders_area"] = true,							--Grant each side a peaceful direction with no nests and biters?
 	["random_scrap"] = true,							--Generate harvestable scrap around worms randomly?
 
