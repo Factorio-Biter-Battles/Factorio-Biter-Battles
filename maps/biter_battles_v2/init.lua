@@ -265,8 +265,8 @@ function Public.forces()
 		global.bb_threat[force.name] = 0
 		game.forces["south"].set_ammo_damage_modifier("bullet", 0.2)
 		game.forces["north"].set_ammo_damage_modifier("bullet", 0.2)
-		game.forces["south"].set_ammo_damage_modifier("grenade", -0.5)
-		game.forces["north"].set_ammo_damage_modifier("grenade", -0.5)
+		-- game.forces["south"].set_ammo_damage_modifier("grenade", -0.5)
+		-- game.forces["north"].set_ammo_damage_modifier("grenade", -0.5)
 	end
 end
 
