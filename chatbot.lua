@@ -5,30 +5,24 @@ local Server = require 'utils.server'
 local Color = require 'utils.color_presets'
 
 local font_color = Color.warning
-local font_welcome = {r = 150, g = 100, b = 255, a = 255}
 local font = 'default-game'
 local format = string.format
 
 local brain = {
-    [1] = {'Our Discord server is at: https://discord.gg/fBKvBENj2d'},
+    [1] = {'Our Discord server is at: http://discord.gg/KvDN8tn5sF'},
     [2] = {
-        'Need an admin? Join our discord at: https://discord.gg/fBKvBENj2d,',
-        'and report it in #i-need-halp',
-        'If you have played for more than 5h in our maps then,',
-        'you are eligible to run the command /jail and /free'
+        'Need an admin? Join our discord at: http://discord.gg/KvDN8tn5sF,',
+        'and report it in #support',
+        'If you are trusted, you are eligible to run the command /jail and /free'
     },
-    [3] = {'Scenario repository for download:', 'https://github.com/1pulse/factorio_biter_battles'},
+    [3] = {'Scenario repository for download:', 'https://github.com/1pulse/Factorio-Biter-Battles'},
     [4] = {
-        'If you feel like the server is lagging, run the following command:',
-        '/server-ups',
-        'This will display the server UPS on your top right screen.'
-    },
-    [5] = {
         "If you're not trusted - ask a trusted player or an admin to trust you."
     },
-    [6] = {
+    [5] = {
         'Need a guide to help learn the server?',
-        'Check out one of our guides over at shorturl.at/demsB, or join our discord to see our full list of guides.'
+        'Check out the pinned messages at our discord\'s #learning channel',
+        'for a link to one of many guides written by members of the community.'
     }
 }
 
@@ -48,18 +42,16 @@ local links = {
     ['stealing'] = brain[2],
     ['stole'] = brain[2],
     ['troll'] = brain[2],
-    ['lag'] = brain[4],
-    ['lagging'] = brain[4],
-    ['trust'] = brain[5],
-    ['trusted'] = brain[5],
-    ['untrusted'] = brain[5],
-    ['guide'] = brain[6],
-    ['meta'] = brain[6],
+    ['trust'] = brain[4],
+    ['trusted'] = brain[4],
+    ['untrusted'] = brain[4],
+    ['guide'] = brain[5],
+    ['meta'] = brain[5],
 }
 
 local function on_player_created(event)
     local player = game.players[event.player_index]
-    player.print('[font=' .. font .. ']' .. 'Hi, join us on discord >> discord.gg/zwtBDnSTS5' .. '[/font]', font_welcome)
+    player.print('[font=' .. font .. ']' .. 'Welcome! Join us on discord >> http://discord.gg/KvDN8tn5sF' .. '[/font]', font_color)
 end
 
 commands.add_command(
@@ -178,10 +170,6 @@ end
 
 local function on_console_chat(event)
     if not event.player_index then
-        return
-    end
-    local secs = Server.get_current_time()
-    if not secs then
         return
     end
     process_bot_answers(event)
