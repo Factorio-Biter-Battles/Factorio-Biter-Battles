@@ -10,8 +10,8 @@ local difficulties = {
 	[4] = {name = "Normal", str = "125%", value = 1.25, color = {r=0.00, g=0.00, b=0.25}, print_color = {r=0.0, g=0.0, b=0.7}},
 	[5] = {name = "Hard", str = "150%", value = 1.5, color = {r=0.25, g=0.00, b=0.00}, print_color = {r=0.5, g=0.0, b=0.00}},
 	[6] = {name = "Nightmare", str = "200%", value = 2, color = {r=0.35, g=0.00, b=0.00}, print_color = {r=0.7, g=0.0, b=0.00}},
-	[7] = {name = "Ultra-Violence", str = "250%", value = 2.5, color = {r=0.45, g=0.00, b=0.00}, print_color = {r=0.7, g=0.0, b=0.00}},
-	[8] = {name = "Fun and Fast", str = "400%", value = 4, color = {r=0.55, g=0.00, b=0.00}, print_color = {r=0.9, g=0.0, b=0.00}}
+	[7] = {name = "Ultra-Violence", str = "300%", value = 3, color = {r=0.45, g=0.00, b=0.00}, print_color = {r=0.7, g=0.0, b=0.00}},
+	[8] = {name = "Fun and Fast", str = "500%", value = 5, color = {r=0.55, g=0.00, b=0.00}, print_color = {r=0.9, g=0.0, b=0.00}}
 }
 
 local timeout = 18000
