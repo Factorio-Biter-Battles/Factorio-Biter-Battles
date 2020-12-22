@@ -14,7 +14,7 @@ local difficulties = {
 	[8] = {name = "Fun and Fast", str = "500%", value = 5, color = {r=0.55, g=0.00, b=0.00}, print_color = {r=0.9, g=0.0, b=0.00}}
 }
 
-local timeout = 18000
+local timeout = 40000
 
 local function difficulty_gui()
 	for _, player in pairs(game.connected_players) do
