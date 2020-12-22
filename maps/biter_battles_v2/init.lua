@@ -165,6 +165,7 @@ function Public.tables()
 	global.unit_spawners = {}
 	global.unit_spawners.north_biters = {}
 	global.unit_spawners.south_biters = {}
+	global.difficulty_votes_timeout = 36000
 	global.next_attack = "north"
 	if math.random(1,2) == 1 then global.next_attack = "south" end
 end
