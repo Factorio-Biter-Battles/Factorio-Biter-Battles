@@ -1,5 +1,26 @@
 local Public = {}
 
+-- List of forces that will be affected by ammo modifier
+Public.ammo_modified_forces_list = {"north", "south", "spectator"}
+
+-- Ammo modifiers via set_ammo_damage_modifier
+-- [ammo_category] = value
+-- damage = base_damage + (base_damage*ammo_modifier)
+Public.base_ammo_modifiers = {
+	["bullet"] = 0.2,
+	["shotgun-shell"] = 1,
+	["flamethrower"] = -0.8,
+	["landmine"] = -0.9
+}
+
+Public.turret_attack_modifiers = {
+	["flamethrower-turret"] = -0.8
+}
+
+Public.upgrade_modifiers = {
+	["shotgun-shell"] = 0.6
+}
+
 Public.food_values = {
 	["automation-science-pack"] =		{value = 0.000505, name = "automation science", color = "255, 50, 50"},
 	["logistic-science-pack"] =		{value = 0.00155, name = "logistic science", color = "50, 255, 50"},
