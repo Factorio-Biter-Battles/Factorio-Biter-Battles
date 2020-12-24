@@ -139,8 +139,20 @@ where ```<my-BB-renamed-folder>``` is the folder name that you changed the clone
 Once you are happy with your changes: run ```git push```
 This will send the changes in your local branch to your branch in github. 
 
-In github, click ```Pull Request```
-- base repository: ```1pulse/factorio_biter_battles```
+If you get the error
+```
+fatal: The current branch <your-branch-name> has no upstream branch.
+To push the current branch and set the remote as upstream, use
+
+    git push --set-upstream origin <your-branch-name>
+```
+
+Run the command ```git push --set-upstream origin <your-branch-name> ```
+
+In your github repository, click ```Compare & pull request```
+- base repository: ```1pulse/Factorio-Biter-Battles```
 - base: ``master``
-- head repository: ``` your repo```
-- compare: ```your branch```
+- head repository: ```<your-repo-name>```
+- compare: ```<your-branch-name>```
+
+Write a small comment about your changes and Click ```Create pull request```
