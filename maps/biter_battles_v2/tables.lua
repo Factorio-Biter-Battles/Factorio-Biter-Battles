@@ -13,7 +13,7 @@ Public.base_ammo_modifiers = {
 	["landmine"] = -0.9
 }
 
-Public.turret_attack_modifiers = {
+Public.base_turret_attack_modifiers = {
 	["flamethrower-turret"] = -0.8
 }
 

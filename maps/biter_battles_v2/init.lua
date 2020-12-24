@@ -274,6 +274,14 @@ function Public.forces()
 		end
 	end
 
+	for _, force in pairs(Tables.ammo_modified_forces_list) do
+		for turret_category, value in pairs(Tables.base_turret_attack_modifiers) do
+			game.print(turret_category)
+			game.forces[force]
+				.set_turret_attack_modifier(turret_category, value)
+		end
+	end
+
 end
 
 return Public
