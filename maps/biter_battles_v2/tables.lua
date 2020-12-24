@@ -5,7 +5,8 @@ Public.ammo_modified_forces_list = {"north", "south", "spectator"}
 
 -- Ammo modifiers via set_ammo_damage_modifier
 -- [ammo_category] = value
--- damage = base_damage + (base_damage*ammo_modifier)
+-- ammo_modifier_dmg = base_damage * base_ammo_modifiers
+-- damage = base_damage + ammo_modifier_dmg
 Public.base_ammo_modifiers = {
 	["bullet"] = 0.2,
 	["shotgun-shell"] = 1,
@@ -13,12 +14,16 @@ Public.base_ammo_modifiers = {
 	["landmine"] = -0.9
 }
 
+-- turret attack modifier via set_turret_attack_modifier
 Public.base_turret_attack_modifiers = {
 	["flamethrower-turret"] = -0.8
 }
 
 Public.upgrade_modifiers = {
-	["shotgun-shell"] = 0.6
+	["flamethrower"] = 0.02,
+	["shotgun-shell"] = 0.6,
+	["grenade"] = 0.4,
+	["landmine"] = 0.03
 }
 
 Public.food_values = {
