@@ -129,7 +129,7 @@ function Public.biters_landfill(entity)
 		if tile.collides_with("resource-layer") then
 			surface.set_tiles({{name = "landfill", position = tile.position}})
 			local particle_pos = {tile.position.x + 0.5, tile.position.y + 0.5}
-			for i = 1, 50, 1 do 
+			for _ = 1, 50, 1 do
 				surface.create_particle({
 					name = "stone-particle",
 					position = particle_pos,
@@ -272,9 +272,9 @@ function Public.spy_fish(player)
 	local duration_per_unit = 2700 
 	local i2 = player.get_inventory(defines.inventory.character_main)
 	if not i2 then return end
-	local owned_fishes = i2.get_item_count("raw-fish")
-	owned_fishes = owned_fishes + i2.get_item_count("raw-fish")
-	if owned_fishes == 0 then 
+	local owned_fish = i2.get_item_count("raw-fish")
+	owned_fish = owned_fish + i2.get_item_count("raw-fish")
+	if owned_fish == 0 then
 		player.print("You have no fish in your inventory.",{ r=0.98, g=0.66, b=0.22})
 	else
 		local x = i2.remove({name="raw-fish", count=1})

@@ -27,7 +27,7 @@ Public.enemy_team_of = {
 }
 
 Public.wait_messages = {
-	"Once upon a midnight dreay...",
+	"Once upon a dreary night...",
 	"Nevermore.",
 	"go and grab a drink.",
 	"take a short healthy break.",

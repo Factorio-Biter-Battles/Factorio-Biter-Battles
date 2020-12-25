@@ -106,7 +106,7 @@ function Public.to_admin(message)
     raw_print(discord_admin_tag .. message)
 end
 
---- Sends a message to the linked banend discord channel. The message is sanitized of markdown server side.
+--- Sends a message to the linked banned discord channel. The message is sanitized of markdown server side.
 -- @param  message<string> message to send.
 function Public.to_banned(message)
     raw_print(discord_banned_tag .. message)

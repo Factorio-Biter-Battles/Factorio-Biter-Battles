@@ -17,7 +17,7 @@ local function get_raffle_table(level, name)
 	if level > 900 then
 		raffle["behemoth-" .. name] = (level - 900) * 8
 	end
-	for k, v in pairs(raffle) do
+	for k, _ in pairs(raffle) do
 		if raffle[k] < 0 then raffle[k] = 0 end
 	end
 	return raffle
@@ -26,7 +26,7 @@ end
 local function roll(evolution_factor, name)
 	local raffle = get_raffle_table(math_floor(evolution_factor * 1000), name)
 	local max_chance = 0
-	for k, v in pairs(raffle) do
+	for _, v in pairs(raffle) do
 		max_chance = max_chance + v
 	end
 	local r = math_random(0, math_floor(max_chance))	
@@ -60,7 +60,7 @@ local function get_worm_raffle_table(level)
 	if level > 900 then
 		raffle["behemoth-worm-turret"] = (level - 900) * 3
 	end
-	for k, v in pairs(raffle) do
+	for k, _ in pairs(raffle) do
 		if raffle[k] < 0 then raffle[k] = 0 end
 	end
 	return raffle
@@ -69,7 +69,7 @@ end
 local function get_worm_name(evolution_factor)
 	local raffle = get_worm_raffle_table(math_floor(evolution_factor * 1000))
 	local max_chance = 0
-	for k, v in pairs(raffle) do
+	for _, v in pairs(raffle) do
 		max_chance = max_chance + v
 	end
 	local r = math_random(0, math_floor(max_chance))	

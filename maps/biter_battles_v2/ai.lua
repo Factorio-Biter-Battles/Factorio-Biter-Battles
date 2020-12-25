@@ -42,7 +42,7 @@ local threat_values = {
 
 local function get_active_biter_count(biter_force_name)
 	local count = 0
-	for _, biter in pairs(global.active_biters[biter_force_name]) do
+	for _, _ in pairs(global.active_biters[biter_force_name]) do
 		count = count + 1
 	end
 	return count
@@ -208,7 +208,7 @@ local function select_units_around_spawner(spawner, force_name, side_target)
 	
 	--Manual spawning of units	
 	local roll_type = unit_type_raffle[math_random(1, size_of_unit_type_raffle)]
-	for c = 1, max_unit_count - unit_count, 1 do
+	for _ = 1, max_unit_count - unit_count, 1 do
 		if threat < 0 then break end
 		local unit_name = BiterRaffle.roll(roll_type, global.bb_evolution[biter_force_name])
 		local position = spawner.surface.find_non_colliding_position(unit_name, spawner.position, 128, 2)
@@ -291,7 +291,7 @@ end
 
 local function get_active_threat(biter_force_name)
 	local active_threat = 0	
-	for unit_number, biter in pairs(global.active_biters[biter_force_name]) do
+	for _, biter in pairs(global.active_biters[biter_force_name]) do
 		if biter.entity then 
 			if biter.entity.valid then
 				active_threat = active_threat + threat_values[biter.entity.name]
@@ -308,7 +308,7 @@ local function get_nearby_biter_nest(target_entity)
 	if not spawner then return end
 	local best_distance = (center.x - spawner.position.x) ^ 2 + (center.y - spawner.position.y) ^ 2
 	
-	for i = 1, 16, 1 do
+	for _ = 1, 16, 1 do
 		local new_spawner = get_random_spawner(biter_force_name)
 		local new_distance = (center.x - new_spawner.position.x) ^ 2 + (center.y - new_spawner.position.y) ^ 2	
 		if new_distance < best_distance then
@@ -398,7 +398,7 @@ Public.wake_up_sleepy_groups = function()
 	local biter_force_name = force_name .. "_biters"
 	local entity
 	local unit_group	
-	for unit_number, biter in pairs(global.active_biters[biter_force_name]) do
+	for _, biter in pairs(global.active_biters[biter_force_name]) do
 		entity = biter.entity
 		if entity then 
 			if entity.valid then
@@ -418,7 +418,7 @@ Public.wake_up_sleepy_groups = function()
 end
 
 --By Maksiu1000 skip the last two tech 
-Public.unlock_satelite = function()
+Public.unlock_satellite = function()
     if game.forces.north.technologies['speed-module-3'].researched 
     and not game.forces.north.technologies['rocket-silo'].researched == true then
 
@@ -457,7 +457,7 @@ Public.raise_evo = function()
 	global.evo_raise_counter = global.evo_raise_counter + (1 * 0.50)
 end
 
---Biter Threat Value Substraction
+--Biter Threat Value Subtraction
 function Public.subtract_threat(entity)
 	if not threat_values[entity.name] then return end
 	if entity.type == "unit" then

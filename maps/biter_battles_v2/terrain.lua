@@ -26,7 +26,7 @@ end
 local size_of_chunk_tile_vectors = #chunk_tile_vectors
 
 local loading_chunk_vectors = {}
-for k, v in pairs(chunk_tile_vectors) do
+for _, v in pairs(chunk_tile_vectors) do
 	if v[1] == 0 or v[1] == 31 or v[2] == 0 or v[2] == 31 then table_insert(loading_chunk_vectors, v) end
 end
 
@@ -96,7 +96,7 @@ local function create_mirrored_tile_chain(surface, tile, count, straightness)
 	}	
 	modifiers = shuffle(modifiers)
 	
-	for a = 1, count, 1 do
+	for _ = 1, count, 1 do
 		local tile_placed = false
 		
 		if math_random(0, 100) > straightness then modifiers = shuffle(modifiers) end
@@ -123,7 +123,7 @@ local function get_replacement_tile(surface, position)
 	for i = 1, 128, 1 do
 		local vectors = {{0, i}, {0, i * -1}, {i, 0}, {i * -1, 0}}
 		table.shuffle_table(vectors)
-		for k, v in pairs(vectors) do
+		for _, v in pairs(vectors) do
 			local tile = surface.get_tile(position.x + v[1], position.y + v[2])
 			if not tile.collides_with("resource-layer") then
 				if tile.name ~= "stone-path" then
@@ -202,7 +202,7 @@ local function generate_starting_area(pos, distance_to_center, surface)
 	-- if noise_2 > -0.5:
 	--      -1.75    0 	    => wall
 	-- else:
-	--   	-6      -3 	 	=> 1/16 chance of turrent or turret-remnants
+	--   	-6      -3 	 	=> 1/16 chance of turret or turret-remnants
 	--   	-1.95    0 	 	=> wall
 	--    	 0       4.5    => chest-remnants with 1/3, chest with 1/(distance_from_spawn_wall+2)
 	--
@@ -314,7 +314,7 @@ local function generate_extra_worm_turrets(surface, left_top)
 			worm.active = false
 			
 			-- add some scrap			
-			for c = 1, math_random(0, 4), 1 do
+			for _ = 1, math_random(0, 4), 1 do
 				local vector = scrap_vectors[math_random(1, size_of_scrap_vectors)]
 				local position = {worm.position.x + vector[1], worm.position.y + vector[2]}
 				local name = wrecks[math_random(1, size_of_wrecks)]					
@@ -521,7 +521,7 @@ function Public.generate_additional_spawn_ore(surface)
 	for ore, ore_count in pairs(ores) do
 		if ore_count < 1000 or ore_count == nil then
 			local pos = {}
-			for a = 1, 32, 1 do
+			for _ = 1, 32, 1 do
 				pos = {x = -96 + math_random(0, 192), y = -20 - math_random(0, 96)}
 				if surface.can_place_entity({name = "coal", position = pos, amount = 1}) then
 					break
@@ -565,7 +565,7 @@ function Public.generate_silo(surface)
 	silo.minable = false
 	silo.active = false
 
-	for i = 1, 32, 1 do
+	for _ = 1, 32, 1 do
 		create_mirrored_tile_chain(surface, {name = "stone-path", position = silo.position}, 32, 10)
 	end
 	
@@ -620,8 +620,8 @@ function Public.minable_wrecks(event)
 	
 	local loot_worth = math_floor(math_abs(entity.position.x * 0.02)) + math_random(16, 32)	
 	local blacklist = LootRaffle.get_tech_blacklist(math_abs(entity.position.x * 0.0001) + 0.10)
-	for k, v in pairs(blacklist) do print(k) end
-	for k, v in pairs(loot_blacklist) do blacklist[k] = true end		
+	for k, _ in pairs(blacklist) do print(k) end
+	for k, _ in pairs(loot_blacklist) do blacklist[k] = true end
 	local item_stacks = LootRaffle.roll(loot_worth, math_random(1, 3), blacklist)
 		
 	for k, stack in pairs(item_stacks) do	
