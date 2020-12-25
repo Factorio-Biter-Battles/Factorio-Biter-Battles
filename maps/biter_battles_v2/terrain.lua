@@ -15,7 +15,7 @@ local spawn_circle_size = 39
 local ores = {"copper-ore", "iron-ore", "stone", "coal"}
 -- mixed_ore_multiplier order is based on the ores variable
 local mixed_ore_multiplier = {1, 1, 1, 1}
-local rocks = {"sand-rock-big","sand-rock-big","rock-big","rock-big","rock-big","rock-big", "rock-huge"}
+local rocks = {"rock-huge", "rock-big", "rock-big", "rock-big", "sand-rock-big"}
 
 local chunk_tile_vectors = {}
 for x = 0, 31, 1 do
@@ -535,8 +535,7 @@ end
 function Public.generate_additional_rocks(surface)
 	local r = 130
 	if surface.count_entities_filtered({type = "simple-entity", area = {{r * -1, r * -1}, {r, 0}}}) >= 12 then return end		
-	local position = {x = -96 + math_random(0, 192), y = -40 - math_random(0, 96)}	
-	local rocks = {"rock-huge", "rock-big", "rock-big", "rock-big", "sand-rock-big"}	
+	local position = {x = -96 + math_random(0, 192), y = -40 - math_random(0, 96)}
 	for _ = 1, math_random(6, 10) do
 		local name = rocks[math_random(1, 5)]
 		local p = surface.find_non_colliding_position(name, {position.x + (-10 + math_random(0, 20)), position.y + (-10 + math_random(0, 20))}, 16, 1)
