@@ -109,8 +109,8 @@ function Public.source_surface()
 	map_gen_settings.terrain_segmentation = math.random(30, 40) * 0.1
 	map_gen_settings.cliff_settings = {cliff_elevation_interval = 0, cliff_elevation_0 = 0}
 	map_gen_settings.autoplace_controls = {
-		["coal"] = {frequency = 6.5, size = 0.24, richness = 0.24},
-		["stone"] = {frequency = 5, size = 0.28, richness = 0.15},
+		["coal"] = {frequency = 6.5, size = 0.34, richness = 0.24},
+		["stone"] = {frequency = 5, size = 0.28, richness = 0.25},
 		["copper-ore"] = {frequency = 6, size = 0.28, richness = 0.3},
 		["iron-ore"] = {frequency = 8.5, size = 0.8, richness = 0.23},
 		["uranium-ore"] = {frequency = 2, size = 1, richness = 1},
