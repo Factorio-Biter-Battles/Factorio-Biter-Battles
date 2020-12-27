@@ -35,7 +35,7 @@ local function add_science_logs(player, element)
 	if global.science_logs_total_north == nil then
 		global.science_logs_total_north = { 0 }
 		global.science_logs_total_south = { 0 }
-		for i = 1, 7 do	
+		for _ = 1, 7 do
 			table.insert(global.science_logs_total_north, 0)
 			table.insert(global.science_logs_total_south, 0)
 		end

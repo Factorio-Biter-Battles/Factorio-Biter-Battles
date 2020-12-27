@@ -67,7 +67,7 @@ end
 
 local tick_minute_functions = {
 	[300 * 1] = Ai.raise_evo,
-	[300 * 1+ 30 * 1] = Ai.unlock_satelite,			--free silo space tech
+	[300 * 1+ 30 * 1] = Ai.unlock_satellite,			--free silo space tech
 	[300 * 2] = Ai.destroy_inactive_biters,
 	[300 * 3 + 30 * 0] = Ai.pre_main_attack,		-- setup for main_attack
 	[300 * 3 + 30 * 1] = Ai.perform_main_attack,	-- call perform_main_attack 7 times on different ticks

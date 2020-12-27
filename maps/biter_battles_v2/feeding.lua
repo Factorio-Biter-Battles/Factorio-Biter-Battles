@@ -80,14 +80,13 @@ local function add_stats(player, food, flask_amount,biter_force_name,evo_before_
 	local n = bb_config.north_side_team_name
 	local s = bb_config.south_side_team_name
 	if global.tm_custom_name["north"] then n = global.tm_custom_name["north"] end
-	if global.tm_custom_name["south"] then s = global.tm_custom_name["south"] end	
+	if global.tm_custom_name["south"] then s = global.tm_custom_name["south"] end
 	local team_strings = {
 		["north"] = table.concat({"[color=120, 120, 255]", n, "[/color]"}),
 		["south"] = table.concat({"[color=255, 65, 65]", s, "[/color]"})
 	}
-	if flask_amount > 1 then
+	if flask_amount > 0 then
 		local tick = game.ticks_played
-		local feed_time = math.round(tick, 0)
 		local feed_time_mins = math.round(tick / (60*60), 0)
 		local minute_unit = ""
 		if feed_time_mins <= 1 then
@@ -114,7 +113,7 @@ local function add_stats(player, food, flask_amount,biter_force_name,evo_before_
 		if global.science_logs_total_north == nil then
 			global.science_logs_total_north = { 0 }
 			global.science_logs_total_south = { 0 }
-			for a = 1, 7 do	
+			for _ = 1, 7 do
 				table.insert(global.science_logs_total_north, 0)
 				table.insert(global.science_logs_total_south, 0)
 			end
@@ -160,7 +159,7 @@ function set_evo_and_threat(flask_amount, food, biter_force_name)
 	
 	local food_value = food_values[food].value * global.difficulty_vote_value
 	
-	for a = 1, flask_amount, 1 do				
+	for _ = 1, flask_amount, 1 do
 		---SET EVOLUTION
 		local e2 = (game.forces[biter_force_name].evolution_factor * 100) + 1
 		local diminishing_modifier = (1 / (10 ^ (e2 * 0.017))) / (e2 * 0.5)

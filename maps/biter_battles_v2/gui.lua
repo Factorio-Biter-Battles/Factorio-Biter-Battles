@@ -134,7 +134,7 @@ function Public.create_main_gui(player)
 	end
 
 	local first_team = true
-	for k, gui_value in pairs(gui_values) do
+	for _, gui_value in pairs(gui_values) do
 		-- Line separator
 		if not first_team then
 			frame.add { type = "line", caption = "this line", direction = "horizontal" }

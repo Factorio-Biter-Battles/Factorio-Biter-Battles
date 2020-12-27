@@ -89,7 +89,7 @@ local function silo_kaboom(entity)
 end
 
 local function get_sorted_list(column_name, score_list)
-    for x = 1, #score_list, 1 do
+    for _ = 1, #score_list, 1 do
         for y = 1, #score_list, 1 do
             if not score_list[y + 1] then break end
             if score_list[y][column_name] < score_list[y + 1][column_name] then
