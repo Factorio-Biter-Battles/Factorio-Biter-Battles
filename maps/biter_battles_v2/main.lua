@@ -53,6 +53,10 @@ local function on_robot_built_entity(event)
 	Functions.add_target_entity(event.created_entity)
 end
 
+local function on_robot_built_tile(event)
+	Terrain.deny_bot_landfill(event)
+end
+
 local function on_entity_died(event)
 	local entity = event.entity
 	if not entity.valid then return end

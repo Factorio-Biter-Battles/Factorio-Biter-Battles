@@ -643,7 +643,6 @@ function Public.minable_wrecks(event)
 	end
 end
 
-
 --Landfill Restriction
 function Public.restrict_landfill(surface, inventory, tiles)
 	for _, t in pairs(tiles) do
@@ -655,6 +654,10 @@ function Public.restrict_landfill(surface, inventory, tiles)
 			inventory.insert({name = "landfill", count = 1})
 		end
 	end
+end
+
+function Public.deny_bot_landfill(event)
+    Public.restrict_landfill(event.robot.surface, event.robot.get_inventory(defines.inventory.robot_cargo), event.tiles)
 end
 
 --Construction Robot Restriction
