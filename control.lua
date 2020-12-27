@@ -31,7 +31,7 @@ require 'comfy_panel.poll'
 require 'comfy_panel.score'
 require 'comfy_panel.config'
 
-require 'modules.autostash'
+--require 'modules.autostash'
 
 ---------------- !ENABLE MODULES HERE ----------------
 --require 'modules.admins_operate_biters'
