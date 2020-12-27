@@ -1,4 +1,5 @@
 local Server = require 'utils.server'
+local Tables = require "maps.biter_battles_v2.tables"
 local string_sub = string.sub
 local math_random = math.random
 local math_round = math.round
@@ -7,39 +8,29 @@ local table_insert = table.insert
 local table_remove = table.remove
 local string_find = string.find
 
+-- Only add upgrade research balancing logic in this section
+-- All values should be in tables.lua
 local balance_functions = {
-	["flamethrower"] = function(force_name)
-		global.combat_balance[force_name].flamethrower_damage = -0.8
-		game.forces[force_name].set_turret_attack_modifier("flamethrower-turret", global.combat_balance[force_name].flamethrower_damage)
-		game.forces[force_name].set_ammo_damage_modifier("flamethrower", global.combat_balance[force_name].flamethrower_damage)
-	end,
 	["refined-flammables"] = function(force_name)
-		global.combat_balance[force_name].flamethrower_damage = global.combat_balance[force_name].flamethrower_damage + 0.02
+		if not global.combat_balance[force_name].flamethrower_damage then global.combat_balance[force_name].flamethrower_damage = get_ammo_modifier("flamethrower") end
+		global.combat_balance[force_name].flamethrower_damage = global.combat_balance[force_name].flamethrower_damage + get_upgrade_modifier("flamethrower")
 		game.forces[force_name].set_turret_attack_modifier("flamethrower-turret", global.combat_balance[force_name].flamethrower_damage)								
 		game.forces[force_name].set_ammo_damage_modifier("flamethrower", global.combat_balance[force_name].flamethrower_damage)
 	end,
-	["land-mine"] = function(force_name)
-		if not global.combat_balance[force_name].land_mine then global.combat_balance[force_name].land_mine = -.9 end
-		game.forces[force_name].set_ammo_damage_modifier("landmine", global.combat_balance[force_name].land_mine)
-	end,
 	
 	["stronger-explosives"] = function(force_name)
-		global.combat_balance[force_name].grenade_damage = global.combat_balance[force_name].grenade_damage + 0.4					
+		if not global.combat_balance[force_name].grenade_damage then global.combat_balance[force_name].grenade_damage = get_ammo_modifier("grenade") end			
+		global.combat_balance[force_name].grenade_damage = global.combat_balance[force_name].grenade_damage + get_upgrade_modifier("grenade")
 		game.forces[force_name].set_ammo_damage_modifier("grenade", global.combat_balance[force_name].grenade_damage)
 
-		if not global.combat_balance[force_name].land_mine then global.combat_balance[force_name].land_mine = -0.9 end
-		global.combat_balance[force_name].land_mine = global.combat_balance[force_name].land_mine + 0.03								
+		if not global.combat_balance[force_name].land_mine then global.combat_balance[force_name].land_mine = get_ammo_modifier("landmine") end
+		global.combat_balance[force_name].land_mine = global.combat_balance[force_name].land_mine + get_upgrade_modifier("landmine")								
 		game.forces[force_name].set_ammo_damage_modifier("landmine", global.combat_balance[force_name].land_mine)
 	end,
-	["military"] = function(force_name)
-		global.combat_balance[force_name].shotgun = 1
-		game.forces[force_name].set_ammo_damage_modifier("shotgun-shell", global.combat_balance[force_name].shotgun)
-	end,
-
 	["physical-projectile-damage"] = function(force_name)
-		global.combat_balance[force_name].shotgun = global.combat_balance[force_name].shotgun + 0.6
+		if not global.combat_balance[force_name].shotgun then global.combat_balance[force_name].shotgun = get_ammo_modifier("shotgun-shell") end
+		global.combat_balance[force_name].shotgun = global.combat_balance[force_name].shotgun + get_upgrade_modifier("shotgun-shell")	
 		game.forces[force_name].set_ammo_damage_modifier("shotgun-shell", global.combat_balance[force_name].shotgun)
-		
 	end,
 }
 
@@ -326,6 +317,22 @@ function Public.map_intro_click(player, element)
 			return true
 		end
 	end	
+end
+
+function get_ammo_modifier(ammo_category)
+	local result = 0
+	if Tables.base_ammo_modifiers[ammo_category] then
+        result = Tables.base_ammo_modifiers[ammo_category]
+	end
+    return result
+end
+
+function get_upgrade_modifier(ammo_category)
+    result = 0
+    if Tables.upgrade_modifiers[ammo_category] then
+        result = Tables.upgrade_modifiers[ammo_category]
+    end
+    return result
 end
 
 return Public

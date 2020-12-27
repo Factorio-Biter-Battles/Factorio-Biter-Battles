@@ -1,6 +1,7 @@
 local Terrain = require "maps.biter_battles_v2.terrain"
 local Force_health_booster = require "modules.force_health_booster"
 local Score = require "comfy_panel.score"
+local Tables = require "maps.biter_battles_v2.tables"
 
 local Public = {}
 
@@ -264,11 +265,21 @@ function Public.forces()
 		global.bb_evolution[force.name] = 0
 		global.bb_threat_income[force.name] = 0
 		global.bb_threat[force.name] = 0
-		game.forces["south"].set_ammo_damage_modifier("bullet", 0.2)
-		game.forces["north"].set_ammo_damage_modifier("bullet", 0.2)
-		-- game.forces["south"].set_ammo_damage_modifier("grenade", -0.5)
-		-- game.forces["north"].set_ammo_damage_modifier("grenade", -0.5)
 	end
+	for _, force in pairs(Tables.ammo_modified_forces_list) do
+		for ammo_category, value in pairs(Tables.base_ammo_modifiers) do
+			game.forces[force]
+				.set_ammo_damage_modifier(ammo_category, value)
+		end
+	end
+
+	for _, force in pairs(Tables.ammo_modified_forces_list) do
+		for turret_category, value in pairs(Tables.base_turret_attack_modifiers) do
+			game.forces[force]
+				.set_turret_attack_modifier(turret_category, value)
+		end
+	end
+
 end
 
 return Public
