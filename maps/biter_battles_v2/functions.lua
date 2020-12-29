@@ -4,6 +4,8 @@ local string_sub = string.sub
 local math_random = math.random
 local math_round = math.round
 local math_abs = math.abs
+local math_min = math.min
+local math_floor = math.floor
 local table_insert = table.insert
 local table_remove = table.remove
 local string_find = string.find
@@ -258,26 +260,42 @@ function Public.share_chat(event)
 
 end
 
-function Public.spy_fish(player)
+function Public.spy_fish(player, event)
+	local button = event.button
+	local ctrl = event.control
 	if not player.character then return end
 	local duration_per_unit = 2700 
 	local i2 = player.get_inventory(defines.inventory.character_main)
 	if not i2 then return end
 	local owned_fish = i2.get_item_count("raw-fish")
-	owned_fish = owned_fish + i2.get_item_count("raw-fish")
+	local send_amount = 1
 	if owned_fish == 0 then
 		player.print("You have no fish in your inventory.",{ r=0.98, g=0.66, b=0.22})
 	else
-		local x = i2.remove({name="raw-fish", count=1})
-		if x == 0 then i2.remove({name="raw-fish", count=1}) end
+		if ctrl then
+			if button == defines.mouse_button_type.left then
+				send_amount = math_min(owned_fish, 100)
+			elseif button == defines.mouse_button_type.right then
+				send_amount = math_min(owned_fish, 50)
+			end
+		else
+			if button == defines.mouse_button_type.left then
+				send_amount = 1
+			elseif button == defines.mouse_button_type.right then
+				send_amount = math_floor(owned_fish / 2)
+			end
+		end
+
+		local x = i2.remove({name="raw-fish", count=send_amount})
+		if x == 0 then i2.remove({name="raw-fish", count=send_amount}) end
 		local enemy_team = "south"
 		if player.force.name == "south" then enemy_team = "north" end													 
 		if global.spy_fish_timeout[player.force.name] - game.tick > 0 then 
-			global.spy_fish_timeout[player.force.name] = global.spy_fish_timeout[player.force.name] + duration_per_unit
+			global.spy_fish_timeout[player.force.name] = global.spy_fish_timeout[player.force.name] + duration_per_unit * send_amount
 			player.print(math.ceil((global.spy_fish_timeout[player.force.name] - game.tick) / 60) .. " seconds of enemy vision left.", { r=0.98, g=0.66, b=0.22})
-		else			
+		else
 			game.print(player.name .. " sent a fish to spy on " .. enemy_team .. " team!", {r=0.98, g=0.66, b=0.22})			
-			global.spy_fish_timeout[player.force.name] = game.tick + duration_per_unit							
+			global.spy_fish_timeout[player.force.name] = game.tick + duration_per_unit * send_amount
 		end		
 	end
 end

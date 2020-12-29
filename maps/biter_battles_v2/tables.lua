@@ -40,7 +40,7 @@ Public.gui_foods = {}
 for k, v in pairs(Public.food_values) do
 	Public.gui_foods[k] = math.floor(v.value * 10000) .. " Mutagen strength"
 end
-Public.gui_foods["raw-fish"] = "Send spy"
+Public.gui_foods["raw-fish"] = "Send a fish to spy for 45 seconds.\nLeft Mouse Button: Send one fish.\nCtrl+LMB: Sends 100 fish.\nRMB: Send half of all fish.\nCtrl+RMB: Sends 50 fish."
 
 Public.force_translation = {
 	["south_biters"] = "south",
