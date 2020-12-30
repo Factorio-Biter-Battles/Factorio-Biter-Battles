@@ -1,6 +1,6 @@
 local Public = {}
 local LootRaffle = require "functions.loot_raffle"
-local BiterRaffle = require "functions.biter_raffle"
+local BiterRaffle = require "maps.biter_battles_v2.biter_raffle"
 local bb_config = require "maps.biter_battles_v2.config"
 
 local table_insert = table.insert
