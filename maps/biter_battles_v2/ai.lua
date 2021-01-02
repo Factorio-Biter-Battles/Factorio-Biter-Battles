@@ -210,8 +210,8 @@ local function select_units_around_spawner(spawner, force_name, side_target)
 	return valid_biters
 end
 
-local function send_group(unit_group, force_name, target)
-	if not target then print("No target for " .. force_name .. " biters.") return end
+local function send_group(unit_group, force_name)
+	local target = global.rocket_silo[force_name]
 	
 	target = target.position
 	
@@ -233,15 +233,8 @@ local function send_group(unit_group, force_name, target)
 	end
 	
 	commands[#commands + 1] = {
-		type = defines.command.attack_area,
-		destination = target,
-		radius = 32,
-		distraction = defines.distraction.by_enemy
-	}
-	
-	commands[#commands + 1] = {
 		type = defines.command.attack,
-		target = global.rocket_silo[force_name],
+		target = target,
 		distraction = defines.distraction.by_damage
 	}
 	
@@ -332,7 +325,7 @@ local function create_attack_group(surface, force_name, biter_force_name)
 	local unit_group = surface.create_unit_group({position = unit_group_position, force = biter_force_name})
 	for _, unit in pairs(units) do unit_group.add_member(unit) end
 	
-	send_group(unit_group, force_name, target)
+	send_group(unit_group, force_name)
 	
 	global.unit_groups[unit_group.group_number] = unit_group
 end
