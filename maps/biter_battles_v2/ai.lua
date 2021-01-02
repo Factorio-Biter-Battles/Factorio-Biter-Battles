@@ -311,13 +311,13 @@ local function create_attack_group(surface, force_name, biter_force_name)
 		return false 
 	end	
 	
-	local side_target = global.rocket_silo[force_name]
-	if not side_target then
-		print("No side target found for " .. force_name .. ".")
+	local target = global.rocket_silo[force_name]
+	if not target then
+		print("No target found for " .. force_name .. ".")
 		return
 	end
 	
-	local spawner = get_nearby_biter_nest(side_target)
+	local spawner = get_nearby_biter_nest(target)
 	if not spawner then
 		print("No spawner found for " .. force_name .. ".")
 		return
@@ -326,13 +326,13 @@ local function create_attack_group(surface, force_name, biter_force_name)
 	local unit_group_position = get_unit_group_position(spawner)
 	if not unit_group_position then return end
 	
-	local units = select_units_around_spawner(spawner, force_name, side_target)
+	local units = select_units_around_spawner(spawner, force_name, target)
 	if not units then return end
 	
 	local unit_group = surface.create_unit_group({position = unit_group_position, force = biter_force_name})
 	for _, unit in pairs(units) do unit_group.add_member(unit) end
 	
-	send_group(unit_group, force_name, side_target)
+	send_group(unit_group, force_name, target)
 	
 	global.unit_groups[unit_group.group_number] = unit_group
 end
