@@ -263,7 +263,7 @@ local function send_group(unit_group, force_name, side_target)
 	commands[#commands + 1] = {
 		type = defines.command.attack,
 		target = global.rocket_silo[force_name],
-		distraction = defines.distraction.by_enemy
+		distraction = defines.distraction.by_damage
 	}
 	
 	unit_group.set_command({
