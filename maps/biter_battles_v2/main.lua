@@ -44,13 +44,11 @@ end
 
 local function on_built_entity(event)
 	Functions.no_turret_creep(event)
-	Functions.add_target_entity(event.created_entity)
 end
 
 local function on_robot_built_entity(event)
 	Functions.no_turret_creep(event)
 	Terrain.deny_construction_bots(event)
-	Functions.add_target_entity(event.created_entity)
 end
 
 local function on_robot_built_tile(event)

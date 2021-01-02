@@ -48,21 +48,6 @@ local function get_active_biter_count(biter_force_name)
 	return count
 end
 
-local function get_target_entity(force_name)
-	local force_index = game.forces[force_name].index	
-	local target_entity = Functions.get_random_target_entity(force_index)
-	if not target_entity then print("Unable to get target entity for " .. force_name .. ".") return end	
-	for _ = 1, 2, 1 do
-		local e = Functions.get_random_target_entity(force_index)
-		if math_abs(e.position.x) < math_abs(target_entity.position.x) then
-			target_entity = e
-		end
-	end	
-	if not target_entity then print("Unable to get target entity for " .. force_name .. ".") return end	
-	--print("Target entity for " .. force_name .. ": " .. target_entity.name .. " at x=" .. target_entity.position.x .. " y=" .. target_entity.position.y)
-	return target_entity
-end
-
 local function get_threat_ratio(biter_force_name)
 	if global.bb_threat[biter_force_name] <= 0 then return 0 end
 	local t1 = global.bb_threat["north_biters"]
