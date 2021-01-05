@@ -264,6 +264,7 @@ function Public.spy_fish(player, event)
 	local button = event.button
 	local shift = event.shift
 	if not player.character then return end
+	if event.control then return end
 	local duration_per_unit = 2700 
 	local i2 = player.get_inventory(defines.inventory.character_main)
 	if not i2 then return end
@@ -292,9 +293,18 @@ function Public.spy_fish(player, event)
 		if player.force.name == "south" then enemy_team = "north" end													 
 		if global.spy_fish_timeout[player.force.name] - game.tick > 0 then 
 			global.spy_fish_timeout[player.force.name] = global.spy_fish_timeout[player.force.name] + duration_per_unit * send_amount
-			player.print(math.ceil((global.spy_fish_timeout[player.force.name] - game.tick) / 60) .. " seconds of enemy vision left.", { r=0.98, g=0.66, b=0.22})
+			spy_time_seconds = math_floor(global.spy_fish_timeout[player.force.name] - game.tick) / 60
+			if spy_time_seconds > 60 then
+				local minute_label = " minute and "
+				if spy_time_seconds > 120 then
+					minute_label = " minutes and "
+				end
+				player.print(math_floor(spy_time_seconds / 60) .. minute_label .. math_floor(spy_time_seconds % 60) .. " seconds of enemy vision left.", { r=0.98, g=0.66, b=0.22})
+			else
+				player.print(spy_time_seconds .. " seconds of enemy vision left.", { r=0.98, g=0.66, b=0.22})
+			end
 		else
-			game.print(player.name .. " sent a fish to spy on " .. enemy_team .. " team!", {r=0.98, g=0.66, b=0.22})			
+			game.print(player.name .. " sent " .. send_amount .. " fish to spy on " .. enemy_team .. " team!", {r=0.98, g=0.66, b=0.22})
 			global.spy_fish_timeout[player.force.name] = game.tick + duration_per_unit * send_amount
 		end		
 	end
