@@ -262,7 +262,7 @@ end
 
 function Public.spy_fish(player, event)
 	local button = event.button
-	local ctrl = event.control
+	local shift = event.shift
 	if not player.character then return end
 	local duration_per_unit = 2700 
 	local i2 = player.get_inventory(defines.inventory.character_main)
@@ -272,17 +272,17 @@ function Public.spy_fish(player, event)
 	if owned_fish == 0 then
 		player.print("You have no fish in your inventory.",{ r=0.98, g=0.66, b=0.22})
 	else
-		if ctrl then
+		if shift then
 			if button == defines.mouse_button_type.left then
-				send_amount = math_min(owned_fish, 100)
+				send_amount = owned_fish
 			elseif button == defines.mouse_button_type.right then
-				send_amount = math_min(owned_fish, 50)
+				send_amount = math_floor(owned_fish / 2)
 			end
 		else
 			if button == defines.mouse_button_type.left then
 				send_amount = 1
 			elseif button == defines.mouse_button_type.right then
-				send_amount = math_floor(owned_fish / 2)
+				send_amount = math_min(owned_fish, 5)
 			end
 		end
 
