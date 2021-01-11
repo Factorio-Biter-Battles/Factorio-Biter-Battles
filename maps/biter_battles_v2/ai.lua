@@ -218,6 +218,11 @@ local function select_units_around_spawner(spawner, force_name, side_target)
 		i = i + 1
 		valid_biters[i] = biter
 		global.active_biters[biter.force.name][biter.unit_number] = {entity = biter, active_since = game.tick}
+		--Announce New Spawn
+		if(global.biter_spawn_unseen[force_name][unit_name]) then
+			game.print("A " .. unit_name:gsub("-", " ") .. " was spotted far away on team " .. force_name .. "...")
+			global.biter_spawn_unseen[force_name][unit_name] = false
+		end
 	end
 		
 	if global.bb_debug then game.print(get_active_biter_count(biter_force_name) .. " active units for " .. biter_force_name) end
