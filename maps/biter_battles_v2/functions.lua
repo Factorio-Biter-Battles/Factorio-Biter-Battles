@@ -234,7 +234,7 @@ function Public.share_chat(event)
 		game.forces.spectator.print(player.name .. tag .. " (south): ".. event.message, color)
 	end
 	
-	if global.tournament_mode and not player.admin then return end
+	if global.tournament_mode then return end
 	
 	if player.force.name == "player" then
 		game.forces.north.print(player.name .. tag .. " (spawn): ".. event.message, color)
