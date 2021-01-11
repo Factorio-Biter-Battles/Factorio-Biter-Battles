@@ -405,7 +405,7 @@ local function on_gui_click(event)
 	if name == "join_north_button" then join_gui_click(name, player) return end
 	if name == "join_south_button" then join_gui_click(name, player) return end
 
-	if name == "raw-fish" then Functions.spy_fish(player) return end
+	if name == "raw-fish" then Functions.spy_fish(player, event) return end
 
 	if food_names[name] then feed_the_biters(player, name) return end
 
