@@ -225,7 +225,9 @@ function Public.share_chat(event)
 	local color = player.chat_color
 
 	local msg = player.name .. tag .. " (" .. player.force.name .. "): ".. event.message
-	game.forces.spectator.print(player.name .. tag .. " (" .. player.force.name .. "): ".. event.message, color)
+	if player.force.name == "north" or player.force.name == "south" then
+		game.forces.spectator.print(player.name .. tag .. " (" .. player.force.name .. "): ".. event.message, color)
+	end
 
 	if global.tournament_mode then return end
 
