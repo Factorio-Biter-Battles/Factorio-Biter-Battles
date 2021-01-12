@@ -71,7 +71,7 @@ local function set_difficulty()
 		vote_count = vote_count + 1
 	end
 	if vote_count == 0 then return end
-	v= math.floor(vote_count/2, 0)+1
+	v= math.floor(vote_count/2)+1
 	table.sort(a)
 	local new_index = a[v]
 	if global.difficulty_vote_index ~= new_index then
