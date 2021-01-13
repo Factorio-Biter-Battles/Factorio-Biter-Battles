@@ -423,7 +423,8 @@ Public.wake_up_sleepy_groups = function()
 end
 
 --By Maksiu1000 skip the last two tech 
-Public.unlock_satellite = function()
+Public.unlock_satellite = function(event)
+    -- TODO: skip not-relevant research
     if game.forces.north.technologies['speed-module-3'].researched 
     and not game.forces.north.technologies['rocket-silo'].researched == true then
 
