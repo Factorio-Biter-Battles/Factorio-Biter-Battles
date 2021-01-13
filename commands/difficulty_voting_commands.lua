@@ -12,6 +12,7 @@ local function revote()
         else
             local tick = game.ticks_played
             global.difficulty_votes_timeout = tick + 10800
+            global.difficulty_player_votes = {}
             msg = player.name .. " opened difficulty voting. Voting enabled for 3 mins"
             game.print(msg)
             Server.to_discord_embed(msg)
