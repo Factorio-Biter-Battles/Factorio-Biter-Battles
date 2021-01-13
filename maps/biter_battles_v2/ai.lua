@@ -424,7 +424,10 @@ end
 
 --By Maksiu1000 skip the last two tech 
 Public.unlock_satellite = function(event)
-    -- TODO: skip not-relevant research
+    -- Skip unrelated events
+    if event.research.name ~= 'speed-module-3' then
+        return
+    end
     if game.forces.north.technologies['speed-module-3'].researched 
     and not game.forces.north.technologies['rocket-silo'].researched == true then
 
