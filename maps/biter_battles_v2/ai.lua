@@ -428,22 +428,12 @@ Public.unlock_satellite = function(event)
     if event.research.name ~= 'speed-module-3' then
         return
     end
-    if game.forces.north.technologies['speed-module-3'].researched 
-    and not game.forces.north.technologies['rocket-silo'].researched == true then
-
-               game.forces.north.technologies['rocket-silo'].researched=true 
-               game.forces.north.technologies['space-science-pack'].researched=true
-    
+    local force = event.research.force
+    if force.technologies['speed-module-3'].researched 
+        and not force.technologies['rocket-silo'].researched then
+        force.technologies['rocket-silo'].researched=true 
+        force.technologies['space-science-pack'].researched=true
     end   
-     
-     if game.forces.south.technologies['speed-module-3'].researched 
-     and not game.forces.south.technologies['rocket-silo'].researched == true then
-
-               game.forces.south.technologies['space-science-pack'].researched=true
-               game.forces.south.technologies['rocket-silo'].researched=true
-    
-      
-    end
 end
 
 Public.raise_evo = function()
