@@ -429,8 +429,7 @@ Public.unlock_satellite = function(event)
         return
     end
     local force = event.research.force
-    if force.technologies['speed-module-3'].researched 
-        and not force.technologies['rocket-silo'].researched then
+    if not force.technologies['rocket-silo'].researched then
         force.technologies['rocket-silo'].researched=true 
         force.technologies['space-science-pack'].researched=true
     end   
