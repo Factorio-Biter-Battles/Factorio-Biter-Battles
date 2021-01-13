@@ -12,7 +12,7 @@ Public.base_ammo_modifiers = {
 	["shotgun-shell"] = 1,
 	["flamethrower"] = -0.75,
 	["landmine"] = -0.9,
-	["grenade"] = -0.6
+	["grenade"] = -0.4
 }
 
 -- turret attack modifier via set_turret_attack_modifier
