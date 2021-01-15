@@ -574,6 +574,12 @@ function Public.generate_silo(surface)
 			entity.destroy()
 		end
 	end
+	local turret1 = surface.create_entity({name = "gun-turret", position = {x=pos.x, y=pos.y-5}, force = "neutral"})
+	turret1.insert({name = "firearm-magazine", count = 10})
+	turret1.active = false
+	local turret2 = surface.create_entity({name = "gun-turret", position = {x=pos.x+2, y=pos.y-5}, force = "neutral"})
+	turret2.insert({name = "firearm-magazine", count = 10})
+	turret2.active = false
 end
 --[[
 function Public.generate_spawn_goodies(surface)
