@@ -423,23 +423,16 @@ Public.wake_up_sleepy_groups = function()
 end
 
 --By Maksiu1000 skip the last two tech 
-Public.unlock_satellite = function()
-    if game.forces.north.technologies['speed-module-3'].researched 
-    and not game.forces.north.technologies['rocket-silo'].researched == true then
-
-               game.forces.north.technologies['rocket-silo'].researched=true 
-               game.forces.north.technologies['space-science-pack'].researched=true
-    
-    end   
-     
-     if game.forces.south.technologies['speed-module-3'].researched 
-     and not game.forces.south.technologies['rocket-silo'].researched == true then
-
-               game.forces.south.technologies['space-science-pack'].researched=true
-               game.forces.south.technologies['rocket-silo'].researched=true
-    
-      
+Public.unlock_satellite = function(event)
+    -- Skip unrelated events
+    if event.research.name ~= 'speed-module-3' then
+        return
     end
+    local force = event.research.force
+    if not force.technologies['rocket-silo'].researched then
+        force.technologies['rocket-silo'].researched=true 
+        force.technologies['space-science-pack'].researched=true
+    end   
 end
 
 Public.raise_evo = function()
