@@ -1,5 +1,4 @@
 local Terrain = require "maps.biter_battles_v2.terrain"
-local Force_health_booster = require "modules.force_health_booster"
 local Score = require "comfy_panel.score"
 local Tables = require "maps.biter_battles_v2.tables"
 
@@ -133,7 +132,6 @@ end
 
 function Public.tables()
 	local get_score = Score.get_table()
-	Force_health_booster.reset_tables()
 	get_score.score_table = {}
 	global.science_logs_text = nil
 	global.science_logs_total_north = nil
