@@ -343,6 +343,15 @@ function Public.server_restart()
     if global.server_restart_timer % 30 == 0 then
         game.print("Map will restart in " .. global.server_restart_timer ..
                        " seconds!", {r = 0.22, g = 0.88, b = 0.22})
+        if global.server_restart_timer / 30 == 4 then
+            game.print("Have any suggestions? Let us know at the #suggestion-discussion channel on our discord at: http://discord.gg/KvDN8tn5sF", {r=0.98, g=0.66, b=0.22})
+        elseif global.server_restart_timer / 30 == 3 then
+            game.print("Did you know we have Captains Mode at 11 AM EST (6 PM CET) and 3 PM EST (10 pm CET) on Saturday?", {r=0.98, g=0.66, b=0.22})
+        elseif global.server_restart_timer / 30 == 2 then
+            game.print("We are introducing Captain's Mode on Tuesday and Thursday as well at the above times.", {r=0.98, g=0.66, b=0.22})
+        elseif global.server_restart_timer / 30 == 1 then
+            game.print("Good luck with your next match!", {r=0.98, g=0.66, b=0.22})
+        end
     end
 end
 

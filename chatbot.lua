@@ -13,7 +13,7 @@ local brain = {
     [2] = {
         'Need an admin? Join our discord at: http://discord.gg/KvDN8tn5sF,',
         'and report it in #support',
-        'If you are trusted, you are eligible to run the command /jail and /free'
+        'If you are trusted, you are eligible to run the command /jail <player-name> "reason" and /free'
     },
     [3] = {'Scenario repository for download:', 'https://github.com/1pulse/Factorio-Biter-Battles'},
     [4] = {
@@ -23,7 +23,11 @@ local brain = {
         'Need a guide to help learn the server?',
         'Check out the pinned messages at our discord\'s #learning channel',
         'for a link to one of many guides written by members of the community.'
-    }
+    },
+    [6] = {
+        'Warning - Foul language will not be tolerated on this server',
+        'Repeated offenses will be met with a jail/ban'
+    },
 }
 
 local links = {
@@ -36,6 +40,9 @@ local links = {
     ['grief'] = brain[2],
     ['griefer'] = brain[2],
     ['griefing'] = brain[2],
+    ['jail'] = brain[2],
+    ['ban'] = brain[2],
+    ['report'] = brain[2],
     ['mod'] = brain[2],
     ['moderator'] = brain[2],
     ['scenario'] = brain[3],
@@ -45,8 +52,18 @@ local links = {
     ['trust'] = brain[4],
     ['trusted'] = brain[4],
     ['untrusted'] = brain[4],
+    ['learn'] = brain[5],
     ['guide'] = brain[5],
     ['meta'] = brain[5],
+    ['asshole'] = brain[6],
+    ['bitch'] = brain[6],
+    ['cunt'] = brain[6],
+    ['fuck'] = brain[6],
+    ['fucking'] = brain[6],
+    ['idiot'] = brain[6],
+    ['moron'] = brain[6],
+    ['retard'] = brain[6],
+    ['stfu'] = brain[6],
 }
 
 local function on_player_created(event)

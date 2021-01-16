@@ -217,47 +217,37 @@ end
 
 --Share chat with spectator force
 function Public.share_chat(event)
-	if not event.message then return end	
-	if not event.player_index then return end	
+	if not event.message then return end
+	if not event.player_index then return end
 	local player = game.players[event.player_index]
 	local tag = player.tag
 	if not tag then tag = "" end
 	local color = player.chat_color
 
 	local msg = player.name .. tag .. " (" .. player.force.name .. "): ".. event.message
-	Server.to_discord_player_chat(msg)
-	
-	if player.force.name == "north" then
-		game.forces.spectator.print(player.name .. tag .. " (north): ".. event.message, color)		
+	if player.force.name == "north" or player.force.name == "south" then
+		game.forces.spectator.print(player.name .. tag .. " (" .. player.force.name .. "): ".. event.message, color)
 	end
-	if player.force.name == "south" then
-		game.forces.spectator.print(player.name .. tag .. " (south): ".. event.message, color)
-	end
-	
+
 	if global.tournament_mode and not player.admin then return end
-	
+
 	if player.force.name == "player" then
 		game.forces.north.print(player.name .. tag .. " (spawn): ".. event.message, color)
 		game.forces.south.print(player.name .. tag .. " (spawn): ".. event.message, color)
 		game.forces.spectator.print(player.name .. tag .. " (spawn): ".. event.message, color)
 	end
-	if player.force.name == "spectator" then	
-	
-		--Skip messages that would spoil coordinates from spectators
-		local a, b = string_find(event.message, "gps=", 1, false)
-		if a then return end	
-		
-		if (event.message:find("^-n ")) then
-			game.forces.north.print(player.name .. tag .. " (spectator): ".. event.message, color)
-		elseif (event.message:find("^-s ")) then 
-			game.forces.south.print(player.name .. tag .. " (spectator): ".. event.message, color)
-		else 
-			game.forces.north.print(player.name .. tag .. " (spectator): ".. event.message, color)
-			game.forces.south.print(player.name .. tag .. " (spectator): ".. event.message, color)
-		end
+
+	--Skip messages that would spoil coordinates from spectators and don't send gps coord to discord
+	local a, b = string_find(event.message, "gps=", 1, false)
+	if a then return end
+
+	local discord_msg = player.name .. " (" .. player.force.name .. "): ".. event.message
+	Server.to_discord_player_chat(discord_msg)
+
+	if player.force.name == "spectator" then
+		game.forces.north.print(player.name .. tag .. " (spectator): ".. event.message, color)
+		game.forces.south.print(player.name .. tag .. " (spectator): ".. event.message, color)
 	end
-
-
 end
 
 function Public.spy_fish(player, event)
@@ -265,7 +255,7 @@ function Public.spy_fish(player, event)
 	local shift = event.shift
 	if not player.character then return end
 	if event.control then return end
-	local duration_per_unit = 2700 
+	local duration_per_unit = 2700
 	local i2 = player.get_inventory(defines.inventory.character_main)
 	if not i2 then return end
 	local owned_fish = i2.get_item_count("raw-fish")
