@@ -13,9 +13,9 @@ local player_data = {}
 local votejail = {}
 local votefree = {}
 local settings = {
-    playtime_for_vote = 25920000, -- 5 days
+    playtime_for_vote = 3600,
     playtime_for_instant_jail = 103680000, -- 20 days
-    votejail_count = 5
+    votejail_count = 3
 }
 local set_data = Server.set_data
 local try_get_data = Server.try_get_data

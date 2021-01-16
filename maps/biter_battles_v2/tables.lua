@@ -10,19 +10,21 @@ Public.ammo_modified_forces_list = {"north", "south", "spectator"}
 Public.base_ammo_modifiers = {
 	["bullet"] = 0.2,
 	["shotgun-shell"] = 1,
-	["flamethrower"] = -0.8,
-	["landmine"] = -0.9
+	["flamethrower"] = -0.75,
+	["landmine"] = -0.9,
+	["grenade"] = -0.4
 }
 
 -- turret attack modifier via set_turret_attack_modifier
 Public.base_turret_attack_modifiers = {
-	["flamethrower-turret"] = -0.8
+	["flamethrower-turret"] = -0.75
 }
 
 Public.upgrade_modifiers = {
-	["flamethrower"] = 0.02,
+	["flamethrower"] = 0.03,
 	["shotgun-shell"] = 0.6,
-	["grenade"] = 0.4,
+	["grenade"] = 0.6,
+	["bullet"] = 0.25,
 	["landmine"] = 0.03
 }
 
