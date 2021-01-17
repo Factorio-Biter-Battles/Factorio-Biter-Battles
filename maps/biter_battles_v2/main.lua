@@ -143,6 +143,7 @@ end
 
 local Event = require 'utils.event'
 Event.add(defines.events.on_research_finished, Ai.unlock_satellite)			--free silo space tech
+Event.add(defines.events.on_entity_died, Ai.on_entity_died)
 Event.add(defines.events.on_built_entity, on_built_entity)
 Event.add(defines.events.on_chunk_generated, on_chunk_generated)
 Event.add(defines.events.on_console_chat, on_console_chat)

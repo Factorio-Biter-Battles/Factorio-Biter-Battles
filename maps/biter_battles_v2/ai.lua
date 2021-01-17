@@ -467,4 +467,24 @@ function Public.subtract_threat(entity)
 	return true
 end
 
+-- biter reanimation based on module/biter_reanimator.lua
+local function reanimate(entity, cut_off)
+	if math_random(1, 10000) > cut_off then	return end
+
+	local revived_entity = entity.clone({position = entity.position, surface = entity.surface, force = entity.force})
+	revived_entity.health = revived_entity.prototype.max_health
+
+	entity.destroy()
+end
+
+Public.on_entity_died = function(event)
+	local entity = event.entity
+	if not entity.valid then return end
+	if entity.type ~= "unit" then return end
+	-- Skip when under 100 evo
+	local cut_off = global.reanimate[entity.force.index]
+	if not cut_off then return end
+	reanimate(entity, cut_off)
+end
+
 return Public

@@ -172,6 +172,7 @@ function Public.tables()
 			["medium-spitter"] = true, ["medium-biter"] = true, ["big-spitter"] = true, ["big-biter"] = true, ["behemoth-spitter"] = true, ["behemoth-biter"] = true
 		}
 	}
+	global.reanimate = {}
 	global.difficulty_votes_timeout = 36000
 	global.next_attack = "north"
 	if math.random(1,2) == 1 then global.next_attack = "south" end
