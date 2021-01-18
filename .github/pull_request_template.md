@@ -1,6 +1,6 @@
 ### Brief description of the changes:
----Fill in---
+Change PR template
 
-### Tested Changes
-- [x] I've tested the changes locally or with people.
+### Tested Changes:
+- [ ] I've tested the changes locally or with people.
 - [ ] I've not tested the changes.
