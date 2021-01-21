@@ -22,6 +22,13 @@ Public.base_turret_attack_modifiers = {
 Public.upgrade_modifiers = {
 	["flamethrower"] = 0.02,
 	["shotgun-shell"] = 0.6,
+	["bullet-1"] = 0.3,
+	["bullet-2"] = 0.3,
+	["bullet-3"] = 0.3,
+	["bullet-4"] = 0.3,
+	["bullet-5"] = 0.3,
+	["bullet-6"] = 0.3,
+	["bullet-7"] = 0.3,
 	["grenade"] = 0.4,
 	["landmine"] = 0.03
 }
