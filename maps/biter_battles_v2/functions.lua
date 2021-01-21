@@ -40,25 +40,25 @@ local balance_functions = {
 		game.forces[force_name].set_ammo_damage_modifier("shotgun-shell", global.combat_balance[force_name].shotgun)
 	end,
 	["physical-projectile-damage-1"] = function(force_name)
-		proj_buff(0.3,force_name)
+		proj_buff(get_upgrade_modifier("bullet-1"),force_name)
 	end,
 	["physical-projectile-damage-2"] = function(force_name)
-		proj_buff(0.3,force_name)
+		proj_buff(get_upgrade_modifier("bullet-2"),force_name)
 	end,
 	["physical-projectile-damage-3"] = function(force_name)
-		proj_buff(0.3,force_name)
+		proj_buff(get_upgrade_modifier("bullet-3"),force_name)
 	end,
 	["physical-projectile-damage-4"] = function(force_name)
-		proj_buff(0.3,force_name)
+		proj_buff(get_upgrade_modifier("bullet-4"),force_name)
 	end,
 	["physical-projectile-damage-5"] = function(force_name)
-		proj_buff(0.3,force_name)
+		proj_buff(get_upgrade_modifier("bullet-5"),force_name)
 	end,
 	["physical-projectile-damage-6"] = function(force_name)
-		proj_buff(0.3,force_name)
+		proj_buff(get_upgrade_modifier("bullet-6"),force_name)
 	end,
 	["physical-projectile-damage-7"] = function(force_name)
-		proj_buff(0.3,force_name)
+		proj_buff(get_upgrade_modifier("bullet-7"),force_name)
 	end,
 }
 
