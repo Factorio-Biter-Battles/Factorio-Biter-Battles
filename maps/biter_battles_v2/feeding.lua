@@ -28,7 +28,7 @@ local function set_biter_endgame_modifiers(force)
 	force.set_ammo_damage_modifier("flamethrower", damage_mod)
 	force.set_ammo_damage_modifier("laser-turret", damage_mod)
 
-	global.reanimate[force.index] = math.floor((global.bb_evolution[force.name] - 1) * 10000)
+	global.reanimate[force.index] = math.floor((global.bb_evolution[force.name] - 1) * 4000)
 end
 
 local function get_enemy_team_of(team)
