@@ -12,9 +12,9 @@ local string_find = string.find
 
 -- Only add upgrade research balancing logic in this section
 -- All values should be in tables.lua
-local function proj_buff(current_value,force_name)
+local function proj_buff(upgrade_value,force_name)
 	if not global.combat_balance[force_name].bullet then global.combat_balance[force_name].bullet = get_ammo_modifier("bullet") end
-	global.combat_balance[force_name].bullet = global.combat_balance[force_name].bullet + current_value
+	global.combat_balance[force_name].bullet = global.combat_balance[force_name].bullet + upgrade_value
 	game.forces[force_name].set_ammo_damage_modifier("bullet", global.combat_balance[force_name].bullet)
 end
 local balance_functions = {
