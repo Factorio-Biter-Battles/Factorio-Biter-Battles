@@ -446,7 +446,7 @@ local function update_difficulty()
     local next_diff = current_diff
     for k, v in pairs(global.difficulty_increases[global.difficulty_vote_index]) do
         if k > minute then break end
-        next_diff = v / 100
+        next_diff = v
     end
     if next_diff == current_diff then
         return
