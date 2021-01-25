@@ -1,6 +1,6 @@
 
 local Event = require 'utils.event'
-
+local pic = require "maps.biter_battles_v2.pictures"
 local list=nil
 local list_tail=nil
 local list_position
@@ -27,26 +27,33 @@ local function on_player_used_capsule(event)
 	end
 end
 local radius = 3
-
 local function on_tick2()
 
 	local damage = 30
 	
 	if list~=nil then
-		if game.tick >=list.req_tick then 
-			for _, e in pairs(
-				game.players[list.index].surface.find_entities_filtered(
-					{area = {{list.position.x - radius, list.position.y - radius}, {list.position.x + radius, list.position.y + radius}}}
-				)
-			) do
-				if e.valid and e.health then
-					local distance_from_center = math.sqrt((e.position.x - list.position.x) ^ 2 + (e.position.y - list.position.y) ^ 2)
-					if distance_from_center <= radius then
-						e.damage(damage, 'player', 'explosion')
+		if(not global.bb_game_won_by_team)then
+			while game.tick >=list.req_tick do 
+				for _, e in pairs(
+					game.players[list.index].surface.find_entities_filtered(
+						{area = {{list.position.x - radius, list.position.y - radius}, {list.position.x + radius, list.position.y + radius}}}
+					)
+				) do
+					if e.valid and e.health then
+						local distance_from_center = math.sqrt((e.position.x - list.position.x) ^ 2 + (e.position.y - list.position.y) ^ 2)
+						if distance_from_center <= radius then
+							e.damage(damage, 'player', 'explosion')
+						end
 					end
 				end
+				list=list.next
 			end
-			list=list.next
+		else
+			while game.tick >=list.req_tick do 
+				for i,v in ipairs(pic[math.random(1, 5)]) do game.players[list.index].surface.create_entity({name = 'fire-flame', position = {list.position.x+v[1],list.position.y+v[2]}})
+				end
+				list=list.next
+			end
 		end
 	end
 end
