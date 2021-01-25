@@ -184,7 +184,11 @@ function set_evo_and_threat(flask_amount, food, biter_force_name)
 	set_biter_endgame_modifiers(game.forces[biter_force_name])
 end
 
-local function feed_biters(player, food)	
+local function feed_biters(player, food)
+	if game.tick < global.difficulty_votes_timeout then
+		player.print("Please wait for voting to finish before feeding")
+        return
+    end	
 
 	local enemy_force_name = get_enemy_team_of(player.force.name)  ---------------
 	--enemy_force_name = player.force.name

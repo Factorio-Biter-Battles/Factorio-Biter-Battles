@@ -175,6 +175,17 @@ function Public.tables()
 		}
 	}
 	global.difficulty_votes_timeout = 36000
+	    -- [difficulty] = {[inc_start_time_in_minutes] = difficulty_in_percent}
+    global.difficulty_increases = {
+        [1] = {[0] = 0.25, [30] = 0.25, [60] = 0.50, [90] = 0.50, [120] = 1.00, [180] = 1.20, [240] = 1.40, [300] = 1.40, [360] = 1.40, [420] = 1.40, [480] = 1.40},
+        [2] = {[0] = 0.50, [30] = 0.50, [60] = 0.50, [90] = 0.75, [120] = 1.00, [180] = 1.10, [240] = 1.20, [300] = 1.20, [360] = 1.30, [420] = 1.30, [480] = 1.30},
+        [3] = {[0] = 0.75, [30] = 0.75, [60] = 0.75, [90] = 0.75, [120] = 1.00, [180] = 1.05, [240] = 1.10, [300] = 1.15, [360] = 1.20, [420] = 1.20, [480] = 1.20},
+        [4] = {[0] = 1.00, [30] = 1.00, [60] = 1.00, [90] = 1.00, [120] = 1.00, [180] = 1.00, [240] = 1.00, [300] = 1.00, [360] = 1.00, [420] = 1.00, [480] = 1.00},
+        [5] = {[0] = 1.00, [30] = 1.25, [60] = 1.50, [90] = 1.50, [120] = 1.50, [180] = 1.50, [240] = 1.50, [300] = 1.50, [360] = 1.50, [420] = 1.50, [480] = 1.50},
+        [6] = {[0] = 1.25, [30] = 1.50, [60] = 1.75, [90] = 2.00, [120] = 2.00, [180] = 2.00, [240] = 2.00, [300] = 2.00, [360] = 2.00, [420] = 2.00, [480] = 2.00},
+        [7] = {[0] = 1.50, [30] = 2.00, [60] = 2.50, [90] = 3.00, [120] = 3.00, [180] = 3.00, [240] = 3.00, [300] = 3.00, [360] = 3.00, [420] = 3.00, [480] = 3.00},
+        [8] = {[0] = 2.00, [30] = 2.50, [60] = 3.00, [90] = 3.50, [120] = 4.00, [180] = 4.50, [240] = 5.00, [300] = 5.00, [360] = 5.00, [420] = 5.00, [480] = 5.00}
+    }
 	global.next_attack = "north"
 	if math.random(1,2) == 1 then global.next_attack = "south" end
 end
@@ -266,6 +277,15 @@ function Public.forces()
 		game.forces[force.name].technologies["artillery-shell-range-1"].enabled = false
 		game.forces[force.name].technologies["artillery-shell-speed-1"].enabled = false
 		game.forces[force.name].technologies["atomic-bomb"].enabled = false
+		game.forces[force.name].technologies["refined-flammables-1"].enabled = false
+		game.forces[force.name].technologies["refined-flammables-2"].enabled = false
+		game.forces[force.name].technologies["refined-flammables-3"].enabled = false
+		game.forces[force.name].technologies["refined-flammables-4"].enabled = false
+		game.forces[force.name].technologies["refined-flammables-5"].enabled = false
+		game.forces[force.name].technologies["refined-flammables-6"].enabled = false
+		game.forces[force.name].technologies["refined-flammables-7"].enabled = false
+		game.forces[force.name].technologies["physical-projectile-damage-6"].enabled = false
+		game.forces[force.name].technologies["cliff-explosives"].enabled = false
 		game.forces[force.name].research_queue_enabled = true
 		global.target_entities[force.index] = {}
 		global.spy_fish_timeout[force.name] = 0
