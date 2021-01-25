@@ -185,6 +185,7 @@ function set_evo_and_threat(flask_amount, food, biter_force_name)
 end
 
 local function feed_biters(player, food)	
+
 	local enemy_force_name = get_enemy_team_of(player.force.name)  ---------------
 	--enemy_force_name = player.force.name
 	
