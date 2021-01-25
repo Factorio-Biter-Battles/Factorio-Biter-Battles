@@ -38,6 +38,7 @@ local balance_functions = {
 		if not global.combat_balance[force_name].shotgun then global.combat_balance[force_name].shotgun = get_ammo_modifier("shotgun-shell") end
 		global.combat_balance[force_name].shotgun = global.combat_balance[force_name].shotgun + get_upgrade_modifier("shotgun-shell")	
 		game.forces[force_name].set_ammo_damage_modifier("shotgun-shell", global.combat_balance[force_name].shotgun)
+		game.forces[force_name].set_turret_attack_modifier("gun-turret",0)
 	end,
 	["physical-projectile-damage-1"] = function(force_name)
 		proj_buff(0.3,force_name)
