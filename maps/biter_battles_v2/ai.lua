@@ -451,7 +451,7 @@ local function update_difficulty()
     if next_diff == current_diff then
         return
     end
-    game.print("Difficulty changed to "..next_diff.."% at minute "..minute)
+    game.print("Difficulty changed to "..math.round(next_diff*100, 2).."% at minute "..math.round(minute, 0))
     global.difficulty_vote_value = next_diff
 end
 
