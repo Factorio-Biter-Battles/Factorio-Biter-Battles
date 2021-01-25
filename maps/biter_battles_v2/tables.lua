@@ -23,7 +23,7 @@ Public.upgrade_modifiers = {
 	["flamethrower"] = 0.02,
 	["shotgun-shell"] = 0.6,
 	["grenade"] = 0.4,
-	["landmine"] = 0.01
+	["landmine"] = 0.04
 }
 
 Public.food_values = {
