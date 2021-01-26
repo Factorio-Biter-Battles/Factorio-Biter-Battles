@@ -288,7 +288,9 @@ function Public.forces()
 				.set_turret_attack_modifier(turret_category, value)
 		end
 	end
-
+	for _, force in pairs(Tables.ammo_modified_forces_list) do
+		game.forces[force].set_gun_speed_modifier("flamethrower",-0.9)
+	end
 end
 
 return Public
