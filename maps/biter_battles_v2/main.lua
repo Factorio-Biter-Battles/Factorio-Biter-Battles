@@ -143,6 +143,7 @@ end
 
 local Event = require 'utils.event'
 Event.add(defines.events.on_research_finished, Ai.unlock_satellite)			--free silo space tech
+Event.add(defines.events.on_entity_died, Ai.on_entity_died)
 Event.add(defines.events.on_built_entity, on_built_entity)
 Event.add(defines.events.on_chunk_generated, on_chunk_generated)
 Event.add(defines.events.on_console_chat, on_console_chat)
@@ -157,10 +158,6 @@ Event.add(defines.events.on_robot_built_entity, on_robot_built_entity)
 Event.add(defines.events.on_robot_built_tile, on_robot_built_tile)
 Event.add(defines.events.on_tick, on_tick)
 Event.on_init(on_init)
-
-Event.add_event_filter(defines.events.on_entity_damaged, {filter = "type", type = "unit"})
-Event.add_event_filter(defines.events.on_entity_damaged, {filter = "type", type = "unit-spawner"})
-Event.add_event_filter(defines.events.on_entity_damaged, {filter = "type", type = "turret"})
 
 require "maps.biter_battles_v2.spec_spy"
 require "maps.biter_battles_v2.difficulty_vote"

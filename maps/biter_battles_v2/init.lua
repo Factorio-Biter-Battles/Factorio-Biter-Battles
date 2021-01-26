@@ -1,5 +1,4 @@
 local Terrain = require "maps.biter_battles_v2.terrain"
-local Force_health_booster = require "modules.force_health_booster"
 local Score = require "comfy_panel.score"
 local Tables = require "maps.biter_battles_v2.tables"
 
@@ -133,7 +132,6 @@ end
 
 function Public.tables()
 	local get_score = Score.get_table()
-	Force_health_booster.reset_tables()
 	get_score.score_table = {}
 	global.science_logs_text = nil
 	global.science_logs_total_north = nil
@@ -174,6 +172,7 @@ function Public.tables()
 			["medium-spitter"] = true, ["medium-biter"] = true, ["big-spitter"] = true, ["big-biter"] = true, ["behemoth-spitter"] = true, ["behemoth-biter"] = true
 		}
 	}
+	global.reanimate = {}
 	global.difficulty_votes_timeout = 36000
 	global.next_attack = "north"
 	if math.random(1,2) == 1 then global.next_attack = "south" end

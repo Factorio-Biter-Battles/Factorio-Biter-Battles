@@ -1,5 +1,4 @@
 local bb_config = require "maps.biter_battles_v2.config"
-local Force_health_booster = require "modules.force_health_booster"
 local Functions = require "maps.biter_battles_v2.functions"
 local Server = require 'utils.server'
 
@@ -28,8 +27,8 @@ local function set_biter_endgame_modifiers(force)
 	force.set_ammo_damage_modifier("artillery-shell", damage_mod)
 	force.set_ammo_damage_modifier("flamethrower", damage_mod)
 	force.set_ammo_damage_modifier("laser-turret", damage_mod)
-	
-	Force_health_booster.set_health_modifier(force.index, Functions.get_health_modifier(force))
+
+	global.reanimate[force.index] = math.floor((global.bb_evolution[force.name] - 1) * 4000)
 end
 
 local function get_enemy_team_of(team)
