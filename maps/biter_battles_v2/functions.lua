@@ -17,14 +17,69 @@ local function proj_buff(current_value,force_name)
 	global.combat_balance[force_name].bullet = global.combat_balance[force_name].bullet + current_value
 	game.forces[force_name].set_ammo_damage_modifier("bullet", global.combat_balance[force_name].bullet)
 end
+local function laser_buff(current_value,force_name)
+		if not global.combat_balance[force_name].laser_damage then global.combat_balance[force_name].laser_damage = get_turret_attack_modifier("laser-turret") end
+		global.combat_balance[force_name].laser_damage = global.combat_balance[force_name].laser_damage + current_value - get_upgrade_modifier("laser-turret")
+		game.forces[force_name].set_turret_attack_modifier("laser-turret", current_value)	
+end
+local function flamer_buff(current_value_ammo,current_value_turret,force_name)
+		if not global.combat_balance[force_name].flame_damage then global.combat_balance[force_name].flame_damage = get_ammo_modifier("flamethrower") end
+		global.combat_balance[force_name].flame_damage = global.combat_balance[force_name].flame_damage + current_value_ammo - get_upgrade_modifier("flamethrower")
+		game.forces[force_name].set_ammo_damage_modifier("flamethrower", global.combat_balance[force_name].flame_damage)
+		
+		if not global.combat_balance[force_name].flamethrower_damage then global.combat_balance[force_name].flamethrower_damage = get_turret_attack_modifier("flamethrower-turret") end
+		global.combat_balance[force_name].flamethrower_damage = global.combat_balance[force_name].flamethrower_damage +current_value_turret - get_upgrade_modifier("flamethrower-turret")
+		game.forces[force_name].set_turret_attack_modifier("flamethrower-turret", global.combat_balance[force_name].flamethrower_damage)	
+end
 local balance_functions = {
 	["refined-flammables"] = function(force_name)
-		if not global.combat_balance[force_name].flamethrower_damage then global.combat_balance[force_name].flamethrower_damage = get_ammo_modifier("flamethrower") end
-		global.combat_balance[force_name].flamethrower_damage = global.combat_balance[force_name].flamethrower_damage + get_upgrade_modifier("flamethrower")
-		game.forces[force_name].set_turret_attack_modifier("flamethrower-turret", global.combat_balance[force_name].flamethrower_damage)								
-		game.forces[force_name].set_ammo_damage_modifier("flamethrower", global.combat_balance[force_name].flamethrower_damage)
+		flamer_buff(get_upgrade_modifier("flamethrower")*2,get_upgrade_modifier("flamethrower-turret")*2,force_name)
 	end,
-	
+	["refined-flammables-1"] = function(force_name)
+		flamer_buff(0.03,0.03,force_name)
+	end,
+	["refined-flammables-2"] = function(force_name)
+		flamer_buff(0.03,0.03,force_name)
+	end,
+	["refined-flammables-3"] = function(force_name)
+		flamer_buff(0.03,0.03,force_name)
+	end,
+	["refined-flammables-4"] = function(force_name)
+		flamer_buff(0.03,0.03,force_name)
+	end,
+	["refined-flammables-5"] = function(force_name)
+		flamer_buff(0.03,0.03,force_name)
+	end,
+	["refined-flammables-6"] = function(force_name)
+		flamer_buff(0.03,0.03,force_name)
+	end,
+	["refined-flammables-7"] = function(force_name)
+		flamer_buff(0.03,0.03,force_name)
+	end,
+	["energy-weapons-damage"] = function(force_name)
+		laser_buff(get_upgrade_modifier("laser-turret")*2,force_name)
+	end,
+	["energy-weapons-damage-1"] = function(force_name)
+		laser_buff(0.3,force_name)
+	end,
+	["energy-weapons-damage-2"] = function(force_name)
+		laser_buff(0.3,force_name)
+	end,
+	["energy-weapons-damage-3"] = function(force_name)
+		laser_buff(0.3,force_name)
+	end,
+	["energy-weapons-damage-4"] = function(force_name)
+		laser_buff(0.3,force_name)
+	end,
+	["energy-weapons-damage-5"] = function(force_name)
+		laser_buff(0.3,force_name)
+	end,
+	["energy-weapons-damage-6"] = function(force_name)
+		laser_buff(0.3,force_name)
+	end,
+	["energy-weapons-damage-7"] = function(force_name)
+		laser_buff(0.3,force_name)
+	end,
 	["stronger-explosives"] = function(force_name)
 		if not global.combat_balance[force_name].grenade_damage then global.combat_balance[force_name].grenade_damage = get_ammo_modifier("grenade") end			
 		global.combat_balance[force_name].grenade_damage = global.combat_balance[force_name].grenade_damage + get_upgrade_modifier("grenade")
@@ -367,6 +422,13 @@ function get_ammo_modifier(ammo_category)
 	local result = 0
 	if Tables.base_ammo_modifiers[ammo_category] then
         result = Tables.base_ammo_modifiers[ammo_category]
+	end
+    return result
+end
+function get_turret_attack_modifier(turret_category)
+	local result = 0
+	if Tables.base_turret_attack_modifiers[turret_category] then
+        result = Tables.base_turret_attack_modifiers[turret_category]
 	end
     return result
 end
