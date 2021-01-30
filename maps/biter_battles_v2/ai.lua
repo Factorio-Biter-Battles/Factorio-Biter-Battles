@@ -435,11 +435,14 @@ Public.unlock_satellite = function(event)
     end   
 end
 
+
+
 Public.raise_evo = function()
 	if global.freeze_players then return end
 	if not global.training_mode and (#game.forces.north.connected_players == 0 or #game.forces.south.connected_players == 0) then return end	
 	local amount = math.ceil(global.difficulty_vote_value * global.evo_raise_counter * 0.75)
 	
+
 	if not global.total_passive_feed_redpotion then global.total_passive_feed_redpotion = 0 end
 	global.total_passive_feed_redpotion = global.total_passive_feed_redpotion + amount
 	
@@ -465,6 +468,26 @@ function Public.subtract_threat(entity)
 	global.bb_threat[entity.force.name] = global.bb_threat[entity.force.name] - threat_values[entity.name]
 	
 	return true
+end
+
+-- biter reanimation based on module/biter_reanimator.lua
+local function reanimate(entity, cut_off)
+	if math_random(1, 10000) > cut_off then	return end
+
+	local revived_entity = entity.clone({position = entity.position, surface = entity.surface, force = entity.force})
+	revived_entity.health = revived_entity.prototype.max_health
+
+	entity.destroy()
+end
+
+Public.on_entity_died = function(event)
+	local entity = event.entity
+	if not entity.valid then return end
+	if entity.type ~= "unit" then return end
+	-- Skip when under 100 evo
+	local cut_off = global.reanimate[entity.force.index]
+	if not cut_off then return end
+	reanimate(entity, cut_off)
 end
 
 return Public

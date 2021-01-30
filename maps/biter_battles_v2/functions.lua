@@ -34,6 +34,11 @@ local balance_functions = {
 		global.combat_balance[force_name].land_mine = global.combat_balance[force_name].land_mine + get_upgrade_modifier("landmine")								
 		game.forces[force_name].set_ammo_damage_modifier("landmine", global.combat_balance[force_name].land_mine)
 	end,
+	["stronger-explosives-1"] = function(force_name)
+		if not global.combat_balance[force_name].land_mine then global.combat_balance[force_name].land_mine = get_ammo_modifier("landmine") end
+		global.combat_balance[force_name].land_mine = global.combat_balance[force_name].land_mine - get_upgrade_modifier("landmine")								
+		game.forces[force_name].set_ammo_damage_modifier("landmine", global.combat_balance[force_name].land_mine)
+	end,
 	["physical-projectile-damage"] = function(force_name)
 		if not global.combat_balance[force_name].shotgun then global.combat_balance[force_name].shotgun = get_ammo_modifier("shotgun-shell") end
 		global.combat_balance[force_name].shotgun = global.combat_balance[force_name].shotgun + get_upgrade_modifier("shotgun-shell")	
@@ -132,11 +137,6 @@ function Public.get_random_target_entity(force_index)
 			if size_of_target_entities == 0 then return end
 		end
 	end
-end
-
-function Public.get_health_modifier(force)
-	if global.bb_evolution[force.name] < 1 then return 1 end
-	return math_round((global.bb_evolution[force.name] - 1) * 3, 3) + 1
 end
 
 function Public.biters_landfill(entity)
