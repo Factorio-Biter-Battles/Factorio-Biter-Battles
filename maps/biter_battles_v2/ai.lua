@@ -436,7 +436,7 @@ Public.unlock_satellite = function(event)
 end
 
 local function update_difficulty()
-    local tick = game.tick
+    local tick = game.ticks_played
     -- wait for vote to end first
 	if tick < global.difficulty_votes_timeout then
         return
