@@ -3,15 +3,20 @@ local event = require 'utils.event'
 local Server = require 'utils.server'
 
 local difficulties = {
+
+
 	
+
 	[1] = {name = "I'm Too Young to Die", str = "25%", value = 0.25, color = {r=0.00, g=0.45, b=0.00}, print_color = {r=0.00, g=0.9, b=0.00}},
 	[2] = {name = "Piece of Cake", str = "50%", value = 0.5, color = {r=0.00, g=0.35, b=0.00}, print_color = {r=0.00, g=0.7, b=0.00}},
 	[3] = {name = "Easy", str = "75%", value = 0.75, color = {r=0.00, g=0.25, b=0.00}, print_color = {r=0.00, g=0.5, b=0.00}},
 	[4] = {name = "Normal", str = "100%", value = 1, color = {r=0.00, g=0.00, b=0.25}, print_color = {r=0.0, g=0.0, b=0.7}},
-	[5] = {name = "Hard", str = "150%", value = 1, color = {r=0.25, g=0.00, b=0.00}, print_color = {r=0.5, g=0.0, b=0.00}},
-	[6] = {name = "Nightmare", str = "200%", value = 1, color = {r=0.35, g=0.00, b=0.00}, print_color = {r=0.7, g=0.0, b=0.00}},
-	[7] = {name = "Ultra-Violence", str = "300%", value = 1, color = {r=0.45, g=0.00, b=0.00}, print_color = {r=0.7, g=0.0, b=0.00}},
-	[8] = {name = "Fun and Fast", str = "500%", value = 1, color = {r=0.55, g=0.00, b=0.00}, print_color = {r=0.9, g=0.0, b=0.00}}
+	[5] = {name = "Hard", str = "125%", value = 1.25, color = {r=0.25, g=0.00, b=0.00}, print_color = {r=0.5, g=0.0, b=0.00}},
+	[6] = {name = "Nightmare", str = "150%", value = 1.5, color = {r=0.35, g=0.00, b=0.00}, print_color = {r=0.7, g=0.0, b=0.00}},
+	[7] = {name = "Ultra-Violence", str = "200%", value = 2, color = {r=0.45, g=0.00, b=0.00}, print_color = {r=0.7, g=0.0, b=0.00}},
+	[8] = {name = "Fun and Fast", str = "300%", value = 3, color = {r=0.55, g=0.00, b=0.00}, print_color = {r=0.9, g=0.0, b=0.00}}
+
+
 }
 
 local function difficulty_gui()
@@ -148,3 +153,9 @@ end
 event.add(defines.events.on_gui_click, on_gui_click)
 event.add(defines.events.on_player_left_game, on_player_left_game)
 event.add(defines.events.on_player_joined_game, on_player_joined_game)
+
+local Public = {}
+Public.difficulties = difficulties
+Public.difficulty_gui = difficulty_gui
+
+return Public
