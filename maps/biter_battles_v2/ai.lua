@@ -20,17 +20,17 @@ for x = vector_radius * -1, vector_radius, 1 do
 end
 local size_of_vectors = #attack_vectors.north
 
-local unit_type_raffle = {"biter", "mixed", "mixed", "spitter", "spitter"}
+local unit_type_raffle = {"biter", "mixed", "mixed","mixed", "spitter", "spitter"}
 local size_of_unit_type_raffle = #unit_type_raffle
 
 local threat_values = {
-	["small-spitter"] = 1.5,
+	["small-spitter"] = 2,
 	["small-biter"] = 1.5,
 	["medium-spitter"] = 4.5,
-	["medium-biter"] = 4.5,
-	["big-spitter"] = 13,
+	["medium-biter"] = 5,
+	["big-spitter"] = 10,
 	["big-biter"] = 13,
-	["behemoth-spitter"] = 38.5,
+	["behemoth-spitter"] = 35,
 	["behemoth-biter"] = 38.5,
 	["small-worm-turret"] = 8,
 	["medium-worm-turret"] = 16,
