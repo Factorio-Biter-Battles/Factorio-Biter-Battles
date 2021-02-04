@@ -1,5 +1,4 @@
 local bb_config = require "maps.biter_battles_v2.config"
-local Force_health_booster = require "modules.force_health_booster"
 local Functions = require "maps.biter_battles_v2.functions"
 local Server = require 'utils.server'
 
@@ -28,8 +27,8 @@ local function set_biter_endgame_modifiers(force)
 	force.set_ammo_damage_modifier("artillery-shell", damage_mod)
 	force.set_ammo_damage_modifier("flamethrower", damage_mod)
 	force.set_ammo_damage_modifier("laser-turret", damage_mod)
-	
-	Force_health_booster.set_health_modifier(force.index, Functions.get_health_modifier(force))
+
+	global.reanimate[force.index] = math.floor((global.bb_evolution[force.name] - 1) * 4000)
 end
 
 local function get_enemy_team_of(team)
@@ -184,11 +183,11 @@ function set_evo_and_threat(flask_amount, food, biter_force_name)
 	set_biter_endgame_modifiers(game.forces[biter_force_name])
 end
 
-local function feed_biters(player, food)
-	if game.tick < global.difficulty_votes_timeout then
+local function feed_biters(player, food)	
+	if game.ticks_played < global.difficulty_votes_timeout then
 		player.print("Please wait for voting to finish before feeding")
-        return
-    end	
+		return
+	end
 
 	local enemy_force_name = get_enemy_team_of(player.force.name)  ---------------
 	--enemy_force_name = player.force.name

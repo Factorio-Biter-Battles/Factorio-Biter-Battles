@@ -2,6 +2,7 @@ local Public = {}
 local BiterRaffle = require "maps.biter_battles_v2.biter_raffle"
 local Functions = require "maps.biter_battles_v2.functions"
 local bb_config = require "maps.biter_battles_v2.config"
+local vote = require "maps.biter_battles_v2.difficulty_vote"
 local math_random = math.random
 local math_abs = math.abs
 
@@ -436,7 +437,9 @@ Public.unlock_satellite = function(event)
 end
 
 local function update_difficulty()
-    local tick = game.tick
+
+    local tick = game.ticks_played
+
     -- wait for vote to end first
 	if tick < global.difficulty_votes_timeout then
         return
@@ -451,8 +454,12 @@ local function update_difficulty()
     if next_diff == current_diff then
         return
     end
-    game.print("Difficulty changed to "..math.round(next_diff*100, 2).."% at minute "..math.round(minute, 0))
+
+    local str = math.floor(100*next_diff).."%"
+    vote.difficulties[global.difficulty_vote_index].str = str
+    game.print("Difficulty changed to "..str.." at minute "..math.floor(minute))
     global.difficulty_vote_value = next_diff
+    vote.difficulty_gui()
 end
 
 
@@ -461,8 +468,8 @@ Public.raise_evo = function()
 	if not global.training_mode and (#game.forces.north.connected_players == 0 or #game.forces.south.connected_players == 0) then return end	
 	local amount = math.ceil(global.difficulty_vote_value * global.evo_raise_counter * 0.75)
 	
-	    update_difficulty()
-	
+    update_difficulty()
+
 
 	if not global.total_passive_feed_redpotion then global.total_passive_feed_redpotion = 0 end
 	global.total_passive_feed_redpotion = global.total_passive_feed_redpotion + amount
@@ -489,6 +496,26 @@ function Public.subtract_threat(entity)
 	global.bb_threat[entity.force.name] = global.bb_threat[entity.force.name] - threat_values[entity.name]
 	
 	return true
+end
+
+-- biter reanimation based on module/biter_reanimator.lua
+local function reanimate(entity, cut_off)
+	if math_random(1, 10000) > cut_off then	return end
+
+	local revived_entity = entity.clone({position = entity.position, surface = entity.surface, force = entity.force})
+	revived_entity.health = revived_entity.prototype.max_health
+
+	entity.destroy()
+end
+
+Public.on_entity_died = function(event)
+	local entity = event.entity
+	if not entity.valid then return end
+	if entity.type ~= "unit" then return end
+	-- Skip when under 100 evo
+	local cut_off = global.reanimate[entity.force.index]
+	if not cut_off then return end
+	reanimate(entity, cut_off)
 end
 
 return Public

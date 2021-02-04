@@ -196,11 +196,6 @@ function Public.get_random_target_entity(force_index)
 	end
 end
 
-function Public.get_health_modifier(force)
-	if global.bb_evolution[force.name] < 1 then return 1 end
-	return math_round((global.bb_evolution[force.name] - 1) * 3, 3) + 1
-end
-
 function Public.biters_landfill(entity)
 	if not landfill_biters[entity.name] then return end	
 	local position = entity.position
