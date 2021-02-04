@@ -188,6 +188,7 @@ local function feed_biters(player, food)
 		player.print("Please wait for voting to finish before feeding")
 		return
 	end
+
 	local enemy_force_name = get_enemy_team_of(player.force.name)  ---------------
 	--enemy_force_name = player.force.name
 	

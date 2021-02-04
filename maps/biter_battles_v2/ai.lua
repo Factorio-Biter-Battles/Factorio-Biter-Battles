@@ -437,7 +437,9 @@ Public.unlock_satellite = function(event)
 end
 
 local function update_difficulty()
+
     local tick = game.ticks_played
+
     -- wait for vote to end first
 	if tick < global.difficulty_votes_timeout then
         return
@@ -452,6 +454,7 @@ local function update_difficulty()
     if next_diff == current_diff then
         return
     end
+
     local str = math.floor(100*next_diff).."%"
     vote.difficulties[global.difficulty_vote_index].str = str
     game.print("Difficulty changed to "..str.." at minute "..math.floor(minute))
@@ -459,12 +462,14 @@ local function update_difficulty()
     vote.difficulty_gui()
 end
 
+
 Public.raise_evo = function()
 	if global.freeze_players then return end
 	if not global.training_mode and (#game.forces.north.connected_players == 0 or #game.forces.south.connected_players == 0) then return end	
 	local amount = math.ceil(global.difficulty_vote_value * global.evo_raise_counter * 0.75)
 	
     update_difficulty()
+
 
 	if not global.total_passive_feed_redpotion then global.total_passive_feed_redpotion = 0 end
 	global.total_passive_feed_redpotion = global.total_passive_feed_redpotion + amount

@@ -174,6 +174,7 @@ function Public.tables()
 	}
 	global.reanimate = {}
 	global.difficulty_votes_timeout = 36000
+
 	-- [difficulty] = {[inc_start_time_in_minutes] = difficulty_in_percent}
 	global.difficulty_increases = {
 		[1] = {[0] = 0.25, [30] = 0.25, [60] = 0.50, [90] = 0.50, [120] = 1.00, [180] = 1.20, [240] = 1.40, [300] = 1.40, [360] = 1.40, [420] = 1.40, [480] = 1.40},
@@ -185,6 +186,7 @@ function Public.tables()
 		[7] = {[0] = 2.00, [30] = 2.00, [60] = 2.50, [90] = 3.00, [120] = 3.00, [180] = 3.00, [240] = 3.00, [300] = 3.00, [360] = 3.00, [420] = 3.00, [480] = 3.00},
 		[8] = {[0] = 3.00, [30] = 3.50, [60] = 4.00, [90] = 4.50, [120] = 5.00, [180] = 5.00, [240] = 5.00, [300] = 5.00, [360] = 5.00, [420] = 5.00, [480] = 5.00}
 	}
+
 	global.next_attack = "north"
 	if math.random(1,2) == 1 then global.next_attack = "south" end
 end
@@ -276,6 +278,12 @@ function Public.forces()
 		game.forces[force.name].technologies["artillery-shell-range-1"].enabled = false
 		game.forces[force.name].technologies["artillery-shell-speed-1"].enabled = false
 		game.forces[force.name].technologies["atomic-bomb"].enabled = false
+
+		game.forces[force.name].technologies["refined-flammables-4"].enabled = false
+		game.forces[force.name].technologies["refined-flammables-5"].enabled = false
+		game.forces[force.name].technologies["refined-flammables-6"].enabled = false
+		game.forces[force.name].technologies["refined-flammables-7"].enabled = false
+		game.forces[force.name].technologies["physical-projectile-damage-6"].enabled = false
 		game.forces[force.name].technologies["cliff-explosives"].enabled = false
 		game.forces[force.name].research_queue_enabled = true
 		global.target_entities[force.index] = {}
