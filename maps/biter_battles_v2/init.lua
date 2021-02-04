@@ -277,9 +277,6 @@ function Public.forces()
 		game.forces[force.name].technologies["artillery-shell-range-1"].enabled = false
 		game.forces[force.name].technologies["artillery-shell-speed-1"].enabled = false
 		game.forces[force.name].technologies["atomic-bomb"].enabled = false
-		game.forces[force.name].technologies["refined-flammables-1"].enabled = false
-		game.forces[force.name].technologies["refined-flammables-2"].enabled = false
-		game.forces[force.name].technologies["refined-flammables-3"].enabled = false
 		game.forces[force.name].technologies["refined-flammables-4"].enabled = false
 		game.forces[force.name].technologies["refined-flammables-5"].enabled = false
 		game.forces[force.name].technologies["refined-flammables-6"].enabled = false
