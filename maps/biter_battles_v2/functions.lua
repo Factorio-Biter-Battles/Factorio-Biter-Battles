@@ -36,10 +36,10 @@ local balance_functions = {
 		flamer_buff(get_upgrade_modifier("flamethrower")*2,get_upgrade_modifier("flamethrower-turret")*2,force_name)
 	end,
 	["refined-flammables-1"] = function(force_name)
-		flamer_buff((2/9),(1/9),force_name)
+		flamer_buff((1/9),(1/9),force_name)
 	end,
 	["refined-flammables-2"] = function(force_name)
-		flamer_buff((2/9),(1/9),force_name)
+		flamer_buff((1/9),(1/9),force_name)
 	end,
 	["refined-flammables-3"] = function(force_name)
 		flamer_buff((1/3),(1/3),force_name)
