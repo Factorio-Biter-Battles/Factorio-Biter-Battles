@@ -17,11 +17,14 @@ Public.base_ammo_modifiers = {
 
 -- turret attack modifier via set_turret_attack_modifier
 Public.base_turret_attack_modifiers = {
-	["flamethrower-turret"] = -(5/9)
+	["flamethrower-turret"] = -(5/9),
+	["laser-turret"] = 0.0
 }
 
 Public.upgrade_modifiers = {
 	["flamethrower"] = 0.02,
+	["flamethrower-turret"] = 0.02,
+	["laser-turret"] = 0.3,
 	["shotgun-shell"] = 0.6,
 	["grenade"] = (6/7),
 	["landmine"] = 0.04
@@ -29,12 +32,12 @@ Public.upgrade_modifiers = {
 
 Public.food_values = {
 	["automation-science-pack"] =		{value = 0.000501, name = "automation science", color = "255, 50, 50"},
-	["logistic-science-pack"] =			{value = 0.00121, name = "logistic science", color = "50, 255, 50"},
-	["military-science-pack"] =			{value = 0.00651, name = "military science", color = "105, 105, 105"},
-	["chemical-science-pack"] = 		{value = 0.0175, name = "chemical science", color = "100, 200, 255"},
-	["production-science-pack"] =		{value = 0.08, name = "production science", color = "150, 25, 255"},
-	["utility-science-pack"] =			{value = 0.135, name = "utility science", color = "210, 210, 60"},
-	["space-science-pack"] = 			{value = 0.5, name = "space science", color = "255, 255, 255"},
+	["logistic-science-pack"] =		{value = 0.00141, name = "logistic science", color = "50, 255, 50"},
+	["military-science-pack"] =		{value = 0.00651, name = "military science", color = "105, 105, 105"},
+	["chemical-science-pack"] = 		{value = 0.02, name = "chemical science", color = "100, 200, 255"},
+	["production-science-pack"] =		{value = 0.1, name = "production science", color = "150, 25, 255"},
+	["utility-science-pack"] =		{value = 0.15, name = "utility science", color = "210, 210, 60"},
+	["space-science-pack"] = 		{value = 0.6, name = "space science", color = "255, 255, 255"},
 }
 
 Public.gui_foods = {}
