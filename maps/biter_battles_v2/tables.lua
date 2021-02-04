@@ -17,7 +17,7 @@ Public.base_ammo_modifiers = {
 
 -- turret attack modifier via set_turret_attack_modifier
 Public.base_turret_attack_modifiers = {
-	["flamethrower-turret"] = -(5/9),
+	["flamethrower-turret"] = -(6/9),
 	["laser-turret"] = 0.0
 }
 
