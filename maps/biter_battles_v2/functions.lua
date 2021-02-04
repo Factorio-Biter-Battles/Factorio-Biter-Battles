@@ -36,19 +36,19 @@ local balance_functions = {
 		flamer_buff(get_upgrade_modifier("flamethrower")*2,get_upgrade_modifier("flamethrower-turret")*2,force_name)
 	end,
 	["refined-flammables-1"] = function(force_name)
-		flamer_buff(0.03,0.03,force_name)
+		flamer_buff((2/9),(1/9),force_name)
 	end,
 	["refined-flammables-2"] = function(force_name)
-		flamer_buff(0.03,0.03,force_name)
+		flamer_buff((2/9),(1/9),force_name)
 	end,
 	["refined-flammables-3"] = function(force_name)
-		flamer_buff(0.03,0.03,force_name)
+		flamer_buff((1/3),(1/3),force_name)
 	end,
 	["refined-flammables-4"] = function(force_name)
-		flamer_buff(0.03,0.03,force_name)
+		flamer_buff((1/9),(1/9),force_name)
 	end,
 	["refined-flammables-5"] = function(force_name)
-		flamer_buff(0.03,0.03,force_name)
+		flamer_buff((1/9),(1/9),force_name)
 	end,
 	["refined-flammables-6"] = function(force_name)
 		flamer_buff(0.03,0.03,force_name)
@@ -60,25 +60,25 @@ local balance_functions = {
 		laser_buff(get_upgrade_modifier("laser-turret")*2,force_name)
 	end,
 	["energy-weapons-damage-1"] = function(force_name)
-		laser_buff(0.3,force_name)
+		laser_buff(0.2,force_name)
 	end,
 	["energy-weapons-damage-2"] = function(force_name)
-		laser_buff(0.3,force_name)
+		laser_buff(0.2,force_name)
 	end,
 	["energy-weapons-damage-3"] = function(force_name)
-		laser_buff(0.3,force_name)
+		laser_buff(0.4,force_name)
 	end,
 	["energy-weapons-damage-4"] = function(force_name)
-		laser_buff(0.3,force_name)
+		laser_buff(0.4,force_name)
 	end,
 	["energy-weapons-damage-5"] = function(force_name)
-		laser_buff(0.3,force_name)
+		laser_buff(0.6,force_name)
 	end,
 	["energy-weapons-damage-6"] = function(force_name)
-		laser_buff(0.3,force_name)
+		laser_buff(0.8,force_name)
 	end,
 	["energy-weapons-damage-7"] = function(force_name)
-		laser_buff(0.3,force_name)
+		laser_buff(0.8,force_name)
 	end,
 	
 	["stronger-explosives"] = function(force_name)
