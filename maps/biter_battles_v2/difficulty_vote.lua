@@ -148,3 +148,9 @@ end
 event.add(defines.events.on_gui_click, on_gui_click)
 event.add(defines.events.on_player_left_game, on_player_left_game)
 event.add(defines.events.on_player_joined_game, on_player_joined_game)
+
+local Public = {}
+Public.difficulties = difficulties
+Public.difficulty_gui = difficulty_gui
+
+return Public

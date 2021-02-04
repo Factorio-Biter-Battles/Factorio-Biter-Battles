@@ -2,6 +2,7 @@ local Public = {}
 local BiterRaffle = require "maps.biter_battles_v2.biter_raffle"
 local Functions = require "maps.biter_battles_v2.functions"
 local bb_config = require "maps.biter_battles_v2.config"
+local vote = require "maps.biter_battles_v2.difficulty_vote"
 local math_random = math.random
 local math_abs = math.abs
 
@@ -451,8 +452,11 @@ local function update_difficulty()
     if next_diff == current_diff then
         return
     end
-    game.print("Difficulty changed to "..next_diff.."% at minute "..minute)
+    local str = math.floor(100*next_diff).."%"
+    vote.difficulties[global.difficulty_vote_index].str = str
+    game.print("Difficulty changed to "..str.." at minute "..math.floor(minute))
     global.difficulty_vote_value = next_diff
+    vote.difficulty_gui()
 end
 
 Public.raise_evo = function()
