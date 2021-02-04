@@ -111,7 +111,7 @@ local balance_functions = {
 		proj_buff(0.6,force_name)
 	end,
 	["physical-projectile-damage-4"] = function(force_name)
-		proj_buff(0.4,force_name)
+		proj_buff(0.6,force_name)
 	end,
 	["physical-projectile-damage-5"] = function(force_name)
 		proj_buff(0.4,force_name)
