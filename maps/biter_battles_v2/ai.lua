@@ -228,6 +228,23 @@ local function select_units_around_spawner(spawner, force_name, side_target)
 	return valid_biters
 end
 
+local group_path_flags_nocache_straight =
+{
+  cache = false,
+  prefer_straight_paths = true
+}
+
+local group_path_flags_cache_straight_lowprio =
+{
+  prefer_straight_paths = true,
+  low_priority = true
+}
+
+local group_path_flags_nocache =
+{
+  cache = false
+}
+
 local function send_group(unit_group, force_name, side_target)
 	local target
 	if side_target then
@@ -251,7 +268,8 @@ local function send_group(unit_group, force_name, side_target)
 				type = defines.command.attack_area,
 				destination = position,
 				radius = 16,
-				distraction = defines.distraction.by_enemy
+				distraction = defines.distraction.by_enemy,
+				pathfind_flags = group_path_flags_cache_straight_lowprio
 			}
 		end
 	end
@@ -260,13 +278,15 @@ local function send_group(unit_group, force_name, side_target)
 		type = defines.command.attack_area,
 		destination = target,
 		radius = 32,
-		distraction = defines.distraction.by_enemy
+		distraction = defines.distraction.by_enemy,
+		pathfind_flags = group_path_flags_nocache_straight
 	}
 	
 	commands[#commands + 1] = {
 		type = defines.command.attack,
 		target = global.rocket_silo[force_name],
-		distraction = defines.distraction.by_damage
+		distraction = defines.distraction.by_damage,
+		pathfind_flags = group_path_flags_nocache
 	}
 	
 	unit_group.set_command({
