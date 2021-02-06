@@ -202,7 +202,7 @@ local function send_group(unit_group, force_name, side_target)
 
 	local commands = {}
 	local vector = attack_vectors[force_name][math_random(1, size_of_vectors)]
-	local distance_modifier = math_random(25, 100) * 0.01
+	local distance_modifier = math_random(1, 8) * 0.128
 
 	local position = {target.x + (vector[1] * distance_modifier), target.y + (vector[2] * distance_modifier)}
 	position = unit_group.surface.find_non_colliding_position("stone-furnace", position, 96, 1)
