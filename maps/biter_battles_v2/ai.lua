@@ -266,28 +266,42 @@ local function send_group(unit_group, force_name, side_target)
 	if position then
 		if math.abs(position.y) < math.abs(unit_group.position.y) then
 			commands[#commands + 1] = {
-				type = defines.command.attack_area,
+				type = defines.command.go_to_location,
 				destination = position,
-				radius = 16,
+				radius = 64,
 				distraction = defines.distraction.by_enemy,
 				pathfind_flags = group_path_flags_cache_straight_lowprio
 			}
 		end
 	end
 	
+    commands[#commands + 1] = {
+		type = defines.command.go_to_location,
+		destination = target,
+		radius = 64,
+		distraction = defines.distraction.by_enemy,
+		pathfind_flags = group_path_flags_nocache_straight
+	}
+	
 	commands[#commands + 1] = {
 		type = defines.command.attack_area,
 		destination = target,
-		radius = 32,
+		radius = 16,
 		distraction = defines.distraction.by_enemy,
-		pathfind_flags = group_path_flags_nocache_straight
+	}
+	
+    commands[#commands + 1] = {
+		type = defines.command.go_to_location,
+		destination = global.rocket_silo[force_name].position,
+        radius = 64,
+		distraction = defines.distraction.by_damage,
+		pathfind_flags = group_path_flags_nocache_nobreak
 	}
 	
 	commands[#commands + 1] = {
 		type = defines.command.attack,
 		target = global.rocket_silo[force_name],
 		distraction = defines.distraction.by_damage,
-		pathfind_flags = group_path_flags_nocache_nobreak
 	}
 	
 	unit_group.set_command({
