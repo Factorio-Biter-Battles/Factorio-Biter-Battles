@@ -240,9 +240,10 @@ local group_path_flags_cache_straight_lowprio =
   low_priority = true
 }
 
-local group_path_flags_nocache =
+local group_path_flags_nocache_nobreak =
 {
-  cache = false
+  cache = false,
+  no_break = true
 }
 
 local function send_group(unit_group, force_name, side_target)
@@ -286,7 +287,7 @@ local function send_group(unit_group, force_name, side_target)
 		type = defines.command.attack,
 		target = global.rocket_silo[force_name],
 		distraction = defines.distraction.by_damage,
-		pathfind_flags = group_path_flags_nocache
+		pathfind_flags = group_path_flags_nocache_nobreak
 	}
 	
 	unit_group.set_command({
