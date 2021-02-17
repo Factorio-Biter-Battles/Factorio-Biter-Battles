@@ -425,11 +425,11 @@ end
 --By Maksiu1000 skip the last two tech 
 Public.unlock_satellite = function(event)
     -- Skip unrelated events
-    if event.research.name ~= 'speed-module-3' then
+    if event.research.name ~= 'rocket-silo' then
         return
     end
     local force = event.research.force
-    if not force.technologies['rocket-silo'].researched then
+    if not force.technologies['space-science-pack'].researched then
         force.technologies['space-science-pack'].researched=true
     end   
 end
