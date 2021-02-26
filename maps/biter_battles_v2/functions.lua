@@ -283,7 +283,7 @@ function Public.spy_fish(player, event)
 		if player.force.name == "south" then enemy_team = "north" end													 
 		if global.spy_fish_timeout[player.force.name] - game.tick > 0 then 
 			global.spy_fish_timeout[player.force.name] = global.spy_fish_timeout[player.force.name] + duration_per_unit * send_amount
-			spy_time_seconds = math_floor(global.spy_fish_timeout[player.force.name] - game.tick) / 60
+			spy_time_seconds = math_floor((global.spy_fish_timeout[player.force.name] - game.tick) / 60)
 			if spy_time_seconds > 60 then
 				local minute_label = " minute and "
 				if spy_time_seconds > 120 then
