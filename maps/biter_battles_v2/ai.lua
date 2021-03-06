@@ -437,7 +437,9 @@ Public.unlock_satellite = function(event)
 end
 
 local function update_difficulty()
+	
     local tick = game.ticks_played
+	
     -- wait for vote to end first
 	if tick < global.difficulty_votes_timeout then
         return
@@ -452,6 +454,7 @@ local function update_difficulty()
     if next_diff == current_diff then
         return
     end
+	
     local str = math.floor(100*next_diff).."%"
     vote.difficulties[global.difficulty_vote_index].str = str
     game.print("Difficulty changed to "..str.." at minute "..math.floor(minute))
