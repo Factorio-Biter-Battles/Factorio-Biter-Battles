@@ -174,6 +174,7 @@ function Public.tables()
 	}
 	global.reanimate = {}
 	global.difficulty_votes_timeout = 36000
+	
 		-- [difficulty] = {[inc_start_time_in_minutes] = difficulty_in_percent}
 	global.difficulty_increases = {
 		[1] = {[0] = 0.25, [30] = 0.25, [60] = 0.50, [90] = 0.50, [120] = 0.75, [180] = 0.75, [240] = 0.75, [300] = 0.75, [360] = 0.75, [420] = 0.75, [480] = 0.75},
@@ -184,6 +185,7 @@ function Public.tables()
 		[6] = {[0] = 3.00, [30] = 3.00, [60] = 3.00, [90] = 3.00, [120] = 3.00, [180] = 3.00, [240] = 3.00, [300] = 3.00, [360] = 3.00, [420] = 3.00, [480] = 3.00},
 		[7] = {[0] = 5.00, [30] = 5.00, [60] = 5.00, [90] = 5.00, [120] = 5.00, [180] = 5.00, [240] = 5.00, [300] = 5.00, [360] = 5.00, [420] = 5.00, [480] = 5.00}
 	}
+	
 	global.next_attack = "north"
 	if math.random(1,2) == 1 then global.next_attack = "south" end
 end
