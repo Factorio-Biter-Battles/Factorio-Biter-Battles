@@ -60,25 +60,25 @@ local balance_functions = {
 		laser_buff(get_upgrade_modifier("laser-turret")*2,force_name)
 	end,
 	["energy-weapons-damage-1"] = function(force_name)
-		laser_buff(0.3,force_name)
+		laser_buff(0.2,force_name)
 	end,
 	["energy-weapons-damage-2"] = function(force_name)
-		laser_buff(0.3,force_name)
+		laser_buff(0.2,force_name)
 	end,
 	["energy-weapons-damage-3"] = function(force_name)
-		laser_buff(0.3,force_name)
+		laser_buff(0.4,force_name)
 	end,
 	["energy-weapons-damage-4"] = function(force_name)
-		laser_buff(0.3,force_name)
+		laser_buff(0.4,force_name)
 	end,
 	["energy-weapons-damage-5"] = function(force_name)
-		laser_buff(0.3,force_name)
+		laser_buff(0.4,force_name)
 	end,
 	["energy-weapons-damage-6"] = function(force_name)
-		laser_buff(0.3,force_name)
+		laser_buff(0.8,force_name)
 	end,
 	["energy-weapons-damage-7"] = function(force_name)
-		laser_buff(0.3,force_name)
+		laser_buff(1.0,force_name)
 	end,
 	["stronger-explosives"] = function(force_name)
 		if not global.combat_balance[force_name].grenade_damage then global.combat_balance[force_name].grenade_damage = get_ammo_modifier("grenade") end			
