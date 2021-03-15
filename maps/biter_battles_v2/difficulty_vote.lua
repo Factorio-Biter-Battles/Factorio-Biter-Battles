@@ -60,19 +60,15 @@ local function poll_difficulty(player)
 end
 
 local function set_difficulty()
-	local a = {}
+	local sum = 0
 	local vote_count = 0
-	local c = 0
-	local v = 0
 	for _, d in pairs(global.difficulty_player_votes) do
-		c = c + 1
-		a[c] = d
+		sum = sum + d
 		vote_count = vote_count + 1
 	end
 	if vote_count == 0 then return end
-	v= math.floor(vote_count/2)+1
-	table.sort(a)
-	local new_index = a[v]
+	sum = sum / vote_count
+	local new_index = math.round(sum, 0)
 	if global.difficulty_vote_index ~= new_index then
 		local message = table.concat({">> Map difficulty has changed to ", difficulties[new_index].name, " difficulty!"})
 		game.print(message, difficulties[new_index].print_color)
