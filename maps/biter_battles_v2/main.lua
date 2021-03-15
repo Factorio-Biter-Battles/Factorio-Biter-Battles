@@ -41,16 +41,88 @@ end
 local function on_console_chat(event)
 	Functions.share_chat(event)
 end
-
+local entity_limits = {
+        ['north'] = {placed = 0, limit = 3000, str = 'land-mine'},
+        ['south'] = {placed = 0, limit = 3000, str = 'land-mine'},
+    }
 local function on_built_entity(event)
 	Functions.no_turret_creep(event)
 	Functions.add_target_entity(event.created_entity)
+	
+	local entity=event.created_entity
+	if(entity.name=='land-mine')then
+	if entity_limits[entity.force.name].placed < entity_limits[entity.force.name].limit then
+			entity_limits[entity.force.name].placed = entity_limits[entity.force.name].placed + 1
+				if(entity_limits[entity.force.name].placed%10==0)then
+					entity.surface.create_entity(
+					{
+						name = 'flying-text',
+						position = entity.position,
+						text = entity_limits[entity.force.name].placed ..
+							' / ' .. entity_limits[entity.force.name].limit .. ' ' .. entity_limits[entity.force.name].str .. 's',
+						color = {r = 0.98, g = 0.66, b = 0.22}
+					}
+            )
+			end
+        else
+            entity.surface.create_entity(
+                {
+                    name = 'flying-text',
+                    position = entity.position,
+                    text = entity_limits[entity.force.name].str .. ' limit reached.',
+                    color = {r = 0.82, g = 0.11, b = 0.11}
+                }
+            )
+			local player = game.players[event.player_index]
+            player.insert({name = entity.name, count = 1})
+            if get_score then
+                if get_score[player.force.name] then
+                    if get_score[player.force.name].players[player.name] then
+                        get_score[player.force.name].players[player.name].built_entities =
+                            get_score[player.force.name].players[player.name].built_entities - 1
+                    end
+                end
+            end
+            entity.destroy()
+		end
+	end
 end
 
 local function on_robot_built_entity(event)
 	Functions.no_turret_creep(event)
 	Terrain.deny_construction_bots(event)
 	Functions.add_target_entity(event.created_entity)
+	
+	local entity=event.created_entity
+	if(entity.name=='land-mine')then
+	if entity_limits[entity.force.name].placed < entity_limits[entity.force.name].limit then
+			entity_limits[entity.force.name].placed = entity_limits[entity.force.name].placed + 1
+				if(entity_limits[entity.force.name].placed%10==0)then
+					entity.surface.create_entity(
+					{
+						name = 'flying-text',
+						position = entity.position,
+						text = entity_limits[entity.force.name].placed ..
+							' / ' .. entity_limits[entity.force.name].limit .. ' ' .. entity_limits[entity.force.name].str .. 's',
+						color = {r = 0.98, g = 0.66, b = 0.22}
+					}
+            )
+			end
+        else
+            entity.surface.create_entity(
+                {
+                    name = 'flying-text',
+                    position = entity.position,
+                    text = entity_limits[entity.force.name].str .. ' limit reached.',
+                    color = {r = 0.82, g = 0.11, b = 0.11}
+                }
+            )
+			local inventory = event.robot.get_inventory(defines.inventory.robot_cargo)
+            inventory.insert({name = entity.name, count = 1})
+            entity.destroy()
+		end
+	end
+
 end
 
 local function on_robot_built_tile(event)
@@ -63,6 +135,9 @@ local function on_entity_died(event)
 	if Ai.subtract_threat(entity) then Gui.refresh_threat() end
 	if Functions.biters_landfill(entity) then return end
 	Game_over.silo_death(event)
+	if(entity.name=='land-mine')then
+        entity_limits[event.entity.force.name].placed = entity_limits[event.entity.force.name].placed - 1
+	end
 end
 
 local tick_minute_functions = {
@@ -126,8 +201,15 @@ end
 
 local function on_player_mined_entity(event)
 	Terrain.minable_wrecks(event)
+	if(event.entity.name=='land-mine')then
+        entity_limits[event.entity.force.name].placed = entity_limits[event.entity.force.name].placed - 1
+	end
 end
-
+local function on_robot_mined_entity(event)
+	if(event.entity.name=='land-mine')then
+        entity_limits[event.entity.force.name].placed = entity_limits[event.entity.force.name].placed - 1
+	end
+end
 local function on_chunk_generated(event)
 	Terrain.generate(event)
 	Mirror_terrain.add_chunk(event)
@@ -153,6 +235,7 @@ Event.add(defines.events.on_marked_for_deconstruction, on_marked_for_deconstruct
 Event.add(defines.events.on_player_built_tile, on_player_built_tile)
 Event.add(defines.events.on_player_joined_game, on_player_joined_game)
 Event.add(defines.events.on_player_mined_entity, on_player_mined_entity)
+Event.add(defines.events.on_robot_mined_entity, on_robot_mined_entity)
 Event.add(defines.events.on_research_finished, on_research_finished)
 Event.add(defines.events.on_robot_built_entity, on_robot_built_entity)
 Event.add(defines.events.on_robot_built_tile, on_robot_built_tile)
