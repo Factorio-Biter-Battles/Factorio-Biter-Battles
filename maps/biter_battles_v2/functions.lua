@@ -12,14 +12,74 @@ local string_find = string.find
 
 -- Only add upgrade research balancing logic in this section
 -- All values should be in tables.lua
+local function proj_buff(current_value,force_name)
+	if not global.combat_balance[force_name].bullet then global.combat_balance[force_name].bullet = get_ammo_modifier("bullet") end
+	global.combat_balance[force_name].bullet = global.combat_balance[force_name].bullet + current_value
+	game.forces[force_name].set_ammo_damage_modifier("bullet", global.combat_balance[force_name].bullet)
+end
+local function laser_buff(current_value,force_name)
+		if not global.combat_balance[force_name].laser_damage then global.combat_balance[force_name].laser_damage = get_turret_attack_modifier("laser-turret") end
+		global.combat_balance[force_name].laser_damage = global.combat_balance[force_name].laser_damage + current_value - get_upgrade_modifier("laser-turret")
+		game.forces[force_name].set_turret_attack_modifier("laser-turret", current_value)	
+end
+local function flamer_buff(current_value_ammo,current_value_turret,force_name)
+		if not global.combat_balance[force_name].flame_damage then global.combat_balance[force_name].flame_damage = get_ammo_modifier("flamethrower") end
+		global.combat_balance[force_name].flame_damage = global.combat_balance[force_name].flame_damage + current_value_ammo - get_upgrade_modifier("flamethrower")
+		game.forces[force_name].set_ammo_damage_modifier("flamethrower", global.combat_balance[force_name].flame_damage)
+		
+		if not global.combat_balance[force_name].flamethrower_damage then global.combat_balance[force_name].flamethrower_damage = get_turret_attack_modifier("flamethrower-turret") end
+		global.combat_balance[force_name].flamethrower_damage = global.combat_balance[force_name].flamethrower_damage +current_value_turret - get_upgrade_modifier("flamethrower-turret")
+		game.forces[force_name].set_turret_attack_modifier("flamethrower-turret", global.combat_balance[force_name].flamethrower_damage)	
+end
 local balance_functions = {
 	["refined-flammables"] = function(force_name)
-		if not global.combat_balance[force_name].flamethrower_damage then global.combat_balance[force_name].flamethrower_damage = get_ammo_modifier("flamethrower") end
-		global.combat_balance[force_name].flamethrower_damage = global.combat_balance[force_name].flamethrower_damage + get_upgrade_modifier("flamethrower")
-		game.forces[force_name].set_turret_attack_modifier("flamethrower-turret", global.combat_balance[force_name].flamethrower_damage)								
-		game.forces[force_name].set_ammo_damage_modifier("flamethrower", global.combat_balance[force_name].flamethrower_damage)
+		flamer_buff(get_upgrade_modifier("flamethrower")*2,get_upgrade_modifier("flamethrower-turret")*2,force_name)
 	end,
-	
+	["refined-flammables-1"] = function(force_name)
+		flamer_buff(0.03,0.03,force_name)
+	end,
+	["refined-flammables-2"] = function(force_name)
+		flamer_buff(0.03,0.03,force_name)
+	end,
+	["refined-flammables-3"] = function(force_name)
+		flamer_buff(0.03,0.03,force_name)
+	end,
+	["refined-flammables-4"] = function(force_name)
+		flamer_buff(0.03,0.03,force_name)
+	end,
+	["refined-flammables-5"] = function(force_name)
+		flamer_buff(0.03,0.03,force_name)
+	end,
+	["refined-flammables-6"] = function(force_name)
+		flamer_buff(0.03,0.03,force_name)
+	end,
+	["refined-flammables-7"] = function(force_name)
+		flamer_buff(0.03,0.03,force_name)
+	end,
+	["energy-weapons-damage"] = function(force_name)
+		laser_buff(get_upgrade_modifier("laser-turret")*2,force_name)
+	end,
+	["energy-weapons-damage-1"] = function(force_name)
+		laser_buff(0.2,force_name)
+	end,
+	["energy-weapons-damage-2"] = function(force_name)
+		laser_buff(0.2,force_name)
+	end,
+	["energy-weapons-damage-3"] = function(force_name)
+		laser_buff(0.4,force_name)
+	end,
+	["energy-weapons-damage-4"] = function(force_name)
+		laser_buff(0.4,force_name)
+	end,
+	["energy-weapons-damage-5"] = function(force_name)
+		laser_buff(0.4,force_name)
+	end,
+	["energy-weapons-damage-6"] = function(force_name)
+		laser_buff(0.8,force_name)
+	end,
+	["energy-weapons-damage-7"] = function(force_name)
+		laser_buff(1.0,force_name)
+	end,
 	["stronger-explosives"] = function(force_name)
 		if not global.combat_balance[force_name].grenade_damage then global.combat_balance[force_name].grenade_damage = get_ammo_modifier("grenade") end			
 		global.combat_balance[force_name].grenade_damage = global.combat_balance[force_name].grenade_damage + get_upgrade_modifier("grenade")
@@ -29,10 +89,37 @@ local balance_functions = {
 		global.combat_balance[force_name].land_mine = global.combat_balance[force_name].land_mine + get_upgrade_modifier("landmine")								
 		game.forces[force_name].set_ammo_damage_modifier("landmine", global.combat_balance[force_name].land_mine)
 	end,
+	["stronger-explosives-1"] = function(force_name)
+		if not global.combat_balance[force_name].land_mine then global.combat_balance[force_name].land_mine = get_ammo_modifier("landmine") end
+		global.combat_balance[force_name].land_mine = global.combat_balance[force_name].land_mine - get_upgrade_modifier("landmine")								
+		game.forces[force_name].set_ammo_damage_modifier("landmine", global.combat_balance[force_name].land_mine)
+	end,
 	["physical-projectile-damage"] = function(force_name)
 		if not global.combat_balance[force_name].shotgun then global.combat_balance[force_name].shotgun = get_ammo_modifier("shotgun-shell") end
 		global.combat_balance[force_name].shotgun = global.combat_balance[force_name].shotgun + get_upgrade_modifier("shotgun-shell")	
 		game.forces[force_name].set_ammo_damage_modifier("shotgun-shell", global.combat_balance[force_name].shotgun)
+		game.forces[force_name].set_turret_attack_modifier("gun-turret",0)
+	end,
+	["physical-projectile-damage-1"] = function(force_name)
+		proj_buff(0.3,force_name)
+	end,
+	["physical-projectile-damage-2"] = function(force_name)
+		proj_buff(0.3,force_name)
+	end,
+	["physical-projectile-damage-3"] = function(force_name)
+		proj_buff(0.3,force_name)
+	end,
+	["physical-projectile-damage-4"] = function(force_name)
+		proj_buff(0.3,force_name)
+	end,
+	["physical-projectile-damage-5"] = function(force_name)
+		proj_buff(0.3,force_name)
+	end,
+	["physical-projectile-damage-6"] = function(force_name)
+		proj_buff(0.3,force_name)
+	end,
+	["physical-projectile-damage-7"] = function(force_name)
+		proj_buff(0.3,force_name)
 	end,
 }
 
@@ -107,11 +194,6 @@ function Public.get_random_target_entity(force_index)
 	end
 end
 
-function Public.get_health_modifier(force)
-	if global.bb_evolution[force.name] < 1 then return 1 end
-	return math_round((global.bb_evolution[force.name] - 1) * 3, 3) + 1
-end
-
 function Public.biters_landfill(entity)
 	if not landfill_biters[entity.name] then return end	
 	local position = entity.position
@@ -146,7 +228,6 @@ function Public.combat_balance(event)
 		if balance_functions[key] then
 			if not global.combat_balance[force_name] then global.combat_balance[force_name] = {} end
 			balance_functions[key](force_name)
-			return
 		end
 	end
 end
@@ -283,7 +364,7 @@ function Public.spy_fish(player, event)
 		if player.force.name == "south" then enemy_team = "north" end													 
 		if global.spy_fish_timeout[player.force.name] - game.tick > 0 then 
 			global.spy_fish_timeout[player.force.name] = global.spy_fish_timeout[player.force.name] + duration_per_unit * send_amount
-			spy_time_seconds = math_floor(global.spy_fish_timeout[player.force.name] - game.tick) / 60
+			spy_time_seconds = math_floor((global.spy_fish_timeout[player.force.name] - game.tick) / 60)
 			if spy_time_seconds > 60 then
 				local minute_label = " minute and "
 				if spy_time_seconds > 120 then
@@ -341,6 +422,13 @@ function get_ammo_modifier(ammo_category)
 	local result = 0
 	if Tables.base_ammo_modifiers[ammo_category] then
         result = Tables.base_ammo_modifiers[ammo_category]
+	end
+    return result
+end
+function get_turret_attack_modifier(turret_category)
+	local result = 0
+	if Tables.base_turret_attack_modifiers[turret_category] then
+        result = Tables.base_turret_attack_modifiers[turret_category]
 	end
     return result
 end

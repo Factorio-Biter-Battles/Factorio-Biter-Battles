@@ -1,4 +1,23 @@
 # Contributing Guide
+
+## Table of Contents
+- [Contributing Guide](#contributing-guide)
+  * [Getting Started](#getting-started)
+  * [Reporting a bug](#reporting-a-bug)
+  * [Discussing or Proposing new features](#discussing-or-proposing-new-features)
+  * [Submitting a fix](#submitting-a-fix)
+- [Beginner Guide - Contributing to the git repo](#beginner-guide---contributing-to-the-git-repo)
+  * [I've set it up before](#i-ve-set-it-up-before)
+  * [I'm setting it up for the first time](#i-m-setting-it-up-for-the-first-time)
+    + [Create a fork](#create-a-fork)
+    + [Clone the repo](#clone-the-repo)
+    + [Check your remote settings](#check-your-remote-settings)
+    + [Branching](#branching)
+    + [Make your changes](#make-your-changes)
+    + [Testing](#testing)
+    + [Submit a pull request](#submit-a-pull-request)
+## Getting Started
+
 Here is a guideline on how to get started!
 
 We want to make contributing to this project as easy and transparent as possible, whether it's:
@@ -45,7 +64,7 @@ Run the following to create a new branch and make changes as usual:
 ## I'm setting it up for the first time
 
 ### Create a fork
-Go to https://github.com/1pulse/factorio_biter_battles, then click fork.
+Go to https://github.com/Factorio-Biter-Battles/Factorio-Biter-Battles, then click fork.
 
 ### Clone the repo
 - Go to your [Factorio scenarios folder](https://wiki.factorio.com/Application_directory#User_data_directory) (try %APPDATA%/roaming/factorio/scenarios)
@@ -64,7 +83,7 @@ Run ``` git remote show origin ``` which would show something like this
 <br>The https urls should still work.
 
 ```  
-  Fetch URL: git@github.com:1pulse/factorio_biter_battles.git
+  Fetch URL: git@github.com:Factorio-Biter-Battles/Factorio-Biter-Battles.git
   Push  URL: git@github.com:<your fork>
 ```
 
@@ -72,7 +91,7 @@ If it's not like the above:
 
 Set the fetch url
 ```
-git remote set-url origin git@github.com:1pulse/factorio_biter_battles.git
+git remote set-url origin git@github.com:Factorio-Biter-Battles/Factorio-Biter-Battles.git
 ```
 Set the push url
 ```
@@ -108,6 +127,9 @@ Under User Scenario's select ```<my-BB-renamed-folder>```
 
 where ```<my-BB-renamed-folder>``` is the folder name that you changed the cloned version to.
 
+####What should I test?
+**You should test the code you modified to ensure it's working**. Try get a friend to verify any multiplayer changes by asking for a hand in discord. Make sure to run the scenario and ensure it doesn't crash!  
+
 ### Submit a pull request
 Once you are happy with your changes: run ```git push```
 This will send the changes in your local branch to your branch in github.
@@ -123,7 +145,7 @@ To push the current branch and set the remote as upstream, use
 Run the command ```git push --set-upstream origin <your-branch-name> ```
 
 In your github repository, click ```Compare & pull request```
-- base repository: ```1pulse/Factorio-Biter-Battles```
+- base repository: ```Factorio-Biter-Battles/Factorio-Biter-Battles```
 - base: ``master``
 - head repository: ```<your-repo-name>```
 - compare: ```<your-branch-name>```
