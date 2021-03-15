@@ -2,6 +2,7 @@ local Public = {}
 local BiterRaffle = require "maps.biter_battles_v2.biter_raffle"
 local Functions = require "maps.biter_battles_v2.functions"
 local bb_config = require "maps.biter_battles_v2.config"
+local vote = require "maps.biter_battles_v2.difficulty_vote"
 local math_random = math.random
 local math_abs = math.abs
 
@@ -229,24 +230,6 @@ local function select_units_around_spawner(spawner, force_name, side_target)
 	return valid_biters
 end
 
-local group_path_flags_nocache_straight =
-{
-  cache = false,
-  prefer_straight_paths = true
-}
-
-local group_path_flags_cache_straight_lowprio =
-{
-  prefer_straight_paths = true,
-  low_priority = true
-}
-
-local group_path_flags_nocache_nobreak =
-{
-  cache = false,
-  no_break = true
-}
-
 local function send_group(unit_group, force_name, side_target)
 	local target
 	if side_target then
@@ -260,49 +243,32 @@ local function send_group(unit_group, force_name, side_target)
 
 	local commands = {}
 	local vector = attack_vectors[force_name][math_random(1, size_of_vectors)]
-	local distance_modifier = math_random(1, 8) * 0.128
+	local distance_modifier = math_random(25, 100) * 0.01
 
 	local position = {target.x + (vector[1] * distance_modifier), target.y + (vector[2] * distance_modifier)}
 	position = unit_group.surface.find_non_colliding_position("stone-furnace", position, 96, 1)
 	if position then
 		if math.abs(position.y) < math.abs(unit_group.position.y) then
 			commands[#commands + 1] = {
-				type = defines.command.go_to_location,
+				type = defines.command.attack_area,
 				destination = position,
-				radius = 64,
-				distraction = defines.distraction.by_enemy,
-				pathfind_flags = group_path_flags_cache_straight_lowprio
+				radius = 16,
+				distraction = defines.distraction.by_enemy
 			}
 		end
 	end
 
-    commands[#commands + 1] = {
-		type = defines.command.go_to_location,
-		destination = target,
-		radius = 64,
-		distraction = defines.distraction.by_enemy,
-		pathfind_flags = group_path_flags_nocache_straight
-	}
-
 	commands[#commands + 1] = {
 		type = defines.command.attack_area,
 		destination = target,
-		radius = 16,
-		distraction = defines.distraction.by_enemy,
-	}
-
-    commands[#commands + 1] = {
-		type = defines.command.go_to_location,
-		destination = global.rocket_silo[force_name].position,
-        radius = 64,
-		distraction = defines.distraction.by_damage,
-		pathfind_flags = group_path_flags_nocache_nobreak
+		radius = 32,
+		distraction = defines.distraction.by_enemy
 	}
 
 	commands[#commands + 1] = {
 		type = defines.command.attack,
 		target = global.rocket_silo[force_name],
-		distraction = defines.distraction.by_damage,
+		distraction = defines.distraction.by_enemy
 	}
 
 	unit_group.set_command({
@@ -469,12 +435,39 @@ Public.unlock_satellite = function(event)
     end
 end
 
+local function update_difficulty()
+
+    local tick = game.ticks_played
+
+    -- wait for vote to end first
+	if tick < global.difficulty_votes_timeout then
+        return
+    end
+	local minute = tick / 3600
+    local current_diff = global.difficulty_vote_value
+    local next_diff = current_diff
+    for k, v in pairs(global.difficulty_increases[global.difficulty_vote_index]) do
+        if k > minute then break end
+        next_diff = v
+    end
+    if next_diff == current_diff then
+        return
+    end
+
+    local str = math.floor(100*next_diff).."%"
+    vote.difficulties[global.difficulty_vote_index].str = str
+    game.print("Difficulty changed to "..str.." at minute "..math.floor(minute))
+    global.difficulty_vote_value = next_diff
+    vote.difficulty_gui()
+end
 
 
 Public.raise_evo = function()
 	if global.freeze_players then return end
 	if not global.training_mode and (#game.forces.north.connected_players == 0 or #game.forces.south.connected_players == 0) then return end
 	local amount = math.ceil(global.difficulty_vote_value * global.evo_raise_counter * 0.75)
+
+	update_difficulty()
 
 
 	if not global.total_passive_feed_redpotion then global.total_passive_feed_redpotion = 0 end

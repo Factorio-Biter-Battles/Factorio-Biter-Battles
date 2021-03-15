@@ -110,8 +110,8 @@ function Public.source_surface()
 	map_gen_settings.cliff_settings = {cliff_elevation_interval = 0, cliff_elevation_0 = 0}
 	map_gen_settings.autoplace_controls = {
 		["coal"] = {frequency = 6.5, size = 0.34, richness = 0.24},
-		["stone"] = {frequency = 5, size = 0.28, richness = 0.25},
-		["copper-ore"] = {frequency = 6, size = 0.28, richness = 0.3},
+		["stone"] = {frequency = 6, size = 0.35, richness = 0.25},
+		["copper-ore"] = {frequency = 7, size = 0.32, richness = 0.35},
 		["iron-ore"] = {frequency = 8.5, size = 0.8, richness = 0.23},
 		["uranium-ore"] = {frequency = 2, size = 1, richness = 1},
 		["crude-oil"] = {frequency = 8, size = 1.4, richness = 0.45},
@@ -174,6 +174,18 @@ function Public.tables()
 	}
 	global.reanimate = {}
 	global.difficulty_votes_timeout = 36000
+	
+		-- [difficulty] = {[inc_start_time_in_minutes] = difficulty_in_percent}
+	global.difficulty_increases = {
+		[1] = {[30] = 0.25, [60] = 0.50, [90] = 0.50, [120] = 0.75, [180] = 0.75, [240] = 0.75, [300] = 0.75, [360] = 0.75, [420] = 0.75, [480] = 0.75},
+		[2] = {[30] = 0.50, [60] = 0.50, [90] = 0.75, [120] = 0.75, [180] = 0.75, [240] = 0.75, [300] = 0.75, [360] = 0.75, [420] = 0.75, [480] = 0.75},
+		[3] = {[30] = 0.75, [60] = 0.75, [90] = 0.75, [120] = 0.75, [180] = 0.75, [240] = 0.75, [300] = 0.75, [360] = 0.75, [420] = 0.75, [480] = 0.75},
+		[4] = {[30] = 1.00, [60] = 1.00, [90] = 1.00, [120] = 1.00, [180] = 1.00, [240] = 1.00, [300] = 1.00, [360] = 1.00, [420] = 1.00, [480] = 1.00},
+		[5] = {[30] = 1.50, [60] = 1.50, [90] = 1.50, [120] = 1.50, [180] = 1.50, [240] = 1.50, [300] = 1.50, [360] = 1.50, [420] = 1.50, [480] = 1.50},
+		[6] = {[30] = 3.00, [60] = 3.00, [90] = 3.00, [120] = 3.00, [180] = 3.00, [240] = 3.00, [300] = 3.00, [360] = 3.00, [420] = 3.00, [480] = 3.00},
+		[7] = {[30] = 5.00, [60] = 5.00, [90] = 5.00, [120] = 5.00, [180] = 5.00, [240] = 5.00, [300] = 5.00, [360] = 5.00, [420] = 5.00, [480] = 5.00}
+	}
+	
 	global.next_attack = "north"
 	if math.random(1,2) == 1 then global.next_attack = "south" end
 end
@@ -266,6 +278,7 @@ function Public.forces()
 		game.forces[force.name].technologies["artillery-shell-speed-1"].enabled = false
 		game.forces[force.name].technologies["atomic-bomb"].enabled = false
 		game.forces[force.name].technologies["cliff-explosives"].enabled = false
+		game.forces[force.name].technologies["land-mine"].enabled = false
 		game.forces[force.name].research_queue_enabled = true
 		global.target_entities[force.index] = {}
 		global.spy_fish_timeout[force.name] = 0
