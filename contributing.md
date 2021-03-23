@@ -3,8 +3,6 @@
 ## Table of Contents
 - [Contributing Guide](#contributing-guide)
   * [Getting Started](#getting-started)
-  * [Reporting a bug](#reporting-a-bug)
-  * [Discussing or Proposing new features](#discussing-or-proposing-new-features)
   * [Submitting a fix](#submitting-a-fix)
 - [Beginner Guide - Contributing to the git repo](#beginner-guide---contributing-to-the-git-repo)
   * [I've set it up before](#i-ve-set-it-up-before)
@@ -25,20 +23,6 @@ We want to make contributing to this project as easy and transparent as possible
 - Reporting a bug
 - Discussing or Proposing new features
 - Submitting a fix
-
-## Reporting a bug
-To report a bug:
-- Create a new issue on the Github Repo
-- Also mention it on our [#suggestions-discussion](https://discord.gg/Wf8jjkwqAr) discord channel (see instructions below)
-
-## Discussing or Proposing new features
-To propose new features or discuss existing ones, please discuss in our discord channel
-
-After some discussion, you can submit suggestions at [#suggestions-discussion](https://discord.gg/Wf8jjkwqAr) using the command:
-```!suggest <suggestion description>```
-
-Vote in the [#suggestions-list](https://discord.gg/Wf8jjkwqAr) discord channel.
-See status in #suggestion-decisions (approved/denied/considered/implemented)
 
 ## Submitting a fix
 - Fork the code

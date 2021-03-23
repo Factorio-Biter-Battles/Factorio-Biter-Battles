@@ -9,9 +9,9 @@ local font = 'default-game'
 local format = string.format
 
 local brain = {
-    [1] = {'Our Discord server is at: http://discord.gg/KvDN8tn5sF'},
+    [1] = {'Our Discord server is at: https://discord.com/invite/hAYW3K7J2A'},
     [2] = {
-        'Need an admin? Join our discord at: http://discord.gg/KvDN8tn5sF,',
+        'Need an admin? Join our discord at: https://discord.com/invite/hAYW3K7J2A,',
         'and report it in #support',
         'If you are trusted, you are eligible to run the command /jail <player-name> "reason" and /free'
     },
