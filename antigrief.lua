@@ -356,7 +356,7 @@ local function on_player_used_capsule(event)
             msg = format(player.name .. ' damaged: %s with: %s', get_entities(name, entities), name)
             local ban_msg =
                 format(
-                'Damaged: %s with: %s. This action was performed automatically. Visit https://discord.gg/fBKvBENj2d for forgiveness',
+                'Damaged: %s with: %s. This action was performed automatically. Visit https://discord.com/invite/hAYW3K7J2A for forgiveness',
                 get_entities(name, entities),
                 name
             )
