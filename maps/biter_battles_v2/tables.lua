@@ -8,9 +8,9 @@ Public.ammo_modified_forces_list = {"north", "south", "spectator"}
 -- ammo_modifier_dmg = base_damage * base_ammo_modifiers
 -- damage = base_damage + ammo_modifier_dmg
 Public.base_ammo_modifiers = {
-	["bullet"] = 0.2,
+	["bullet"] = 0.16,
 	["shotgun-shell"] = 1,
-	["flamethrower"] = -0.8,
+	["flamethrower"] = -0.6,
 	["landmine"] = -0.9
 }
 
@@ -25,7 +25,7 @@ Public.upgrade_modifiers = {
 	["flamethrower-turret"] = 0.02,
 	["laser-turret"] = 0.3,
 	["shotgun-shell"] = 0.6,
-	["grenade"] = 0.4,
+	["grenade"] = 0.48,
 	["landmine"] = 0.04
 }
 
