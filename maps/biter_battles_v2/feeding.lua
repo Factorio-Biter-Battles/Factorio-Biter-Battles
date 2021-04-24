@@ -21,13 +21,14 @@ end
 
 local function set_biter_endgame_modifiers(force)
 	if force.evolution_factor ~= 1 then return end
+	global.reanimate[force.index] = math.floor((global.bb_evolution[force.name] - 1) * 4000)
 	local damage_mod = math.round((global.bb_evolution[force.name] - 1) * 0.50, 3)
 	force.set_ammo_damage_modifier("melee", damage_mod)
 	force.set_ammo_damage_modifier("biological", damage_mod)
 	force.set_ammo_damage_modifier("artillery-shell", damage_mod)
 	force.set_ammo_damage_modifier("flamethrower", damage_mod)
 
-	global.reanimate[force.index] = math.floor((global.bb_evolution[force.name] - 1) * 4000)
+	
 end
 
 local function get_enemy_team_of(team)
