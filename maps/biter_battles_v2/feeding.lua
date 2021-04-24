@@ -26,7 +26,6 @@ local function set_biter_endgame_modifiers(force)
 	force.set_ammo_damage_modifier("biological", damage_mod)
 	force.set_ammo_damage_modifier("artillery-shell", damage_mod)
 	force.set_ammo_damage_modifier("flamethrower", damage_mod)
-	force.set_ammo_damage_modifier("laser-turret", damage_mod)
 
 	global.reanimate[force.index] = math.floor((global.bb_evolution[force.name] - 1) * 4000)
 end
