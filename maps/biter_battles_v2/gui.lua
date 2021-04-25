@@ -305,6 +305,7 @@ function join_team(player, force_name, forced_join)
 		local msg = table.concat({"Team ", player.force.name, " player ", player.name, " is no longer spectating."})
 		game.print(msg, {r = 0.98, g = 0.66, b = 0.22})
 		Server.to_discord_bold(msg)
+        global.spectator_rejoin_delay[player.name] = game.tick
 		player.spectator = false
 		return
 	end
@@ -330,6 +331,7 @@ function join_team(player, force_name, forced_join)
 	player.insert {name = 'iron-plate', count = 16}
 	player.insert {name = 'burner-mining-drill', count = 10}
 	global.chosen_team[player.name] = force_name
+    global.spectator_rejoin_delay[player.name] = game.tick
 	player.spectator = false
 	Public.refresh()
 end
