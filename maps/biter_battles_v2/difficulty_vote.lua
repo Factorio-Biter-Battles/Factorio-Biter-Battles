@@ -136,6 +136,21 @@ local function on_gui_click(event)
 		event.element.parent.destroy()
 		return
 	end
+
+    if player.spectator then
+        player.print("spectators can't vote for difficulty")
+		event.element.parent.destroy()
+        return
+    end
+
+	if game.tick - global.spectator_rejoin_delay[player.name] < 3600 then
+        player.print(
+            "Not ready to vote. Please wait " .. 60-(math.floor((game.tick - global.spectator_rejoin_delay[player.name])/60)) .. " seconds.",
+            {r = 0.98, g = 0.66, b = 0.22}
+        )
+		event.element.parent.destroy()
+        return
+    end
 	
 	game.print(player.name .. " has voted for " .. difficulties[i].name .. " difficulty!", difficulties[i].print_color)
 	global.difficulty_player_votes[player.name] = i

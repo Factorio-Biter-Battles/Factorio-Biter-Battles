@@ -30,13 +30,13 @@ Public.upgrade_modifiers = {
 }
 
 Public.food_values = {
-	["automation-science-pack"] =		{value = 0.000505, name = "automation science", color = "255, 50, 50"},
-	["logistic-science-pack"] =		{value = 0.00155, name = "logistic science", color = "50, 255, 50"},
-	["military-science-pack"] =		{value = 0.00455, name = "military science", color = "105, 105, 105"},
-	["chemical-science-pack"] = 		{value = 0.015, name = "chemical science", color = "100, 200, 255"},
-	["production-science-pack"] =		{value = 0.05, name = "production science", color = "150, 25, 255"},
-	["utility-science-pack"] =		{value = 0.07, name = "utility science", color = "210, 210, 60"},
-	["space-science-pack"] = 		{value = 0.5, name = "space science", color = "255, 255, 255"},
+	["automation-science-pack"] =		{value = 0.001, name = "automation science", color = "255, 50, 50"},
+	["logistic-science-pack"] =		{value = 0.00263, name = "logistic science", color = "50, 255, 50"},
+	["military-science-pack"] =		{value = 0.00788, name = "military science", color = "105, 105, 105"},
+	["chemical-science-pack"] = 		{value = 0.02121, name = "chemical science", color = "100, 200, 255"},
+	["production-science-pack"] =		{value = 0.1008, name = "production science", color = "150, 25, 255"},
+	["utility-science-pack"] =		{value = 0.1099, name = "utility science", color = "210, 210, 60"},
+	["space-science-pack"] = 		{value = 0.491, name = "space science", color = "255, 255, 255"},
 }
 
 Public.gui_foods = {}

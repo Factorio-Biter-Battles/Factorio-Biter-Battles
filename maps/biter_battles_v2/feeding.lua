@@ -161,7 +161,7 @@ function set_evo_and_threat(flask_amount, food, biter_force_name)
 	for _ = 1, flask_amount, 1 do
 		---SET EVOLUTION
 		local e2 = (game.forces[biter_force_name].evolution_factor * 100) + 1
-		local diminishing_modifier = (1 / (10 ^ (e2 * 0.017))) / (e2 * 0.5)
+		local diminishing_modifier = (1 / (10 ^ (e2 * 0.015))) / (e2 * 0.5)
 		local evo_gain = (food_value * diminishing_modifier)
 		global.bb_evolution[biter_force_name] = global.bb_evolution[biter_force_name] + evo_gain
 		global.bb_evolution[biter_force_name] = math_round(global.bb_evolution[biter_force_name], decimals)
@@ -172,7 +172,7 @@ function set_evo_and_threat(flask_amount, food, biter_force_name)
 		end
 		
 		--ADD INSTANT THREAT
-		local diminishing_modifier = 1 / (0.2 + (e2 * 0.018))
+		local diminishing_modifier = 1 / (0.2 + (e2 * 0.016))
 		global.bb_threat[biter_force_name] = global.bb_threat[biter_force_name] + (food_value * instant_threat_player_count_modifier * diminishing_modifier)
 		global.bb_threat[biter_force_name] = math_round(global.bb_threat[biter_force_name], decimals)		
 	end
