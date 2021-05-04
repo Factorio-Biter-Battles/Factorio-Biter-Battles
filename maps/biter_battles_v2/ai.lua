@@ -456,6 +456,18 @@ Public.raise_evo = function()
 	global.evo_raise_counter = global.evo_raise_counter + (1 * 0.50)
 end
 
+Public.reset_evo = function()
+	local amount = global.total_passive_feed_redpotion
+	if amount < 1 then return end
+	global.total_passive_feed_redpotion = 0
+
+	local biter_teams = {["north_biters"] = "north", ["south_biters"] = "south"}
+	for bf, _ in pairs(biter_teams) do
+		global.bb_evolution[bf] = 0
+		set_evo_and_threat(amount, "automation-science-pack", bf)
+	end
+end
+
 --Biter Threat Value Subtraction
 function Public.subtract_threat(entity)
 	if not threat_values[entity.name] then return end
