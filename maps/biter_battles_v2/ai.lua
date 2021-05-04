@@ -439,7 +439,7 @@ Public.raise_evo = function()
 	if not global.training_mode and (#game.forces.north.connected_players == 0 or #game.forces.south.connected_players == 0) then return end
 	if game.ticks_played < 7200 then return end
 
-	local amount = math.ceil(global.difficulty_vote_value * global.evo_raise_counter * 0.75)
+	local amount = math.ceil(global.evo_raise_counter * 0.75)
 
 	if not global.total_passive_feed_redpotion then global.total_passive_feed_redpotion = 0 end
 	global.total_passive_feed_redpotion = global.total_passive_feed_redpotion + amount
