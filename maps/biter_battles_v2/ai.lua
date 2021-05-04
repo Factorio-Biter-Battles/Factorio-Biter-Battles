@@ -437,7 +437,7 @@ end
 Public.raise_evo = function()
 	if global.freeze_players then return end
 	if not global.training_mode and (#game.forces.north.connected_players == 0 or #game.forces.south.connected_players == 0) then return end
-	if game.ticks_played < global.difficulty_votes_timeout then return end
+	if game.ticks_played < 7200 then return end
 
 	local amount = math.ceil(global.difficulty_vote_value * global.evo_raise_counter * 0.75)
 
