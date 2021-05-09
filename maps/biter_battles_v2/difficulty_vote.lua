@@ -1,4 +1,5 @@
 local bb_config = require "maps.biter_battles_v2.config"
+local ai = require "maps.biter_battles_v2.ai"
 local event = require 'utils.event'
 local Server = require 'utils.server'
 
@@ -80,6 +81,7 @@ local function set_difficulty()
 	end
 	 global.difficulty_vote_index = new_index
 	 global.difficulty_vote_value = difficulties[new_index].value
+	 ai.reset_evo()
 end
 
 local function on_player_joined_game(event)

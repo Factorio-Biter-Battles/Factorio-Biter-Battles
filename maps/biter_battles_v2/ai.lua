@@ -437,7 +437,9 @@ end
 Public.raise_evo = function()
 	if global.freeze_players then return end
 	if not global.training_mode and (#game.forces.north.connected_players == 0 or #game.forces.south.connected_players == 0) then return end
-	local amount = math.ceil(global.difficulty_vote_value * global.evo_raise_counter * 0.75)
+	if game.ticks_played < 7200 then return end
+
+	local amount = math.ceil(global.evo_raise_counter * 0.75)
 
 	if not global.total_passive_feed_redpotion then global.total_passive_feed_redpotion = 0 end
 	global.total_passive_feed_redpotion = global.total_passive_feed_redpotion + amount
@@ -452,6 +454,18 @@ Public.raise_evo = function()
 	end
 	if not a_team_has_players then return end
 	global.evo_raise_counter = global.evo_raise_counter + (1 * 0.50)
+end
+
+Public.reset_evo = function()
+	local amount = global.total_passive_feed_redpotion
+	if amount < 1 then return end
+	global.total_passive_feed_redpotion = 0
+
+	local biter_teams = {["north_biters"] = "north", ["south_biters"] = "south"}
+	for bf, _ in pairs(biter_teams) do
+		global.bb_evolution[bf] = 0
+		set_evo_and_threat(amount, "automation-science-pack", bf)
+	end
 end
 
 --Biter Threat Value Subtraction
