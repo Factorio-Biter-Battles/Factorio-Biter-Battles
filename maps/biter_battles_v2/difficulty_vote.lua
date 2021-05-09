@@ -15,14 +15,21 @@ local difficulties = {
 }
 
 local function difficulty_gui()
+	local value = math.floor(global.difficulty_vote_value*100)
 	for _, player in pairs(game.connected_players) do
 		if player.gui.top["difficulty_gui"] then player.gui.top["difficulty_gui"].destroy() end
-		local str = table.concat({"Global map difficulty is ", difficulties[global.difficulty_vote_index].name, ". Mutagen has ", difficulties[global.difficulty_vote_index].str, " effectiveness."})
+		local str = table.concat({"Global map difficulty is ", difficulties[global.difficulty_vote_index].name, ". Mutagen has ", value, "% effectiveness."})
 		local b = player.gui.top.add { type = "sprite-button", caption = difficulties[global.difficulty_vote_index].name, tooltip = str, name = "difficulty_gui" }
 		b.style.font = "heading-2"
 		b.style.font_color = difficulties[global.difficulty_vote_index].print_color
 		b.style.minimal_height = 38
 		b.style.minimal_width = 96
+	end
+end
+
+local function on_tick()
+	if game.tick % 3600 == 130 then			
+		difficulty_gui() 		
 	end
 end
 
@@ -164,6 +171,7 @@ end
 event.add(defines.events.on_gui_click, on_gui_click)
 event.add(defines.events.on_player_left_game, on_player_left_game)
 event.add(defines.events.on_player_joined_game, on_player_joined_game)
+event.add(defines.events.on_tick, on_tick)
 
 local Public = {}
 Public.difficulties = difficulties
