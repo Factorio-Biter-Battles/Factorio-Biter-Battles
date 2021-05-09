@@ -434,7 +434,22 @@ Public.unlock_satellite = function(event)
     end
 end
 
+local function difficulty_curve()
+    if global.difficulty_vote_index >2 then return end
+    if global.difficulty_vote_index ==1 
+     then
+        local x = game.ticks_played/3600
+        local y = -2^(-0.02*(x+50))+0.75
+        global.difficulty_vote_value = y
+     else
+		local x = game.ticks_played/3600
+        local y = -2^(-0.03*(x+50))+0.75
+        global.difficulty_vote_value = y
+    end
+end
+
 Public.raise_evo = function()
+	difficulty_curve()
 	if global.freeze_players then return end
 	if not global.training_mode and (#game.forces.north.connected_players == 0 or #game.forces.south.connected_players == 0) then return end
 	local amount = math.ceil(global.difficulty_vote_value * global.evo_raise_counter * 0.75)
