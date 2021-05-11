@@ -287,7 +287,6 @@ local enemy_team_of = {["north"] = "south", ["south"] = "north"}
 function Public.server_restart()
     if not global.server_restart_timer then return end
     global.server_restart_timer = global.server_restart_timer - 5
-    if global.server_restart_timer == 150 then return end
     if global.server_restart_timer == 10 then
         game.delete_surface(game.surfaces.bb_source)
         return
