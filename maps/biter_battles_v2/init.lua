@@ -173,6 +173,9 @@ function Public.tables()
 		}
 	}
 	global.reanimate = {}
+	global.difficulty_vote_value = 1
+	global.difficulty_vote_index = 4
+
 	global.difficulty_votes_timeout = 36000
 
 	global.next_attack = "north"
