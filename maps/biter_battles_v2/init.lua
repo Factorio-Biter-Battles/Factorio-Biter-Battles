@@ -172,7 +172,7 @@ function Public.tables()
 			["medium-spitter"] = true, ["medium-biter"] = true, ["big-spitter"] = true, ["big-biter"] = true, ["behemoth-spitter"] = true, ["behemoth-biter"] = true
 		}
 	}
-	global.reanimate = {}
+	global.reanimate = { [6] = 0, [7] = 0} -- 6 and 7 correspond to indices of "north_biters" and "south_biters"
 	global.difficulty_vote_value = 1
 	global.difficulty_vote_index = 4
 
