@@ -97,7 +97,7 @@ function Public.initial_setup()
 			["enemy-base"] = {frequency = 0, size = 0, richness = 0}
 		},
 	}
-	local surface = game.create_surface("biter_battles", map_gen_settings)
+	local surface = game.create_surface(global.bb_surface_name, map_gen_settings)
 end
 
 --Terrain Source Surface
@@ -137,6 +137,8 @@ function Public.tables()
 	global.science_logs_text = nil
 	global.science_logs_total_north = nil
 	global.science_logs_total_south = nil
+	-- Name of main BB surface within game.surfaces
+	global.bb_surface_name = "bb0"
 	global.active_biters = {}
 	global.bb_evolution = {}
 	global.bb_game_won_by_team = nil
@@ -181,7 +183,7 @@ function Public.tables()
 end
 
 function Public.load_spawn()
-	local surface = game.surfaces["biter_battles"]
+	local surface = game.surfaces[global.bb_surface_name]
 	surface.request_to_generate_chunks({x = 0, y = 0}, 1)
 	surface.force_generate_chunk_requests()
 
@@ -213,7 +215,7 @@ function Public.forces()
 		end
 	end
 
-	local surface = game.surfaces["biter_battles"]
+	local surface = game.surfaces[global.bb_surface_name]
 
 	local f = game.forces["north"]
 	f.set_spawn_position({0, -44}, surface)

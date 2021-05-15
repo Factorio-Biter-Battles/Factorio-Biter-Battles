@@ -249,7 +249,7 @@ function Public.init_player(player)
 	player.spectator = true
 	player.force = game.forces.spectator
 	
-	local surface = game.surfaces.biter_battles
+	local surface = game.surfaces[global.bb_surface_name]
 	local p = spawn_positions[math_random(1, size_of_spawn_positions)]
 	if surface.is_chunk_generated({0,0}) then
 		player.teleport(surface.find_non_colliding_position("character", p, 4, 0.5), surface)

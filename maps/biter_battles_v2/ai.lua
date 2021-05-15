@@ -128,7 +128,7 @@ Public.send_near_biters_to_silo = function()
 	if not global.rocket_silo["north"] then return end
 	if not global.rocket_silo["south"] then return end
 
-	game.surfaces["biter_battles"].set_multi_command({
+	game.surfaces[global.bb_surface_name].set_multi_command({
 		command={
 			type=defines.command.attack,
 			target=global.rocket_silo["north"],
@@ -139,7 +139,7 @@ Public.send_near_biters_to_silo = function()
 		unit_search_distance = 64
 		})
 
-	game.surfaces["biter_battles"].set_multi_command({
+	game.surfaces[global.bb_surface_name].set_multi_command({
 		command={
 			type=defines.command.attack,
 			target=global.rocket_silo["south"],
@@ -363,7 +363,7 @@ local function create_attack_group(surface, force_name, biter_force_name)
 end
 
 Public.pre_main_attack = function()
-	local surface = game.surfaces["biter_battles"]
+	local surface = game.surfaces[global.bb_surface_name]
 	local force_name = global.next_attack
 
 	if not global.training_mode or (global.training_mode and #game.forces[force_name].connected_players > 0) then
@@ -379,7 +379,7 @@ end
 
 Public.perform_main_attack = function()
 	if global.main_attack_wave_amount > 0 then
-		local surface = game.surfaces["biter_battles"]
+		local surface = game.surfaces[global.bb_surface_name]
 		local force_name = global.next_attack
 		local biter_force_name = force_name .. "_biters"
 

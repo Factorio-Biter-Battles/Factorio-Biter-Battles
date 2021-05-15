@@ -25,7 +25,7 @@ end
 function Public.reveal_map()
     for _, f in pairs({"north", "south", "player", "spectator"}) do
         local r = 768
-        game.forces[f].chart(game.surfaces["biter_battles"],
+        game.forces[f].chart(game.surfaces[global.bb_surface_name],
                              {{r * -1, r * -1}, {r, r}})
     end
 end
@@ -333,7 +333,7 @@ function Public.server_restart()
             end
             Gui.create_main_gui(player)
         end
-        game.surfaces.biter_battles.clear(true)
+        game.surfaces[global.bb_surface_name].clear(true)
         game.reset_time_played()
         global.server_restart_timer = nil
         game.speed = 1

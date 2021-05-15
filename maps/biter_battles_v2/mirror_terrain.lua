@@ -118,7 +118,7 @@ local function process_entity(surface, entity, force_name)
 end
 
 local function copy_chunk(chunk)
-	local target_surface = game.surfaces.biter_battles
+	local target_surface = game.surfaces[global.bb_surface_name]
 	
 	local source_surface = game.surfaces.bb_source
 	local source_chunk_position = {chunk[1][1], chunk[1][2]}
@@ -169,7 +169,7 @@ local function copy_chunk(chunk)
 end
 
 local function mirror_chunk(chunk)
-	local target_surface = game.surfaces.biter_battles
+	local target_surface = game.surfaces[global.bb_surface_name]
 	
 	local source_surface = game.surfaces.bb_source
 	local source_chunk_position = {chunk[1][1], chunk[1][2] * -1 - 1}
@@ -209,7 +209,7 @@ local function mirror_chunk(chunk)
 end
 
 local function reveal_chunk(chunk)
-	local surface = game.surfaces.biter_battles
+	local surface = game.surfaces[global.bb_surface_name]
 	local chunk_position = chunk[1]
 	for _, force_name in pairs({"north", "south"}) do
 		local force = game.forces[force_name]
@@ -221,7 +221,7 @@ end
 
 function Public.add_chunk(event)
 	local surface = event.surface
-	if surface.name ~= "biter_battles" then return end
+	if surface.name ~= global.bb_surface_name then return end
 	local left_top = event.area.left_top	
 	local terrain_gen = global.terrain_gen
 	

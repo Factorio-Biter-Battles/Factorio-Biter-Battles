@@ -15,7 +15,7 @@ require 'maps.biter_battles_v2.commands'
 require "modules.spawners_contain_biters"
 
 local function on_player_joined_game(event)
-	local surface = game.surfaces["biter_battles"]
+	local surface = game.surfaces[global.bb_surface_name]
 	local player = game.players[event.player_index]
 	if player.online_time == 0 or player.force.name == "player" then
 		Functions.init_player(player)

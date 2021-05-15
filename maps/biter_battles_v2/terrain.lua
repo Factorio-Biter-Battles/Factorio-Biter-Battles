@@ -425,7 +425,7 @@ function Public.generate(event)
 	local left_top_x = left_top.x
 	local left_top_y = left_top.y
 	
-	if surface.name == "biter_battles" then
+	if surface.name == global.bb_surface_name then
 		local tiles = {}
 		if math_abs(left_top_x) > 64 or math_abs(left_top_y) > 64 then
 			for k, v in pairs(loading_chunk_vectors) do tiles[k] = {name = "out-of-map", position = {left_top_x + v[1], left_top_y + v[2]}} end
