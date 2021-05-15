@@ -410,7 +410,7 @@ local function mixed_ore(surface, left_top_x, left_top_y)
 	end
 	
 	if left_top_y == -32 and math_abs(left_top_x) <= 32 then
-		for _, e in pairs(surface.find_entities_filtered({area = {{-12, -12},{12, 12}}})) do e.destroy() end
+		for _, e in pairs(surface.find_entities_filtered({name = 'character', invert = true, area = {{-12, -12},{12, 12}}})) do e.destroy() end
 	end
 end
 
