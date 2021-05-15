@@ -433,7 +433,7 @@ function Public.silo_death(event)
         south_evo = math.floor(1000 * global.bb_evolution["south_biters"]) * 0.1
         south_threat = math.floor(global.bb_threat["south_biters"])
 
-		discord_message = "***" .. c .. " has won! ***" .. "\\n" .. 
+		discord_message = "*** Team " .. global.bb_game_won_by_team .. " has won! ***" .. "\\n" ..
 							global.victory_time .. "\\n\\n" .. 
 							"North Evo: " .. north_evo .. "%\\n" ..
                             "North Threat: " .. north_threat .. "\\n\\n" ..
