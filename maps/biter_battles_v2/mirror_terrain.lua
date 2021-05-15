@@ -90,11 +90,9 @@ local entity_copy_functions = {
 	end,
 	["wall"] = function(surface, entity, target_position, force_name)
 		local e = entity.clone({position = target_position, surface = surface, force = force_name})
-		e.active = true
 	end,
 	["container"] = function(surface, entity, target_position, force_name)
 		local e = entity.clone({position = target_position, surface = surface, force = force_name})
-		e.active = true
 	end,
 	["fish"] = function(surface, entity, target_position, force_name)
 		local mirror_entity = {name = entity.name, position = target_position}
@@ -169,41 +167,40 @@ local function copy_chunk(chunk)
 end
 
 local function mirror_chunk(chunk)
-	local target_surface = game.surfaces[global.bb_surface_name]
+	local surface = game.surfaces[global.bb_surface_name]
 	
-	local source_surface = game.surfaces.bb_source
 	local source_chunk_position = {chunk[1][1], chunk[1][2] * -1 - 1}
 	local source_left_top = {x = source_chunk_position[1] * 32, y = source_chunk_position[2] * 32}
 	local source_area = {{source_left_top.x, source_left_top.y}, {source_left_top.x + 32, source_left_top.y + 32}}
 	
-	if not source_surface.is_chunk_generated(source_chunk_position) then
-		source_surface.request_to_generate_chunks({x = source_left_top.x + 16, y = source_left_top.y + 16}, 0)
+	if not surface.is_chunk_generated(source_chunk_position) then
+		surface.request_to_generate_chunks({x = source_left_top.x + 16, y = source_left_top.y + 16}, 0)
 		return
 	end
 
 	if chunk[2] == 1 then
 		local tiles = {}
-		for k, tile in pairs(source_surface.find_tiles_filtered({area = source_area})) do
+		for k, tile in pairs(surface.find_tiles_filtered({area = source_area})) do
 			tiles[k] = {name = tile.name, position = {tile.position.x, tile.position.y * -1 - 1}}			
 		end
-		target_surface.set_tiles(tiles, true)
+		surface.set_tiles(tiles, true)
 		chunk[2] = chunk[2] + 1
 		return
 	end
 	
 	if chunk[2] == 2 then
-		for _, entity in pairs(source_surface.find_entities_filtered({area = source_area})) do
-			process_entity(target_surface, entity, "south")
+		for _, entity in pairs(surface.find_entities_filtered({area = source_area})) do
+			process_entity(surface, entity, "south")
 		end
 		chunk[2] = chunk[2] + 1
 		return
 	end
 	
 	local decoratives = {}
-	for k, decorative in pairs(source_surface.find_decoratives_filtered{area = source_area}) do 
+	for k, decorative in pairs(surface.find_decoratives_filtered{area = source_area}) do
 		decoratives[k] = {name = decorative.decorative.name, position = {decorative.position.x, decorative.position.y * -1}, amount = decorative.amount}
 	end
-	target_surface.create_decoratives({check_collision = false, decoratives = decoratives})
+	surface.create_decoratives({check_collision = false, decoratives = decoratives})
 	
 	return true
 end
@@ -225,10 +222,7 @@ function Public.add_chunk(event)
 	local left_top = event.area.left_top	
 	local terrain_gen = global.terrain_gen
 	
-	if left_top.y < 0 then
-		terrain_gen.size_of_chunk_copy = terrain_gen.size_of_chunk_copy + 1
-		terrain_gen.chunk_copy[terrain_gen.size_of_chunk_copy] = {{left_top.x / 32, left_top.y / 32}, 1}
-	else
+	if left_top.y >= 0 then
 		terrain_gen.size_of_chunk_mirror = terrain_gen.size_of_chunk_mirror + 1
 		terrain_gen.chunk_mirror[terrain_gen.size_of_chunk_mirror] = {{left_top.x / 32, left_top.y / 32}, 1}
 	end
@@ -272,7 +266,6 @@ local function south_work()
 		end			
 		break
 	end
-	clear_source_surface(terrain_gen)
 end
 
 local works = {
@@ -283,9 +276,8 @@ local works = {
 function Public.ticking_work()
 	local tick = game.ticks_played
 	if tick < 4 then return end
-	local work = works[tick % 2 + 1]	
 	if global.server_restart_timer then return end
-	work()
+	south_work()
 end
 
 return Public

@@ -136,8 +136,9 @@ end
 local function on_init()
 	Init.tables()
 	Init.initial_setup()
-	Init.forces()	
-	Init.source_surface()
+	Init.playground_surface()
+	Init.forces()
+	Init.draw_structures()
 	Init.load_spawn()
 end
 

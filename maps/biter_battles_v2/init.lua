@@ -74,34 +74,10 @@ function Public.initial_setup()
 	for chunk in surface.get_chunks() do
 		surface.delete_chunk({chunk.x, chunk.y})
 	end
-
-	--Playground Surface
-	local map_gen_settings = {
-		["water"] = 0,
-		["starting_area"] = 1,
-		["cliff_settings"] = {cliff_elevation_interval = 0, cliff_elevation_0 = 0},
-		["default_enable_all_autoplace_controls"] = false,
-		["autoplace_settings"] = {
-			["entity"] = {treat_missing_as_default = false},
-			["tile"] = {treat_missing_as_default = false},
-			["decorative"] = {treat_missing_as_default = false},
-		},
-		autoplace_controls = {
-			["coal"] = {frequency = 0, size = 0, richness = 0},
-			["stone"] = {frequency = 0, size = 0, richness = 0},
-			["copper-ore"] = {frequency = 0, size = 0, richness = 0},
-			["iron-ore"] = {frequency = 0, size = 0, richness = 0},
-			["uranium-ore"] = {frequency = 0, size = 0, richness = 0},
-			["crude-oil"] = {frequency = 0, size = 0, richness = 0},
-			["trees"] = {frequency = 0, size = 0, richness = 0},
-			["enemy-base"] = {frequency = 0, size = 0, richness = 0}
-		},
-	}
-	local surface = game.create_surface(global.bb_surface_name, map_gen_settings)
 end
 
---Terrain Source Surface
-function Public.source_surface()
+--Terrain Playground Surface
+function Public.playground_surface()
 	local map_gen_settings = {}
 	local int_max = 2 ^ 31
 	map_gen_settings.seed = math.random(1, int_max)
@@ -119,10 +95,13 @@ function Public.source_surface()
 		["trees"] = {frequency = math.random(8, 28) * 0.1, size = math.random(6, 14) * 0.1, richness = math.random(2, 4) * 0.1},
 		["enemy-base"] = {frequency = 0, size = 0, richness = 0}
 	}
-	local surface = game.create_surface("bb_source", map_gen_settings)
+	local surface = game.create_surface(global.bb_surface_name, map_gen_settings)
 	surface.request_to_generate_chunks({x = 0, y = -256}, 8)
 	surface.force_generate_chunk_requests()
+end
 
+function Public.draw_structures()
+	local surface = game.surfaces[global.bb_surface_name]
 	Terrain.draw_spawn_area(surface)
 	Terrain.generate_additional_spawn_ore(surface)
 	Terrain.generate_additional_rocks(surface)
@@ -138,7 +117,13 @@ function Public.tables()
 	global.science_logs_total_north = nil
 	global.science_logs_total_south = nil
 	-- Name of main BB surface within game.surfaces
-	global.bb_surface_name = "bb0"
+	-- We hot-swap here between 2 surfaces.
+	if global.bb_surface_name == 'bb0' then
+		global.bb_surface_name = "bb1"
+	else
+		global.bb_surface_name = "bb0"
+	end
+
 	global.active_biters = {}
 	global.bb_evolution = {}
 	global.bb_game_won_by_team = nil
