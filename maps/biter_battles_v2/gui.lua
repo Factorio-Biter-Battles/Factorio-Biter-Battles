@@ -382,7 +382,7 @@ function Public.spy_fish()
 	for _, f in pairs(spy_forces) do
 		if global.spy_fish_timeout[f[1]] - game.tick > 0 then
 			local r = 96
-			local surface = game.surfaces["biter_battles"]
+			local surface = game.surfaces[global.bb_surface_name]
 			for _, player in pairs(game.forces[f[2]].connected_players) do
 				game.forces[f[1]].chart(surface, {{player.position.x - r, player.position.y - r}, {player.position.x + r, player.position.y + r}})
 			end

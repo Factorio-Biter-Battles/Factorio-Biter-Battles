@@ -25,7 +25,7 @@ end
 function Public.reveal_map()
     for _, f in pairs({"north", "south", "player", "spectator"}) do
         local r = 768
-        game.forces[f].chart(game.surfaces["biter_battles"],
+        game.forces[f].chart(game.surfaces[global.bb_surface_name],
                              {{r * -1, r * -1}, {r, r}})
     end
 end
@@ -287,15 +287,6 @@ local enemy_team_of = {["north"] = "south", ["south"] = "north"}
 function Public.server_restart()
     if not global.server_restart_timer then return end
     global.server_restart_timer = global.server_restart_timer - 5
-    if global.server_restart_timer == 150 then return end
-    if global.server_restart_timer == 10 then
-        game.delete_surface(game.surfaces.bb_source)
-        return
-    end
-    if global.server_restart_timer == 5 then
-        Init.source_surface()
-        return
-    end
 
     if global.server_restart_timer == 0 then
         if global.restart then
@@ -324,20 +315,26 @@ function Public.server_restart()
         local message = 'Map is restarting! '
         Server.to_discord_bold(table.concat {'*** ', message, ' ***'})
 
+	local prev_surface = global.bb_surface_name
         Init.tables()
-        Init.forces()
+	Init.playground_surface()
+	Init.forces()
+	Init.draw_structures()
         Init.load_spawn()
+
+	local position = {0, 0}
         for _, player in pairs(game.players) do
             Functions.init_player(player)
             for _, e in pairs(player.gui.left.children) do
                 e.destroy()
             end
             Gui.create_main_gui(player)
+	    player.teleport(position, global.bb_surface_name)
         end
-        game.surfaces.biter_battles.clear(true)
         game.reset_time_played()
         global.server_restart_timer = nil
         game.speed = 1
+	game.delete_surface(prev_surface)
         return
     end
     if global.server_restart_timer % 30 == 0 then
