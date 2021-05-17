@@ -83,8 +83,6 @@ local tick_minute_functions = {
 }
 
 local function on_tick()
-	Mirror_terrain.ticking_work()
-
 	local tick = game.tick
 
 	if tick % 60 == 0 then 
@@ -133,8 +131,63 @@ local function on_player_mined_entity(event)
 end
 
 local function on_chunk_generated(event)
-	Terrain.generate(event)
-	Mirror_terrain.add_chunk(event)
+	local surface = event.surface
+
+	-- Check if we're out of init.
+	if not surface or not surface.valid then return end
+
+	-- Necessary check to ignore nauvis surface.
+	if surface.name ~= global.bb_surface_name then return end
+
+	-- Generate structures for north only.
+	local pos = event.area.left_top
+	if pos.y < 0 then
+		Terrain.generate(event)
+	end
+
+	-- Request chunk for opposite side, maintain the lockstep.
+	-- NOTE: There is still a window where user can place down a structure
+	-- and it will be mirrored. However this window is so tiny - user would
+	-- need to fly in god mode and spam entities in partially generated
+	-- chunks.
+	local req_pos = { pos.x + 16, -pos.y + 16 }
+	surface.request_to_generate_chunks(req_pos, 0)
+
+	-- Clone from north and south. NOTE: This WILL fire 2 times
+	-- for each chunk due to asynchronus nature of this event.
+	-- Both sides contain arbitary amount of chunks, some positions
+	-- when inverted will be still in process of generation or not
+	-- generated at all. It is important to perform 2 passes to make
+	-- sure everything is cloned properly. Normally we would use mutex
+	-- but this is not reliable in this environment.
+	Mirror_terrain.clone(event)
+end
+
+local function on_entity_cloned(event)
+	local source = event.source
+	local destination = event.destination
+
+	-- In case entity dies between clone and this event we
+	-- have to ensure south doesn't get additional objects.
+	if not source.valid then
+		if destination.valid then
+			destination.destroy()
+		end
+
+		return
+	end
+
+	Mirror_terrain.invert_entity(event)
+end
+
+local function on_area_cloned(event)
+	local surface = event.destination_surface
+
+	-- Check if we're out of init and not between surface hot-swap.
+	if not surface or not surface.valid then return end
+
+	-- Event is fired only for south side.
+	Mirror_terrain.invert_tiles(event)
 end
 
 local function on_init()
@@ -147,8 +200,10 @@ local function on_init()
 end
 
 local Event = require 'utils.event'
+Event.add(defines.events.on_area_cloned, on_area_cloned)
 Event.add(defines.events.on_research_finished, Ai.unlock_satellite)			--free silo space tech
 Event.add(defines.events.on_entity_died, Ai.on_entity_died)
+Event.add(defines.events.on_entity_cloned, on_entity_cloned)
 Event.add(defines.events.on_built_entity, on_built_entity)
 Event.add(defines.events.on_chunk_generated, on_chunk_generated)
 Event.add(defines.events.on_console_chat, on_console_chat)

@@ -96,7 +96,7 @@ function Public.playground_surface()
 		["enemy-base"] = {frequency = 0, size = 0, richness = 0}
 	}
 	local surface = game.create_surface(global.bb_surface_name, map_gen_settings)
-	surface.request_to_generate_chunks({x = 0, y = -256}, 8)
+	surface.request_to_generate_chunks({x = 0, y = -256}, 7)
 	surface.force_generate_chunk_requests()
 end
 

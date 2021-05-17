@@ -379,12 +379,24 @@ end
 
 local function respawn_silo(event)
 	local entity = event.entity
-	global.rocket_silo[entity.force.name] = entity.clone {
+	local surface = entity.surface
+	if surface == nil or not surface.valid then
+		log("Surface " .. global.bb_surface_name .. " invalid - cannot respawn silo")
+		return
+	end
+
+	local force_name = entity.force.name
+	-- Has to be created instead of clone otherwise it will be moved to south.
+	entity = surface.create_entity {
+		name = entity.name,
 		position = entity.position,
-		surface = entity.surface,
-		force = entity.force
+		surface = surface,
+		force = force_name,
+		create_build_effect_smoke = false,
 	}
-	global.rocket_silo[entity.force.name].health = 5
+	entity.minable = false
+	entity.health = 5
+	global.rocket_silo[force_name] = entity
 end
 
 function Public.silo_death(event)
