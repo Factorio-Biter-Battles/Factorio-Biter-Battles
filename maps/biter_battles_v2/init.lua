@@ -140,12 +140,6 @@ function Public.tables()
 	global.spectator_rejoin_delay = {}
 	global.spy_fish_timeout = {}
 	global.target_entities = {}
-	global.terrain_gen = {}
-	global.terrain_gen.chunk_copy = {}
-	global.terrain_gen.chunk_mirror = {}
-	global.terrain_gen.counter = 0
-	global.terrain_gen.size_of_chunk_copy = 0
-	global.terrain_gen.size_of_chunk_mirror = 0
 	global.tm_custom_name = {}
 	global.total_passive_feed_redpotion = 0
 	global.unit_groups = {}
