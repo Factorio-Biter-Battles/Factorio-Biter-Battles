@@ -372,9 +372,18 @@ local function freeze_all_biters(surface)
 end
 
 local function biter_killed_the_silo(event)
-    local cause = event.cause
-    if cause and cause.valid and cause.type == "unit" then return true end
-    return
+	local force = event.force
+	if force ~= nil then
+		return string.find(event.force.name, "_biters")
+	end
+
+	local cause = event.cause
+	if cause ~= nil then
+		return (cause.valid and cause.type == 'unit')
+	end
+
+	log("Could not determine what destroyed the silo")
+	return false
 end
 
 local function respawn_silo(event)

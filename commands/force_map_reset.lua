@@ -12,21 +12,16 @@ local function force_map_reset(reason)
         elseif not reason or string.len(reason) <= 5 then
             player.print("[ERROR] Please enter reason, min length of 5")
         else
+	    if not global.rocket_silo["north"].valid then
+		game.print("[ERROR] Map is during reset already")
+		return
+	    end
+
             msg ="Admin " .. player.name .. " initiated map reset. Reason: " .. reason
             game.print(msg, Color.warning)
             Server.to_discord_embed(msg)
             local p = global.rocket_silo["north"].position
-            global.rocket_silo["north"].die("south")
-            unit = game.player.surface.create_entity {
-                name = "behemoth-biter",
-                position = p,
-                force = game.forces['south']
-            }
-            unit.set_command({
-                type = defines.command.attack,
-                target = global.rocket_silo["north"],
-                distraction = defines.distraction.by_enemy
-            })
+            global.rocket_silo["north"].die("south_biters")
         end
     end
 end
