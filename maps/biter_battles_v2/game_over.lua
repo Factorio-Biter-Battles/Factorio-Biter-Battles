@@ -377,6 +377,16 @@ local function biter_killed_the_silo(event)
     return
 end
 
+local function respawn_silo(event)
+	local entity = event.entity
+	global.rocket_silo[entity.force.name] = entity.clone {
+		position = entity.position,
+		surface = entity.surface,
+		force = entity.force
+	}
+	global.rocket_silo[entity.force.name].health = 5
+end
+
 function Public.silo_death(event)
     local entity = event.entity
     if not entity.valid then return end
@@ -385,14 +395,8 @@ function Public.silo_death(event)
     if entity == global.rocket_silo.south or entity == global.rocket_silo.north then
 
         -- Respawn Silo in case of friendly fire
-        if not biter_killed_the_silo(event) then
-            global.rocket_silo[entity.force.name] =
-                entity.clone({
-                    position = entity.position,
-                    surface = entity.surface,
-                    force = entity.force
-                })
-            global.rocket_silo[entity.force.name].health = 5
+	if not biter_killed_the_silo(event) then
+	    respawn_silo(event)
             return
         end
 
