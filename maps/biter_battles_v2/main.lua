@@ -188,6 +188,15 @@ local function on_area_cloned(event)
 
 	-- Event is fired only for south side.
 	Mirror_terrain.invert_tiles(event)
+
+	-- Check chunks around southen silo to remove water tiles under stone-path.
+	-- Silo can be removed by picking bricks from under it in a situation where
+	-- stone-path tiles were placed directly onto water tiles. This scenario does
+	-- not appear for north as water is removed during silo generation.
+	local position = event.destination_area.left_top
+	if position.y == 64 and math.abs(position.x) <= 64 then
+		Mirror_terrain.remove_hidden_tiles(event)
+	end
 end
 
 local function on_init()

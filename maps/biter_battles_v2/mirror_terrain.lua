@@ -110,6 +110,24 @@ function Public.invert_entity(event)
 	destination.teleport(dest_pos)
 end
 
+function Public.remove_hidden_tiles(event)
+	local bb = event.destination_area
+	local surface = event.destination_surface
+	local to_remove = surface.find_tiles_filtered {
+		area = bb,
+		has_hidden_tile = true,
+		name = "stone-path",
+	}
+
+	local tiles = {}
+	for i, tile in pairs(to_remove) do
+		if not tile.valid then goto remove_hidden_cont end
+		surface.set_hidden_tile(tile.position, nil)
+
+		::remove_hidden_cont::
+	end
+end
+
 function Public.invert_tiles(event)
 	local surface = event.destination_surface
 	local to_emplace = surface.find_tiles_filtered {
