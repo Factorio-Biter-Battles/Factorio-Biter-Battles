@@ -96,7 +96,7 @@ function Public.playground_surface()
 		["enemy-base"] = {frequency = 0, size = 0, richness = 0}
 	}
 	local surface = game.create_surface(global.bb_surface_name, map_gen_settings)
-	surface.request_to_generate_chunks({x = 0, y = -256}, 8)
+	surface.request_to_generate_chunks({x = 0, y = -256}, 7)
 	surface.force_generate_chunk_requests()
 end
 
@@ -140,12 +140,6 @@ function Public.tables()
 	global.spectator_rejoin_delay = {}
 	global.spy_fish_timeout = {}
 	global.target_entities = {}
-	global.terrain_gen = {}
-	global.terrain_gen.chunk_copy = {}
-	global.terrain_gen.chunk_mirror = {}
-	global.terrain_gen.counter = 0
-	global.terrain_gen.size_of_chunk_copy = 0
-	global.terrain_gen.size_of_chunk_mirror = 0
 	global.tm_custom_name = {}
 	global.total_passive_feed_redpotion = 0
 	global.unit_groups = {}

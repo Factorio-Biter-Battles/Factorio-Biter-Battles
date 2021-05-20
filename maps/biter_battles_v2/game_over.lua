@@ -372,9 +372,40 @@ local function freeze_all_biters(surface)
 end
 
 local function biter_killed_the_silo(event)
-    local cause = event.cause
-    if cause and cause.valid and cause.type == "unit" then return true end
-    return
+	local force = event.force
+	if force ~= nil then
+		return string.find(event.force.name, "_biters")
+	end
+
+	local cause = event.cause
+	if cause ~= nil then
+		return (cause.valid and cause.type == 'unit')
+	end
+
+	log("Could not determine what destroyed the silo")
+	return false
+end
+
+local function respawn_silo(event)
+	local entity = event.entity
+	local surface = entity.surface
+	if surface == nil or not surface.valid then
+		log("Surface " .. global.bb_surface_name .. " invalid - cannot respawn silo")
+		return
+	end
+
+	local force_name = entity.force.name
+	-- Has to be created instead of clone otherwise it will be moved to south.
+	entity = surface.create_entity {
+		name = entity.name,
+		position = entity.position,
+		surface = surface,
+		force = force_name,
+		create_build_effect_smoke = false,
+	}
+	entity.minable = false
+	entity.health = 5
+	global.rocket_silo[force_name] = entity
 end
 
 function Public.silo_death(event)
@@ -385,14 +416,8 @@ function Public.silo_death(event)
     if entity == global.rocket_silo.south or entity == global.rocket_silo.north then
 
         -- Respawn Silo in case of friendly fire
-        if not biter_killed_the_silo(event) then
-            global.rocket_silo[entity.force.name] =
-                entity.clone({
-                    position = entity.position,
-                    surface = entity.surface,
-                    force = entity.force
-                })
-            global.rocket_silo[entity.force.name].health = 5
+	if not biter_killed_the_silo(event) then
+	    respawn_silo(event)
             return
         end
 

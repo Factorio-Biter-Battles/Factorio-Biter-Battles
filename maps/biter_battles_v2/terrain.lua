@@ -419,24 +419,6 @@ function Public.generate(event)
 	local left_top = event.area.left_top
 	local left_top_x = left_top.x
 	local left_top_y = left_top.y
-	
-	if surface.name ~= global.bb_surface_name then return end
-	if left_top_y >= 0 then
-		local tiles = {}
-		if math_abs(left_top_x) > 64 or math_abs(left_top_y) > 64 then
-			for k, v in pairs(loading_chunk_vectors) do tiles[k] = {name = "out-of-map", position = {left_top_x + v[1], left_top_y + v[2]}} end
-		end
-		surface.set_tiles(tiles, false)
-
-		local objects = surface.find_entities(event.area)
-		for _, object in pairs(objects) do
-			if object.name ~= 'character' then
-				object.destroy()
-			end
-		end
-
-		return
-	end
 
 	mixed_ore(surface, left_top_x, left_top_y)
 	generate_river(surface, left_top_x, left_top_y)
