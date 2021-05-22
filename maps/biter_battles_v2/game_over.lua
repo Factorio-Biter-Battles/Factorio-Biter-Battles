@@ -322,14 +322,12 @@ function Public.server_restart()
 	Init.draw_structures()
         Init.load_spawn()
 
-	local position = {0, 0}
         for _, player in pairs(game.players) do
             Functions.init_player(player)
             for _, e in pairs(player.gui.left.children) do
                 e.destroy()
             end
             Gui.create_main_gui(player)
-	    player.teleport(position, global.bb_surface_name)
         end
         game.reset_time_played()
         global.server_restart_timer = nil
