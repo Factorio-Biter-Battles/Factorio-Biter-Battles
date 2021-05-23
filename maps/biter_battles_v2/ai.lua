@@ -514,6 +514,8 @@ local function reanimate(entity, cut_off)
 end
 
 Public.on_entity_died = function(event)
+	if global.server_restart_timer ~= nil then return end
+
 	local entity = event.entity
 	if not entity.valid then return end
 	if entity.type ~= "unit" then return end
