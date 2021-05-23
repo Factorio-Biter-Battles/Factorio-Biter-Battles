@@ -484,13 +484,38 @@ end
 local function reanimate(entity, cut_off)
 	if math_random(1, 10000) > cut_off then	return end
 
-	local revived_entity = entity.clone({position = entity.position, surface = entity.surface, force = entity.force})
-	revived_entity.health = revived_entity.prototype.max_health
+	local surface = entity.surface
+	-- Has to be created instead of clone otherwise it will be moved to
+	-- other side through on_entity_clone()
+	local unit = surface.create_entity {
+		name = entity.name,
+		position = entity.position,
+		surface = surface,
+		force = entity.force,
+		direction = entity.direction
+	}
+	unit.health = unit.prototype.max_health
 
+	-- Reassign to previous group. In case this was last member in the
+	-- group we cannot destroy entity just yet, instead perform add.
+	local group = entity.unit_group
+	if group == nil then
+		entity.destroy()
+		return
+	end
+
+	if not group.valid then
+		entity.destroy()
+		return
+	end
+
+	group.add_member(unit)
 	entity.destroy()
 end
 
 Public.on_entity_died = function(event)
+	if global.server_restart_timer ~= nil then return end
+
 	local entity = event.entity
 	if not entity.valid then return end
 	if entity.type ~= "unit" then return end
