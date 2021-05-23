@@ -383,7 +383,9 @@ local function draw_biter_area(surface, left_top_x, left_top_y)
 	end
 end
 
+global.disablemixedores=false
 local function mixed_ore(surface, left_top_x, left_top_y)
+	if global.disablemixedores then return end
 	local seed = game.surfaces[global.bb_surface_name].map_gen_settings.seed
 	
 	local noise = GetNoise("bb_ore", {x = left_top_x + 16, y = left_top_y + 16}, seed)
