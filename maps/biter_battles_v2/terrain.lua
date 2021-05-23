@@ -583,6 +583,7 @@ function Public.generate_spawn_goodies(surface)
 end
 ]]
 
+global.lootmodi=0.02
 function Public.minable_wrecks(event)
 	local entity = event.entity
 	if not entity then return end
@@ -592,7 +593,7 @@ function Public.minable_wrecks(event)
 	local surface = entity.surface
 	local player = game.players[event.player_index]
 	
-	local loot_worth = math_floor(math_abs(entity.position.x * 0.02)) + math_random(16, 32)	
+	local loot_worth = math_floor(math_abs(entity.position.x * global.lootmodi)) + math_random(16, 32)	
 	local blacklist = LootRaffle.get_tech_blacklist(math_abs(entity.position.x * 0.0001) + 0.10)
 	for k, _ in pairs(loot_blacklist) do blacklist[k] = true end
 	local item_stacks = LootRaffle.roll(loot_worth, math_random(1, 3), blacklist)
