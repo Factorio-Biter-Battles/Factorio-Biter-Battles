@@ -259,7 +259,7 @@ function Public.refresh_threat()
 	end
 	global.gui_refresh_delay = game.tick + 5
 end
-
+global.insertcar=false
 function join_team(player, force_name, forced_join)
 	if not player.character then return end
 	if not forced_join then
@@ -331,6 +331,7 @@ function join_team(player, force_name, forced_join)
 	player.insert {name = 'iron-plate', count = 16}
 	player.insert {name = 'burner-mining-drill', count = 10}
 	player.insert {name = 'wood', count = 2}
+	if global.insertcar then player.insert {name = 'car', count = 1} end
 	global.chosen_team[player.name] = force_name
     global.spectator_rejoin_delay[player.name] = game.tick
 	player.spectator = false
