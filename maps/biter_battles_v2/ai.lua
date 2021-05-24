@@ -495,21 +495,6 @@ local function reanimate(entity, cut_off)
 		direction = entity.direction
 	}
 	unit.health = unit.prototype.max_health
-
-	-- Reassign to previous group. In case this was last member in the
-	-- group we cannot destroy entity just yet, instead perform add.
-	local group = entity.unit_group
-	if group == nil then
-		entity.destroy()
-		return
-	end
-
-	if not group.valid then
-		entity.destroy()
-		return
-	end
-
-	group.add_member(unit)
 	entity.destroy()
 end
 
