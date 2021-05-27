@@ -479,25 +479,30 @@ function Public.draw_spawn_area(surface)
 end
 
 function Public.generate_additional_spawn_ore(surface)
-	local r = 130
-	local area = {{r * -1, r * -1}, {r, 0}}
-	local ores = {}
-	ores["iron-ore"] = surface.count_entities_filtered({name = "iron-ore", area = area})
-	ores["copper-ore"] = surface.count_entities_filtered({name = "copper-ore", area = area})
-	ores["coal"] = surface.count_entities_filtered({name = "coal", area = area})
-	ores["stone"] = surface.count_entities_filtered({name = "stone", area = area})
-	for ore, ore_count in pairs(ores) do
-		if ore_count < 1000 or ore_count == nil then
-			local pos = {}
-			for _ = 1, 32, 1 do
-				pos = {x = -96 + math_random(0, 192), y = -20 - math_random(0, 96)}
-				if surface.can_place_entity({name = "coal", position = pos, amount = 1}) then
-					break
+	-- how high and wide the patches can be drawn
+	local h = 100 
+	local w = 200
+	local area = {{-w-30, -h-30}, {w+30, 0}}	
+	for _, entity in pairs(game.surfaces[3].find_entities_filtered{area = area, type = "resource"}) do entity.destroy() end
+
+	-- mainbase ores settings
+	local ores = {}	
+	ores["iron-ore"] =  {size=1.1, density=2000, patches=2}  
+	ores["copper-ore"] ={size=0.9, density=2000, patches=1}
+	ores["coal"] =	    {size=0.9, density=2000, patches=1}
+	ores["stone"] =	    {size=1,   density=3000, patches=1}
+	
+		for ore, k in pairs(ores) do
+			for i=1,ores[ore].patches, 1 do 
+				local pos = {}
+				for _ = 1, 32, 1 do
+					pos = {x = math_random(-w/2, w/2), y = - math_random(30, h)}
+					if surface.can_place_entity({name = "coal", position = pos, amount = 1}) then
+						break end
 				end
+				draw_noise_ore_patch(pos, ore, surface, ores[ore].size*(math_random(20, 24)), ores[ore].density)
 			end
-			draw_noise_ore_patch(pos, ore, surface, math_random(18, 24), math_random(1500, 2000))
-		end
-	end
+		end		
 end
 
 function Public.generate_additional_rocks(surface)
