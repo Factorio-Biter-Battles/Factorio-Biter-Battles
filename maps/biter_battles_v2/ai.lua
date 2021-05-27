@@ -481,24 +481,6 @@ function Public.subtract_threat(entity)
 	return true
 end
 
--- biter reanimation based on module/biter_reanimator.lua
-local function reanimate(entity, cut_off)
-	if math_random(1, 10000) > cut_off then	return end
-
-	local surface = entity.surface
-	-- Has to be created instead of clone otherwise it will be moved to
-	-- other side through on_entity_clone()
-	local unit = surface.create_entity {
-		name = entity.name,
-		position = entity.position,
-		surface = surface,
-		force = entity.force,
-		direction = entity.direction
-	}
-	unit.health = unit.prototype.max_health
-	entity.destroy()
-end
-
 local UNIT_NAMES = {
 	'small-biter',
 	'small-spitter',
