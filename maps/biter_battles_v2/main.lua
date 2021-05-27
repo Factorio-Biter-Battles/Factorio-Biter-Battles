@@ -85,6 +85,8 @@ local tick_minute_functions = {
 local function on_tick()
 	local tick = game.tick
 
+	Ai.reanimate_units()
+
 	if tick % 60 == 0 then 
 		global.bb_threat["north_biters"] = global.bb_threat["north_biters"] + global.bb_threat_income["north_biters"]
 		global.bb_threat["south_biters"] = global.bb_threat["south_biters"] + global.bb_threat_income["south_biters"]
@@ -211,7 +213,11 @@ end
 local Event = require 'utils.event'
 Event.add(defines.events.on_area_cloned, on_area_cloned)
 Event.add(defines.events.on_research_finished, Ai.unlock_satellite)			--free silo space tech
-Event.add(defines.events.on_entity_died, Ai.on_entity_died)
+Event.add(defines.events.on_post_entity_died, Ai.schedule_reanimate)
+Event.add_event_filter(defines.events.on_post_entity_died, {
+	filter = "type",
+	type = "unit",
+})
 Event.add(defines.events.on_entity_cloned, on_entity_cloned)
 Event.add(defines.events.on_built_entity, on_built_entity)
 Event.add(defines.events.on_chunk_generated, on_chunk_generated)

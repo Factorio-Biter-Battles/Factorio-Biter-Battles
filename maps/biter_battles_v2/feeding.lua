@@ -21,14 +21,21 @@ end
 
 local function set_biter_endgame_modifiers(force)
 	if force.evolution_factor ~= 1 then return end
-	global.reanimate[force.index] = math.floor((global.bb_evolution[force.name] - 1) * 4000)
+
+	-- Calculates reanimation chance. This value is normalized onto
+	-- maximum re-animation threshold. For example if real evolution is 150
+	-- and max is 350, then 150 / 350 = 42% chance.
+	local threshold = global.bb_evolution[force.name]
+	threshold = math.floor((threshold - 1.0) * 100.0)
+	threshold = threshold / global.max_reanim_thresh * 100
+	threshold = math.floor(threshold)
+	global.reanim_chance[force.index] = threshold
+
 	local damage_mod = math.round((global.bb_evolution[force.name] - 1) * 1.0, 3)
 	force.set_ammo_damage_modifier("melee", damage_mod)
 	force.set_ammo_damage_modifier("biological", damage_mod)
 	force.set_ammo_damage_modifier("artillery-shell", damage_mod)
 	force.set_ammo_damage_modifier("flamethrower", damage_mod)
-
-	
 end
 
 local function get_enemy_team_of(team)

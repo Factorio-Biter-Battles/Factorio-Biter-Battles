@@ -2,6 +2,7 @@ local Public = {}
 local BiterRaffle = require "maps.biter_battles_v2.biter_raffle"
 local Functions = require "maps.biter_battles_v2.functions"
 local bb_config = require "maps.biter_battles_v2.config"
+local fifo = require "maps.biter_battles_v2.fifo"
 local math_random = math.random
 local math_abs = math.abs
 
@@ -498,16 +499,145 @@ local function reanimate(entity, cut_off)
 	entity.destroy()
 end
 
-Public.on_entity_died = function(event)
-	if global.server_restart_timer ~= nil then return end
+local UNIT_NAMES = {
+	'small-biter',
+	'small-spitter',
+	'medium-biter',
+	'medium-spitter',
+	'big-biter',
+	'big-spitter',
+	'behemoth-biter',
+	'behemoth-spitter',
+}
+local UNIT_NAMES_LEN = #UNIT_NAMES
 
-	local entity = event.entity
-	if not entity.valid then return end
-	if entity.type ~= "unit" then return end
-	-- Skip when under 100 evo
-	local cut_off = global.reanimate[entity.force.index]
-	if not cut_off then return end
-	reanimate(entity, cut_off)
+local function likely_biter_name(force_name)
+	-- Get most likely biter name based on current evolution.
+	local idx = UNIT_NAMES_LEN
+	local evo = global.bb_evolution[force_name]
+	-- Bother calculating threshold only for evolution less than 90.
+	if evo < 0.9 then
+		-- Map evolution onto array indicies.
+		idx = math.ceil((evo + 0.1) * UNIT_NAMES_LEN)
+	end
+
+	-- Randomly choose between pair and respect array boundaries.
+	if idx > 1 then
+		idx = math.random(idx - 1, idx)
+	end
+
+	return UNIT_NAMES[idx]
+end
+
+local CORPSE_NAMES = {
+	'behemoth-biter-corpse',
+	'big-biter-corpse',
+	'medium-biter-corpse',
+	'small-biter-corpse',
+	'behemoth-spitter-corpse',
+	'big-spitter-corpse',
+	'medium-spitter-corpse',
+	'small-spitter-corpse',
+}
+
+local function reanimate_unit(id)
+	local position = fifo.pop(id)
+
+	-- Find corpse to spawn unit on top of.
+	local surface = game.surfaces[global.bb_surface_name]
+	local corpse = surface.find_entities_filtered {
+		type = 'corpse',
+		name = CORPSE_NAMES,
+		position = position,
+		radius = 1,
+		limit = 1,
+	}[1]
+
+	local force = 'south_biters'
+	if position.y < 0 then
+		force = 'north_biters'
+	end
+
+	local direction = nil
+	local name = nil
+	if corpse == nil then
+		-- No corpse data, choose unit based on evolution %.
+		name = likely_biter_name(force)
+	else
+		-- Extract name by cutting of '-corpse' part.
+		name = string.sub(corpse.name, 0, -8)
+		position = corpse.position
+		direction = corpse.direction
+		corpse.destroy()
+	end
+
+	surface.create_entity {
+		name = name,
+		position = position,
+		force = force,
+		direction = direction,
+	}
+end
+
+local function _reanimate_units(id, cycles)
+	repeat
+		-- Reanimate unit and reassign current fifo state
+		reanimate_unit(id)
+		cycles = cycles - 1
+	until cycles == 0
+end
+
+function Public.reanimate_units()
+	-- This FIFOs can be accessed by force indices.
+	for force, id in pairs(global.dead_units) do
+		-- Check for each side if there are any biters to reanimate.
+		if fifo.empty(id) then
+			goto reanim_units_cont
+		end
+
+		-- Balance amount of unit creation requests to get rid off
+		-- excess stored in memory.
+		local cycles = fifo.length(id) / global.reanim_balancer
+		cycles = math.floor(cycles) + 1
+		_reanimate_units(id, cycles)
+
+		::reanim_units_cont::
+	end
+end
+
+Public.schedule_reanimate = function(event)
+	-- This event is to be fired from on_post_entity_died. Standard version
+	-- of this event is racing with current reanimation logic. Corpse
+	-- takes few ticks to spawn, there is also a short dying animation. This
+	-- combined makes renimation to miss corpses on the battle field
+	-- sometimes.
+	
+	-- If rocket silo was blown up - disable reanimate logic.
+	if global.server_restart_timer ~= nil then
+		return
+	end
+
+	-- There is no entity within this event and so we have to guess
+	-- force based on y axis.
+	local force = game.forces['south_biters']
+	local position = event.position
+	if position.y < 0 then
+		force = game.forces['north_biters']
+	end
+
+	local idx = force.index
+	local chance = global.reanim_chance[idx]
+	if chance <= 0 then
+		return
+	end
+
+	local reanimate = math.random(1, 100) <= chance
+	if not reanimate then
+		return
+	end
+
+	-- Store only position, that is enough to guess force and type of biter.
+	fifo.push(global.dead_units[idx], position)
 end
 
 return Public
