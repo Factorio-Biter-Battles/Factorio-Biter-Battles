@@ -3,7 +3,9 @@ local LootRaffle = require "functions.loot_raffle"
 local BiterRaffle = require "maps.biter_battles_v2.biter_raffle"
 local bb_config = require "maps.biter_battles_v2.config"
 local Functions = require "maps.biter_battles_v2.functions"
+local tables = require "maps.biter_battles_v2.tables"
 
+local spawn_ore = tables.spawn_ore
 local table_insert = table.insert
 local math_floor = math.floor
 local math_random = math.random
@@ -483,6 +485,44 @@ function Public.clear_ore_in_main(surface)
 		entity.destroy() end
 end
 
+function Public.generate_spawn_ore(surface)
+	local area = { x = 160, y = 80 }
+	local y = 30
+	local x = -area.x/2
+	local grid_index = 1
+	local grid = {}
+	local sqy=(area.y-30)/3
+	local sqx=(area.x)/7
+	for i = 1 ,3 ,1 do
+		y = y + sqy/2
+		if i >1 then y = y + sqy end
+		for j = 1, 7, 1 do
+			x = x + sqx/2
+			if j >1 then x = x + sqx/2 end
+			grid[grid_index] = { x = math.floor( x + 0.5 ), y = - math.floor( y + 0.5 ) }            
+			grid_index = grid_index + 1
+		end
+		x = -area.x/2
+	end
+	grid = premutate_table(grid)
+	grid_index = 1
+	for ore, k in pairs(spawn_ore) do        
+		for i = 1 ,spawn_ore[ore].big_patches, 1 do
+			local ingy = grid[grid_index].y + math_floor((math_random(0,sqy)-sqy/2))
+			local ingx = grid[grid_index].x + math_floor((math_random(0,sqx)-sqx/2))
+			local pos = {x = ingx, y = ingy}          
+			draw_noise_ore_patch(pos, ore, surface, spawn_ore[ore].size, spawn_ore[ore].density)  
+			grid_index = grid_index + 1
+		end
+		for i = 1 ,spawn_ore[ore].small_patches, 1 do
+			local ingy = grid[grid_index].y + math_floor((math_random(0,sqy)-sqy/2))
+			local ingx = grid[grid_index].x + math_floor((math_random(0,sqx)-sqy/2))
+			local pos = {x = ingx, y = ingy}          
+			draw_noise_ore_patch(pos, ore, surface, spawn_ore[ore].size/2.5, spawn_ore[ore].density)  
+			grid_index = grid_index + 1
+		end        
+	end
+end
 
 function Public.generate_additional_rocks(surface)
 	local r = 130
