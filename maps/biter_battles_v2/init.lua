@@ -103,7 +103,8 @@ end
 function Public.draw_structures()
 	local surface = game.surfaces[global.bb_surface_name]
 	Terrain.draw_spawn_area(surface)
-	Terrain.generate_additional_spawn_ore(surface)
+	Terrain.clear_ore_in_main(surface)
+	Terrain.generate_spawn_ore(surface)
 	Terrain.generate_additional_rocks(surface)
 	Terrain.generate_silo(surface)
 	Terrain.draw_spawn_circle(surface)
