@@ -485,6 +485,25 @@ function Public.clear_ore_in_main(surface)
 		entity.destroy() end
 end
 
+function premutate_table(tableA)
+    local tableB = {}
+    local state
+    local rn
+    local index = 0
+    for i, v in ipairs(tableA) do index = index + 1 end
+    for i, v in ipairs(tableA) do 
+        state = true
+        while(state) do
+            rn = math_random(1,index)
+            if tableB[rn] == nil then
+                tableB[rn] = v
+                state = false
+            end    
+        end
+    end
+    return tableB
+    end
+
 function Public.generate_spawn_ore(surface)
 	local area = { x = 160, y = 80 }
 	local y = 30
