@@ -94,6 +94,13 @@ Public.food_long_to_short = {
 	["utility-science-pack"] = {short_name= "utility", indexScience = 6},
 	["space-science-pack"] = {short_name= "space", indexScience = 7}
 }
+
+Public.spawn_ore = { --max 21 patches total
+	["iron-ore"] =      {size = 23, density = 3000, big_patches = 2, small_patches = 1},
+	["copper-ore"] =    {size = 21, density = 3000, big_patches = 1, small_patches = 2},
+	["coal"] =          {size = 22, density = 3000, big_patches = 1, small_patches = 2},
+	["stone"] =         {size = 22, density = 3000, big_patches = 1, small_patches = 1}
+}
 Public.forces_list = { "all teams", "north", "south" }
 Public.science_list = { "all science", "very high tier (space, utility, production)", "high tier (space, utility, production, chemical)", "mid+ tier (space, utility, production, chemical, military)","space","utility","production","chemical","military", "logistic", "automation" }
 Public.evofilter_list = { "all evo jump", "no 0 evo jump", "10+ only","5+ only","4+ only","3+ only","2+ only","1+ only" }
