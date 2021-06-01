@@ -3,7 +3,9 @@ local LootRaffle = require "functions.loot_raffle"
 local BiterRaffle = require "maps.biter_battles_v2.biter_raffle"
 local bb_config = require "maps.biter_battles_v2.config"
 local Functions = require "maps.biter_battles_v2.functions"
+local tables = require "maps.biter_battles_v2.tables"
 
+local spawn_ore = tables.spawn_ore
 local table_insert = table.insert
 local math_floor = math.floor
 local math_random = math.random
@@ -497,6 +499,64 @@ function Public.generate_additional_spawn_ore(surface)
 			end
 			draw_noise_ore_patch(pos, ore, surface, math_random(18, 24), math_random(1500, 2000))
 		end
+	end
+end
+
+
+
+local function draw_grid_ore_patch(count, grid, name, surface, size, density)
+	-- Takes a random left_top coordinate from grid, removes it and draws
+	-- ore patch on top of it. Grid is held by reference, so this function
+	-- is reentrant.
+	for i = 1, count, 1 do
+		local idx = math.random(1, #grid)
+		local pos = grid[idx]
+		table.remove(grid, idx)
+
+		-- The draw_noise_ore_patch expects position with x and y keys.
+		pos = { x = pos[1], y = pos[2] }
+		draw_noise_ore_patch(pos, name, surface, size, density)
+	end
+end
+
+function Public.clear_ore_in_main(surface)
+	local search_area = {
+		left_top = { -150, -150 },
+		right_bottom = { 150, 0 }
+	}
+	local resources = surface.find_entities_filtered {
+		area = search_area,
+		type = "resource"
+	}
+	for _, res in pairs(resources) do
+		res.destroy()
+	end
+end
+
+function Public.generate_spawn_ore(surface)
+	-- This array holds indicies of chunks onto which we desire to
+	-- generate ore patches. It is visually representing north spawn
+	-- area. One element was removed on purpose - we don't want to
+	-- draw ore in the lake which overlaps with chunk [0,-1]. All ores
+	-- will be mirrored to south.
+	local grid = {
+		{ -2, -3 }, { -1, -3 }, { 0, -3 }, { 1, -3, }, { 2, -3 },
+		{ -2, -2 }, { -1, -2 }, { 0, -2 }, { 1, -2, }, { 2, -2 },
+		{ -2, -1 }, { -1, -1 },            { 1, -1, }, { 2, -1 },
+	}
+
+	-- Calculate left_top position of a chunk. It will be used as origin
+	-- for ore drawing. Reassigns new coordinates to the grid.
+	for i, _ in ipairs(grid) do
+		grid[i][1] = grid[i][1] * 32 + math.random(-12, 12)
+		grid[i][2] = grid[i][2] * 32 + math.random(-24, -1)
+	end
+
+	for name, props in pairs(spawn_ore) do
+		draw_grid_ore_patch(props.big_patches, grid, name, surface,
+				    props.size, props.density)
+		draw_grid_ore_patch(props.small_patches, grid, name, surface,
+				    props.size / 2, props.density)
 	end
 end
 
