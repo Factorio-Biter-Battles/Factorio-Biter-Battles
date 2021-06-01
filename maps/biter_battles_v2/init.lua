@@ -145,7 +145,6 @@ function Public.tables()
 	global.target_entities = {}
 	global.tm_custom_name = {}
 	global.total_passive_feed_redpotion = 0
-	global.unit_groups = {}
 	global.unit_spawners = {}
 	global.unit_spawners.north_biters = {}
 	global.unit_spawners.south_biters = {}

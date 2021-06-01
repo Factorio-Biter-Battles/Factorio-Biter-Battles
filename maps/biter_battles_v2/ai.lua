@@ -114,10 +114,6 @@ end
 Public.destroy_inactive_biters = function()
 	local biter_force_name = global.next_attack .. "_biters"
 
-	for _, group in pairs(global.unit_groups) do
-		set_active_biters(group)
-	end
-
 	for unit_number, biter in pairs(global.active_biters[biter_force_name]) do
 		if is_biter_inactive(biter, unit_number, biter_force_name) then
 			global.active_biters[biter_force_name][unit_number] = nil
@@ -360,8 +356,6 @@ local function create_attack_group(surface, force_name, biter_force_name)
 	for _, unit in pairs(units) do unit_group.add_member(unit) end
 
 	send_group(unit_group, force_name, side_target)
-
-	global.unit_groups[unit_group.group_number] = unit_group
 end
 
 Public.pre_main_attack = function()
