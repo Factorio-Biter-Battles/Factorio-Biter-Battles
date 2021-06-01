@@ -563,28 +563,6 @@ function Public.generate_spawn_ore(surface)
 	end
 end
 
-function Public.generate_additional_spawn_ore(surface)
-	local r = 130
-	local area = {{r * -1, r * -1}, {r, 0}}
-	local ores = {}
-	ores["iron-ore"] = surface.count_entities_filtered({name = "iron-ore", area = area})
-	ores["copper-ore"] = surface.count_entities_filtered({name = "copper-ore", area = area})
-	ores["coal"] = surface.count_entities_filtered({name = "coal", area = area})
-	ores["stone"] = surface.count_entities_filtered({name = "stone", area = area})
-	for ore, ore_count in pairs(ores) do
-		if ore_count < 1000 or ore_count == nil then
-			local pos = {}
-			for _ = 1, 32, 1 do
-				pos = {x = -96 + math_random(0, 192), y = -20 - math_random(0, 96)}
-				if surface.can_place_entity({name = "coal", position = pos, amount = 1}) then
-					break
-				end
-			end
-			draw_noise_ore_patch(pos, ore, surface, math_random(18, 24), math_random(1500, 2000))
-		end
-	end
-end
-
 function Public.generate_additional_rocks(surface)
 	local r = 130
 	if surface.count_entities_filtered({type = "simple-entity", area = {{r * -1, r * -1}, {r, 0}}}) >= 12 then return end		
