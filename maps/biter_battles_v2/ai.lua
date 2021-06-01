@@ -143,14 +143,7 @@ local function select_units_around_spawner(spawner, force_name, side_target)
 	local valid_biters = {}
 	local i = 0
 
-	local threat = global.bb_threat[biter_force_name] * math_random(8, 32) * 0.01
-
-	--threat modifier for outposts
-	local m = math_abs(side_target.position.x) - 512
-	if m < 0 then m = 0 end
-	m = 1 - m * 0.001
-	if m < 0.5 then m = 0.5 end
-	threat = threat * m
+	local threat = global.bb_threat[biter_force_name] / 10
 
 	local unit_count = 0
 	local max_unit_count = math.floor(global.bb_threat[biter_force_name] * 0.25) + math_random(6,12)
