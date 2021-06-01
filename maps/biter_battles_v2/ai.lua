@@ -93,7 +93,7 @@ local function is_biter_inactive(biter, unit_number, biter_force_name)
 end
 
 Public.send_near_biters_to_silo = function()
-	if game.tick < 108000 then return end
+	if game.ticks_played < 108000 then return end
 	if not global.rocket_silo["north"] then return end
 	if not global.rocket_silo["south"] then return end
 
