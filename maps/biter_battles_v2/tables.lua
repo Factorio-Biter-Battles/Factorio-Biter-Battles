@@ -94,6 +94,18 @@ Public.food_long_to_short = {
 	["utility-science-pack"] = {short_name= "utility", indexScience = 6},
 	["space-science-pack"] = {short_name= "space", indexScience = 7}
 }
+
+Public.spawn_ore = { 
+	--size is size of the patches. default 20. recomended range 0 to 50.  
+	--density is the density of the ore. default 3000. recomended range from 0 to no limit. 
+	--big/small_patches is amout of big/small patches that will be drawn.
+	--recomended range 0 to 21. if more, they will be drawn on top of each other.
+	["iron-ore"] = {size = 23, density = 3000, big_patches = 2, small_patches = 1},
+	["copper-ore"] = {size = 21, density = 3000, big_patches = 1, small_patches = 2},
+	["coal"] = {size = 22, density = 3000, big_patches = 1, small_patches = 2},
+	["stone"] = {size = 22, density = 3000, big_patches = 1, small_patches = 2}
+}
+
 Public.forces_list = { "all teams", "north", "south" }
 Public.science_list = { "all science", "very high tier (space, utility, production)", "high tier (space, utility, production, chemical)", "mid+ tier (space, utility, production, chemical, military)","space","utility","production","chemical","military", "logistic", "automation" }
 Public.evofilter_list = { "all evo jump", "no 0 evo jump", "10+ only","5+ only","4+ only","3+ only","2+ only","1+ only" }
