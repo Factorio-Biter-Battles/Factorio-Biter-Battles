@@ -478,6 +478,16 @@ function Public.draw_spawn_area(surface)
 	surface.regenerate_decorative()
 end
 
+function Public.clear_ore_in_main(surface)
+	local filter = surface.find_entities_filtered{
+		area = {{-150, -150}, {150, 0}},
+		type = "resource"
+	}
+	for _, entity in pairs(filter) do
+		entity.destroy() 
+	end
+end
+
 function Public.generate_additional_spawn_ore(surface)
 	local r = 130
 	local area = {{r * -1, r * -1}, {r, 0}}
