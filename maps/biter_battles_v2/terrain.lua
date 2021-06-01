@@ -3,7 +3,9 @@ local LootRaffle = require "functions.loot_raffle"
 local BiterRaffle = require "maps.biter_battles_v2.biter_raffle"
 local bb_config = require "maps.biter_battles_v2.config"
 local Functions = require "maps.biter_battles_v2.functions"
+local tables = require "maps.biter_battles_v2.tables"
 
+local spawn_ore = tables.spawn_ore
 local table_insert = table.insert
 local math_floor = math.floor
 local math_random = math.random
@@ -500,6 +502,65 @@ function premutate_table(tableA)
 		tableB[rn] = v
 	end
 	return tableB
+end
+
+function Public.generate_spawn_ore(surface)
+
+	local y
+	local x
+	local pos
+	local grid = {
+		{x = -69, y = -38},
+		{x = -46, y = -38},
+		{x = -23, y = -38},
+		{x = 0, y = -45},
+		{x = 23, y = -38},
+		{x = 46, y = -38},
+		{x = 69, y = -38},
+		{x = -80, y = -63},
+		{x = -46, y = -63},
+		{x = -23, y = -68},
+		{x = 0, y = -78},
+		{x = 23, y = -68},
+		{x = 46, y = -63},
+		{x = 80, y = -63},
+		{x = -69, y = -88},
+		{x = -46, y = -88},
+		{x = -23, y = -100},
+		{x = 0, y = -118},
+		{x = 23, y = -100},
+		{x = 46, y = -88},
+		{x = 69, y = -88}
+	}
+	grid = premutate_table(grid)
+	grid_index = 1
+	local gridmax = table.maxn(grid)
+
+	for ore, k in pairs(spawn_ore) do 		       
+		for i = 1, spawn_ore[ore].big_patches, 1 do
+			pos = {
+				x = grid[grid_index].x + math_random(-5, 5),
+				y = grid[grid_index].y + math_random(-8, 8)
+			}            
+			draw_noise_ore_patch(pos, ore, surface, spawn_ore[ore].size, spawn_ore[ore].density)  
+			grid_index = grid_index + 1
+			if grid_index > gridmax then
+				grid_index = 1
+			end
+		end
+
+		for i = 1 ,spawn_ore[ore].small_patches, 1 do
+			pos = {
+				x = grid[grid_index].x + math_random(-5, 5),
+				y = grid[grid_index].y + math_random(-8, 8)				
+			}         
+			draw_noise_ore_patch(pos, ore, surface, spawn_ore[ore].size / 2.5, spawn_ore[ore].density)  
+			grid_index = grid_index + 1
+			if  grid_index > gridmax then
+				grid_index = 1
+			end
+		end  		      
+	end
 end
 
 function Public.generate_additional_spawn_ore(surface)
