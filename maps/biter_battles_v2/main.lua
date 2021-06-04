@@ -230,6 +230,13 @@ local function clear_corpses(cmd)
             player.print('[ERROR] Value is too big.', Color.fail)
             return
         end
+
+	if not Ai.empty_reanim_scheduler() then
+		player.print("[ERROR] Some corpses are waiting to be reanimated...")
+		player.print(" => Try again in short moment")
+		return
+	end
+
         local pos = player.position
 
         local radius = {{x = (pos.x + -param), y = (pos.y + -param)}, {x = (pos.x + param), y = (pos.y + param)}}

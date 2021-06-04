@@ -622,4 +622,15 @@ Public.schedule_reanimate = function(event)
 	fifo.push(global.dead_units[idx], position)
 end
 
+function Public.empty_reanim_scheduler()
+	for force, id in pairs(global.dead_units) do
+		-- Check for each side if there are any biters to reanimate.
+		if not fifo.empty(id) then
+			return false
+		end
+	end
+
+	return true
+end
+
 return Public
