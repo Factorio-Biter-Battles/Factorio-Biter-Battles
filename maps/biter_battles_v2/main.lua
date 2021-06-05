@@ -9,6 +9,8 @@ local Mirror_terrain = require "maps.biter_battles_v2.mirror_terrain"
 require 'modules.simple_tags'
 local Team_manager = require "maps.biter_battles_v2.team_manager"
 local Terrain = require "maps.biter_battles_v2.terrain"
+local Session = require 'utils.datastore.session_data'
+local Color = require 'utils.color_presets'
 local diff_vote = require "maps.biter_battles_v2.difficulty_vote"
 
 require "maps.biter_battles_v2.sciencelogs_tab"
@@ -84,6 +86,8 @@ local tick_minute_functions = {
 
 local function on_tick()
 	local tick = game.tick
+
+	Ai.reanimate_units()
 
 	if tick % 60 == 0 then 
 		global.bb_threat["north_biters"] = global.bb_threat["north_biters"] + global.bb_threat_income["north_biters"]
@@ -199,6 +203,51 @@ local function on_area_cloned(event)
 	end
 end
 
+local function clear_corpses(cmd)
+	local player = game.player
+        local trusted = Session.get_trusted_table()
+        local param = tonumber(cmd.parameter)
+
+        if not player or not player.valid then
+            return
+        end
+        local p = player.print
+        if not trusted[player.name] then
+            if not player.admin then
+                p('[ERROR] Only admins and trusted weebs are allowed to run this command!', Color.fail)
+                return
+            end
+        end
+        if param == nil then
+            player.print('[ERROR] Must specify radius!', Color.fail)
+            return
+        end
+        if param < 0 then
+            player.print('[ERROR] Value is too low.', Color.fail)
+            return
+        end
+        if param > 500 then
+            player.print('[ERROR] Value is too big.', Color.fail)
+            return
+        end
+
+	if not Ai.empty_reanim_scheduler() then
+		player.print("[ERROR] Some corpses are waiting to be reanimated...")
+		player.print(" => Try again in short moment")
+		return
+	end
+
+        local pos = player.position
+
+        local radius = {{x = (pos.x + -param), y = (pos.y + -param)}, {x = (pos.x + param), y = (pos.y + param)}}
+        for _, entity in pairs(player.surface.find_entities_filtered {area = radius, type = 'corpse'}) do
+            if entity.corpse_expires then
+                entity.destroy()
+            end
+        end
+        player.print('Cleared biter-corpses.', Color.success)
+end
+
 local function on_init()
 	Init.tables()
 	Init.initial_setup()
@@ -211,7 +260,11 @@ end
 local Event = require 'utils.event'
 Event.add(defines.events.on_area_cloned, on_area_cloned)
 Event.add(defines.events.on_research_finished, Ai.unlock_satellite)			--free silo space tech
-Event.add(defines.events.on_entity_died, Ai.on_entity_died)
+Event.add(defines.events.on_post_entity_died, Ai.schedule_reanimate)
+Event.add_event_filter(defines.events.on_post_entity_died, {
+	filter = "type",
+	type = "unit",
+})
 Event.add(defines.events.on_entity_cloned, on_entity_cloned)
 Event.add(defines.events.on_built_entity, on_built_entity)
 Event.add(defines.events.on_chunk_generated, on_chunk_generated)
@@ -227,5 +280,8 @@ Event.add(defines.events.on_robot_built_entity, on_robot_built_entity)
 Event.add(defines.events.on_robot_built_tile, on_robot_built_tile)
 Event.add(defines.events.on_tick, on_tick)
 Event.on_init(on_init)
+
+commands.add_command('clear-corpses', 'Clears all the biter corpses..',
+		     clear_corpses)
 
 require "maps.biter_battles_v2.spec_spy"
