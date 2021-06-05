@@ -99,7 +99,7 @@ Public.spawn_ore = {
 	--size is size of the patches. default 20. recomended range 0 to 50.  
 	--density is the density of the ore. default 3000. recomended range from 0 to no limit. 
 	--big/small_patches is amout of big/small patches that will be drawn.
-	--recomended range 0 to 21. if more, they will be drawn on top of each other.
+	--recomended range 0 to 21. warning sum off big and small patches cant be higher than 21
 	["iron-ore"] = {size = 23, density = 3000, big_patches = 2, small_patches = 1},
 	["copper-ore"] = {size = 21, density = 3000, big_patches = 1, small_patches = 2},
 	["coal"] = {size = 22, density = 3000, big_patches = 1, small_patches = 2},
