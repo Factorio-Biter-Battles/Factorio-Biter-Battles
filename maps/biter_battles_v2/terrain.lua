@@ -504,6 +504,15 @@ function premutate_table(tableA)
 	return tableB
 end
 
+function generate_oref(grid,count,ore,surface,size)	
+	for i = 1, count, 1 do		
+		local idx = math.random(1, #grid)
+		local pos = grid[idx]
+		table.remove(grid, idx)
+		draw_noise_ore_patch(pos, ore, surface, size, spawn_ore[ore].density)
+	end
+end
+
 function Public.generate_spawn_ore(surface)
 
 	local y
