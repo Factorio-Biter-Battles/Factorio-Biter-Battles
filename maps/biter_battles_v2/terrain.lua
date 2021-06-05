@@ -514,61 +514,24 @@ function generate_oref(grid,count,ore,surface,size)
 end
 
 function Public.generate_spawn_ore(surface)
-
 	local y
 	local x
-	local pos
-	local grid = {
-		{x = -69, y = -38},
-		{x = -46, y = -38},
-		{x = -23, y = -38},
-		{x = 0, y = -45},
-		{x = 23, y = -38},
-		{x = 46, y = -38},
-		{x = 69, y = -38},
-		{x = -80, y = -63},
-		{x = -46, y = -63},
-		{x = -23, y = -68},
-		{x = 0, y = -78},
-		{x = 23, y = -68},
-		{x = 46, y = -63},
-		{x = 80, y = -63},
-		{x = -69, y = -88},
-		{x = -46, y = -88},
-		{x = -23, y = -100},
-		{x = 0, y = -118},
-		{x = 23, y = -100},
-		{x = 46, y = -88},
-		{x = 69, y = -88}
-	}
-	grid = premutate_table(grid)
-	grid_index = 1
-	local gridmax = table.maxn(grid)
-
-	for ore, k in pairs(spawn_ore) do 		       
-		for i = 1, spawn_ore[ore].big_patches, 1 do
-			pos = {
-				x = grid[grid_index].x + math_random(-5, 5),
-				y = grid[grid_index].y + math_random(-8, 8)
-			}            
-			draw_noise_ore_patch(pos, ore, surface, spawn_ore[ore].size, spawn_ore[ore].density)  
-			grid_index = grid_index + 1
-			if grid_index > gridmax then
-				grid_index = 1
+	local grid = {}	
+		for x = -2, 2, 1 do
+			for y = -1, -3, -1 do	
+				local f = 0 
+				if x == 0 then 
+					f = -12 
+				end		
+				 grid[#grid + 1] = {
+					 x = x * 32 + math.random(-12, 12),
+					 y = y * 32 + math.random(-24, -1) + f
+				 }	
 			end
 		end
-
-		for i = 1 ,spawn_ore[ore].small_patches, 1 do
-			pos = {
-				x = grid[grid_index].x + math_random(-5, 5),
-				y = grid[grid_index].y + math_random(-8, 8)				
-			}         
-			draw_noise_ore_patch(pos, ore, surface, spawn_ore[ore].size / 2.5, spawn_ore[ore].density)  
-			grid_index = grid_index + 1
-			if  grid_index > gridmax then
-				grid_index = 1
-			end
-		end  		      
+	for ore, k in pairs(spawn_ore) do 
+		generate_oref(grid,spawn_ore[ore].big_patches,ore,surface,spawn_ore[ore].size)
+		generate_oref(grid,spawn_ore[ore].small_patches,ore,surface,spawn_ore[ore].size/2)
 	end
 end
 
