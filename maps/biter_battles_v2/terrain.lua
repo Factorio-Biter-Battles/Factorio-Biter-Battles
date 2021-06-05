@@ -490,20 +490,6 @@ function Public.clear_ore_in_main(surface)
 	end
 end
 
-function premutate_table(tableA)
-	local tableB = {}
-	local rn
-	local index = table.maxn(tableA)
-
-	for i, v in ipairs(tableA) do		
-		repeat
-			rn = math_random(1, index)
-		until(tableB[rn] == nil)
-		tableB[rn] = v
-	end
-	return tableB
-end
-
 function generate_oref(grid,count,ore,surface,size)	
 	for i = 1, count, 1 do		
 		local idx = math.random(1, #grid)
