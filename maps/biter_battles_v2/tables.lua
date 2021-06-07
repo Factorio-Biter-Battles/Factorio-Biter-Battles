@@ -112,7 +112,7 @@ Public.spawn_ore = {
 	-- regardless of the patch size.
 	["iron-ore"] = {
 		size = 23,
-		density = 3000,
+		density = 3500,
 		big_patches = 2,
 		small_patches = 1
 	},
@@ -124,15 +124,15 @@ Public.spawn_ore = {
 	},
 	["coal"] = {
 		size = 22,
-		density = 3000,
+		density = 2500,
 		big_patches = 1,
-		small_patches = 2
+		small_patches = 1
 	},
 	["stone"] = {
-		size = 22,
-		density = 3000,
+		size = 20,
+		density = 2000,
 		big_patches = 1,
-		small_patches = 2
+		small_patches = 0
 	}
 }
 
