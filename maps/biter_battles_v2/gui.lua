@@ -2,6 +2,7 @@ local Public = {}
 local Server = require 'utils.server'
 
 local bb_config = require "maps.biter_battles_v2.config"
+local bb_diff = require "maps.biter_battles_v2.difficulty_vote"
 local event = require 'utils.event'
 local Functions = require "maps.biter_battles_v2.functions"
 local feed_the_biters = require "maps.biter_battles_v2.feeding"
@@ -205,6 +206,9 @@ function Public.create_main_gui(player)
 		l.style.width = 50
 		l.tooltip = gui_value.t2
 	end
+
+	-- Difficulty mutagen effectivness update
+	bb_diff.difficulty_gui()
 
 	-- Action frame
 	local t = frame.add  { type = "table", column_count = 2 }
