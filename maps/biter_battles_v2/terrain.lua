@@ -498,17 +498,47 @@ local function draw_grid_ore_patch(count, grid, name, surface, size, density)
 	end
 end
 
+local function _clear_resources(surface, area)
+	local resources = surface.find_entities_filtered {
+		area = area,
+		type = "resource",
+	}
+
+	local i = 0
+	for _, res in pairs(resources) do
+		if not res.valid then
+			goto clear_resources_cont
+		end
+		res.destroy()
+		i = i + 1
+
+		::clear_resources_cont::
+	end
+
+	return i
+end
+
 function Public.clear_ore_in_main(surface)
-	local search_area = {
+	local area = {
 		left_top = { -150, -150 },
 		right_bottom = { 150, 0 }
 	}
-	local resources = surface.find_entities_filtered {
-		area = search_area,
-		type = "resource"
-	}
-	for _, res in pairs(resources) do
-		res.destroy()
+	local limit = 20
+	local cnt = 0
+	repeat
+		-- Keep clearing resources until there is none.
+		-- Each cycle increases search area.
+		cnt = _clear_resources(surface, area)
+		limit = limit - 1
+		area.left_top[1] = area.left_top[1] - 5
+		area.left_top[2] = area.left_top[2] - 5
+		area.right_bottom[1] = area.right_bottom[1] + 5
+	until cnt == 0 or limit == 0
+
+	if limit == 0 then
+		log("Limit reached, some ores might be truncated in spawn area")
+		log("If this is a custom build, remove a call to clear_ore_in_main")
+		log("If this in a standard value, limit could be tweaked")
 	end
 end
 
