@@ -84,8 +84,6 @@ function Public.invert_entity(event)
 	if destination.name == "rocket-silo" then
 		global.rocket_silo[destination.force.name] = destination
 		Functions.add_target_entity(destination)
-	elseif destination.name == "gun-turret" then
-		Functions.add_target_entity(destination)
 	elseif destination.name == "spitter-spawner" or destination.name == 'biter-spawner' then
 		table_insert(global.unit_spawners[destination.force.name], destination)
 	end

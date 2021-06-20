@@ -149,11 +149,7 @@ local target_entity_types = {
 	["reactor"] = true,
 	["roboport"] = true,
 	["rocket-silo"] = true,
-	["ammo-turret"] = true,
-	["artillery-turret"] = true,
 	["beacon"] = true,
-	["electric-turret"] = true,
-	["fluid-turret"] = true,
 }
 
 local spawn_positions = {}

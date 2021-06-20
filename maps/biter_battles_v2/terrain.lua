@@ -251,7 +251,6 @@ local function generate_starting_area(pos, distance_to_center, surface)
 						if surface.can_place_entity({name = "gun-turret", position = pos}) then
 							local e = surface.create_entity({name = "gun-turret", position = pos, force = "north"})
 							e.insert({name = "firearm-magazine", count = math_random(2,16)})
-							Functions.add_target_entity(e)
 						end
 					else
 						if math_random(1, 24) == 1 and not is_horizontal_border_river(pos) then
