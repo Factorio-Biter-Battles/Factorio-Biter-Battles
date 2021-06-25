@@ -1,4 +1,5 @@
 local Public = {}
+
 local Server = require 'utils.server'
 
 local bb_config = require "maps.biter_battles_v2.config"
@@ -7,6 +8,7 @@ local event = require 'utils.event'
 local Functions = require "maps.biter_battles_v2.functions"
 local feed_the_biters = require "maps.biter_battles_v2.feeding"
 local Tables = require "maps.biter_battles_v2.tables"
+local Pixie = require 'maps.biter_battles_v2.pixie'
 
 local wait_messages = Tables.wait_messages
 local food_names = Tables.gui_foods
@@ -286,6 +288,9 @@ function join_team(player, force_name, forced_join)
 		end
 	end
 
+
+	Pixie.register_player(force_name, player.name)
+	
 	if global.chosen_team[player.name] then
 		if not forced_join then
 			if game.tick - global.spectator_rejoin_delay[player.name] < 3600 then
