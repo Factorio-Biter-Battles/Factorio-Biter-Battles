@@ -139,32 +139,6 @@ function Pixie.reward_pixie_dust(event)
     surface.create_entity(pixie_balance_message(entity.position, pixie_result))
 end
 
-local function chat_with_team(message, team)
-    local player = game.player
-    local player_name = player.name
-    local force = game.forces['player']
-
-    local tag = player.tag
-    if not tag then tag = "" end
-    local color = player.chat_color
-
-    local a, b = string_find(message, "gps=", 1, false)
-    if a then return end
-
-    local msg = "[To " .. team .. "] " .. player_name .. tag .. " (" ..
-                    player.force.name .. "): " .. message
-
-    game.forces.spectator.print(msg, color)
-
-    if (team == "north" or player.force.name == "north") then
-        game.forces.north.print(msg, color)
-    end
-    if (team == "south" or player.force.name == "south") then
-        game.forces.south.print(msg, color)
-    end
-    Server.to_discord_player_chat(msg)
-end
-
 commands.add_command('pixie-balance', 'Check your Pixie Balance', function(cmd)
     local player = game.player
     if global.player_pixie_dust[player.force.name] and
