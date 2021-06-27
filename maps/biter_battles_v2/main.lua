@@ -12,6 +12,7 @@ local Terrain = require "maps.biter_battles_v2.terrain"
 local Session = require 'utils.datastore.session_data'
 local Color = require 'utils.color_presets'
 local diff_vote = require "maps.biter_battles_v2.difficulty_vote"
+local Pixie = require "maps.biter_battles_v2.pixie"
 
 require "maps.biter_battles_v2.sciencelogs_tab"
 require 'maps.biter_battles_v2.commands'
@@ -48,6 +49,7 @@ end
 local function on_built_entity(event)
 	Functions.no_turret_creep(event)
 	Functions.add_target_entity(event.created_entity)
+	Pixie.get_player_pixie_payment(event)
 end
 
 local function on_robot_built_entity(event)
@@ -65,6 +67,7 @@ local function on_entity_died(event)
 	if not entity.valid then return end
 	if Ai.subtract_threat(entity) then Gui.refresh_threat() end
 	if Functions.biters_landfill(entity) then return end
+	Pixie.reward_pixie_dust(event)
 	Game_over.silo_death(event)
 end
 
@@ -131,6 +134,7 @@ local function on_player_built_tile(event)
 end
 
 local function on_player_mined_entity(event)
+	Pixie.refund_player_pixie_payment(event)
 	Terrain.minable_wrecks(event)
 end
 
