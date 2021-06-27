@@ -1,9 +1,10 @@
 local Pixie = {}
 
-Pixie.base_pixie_dust = 100
+Pixie.base_pixie_dust = 100 -- Starting pixie dust
 Pixie.base_item_pixie_dust = 5 -- if no value supplied, this will be the pixie value
 Pixie.base_biter_pixie_dust = 5 -- if no value supplied, this will be the pixie value
 
+-- Spitter/biters/spawner only. Didn't include worms
 Pixie.biter_pixie_dust_values = {
     ["small-spitter"] = 1,
     ["small-biter"] = 2,
@@ -11,6 +12,7 @@ Pixie.biter_pixie_dust_values = {
     ["spitter-spawner"] = 10
 }
 
+-- see factorio wiki for item names
 Pixie.item_pixie_dust_values = {
     ["stone-furnace"] = 1,
     ["burner-mining-drill"] = 1
