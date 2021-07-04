@@ -151,7 +151,7 @@ local function select_units_around_spawner(spawner, force_name, side_target)
 
 	--Collect biters around spawners
 	if math_random(1, 2) == 1 then
-		local biters = spawner.surface.find_enemy_units(spawner.position, 160, force_name)
+		local biters = spawner.surface.find_enemy_units(spawner.position, 96, force_name)
 		if biters[1] then
 			for _, biter in pairs(biters) do
 				if unit_count >= max_unit_count then break end
@@ -245,7 +245,7 @@ local function get_unit_group_position(spawner)
 	else
 		p = {x = spawner.position.x, y = spawner.position.y - 4}
 	end
-	p = spawner.surface.find_non_colliding_position("electric-furnace", p, 512, 1)
+	p = spawner.surface.find_non_colliding_position("electric-furnace", p, 256, 1)
 	if not p then
 		if global.bb_debug then game.print("No unit_group_position found for team " .. spawner.force.name) end
 		return
