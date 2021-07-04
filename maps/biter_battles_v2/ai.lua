@@ -209,9 +209,9 @@ local function send_group(unit_group, force_name, side_target)
 	if position then
 		if math.abs(position.y) < math.abs(unit_group.position.y) then
 			commands[#commands + 1] = {
-				type = defines.command.attack_area,
+				type = defines.command.go_to_location,
 				destination = position,
-				radius = 16,
+				radius = 32,
 				distraction = defines.distraction.by_enemy
 			}
 		end
