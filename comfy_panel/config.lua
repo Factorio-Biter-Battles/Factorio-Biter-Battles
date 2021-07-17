@@ -4,6 +4,7 @@ local Antigrief = require 'antigrief'
 local Color = require 'utils.color_presets'
 local SessionData = require 'utils.datastore.session_data'
 local Utils = require 'utils.core'
+local Special_Mode_Inverted = require 'maps.biter_battles_v2.inverted'
 
 local spaghett_entity_blacklist = {
     ['logistic-chest-requester'] = true,
@@ -151,6 +152,18 @@ local functions = {
 		else
 			global.bb_settings.only_admins_vote = false
 			game.print("Admin-only difficulty voting has been disabled!")
+		end
+	end,
+
+    ["bb_inverted_mode"] = function(event) 
+		if event.element.switch_state == "left" then
+			global.bb_settings.inverted = true
+            Special_Mode_Inverted.init()
+			game.print("Game is now inverted!! Destroy your silo!!")
+		else
+			global.bb_settings.inverted = false
+            Special_Mode_Inverted.disable_mode()
+			game.print("Game is back to normal. Protect your silo!!")
 		end
 	end,
 }
@@ -423,7 +436,7 @@ local build_config_gui = (function(player, frame)
                 switch_state = 'left'
             end
             add_switch(
-                scroll_pane,
+                scroll_pane,    
                 switch_state,
                 'comfy_panel_poll_trusted_toggle',
                 'Poll mode',
@@ -478,6 +491,13 @@ local build_config_gui = (function(player, frame)
 			local switch_state = "right"
 			if global.bb_settings.only_admins_vote then switch_state = "left" end
 			local switch = add_switch(scroll_pane, switch_state, "bb_only_admins_vote", "Admin Vote", "Only admins can vote for map difficulty. Clears all currently existing votes.")
+			if not admin then switch.ignored_by_interaction = true end
+			
+			scroll_pane.add({type = 'line'})
+				
+			local switch_state = "right"
+			if global.bb_settings.inverted then switch_state = "left" end
+			local switch = add_switch(scroll_pane, switch_state, "bb_inverted_mode", "Special Game: BB Inverted Mode", "BB Inverted Mode.")
 			if not admin then switch.ignored_by_interaction = true end
 			
 			scroll_pane.add({type = 'line'})

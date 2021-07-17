@@ -441,4 +441,12 @@ function get_upgrade_modifier(ammo_category)
     return result
 end
 
+function Public.get_enemy_team_of(team)
+	if global.training_mode or global.bb_settings.inverted then
+		return team
+	else
+		return Tables.enemy_team_of[team]
+	end
+end
+
 return Public
