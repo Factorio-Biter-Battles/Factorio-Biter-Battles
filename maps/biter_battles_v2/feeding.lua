@@ -39,11 +39,7 @@ local function set_biter_endgame_modifiers(force)
 end
 
 local function get_enemy_team_of(team)
-	if global.training_mode then
-		return team
-	else
-		return enemy_team_of[team]
-	end
+	return Functions.get_enemy_team_of(team)
 end
 
 local function print_feeding_msg(player, food, flask_amount)

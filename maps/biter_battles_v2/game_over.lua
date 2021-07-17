@@ -282,8 +282,6 @@ local function show_mvps(player)
     end
 end
 
-local enemy_team_of = {["north"] = "south", ["south"] = "north"}
-
 function Public.server_restart()
     if not global.server_restart_timer then return end
     global.server_restart_timer = global.server_restart_timer - 5
@@ -419,7 +417,7 @@ function Public.silo_death(event)
             return
         end
 
-        global.bb_game_won_by_team = enemy_team_of[entity.force.name]
+        global.bb_game_won_by_team = Functions.get_enemy_team_of(entity.force.name)
 
         set_victory_time()
 		north_players = "NORTH PLAYERS: \\n"
