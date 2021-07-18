@@ -3,7 +3,7 @@ local Gui = require "maps.biter_battles_v2.gui"
 local Init = require "maps.biter_battles_v2.init"
 local Score = require "comfy_panel.score"
 local Server = require 'utils.server'
-
+local Special_Mode_Inverted = require 'maps.biter_battles_v2.inverted'
 local math_random = math.random
 
 local Public = {}
@@ -466,6 +466,8 @@ function Public.silo_death(event)
         silo_kaboom(entity)
 
         freeze_all_biters(entity.surface)
+
+        Special_Mode_Inverted.disable_mode()
     end
 end
 
