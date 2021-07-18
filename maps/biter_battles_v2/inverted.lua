@@ -1,4 +1,6 @@
 local Event = require 'utils.event'
+local Tables = require "maps.biter_battles_v2.tables"
+
 base_silo_bonus_health = 1000000
 
 local Public = {}
@@ -24,13 +26,19 @@ function Public.init()
                 alignment = "center",
                 scale_with_zoom = true
             }
+
+            game.forces[force].friendly_fire = false
     end
 end
 
 function Public.disable_mode()
 	rendering.clear()
+    for force, v in pairs(Tables.enemy_team_of) do
+        game.forces[force].friendly_fire = true
+    end
     global.silo_bonus_health = {}
     global.silo_bonus_health_text_id = {}
+    global.bb_settings.inverted = false
 end
 
 local function on_entity_damaged(event)
