@@ -26,6 +26,16 @@ local gui_values = {
 		tech_spy = "spy-south-tech", prod_spy = "spy-south-prod"}
 	}
 
+local function clear_copy_history(player) 
+	if player and player.valid then
+		for i=1,21 do
+			stack = player.cursor_stack.import_stack("0eNp9jkEKgzAURO8y67jQhsbmKqUUrR/5kHwliVKR3L3GbrrqcoaZN7OjdwvNgSXB7uDXJBH2viPyKJ0rXtpmggUn8lCQzhfVL0EoVJ6FZayGwM4hK7AM9Iat80OBJHFi+uJOsT1l8T2FI/AXpDBP8ehOUvYPnjYKG2x1bXMhn1fsz3OFlUI8801ba3NrzEVroxud8wdvA0sn")
+			player.add_to_clipboard(player.cursor_stack)
+			player.clear_cursor() 
+		end
+	end
+end
+
 local function create_sprite_button(player)
 	if player.gui.top["bb_toggle_button"] then return end
 	local button = player.gui.top.add({type = "sprite-button", name = "bb_toggle_button", sprite = "entity/big-biter"})
@@ -338,6 +348,7 @@ function join_team(player, force_name, forced_join)
 	global.chosen_team[player.name] = force_name
     global.spectator_rejoin_delay[player.name] = game.tick
 	player.spectator = false
+	clear_copy_history(player)
 	Public.refresh()
 end
 
