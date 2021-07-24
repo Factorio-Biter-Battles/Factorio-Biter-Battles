@@ -29,7 +29,7 @@ local gui_values = {
 local function clear_copy_history(player) 
 	if player and player.valid then
 		for i=1,21 do
-			-- String is a bp of one burner miner
+			-- Imports blueprint of single burner miner into the cursor stack
 			stack = player.cursor_stack.import_stack("0eNp9jkEKgzAURO8y67jQhsbmKqUUrR/5kHwliVKR3L3GbrrqcoaZN7OjdwvNgSXB7uDXJBH2viPyKJ0rXtpmggUn8lCQzhfVL0EoVJ6FZayGwM4hK7AM9Iat80OBJHFi+uJOsT1l8T2FI/AXpDBP8ehOUvYPnjYKG2x1bXMhn1fsz3OFlUI8801ba3NrzEVroxud8wdvA0sn")
 			player.add_to_clipboard(player.cursor_stack)
 			player.clear_cursor() 
