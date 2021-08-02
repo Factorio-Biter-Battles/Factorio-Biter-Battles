@@ -21,14 +21,14 @@ local checks = {
 
 local function get_x_offset(player)
 	local x = 0
-	for _, element in pairs(player.gui.top.children) do
-		if element.name == "simple_tag" then break end		
+	for _, element in pairs(player.gui.top.children) do	
 		local style = element.style
 		for _, v in pairs(checks) do
 			if style[v] then
 				x = x + style[v]
 			end
 		end
+		if element.name == "simple_tag" then break end	
 	end
 	return x
 end
