@@ -439,9 +439,9 @@ Public.raise_evo = function()
 	if global.freeze_players then return end
 	if not global.training_mode and (#game.forces.north.connected_players == 0 or #game.forces.south.connected_players == 0) then return end
 	if game.ticks_played < 7200 then return end
-	if global.difficulty_vote_index == 1 then
+	if ( 1 <= global.difficulty_vote_index) and ( 3 >= global.difficulty_vote_index) then		
 		local x = game.ticks_played/3600 -- current length of the match in minutes
-		global.difficulty_vote_value = ((x / 470) ^ 3.7) + 0.25
+		global.difficulty_vote_value = ((x / 470) ^ 3.7) + 0.25*global.difficulty_vote_index
 	end
 
 	local amount = math.ceil(global.evo_raise_counter * 0.75)
