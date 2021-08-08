@@ -691,7 +691,6 @@ function Public.restrict_landfill(surface, inventory, tiles)
 		if check_position.y > 0 then check_position = {x = check_position.x * -1, y = (check_position.y * -1) - 1} end
 		if is_horizontal_border_river(check_position) or distance_to_center < spawn_circle_size then
 			surface.set_tiles({{name = t.old_tile.name, position = t.position}}, true)
-			inventory.insert({name = "landfill", count = 1})
 		end
 	end
 end
