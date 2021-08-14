@@ -145,7 +145,7 @@ local function on_chunk_generated(event)
 
 	-- Generate structures for north only.
 	local pos = event.area.left_top
-	if pos.y < 0 then
+	if pos.y <= pos.x * -1 then
 		Terrain.generate(event)
 	end
 
@@ -154,7 +154,7 @@ local function on_chunk_generated(event)
 	-- and it will be mirrored. However this window is so tiny - user would
 	-- need to fly in god mode and spam entities in partially generated
 	-- chunks.
-	local req_pos = { pos.x + 16, -pos.y + 16 }
+	local req_pos = Functions.invert_position(pos, 16)
 	surface.request_to_generate_chunks(req_pos, 0)
 
 	-- Clone from north and south. NOTE: This WILL fire 2 times
@@ -198,7 +198,7 @@ local function on_area_cloned(event)
 	-- stone-path tiles were placed directly onto water tiles. This scenario does
 	-- not appear for north as water is removed during silo generation.
 	local position = event.destination_area.left_top
-	if position.y == 64 and math.abs(position.x) <= 64 then
+	if position.x >= 32 and position.x <= 64 and position.y >= 32 and position.y <= 64 then
 		Mirror_terrain.remove_hidden_tiles(event)
 	end
 end

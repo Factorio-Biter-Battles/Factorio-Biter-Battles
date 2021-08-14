@@ -97,7 +97,7 @@ function Public.playground_surface()
 		["enemy-base"] = {frequency = 0, size = 0, richness = 0}
 	}
 	local surface = game.create_surface(global.bb_surface_name, map_gen_settings)
-	surface.request_to_generate_chunks({x = 0, y = -256}, 7)
+	surface.request_to_generate_chunks({x = 0, y = 0}, 7)
 	surface.force_generate_chunk_requests()
 end
 
@@ -207,20 +207,14 @@ function Public.load_spawn()
 	surface.request_to_generate_chunks({x = 0, y = 0}, 2)
 	surface.force_generate_chunk_requests()
 
-	for y = 0, 576, 32 do
-		surface.request_to_generate_chunks({x = 80, y = y + 16}, 0)
-		surface.request_to_generate_chunks({x = 48, y = y + 16}, 0)
-		surface.request_to_generate_chunks({x = 16, y = y + 16}, 0)
-		surface.request_to_generate_chunks({x = -16, y = y - 16}, 0)
-		surface.request_to_generate_chunks({x = -48, y = y - 16}, 0)
-		surface.request_to_generate_chunks({x = -80, y = y - 16}, 0)
-
-		surface.request_to_generate_chunks({x = 80, y = y * -1 + 16}, 0)
-		surface.request_to_generate_chunks({x = 48, y = y * -1 + 16}, 0)
-		surface.request_to_generate_chunks({x = 16, y = y * -1 + 16}, 0)
-		surface.request_to_generate_chunks({x = -16, y = y * -1 - 16}, 0)
-		surface.request_to_generate_chunks({x = -48, y = y * -1 - 16}, 0)
-		surface.request_to_generate_chunks({x = -80, y = y * -1 - 16}, 0)
+	-- request generate chunks perpendicular to the diagonal river
+	for y = 16, 576, 32 do
+		for x = 16, 576, 32 do
+			if math.abs(x - y) <= 96  then
+				surface.request_to_generate_chunks({x = x, y = y}, 0)
+				surface.request_to_generate_chunks({x = x * -1, y = y * -1}, 0)
+			end
+		end
 	end
 end
 
@@ -235,14 +229,14 @@ function Public.forces()
 	local surface = game.surfaces[global.bb_surface_name]
 
 	local f = game.forces["north"]
-	f.set_spawn_position({0, -44}, surface)
+	f.set_spawn_position({-32, -32}, surface)
 	f.set_cease_fire('player', true)
 	f.set_friend("spectator", true)
 	f.set_friend("south_biters", true)
 	f.share_chart = true
 
 	local f = game.forces["south"]
-	f.set_spawn_position({0, 44}, surface)
+	f.set_spawn_position({32, 32}, surface)
 	f.set_cease_fire('player', true)
 	f.set_friend("spectator", true)
 	f.set_friend("north_biters", true)

@@ -197,7 +197,7 @@ end
 function Public.biters_landfill(entity)
 	if not landfill_biters[entity.name] then return end	
 	local position = entity.position
-	if math_abs(position.y) < 8 then return true end
+	if math_abs(position.x + position.y) < 8 then return true end
 	local surface = entity.surface
 	for _, vector in pairs(landfill_biters_vectors) do
 		local tile = surface.get_tile({position.x + vector[1], position.y + vector[2]})
@@ -439,6 +439,11 @@ function get_upgrade_modifier(ammo_category)
         result = Tables.upgrade_modifiers[ammo_category]
     end
     return result
+end
+
+function Public.invert_position(pos, shift)
+	shift = shift or 0
+	return {x = pos.y * -1 + shift, y = pos.x * -1 + shift}
 end
 
 return Public

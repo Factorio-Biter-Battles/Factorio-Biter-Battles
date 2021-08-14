@@ -167,6 +167,10 @@ local function draw_noise_ore_patch(position, name, surface, radius, richness)
 	end
 end
 
+function get_tile_center(tile_position)
+	return {x = tile_position.x + 0.5, y = tile_position.y + 0.5}
+end
+
 function is_within_spawn_circle(pos)
 	if math_abs(pos.x) > spawn_circle_size then return false end
 	if math_abs(pos.y) > spawn_circle_size then return false end
@@ -174,14 +178,40 @@ function is_within_spawn_circle(pos)
 	return true
 end
 
-local river_y_1 = bb_config.border_river_width * -1.5
-local river_y_2 = bb_config.border_river_width * 1.5
-local river_width_half = math_floor(bb_config.border_river_width * -0.5)
+local river_noise_factor = 4
+local river_max_noise = river_noise_factor * 1.1
+-- diagonal river from southwest to northeast
+-- pos for tile must be the center of the tile
 function is_horizontal_border_river(pos)
-	if pos.y < river_y_1 then return false end
-	if pos.y > river_y_2 then return false end
-	if pos.y >= river_width_half - (math_abs(get_noise(1, pos)) * 4) then return true end
+	if pos.y > pos.x * -1 then
+		-- position in south, convert to north
+		pos = Functions.invert_position(pos)
+	end
+
+	local pos_distance = pos.y + pos.x + bb_config.border_river_width
+
+	if pos_distance > river_max_noise then return true end
+	if pos_distance < 0 then return false end
+	if pos_distance > math_abs(get_noise(1, pos)) * river_noise_factor then return true end
 	return false
+end
+
+function is_north_side(pos)
+	if pos.y > pos.x * -1 then
+		-- position in south of the diagonal
+		return false
+	end
+
+	return not (is_horizontal_border_river(pos) or is_within_spawn_circle(pos))
+end
+
+function is_south_side(pos)
+	if pos.y < pos.x * -1 then
+		-- position in north of the diagonal
+		return false
+	end
+
+	return not (is_horizontal_border_river(pos) or is_within_spawn_circle(pos))
 end
 
 local function generate_starting_area(pos, distance_to_center, surface)
@@ -267,15 +297,15 @@ local function generate_starting_area(pos, distance_to_center, surface)
 end
 
 local function generate_river(surface, left_top_x, left_top_y)
-	if left_top_y ~= -32 then return end
 	for x = 0, 31, 1 do
 		for y = 0, 31, 1 do
 			local pos = {x = left_top_x + x, y = left_top_y + y}
-			local distance_to_center = math_sqrt(pos.x ^ 2 + pos.y ^ 2)
-			if is_horizontal_border_river(pos) and distance_to_center > spawn_circle_size - 2 then
+			pos = get_tile_center(pos)
+			if is_horizontal_border_river(pos) and not is_within_spawn_circle(pos)
+			then
 				surface.set_tiles({{name = "deepwater", position = pos}})
-				if math_random(1, 64) == 1 then 
-					local e = surface.create_entity({name = "fish", position = pos}) 
+				if math_random(1, 64) == 1 then
+					local e = surface.create_entity({name = "fish", position = pos})
 				end
 			end
 		end
@@ -325,19 +355,36 @@ local function generate_extra_worm_turrets(surface, left_top)
 	end
 end
 
-local bitera_area_distance = bb_config.bitera_area_distance * -1
-local biter_area_angle = 0.45
+--biter area divergence angle from 0 to 360
+local divergence_angle = 135
+local divergence = 1 / math.tan((divergence_angle * math.pi/180) / 2)
 
-local function is_biter_area(position)
-	local a = bitera_area_distance - (math_abs(position.x) * biter_area_angle)	
-	if position.y - 70 > a then return false end
-	if position.y + 70 < a then return true end	
-	if position.y + (get_noise(3, position) * 64) > a then return false end
-	return true
+--start from 12 o'clock, counterclockwise
+local tilt_angle = 45
+local cos_t = math.cos(tilt_angle * math.pi/180)
+local sin_t = math.sin(tilt_angle * math.pi/180)
+local biter_noise_factor = 64
+local biter_max_noise = biter_noise_factor * 1.2
+
+local function is_biter_area(pos)
+	local x = pos.x
+	local y = pos.y
+
+	-- https://www.desmos.com/calculator/d1a7ocottd
+	local pos_distance = x * sin_t + y * cos_t + divergence * math_abs(x * cos_t - y * sin_t) + bb_config.bitera_area_distance
+
+	if pos_distance < biter_max_noise * -1 then return true end
+	if pos_distance > biter_max_noise then return false end
+	if pos_distance < get_noise(3, pos) * biter_noise_factor then return true end
+	return false
 end
 
 local function draw_biter_area(surface, left_top_x, left_top_y)
-	if not is_biter_area({x = left_top_x, y = left_top_y - 96}) then return end
+	-- check top left, top right and bottom left
+	if not is_biter_area({x = left_top_x, y = left_top_y})
+		and not is_biter_area({x = left_top_x + 31, y = left_top_y})
+		and not is_biter_area({x = left_top_x, y = left_top_y + 31})
+	then return end
 	
 	local seed = game.surfaces[global.bb_surface_name].map_gen_settings.seed
 		
@@ -424,33 +471,28 @@ function Public.generate(event)
 
 	mixed_ore(surface, left_top_x, left_top_y)
 	generate_river(surface, left_top_x, left_top_y)
-	draw_biter_area(surface, left_top_x, left_top_y)		
+	draw_biter_area(surface, left_top_x, left_top_y)
 	generate_extra_worm_turrets(surface, left_top)
 end
 
 function Public.draw_spawn_circle(surface)
 	local tiles = {}
-	for x = spawn_circle_size * -1, -1, 1 do
-		for y = spawn_circle_size * -1, -1, 1 do
+	for x = spawn_circle_size * -1, spawn_circle_size - 1, 1 do
+		for y = spawn_circle_size * -1, spawn_circle_size - 1, 1 do
 			local pos = {x = x, y = y}
+			pos = get_tile_center(pos)
 			local distance_to_center = math_sqrt(pos.x ^ 2 + pos.y ^ 2)
 			if distance_to_center <= spawn_circle_size then
-				table_insert(tiles, {name = "deepwater", position = pos})
-
-				if distance_to_center < 9.5 then 
+				if distance_to_center < 9 then
 					table_insert(tiles, {name = "refined-concrete", position = pos})
-					if distance_to_center < 7 then 
+					if distance_to_center < 7 then
 						table_insert(tiles, {name = "sand-1", position = pos})
 					end
-			--	else
-					--
-				end			
+				else
+					table_insert(tiles, {name = "deepwater", position = pos})
+				end
 			end
 		end
-	end
-	
-	for i = 1, #tiles, 1 do
-		table_insert(tiles, {name = tiles[i].name, position = {tiles[i].position.x * -1 - 1, tiles[i].position.y}})
 	end
 	
 	surface.set_tiles(tiles, true)
@@ -466,16 +508,16 @@ end
 
 function Public.draw_spawn_area(surface)
 	local chunk_r = 4
-	local r = chunk_r * 32	
-	
-	for x = r * -1, r, 1 do
-		for y = r * -1, -4, 1 do
-			local pos = {x = x, y = y}
+	local r = chunk_r * 32
+
+	for x = r * -1, r * 0.5, 1 do
+		for y = r * -1, r * 0.5, 1 do
+			local pos = {x = x, y = y }
 			local distance_to_center = math_sqrt(pos.x ^ 2 + pos.y ^ 2)
 			generate_starting_area(pos, distance_to_center, surface)
 		end
 	end
-	
+
 	surface.destroy_decoratives({})
 	surface.regenerate_decorative()
 end
@@ -521,7 +563,7 @@ end
 function Public.clear_ore_in_main(surface)
 	local area = {
 		left_top = { -150, -150 },
-		right_bottom = { 150, 0 }
+		right_bottom = { 150, 150 }
 	}
 	local limit = 20
 	local cnt = 0
@@ -549,9 +591,11 @@ function Public.generate_spawn_ore(surface)
 	-- draw ore in the lake which overlaps with chunk [0,-1]. All ores
 	-- will be mirrored to south.
 	local grid = {
-		{ -2, -3 }, { -1, -3 }, { 0, -3 }, { 1, -3, }, { 2, -3 },
-		{ -2, -2 }, { -1, -2 }, { 0, -2 }, { 1, -2, }, { 2, -2 },
-		{ -2, -1 }, { -1, -1 },            { 1, -1, }, { 2, -1 },
+		            { -2, -3 }, { -1, -3 }, { 0, -3 }, { 1, -3, },
+		{ -3, -2 }, { -2, -2 }, { -1, -2 }, { 0, -2 },
+		{ -3, -1 }, { -2, -1 }, { -1, -1 },
+		{ -3,  0 }, { -2,  0 },
+		{ -3,  1 },
 	}
 
 	-- Calculate left_top position of a chunk. It will be used as origin
@@ -571,25 +615,21 @@ end
 
 function Public.generate_additional_rocks(surface)
 	local r = 130
-	if surface.count_entities_filtered({type = "simple-entity", area = {{r * -1, r * -1}, {r, 0}}}) >= 12 then return end		
+	if surface.count_entities_filtered({type = "simple-entity", area = {{r * -1, r * -1}, {r * 0.5, r * 0.5}}}) >= 12 then return end
 	local position = {x = -96 + math_random(0, 192), y = -40 - math_random(0, 96)}
 	for _ = 1, math_random(6, 10) do
 		local name = rocks[math_random(1, 5)]
 		local p = surface.find_non_colliding_position(name, {position.x + (-10 + math_random(0, 20)), position.y + (-10 + math_random(0, 20))}, 16, 1)
-		if p and p.y < -16 then
+		if p and p.y + p.x < -16 then
 			surface.create_entity({name = name, position = p})
 		end
 	end
 end
 
 function Public.generate_silo(surface)
-	local pos = {x = -32 + math_random(0, 64), y = -72}
-	local mirror_position = {x = pos.x * -1, y = pos.y * -1}
+	local pos = {x = -72 + math_random(0, 32), y = -72 + math_random(0, 32)}
 
 	for _, t in pairs(surface.find_tiles_filtered({area = {{pos.x - 6, pos.y - 6},{pos.x + 6, pos.y + 6}}, name = {"water", "deepwater"}})) do
-		surface.set_tiles({{name = get_replacement_tile(surface, t.position), position = t.position}})
-	end
-	for _, t in pairs(surface.find_tiles_filtered({area = {{mirror_position.x - 6, mirror_position.y - 6},{mirror_position.x + 6, mirror_position.y + 6}}, name = {"water", "deepwater"}})) do
 		surface.set_tiles({{name = get_replacement_tile(surface, t.position), position = t.position}})
 	end
 
@@ -612,9 +652,9 @@ function Public.generate_silo(surface)
 			entity.destroy()
 		end
 	end
-	local turret1 = surface.create_entity({name = "gun-turret", position = {x=pos.x, y=pos.y-5}, force = "north"})
+	local turret1 = surface.create_entity({name = "gun-turret", position = {x=pos.x-3, y=pos.y-5}, force = "north"})
 	turret1.insert({name = "firearm-magazine", count = 10})
-	local turret2 = surface.create_entity({name = "gun-turret", position = {x=pos.x+2, y=pos.y-5}, force = "north"})
+	local turret2 = surface.create_entity({name = "gun-turret", position = {x=pos.x-5, y=pos.y-3}, force = "north"})
 	turret2.insert({name = "firearm-magazine", count = 10})
 end
 --[[
@@ -686,10 +726,9 @@ end
 --Landfill Restriction
 function Public.restrict_landfill(surface, inventory, tiles)
 	for _, t in pairs(tiles) do
-		local distance_to_center = math_sqrt(t.position.x ^ 2 + t.position.y ^ 2)
-		local check_position = t.position
-		if check_position.y > 0 then check_position = {x = check_position.x * -1, y = (check_position.y * -1) - 1} end
-		if is_horizontal_border_river(check_position) or distance_to_center < spawn_circle_size then
+		-- pos is the center of the tile
+		local pos = get_tile_center(t.position)
+		if is_horizontal_border_river(pos) or is_within_spawn_circle(pos) then
 			surface.set_tiles({{name = t.old_tile.name, position = t.position}}, true)
 			inventory.insert({name = "landfill", count = 1})
 		end
@@ -702,17 +741,17 @@ end
 
 --Construction Robot Restriction
 local robot_build_restriction = {
-	["north"] = function(y)
-		if y >= -10 then return true end
+	["north"] = function(pos)
+		return not is_north_side(pos)
 	end,
-	["south"] = function(y)
-		if y <= 10 then return true end
+	["south"] = function(pos)
+		return not is_south_side(pos)
 	end
 }
 
 function Public.deny_construction_bots(event)
 	if not robot_build_restriction[event.robot.force.name] then return end
-	if not robot_build_restriction[event.robot.force.name](event.created_entity.position.y) then return end
+	if not robot_build_restriction[event.robot.force.name](event.created_entity.position) then return end
 	local inventory = event.robot.get_inventory(defines.inventory.robot_cargo)
 	inventory.insert({name = event.created_entity.name, count = 1})
 	event.robot.surface.create_entity({name = "explosion", position = event.created_entity.position})

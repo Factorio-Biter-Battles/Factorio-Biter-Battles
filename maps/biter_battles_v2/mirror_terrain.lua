@@ -6,14 +6,14 @@ local table_remove = table.remove
 local table_insert = table.insert
 
 local direction_translation = {
-	[defines.direction.north] = defines.direction.south,
-	[defines.direction.northeast] = defines.direction.southeast,
-	[defines.direction.east] = defines.direction.east,
-	[defines.direction.southeast] = defines.direction.northeast,
-	[defines.direction.south] = defines.direction.north,
-	[defines.direction.southwest] = defines.direction.northwest,
-	[defines.direction.west] = defines.direction.west,
-	[defines.direction.northwest] = defines.direction.southwest,
+	[defines.direction.north] = defines.direction.east,
+	[defines.direction.northeast] = defines.direction.northeast,
+	[defines.direction.east] = defines.direction.north,
+	[defines.direction.southeast] = defines.direction.northwest,
+	[defines.direction.south] = defines.direction.west,
+	[defines.direction.southwest] = defines.direction.southwest,
+	[defines.direction.west] = defines.direction.south,
+	[defines.direction.northwest] = defines.direction.southeast,
 }
 
 local function clear_entities(surface, bb)
@@ -49,13 +49,17 @@ function Public.clone(event)
 		expand_map = true
 	}
 
-	if source_bb.left_top.y < 0 then
-		destination_bb.left_top.y = -source_bb.right_bottom.y
-		destination_bb.right_bottom.y = -source_bb.left_top.y
+	-- clone only chunk above diagonal line without chunks on the line
+	if source_bb.left_top.y < source_bb.left_top.x * -1 then
+		destination_bb.left_top = Functions.invert_position(source_bb.right_bottom)
+		destination_bb.right_bottom = Functions.invert_position(source_bb.left_top)
 	else
-		source_bb.left_top.y = -destination_bb.right_bottom.y
-		source_bb.right_bottom.y = -destination_bb.left_top.y
+		source_bb.left_top = Functions.invert_position(destination_bb.right_bottom)
+		source_bb.right_bottom = Functions.invert_position(destination_bb.left_top)
 	end
+
+	-- ignonre chunks on diagonal line
+	if source_bb.left_top.x == destination_bb.left_top.x then return end
 
 	-- Workaround for what I assume is bug in game engine.
 	-- "Source entities overlap with destination entities."
@@ -96,8 +100,7 @@ function Public.invert_entity(event)
 
 	-- Invert entity position to south in relation to source entity.
 	local src_pos = source.position
-	local dest_pos = source.position
-	dest_pos.y = -dest_pos.y
+	local dest_pos = Functions.invert_position(source.position)
 
 	-- Check if there are no overlaps.
 	if src_pos.x == dest_pos.x and src_pos.y == dest_pos.y then
@@ -137,9 +140,7 @@ function Public.invert_tiles(event)
 	local tiles = {}
 	for i, tile in pairs(to_emplace) do
 		if not tile.valid then goto invert_tile_continue end
-
-		local pos = tile.position
-		pos.y = -pos.y - 1
+		local pos = Functions.invert_position(tile.position, -1)
 		tiles[i] = {
 			position = pos,
 			name = tile.name
@@ -149,6 +150,23 @@ function Public.invert_tiles(event)
 	end
 
 	surface.set_tiles(tiles)
+
+	local src_decoratives = surface.find_decoratives_filtered {
+		area = event.source_area
+	}
+	local dest_decoratives = {}
+	for i, d in pairs(src_decoratives) do
+		local pos = Functions.invert_position(d.position, -1)
+		dest_decoratives[i] = {
+			amount = d.amount,
+			position = pos,
+			name = d.decorative.name
+		}
+	end
+	if dest_decoratives ~= nil then
+		surface.create_decoratives{check_collision = false, decoratives = dest_decoratives}
+	end
+
 end
 
 return Public

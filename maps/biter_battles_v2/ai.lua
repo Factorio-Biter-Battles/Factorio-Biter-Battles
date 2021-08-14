@@ -11,11 +11,11 @@ local attack_vectors = {}
 attack_vectors.north = {}
 attack_vectors.south = {}
 --awesomepatrol's pathing  updates
-for p = 0.3, 0.71, 0.1 do
+for p = 0.05, 0.45, 0.1 do
 	local a = math.pi * p
 	local x = vector_radius * math.cos(a)
 	local y = vector_radius * math.sin(a)
-	attack_vectors.north[#attack_vectors.north + 1] = {x, y * -1}
+	attack_vectors.north[#attack_vectors.north + 1] = {y * -1, x * -1}
 	attack_vectors.south[#attack_vectors.south + 1] = {x, y}
 end
 local size_of_vectors = #attack_vectors.north
@@ -248,7 +248,9 @@ local function send_group(unit_group, force_name, side_target)
 	local position = {target.x + (vector[1] * distance_modifier), target.y + (vector[2] * distance_modifier)}
 	position = unit_group.surface.find_non_colliding_position("stone-furnace", position, 96, 1)
 	if position then
-		if math.abs(position.y) < math.abs(unit_group.position.y) then
+		local h1 = math_abs(position.x + position.y)
+		local h2 = math_abs(unit_group.position.x + unit_group.position.y)
+		if h1 > h2 then
 			commands[#commands + 1] = {
 				type = defines.command.attack_area,
 				destination = position,
@@ -540,7 +542,7 @@ local function reanimate_unit(id)
 	}[1]
 
 	local force = 'south_biters'
-	if position.y < 0 then
+	if position.y < position.x * -1 then
 		force = 'north_biters'
 	end
 
@@ -607,7 +609,7 @@ Public.schedule_reanimate = function(event)
 	-- force based on y axis.
 	local force = game.forces['south_biters']
 	local position = event.position
-	if position.y < 0 then
+	if position.y < position.x * -1 then
 		force = game.forces['north_biters']
 	end
 
