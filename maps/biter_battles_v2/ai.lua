@@ -6,6 +6,7 @@ local fifo = require "maps.biter_battles_v2.fifo"
 local Tables = require "maps.biter_battles_v2.tables"
 local math_random = math.random
 local math_abs = math.abs
+local math_ceil = math.ceil
 
 local vector_radius = 512
 local attack_vectors = {}
@@ -484,7 +485,16 @@ function Public.subtract_threat(entity)
 		global.active_biters[entity.force.name][entity.unit_number] = nil
 	end
 
-	global.bb_threat[entity.force.name] = global.bb_threat[entity.force.name] - threat_values[entity.name]
+	local force_name = entity.force.name
+	if global.bb_evolution[force_name] < 1 then
+		global.bb_threat[force_name] = global.bb_threat[force_name] - threat_values[entity.name]
+	else
+		local idx = entity.force.index
+		local chance = global.reanim_chance[idx]
+		if chance < 100 then
+			global.bb_threat[force_name] = global.bb_threat[force_name] - math_ceil(threat_values[entity.name] * 100 / (100 - chance))
+		end
+	end
 
 	return true
 end
