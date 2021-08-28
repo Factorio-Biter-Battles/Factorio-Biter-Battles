@@ -220,14 +220,19 @@ local function on_console_command(event)
         ['editor'] = true,
         ['silent-command'] = true,
         ['sc'] = true,
-        ['debug'] = true
+        ['debug'] = true,
+        ['s'] = true,
+        ['shout'] = true
     }
 
     if not commands[cmd] then
         return
     end
 
-    if player then
+    if cmd == "shout" or cmd == "s" and player and param then
+        local chatmsg = "[shout] " .. player.name .. " (" .. player.force.name .. "): " .. param
+        Server.to_discord_player_chat(chatmsg)
+    elseif player then
         for _, p in pairs(game.connected_players) do
             if p.admin == true and p.name ~= player.name then
                 if param then
