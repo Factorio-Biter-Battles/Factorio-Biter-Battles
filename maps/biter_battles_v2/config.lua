@@ -1,6 +1,8 @@
 --BITER BATTLES CONFIG--
 
 local bb_config = {
+	["rejoin_team_delay"] = 36000,  					-- Time required to rejoin team in ticks
+
 	--Optional custom team names, can also be modified via "Team Manager"
 	["north_side_team_name"] = "Team North",
 	["south_side_team_name"] = "Team South",
