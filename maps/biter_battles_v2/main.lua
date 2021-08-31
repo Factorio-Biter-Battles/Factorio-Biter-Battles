@@ -257,6 +257,17 @@ local function on_init()
 	Init.load_spawn()
 end
 
+local function on_player_respawned(event)
+	local player = game.players[event.player_index]	
+	local surface = player.surface
+	if player and surface and not player.spectator then
+		local msg = player.name .. " from " .. player.force.name .. " died and was sent to spectator heaven"
+		game.print(msg, Color.warning)
+		player.teleport({0,0}, surface)		
+	end
+end
+
+
 local Event = require 'utils.event'
 Event.add(defines.events.on_area_cloned, on_area_cloned)
 Event.add(defines.events.on_research_finished, Ai.unlock_satellite)			--free silo space tech
@@ -279,9 +290,11 @@ Event.add(defines.events.on_research_finished, on_research_finished)
 Event.add(defines.events.on_robot_built_entity, on_robot_built_entity)
 Event.add(defines.events.on_robot_built_tile, on_robot_built_tile)
 Event.add(defines.events.on_tick, on_tick)
+Event.add(defines.events.on_player_respawned, on_player_respawned)
 Event.on_init(on_init)
 
 commands.add_command('clear-corpses', 'Clears all the biter corpses..',
 		     clear_corpses)
 
 require "maps.biter_battles_v2.spec_spy"
+
