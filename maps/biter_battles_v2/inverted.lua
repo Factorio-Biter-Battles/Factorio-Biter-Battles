@@ -1,7 +1,7 @@
 local Event = require 'utils.event'
 local Tables = require "maps.biter_battles_v2.tables"
 
-base_silo_bonus_health = 1000000
+base_silo_bonus_health = 10000000
 
 local Public = {}
 
