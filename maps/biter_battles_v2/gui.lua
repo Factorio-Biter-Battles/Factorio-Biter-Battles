@@ -175,7 +175,7 @@ function Public.create_main_gui(player)
 		l.style.font_color = { r=0.22, g=0.88, b=0.22}
 		
 		-- Tech button
-		if is_spec then
+		if is_spec and not global.chosen_team[player.name] then
 			add_tech_button(t, gui_value)
 			-- add_prod_button(t, gui_value)
 		end
