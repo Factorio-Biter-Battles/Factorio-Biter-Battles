@@ -486,6 +486,14 @@ local function on_player_mined_entity(event)
         return
     end
 
+    if entity.type == 'offshore-pump' then
+        Utils.print_admins(
+            player.name .. ' mined an offshore pump at' ..
+            '[gps=' .. entity.position.x .. ',' .. entity.position.y .. ',' .. entity.surface.name .. ']',
+            nil
+        )
+    end
+
     if this.whitelist_types[entity.type] then
         if not this.mining_history then
             this.mining_history = {}
