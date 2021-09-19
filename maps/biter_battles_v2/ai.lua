@@ -3,6 +3,7 @@ local BiterRaffle = require "maps.biter_battles_v2.biter_raffle"
 local Functions = require "maps.biter_battles_v2.functions"
 local bb_config = require "maps.biter_battles_v2.config"
 local fifo = require "maps.biter_battles_v2.fifo"
+local Tables = require "maps.biter_battles_v2.tables"
 local math_random = math.random
 local math_abs = math.abs
 
@@ -439,9 +440,9 @@ Public.raise_evo = function()
 	if global.freeze_players then return end
 	if not global.training_mode and (#game.forces.north.connected_players == 0 or #game.forces.south.connected_players == 0) then return end
 	if game.ticks_played < 7200 then return end
-	if global.difficulty_vote_index == 1 then
+	if ( 1 <= global.difficulty_vote_index) and ( 3 >= global.difficulty_vote_index) then
 		local x = game.ticks_played/3600 -- current length of the match in minutes
-		global.difficulty_vote_value = ((x / 470) ^ 3.7) + 0.25
+		global.difficulty_vote_value = ((x / 470) ^ 3.7) + Tables.difficulties[global.difficulty_vote_index].value
 	end
 
 	local amount = math.ceil(global.evo_raise_counter * 0.75)
@@ -462,6 +463,9 @@ Public.raise_evo = function()
 end
 
 Public.reset_evo = function()
+	-- Shouldn't reset evo if any of the teams fed. Feeding is blocked when voting is in progress.
+	if game.ticks_played >= global.difficulty_votes_timeout then return end
+
 	local amount = global.total_passive_feed_redpotion
 	if amount < 1 then return end
 	global.total_passive_feed_redpotion = 0
