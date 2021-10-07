@@ -42,10 +42,10 @@ local function create_sprite_button(player)
 	local button = player.gui.top.add({type = "sprite-button", name = "bb_toggle_button", sprite = "entity/big-biter"})
 	button.style.font = "default-bold"
 	button.style.minimal_width = 38
-    button.style.maximal_width = 38
-    button.style.minimal_height = 38
-    button.style.maximal_height = 38
-    button.style.padding = -2
+	button.style.maximal_width = 38
+	button.style.minimal_height = 38
+	button.style.maximal_height = 38
+	button.style.padding = -2
 end
 
 local function create_first_join_gui(player)
@@ -322,7 +322,7 @@ function join_team(player, force_name, forced_join)
 		local msg = table.concat({"Team ", player.force.name, " player ", player.name, " is no longer spectating."})
 		game.print(msg, {r = 0.98, g = 0.66, b = 0.22})
 		Server.to_discord_bold(msg)
-        global.spectator_rejoin_delay[player.name] = game.tick
+		global.spectator_rejoin_delay[player.name] = game.tick
 		player.spectator = false
 		return
 	end
@@ -349,7 +349,7 @@ function join_team(player, force_name, forced_join)
 	player.insert {name = 'burner-mining-drill', count = 10}
 	player.insert {name = 'wood', count = 2}
 	global.chosen_team[player.name] = force_name
-    global.spectator_rejoin_delay[player.name] = game.tick
+	global.spectator_rejoin_delay[player.name] = game.tick
 	player.spectator = false
 	clear_copy_history(player)
 	Public.refresh()
