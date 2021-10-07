@@ -67,8 +67,10 @@ local function top_button(player)
     end
     local button =
         player.gui.top.add({type = 'sprite-button', name = 'comfy_panel_top_button', sprite = 'item/raw-fish'})
-    button.style.minimal_height = 38
     button.style.minimal_width = 38
+    button.style.maximal_width = 38
+    button.style.minimal_height = 38
+    button.style.maximal_height = 38
     button.style.padding = -2
 end
 

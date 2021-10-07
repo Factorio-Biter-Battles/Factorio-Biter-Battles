@@ -41,9 +41,11 @@ local function create_sprite_button(player)
 	if player.gui.top["bb_toggle_button"] then return end
 	local button = player.gui.top.add({type = "sprite-button", name = "bb_toggle_button", sprite = "entity/big-biter"})
 	button.style.font = "default-bold"
-	button.style.minimal_height = 38
 	button.style.minimal_width = 38
-	button.style.padding = -1
+    button.style.maximal_width = 38
+    button.style.minimal_height = 38
+    button.style.maximal_height = 38
+    button.style.padding = -2
 end
 
 local function create_first_join_gui(player)
