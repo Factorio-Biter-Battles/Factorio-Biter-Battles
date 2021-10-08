@@ -387,10 +387,10 @@ function Public.create_map_intro_button(player)
 	button.style.font_color = {r=0.5, g=0.3, b=0.99}
 	button.style.font = "heading-1"
 	button.style.minimal_width = 38
-	button.style.maximal_width = 38
-	button.style.minimal_height = 38
-	button.style.maximal_height = 38
-	button.style.padding = -2
+    button.style.maximal_width = 38
+    button.style.minimal_height = 38
+    button.style.maximal_height = 38
+    button.style.padding = -2
 end
 
 function Public.show_intro(player)
@@ -420,24 +420,24 @@ end
 function get_ammo_modifier(ammo_category)
 	local result = 0
 	if Tables.base_ammo_modifiers[ammo_category] then
-		result = Tables.base_ammo_modifiers[ammo_category]
+        result = Tables.base_ammo_modifiers[ammo_category]
 	end
-	return result
+    return result
 end
 function get_turret_attack_modifier(turret_category)
 	local result = 0
 	if Tables.base_turret_attack_modifiers[turret_category] then
-		result = Tables.base_turret_attack_modifiers[turret_category]
+        result = Tables.base_turret_attack_modifiers[turret_category]
 	end
-	return result
+    return result
 end
 
 function get_upgrade_modifier(ammo_category)
-	result = 0
-	if Tables.upgrade_modifiers[ammo_category] then
-		result = Tables.upgrade_modifiers[ammo_category]
-	end
-	return result
+    result = 0
+    if Tables.upgrade_modifiers[ammo_category] then
+        result = Tables.upgrade_modifiers[ammo_category]
+    end
+    return result
 end
 
 return Public
