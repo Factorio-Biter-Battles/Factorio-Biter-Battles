@@ -100,11 +100,9 @@ function Public.draw_top_toggle_button(player)
 	button.style.font = "heading-2"
 	button.style.font_color = {r = 0.88, g = 0.55, b = 0.11}
 	button.style.minimal_height = 38
+	button.style.maximal_height = 38
 	button.style.minimal_width = 120
-	button.style.top_padding = 2
-	button.style.left_padding = 0
-	button.style.right_padding = 0
-	button.style.bottom_padding = 2
+	button.style.padding = -2
 end
 
 local function draw_manager_gui(player)

@@ -15,7 +15,9 @@ local function difficulty_gui()
 		b.style.font = "heading-2"
 		b.style.font_color = difficulties[global.difficulty_vote_index].print_color
 		b.style.minimal_height = 38
+		b.style.maximal_height = 38
 		b.style.minimal_width = 96
+		b.style.padding = -2
 	end
 end
 

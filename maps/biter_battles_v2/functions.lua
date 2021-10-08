@@ -387,11 +387,10 @@ function Public.create_map_intro_button(player)
 	b.style.font_color = {r=0.5, g=0.3, b=0.99}
 	b.style.font = "heading-1"
 	b.style.minimal_height = 38
+	b.style.maximal_height = 38
 	b.style.minimal_width = 38
-	b.style.top_padding = 1
-	b.style.left_padding = 1
-	b.style.right_padding = 1
-	b.style.bottom_padding = 1
+	b.style.maximal_width = 38
+	b.style.padding = -2
 end
 
 function Public.show_intro(player)
