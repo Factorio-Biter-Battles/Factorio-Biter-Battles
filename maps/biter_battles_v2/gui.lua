@@ -92,6 +92,13 @@ local function create_first_join_gui(player)
 		b.style.minimal_width = 350
 		frame.add  { type = "label", caption = "-----------------------------------------------------------"}
 	end
+	local d = frame.add{type = "sprite-button", name = "join_random_button", caption = "JOIN RANDOM"}
+	d.style.font = "default-large-bold"
+	d.style.font_color = { r=1, g=0, b=1}
+	d.style.minimal_width = 350
+	frame.add  { type = "label", caption = "-----------------------------------------------------------"}
+	frame.style.bottom_padding = -2
+	
 end
 
 local function add_tech_button(elem, gui_value)
@@ -424,6 +431,16 @@ local function on_gui_click(event)
 
 	if name == "join_north_button" then join_gui_click(name, player) return end
 	if name == "join_south_button" then join_gui_click(name, player) return end
+	if name == "join_random_button" then
+		if #game.forces["north"].connected_players ~= #game.forces["south"].connected_players then 
+			player.print("Teams are not balanced",{ r=0.98, g=0.66, b=0.22})
+		else
+			local a = math.random(1,2)
+			if a == 1 then join_gui_click("join_north_button", player) 
+			else join_gui_click("join_south_button", player) return end
+		end
+		return
+	end
 
 	if name == "raw-fish" then Functions.spy_fish(player, event) return end
 
@@ -475,6 +492,7 @@ local function on_player_joined_game(event)
 	create_sprite_button(player)
 	Public.create_main_gui(player)
 end
+
 
 event.add(defines.events.on_gui_click, on_gui_click)
 event.add(defines.events.on_player_joined_game, on_player_joined_game)
