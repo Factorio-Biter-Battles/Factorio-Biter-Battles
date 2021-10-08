@@ -383,14 +383,15 @@ end
 
 function Public.create_map_intro_button(player)
 	if player.gui.top["map_intro_button"] then return end
-	local button = player.gui.top.add({type = "sprite-button", caption = "?", name = "map_intro_button", tooltip = "Map Info"})
-	button.style.font_color = {r=0.5, g=0.3, b=0.99}
-	button.style.font = "heading-1"
-	button.style.minimal_width = 38
-    button.style.maximal_width = 38
-    button.style.minimal_height = 38
-    button.style.maximal_height = 38
-    button.style.padding = -2
+	local b = player.gui.top.add({type = "sprite-button", caption = "?", name = "map_intro_button", tooltip = "Map Info"})
+	b.style.font_color = {r=0.5, g=0.3, b=0.99}
+	b.style.font = "heading-1"
+	b.style.minimal_height = 38
+	b.style.minimal_width = 38
+	b.style.top_padding = 1
+	b.style.left_padding = 1
+	b.style.right_padding = 1
+	b.style.bottom_padding = 1
 end
 
 function Public.show_intro(player)
