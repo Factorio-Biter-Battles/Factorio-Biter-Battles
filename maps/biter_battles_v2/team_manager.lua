@@ -1,6 +1,6 @@
 local Public = {}
 local Server = require 'utils.server'
-
+require 'utils.gui_styles'
 local forces = {
 	{name = "north", color = {r = 0, g = 0, b = 200}},
 	{name = "spectator", color = {r = 111, g = 111, b = 111}},
@@ -99,10 +99,7 @@ function Public.draw_top_toggle_button(player)
 	local button = player.gui.top.add({type = "sprite-button", name = "team_manager_toggle_button", caption = "Team Manager", tooltip = tooltip})
 	button.style.font = "heading-2"
 	button.style.font_color = {r = 0.88, g = 0.55, b = 0.11}
-	button.style.minimal_height = 38
-	button.style.maximal_height = 38
-	button.style.minimal_width = 120
-	button.style.padding = -2
+	element_style({element = button, x = 114, y = 38, pad = -2})
 end
 
 local function draw_manager_gui(player)
