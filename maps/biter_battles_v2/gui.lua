@@ -58,7 +58,7 @@ local function create_first_join_gui(player)
 	b.style.font_color = {r=0.98, g=0.66, b=0.22}
 
 	frame.add  { type = "label", caption = "-----------------------------------------------------------"}
-	local d = frame.add{type = "sprite-button", name = "join_random_button", caption = "JOIN AUTO"}
+	local d = frame.add{type = "sprite-button", name = "join_random_button", caption = "AUTO JOIN"}
 	d.style.font = "default-large-bold"
 	d.style.font_color = { r=1, g=0, b=1}
 	d.style.minimal_width = 350
@@ -381,12 +381,6 @@ function spectate(player, forced_join)
 end
 
 local function join_gui_click(name, player)
-	--[[local team = {
-		["join_north_button"] = "north",
-		["join_south_button"] = "south"
-	}
-	]]
-
 	if not name then return end
 
 	if global.game_lobby_active then
@@ -433,11 +427,8 @@ local function on_gui_click(event)
 	for _, gui_values in pairs(gui_values) do
 		if name == gui_values.n1 then join_gui_click(gui_values.force, player) return end
 	end
-	--if name == "join_north_button" then join_gui_click(name, player) return end
-	--if name == "join_south_button" then join_gui_click(name, player) return end
-	
+		
 	if name == "join_random_button" then
-		--player.print("join_random_button clicked")
 		local teams_equal = true
 		local a = #game.forces["north"].connected_players --Idk how to choose the 1st force without calling 'north'
 		
@@ -455,11 +446,9 @@ local function on_gui_click(event)
 			for  _, gui_values in pairs(gui_values) do
 				table.insert(teams, gui_values.force)
 			end
-			--player.print("Randomizing a team for you")
 			join_gui_click(teams[math.random(#teams)], player)
-		-- checking which team is smaller and joining it
-		else
-			--player.print("determing which team is the smallest")
+		
+		else -- checking which team is smaller and joining it
 			local smallest_team = gui_values["north"].force --Idk how to choose the 1st force without calling 'north'
 			for _, gui_values in pairs(gui_values) do
 				player.print(a)
@@ -468,21 +457,9 @@ local function on_gui_click(event)
 					a = #game.forces[gui_values.force].connected_players
 				end
 			end
-			--player.print("Team " .. smallest_team .. " is the smallest. Proceeding to join it")
 			join_gui_click(smallest_team, player)
 		end
 		return
-		--[[
-		if #game.forces["north"].connected_players < #game.forces["south"].connected_players then 
-			player.print('south is bigger')
-			join_gui_click('north', player)
-			
-		elseif #game.forces["north"].connected_players > #game.forces["south"].connected_players then
-			player.print('north is bigger')
-			join_gui_click('south', player)
-		
-		return end
-		]]
 	end
 
 	if name == "raw-fish" then Functions.spy_fish(player, event) return end
