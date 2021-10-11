@@ -58,7 +58,13 @@ local function create_first_join_gui(player)
 	b.style.font_color = {r=0.98, g=0.66, b=0.22}
 
 	frame.add  { type = "label", caption = "-----------------------------------------------------------"}
-
+	local d = frame.add{type = "sprite-button", name = "join_random_button", caption = "AUTO JOIN"}
+	d.style.font = "default-large-bold"
+	d.style.font_color = { r=1, g=0, b=1}
+	d.style.minimal_width = 350
+	frame.add  { type = "label", caption = "-----------------------------------------------------------"}
+	frame.style.bottom_padding = -2
+	
 	for _, gui_value in pairs(gui_values) do
 		local t = frame.add { type = "table", column_count = 3 }
 		local c = gui_value.c1
@@ -92,6 +98,8 @@ local function create_first_join_gui(player)
 		b.style.minimal_width = 350
 		frame.add  { type = "label", caption = "-----------------------------------------------------------"}
 	end
+	
+	
 end
 
 local function add_tech_button(elem, gui_value)
@@ -373,16 +381,11 @@ function spectate(player, forced_join)
 end
 
 local function join_gui_click(name, player)
-	local team = {
-		["join_north_button"] = "north",
-		["join_south_button"] = "south"
-	}
-
-	if not team[name] then return end
+	if not name then return end
 
 	if global.game_lobby_active then
 		if player.admin then
-			join_team(player, team[name])
+			join_team(player, name)
 			game.print("Lobby disabled, admin override.", { r=0.98, g=0.66, b=0.22})
 			global.game_lobby_active = false
 			return
@@ -390,7 +393,7 @@ local function join_gui_click(name, player)
 		player.print("Waiting for more players, " .. wait_messages[math_random(1, #wait_messages)], { r=0.98, g=0.66, b=0.22})
 		return
 	end
-	join_team(player, team[name])
+	join_team(player, name)
 end
 
 local spy_forces = {{"north", "south"},{"south", "north"}}
@@ -421,9 +424,43 @@ local function on_gui_click(event)
 		end
 		return
 	end
-
-	if name == "join_north_button" then join_gui_click(name, player) return end
-	if name == "join_south_button" then join_gui_click(name, player) return end
+	for _, gui_values in pairs(gui_values) do
+		if name == gui_values.n1 then join_gui_click(gui_values.force, player) return end
+	end
+		
+	if name == "join_random_button" then
+		local teams_equal = true
+		local a = #game.forces["north"].connected_players --Idk how to choose the 1st force without calling 'north'
+		
+		-- checking if teams are equal	
+		for  _, gui_values in pairs(gui_values) do
+			if a ~= #game.forces[gui_values.force].connected_players then 
+				teams_equal = false
+				player.print(teams_equal)
+				break
+			end
+		end
+		-- choosing a team at random if teams are equal
+		if teams_equal then
+			local teams = {}
+			for  _, gui_values in pairs(gui_values) do
+				table.insert(teams, gui_values.force)
+			end
+			join_gui_click(teams[math.random(#teams)], player)
+		
+		else -- checking which team is smaller and joining it
+			local smallest_team = gui_values["north"].force --Idk how to choose the 1st force without calling 'north'
+			for _, gui_values in pairs(gui_values) do
+				player.print(a)
+				if a > #game.forces[gui_values.force].connected_players then
+					smallest_team = gui_values.force
+					a = #game.forces[gui_values.force].connected_players
+				end
+			end
+			join_gui_click(smallest_team, player)
+		end
+		return
+	end
 
 	if name == "raw-fish" then Functions.spy_fish(player, event) return end
 
@@ -475,6 +512,7 @@ local function on_player_joined_game(event)
 	create_sprite_button(player)
 	Public.create_main_gui(player)
 end
+
 
 event.add(defines.events.on_gui_click, on_gui_click)
 event.add(defines.events.on_player_joined_game, on_player_joined_game)
