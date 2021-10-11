@@ -1,7 +1,7 @@
 --Adds a small gui to quick select an icon tag for your character - mewmew
 
 local Event = require 'utils.event'
-
+require 'utils.gui_styles'
 local icons = {
 	{"[img=item/electric-mining-drill]", "item/electric-mining-drill", "Miner"},
 	{"[img=item/stone-furnace]", "item/stone-furnace", "Smeltery"},
@@ -38,9 +38,7 @@ local function draw_top_gui(player)
 	local button = player.gui.top.add({type = "sprite-button", name = "simple_tag", caption = "Tag"})
 	button.style.font = "heading-2"
 	button.style.font_color = {212, 212, 212}
-	button.style.minimal_height = 38
-	button.style.minimal_width = 38
-	button.style.padding = -2
+	element_style({element = button, x = 38, y = 38, pad = -2})
 end
 
 local function draw_screen_gui(player)
@@ -55,14 +53,13 @@ local function draw_screen_gui(player)
 		name = "simple_tag_frame",
 		direction = "vertical",
 	})	
-	frame.location = {x = get_x_offset(player), y = 39}
-	frame.style.padding = -1	
+	frame.location = {x = get_x_offset(player) * player.display_scale - 2, y = 39 * player.display_scale}
+	frame.style.padding = -2
+	frame.style.maximal_width = 42
 	
 	for _, v in pairs(icons) do
 		local button = frame.add({type = "sprite-button", name = v[1], sprite = v[2], tooltip = v[3]})
-		button.style.minimal_height = 38
-		button.style.minimal_width = 38
-		button.style.padding = -1
+		element_style({element = button, x = 38, y = 38, pad = -2})
 	end
 	
 	local tag = player.tag

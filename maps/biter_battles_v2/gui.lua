@@ -14,7 +14,7 @@ local food_names = Tables.gui_foods
 local math_random = math.random
 
 require "maps.biter_battles_v2.spec_spy"
-
+require 'utils/gui_styles'
 local gui_values = {
 		["north"] = {force = "north", biter_force = "north_biters", c1 = bb_config.north_side_team_name, c2 = "JOIN ", n1 = "join_north_button",
 		t1 = "Evolution of north side biters.",
@@ -41,9 +41,7 @@ local function create_sprite_button(player)
 	if player.gui.top["bb_toggle_button"] then return end
 	local button = player.gui.top.add({type = "sprite-button", name = "bb_toggle_button", sprite = "entity/big-biter"})
 	button.style.font = "default-bold"
-	button.style.minimal_height = 38
-	button.style.minimal_width = 38
-	button.style.padding = -1
+	element_style({element = button, x= 38, y = 38, pad = -2})
 end
 
 local function create_first_join_gui(player)

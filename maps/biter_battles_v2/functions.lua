@@ -9,6 +9,7 @@ local math_floor = math.floor
 local table_insert = table.insert
 local table_remove = table.remove
 local string_find = string.find
+require 'utils/gui_styles'
 
 -- Only add upgrade research balancing logic in this section
 -- All values should be in tables.lua
@@ -386,12 +387,7 @@ function Public.create_map_intro_button(player)
 	local b = player.gui.top.add({type = "sprite-button", caption = "?", name = "map_intro_button", tooltip = "Map Info"})
 	b.style.font_color = {r=0.5, g=0.3, b=0.99}
 	b.style.font = "heading-1"
-	b.style.minimal_height = 38
-	b.style.minimal_width = 38
-	b.style.top_padding = 1
-	b.style.left_padding = 1
-	b.style.right_padding = 1
-	b.style.bottom_padding = 1
+	element_style({element = b, x = 38, y = 38, pad = -2})
 end
 
 function Public.show_intro(player)
