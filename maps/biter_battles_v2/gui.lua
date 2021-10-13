@@ -54,14 +54,13 @@ local function create_first_join_gui(player)
 	local b = frame.add  { type = "label", caption = "Feed the enemy team's biters to gain advantage!" }
 	b.style.font = "heading-2"
 	b.style.font_color = {r=0.98, g=0.66, b=0.22}
-
-	frame.add  { type = "label", caption = "-----------------------------------------------------------"}
+	frame.add{ type = "line"}
 	local d = frame.add{type = "sprite-button", name = "join_random_button", caption = "AUTO JOIN"}
 	d.style.font = "default-large-bold"
 	d.style.font_color = { r=1, g=0, b=1}
-	d.style.minimal_width = 350
-	frame.add  { type = "label", caption = "-----------------------------------------------------------"}
-	frame.style.bottom_padding = -2
+	d.style.width = 350
+	frame.add{ type = "line"}
+	frame.style.bottom_padding = 2
 	
 	for _, gui_value in pairs(gui_values) do
 		local t = frame.add { type = "table", column_count = 3 }
@@ -90,11 +89,11 @@ local function create_first_join_gui(player)
 			l.style.font_color = {r = p.color.r * 0.6 + 0.4, g = p.color.g * 0.6 + 0.4, b = p.color.b * 0.6 + 0.4, a = 1}
 			l.style.font = "heading-2"
 		end
-		local b = frame.add  { type = "sprite-button", name = gui_value.n1, caption = c }
+		local b = frame.add  { type = "sprite-button", name = gui_value.n1, caption = c}
 		b.style.font = "default-large-bold"
 		b.style.font_color = font_color
-		b.style.minimal_width = 350
-		frame.add  { type = "label", caption = "-----------------------------------------------------------"}
+		b.style.width = 350
+		frame.add{ type = "line"}
 	end
 	
 	
@@ -434,7 +433,6 @@ local function on_gui_click(event)
 		for  _, gui_values in pairs(gui_values) do
 			if a ~= #game.forces[gui_values.force].connected_players then 
 				teams_equal = false
-				player.print(teams_equal)
 				break
 			end
 		end
@@ -449,7 +447,6 @@ local function on_gui_click(event)
 		else -- checking which team is smaller and joining it
 			local smallest_team = gui_values["north"].force --Idk how to choose the 1st force without calling 'north'
 			for _, gui_values in pairs(gui_values) do
-				player.print(a)
 				if a > #game.forces[gui_values.force].connected_players then
 					smallest_team = gui_values.force
 					a = #game.forces[gui_values.force].connected_players
