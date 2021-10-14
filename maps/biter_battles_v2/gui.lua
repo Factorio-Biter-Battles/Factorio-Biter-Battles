@@ -280,14 +280,13 @@ function Public.refresh_threat()
 	global.gui_refresh_delay = game.tick + 5
 end
 
-function join_team(player, force_name, forced_join)
+function join_team(player, force_name, forced_join, auto_join)
 	if not player.character then return end
 	if not forced_join then
 		if global.tournament_mode then player.print("The game is set to tournament mode. Teams can only be changed via team manager.", {r = 0.98, g = 0.66, b = 0.22}) return end
 	end
 	if not force_name then return end
 	local surface = player.surface
-
 	local enemy_team = "south"
 	if force_name == "south" then enemy_team = "north" end
 
@@ -338,7 +337,8 @@ function join_team(player, force_name, forced_join)
 	if not forced_join then
 		local c = player.force.name
 		if global.tm_custom_name[player.force.name] then c = global.tm_custom_name[player.force.name] end
-		local message = table.concat({player.name, " has joined team ", c, "!"})
+		local message = table.concat({player.name, " has joined team ", c, "! "})
+		if auto_join then message = table.concat({player.name, " was automatically assigned to team ", c, "! "}) end
 		game.print(message, {r = 0.98, g = 0.66, b = 0.22})
 		Server.to_discord_bold(message)
 	end
@@ -377,12 +377,12 @@ function spectate(player, forced_join)
 	player.spectator = true
 end
 
-local function join_gui_click(name, player)
+local function join_gui_click(name, player, auto_join)
 	if not name then return end
 
 	if global.game_lobby_active then
 		if player.admin then
-			join_team(player, name)
+			join_team(player, name, false,  auto_join)
 			game.print("Lobby disabled, admin override.", { r=0.98, g=0.66, b=0.22})
 			global.game_lobby_active = false
 			return
@@ -390,7 +390,7 @@ local function join_gui_click(name, player)
 		player.print("Waiting for more players, " .. wait_messages[math_random(1, #wait_messages)], { r=0.98, g=0.66, b=0.22})
 		return
 	end
-	join_team(player, name)
+	join_team(player, name, false, auto_join)
 end
 
 local spy_forces = {{"north", "south"},{"south", "north"}}
@@ -428,7 +428,7 @@ local function on_gui_click(event)
 	if name == "join_random_button" then
 		local teams_equal = true
 		local a = #game.forces["north"].connected_players --Idk how to choose the 1st force without calling 'north'
-		
+		local auto_join = true
 		-- checking if teams are equal	
 		for  _, gui_values in pairs(gui_values) do
 			if a ~= #game.forces[gui_values.force].connected_players then 
@@ -442,7 +442,7 @@ local function on_gui_click(event)
 			for  _, gui_values in pairs(gui_values) do
 				table.insert(teams, gui_values.force)
 			end
-			join_gui_click(teams[math.random(#teams)], player)
+			join_gui_click(teams[math.random(#teams)], player, auto_join)
 		
 		else -- checking which team is smaller and joining it
 			local smallest_team = gui_values["north"].force --Idk how to choose the 1st force without calling 'north'
@@ -452,7 +452,7 @@ local function on_gui_click(event)
 					a = #game.forces[gui_values.force].connected_players
 				end
 			end
-			join_gui_click(smallest_team, player)
+			join_gui_click(smallest_team, player, auto_join)
 		end
 		return
 	end
