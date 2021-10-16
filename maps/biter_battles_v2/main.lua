@@ -12,7 +12,7 @@ local Terrain = require "maps.biter_battles_v2.terrain"
 local Session = require 'utils.datastore.session_data'
 local Color = require 'utils.color_presets'
 local diff_vote = require "maps.biter_battles_v2.difficulty_vote"
-
+local Jail = require "utils.datastore.jail_data"
 require "maps.biter_battles_v2.sciencelogs_tab"
 require 'maps.biter_battles_v2.commands'
 require "modules.spawners_contain_biters"
@@ -247,7 +247,14 @@ local function clear_corpses(cmd)
         end
         player.print('Cleared biter-corpses.', Color.success)
 end
-
+local function on_rocket_launched(event)
+	if event.player_index == nil then return end
+	local player = game.players[event.player_index]
+	game.print(player.name .. " has fallen out of a rocket!")
+	player.character.die()  
+	Jail.try_ul_data(player.name, true, "God" , "Tried to fly too close to the sun") --< That's how you autojail. Very intuitive :D'
+	
+end
 local function on_init()
 	Init.tables()
 	Init.initial_setup()
@@ -280,6 +287,7 @@ Event.add(defines.events.on_research_finished, on_research_finished)
 Event.add(defines.events.on_robot_built_entity, on_robot_built_entity)
 Event.add(defines.events.on_robot_built_tile, on_robot_built_tile)
 Event.add(defines.events.on_tick, on_tick)
+Event.add(defines.events.on_rocket_launch_ordered, on_rocket_launched)
 Event.on_init(on_init)
 
 commands.add_command('clear-corpses', 'Clears all the biter corpses..',
