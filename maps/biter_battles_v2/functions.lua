@@ -1,4 +1,5 @@
 local Server = require 'utils.server'
+local Muted = require 'utils.muted'
 local Tables = require "maps.biter_battles_v2.tables"
 local string_sub = string.sub
 local math_random = math.random
@@ -299,37 +300,43 @@ end
 
 --Share chat with spectator force
 function Public.share_chat(event)
-	if not event.message then return end
-	if not event.player_index then return end
+	if not event.message or not event.player_index then return end
 	local player = game.players[event.player_index]
+	local player_name = player.name
+	local player_force_name = player.force.name
 	local tag = player.tag
 	if not tag then tag = "" end
 	local color = player.chat_color
+	
+	local muted = Muted.is_muted(player_name)
+	local mute_tag = ""
+	if muted then 
+		mute_tag = "[muted] "
+	end
 
-	local msg = player.name .. tag .. " (" .. player.force.name .. "): ".. event.message
-	if player.force.name == "north" or player.force.name == "south" then
-		game.forces.spectator.print(player.name .. tag .. " (" .. player.force.name .. "): ".. event.message, color)
+	local msg = player_name .. tag .. " (" .. player_force_name .. "): ".. event.message
+	if not muted and (player_force_name == "north" or player_force_name == "south") then
+		game.forces.spectator.print(msg, color)
 	end
 
 	if global.tournament_mode and not player.admin then return end
-
-	if player.force.name == "player" then
-		game.forces.north.print(player.name .. tag .. " (spawn): ".. event.message, color)
-		game.forces.south.print(player.name .. tag .. " (spawn): ".. event.message, color)
-		game.forces.spectator.print(player.name .. tag .. " (spawn): ".. event.message, color)
-	end
 
 	--Skip messages that would spoil coordinates from spectators and don't send gps coord to discord
 	local a, b = string_find(event.message, "gps=", 1, false)
 	if a then return end
 
-	local discord_msg = player.name .. " (" .. player.force.name .. "): ".. event.message
-	Server.to_discord_player_chat(discord_msg)
-
-	if player.force.name == "spectator" then
-		game.forces.north.print(player.name .. tag .. " (spectator): ".. event.message, color)
-		game.forces.south.print(player.name .. tag .. " (spectator): ".. event.message, color)
+	local discord_msg = ""
+	if muted then 
+		discord_msg = mute_tag
+		Muted.print_muted_message(player)
+	end 
+	if not muted and player_force_name == "spectator" then
+		game.forces.north.print(msg)
+		game.forces.south.print(msg)
 	end
+	
+	discord_msg = discord_msg .. player_name .. " (" .. player_force_name .. "): ".. event.message
+	Server.to_discord_player_chat(discord_msg)
 end
 
 function Public.spy_fish(player, event)
