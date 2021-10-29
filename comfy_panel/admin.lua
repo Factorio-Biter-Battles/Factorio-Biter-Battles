@@ -4,7 +4,7 @@ local Event = require 'utils.event'
 local Jailed = require 'utils.datastore.jail_data'
 local Tabs = require 'comfy_panel.main'
 local AntiGrief = require 'antigrief'
-
+local Color = require "utils.color_presets"
 local lower = string.lower
 
 local function admin_only_message(str)
@@ -727,6 +727,51 @@ local function on_gui_selection_state_changed(event)
 end
 
 comfy_panel_tabs['Admin'] = {gui = create_admin_panel, admin = true}
+
+commands.add_command("kill", "Kill a player", function(cmd)
+    local killer = game.get_player(cmd.player_index)
+    local victim = cmd.parameter
+    if not killer.admin then
+        killer.print("Only admins have licence for killing")
+        return
+        end
+    if not game.players[victim] then 
+        killer.print("Invalid name")
+        return
+        end
+    victim = game.get_player(victim)
+    kill(victim, killer)
+    end)
+commands.add_command("punish", "Kill and ban a player. Usage: <name> <reason>", function(cmd)
+    local punisher = game.get_player(cmd.player_index)
+    if not punisher.admin then
+        punisher.print("This is admin only command")
+        return 
+        end
+    if not cmd.parameter then
+        punisher.print("Usage: <name> <reason>")
+        return 
+        end
+    local t = {}
+    local message
+    for i in string.gmatch(cmd.parameter, '%S+') do
+        t[#t + 1] = i
+        end
+    local offender = t[1]
+    table.remove(t, 1)
+    message = table.concat(t, ' ')
+    if not game.players[offender] then
+        punisher.print("Invalid name")
+        return
+        end
+    if string.len(message) < 10 then
+        punisher.print("No valid reason given, or reason is too short")
+        return
+        end
+    kill(offender, punisher)
+    game.ban_player(offender, message .. " Appeal an discord. Link on biterbattles.org")
+    end)
+        
 
 Event.add(defines.events.on_gui_text_changed, text_changed)
 Event.add(defines.events.on_gui_click, on_gui_click)
