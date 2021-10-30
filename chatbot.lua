@@ -202,7 +202,17 @@ local function on_console_command(event)
     local player = game.players[event.player_index]
     local param = event.parameters
 
-    if not player.admin then
+    local commands = {
+        ['editor'] = true,
+        ['silent-command'] = true,
+        ['sc'] = true,
+        ['debug'] = true
+    }
+
+    if (cmd == "shout" or cmd == "s") and player and param then
+        local chatmsg = "[shout] " .. player.name .. " (" .. player.force.name .. "): " .. param
+        Server.to_discord_player_chat(chatmsg)
+    elseif not player.admin or not commands[cmd] then
         return
     end
 
@@ -217,28 +227,7 @@ local function on_console_command(event)
         param = nil
     end
 
-    local commands = {
-        ['editor'] = true,
-        ['silent-command'] = true,
-        ['sc'] = true,
-        ['debug'] = true,
-        ['s'] = true,
-        ['shout'] = true
-    }
-
-    if not commands[cmd] then
-        return
-    end
-
-    if cmd == "shout" or cmd == "s" and player and param then
-        local chatmsg = "[shout] " .. player.name .. " (" .. player.force.name .. "): " .. param
-
-        if Muted and Muted.is_muted(player.name) then 
-            Muted.print_muted_message(player)
-            chatmsg = "[muted] " .. chatmsg  
-        end
-        Server.to_discord_player_chat(chatmsg)
-    elseif player then
+    if player then
         for _, p in pairs(game.connected_players) do
             if p.admin == true and p.name ~= player.name then
                 if param then
