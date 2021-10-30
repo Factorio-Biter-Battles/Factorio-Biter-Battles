@@ -732,7 +732,7 @@ commands.add_command("kill", "Kill a player", function(cmd)
     local killer = game.get_player(cmd.player_index)
     local victim = cmd.parameter
     if not killer.admin then
-        killer.print("Only admins have licence for killing")
+        killer.print("Only admins have licence for killing!")
         return
         end
     if not game.players[victim] then 
@@ -744,6 +744,8 @@ commands.add_command("kill", "Kill a player", function(cmd)
     end)
 commands.add_command("punish", "Kill and ban a player. Usage: <name> <reason>", function(cmd)
     local punisher = game.get_player(cmd.player_index)
+    local t = {}
+    local message    
     if not punisher.admin then
         punisher.print("This is admin only command")
         return 
@@ -752,8 +754,7 @@ commands.add_command("punish", "Kill and ban a player. Usage: <name> <reason>", 
         punisher.print("Usage: <name> <reason>")
         return 
         end
-    local t = {}
-    local message
+    
     for i in string.gmatch(cmd.parameter, '%S+') do
         t[#t + 1] = i
         end
@@ -761,15 +762,17 @@ commands.add_command("punish", "Kill and ban a player. Usage: <name> <reason>", 
     table.remove(t, 1)
     message = table.concat(t, ' ')
     if not game.players[offender] then
-        punisher.print("Invalid name")
+        punisher.print("Invalid name", {r = 1, g = 0.5, b = 0.1})
         return
         end
-    if string.len(message) < 10 then
-        punisher.print("No valid reason given, or reason is too short")
+    offender = game.get_player(offender)
+    if string.len(message) < 5 then
+        punisher.print("No valid reason given, or reason is too short", {r = 1, g = 0.5, b = 0.1})
         return
         end
+    message = message .. " Appeal an discord. Link on biterbattles.org", {r = 1, g = 0.5, b = 0.1}
     kill(offender, punisher)
-    game.ban_player(offender, message .. " Appeal an discord. Link on biterbattles.org")
+    game.ban_player(offender, message)
     end)
         
 
