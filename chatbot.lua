@@ -3,6 +3,7 @@ local session = require 'utils.datastore.session_data'
 local Timestamp = require 'utils.timestamp'
 local Server = require 'utils.server'
 local Color = require 'utils.color_presets'
+local Muted = require 'utils.muted'
 
 local font_color = Color.warning
 local font = 'default-game'
@@ -231,6 +232,11 @@ local function on_console_command(event)
 
     if cmd == "shout" or cmd == "s" and player and param then
         local chatmsg = "[shout] " .. player.name .. " (" .. player.force.name .. "): " .. param
+
+        if Muted and Muted.is_muted(player.name) then 
+            Muted.print_muted_message(player)
+            chatmsg = "[muted] " .. chatmsg  
+        end
         Server.to_discord_player_chat(chatmsg)
     elseif player then
         for _, p in pairs(game.connected_players) do

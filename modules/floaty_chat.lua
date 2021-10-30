@@ -1,11 +1,14 @@
 local event = require 'utils.event'
+local Muted = require 'utils.muted'
+
 
 local function on_console_chat(event)
-	if not event.message then return end	
-	if not event.player_index then return end	
+	if not event.message or not event.player_index then return end		
 	local player = game.players[event.player_index]
 	if not player.character then return end
-	
+
+	if Muted and Muted.is_muted(player.name) then return end
+
 	local y_offset = -4
 	if package.loaded['modules.rpg'] then y_offset = -4.5 end
 	
