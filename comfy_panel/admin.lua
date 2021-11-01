@@ -4,7 +4,7 @@ local Event = require 'utils.event'
 local Jailed = require 'utils.datastore.jail_data'
 local Tabs = require 'comfy_panel.main'
 local AntiGrief = require 'antigrief'
-local Color = require "utils.color_presets"
+
 local lower = string.lower
 
 local function admin_only_message(str)
@@ -771,6 +771,11 @@ commands.add_command("punish", "Kill and ban a player. Usage: <name> <reason>", 
         return
         end
     message = message .. " Appeal an discord. Link on biterbattles.org", {r = 1, g = 0.5, b = 0.1}
+    --switches offender to their team if he's spectating
+    if offender.force.name == "spectator" then
+        join_team(offender, global.chosen_team[offender.name], true)
+        end
+
     kill(offender, punisher)
     game.ban_player(offender, message)
     end)
