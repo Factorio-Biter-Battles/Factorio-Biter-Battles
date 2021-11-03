@@ -44,6 +44,19 @@ local function create_sprite_button(player)
 	element_style({element = button, x= 38, y = 38, pad = -2})
 end
 
+local function clock(frame)
+	local minutes = game.ticks_played % 216000
+    local hours = game.ticks_played - minutes
+    minutes = string.format("%02d", math.floor(minutes / 3600))
+    hours = string.format("%02d", math.floor(hours / 216000))
+	
+	local clock = frame.add{type = "label", caption ="Game time:	" .. hours .. ":" .. minutes }
+	clock.style.font = "default-bold"
+	clock.style.font_color = {r=0.98, g=0.66, b=0.22}
+	frame.add{ type = "line"}
+
+	end
+
 local function create_first_join_gui(player)
 	if not global.game_lobby_timeout then global.game_lobby_timeout = 5999940 end
 	if global.game_lobby_timeout - game.tick < 0 then global.game_lobby_active = false end
@@ -54,7 +67,8 @@ local function create_first_join_gui(player)
 	local b = frame.add  { type = "label", caption = "Feed the enemy team's biters to gain advantage!" }
 	b.style.font = "heading-2"
 	b.style.font_color = {r=0.98, g=0.66, b=0.22}
-	frame.add{ type = "line"}
+	--frame.add{ type = "line"}
+	clock(frame)
 	local d = frame.add{type = "sprite-button", name = "join_random_button", caption = "AUTO JOIN"}
 	d.style.font = "default-large-bold"
 	d.style.font_color = { r=1, g=0, b=1}
@@ -133,7 +147,8 @@ function Public.create_main_gui(player)
 	end
 
 	local frame = player.gui.left.add { type = "frame", name = "bb_main_gui", direction = "vertical" }
-
+	
+	clock(frame)
 	-- Science sending GUI
 	if not is_spec then
 		frame.add { type = "table", name = "biter_battle_table", column_count = 4 }
@@ -148,8 +163,9 @@ function Public.create_main_gui(player)
 			s.style.right_padding = 0
 			s.style.bottom_padding = 0
 		end
+		frame.add{type="line"}
 	end
-
+	
 	local first_team = true
 	for _, gui_value in pairs(gui_values) do
 		-- Line separator
