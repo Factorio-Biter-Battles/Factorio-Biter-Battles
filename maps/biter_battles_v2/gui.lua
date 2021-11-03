@@ -45,17 +45,15 @@ local function create_sprite_button(player)
 end
 
 local function clock(frame)
-	local minutes = game.ticks_played % 216000
-    local hours = game.ticks_played - minutes
-    minutes = string.format("%02d", math.floor(minutes / 3600))
-    hours = string.format("%02d", math.floor(hours / 216000))
-	
-	local clock = frame.add{type = "label", caption ="Game time:	" .. hours .. ":" .. minutes }
+	local total_minutes = math.floor(game.ticks_played / (60 * 60))
+	local total_hours = math.floor(total_minutes / 60)
+	local minutes = total_minutes - (total_hours * 60)
+		
+	local clock = frame.add{ type = "label", caption ="Game time:	" .. string.format("%02d", total_hours)  .. ":" .. string.format("%02d", minutes) }
 	clock.style.font = "default-bold"
 	clock.style.font_color = {r=0.98, g=0.66, b=0.22}
-	frame.add{ type = "line"}
-
-	end
+	frame.add{ type = "line" }
+end
 
 local function create_first_join_gui(player)
 	if not global.game_lobby_timeout then global.game_lobby_timeout = 5999940 end
@@ -67,7 +65,6 @@ local function create_first_join_gui(player)
 	local b = frame.add  { type = "label", caption = "Feed the enemy team's biters to gain advantage!" }
 	b.style.font = "heading-2"
 	b.style.font_color = {r=0.98, g=0.66, b=0.22}
-	--frame.add{ type = "line"}
 	clock(frame)
 	local d = frame.add{type = "sprite-button", name = "join_random_button", caption = "AUTO JOIN"}
 	d.style.font = "default-large-bold"
@@ -340,7 +337,7 @@ function join_team(player, force_name, forced_join, auto_join)
 		local msg = table.concat({"Team ", player.force.name, " player ", player.name, " is no longer spectating."})
 		game.print(msg, {r = 0.98, g = 0.66, b = 0.22})
 		Server.to_discord_bold(msg)
-        global.spectator_rejoin_delay[player.name] = game.tick
+		global.spectator_rejoin_delay[player.name] = game.tick
 		player.spectator = false
 		return
 	end
@@ -354,9 +351,9 @@ function join_team(player, force_name, forced_join, auto_join)
 		local c = player.force.name
 		if global.tm_custom_name[player.force.name] then c = global.tm_custom_name[player.force.name] end
 		local message = table.concat({player.name, " has joined team ", c, "! "})
-		if auto_join then message = table.concat({player.name, " was automatically assigned to team ", c, "! "}) end
-		game.print(message, {r = 0.98, g = 0.66, b = 0.22})
 		Server.to_discord_bold(message)
+		if auto_join then message = table.concat({player.name, " was automatically assigned to team ", c, "!"}) end
+		game.print(message, {r = 0.98, g = 0.66, b = 0.22})
 	end
 	local i = player.get_inventory(defines.inventory.character_main)
 	i.clear()
@@ -368,7 +365,7 @@ function join_team(player, force_name, forced_join, auto_join)
 	player.insert {name = 'burner-mining-drill', count = 10}
 	player.insert {name = 'wood', count = 2}
 	global.chosen_team[player.name] = force_name
-    global.spectator_rejoin_delay[player.name] = game.tick
+	global.spectator_rejoin_delay[player.name] = game.tick
 	player.spectator = false
 	clear_copy_history(player)
 	Public.refresh()
@@ -444,7 +441,7 @@ local function on_gui_click(event)
 	if name == "join_random_button" then
 		local teams_equal = true
 		local a = #game.forces["north"].connected_players --Idk how to choose the 1st force without calling 'north'
-		local auto_join = true
+
 		-- checking if teams are equal	
 		for  _, gui_values in pairs(gui_values) do
 			if a ~= #game.forces[gui_values.force].connected_players then 
@@ -452,13 +449,14 @@ local function on_gui_click(event)
 				break
 			end
 		end
+
 		-- choosing a team at random if teams are equal
 		if teams_equal then
 			local teams = {}
 			for  _, gui_values in pairs(gui_values) do
 				table.insert(teams, gui_values.force)
 			end
-			join_gui_click(teams[math.random(#teams)], player, auto_join)
+			join_gui_click(teams[math.random(#teams)], player, true)
 		
 		else -- checking which team is smaller and joining it
 			local smallest_team = gui_values["north"].force --Idk how to choose the 1st force without calling 'north'
@@ -468,7 +466,7 @@ local function on_gui_click(event)
 					a = #game.forces[gui_values.force].connected_players
 				end
 			end
-			join_gui_click(smallest_team, player, auto_join)
+			join_gui_click(smallest_team, player, true)
 		end
 		return
 	end
