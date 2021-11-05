@@ -4,6 +4,7 @@ local Event = require 'utils.event'
 local Jailed = require 'utils.datastore.jail_data'
 local Tabs = require 'comfy_panel.main'
 local AntiGrief = require 'antigrief'
+local Server = require 'utils.server'
 
 local lower = string.lower
 
@@ -729,56 +730,53 @@ end
 comfy_panel_tabs['Admin'] = {gui = create_admin_panel, admin = true}
 
 commands.add_command("kill", "Kill a player", function(cmd)
-    local killer = game.get_player(cmd.player_index)
-    local victim = cmd.parameter
-    if not killer.admin then
-        killer.print("Only admins have licence for killing!")
-        return
-        end
-    if not game.players[victim] then 
-        killer.print("Invalid name")
-        return
-        end
-    victim = game.get_player(victim)
-    kill(victim, killer)
-    end)
+	local killer = game.get_player(cmd.player_index)
+	local victim = cmd.parameter
+	if not killer.admin then
+		killer.print("Only admins have licence for killing!")
+		return
+	end
+	if not game.players[victim] then
+		killer.print("Invalid name")
+		return
+	end
+	victim = game.get_player(victim)
+	kill(victim, killer)
+end)
 commands.add_command("punish", "Kill and ban a player. Usage: <name> <reason>", function(cmd)
-    local punisher = game.get_player(cmd.player_index)
-    local t = {}
-    local message    
-    if not punisher.admin then
-        punisher.print("This is admin only command")
-        return 
-        end
-    if not cmd.parameter then
-        punisher.print("Usage: <name> <reason>")
-        return 
-        end
-    
-    for i in string.gmatch(cmd.parameter, '%S+') do
-        t[#t + 1] = i
-        end
-    local offender = t[1]
-    table.remove(t, 1)
-    message = table.concat(t, ' ')
-    if not game.players[offender] then
-        punisher.print("Invalid name", {r = 1, g = 0.5, b = 0.1})
-        return
-        end
-    offender = game.get_player(offender)
-    if string.len(message) < 5 then
-        punisher.print("No valid reason given, or reason is too short", {r = 1, g = 0.5, b = 0.1})
-        return
-        end
-    message = message .. " Appeal an discord. Link on biterbattles.org", {r = 1, g = 0.5, b = 0.1}
-    --switches offender to their team if he's spectating
-    if offender.force.name == "spectator" then
-        join_team(offender, global.chosen_team[offender.name], true)
-        end
+	local punisher = game.get_player(cmd.player_index)
+	local t = {}
+	local message
+	if not punisher.admin then
+		punisher.print("This is admin only command")
+		return
+	end
+	if not cmd.parameter then
+		punisher.print("Usage: <name> <reason>")
+		return
+	end
 
-    kill(offender, punisher)
-    game.ban_player(offender, message)
-    end)
+	for i in string.gmatch(cmd.parameter, '%S+') do t[#t + 1] = i end
+	local offender = t[1]
+	table.remove(t, 1)
+	message = table.concat(t, ' ')
+	if not game.players[offender] then
+		punisher.print("Invalid name", {r = 1, g = 0.5, b = 0.1})
+		return
+	end
+	offender = game.get_player(offender)
+	if string.len(message) < 5 then
+		punisher.print("No valid reason given, or reason is too short", {r = 1, g = 0.5, b = 0.1})
+		return
+	end
+	Server.to_discord_embed(offender .. " was banned by " .. punisher .. ". " .. "Reason: " .. message)
+	message = message .. " Appeal on discord. Link on biterbattles.org", {r = 1, g = 0.5, b = 0.1}
+	-- switches offender to their team if he's spectating
+	if offender.force.name == "spectator" then join_team(offender, global.chosen_team[offender.name], true) end
+
+	kill(offender, punisher)
+	game.ban_player(offender, message)
+end)
         
 
 Event.add(defines.events.on_gui_text_changed, text_changed)
