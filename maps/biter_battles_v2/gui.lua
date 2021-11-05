@@ -48,11 +48,11 @@ local function clock(frame)
 	local total_minutes = math.floor(game.ticks_played / (60 * 60))
 	local total_hours = math.floor(total_minutes / 60)
 	local minutes = total_minutes - (total_hours * 60)
-		
-	local clock = frame.add{ type = "label", caption ="Game time:	" .. string.format("%02d", total_hours)  .. ":" .. string.format("%02d", minutes) }
+
+	local clock = frame.add {type = "label", caption = "Game time: " .. string.format("%02d", total_hours) .. ":" .. string.format("%02d", minutes)}
 	clock.style.font = "default-bold"
-	clock.style.font_color = {r=0.98, g=0.66, b=0.22}
-	frame.add{ type = "line" }
+	clock.style.font_color = {r = 0.98, g = 0.66, b = 0.22}
+	frame.add {type = "line"}
 end
 
 local function create_first_join_gui(player)
@@ -440,26 +440,24 @@ local function on_gui_click(event)
 		
 	if name == "join_random_button" then
 		local teams_equal = true
-		local a = #game.forces["north"].connected_players --Idk how to choose the 1st force without calling 'north'
-
+		local a = #game.forces["north"].connected_players -- Idk how to choose the 1st force without calling 'north'
+	
 		-- checking if teams are equal	
-		for  _, gui_values in pairs(gui_values) do
-			if a ~= #game.forces[gui_values.force].connected_players then 
+		for _, gui_values in pairs(gui_values) do
+			if a ~= #game.forces[gui_values.force].connected_players then
 				teams_equal = false
 				break
 			end
 		end
-
+	
 		-- choosing a team at random if teams are equal
 		if teams_equal then
 			local teams = {}
-			for  _, gui_values in pairs(gui_values) do
-				table.insert(teams, gui_values.force)
-			end
+			for _, gui_values in pairs(gui_values) do table.insert(teams, gui_values.force) end
 			join_gui_click(teams[math.random(#teams)], player, true)
-		
+	
 		else -- checking which team is smaller and joining it
-			local smallest_team = gui_values["north"].force --Idk how to choose the 1st force without calling 'north'
+			local smallest_team = gui_values["north"].force -- Idk how to choose the 1st force without calling 'north'
 			for _, gui_values in pairs(gui_values) do
 				if a > #game.forces[gui_values.force].connected_players then
 					smallest_team = gui_values.force
