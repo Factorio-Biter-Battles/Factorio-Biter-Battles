@@ -769,7 +769,7 @@ commands.add_command("punish", "Kill and ban a player. Usage: <name> <reason>", 
 		punisher.print("No valid reason given, or reason is too short", {r = 1, g = 0.5, b = 0.1})
 		return
 	end
-	Server.to_discord_embed(offender .. " was banned by " .. punisher .. ". " .. "Reason: " .. message)
+	Server.to_discord_embed(offender.name .. " was banned by " .. punisher.name .. ". " .. "Reason: " .. message)
 	message = message .. " Appeal on discord. Link on biterbattles.org", {r = 1, g = 0.5, b = 0.1}
 	-- switches offender to their team if he's spectating
 	if offender.force.name == "spectator" then join_team(offender, global.chosen_team[offender.name], true) end
