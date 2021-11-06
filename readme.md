@@ -4,7 +4,19 @@
 </p>
 
 # Factorio Biter Battles
-A team vs team factorio scenario. Duke it out on a mirrored map, advancing through technologies whilst fending off natural biters, and those sent from the other team.
+The biters have noticed that you are secretly hoarding fish in the rocket silo.  Your objective is to defend your silo, while defeating the other team.  Feed your opponent's biters with science packs to increase their strength.  High tier science juice will yield stronger mutagenic results.  Only feeding and time increases their power and will lead to your teams victory.  There is no major direct pvp combat.  The horizontal border river is landfill proof.  Construction robots can not build on the other teams's side.  The random map layout is mirrored to provide a fair competition.  West and East directions contain no biter nests, leaving room for factory expansion and outpost building.  North and South directions are biter territory.  The gui yields two different main stats for each team's biters.
+
+### EVO
+- Evolution of the biters.
+- Increases when they get fed.
+- Can rise above 100% which unlocks endgame modifiers, granting them increased damage and health.
+
+### THREAT
+- Causes biters to attack.
+- Reduces when biters are slain.
+- Feeding gives permanent "threat-income", as well as creating instant threat.
+- A high threat value causes big attacks.
+- Values of zero or below will cause no attacks.
 
 ### Repository
 - This project project can be found on github at https://github.com/Factorio-Biter-Battles/Factorio-Biter-Battles
