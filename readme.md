@@ -21,7 +21,6 @@ The biters have noticed that you are secretly hoarding fish in the rocket silo. 
 ### Repository
 - This project project can be found on github at https://github.com/Factorio-Biter-Battles/Factorio-Biter-Battles
 - This is a forked project of from [ComfyFactorio](https://github.com/M3wM3w/ComfyFactorio)
-- https://github.com/mysticamber/bitercord is used for discord integration.
 
 ### Join the community
 - We're live on [discord](https://discord.com/invite/hAYW3K7J2A)!
