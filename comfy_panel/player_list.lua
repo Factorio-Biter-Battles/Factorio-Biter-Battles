@@ -650,7 +650,7 @@ local function on_gui_click(event)
         if not target or not target.valid then
             return
         end
-        Where.create_mini_camera_gui(player, target.name, target.position, target.surface.index)
+        Where.create_mini_camera_gui(player, target)
     end
     --Poke other players
     if string.sub(event.element.name, 1, 11) == 'poke_player' then

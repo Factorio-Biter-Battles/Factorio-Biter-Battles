@@ -8,6 +8,7 @@ local spectactor_cameras = 4
 local player_cameras = 1
 local where_camera_prefix = 'where_camera_'
 local resize_prefix = 'resize_'
+local where_camera_list = {}
 
 local function validate_player(player)
     if not player then
@@ -73,7 +74,8 @@ local function get_where_camera_name(player, caption)
     return where_camera_name
 end
 
-local function create_mini_camera_gui(player, caption, position, surface)
+local function create_mini_camera_gui(player, target_player)
+    local caption = target_player.name
     local where_camera_name = get_where_camera_name(player, caption)
     if not where_camera_name then
         return
@@ -82,13 +84,13 @@ local function create_mini_camera_gui(player, caption, position, surface)
     local resize_where_camera_name = resize_prefix .. where_camera_name
 
     local frame = player.gui.screen.add({type = 'frame', name = where_camera_name, caption = caption})
-    surface = tonumber(surface)
+    local surface = tonumber(target_player.surface.index)
     local camera =
         frame.add(
         {
             type = 'camera',
             name = 'where_camera',
-            position = position,
+            position = target_player.position,
             zoom = 0.4,
             surface_index = surface
         }
@@ -96,8 +98,12 @@ local function create_mini_camera_gui(player, caption, position, surface)
 
     camera.style.horizontally_stretchable = true
     camera.style.vertically_stretchable = true
-    camera.style.horizontally_squashable = true
-    camera.style.vertically_squashable = true
+    camera.entity = target_player.character
+
+    if not where_camera_list[player.index] then
+        where_camera_list[player.index] = {}
+    end
+    where_camera_list[player.index][target_player.index] = camera
 
     frame.style.minimal_width  = 200
     frame.style.minimal_height = 200
@@ -144,7 +150,7 @@ commands.add_command(
             local target_player = game.players[cmd.parameter]
 
             if validate_player(target_player) then
-                create_mini_camera_gui(player, target_player.name, target_player.position, target_player.surface.index)
+                create_mini_camera_gui(player, target_player)
             else
                 player.print('Please type a name of a player who is connected.', Color.warning)
             end
@@ -175,17 +181,6 @@ local function on_gui_click(event)
         if player.gui.screen[resize_where_camera_name] then
             player.gui.screen[resize_where_camera_name].bring_to_front()
             return
-        end
-    end
-end
-
-local function on_tick(event)
-    for _, player in pairs(game.connected_players) do
-        for _, child in pairs(player.gui.screen.children) do
-            if string.starts(child.name, where_camera_prefix) then
-                local target_name = child.caption
-                child.where_camera.position = game.players[target_name].position
-            end
         end
     end
 end
@@ -262,11 +257,20 @@ local function on_player_changed_force(event)
     end
 end
 
+local function on_player_respawned(event)
+    local target_index = event.player_index
+    for _, cameras in pairs(where_camera_list) do
+        if cameras[target_index] then
+            cameras[target_index].entity = game.players[target_index].character
+        end
+    end
+end
+
 Public.create_mini_camera_gui = create_mini_camera_gui
 
 Event.add(defines.events.on_gui_click, on_gui_click)
-Event.add(defines.events.on_tick, on_tick)
 Event.add(defines.events.on_gui_location_changed, on_gui_location_changed)
 Event.add(defines.events.on_player_changed_force, on_player_changed_force)
+Event.add(defines.events.on_player_respawned, on_player_respawned)
 
 return Public
