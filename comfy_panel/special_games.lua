@@ -1,6 +1,21 @@
 local Event = require 'utils.event'
 local Color = require 'utils.color_presets'
 local valid_special_games = {
+	--[[ 
+	Add your special game here.
+	Syntax:
+	<game_name> = {
+		name = "<Name displayed in gui>"
+		config = {
+			list of all knobs, leavers and dials used to config your game
+			[1] = {name = "<name of this element>" called in on_gui_click to set variables, type = "<type of this element>", any other parameters needed to define this element},
+			[2] = {name = "example_1", type = "textfield", text = "200", numeric = true, width = 40},
+			[3] = {name = "example_2", type = "checkbox", caption = "Some checkbox", state = false}
+			NOTE all names should be unique in the scope of the game mode
+		},
+		button = {name = "<name of this button>" called in on_gui_clicked , type = "button", caption = "Apply"}
+	}
+	]]
 	turtle = {
 		name = "Turtle",
 		config = {
@@ -16,6 +31,7 @@ local valid_special_games = {
 		},
 		button = {name = "turtle_apply", type = "button", caption = "Apply"}
 	},
+
 	infinity_chest = {
 		name = "Infinity chest",
 		config = {
@@ -25,9 +41,11 @@ local valid_special_games = {
 			[4] = {name = "eq3", type = "choose-elem-button", elem_type = "item"},
 			[5] = {name = "eq4", type = "choose-elem-button", elem_type = "item"},
 			[6] = {name = "eq5", type = "choose-elem-button", elem_type = "item"}
+
 		},
 		button = {name = "infinity_chest_apply", type = "button", caption = "Apply"}
 	}
+
 }
 
 local function generate_turtle(moat_width, entrance_width, size_x, size_y)
@@ -35,7 +53,7 @@ local function generate_turtle(moat_width, entrance_width, size_x, size_y)
 	local surface = game.surfaces[global.bb_surface_name]
 	local water_positions = {}
 	local concrete_positions = {}
-	local k = 1
+
 	for i = 1, size_y + moat_width do
 		for a = 0, moat_width do
 			table.insert(water_positions, {name = "water", position = {x = (size_x / 2) + a, y = i}}) -- north
@@ -53,11 +71,9 @@ local function generate_turtle(moat_width, entrance_width, size_x, size_y)
 
 	for i = 1, entrance_width do
 		for a = 0, moat_width + 6 do
-			table.insert(concrete_positions,
-			             {name = "refined-concrete", position = {x = i - (entrance_width / 2), y = size_y - 3 + a}}) -- north
-			table.insert(concrete_positions,
-			             {name = "refined-concrete", position = {x = i - (entrance_width / 2), y = -size_y + 3 - a}}) -- south
-			k = k * -1
+			table.insert(concrete_positions, {name = "refined-concrete", position = {x = i - (entrance_width / 2), y = size_y - 3 + a}}) -- north
+			table.insert(concrete_positions, {name = "refined-concrete", position = {x = i - (entrance_width / 2), y = -size_y + 3 - a}}) -- south
+
 		end
 	end
 	surface.set_tiles(water_positions)
@@ -110,32 +126,6 @@ local function generate_infinity_chest(separate_chests, eq)
 	end
 end
 
---[[
-	Gui structure
-	Every element is taken from table valid_special_games
-
-	frame - from comfy_panel_tabs
-		label - title, description of panel
-		
-		a - frame containig a single special game, used mostly for astetic purposes
-			table - table with 3 columns
-				label - name of the mode
-				config - flow containing all the config for this mode, used mostly for astetic purposes, so that all settings are in the 2nd column
-					labels, textfields, checkboxes etc - used for configuration of the mode. Every setting used by generate_<mode>() should be picked manually in on_gui_clicked()
-				button - name from valid_special_games, used for calling generate_<name>()
-
-		Example for turtle: 
-
-		a{type = "frame"}
-			table{name = "turtle", type = "table"}
-				label{caption = "Turtle"}
-				config{name = "turtle", type = "flow"}
-					label{name = "label1", type = "label"}
-					textfield{name = "moat_width", type = "textfield"}
-					...
-				button{name = "turtle_apply", type = "button"}
-]]
-
 local create_special_games_panel = (function(player, frame)
 	frame.clear()
 	frame.add{type = "label", caption = "Configure and apply a simple special game here"}.style.single_line = false
@@ -149,15 +139,31 @@ local create_special_games_panel = (function(player, frame)
 		config.style.width = 500
 		for _, i in ipairs(v.config) do
 			config.add {
+				-- Add here any new parameters required by your config elements
 				name = i.name,
 				type = i.type,
 				caption = i.caption,
+				mouse_button_filter = i.mouse_button_filter,
+				direction = i.direction,
 				text = i.text,
 				numeric = i.numeric,
-				item = i.item,
+				allow_decimal = i.allow_decimal,
+				allow_negative = i.allow_negative,
 				state = i.state,
-				elem_type = i.elem_type
-				--[[ Add here any new parameters required by your config elements ]]
+				sprite = i.sprite,
+				number = i.number,
+				show_percent_for_small_numbers = i.show_percent_for_small_numbers,
+				items = i.items,
+				selected_index = i.selected_index,
+				elem_type = i.elem_type,
+				item = i.item,
+				minimum_value = i.minimum_value,
+				maximum_value = i.maximum_value,
+				value = i.value,
+				switch_state = i.switch_state,
+				allow_none_state = i.allow_none_state,
+				left_label_caption = i.left_label_caption,
+				right_label_caption = i.right_label_caption
 			}
 			config[i.name].style.width = i.width
 		end
@@ -168,8 +174,12 @@ end)
 local function on_gui_click(event)
 	local element = event.element
 	if not element.type == "button" then return end
+	local config = element.parent.children[2]
+
+	-- Insert logic for apply button here
+	
 	if element.name == "turtle_apply" then
-		local config = element.parent["turtle_config"]
+
 		local moat_width = config["moat_width"].text
 		local entrance_width = config["entrance_width"].text
 		local size_x = config["size_x"].text
@@ -178,19 +188,18 @@ local function on_gui_click(event)
 		generate_turtle(moat_width, entrance_width, size_x, size_y)
 
 	elseif element.name == "infinity_chest_apply" then
-		local config = element.parent["infinity_chest_config"]
-		local separate_chests = config["separate_chests"].state
 
+		local separate_chests = config["separate_chests"].state
 		local eq = {
 			config["eq1"].elem_value, 
 			config["eq2"].elem_value, 
 			config["eq3"].elem_value, 
 			config["eq4"].elem_value,
-   			config["eq5"].elem_value
+			config["eq5"].elem_value
 		}
 
 		generate_infinity_chest(separate_chests, eq)
-		
+
 	end
 end
 comfy_panel_tabs['Special games'] = {gui = create_special_games_panel, admin = true}
