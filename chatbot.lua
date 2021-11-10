@@ -18,7 +18,7 @@ local brain = {
     },
     [3] = {'Scenario repository for download:', 'https://github.com/1pulse/Factorio-Biter-Battles'},
     [4] = {
-        "If you're not trusted - ask a trusted player or an admin to trust you."
+        "If you're not trusted and have been playing here for awhile, ask an admin to trust you.  Use the /admins command to see if any are available."
     },
     [5] = {
         'Need a guide to help learn the server?',
