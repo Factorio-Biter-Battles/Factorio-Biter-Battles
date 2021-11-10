@@ -55,30 +55,34 @@ local function generate_turtle(moat_width, entrance_width, size_x, size_y)
 	local surface = game.surfaces[global.bb_surface_name]
 	local water_positions = {}
 	local concrete_positions = {}
+	local landfill_positions = {}
 
-	for i = 1, size_y + moat_width do
-		for a = 0, moat_width do
-			table.insert(water_positions, {name = "water", position = {x = (size_x / 2) + a, y = i}}) -- north
-			table.insert(water_positions, {name = "water", position = {x = -(size_x / 2) - a, y = i}})
-			table.insert(water_positions, {name = "water", position = {x = (size_x / 2) + a, y = -i}}) -- south
-			table.insert(water_positions, {name = "water", position = {x = -(size_x / 2) - a, y = -i}})
+	for i = 0, size_y + moat_width do -- veritcal canals
+		for a = 1, moat_width do
+			table.insert(water_positions, {name = "deepwater", position = {x = (size_x / 2) + a, y = i}})
+			table.insert(water_positions, {name = "deepwater", position = {x = (size_x / 2) - size_x - a, y = i}})
+			table.insert(water_positions, {name = "deepwater", position = {x = (size_x / 2) + a, y = -i - 1}})
+			table.insert(water_positions, {name = "deepwater", position = {x = (size_x / 2) - size_x - a, y = -i - 1}})
 		end
 	end
-	for i = 1, size_x do
-		for a = 0, moat_width do
-			table.insert(water_positions, {name = "water", position = {x = i - (size_x / 2), y = size_y + a}}) -- north 
-			table.insert(water_positions, {name = "water", position = {x = i - (size_x / 2), y = -size_y - a}}) -- south
+	for i = 0, size_x do -- horizontal canals
+		for a = 1, moat_width do
+			table.insert(water_positions, {name = "deepwater", position = {x = i - (size_x / 2), y = size_y + a}})
+			table.insert(water_positions, {name = "deepwater", position = {x = i - (size_x / 2), y = -size_y - 1 - a}})
 		end
 	end
 
-	for i = 1, entrance_width do
-		for a = 0, moat_width + 6 do
-			table.insert(concrete_positions, {name = "refined-concrete", position = {x = i - (entrance_width / 2), y = size_y - 3 + a}}) -- north
-			table.insert(concrete_positions, {name = "refined-concrete", position = {x = i - (entrance_width / 2), y = -size_y + 3 - a}}) -- south
-
+	for i = 0, entrance_width - 1 do
+		for a = 1, moat_width + 6 do
+			table.insert(concrete_positions, {name = "refined-concrete", position = {x = -entrance_width / 2 + i, y = size_y - 3 + a}})
+			table.insert(concrete_positions, {name = "refined-concrete", position = {x = -entrance_width / 2 + i, y = -size_y + 2 - a}})
+			table.insert(landfill_positions, {name = "landfill", position = {x = -entrance_width / 2 + i, y = size_y - 3 + a}})
+			table.insert(landfill_positions, {name = "landfill", position = {x = -entrance_width / 2 + i, y = -size_y + 2 - a}})
 		end
 	end
+
 	surface.set_tiles(water_positions)
+	surface.set_tiles(landfill_positions)
 	surface.set_tiles(concrete_positions)
 
 end
