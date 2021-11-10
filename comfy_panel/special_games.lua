@@ -35,12 +35,14 @@ local valid_special_games = {
 	infinity_chest = {
 		name = "Infinity chest",
 		config = {
-			[1] = {name = "separate_chests", type = "checkbox", caption = "Separate chest for each item", state = false},
-			[2] = {name = "eq1", type = "choose-elem-button", elem_type = "item"},
-			[3] = {name = "eq2", type = "choose-elem-button", elem_type = "item"},
-			[4] = {name = "eq3", type = "choose-elem-button", elem_type = "item"},
-			[5] = {name = "eq4", type = "choose-elem-button", elem_type = "item"},
-			[6] = {name = "eq5", type = "choose-elem-button", elem_type = "item"}
+			[1] = {name = "separate_chests", type = "switch", left_label_caption = "Single", right_label_caption = "Multi",	switch_state = "left"},
+			[2] = {name = "label1", type = "label", caption = "Gap size"},
+			[3] = {name = "gap", type = "textfield", text = "0", numeric = true, width = 40},
+			[4] = {name = "eq1", type = "choose-elem-button", elem_type = "item"},
+			[5] = {name = "eq2", type = "choose-elem-button", elem_type = "item"},
+			[6] = {name = "eq3", type = "choose-elem-button", elem_type = "item"},
+			[7] = {name = "eq4", type = "choose-elem-button", elem_type = "item"},
+			[8] = {name = "eq5", type = "choose-elem-button", elem_type = "item"}
 
 		},
 		button = {name = "infinity_chest_apply", type = "button", caption = "Apply"}
@@ -81,7 +83,7 @@ local function generate_turtle(moat_width, entrance_width, size_x, size_y)
 
 end
 
-local function generate_infinity_chest(separate_chests, eq)
+local function generate_infinity_chest(separate_chests, gap, eq)
 	local surface = game.surfaces[global.bb_surface_name]
 	local position_0 = {x = 0, y = -42}
 
@@ -90,7 +92,7 @@ local function generate_infinity_chest(separate_chests, eq)
 
 	game.print("Special game Infinity chest is being generated!", Color.warning)
 
-	if separate_chests == false then
+	if separate_chests == "left" then
 		local chest = surface.create_entity {
 			name = "infinity-chest",
 			position = position_0,
@@ -105,10 +107,9 @@ local function generate_infinity_chest(separate_chests, eq)
 		end
 		chest.clone {position = {position_0.x, -position_0.y}}
 
-	elseif separate_chests == true then
-		local k = 1
+	elseif separate_chests == "right" then
+		local k = gap + 1
 		for i, v in ipairs(eq) do
-			game.print(i)
 			local chest = surface.create_entity {
 				name = "infinity-chest",
 				position = position_0,
@@ -168,6 +169,7 @@ local create_special_games_panel = (function(player, frame)
 			config[i.name].style.width = i.width
 		end
 		table.add {name = v.button.name, type = v.button.type, caption = v.button.caption}
+		table[k .. "_config"].style.vertical_align = "center"
 	end
 end)
 
@@ -177,7 +179,7 @@ local function on_gui_click(event)
 	local config = element.parent.children[2]
 
 	-- Insert logic for apply button here
-	
+
 	if element.name == "turtle_apply" then
 
 		local moat_width = config["moat_width"].text
@@ -189,7 +191,8 @@ local function on_gui_click(event)
 
 	elseif element.name == "infinity_chest_apply" then
 
-		local separate_chests = config["separate_chests"].state
+		local separate_chests = config["separate_chests"].switch_state
+		local gap = config["gap"].text
 		local eq = {
 			config["eq1"].elem_value, 
 			config["eq2"].elem_value, 
@@ -198,7 +201,7 @@ local function on_gui_click(event)
 			config["eq5"].elem_value
 		}
 
-		generate_infinity_chest(separate_chests, eq)
+		generate_infinity_chest(separate_chests, gap, eq)
 
 	end
 end
