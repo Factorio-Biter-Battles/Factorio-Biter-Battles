@@ -20,14 +20,14 @@ local valid_special_games = {
 		name = "Turtle",
 		config = {
 			[1] = {name = "label1", type = "label", caption = "moat width"},
-			[2] = {name = 'moat_width', type = "textfield", text = "3", numeric = true, width = 40},
+			[2] = {name = 'moat_width', type = "textfield", text = "5", numeric = true, width = 40},
 			[3] = {name = "label2", type = "label", caption = "entrance width"},
 			[4] = {name = 'entrance_width', type = "textfield", text = "20", numeric = true, width = 40},
 			[5] = {name = "label3", type = "label", caption = "size x"},
 			[6] = {name = 'size_x', type = "textfield", text = "200", numeric = true, width = 40},
 			[7] = {name = "label4", type = "label", caption = "size y"},
-			[8] = {name = 'size_y', type = "textfield", text = "200", numeric = true, width = 40}
-
+			[8] = {name = 'size_y', type = "textfield", text = "200", numeric = true, width = 40},
+			[9] = {name = "chart_turtle", type = "button", caption = "Chart", width = 60}
 		},
 		button = {name = "turtle_apply", type = "button", caption = "Apply"}
 	},
@@ -37,13 +37,12 @@ local valid_special_games = {
 		config = {
 			[1] = {name = "separate_chests", type = "switch", left_label_caption = "Single", right_label_caption = "Multi",	switch_state = "left"},
 			[2] = {name = "label1", type = "label", caption = "Gap size"},
-			[3] = {name = "gap", type = "textfield", text = "0", numeric = true, width = 40},
+			[3] = {name = "gap", type = "textfield", text = "3", numeric = true, width = 40},
 			[4] = {name = "eq1", type = "choose-elem-button", elem_type = "item"},
 			[5] = {name = "eq2", type = "choose-elem-button", elem_type = "item"},
 			[6] = {name = "eq3", type = "choose-elem-button", elem_type = "item"},
 			[7] = {name = "eq4", type = "choose-elem-button", elem_type = "item"},
-			[8] = {name = "eq5", type = "choose-elem-button", elem_type = "item"}
-
+			[8] = {name = "eq5", type = "choose-elem-button", elem_type = "item"}			
 		},
 		button = {name = "infinity_chest_apply", type = "button", caption = "Apply"}
 	}
@@ -56,7 +55,7 @@ local function generate_turtle(moat_width, entrance_width, size_x, size_y)
 	local water_positions = {}
 	local concrete_positions = {}
 	local landfill_positions = {}
-
+	
 	for i = 0, size_y + moat_width do -- veritcal canals
 		for a = 1, moat_width do
 			table.insert(water_positions, {name = "deepwater", position = {x = (size_x / 2) + a, y = i}})
@@ -143,33 +142,7 @@ local create_special_games_panel = (function(player, frame)
 		local config = table.add {name = k .. "_config", type = "flow", direction = "horizontal"}
 		config.style.width = 500
 		for _, i in ipairs(v.config) do
-			config.add {
-				-- Add here any new parameters required by your config elements
-				name = i.name,
-				type = i.type,
-				caption = i.caption,
-				mouse_button_filter = i.mouse_button_filter,
-				direction = i.direction,
-				text = i.text,
-				numeric = i.numeric,
-				allow_decimal = i.allow_decimal,
-				allow_negative = i.allow_negative,
-				state = i.state,
-				sprite = i.sprite,
-				number = i.number,
-				show_percent_for_small_numbers = i.show_percent_for_small_numbers,
-				items = i.items,
-				selected_index = i.selected_index,
-				elem_type = i.elem_type,
-				item = i.item,
-				minimum_value = i.minimum_value,
-				maximum_value = i.maximum_value,
-				value = i.value,
-				switch_state = i.switch_state,
-				allow_none_state = i.allow_none_state,
-				left_label_caption = i.left_label_caption,
-				right_label_caption = i.right_label_caption
-			}
+			config.add(i)
 			config[i.name].style.width = i.width
 		end
 		table.add {name = v.button.name, type = v.button.type, caption = v.button.caption}
@@ -192,6 +165,14 @@ local function on_gui_click(event)
 		local size_y = config["size_y"].text
 
 		generate_turtle(moat_width, entrance_width, size_x, size_y)
+	elseif element.name == "chart_turtle" then
+		config = element.parent.parent.children[2]
+		local moat_width = config["moat_width"].text
+		local entrance_width = config["entrance_width"].text
+		local size_x = config["size_x"].text
+		local size_y = config["size_y"].text
+	
+		game.forces["spectator"].chart(game.surfaces[global.bb_surface_name], {{-size_x/2-moat_width, -size_y-moat_width}, {size_x/2+moat_width, size_y+moat_width}})
 
 	elseif element.name == "infinity_chest_apply" then
 
