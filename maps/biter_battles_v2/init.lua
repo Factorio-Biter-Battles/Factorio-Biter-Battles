@@ -99,6 +99,7 @@ function Public.playground_surface()
 	local surface = game.create_surface(global.bb_surface_name, map_gen_settings)
 	surface.request_to_generate_chunks({x = 0, y = -256}, 7)
 	surface.force_generate_chunk_requests()
+	surface.brightness_visual_weights = { -1.17, -0.975, -0.52 }
 end
 
 function Public.draw_structures()

@@ -255,7 +255,6 @@ local function on_init()
 	Init.forces()
 	Init.draw_structures()
 	Init.load_spawn()
-	game.surfaces[global.bb_surface_name].brightness_visual_weights = { -1.17, -0.975, -0.52 }
 end
 
 local Event = require 'utils.event'
