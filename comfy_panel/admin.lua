@@ -766,7 +766,7 @@ commands.add_command("punish", "Kill and ban a player. Usage: /punish <name> <re
 			punisher.print("No valid reason given, or reason is too short", Color.warning)
 		end
 	elseif not punisher.admin then
-		punisher.print("This is admin only command", Coloar.warning)
+		punisher.print("This is admin only command", Color.warning)
 	else
 		punisher.print("Usage: /punish <name> <reason>", Color.warning)
 	end
