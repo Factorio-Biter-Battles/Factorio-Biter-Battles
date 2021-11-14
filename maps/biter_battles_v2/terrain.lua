@@ -421,7 +421,8 @@ function Public.generate(event)
 	local left_top = event.area.left_top
 	local left_top_x = left_top.x
 	local left_top_y = left_top.y
-
+	
+	game.surfaces[global.bb_surface_name].brightness_visual_weights = { -1.17, -0.975, -0.52 }
 	mixed_ore(surface, left_top_x, left_top_y)
 	generate_river(surface, left_top_x, left_top_y)
 	draw_biter_area(surface, left_top_x, left_top_y)		
