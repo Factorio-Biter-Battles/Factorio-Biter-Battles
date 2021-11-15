@@ -281,11 +281,6 @@ local function on_built_entity(event)
     end
     local tracker = session.get_session_table()
     local trusted = session.get_trusted_table()
-    --[[
-    if game.tick < 1296000 then
-        return
-    end
-    ]]
     if event.created_entity.type == 'entity-ghost' then
         local player = game.get_player(event.player_index)
 
