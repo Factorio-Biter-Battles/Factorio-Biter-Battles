@@ -186,14 +186,8 @@ local function on_marked_for_deconstruction(event)
         return
     end
 
-    local playtime = player.online_time
-    if tracker[player.name] then
-        playtime = player.online_time + tracker[player.name]
-    end
-    if playtime < 2592000 then
-        event.entity.cancel_deconstruction(game.get_player(event.player_index).force.name)
-        player.print('You have not grown accustomed to this technology yet.', {r = 0.22, g = 0.99, b = 0.99})
-    end
+    event.entity.cancel_deconstruction(game.get_player(event.player_index).force.name)
+    player.print('You have not grown accustomed to this technology yet.', {r = 0.22, g = 0.99, b = 0.99})
 end
 
 local function on_player_ammo_inventory_changed(event)
@@ -292,15 +286,8 @@ local function on_built_entity(event)
             return
         end
 
-        local playtime = player.online_time
-        if tracker[player.name] then
-            playtime = player.online_time + tracker[player.name]
-        end
-
-        if playtime < 432000 then
-            event.created_entity.destroy()
-            player.print('You have not grown accustomed to this technology yet.', {r = 0.22, g = 0.99, b = 0.99})
-        end
+        event.created_entity.destroy()
+        player.print('You have not grown accustomed to this technology yet.', {r = 0.22, g = 0.99, b = 0.99})
     end
 end
 
