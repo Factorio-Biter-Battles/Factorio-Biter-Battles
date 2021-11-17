@@ -81,6 +81,27 @@ Global.register(
     t[k][#t[k] + 1] = (v or 1)
 end
 ]]
+
+function Public.check_position()
+	for _, p in pairs(game.players) do
+		local force = p.force
+		local position = p.position
+		if p.admin then return end
+		if force.name == "north" and position.y > -10 then
+			p.teleport(force.get_spawn_position(game.surfaces[global.bb_surface_name]))
+			game.print(p.name .. " tried to escape his team!")
+
+		elseif force.name == "south" and position.y < 10 then
+			p.teleport(force.get_spawn_position(game.surfaces[global.bb_surface_name]))
+			game.print(p.name .. " tried to escape his team!")
+
+		elseif force.name == "spectator" and (position.y > 15 or position.y < -15) then
+			p.teleport(force.get_spawn_position(game.surfaces[global.bb_surface_name]))
+			game.print(p.name .. " tried to escape his team!")
+		end
+	end
+end
+
 local function increment(t, v)
     t[#t + 1] = (v or 1)
 end

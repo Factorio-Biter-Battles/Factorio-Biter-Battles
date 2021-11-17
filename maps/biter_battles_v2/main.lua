@@ -12,6 +12,7 @@ local Terrain = require "maps.biter_battles_v2.terrain"
 local Session = require 'utils.datastore.session_data'
 local Color = require 'utils.color_presets'
 local diff_vote = require "maps.biter_battles_v2.difficulty_vote"
+local antigrief = require 'antigrief'
 
 require "maps.biter_battles_v2.sciencelogs_tab"
 require 'maps.biter_battles_v2.commands'
@@ -113,6 +114,11 @@ local function on_tick()
 		local key = tick % 3600
 		if tick_minute_functions[key] then tick_minute_functions[key]() end
 	end
+
+	if tick % 3600 == 0 then
+		antigrief.check_position()
+	end
+
 end
 
 local function on_marked_for_deconstruction(event)
