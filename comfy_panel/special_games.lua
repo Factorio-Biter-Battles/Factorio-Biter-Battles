@@ -151,13 +151,25 @@ local create_special_games_panel = (function(player, frame)
 end)
 
 local function on_gui_click(event)
+	local player = game.get_player(event.player_index)
 	local element = event.element
 	if not element.type == "button" then return end
 	local config = element.parent.children[2]
 
+	if string.find(element.name, "_apply") then
+		local flow = element.parent.add{type="flow", direction="vertical"}
+		flow.add{type = "button", name = string.gsub(element.name, "_apply", "_confirm"), caption = "Confirm"}
+		flow.add{type = "button", name = "cancel", caption = "Cancel"}
+		element.visible = false	--hides Apply button	
+		player.print("[SPECIAL GAMES] Are you sure? This change will be reversed only on map restart!", Color.cyan)
+
+	elseif string.find(element.name, "_confirm") then
+		config = element.parent.parent.children[2]
+				
+	end
 	-- Insert logic for apply button here
 
-	if element.name == "turtle_apply" then
+	if element.name == "turtle_confirm" then
 
 		local moat_width = config["moat_width"].text
 		local entrance_width = config["entrance_width"].text
@@ -174,7 +186,7 @@ local function on_gui_click(event)
 	
 		game.forces["spectator"].chart(game.surfaces[global.bb_surface_name], {{-size_x/2-moat_width, -size_y-moat_width}, {size_x/2+moat_width, size_y+moat_width}})
 
-	elseif element.name == "infinity_chest_apply" then
+	elseif element.name == "infinity_chest_confirm" then
 
 		local separate_chests = config["separate_chests"].switch_state
 		local gap = config["gap"].text
@@ -188,6 +200,10 @@ local function on_gui_click(event)
 
 		generate_infinity_chest(separate_chests, gap, eq)
 
+	end
+	if string.find(element.name, "_confirm") or element.name == "cancel" then
+		element.parent.parent.children[3].visible=true	--shows back Apply button
+		element.parent.destroy()	--removes confirm/Cancel buttons
 	end
 end
 comfy_panel_tabs['Special games'] = {gui = create_special_games_panel, admin = true}
