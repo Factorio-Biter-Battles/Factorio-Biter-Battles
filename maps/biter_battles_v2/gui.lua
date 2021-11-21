@@ -44,6 +44,17 @@ local function create_sprite_button(player)
 	element_style({element = button, x= 38, y = 38, pad = -2})
 end
 
+local function clock(frame)
+	local total_minutes = math.floor(game.ticks_played / (60 * 60))
+	local total_hours = math.floor(total_minutes / 60)
+	local minutes = total_minutes - (total_hours * 60)
+
+	local clock = frame.add {type = "label", caption = "Game time: " .. string.format("%02d", total_hours) .. ":" .. string.format("%02d", minutes)}
+	clock.style.font = "default-bold"
+	clock.style.font_color = {r = 0.98, g = 0.66, b = 0.22}
+	frame.add {type = "line"}
+end
+
 local function create_first_join_gui(player)
 	if not global.game_lobby_timeout then global.game_lobby_timeout = 5999940 end
 	if global.game_lobby_timeout - game.tick < 0 then global.game_lobby_active = false end
@@ -54,14 +65,13 @@ local function create_first_join_gui(player)
 	local b = frame.add  { type = "label", caption = "Feed the enemy team's biters to gain advantage!" }
 	b.style.font = "heading-2"
 	b.style.font_color = {r=0.98, g=0.66, b=0.22}
-
-	frame.add  { type = "label", caption = "-----------------------------------------------------------"}
+	clock(frame)
 	local d = frame.add{type = "sprite-button", name = "join_random_button", caption = "AUTO JOIN"}
 	d.style.font = "default-large-bold"
 	d.style.font_color = { r=1, g=0, b=1}
-	d.style.minimal_width = 350
-	frame.add  { type = "label", caption = "-----------------------------------------------------------"}
-	frame.style.bottom_padding = -2
+	d.style.width = 350
+	frame.add{ type = "line"}
+	frame.style.bottom_padding = 2
 	
 	for _, gui_value in pairs(gui_values) do
 		local t = frame.add { type = "table", column_count = 3 }
@@ -90,11 +100,11 @@ local function create_first_join_gui(player)
 			l.style.font_color = {r = p.color.r * 0.6 + 0.4, g = p.color.g * 0.6 + 0.4, b = p.color.b * 0.6 + 0.4, a = 1}
 			l.style.font = "heading-2"
 		end
-		local b = frame.add  { type = "sprite-button", name = gui_value.n1, caption = c }
+		local b = frame.add  { type = "sprite-button", name = gui_value.n1, caption = c}
 		b.style.font = "default-large-bold"
 		b.style.font_color = font_color
-		b.style.minimal_width = 350
-		frame.add  { type = "label", caption = "-----------------------------------------------------------"}
+		b.style.width = 350
+		frame.add{ type = "line"}
 	end
 	
 	
@@ -134,7 +144,8 @@ function Public.create_main_gui(player)
 	end
 
 	local frame = player.gui.left.add { type = "frame", name = "bb_main_gui", direction = "vertical" }
-
+	
+	clock(frame)
 	-- Science sending GUI
 	if not is_spec then
 		frame.add { type = "table", name = "biter_battle_table", column_count = 4 }
@@ -149,8 +160,9 @@ function Public.create_main_gui(player)
 			s.style.right_padding = 0
 			s.style.bottom_padding = 0
 		end
+		frame.add{type="line"}
 	end
-
+	
 	local first_team = true
 	for _, gui_value in pairs(gui_values) do
 		-- Line separator
@@ -281,14 +293,13 @@ function Public.refresh_threat()
 	global.gui_refresh_delay = game.tick + 5
 end
 
-function join_team(player, force_name, forced_join)
+function join_team(player, force_name, forced_join, auto_join)
 	if not player.character then return end
 	if not forced_join then
 		if global.tournament_mode then player.print("The game is set to tournament mode. Teams can only be changed via team manager.", {r = 0.98, g = 0.66, b = 0.22}) return end
 	end
 	if not force_name then return end
 	local surface = player.surface
-
 	local enemy_team = "south"
 	if force_name == "south" then enemy_team = "north" end
 
@@ -326,7 +337,7 @@ function join_team(player, force_name, forced_join)
 		local msg = table.concat({"Team ", player.force.name, " player ", player.name, " is no longer spectating."})
 		game.print(msg, {r = 0.98, g = 0.66, b = 0.22})
 		Server.to_discord_bold(msg)
-        global.spectator_rejoin_delay[player.name] = game.tick
+		global.spectator_rejoin_delay[player.name] = game.tick
 		player.spectator = false
 		return
 	end
@@ -339,9 +350,10 @@ function join_team(player, force_name, forced_join)
 	if not forced_join then
 		local c = player.force.name
 		if global.tm_custom_name[player.force.name] then c = global.tm_custom_name[player.force.name] end
-		local message = table.concat({player.name, " has joined team ", c, "!"})
-		game.print(message, {r = 0.98, g = 0.66, b = 0.22})
+		local message = table.concat({player.name, " has joined team ", c, "! "})
 		Server.to_discord_bold(message)
+		if auto_join then message = table.concat({player.name, " was automatically assigned to team ", c, "!"}) end
+		game.print(message, {r = 0.98, g = 0.66, b = 0.22})
 	end
 	local i = player.get_inventory(defines.inventory.character_main)
 	i.clear()
@@ -353,7 +365,7 @@ function join_team(player, force_name, forced_join)
 	player.insert {name = 'burner-mining-drill', count = 10}
 	player.insert {name = 'wood', count = 2}
 	global.chosen_team[player.name] = force_name
-    global.spectator_rejoin_delay[player.name] = game.tick
+	global.spectator_rejoin_delay[player.name] = game.tick
 	player.spectator = false
 	clear_copy_history(player)
 	Public.refresh()
@@ -378,12 +390,12 @@ function spectate(player, forced_join)
 	player.spectator = true
 end
 
-local function join_gui_click(name, player)
+local function join_gui_click(name, player, auto_join)
 	if not name then return end
 
 	if global.game_lobby_active then
 		if player.admin then
-			join_team(player, name)
+			join_team(player, name, false,  auto_join)
 			game.print("Lobby disabled, admin override.", { r=0.98, g=0.66, b=0.22})
 			global.game_lobby_active = false
 			return
@@ -391,7 +403,7 @@ local function join_gui_click(name, player)
 		player.print("Waiting for more players, " .. wait_messages[math_random(1, #wait_messages)], { r=0.98, g=0.66, b=0.22})
 		return
 	end
-	join_team(player, name)
+	join_team(player, name, false, auto_join)
 end
 
 local spy_forces = {{"north", "south"},{"south", "north"}}
@@ -428,34 +440,31 @@ local function on_gui_click(event)
 		
 	if name == "join_random_button" then
 		local teams_equal = true
-		local a = #game.forces["north"].connected_players --Idk how to choose the 1st force without calling 'north'
-		
+		local a = #game.forces["north"].connected_players -- Idk how to choose the 1st force without calling 'north'
+	
 		-- checking if teams are equal	
-		for  _, gui_values in pairs(gui_values) do
-			if a ~= #game.forces[gui_values.force].connected_players then 
+		for _, gui_values in pairs(gui_values) do
+			if a ~= #game.forces[gui_values.force].connected_players then
 				teams_equal = false
-				player.print(teams_equal)
 				break
 			end
 		end
+	
 		-- choosing a team at random if teams are equal
 		if teams_equal then
 			local teams = {}
-			for  _, gui_values in pairs(gui_values) do
-				table.insert(teams, gui_values.force)
-			end
-			join_gui_click(teams[math.random(#teams)], player)
-		
+			for _, gui_values in pairs(gui_values) do table.insert(teams, gui_values.force) end
+			join_gui_click(teams[math.random(#teams)], player, true)
+	
 		else -- checking which team is smaller and joining it
-			local smallest_team = gui_values["north"].force --Idk how to choose the 1st force without calling 'north'
+			local smallest_team = gui_values["north"].force -- Idk how to choose the 1st force without calling 'north'
 			for _, gui_values in pairs(gui_values) do
-				player.print(a)
 				if a > #game.forces[gui_values.force].connected_players then
 					smallest_team = gui_values.force
 					a = #game.forces[gui_values.force].connected_players
 				end
 			end
-			join_gui_click(smallest_team, player)
+			join_gui_click(smallest_team, player, true)
 		end
 		return
 	end
