@@ -5,33 +5,6 @@ local BiterRaffle = require "maps.biter_battles_v2.biter_raffle"
 local Feeding = require "maps.biter_battles_v2.feeding"
 local Tables = require "maps.biter_battles_v2.tables"
 require 'utils.gui_styles'
-local icons = {
-
-	{"[img=item/chemical-science-pack]", "item/chemical-science-pack", "Science"},
-	{"[img=item/locomotive]", "item/locomotive", "Trainman"},	
-	{"[img=fluid/crude-oil]", "fluid/crude-oil", "Oil processing"},	
-	{"[img=item/submachine-gun]", "item/submachine-gun", "Trooper"},
-	{"[img=item/stone-wall]", "item/stone-wall", "Fortifications"},
-	{"[img=item/repair-pack]", "item/repair-pack", "Support"},	
-}
-
-local checks = {
-	"minimal_width", "left_margin", "right_margin"
-}
-
-local function get_x_offset(player)
-	local x = 0
-	for _, element in pairs(player.gui.top.children) do
-		if element.name == "simple_stats" then break end
-		local style = element.style
-		for _, v in pairs(checks) do
-			if style[v] then
-				x = x + style[v]
-			end
-		end
-	end
-	return x
-end
 
 local function draw_top_gui(player)
 	if player.gui.top.simple_stats then return end
@@ -54,7 +27,6 @@ local function get_upcoming_biter_tier_list_from_current_evo(evo)
 	end
 	return biters_tiers
 end
-
 
 local function calculate_needed_food(biter_force_name, current_threshold, current_evo, current_evo_factor, food_value, player)
 	local evo = current_evo
@@ -95,49 +67,17 @@ local function add_biter_puberty_thresholds_for_team(t, team, player)
 		t.add({type="sprite", sprite="entity/"..v.."-biter"})
 		for kk, vv in pairs(Tables.food_values) do
 			local needed = calculate_needed_food(biter_force_name, c_threshold, current_evo, current_evo_factor, vv.value*global.difficulty_vote_value, player)
-			--player.print("k "..kk.." current_evo "..current_evo.." y val "..vv.value.." thresh "..c_threshold)
 			t.add({type="label", caption=string.format("%7d", needed)})
 		end
 	end
 	for _=1,8 do t.add({type="label", caption= ""}) end
-	--t.add({type="label", caption= ""})
-
-	--local l = t.add({ type="label", caption = "Current evolution: " .. tostring(global.bb_evolution[biter_id])})
-	--for _=1,6 do t.add({type="label", caption= ""}) end
 end
 
 local function add_biter_puberty_thresholds_to_table(t, player)
-	player.print("north "..global.bb_evolution["north_biters"])
-	player.print("south "..global.bb_evolution["south_biters"])
 	for _, x in pairs({"north", "south"}) do
 		add_biter_puberty_thresholds_for_team(t, x, player)
 	end
---Number of Flasks to reach the next biter tier for " .. player.force.name
-
-
-
---Number of Flasks to reach next biter tier
---
---team id, red sci icon, green sci icon, etc
---small, 
---med,
---large, 
---.. global.bb_evolution[biter_force_name]+10*3.0
 end
-
-function dump(o)
-   if type(o) == 'table' then
-      local s = '{ '
-      for k,v in pairs(o) do
-         if type(k) ~= 'number' then k = '"'..k..'"' end
-         s = s .. '['..k..'] = ' .. dump(v) .. ','
-      end
-      return s .. '} '
-   else
-      return tostring(o)
-   end
-end
-
 
 local function draw_screen_gui(player)
 	local frame = player.gui.screen.simple_stats_frame
@@ -155,19 +95,6 @@ local function draw_screen_gui(player)
 	frame.location = {x = 3, y = 39 * player.display_scale}
 	frame.style.padding = -2
 	add_biter_puberty_thresholds_to_table(t, player)
-
---	local l = t.add  { type = "label", caption = "banana Players "}
---	l.style.font_color = { r=0.22, g=0.88, b=0.22}
-----	frame.style.maximal_width = 42
---	local l2 = t.add  { type = "label", caption = "strawberry players"}
---	l2.style.font_color = { r=0.88, g=0.88, b=0.22}
---	local l3 = t.add  { type = "label", caption = "liquid players"}
---	l3.style.font_color = { r=0.88, g=0.88, b=0.22}
---	local unit_name = BiterRaffle.roll("spitter", global.bb_evolution["north"])
---	local l4 = t.add  { type = "label", caption = unit_name}
---	l4.style.font_color = { r=0.88, g=0.88, b=0.22}
---	local l5 = t.add  { type = "label", caption = global.bb_evolution["north"]}
---	l5.style.font_color = { r=0.88, g=0.88, b=0.22}
 end
 
 local function on_player_joined_game(event)
