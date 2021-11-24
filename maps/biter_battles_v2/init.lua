@@ -159,6 +159,10 @@ function Public.tables()
 	}
 	global.difficulty_vote_value = 1
 	global.difficulty_vote_index = 4
+	global.placed_landmine_counts = {
+		["north"] = 0,
+		["south"] = 0
+	}
 
 	global.difficulty_votes_timeout = 36000
 
@@ -290,7 +294,6 @@ function Public.forces()
 		game.forces[force.name].technologies["artillery-shell-speed-1"].enabled = false
 		game.forces[force.name].technologies["atomic-bomb"].enabled = false
 		game.forces[force.name].technologies["cliff-explosives"].enabled = false
-		game.forces[force.name].technologies["land-mine"].enabled = false
 		game.forces[force.name].research_queue_enabled = true
 		global.target_entities[force.index] = {}
 		global.spy_fish_timeout[force.name] = 0

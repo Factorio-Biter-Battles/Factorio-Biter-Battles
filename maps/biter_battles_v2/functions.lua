@@ -266,7 +266,7 @@ function Public.no_turret_creep(event)
 	local entity = event.created_entity
 	if not entity.valid then return end
 	if not no_turret_blacklist[event.created_entity.type] then return end
-	local surface = event.created_entity.surface				
+	local surface = event.created_entity.surface
 	local spawners = surface.find_entities_filtered({type = "unit-spawner", area = {{entity.position.x - 70, entity.position.y - 70}, {entity.position.x + 70, entity.position.y + 70}}})
 	if #spawners == 0 then return end
 	
@@ -276,16 +276,16 @@ function Public.no_turret_creep(event)
 		if (e.position.x - entity.position.x)^2 + (e.position.y - entity.position.y)^2 < 4096 then
 			allowed_to_build = false
 			break
-		end			
+		end
 	end
 	
 	if allowed_to_build then return end
 	
 	if event.player_index then
-		game.players[event.player_index].insert({name = entity.name, count = 1})		
+		game.players[event.player_index].insert({name = entity.name, count = 1})
 	else	
 		local inventory = event.robot.get_inventory(defines.inventory.robot_cargo)
-		inventory.insert({name = entity.name, count = 1})													
+		inventory.insert({name = entity.name, count = 1})
 	end
 	
 	surface.create_entity({
@@ -418,30 +418,74 @@ function Public.map_intro_click(player, element)
 			Public.show_intro(player)
 			return true
 		end
-	end	
+	end
 end
 
 function get_ammo_modifier(ammo_category)
 	local result = 0
 	if Tables.base_ammo_modifiers[ammo_category] then
-        result = Tables.base_ammo_modifiers[ammo_category]
+		result = Tables.base_ammo_modifiers[ammo_category]
 	end
-    return result
+	return result
 end
 function get_turret_attack_modifier(turret_category)
 	local result = 0
 	if Tables.base_turret_attack_modifiers[turret_category] then
-        result = Tables.base_turret_attack_modifiers[turret_category]
+		result = Tables.base_turret_attack_modifiers[turret_category]
 	end
-    return result
+	return result
 end
 
 function get_upgrade_modifier(ammo_category)
-    result = 0
-    if Tables.upgrade_modifiers[ammo_category] then
-        result = Tables.upgrade_modifiers[ammo_category]
-    end
-    return result
+	result = 0
+	if Tables.upgrade_modifiers[ammo_category] then
+		result = Tables.upgrade_modifiers[ammo_category]
+	end
+	return result
 end
+
+function goldilocks_landmines(event)
+	local entity=event.created_entity
+	if (entity.name=='land-mine') then
+		local num_placed_mines = global.placed_landmine_counts[entity.force.name]
+		local maximum_num_mines = Tables.landmine_entity_limits[entity.force.name].limit
+		if num_placed_mines < maximum_num_mines then
+			num_placed_mines = num_placed_mines + 1
+			global.placed_landmine_counts[entity.force.name] = num_placed_mines
+			if (global.placed_landmine_counts[entity.force.name] % 10 == 0) then
+				entity.surface.create_entity(
+					{
+						name = 'flying-text',
+						position = entity.position,
+						text = num_placed_mines ..
+							' / ' .. maximum_num_mines .. ' ' .. entity.name .. 's',
+						color = {r = 0.98, g = 0.66, b = 0.22}
+					}
+				)
+			end
+		else
+			entity.surface.create_entity(
+				{
+					name = 'flying-text',
+					position = entity.position,
+					text = 'land mine limit reached.',
+					color = {r = 0.82, g = 0.11, b = 0.11}
+				}
+			)
+			local player = game.players[event.player_index]
+			player.insert({name = entity.name, count = 1})
+			if get_score then
+				if get_score[player.force.name] then
+					if get_score[player.force.name].players[player.name] then
+						get_score[player.force.name].players[player.name].built_entities =
+							get_score[player.force.name].players[player.name].built_entities - 1
+					end
+				end
+			end
+			entity.destroy()
+		end
+	end
+end
+Public.goldilocks_landmines = goldilocks_landmines
 
 return Public

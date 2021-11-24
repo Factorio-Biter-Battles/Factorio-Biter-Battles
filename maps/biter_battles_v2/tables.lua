@@ -3,6 +3,11 @@ local Public = {}
 -- List of forces that will be affected by ammo modifier
 Public.ammo_modified_forces_list = {"north", "south", "spectator"}
 
+Public.landmine_entity_limits = {
+	['north'] = {limit = 5, str = 'land-mine'},
+	['south'] = {limit = 5, str = 'land-mine'}
+}
+
 -- Ammo modifiers via set_ammo_damage_modifier
 -- [ammo_category] = value
 -- ammo_modifier_dmg = base_damage * base_ammo_modifiers
@@ -11,7 +16,7 @@ Public.base_ammo_modifiers = {
 	["bullet"] = 0.16,
 	["shotgun-shell"] = 1,
 	["flamethrower"] = -0.6,
-	["landmine"] = -0.9
+	["land-mine"] = -0.9
 }
 
 -- turret attack modifier via set_turret_attack_modifier
@@ -26,7 +31,7 @@ Public.upgrade_modifiers = {
 	["laser-turret"] = 0.3,
 	["shotgun-shell"] = 0.6,
 	["grenade"] = 0.48,
-	["landmine"] = 0.04
+	["land-mine"] = 0.04
 }
 
 Public.food_values = {

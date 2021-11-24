@@ -47,11 +47,13 @@ end
 
 local function on_built_entity(event)
 	Functions.no_turret_creep(event)
+	Functions.goldilocks_landmines(event)
 	Functions.add_target_entity(event.created_entity)
 end
 
 local function on_robot_built_entity(event)
 	Functions.no_turret_creep(event)
+	Functions.goldilocks_landmines(event)
 	Terrain.deny_construction_bots(event)
 	Functions.add_target_entity(event.created_entity)
 end
@@ -205,31 +207,32 @@ end
 
 local function clear_corpses(cmd)
 	local player = game.player
-        local trusted = Session.get_trusted_table()
-        local param = tonumber(cmd.parameter)
+	local trusted = Session.get_trusted_table()
+	local param = tonumber(cmd.parameter)
 
-        if not player or not player.valid then
-            return
-        end
-        local p = player.print
-        if not trusted[player.name] then
-            if not player.admin then
-                p('[ERROR] Only admins and trusted weebs are allowed to run this command!', Color.fail)
-                return
-            end
-        end
-        if param == nil then
-            player.print('[ERROR] Must specify radius!', Color.fail)
-            return
-        end
-        if param < 0 then
-            player.print('[ERROR] Value is too low.', Color.fail)
-            return
-        end
-        if param > 500 then
-            player.print('[ERROR] Value is too big.', Color.fail)
-            return
-        end
+	if not player or not player.valid then
+		return
+	end
+
+	local p = player.print
+	if not trusted[player.name] then
+		if not player.admin then
+			p('[ERROR] Only admins and trusted weebs are allowed to run this command!', Color.fail)
+			return
+		end
+	end
+	if param == nil then
+		player.print('[ERROR] Must specify radius!', Color.fail)
+		return
+	end
+	if param < 0 then
+		player.print('[ERROR] Value is too low.', Color.fail)
+		return
+	end
+	if param > 500 then
+		player.print('[ERROR] Value is too big.', Color.fail)
+		return
+	end
 
 	if not Ai.empty_reanim_scheduler() then
 		player.print("[ERROR] Some corpses are waiting to be reanimated...")
@@ -237,15 +240,15 @@ local function clear_corpses(cmd)
 		return
 	end
 
-        local pos = player.position
+	local pos = player.position
 
-        local radius = {{x = (pos.x + -param), y = (pos.y + -param)}, {x = (pos.x + param), y = (pos.y + param)}}
-        for _, entity in pairs(player.surface.find_entities_filtered {area = radius, type = 'corpse'}) do
-            if entity.corpse_expires then
-                entity.destroy()
-            end
-        end
-        player.print('Cleared biter-corpses.', Color.success)
+	local radius = {{x = (pos.x + -param), y = (pos.y + -param)}, {x = (pos.x + param), y = (pos.y + param)}}
+	for _, entity in pairs(player.surface.find_entities_filtered {area = radius, type = 'corpse'}) do
+		if entity.corpse_expires then
+			entity.destroy()
+		end
+	end
+	player.print('Cleared biter-corpses.', Color.success)
 end
 
 local function on_init()
