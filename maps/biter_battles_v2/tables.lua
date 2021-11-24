@@ -4,7 +4,7 @@ local Public = {}
 Public.ammo_modified_forces_list = {"north", "south", "spectator"}
 
 Public.entity_limits = {
-	['land-mine'] = 5
+	['land-mine'] = 3000
 }
 
 -- Ammo modifiers via set_ammo_damage_modifier
