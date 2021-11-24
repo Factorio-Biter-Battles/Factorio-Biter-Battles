@@ -1,21 +1,38 @@
 local Public = {}
 local math_random = math.random
 local math_floor = math.floor
+local Tables = require "maps.biter_battles_v2.tables"
+
+local function linear_biter_function(x, slope, x_intercept)
+	-- x_intercept == evo when this biter starts appearing
+	-- (or dissapearing for small-biters)
+	return slope *(x - x_intercept)
+end
+
+local function initial_medium_biter_function(level, slope, x_intercept)
+end
 
 local function get_raffle_table(level, name)
+	-- thresholds
+	local small_thr = Tables.biter_mutagen_thresholds["small"]
+	local medium_thr = Tables.biter_mutagen_thresholds["medium"]
+	local big_thr = Tables.biter_mutagen_thresholds["big"]
+	local behemoth_thr = Tables.biter_mutagen_thresholds["behemoth"]
+
 	local raffle = {
-		["small-" .. name] = 1000 - level * 1.75,		
-		["medium-" .. name] = -250 + level * 1.5,
-		["big-" .. name] = 0,		
+		["small-" .. name] = linear_biter_function(level, Tables.biter_mutagen_initial_slopes["small"], 1000/1.75),
+		["medium-" .. name] = initial_medium_biter_function(level, 1.5, medium_thr),
+		["big-" .. name] = 0,
 		["behemoth-" .. name] = 0,
 	}
 	
-	if level > 500 then
-		raffle["medium-" .. name] = 500 - (level - 500)
-		raffle["big-" .. name] = (level - 500) * 2
+	if level > big_thr then
+		raffle["medium-" .. name] = big_thr - (level - big_thr)
+		raffle["big-" .. name] = linear_biter_function(level, Tables.biter_mutagen_initial_slopes["big"], big_thr)
 	end
-	if level > 900 then
-		raffle["behemoth-" .. name] = (level - 900) * 8
+
+	if level > behemoth_thr then
+		raffle["behemoth-" .. name] = linear_biter_function(level, Tables.biter_mutagen_initial_slopes["behemoth"], behemoth_thr)
 	end
 	for k, _ in pairs(raffle) do
 		if raffle[k] < 0 then raffle[k] = 0 end
@@ -41,15 +58,15 @@ local function get_biter_name(evolution_factor)
 	return roll(evolution_factor, "biter")
 end
 
-local function get_spitter_name(evolution_factor)	
-	return roll(evolution_factor, "spitter")	
+local function get_spitter_name(evolution_factor)
+	return roll(evolution_factor, "spitter")
 end
 
 local function get_worm_raffle_table(level)
 	local raffle = {
-		["small-worm-turret"] = 1000 - level * 1.75,		
-		["medium-worm-turret"] = level,		
-		["big-worm-turret"] = 0,		
+		["small-worm-turret"] = 1000 - level * 1.75,
+		["medium-worm-turret"] = level,
+		["big-worm-turret"] = 0,
 		["behemoth-worm-turret"] = 0,
 	}
 	

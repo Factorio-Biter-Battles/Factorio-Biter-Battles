@@ -1,3 +1,4 @@
+Public = {}
 local bb_config = require "maps.biter_battles_v2.config"
 local Functions = require "maps.biter_battles_v2.functions"
 local Server = require 'utils.server'
@@ -11,7 +12,7 @@ local minimum_modifier = 125
 local maximum_modifier = 250
 local player_amount_for_maximum_threat_gain = 20
 
-function get_instant_threat_player_count_modifier()
+local function get_instant_threat_player_count_modifier()
 	local current_player_count = #game.forces.north.connected_players + #game.forces.south.connected_players
 	local gain_per_player = (maximum_modifier - minimum_modifier) / player_amount_for_maximum_threat_gain
 	local m = minimum_modifier + gain_per_player * current_player_count
@@ -157,7 +158,38 @@ local function add_stats(player, food, flask_amount,biter_force_name,evo_before_
 	end
 end
 
-function set_evo_and_threat(flask_amount, food, biter_force_name)
+local function calculate_e2(evolution_factor)
+	local e2 = (evolution_factor * 100) + 1
+	return e2
+end
+Public.calculate_e2 = calculate_e2
+
+
+local function evo_gain_from_one_flask(food_value, e2)
+	local diminishing_modifier = (1 / (10 ^ (e2 * 0.015))) / (e2 * 0.5)
+	local evo_gain = (food_value * diminishing_modifier)
+	return evo_gain
+end
+Public.evo_gain_from_one_flask = evo_gain_from_one_flask
+
+local function get_new_evo_factor_from_evolution(evolution)
+	if evolution <= 1 then
+		return evolution
+	else
+		return 1
+	end
+end
+Public.get_new_evo_factor_from_evolution = get_new_evo_factor_from_evolution
+
+local function add_evo_gain(evo_gain, biter_force_name, e2, decimals)
+	local e2 = e2 or calculate_e2(game.forces[biter_force_name].evolution_factor)
+	global.bb_evolution[biter_force_name] = global.bb_evolution[biter_force_name] + evo_gain
+	global.bb_evolution[biter_force_name] = math_round(global.bb_evolution[biter_force_name], decimals)
+	game.forces[biter_force_name].evolution_factor = get_new_evo_factor_from_evolution(global.bb_evolution[biter_force_name])
+end
+
+
+local function set_evo_and_threat(flask_amount, food, biter_force_name)
 	local decimals = 9
 	local math_round = math.round
 	
@@ -165,23 +197,16 @@ function set_evo_and_threat(flask_amount, food, biter_force_name)
 	
 	local food_value = food_values[food].value * global.difficulty_vote_value
 	
-	for _ = 1, flask_amount, 1 do
+	for i = 1, flask_amount, 1 do
 		---SET EVOLUTION
-		local e2 = (game.forces[biter_force_name].evolution_factor * 100) + 1
-		local diminishing_modifier = (1 / (10 ^ (e2 * 0.015))) / (e2 * 0.5)
-		local evo_gain = (food_value * diminishing_modifier)
-		global.bb_evolution[biter_force_name] = global.bb_evolution[biter_force_name] + evo_gain
-		global.bb_evolution[biter_force_name] = math_round(global.bb_evolution[biter_force_name], decimals)
-		if global.bb_evolution[biter_force_name] <= 1 then
-			game.forces[biter_force_name].evolution_factor = global.bb_evolution[biter_force_name]
-		else
-			game.forces[biter_force_name].evolution_factor = 1
-		end
+		local e2 = calculate_e2(game.forces[biter_force_name].evolution_factor)
+		local evo_gain = evo_gain_from_one_flask(food_value, e2)
+		add_evo_gain(evo_gain, biter_force_name, e2, decimals)
 		
 		--ADD INSTANT THREAT
 		local diminishing_modifier = 1 / (0.2 + (e2 * 0.016))
 		global.bb_threat[biter_force_name] = global.bb_threat[biter_force_name] + (food_value * instant_threat_player_count_modifier * diminishing_modifier)
-		global.bb_threat[biter_force_name] = math_round(global.bb_threat[biter_force_name], decimals)		
+		global.bb_threat[biter_force_name] = math_round(global.bb_threat[biter_force_name], decimals)
 	end
 	
 	--SET THREAT INCOME
@@ -190,13 +215,13 @@ function set_evo_and_threat(flask_amount, food, biter_force_name)
 	set_biter_endgame_modifiers(game.forces[biter_force_name])
 end
 
-local function feed_biters(player, food)	
+local function feed_biters(player, food)
 		if game.ticks_played < global.difficulty_votes_timeout then
 		player.print("Please wait for voting to finish before feeding")
 		return
 	end
 
-	local enemy_force_name = get_enemy_team_of(player.force.name)  ---------------
+	local enemy_force_name = get_enemy_team_of(player.force.name)
 	--enemy_force_name = player.force.name
 	
 	local biter_force_name = enemy_force_name .. "_biters"
@@ -210,13 +235,14 @@ local function feed_biters(player, food)
 	
 	i.remove({name = food, count = flask_amount})
 	
-	print_feeding_msg(player, food, flask_amount)	
+	print_feeding_msg(player, food, flask_amount)
 	local evolution_before_feed = global.bb_evolution[biter_force_name]
-	local threat_before_feed = global.bb_threat[biter_force_name]						
+	local threat_before_feed = global.bb_threat[biter_force_name]
 	
 	set_evo_and_threat(flask_amount, food, biter_force_name)
 	
 	add_stats(player, food, flask_amount ,biter_force_name, evolution_before_feed, threat_before_feed)
 end
+Public.feed_biters = feed_biters
 
-return feed_biters
+return Public

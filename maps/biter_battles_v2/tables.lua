@@ -147,6 +147,22 @@ Public.difficulties = {
 	[7] = {name = "Fun and Fast", str = "500%", value = 5, color = {r=0.55, g=0.00, b=0.00}, print_color = {r=0.9, g=0.0, b=0.00}}
 }
 
+Public.biter_mutagen_initial_slopes = {
+	["small"] = -1.75,
+	["medium"] = 1.5,
+	["big"] = 2,
+	["behemoth"] = 8,
+}
+
+-- Minimum mutagen to see each biter size
+Public.biter_mutagen_thresholds = {
+	["small"] = 0,
+	["medium"] = 250/Public.biter_mutagen_initial_slopes["medium"],
+	["big"] = 500,
+	["behemoth"] = 900,
+}
+
+
 Public.forces_list = { "all teams", "north", "south" }
 Public.science_list = { "all science", "very high tier (space, utility, production)", "high tier (space, utility, production, chemical)", "mid+ tier (space, utility, production, chemical, military)","space","utility","production","chemical","military", "logistic", "automation" }
 Public.evofilter_list = { "all evo jump", "no 0 evo jump", "10+ only","5+ only","4+ only","3+ only","2+ only","1+ only" }

@@ -46,7 +46,7 @@ local function draw_screen_gui(player)
 	if player.gui.screen.simple_tag_frame then
 		frame.destroy()
 		return
-	end		
+	end
 	
 	local frame = player.gui.screen.add({
 		type = "frame",
@@ -68,7 +68,7 @@ local function draw_screen_gui(player)
 	local clear_tag_element = frame[tag]
 	if not clear_tag_element then return end
 	clear_tag_element.sprite = "utility/close_white"
-	clear_tag_element.tooltip = "Clear Tag"	
+	clear_tag_element.tooltip = "Clear Tag"
 end
 
 local function on_player_joined_game(event)
