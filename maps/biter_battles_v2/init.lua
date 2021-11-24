@@ -159,9 +159,14 @@ function Public.tables()
 	}
 	global.difficulty_vote_value = 1
 	global.difficulty_vote_index = 4
-	global.placed_landmine_counts = {
-		["north"] = 0,
-		["south"] = 0
+	global.limited_entity_count = {
+		["north"] = 
+		{
+			["land-mine"] = 0
+		},
+		["south"] = {
+			["land-mine"] = 0
+		}
 	}
 
 	global.difficulty_votes_timeout = 36000

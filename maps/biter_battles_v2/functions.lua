@@ -1,6 +1,7 @@
 local Server = require 'utils.server'
 local Muted = require 'utils.muted'
 local Tables = require "maps.biter_battles_v2.tables"
+local Score = require "comfy_panel.score"
 local string_sub = string.sub
 local math_random = math.random
 local math_round = math.round
@@ -83,22 +84,22 @@ local balance_functions = {
 		laser_buff(0.5,force_name)
 	end,
 	["stronger-explosives"] = function(force_name)
-		if not global.combat_balance[force_name].grenade_damage then global.combat_balance[force_name].grenade_damage = get_ammo_modifier("grenade") end			
+		if not global.combat_balance[force_name].grenade_damage then global.combat_balance[force_name].grenade_damage = get_ammo_modifier("grenade") end
 		global.combat_balance[force_name].grenade_damage = global.combat_balance[force_name].grenade_damage + get_upgrade_modifier("grenade")
 		game.forces[force_name].set_ammo_damage_modifier("grenade", global.combat_balance[force_name].grenade_damage)
 
 		if not global.combat_balance[force_name].land_mine then global.combat_balance[force_name].land_mine = get_ammo_modifier("landmine") end
-		global.combat_balance[force_name].land_mine = global.combat_balance[force_name].land_mine + get_upgrade_modifier("landmine")								
+		global.combat_balance[force_name].land_mine = global.combat_balance[force_name].land_mine + get_upgrade_modifier("landmine")
 		game.forces[force_name].set_ammo_damage_modifier("landmine", global.combat_balance[force_name].land_mine)
 	end,
 	["stronger-explosives-1"] = function(force_name)
 		if not global.combat_balance[force_name].land_mine then global.combat_balance[force_name].land_mine = get_ammo_modifier("landmine") end
-		global.combat_balance[force_name].land_mine = global.combat_balance[force_name].land_mine - get_upgrade_modifier("landmine")								
+		global.combat_balance[force_name].land_mine = global.combat_balance[force_name].land_mine - get_upgrade_modifier("landmine")
 		game.forces[force_name].set_ammo_damage_modifier("landmine", global.combat_balance[force_name].land_mine)
 	end,
 	["physical-projectile-damage"] = function(force_name)
 		if not global.combat_balance[force_name].shotgun then global.combat_balance[force_name].shotgun = get_ammo_modifier("shotgun-shell") end
-		global.combat_balance[force_name].shotgun = global.combat_balance[force_name].shotgun + get_upgrade_modifier("shotgun-shell")	
+		global.combat_balance[force_name].shotgun = global.combat_balance[force_name].shotgun + get_upgrade_modifier("shotgun-shell")
 		game.forces[force_name].set_ammo_damage_modifier("shotgun-shell", global.combat_balance[force_name].shotgun)
 		game.forces[force_name].set_turret_attack_modifier("gun-turret",0)
 	end,
@@ -444,21 +445,25 @@ function get_upgrade_modifier(ammo_category)
 	return result
 end
 
-function goldilocks_landmines(event)
-	local entity=event.created_entity
-	if (entity.name=='land-mine') then
-		local num_placed_mines = global.placed_landmine_counts[entity.force.name]
-		local maximum_num_mines = Tables.landmine_entity_limits[entity.force.name].limit
-		if num_placed_mines < maximum_num_mines then
-			num_placed_mines = num_placed_mines + 1
-			global.placed_landmine_counts[entity.force.name] = num_placed_mines
-			if (global.placed_landmine_counts[entity.force.name] % 10 == 0) then
+
+function undo_event_if_past_entity_limit(event)
+	local entity = event.created_entity
+	local entity_name = entity.name
+	local force_name = entity.force.name
+	local entity_limits = Tables.entity_limits
+	if entity_limits[entity_name] ~= nil then
+		local num_placed_entities = global.limited_entity_count[force_name][entity_name]
+		local maximum_num_entities = entity_limits[entity_name]
+		if num_placed_entities < maximum_num_entities then
+			num_placed_entities = num_placed_entities + 1
+			global.limited_entity_count[force_name][entity_name] = num_placed_entities
+			if (num_placed_entities % 10 == 0) then
 				entity.surface.create_entity(
 					{
 						name = 'flying-text',
 						position = entity.position,
-						text = num_placed_mines ..
-							' / ' .. maximum_num_mines .. ' ' .. entity.name .. 's',
+						text = num_placed_entities ..
+							'/' .. maximum_num_entities .. ' ' .. entity.name .. 's',
 						color = {r = 0.98, g = 0.66, b = 0.22}
 					}
 				)
@@ -472,13 +477,21 @@ function goldilocks_landmines(event)
 					color = {r = 0.82, g = 0.11, b = 0.11}
 				}
 			)
-			local player = game.players[event.player_index]
-			player.insert({name = entity.name, count = 1})
-			if get_score then
-				if get_score[player.force.name] then
-					if get_score[player.force.name].players[player.name] then
-						get_score[player.force.name].players[player.name].built_entities =
-							get_score[player.force.name].players[player.name].built_entities - 1
+			if event.robot then
+				local inventory = event.robot.get_inventory(defines.inventory.robot_cargo)
+				inventory.insert({name = entity.name, count = 1})
+			else
+				local player = game.players[event.player_index]
+				player.insert({name = entity.name, count = 1})
+				-- only update score if you're not a robot.
+				local get_score = Score.get_table().score_table
+				if get_score then
+					local player = game.players[event.player_index]
+					if get_score[player.force.name] then
+						if get_score[player.force.name].players[player.name] then
+							get_score[player.force.name].players[player.name].built_entities =
+								get_score[player.force.name].players[player.name].built_entities - 1
+						end
 					end
 				end
 			end
@@ -486,6 +499,19 @@ function goldilocks_landmines(event)
 		end
 	end
 end
-Public.goldilocks_landmines = goldilocks_landmines
+Public.undo_event_if_past_entity_limit = undo_event_if_past_entity_limit
+
+
+function update_limited_entity_count_after_removal(event)
+	local entity = event.entity
+	local entity_name = entity.name
+	local force_name = entity.force.name
+	local entity_limits = Tables.entity_limits
+	if entity_limits[entity_name] ~= nil then
+		global.limited_entity_count[force_name][entity_name] = global.limited_entity_count[force_name][entity_name] - 1
+	end
+end
+Public.update_limited_entity_count_after_removal = update_limited_entity_count_after_removal
+
 
 return Public

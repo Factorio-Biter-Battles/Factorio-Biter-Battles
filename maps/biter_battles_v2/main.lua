@@ -47,13 +47,14 @@ end
 
 local function on_built_entity(event)
 	Functions.no_turret_creep(event)
-	Functions.goldilocks_landmines(event)
+	Functions.undo_event_if_past_entity_limit(event)
 	Functions.add_target_entity(event.created_entity)
 end
 
 local function on_robot_built_entity(event)
 	Functions.no_turret_creep(event)
-	Functions.goldilocks_landmines(event)
+	Functions.undo_event_if_past_entity_limit(event)
+	Functions.update_limited_entity_count_after_removal(event)
 	Terrain.deny_construction_bots(event)
 	Functions.add_target_entity(event.created_entity)
 end
@@ -134,6 +135,11 @@ end
 
 local function on_player_mined_entity(event)
 	Terrain.minable_wrecks(event)
+	Functions.update_limited_entity_count_after_removal(event)
+end
+
+local function on_robot_mined_entity(event)
+	Functions.update_limited_entity_count_after_removal(event)
 end
 
 local function on_chunk_generated(event)
@@ -281,10 +287,10 @@ Event.add(defines.events.on_player_mined_entity, on_player_mined_entity)
 Event.add(defines.events.on_research_finished, on_research_finished)
 Event.add(defines.events.on_robot_built_entity, on_robot_built_entity)
 Event.add(defines.events.on_robot_built_tile, on_robot_built_tile)
+Event.add(defines.events.on_robot_mined_entity, on_robot_mined_entity)
 Event.add(defines.events.on_tick, on_tick)
 Event.on_init(on_init)
 
-commands.add_command('clear-corpses', 'Clears all the biter corpses..',
-		     clear_corpses)
+commands.add_command('clear-corpses', 'Clears all the biter corpses..', clear_corpses)
 
 require "maps.biter_battles_v2.spec_spy"
