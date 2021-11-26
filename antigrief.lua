@@ -190,7 +190,7 @@ local function on_marked_for_deconstruction(event)
     if tracker[player.name] then
         playtime = player.online_time + tracker[player.name]
     end
-    if playtime < 2592000 then
+    if playtime < this.required_playtime then
         event.entity.cancel_deconstruction(game.get_player(event.player_index).force.name)
         player.print('You have not grown accustomed to this technology yet.', {r = 0.22, g = 0.99, b = 0.99})
     end
@@ -214,7 +214,7 @@ local function on_player_ammo_inventory_changed(event)
     if tracker[player.name] then
         playtime = player.online_time + tracker[player.name]
     end
-    if playtime < 1296000 then
+    if playtime < this.required_playtime then
         if this.enable_capsule_cursor_warning then
             local nukes = player.remove_item({name = 'atomic-bomb', count = 1000})
             if nukes > 0 then
@@ -296,7 +296,7 @@ local function on_built_entity(event)
             playtime = player.online_time + tracker[player.name]
         end
 
-        if playtime < 432000 then
+        if playtime < this.required_playtime then
             event.created_entity.destroy()
             player.print('You have not grown accustomed to this technology yet.', {r = 0.22, g = 0.99, b = 0.99})
         end
@@ -677,7 +677,7 @@ local function on_player_cursor_stack_changed(event)
         playtime = player.online_time + tracker[player.name]
     end
 
-    if playtime < 1296000 then
+    if playtime < this.required_playtime then
         if this.enable_capsule_cursor_warning then
             if ammo_names[name] then
                 local item_to_remove = player.remove_item({name = name, count = 1000})
