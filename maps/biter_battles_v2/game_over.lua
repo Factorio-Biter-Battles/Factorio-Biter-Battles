@@ -3,6 +3,7 @@ local Gui = require "maps.biter_battles_v2.gui"
 local Init = require "maps.biter_battles_v2.init"
 local Score = require "comfy_panel.score"
 local Server = require 'utils.server'
+local Special_games = require 'comfy_panel.special_games'
 
 local math_random = math.random
 
@@ -316,7 +317,8 @@ function Public.server_restart()
         Server.to_discord_bold(table.concat {'*** ', message, ' ***'})
 
 	local prev_surface = global.bb_surface_name
-        Init.tables()
+    Special_games.reset_active_special_games()
+    Init.tables()
 	Init.playground_surface()
 	Init.forces()
 	Init.draw_structures()

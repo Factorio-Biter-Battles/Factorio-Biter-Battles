@@ -7,6 +7,7 @@ local event = require 'utils.event'
 local Functions = require "maps.biter_battles_v2.functions"
 local feed_the_biters = require "maps.biter_battles_v2.feeding"
 local Tables = require "maps.biter_battles_v2.tables"
+local Special_games = require "comfy_panel.special_games"
 
 local wait_messages = Tables.wait_messages
 local food_names = Tables.gui_foods
@@ -136,18 +137,28 @@ function Public.create_main_gui(player)
 	local frame = player.gui.left.add { type = "frame", name = "bb_main_gui", direction = "vertical" }
 
 	-- Science sending GUI
+	
+	
 	if not is_spec then
-		frame.add { type = "table", name = "biter_battle_table", column_count = 4 }
-		local t = frame.biter_battle_table
-		for food_name, tooltip in pairs(food_names) do
-			local s = t.add { type = "sprite-button", name = food_name, sprite = "item/" .. food_name }
-			s.tooltip = tooltip
-			s.style.minimal_height = 41
-			s.style.minimal_width = 41
-			s.style.top_padding = 0
-			s.style.left_padding = 0
-			s.style.right_padding = 0
-			s.style.bottom_padding = 0
+		if global.active_special_games["power_feed"] == true then
+			frame.add{type = "label", name = "label1", caption = "Special game Power Feed is enabled! \nFeeding science is replaced by\nfeeding energy stored in accumulators"}
+			frame["label1"].style.single_line = false
+			frame.add{type = "flow", name = "flow1", direction = "horizontal"}
+			frame["flow1"].add{type = "sprite-button", name = "feed_energy", sprite = "item/accumulator", tooltip = "1GJ = " .. global.special_games_variables["flasks_per_1GJ"] .. "[item=" .. global.special_games_variables["flask_type"] .. "]"}
+			frame["flow1"].add{type = "sprite-button", name = "raw-fish", sprite = "item/raw-fish", tooltip = food_names["raw-fish"]}
+		else 
+			frame.add { type = "table", name = "biter_battle_table", column_count = 4 }
+			local t = frame.biter_battle_table			
+			for food_name, tooltip in pairs(food_names) do
+				local s = t.add { type = "sprite-button", name = food_name, sprite = "item/" .. food_name }
+				s.tooltip = tooltip
+				s.style.minimal_height = 41
+				s.style.minimal_width = 41
+				s.style.top_padding = 0
+				s.style.left_padding = 0
+				s.style.right_padding = 0
+				s.style.bottom_padding = 0
+			end
 		end
 	end
 
@@ -463,6 +474,15 @@ local function on_gui_click(event)
 	if name == "raw-fish" then Functions.spy_fish(player, event) return end
 
 	if food_names[name] then feed_the_biters(player, name) return end
+
+	if name == "feed_energy" then
+		if player.position.y ^ 2 + player.position.x ^ 2 < 12000 then
+			Special_games.feed_energy(player)
+		else
+			player.print("You are too far away from spawn to feed",{ r=0.98, g=0.66, b=0.22})
+		end
+		return
+	end
 
 	if name == "bb_leave_spectate" then join_team(player, global.chosen_team[player.name])	end
 
