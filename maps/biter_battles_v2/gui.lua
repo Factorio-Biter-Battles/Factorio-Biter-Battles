@@ -7,6 +7,7 @@ local event = require 'utils.event'
 local Functions = require "maps.biter_battles_v2.functions"
 local feed_the_biters = require "maps.biter_battles_v2.feeding"
 local Tables = require "maps.biter_battles_v2.tables"
+local session = require 'utils.datastore.session_data'
 
 local wait_messages = Tables.wait_messages
 local food_names = Tables.gui_foods
@@ -322,7 +323,11 @@ function join_team(player, force_name, forced_join)
 		player.force = game.forces[force_name]
 		player.character.destructible = true
 		Public.refresh()
-		game.permissions.get_group("Default").add_player(player)
+		if session.get_trusted_table()[player.name] then
+			game.permissions.get_group("Default").add_player(player)
+		else
+			game.permissions.get_group("untrusted").add_player(player)
+		end
 		local msg = table.concat({"Team ", player.force.name, " player ", player.name, " is no longer spectating."})
 		game.print(msg, {r = 0.98, g = 0.66, b = 0.22})
 		Server.to_discord_bold(msg)
@@ -335,7 +340,11 @@ function join_team(player, force_name, forced_join)
 	player.teleport(pos)
 	player.force = game.forces[force_name]
 	player.character.destructible = true
-	game.permissions.get_group("Default").add_player(player)
+	if session.get_trusted_table()[player.name] then
+		game.permissions.get_group("Default").add_player(player)
+	else
+		game.permissions.get_group("untrusted").add_player(player)
+	end
 	if not forced_join then
 		local c = player.force.name
 		if global.tm_custom_name[player.force.name] then c = global.tm_custom_name[player.force.name] end

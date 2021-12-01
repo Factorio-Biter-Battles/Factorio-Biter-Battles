@@ -56,7 +56,28 @@ function Public.initial_setup()
 		defines.input_action.write_to_console,
 	}
 	for _, d in pairs(defs) do p.set_allows_action(d, true) end
-
+	local untrusted_bans = {
+		defines.input_action.activate_copy,
+		defines.input_action.activate_cut,
+		defines.input_action.activate_paste,
+		defines.input_action.cancel_deconstruct,
+		defines.input_action.cancel_upgrade,
+		defines.input_action.copy,
+		defines.input_action.deconstruct,
+		defines.input_action.import_blueprint,
+		defines.input_action.import_blueprint_string,
+		defines.input_action.open_blueprint_library_gui,
+		defines.input_action.open_blueprint_record,
+		defines.input_action.setup_blueprint,
+		defines.input_action.launch_rocket,
+		defines.input_action.setup_blueprint,
+		defines.input_action.upgrade,
+		defines.input_action.use_artillery_remote
+	}
+	local untrusted = game.permissions.create_group("untrusted")
+	for _, i in pairs(untrusted_bans) do
+		untrusted.set_allows_action(i, false)
+	end
 	global.gui_refresh_delay = 0
 	global.game_lobby_active = true
 	global.bb_debug = false
