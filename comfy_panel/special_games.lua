@@ -1,9 +1,14 @@
 local Event = require 'utils.event'
 local Color = require 'utils.color_presets'
 local Tables = require 'maps.biter_battles_v2.tables'
+local Gui_styles = require 'utils.gui_styles'
 local Public = {}
 global.active_special_games = {}
 global.special_games_variables = {}
+local food_names = {}
+for k, v in pairs(Tables.food_names) do
+	table.insert(food_names, k)
+end
 local valid_special_games = {
 	--[[
 	Add your special game here.
@@ -54,25 +59,19 @@ local valid_special_games = {
 	power_feed = {
 		name = "Power feed",
 		config = {
-			[1] = {name = "label1", caption = "Mutagen equivalent of 1GJ", type = "label"},
-			[2] = {name = "flasks_number", type = "textfield", text = "1", numeric = true, width = 40},
-			[3] = {name = "flask_type", type = "choose-elem-button", elem_type = "item", item = "automation-science-pack"},
-			[4] = {name = "min_charge", type = "textfield", numeric = true, text = "1", width = 40, tooltip = "Min charge required for feeding. [GJ]"},
-			[5] = {name = "capacity", type = "textfield", text = "10", numeric = true, width = 40, tooltip = "Capacity of the spawned accumulators"}
+			[1] = {name = "label1", caption = "Mutagen equivalent of 1GJ =", type = "label"},
+			[2] = {name = "flasks_number", type = "textfield", text = "1", numeric = true, allow_decimal = true, width = 40},
+			[3] = {name = "flask_type", type = "choose-elem-button", elem_type = "item", elem_filters = {{filter = "name", name = food_names}}, item = "automation-science-pack"},
+			[4] = {name = "line1", type = "line", direction = "vertical"},
+			[5] = {name = "min_charge", type = "textfield", numeric = true, text = "1", width = 40, tooltip = "Min charge required for feeding. [GJ]"},
+			[6] = {name = "line2", type = "line", direction = "vertical"},
+			[7] = {name = "capacity", type = "textfield", text = "10", numeric = true, width = 40, tooltip = "Capacity of the spawned accumulators"}
 		},
 		button = {name = "power_feed_apply", type = "button", caption = "Apply"}
 	}
 
 }
---[[
-function Public.get_active_special_games()
-	return active_special_games
-end
 
-function Public.get_special_games_variables()
-	return special_games_variables
-end
-]]
 function Public.reset_active_special_games()
 	for _, i in ipairs(global.active_special_games) do
 		i = false
@@ -157,8 +156,6 @@ local function generate_power_feed(flasks_number, flask_type, min_charge, capaci
 	local silos = surface.find_entities_filtered {name = "rocket-silo"}
 
 	for _, v in ipairs(silos) do
-		-- game.print(v.force.name)
-
 		local power_pole
 		if v.force.name == "north" then
 			power_pole = surface.create_entity {name = "medium-electric-pole", position = {v.position.x, v.position.y + 5}, force = v.force}
@@ -179,14 +176,15 @@ local function generate_power_feed(flasks_number, flask_type, min_charge, capaci
 			energy_interface.power_production = 0
 			energy_interface.power_usage = 0
 			energy_interface.operable = false
-
 		end
-
 	end
-	game.print(flasks_number)
 	global.special_games_variables["flasks_per_1GJ"] = flasks_number
 	global.special_games_variables["flask_type"] = flask_type
-	global.special_games_variables["min_charge"] = min_charge
+	if tonumber(flasks_number) < 1 then
+		global.special_games_variables["min_charge"] = min_charge / flasks_number
+	else	
+		global.special_games_variables["min_charge"] = min_charge
+	end
 	global.active_special_games["power_feed"] = true
 end
 
@@ -194,9 +192,9 @@ function Public.feed_energy(player)
 	local surface = player.surface
     if not player.valid then return end
     if not player.force.valid then return end
-    -- if game.ticks_played < global.difficulty_votes_timeout then player.print("Please wait for voting to finish before feeding") return end
+    if game.ticks_played < global.difficulty_votes_timeout then player.print("Please wait for voting to finish before feeding") return end
 
-	local enemy_force_name = Tables.enemy_team_of[player.force.name]
+	local enemy_force = game.forces[Tables.enemy_team_of[player.force.name]]
 	local main_pole = global.special_games_variables[player.force.name .. "_main_pole"]
 
 	-- summing up the charge from all connected accus
@@ -215,21 +213,16 @@ function Public.feed_energy(player)
 		return
 	end
 
-	-- translate GJs to round number of flasks chosen in config
-	local flask_equivalent = math.floor(total_charge * global.special_games_variables["flasks_per_1GJ"])
-	game.print("flask equivalent: " .. flask_equivalent)
+	-- translate GJs to non-round number of flasks chosen in config
+	local flask_equivalent = total_charge * global.special_games_variables["flasks_per_1GJ"]
+
 	-- charge to be returned in J, to prevent loosing energy cased by the translation
-	local charge_to_return = ((total_charge * global.special_games_variables["flasks_per_1GJ"]) - flask_equivalent) * 1000000000
+	local charge_to_return = (flask_equivalent - math.floor(flask_equivalent)) / global.special_games_variables["flasks_per_1GJ"] * 1000000000
 
-	game.print("Total charge: " .. total_charge .. "GJ")
-	game.print("flask equivalent: " .. flask_equivalent)
-	game.print("Charge to return: " .. charge_to_return)
-
-	local biter_force_name = enemy_force_name .. "_biters"
-	local colored_player_name = table.concat({"[color=", player.color.r * 0.6 + 0.35, ",", player.color.g * 0.6 + 0.35, ",", player.color.b * 0.6 + 0.35, "]", player.name, "[/color]"})
-	game.print(table.concat({colored_player_name, " charged ", enemy_force_name, "'s biters with ", math.round(total_charge, 3), "GJ!"}))
-
-	set_evo_and_threat(flask_equivalent, global.special_games_variables["flask_type"], biter_force_name)
+	game.print(table.concat({Gui_styles.colored_player(player), " charged ", enemy_force.name, "'s biters with ", Gui_styles.colored_text(math.round(flask_equivalent / global.special_games_variables["flasks_per_1GJ"], 3) .. "GJ!", Color.yellow)}))
+	
+	local biter_force_name = enemy_force.name .. "_biters"
+	set_evo_and_threat(math.floor(flask_equivalent), global.special_games_variables["flask_type"], biter_force_name)
 
 	-- clearing accus
 	for _, i in ipairs(accumulators) do
