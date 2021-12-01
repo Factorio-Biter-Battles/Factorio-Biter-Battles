@@ -31,7 +31,7 @@ local this = {
     damage_history = {},
     punish_cancel_craft = false,
     log_tree_harvest = false,
-    do_not_check_trusted = false,
+    do_not_check_trusted = true,
     enable_autokick = false,
     enable_autoban = false,
     enable_jail = false,
@@ -170,6 +170,7 @@ local function do_action(player, prefix, msg, ban_msg, kill)
 end
 
 local function on_marked_for_deconstruction(event)
+    --[[
     if not this.enabled then
         return
     end
@@ -194,6 +195,7 @@ local function on_marked_for_deconstruction(event)
         event.entity.cancel_deconstruction(game.get_player(event.player_index).force.name)
         player.print('You have not grown accustomed to this technology yet.', {r = 0.22, g = 0.99, b = 0.99})
     end
+    ]]
 end
 
 local function on_player_ammo_inventory_changed(event)
@@ -276,6 +278,7 @@ local function on_player_built_tile(event)
 end
 
 local function on_built_entity(event)
+    --[[
     if not this.enabled then
         return
     end
@@ -301,6 +304,7 @@ local function on_built_entity(event)
             player.print('You have not grown accustomed to this technology yet.', {r = 0.22, g = 0.99, b = 0.99})
         end
     end
+    ]]
 end
 
 --Capsule History and Antigrief

@@ -95,6 +95,7 @@ commands.add_command(
                     return
                 end
                 trusted[target_player.name] = true
+                if target_player.permission_group.name == "untrusted" then game.permissions.get_group("Default").add_player(target_player) end
                 game.print(target_player.name .. ' is now a trusted player.', {r = 0.22, g = 0.99, b = 0.99})
                 for _, a in pairs(game.connected_players) do
                     if a.admin and a.name ~= player.name then
@@ -148,6 +149,7 @@ commands.add_command(
                     return
                 end
                 trusted[target_player.name] = false
+                if target_player.permission_group.name == "Default" then game.permissions.get_group("untrusted").add_player(target_player) end
                 game.print(target_player.name .. ' is now untrusted.', {r = 0.22, g = 0.99, b = 0.99})
                 for _, a in pairs(game.connected_players) do
                     if a.admin == true and a.name ~= player.name then
