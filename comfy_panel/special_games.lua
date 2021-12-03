@@ -1,5 +1,8 @@
 local Event = require 'utils.event'
 local Color = require 'utils.color_presets'
+local Public = {}
+global.active_special_games = {}
+global.special_games_variables = {}
 local valid_special_games = {
 	--[[ 
 	Add your special game here.
@@ -52,6 +55,9 @@ local valid_special_games = {
 
 }
 
+function Public.reset_active_special_games() for _, i in ipairs(global.active_special_games) do i = false end end
+function Public.reset_special_games_variables() global.special_games_variables = {} end
+
 local function generate_turtle(moat_width, entrance_width, size_x, size_y)
 	game.print("Special game turtle is being generated!", Color.warning)
 	local surface = game.surfaces[global.bb_surface_name]
@@ -88,7 +94,7 @@ local function generate_turtle(moat_width, entrance_width, size_x, size_y)
 	surface.set_tiles(water_positions)
 	surface.set_tiles(landfill_positions)
 	surface.set_tiles(concrete_positions)
-
+	global.active_special_games["turtle"] = true
 end
 
 local function generate_infinity_chest(separate_chests, operable, gap, eq)
@@ -138,6 +144,7 @@ local function generate_infinity_chest(separate_chests, operable, gap, eq)
 			k = k * -1
 		end
 	end
+	global.active_special_games["infinity_chest"] = true
 end
 
 local create_special_games_panel = (function(player, frame)
@@ -224,4 +231,5 @@ end
 comfy_panel_tabs['Special games'] = {gui = create_special_games_panel, admin = true}
 
 Event.add(defines.events.on_gui_click, on_gui_click)
+return Public
 
