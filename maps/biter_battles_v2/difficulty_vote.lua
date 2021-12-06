@@ -7,16 +7,14 @@ require 'utils/gui_styles'
 
 local difficulties = Tables.difficulties
 
-local function difficulty_gui()
+local function difficulty_gui(player)
 	local value = math.floor(global.difficulty_vote_value*100)
-	for _, player in pairs(game.connected_players) do
-		if player.gui.top["difficulty_gui"] then player.gui.top["difficulty_gui"].destroy() end
-		local str = table.concat({"Global map difficulty is ", difficulties[global.difficulty_vote_index].name, ". Mutagen has ", value, "% effectiveness."})
-		local b = player.gui.top.add { type = "sprite-button", caption = difficulties[global.difficulty_vote_index].name, tooltip = str, name = "difficulty_gui" }
-		b.style.font = "heading-2"
-		b.style.font_color = difficulties[global.difficulty_vote_index].print_color
-		element_style({element = b, x = 114, y = 38, pad = -2})		
-	end
+	if player.gui.top["difficulty_gui"] then player.gui.top["difficulty_gui"].destroy() end
+	local str = table.concat({"Global map difficulty is ", difficulties[global.difficulty_vote_index].name, ". Mutagen has ", value, "% effectiveness."})
+	local b = player.gui.top.add { type = "sprite-button", caption = difficulties[global.difficulty_vote_index].name, tooltip = str, name = "difficulty_gui" }
+	b.style.font = "heading-2"
+	b.style.font_color = difficulties[global.difficulty_vote_index].print_color
+	element_style({element = b, x = 114, y = 38, pad = -2})
 end
 
 local function poll_difficulty(player)

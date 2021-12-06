@@ -237,7 +237,7 @@ function Public.create_main_gui(player)
 	end
 
 	-- Difficulty mutagen effectivness update
-	bb_diff.difficulty_gui()
+	bb_diff.difficulty_gui(player)
 
 	-- Action frame
 	local t = frame.add  { type = "table", column_count = 2 }
