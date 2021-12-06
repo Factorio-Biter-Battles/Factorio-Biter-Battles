@@ -17,6 +17,12 @@ local function difficulty_gui(player)
 	element_style({element = b, x = 114, y = 38, pad = -2})
 end
 
+local function difficulty_gui_all()
+	for _, player in pairs(game.connected_players) do
+		difficulty_gui(player)
+	end
+end
+
 local function poll_difficulty(player)
 	if player.gui.center["difficulty_poll"] then player.gui.center["difficulty_poll"].destroy() return end
 	
@@ -91,7 +97,7 @@ local function on_player_joined_game(event)
 		if player.gui.center["difficulty_poll"] then player.gui.center["difficulty_poll"].destroy() end
 	end
 	
-	difficulty_gui()
+	difficulty_gui_all()
 end
 
 local function on_player_left_game(event)
@@ -122,7 +128,7 @@ local function on_gui_click(event)
 			game.print(player.name .. " has voted for " .. difficulties[i].name .. " difficulty!", difficulties[i].print_color)
 			global.difficulty_player_votes[player.name] = i
 			set_difficulty()
-			difficulty_gui()				
+			difficulty_gui(player)
 		end
 		event.element.parent.destroy()
 		return
@@ -146,7 +152,7 @@ local function on_gui_click(event)
 	game.print(player.name .. " has voted for " .. difficulties[i].name .. " difficulty!", difficulties[i].print_color)
 	global.difficulty_player_votes[player.name] = i
 	set_difficulty()
-	difficulty_gui()	
+	difficulty_gui_all()
 	event.element.parent.destroy()
 end
 	
@@ -157,5 +163,6 @@ event.add(defines.events.on_player_joined_game, on_player_joined_game)
 local Public = {}
 Public.difficulties = difficulties
 Public.difficulty_gui = difficulty_gui
+Public.difficulty_gui_all = difficulty_gui_all
 
 return Public

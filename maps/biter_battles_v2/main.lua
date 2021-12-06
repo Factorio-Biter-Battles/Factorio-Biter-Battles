@@ -94,7 +94,7 @@ local function on_tick()
 
 	if tick % 180 == 0 then
 		Gui.refresh()
-		diff_vote.difficulty_gui()
+		diff_vote.difficulty_gui_all()
 	end
 
 	if tick % 300 == 0 then
