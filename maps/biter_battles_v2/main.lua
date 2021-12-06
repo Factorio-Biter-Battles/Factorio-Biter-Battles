@@ -221,19 +221,12 @@ end
 
 local function clear_corpses(cmd)
 	local player = game.player
-        local trusted = Session.get_trusted_table()
         local param = tonumber(cmd.parameter)
 
         if not player or not player.valid then
             return
         end
-        local p = player.print
-        if not trusted[player.name] then
-            if not player.admin then
-                p('[ERROR] Only admins and trusted weebs are allowed to run this command!', Color.fail)
-                return
-            end
-        end
+		
         if param == nil then
             player.print('[ERROR] Must specify radius!', Color.fail)
             return
