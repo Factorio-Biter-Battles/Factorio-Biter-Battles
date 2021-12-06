@@ -92,12 +92,12 @@ local function on_tick()
 		global.bb_threat["south_biters"] = global.bb_threat["south_biters"] + global.bb_threat_income["south_biters"]
 	end
 
-	if tick % 180 == 0 then
+	if (tick+5) % 180 == 0 then
 		Gui.refresh()
 		diff_vote.difficulty_gui_all()
 	end
 
-	if tick % 300 == 0 then
+	if (tick+11) % 300 == 0 then
 		Gui.spy_fish()
 
 		if global.bb_game_won_by_team then
