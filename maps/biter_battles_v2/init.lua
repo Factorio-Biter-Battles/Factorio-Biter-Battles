@@ -147,6 +147,8 @@ function Public.tables()
 	global.unit_spawners = {}
 	global.unit_spawners.north_biters = {}
 	global.unit_spawners.south_biters = {}
+	global.active_special_games = {}
+	global.special_games_variables = {}
 	global.biter_spawn_unseen = {
 		["north"] = {
 			["medium-spitter"] = true, ["medium-biter"] = true, ["big-spitter"] = true, ["big-biter"] = true, ["behemoth-spitter"] = true, ["behemoth-biter"] = true
