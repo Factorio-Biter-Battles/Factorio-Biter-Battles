@@ -70,7 +70,6 @@ end
 
 local tick_minute_functions = {
 	[300 * 1] = Ai.raise_evo,
-	[300 * 2] = Ai.destroy_inactive_biters,
 	[300 * 3 + 30 * 0] = Ai.pre_main_attack,		-- setup for main_attack
 	[300 * 3 + 30 * 1] = Ai.perform_main_attack,	-- call perform_main_attack 7 times on different ticks
 	[300 * 3 + 30 * 2] = Ai.perform_main_attack,	-- some of these might do nothing (if there are no wave left)
@@ -81,7 +80,6 @@ local tick_minute_functions = {
 	[300 * 3 + 30 * 7] = Ai.perform_main_attack,
 	[300 * 3 + 30 * 8] = Ai.post_main_attack,
 	[300 * 4] = Ai.send_near_biters_to_silo,
-	[300 * 5] = Ai.wake_up_sleepy_groups,
 }
 
 local function on_tick()

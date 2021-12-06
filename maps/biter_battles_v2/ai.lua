@@ -41,14 +41,6 @@ local threat_values = {
 	["spitter-spawner"] = 32
 }
 
-local function get_active_biter_count(biter_force_name)
-	local count = 0
-	for _, _ in pairs(global.active_biters[biter_force_name]) do
-		count = count + 1
-	end
-	return count
-end
-
 local function get_target_entity(force_name)
 	local force_index = game.forces[force_name].index
 	local target_entity = Functions.get_random_target_entity(force_index)
@@ -100,33 +92,8 @@ local function is_biter_inactive(biter, unit_number, biter_force_name)
 	end
 end
 
-local function set_active_biters(group)
-	if not group.valid then return end
-	local active_biters = global.active_biters[group.force.name]
-
-	for _, unit in pairs(group.members) do
-		if not active_biters[unit.unit_number] then
-			active_biters[unit.unit_number] = {entity = unit, active_since = game.tick}
-		end
-	end
-end
-
-Public.destroy_inactive_biters = function()
-	local biter_force_name = global.next_attack .. "_biters"
-
-	for _, group in pairs(global.unit_groups) do
-		set_active_biters(group)
-	end
-
-	for unit_number, biter in pairs(global.active_biters[biter_force_name]) do
-		if is_biter_inactive(biter, unit_number, biter_force_name) then
-			global.active_biters[biter_force_name][unit_number] = nil
-		end
-	end
-end
-
 Public.send_near_biters_to_silo = function()
-	if game.tick < 108000 then return end
+	if game.ticks_played < 108000 then return end
 	if not global.rocket_silo["north"] then return end
 	if not global.rocket_silo["south"] then return end
 
@@ -176,14 +143,7 @@ local function select_units_around_spawner(spawner, force_name, side_target)
 	local valid_biters = {}
 	local i = 0
 
-	local threat = global.bb_threat[biter_force_name] * math_random(8, 32) * 0.01
-
-	--threat modifier for outposts
-	local m = math_abs(side_target.position.x) - 512
-	if m < 0 then m = 0 end
-	m = 1 - m * 0.001
-	if m < 0.5 then m = 0.5 end
-	threat = threat * m
+	local threat = global.bb_threat[biter_force_name] / 10
 
 	local unit_count = 0
 	local max_unit_count = math.floor(global.bb_threat[biter_force_name] * 0.25) + math_random(6,12)
@@ -191,14 +151,13 @@ local function select_units_around_spawner(spawner, force_name, side_target)
 
 	--Collect biters around spawners
 	if math_random(1, 2) == 1 then
-		local biters = spawner.surface.find_enemy_units(spawner.position, 160, force_name)
+		local biters = spawner.surface.find_enemy_units(spawner.position, 96, force_name)
 		if biters[1] then
 			for _, biter in pairs(biters) do
 				if unit_count >= max_unit_count then break end
-				if biter.force.name == biter_force_name and global.active_biters[biter.force.name][biter.unit_number] == nil then
+				if biter.force.name == biter_force_name then
 					i = i + 1
 					valid_biters[i] = biter
-					global.active_biters[biter.force.name][biter.unit_number] = {entity = biter, active_since = game.tick}
 					unit_count = unit_count + 1
 					threat = threat - threat_values[biter.name]
 				end
@@ -218,7 +177,6 @@ local function select_units_around_spawner(spawner, force_name, side_target)
 		threat = threat - threat_values[biter.name]
 		i = i + 1
 		valid_biters[i] = biter
-		global.active_biters[biter.force.name][biter.unit_number] = {entity = biter, active_since = game.tick}
 		--Announce New Spawn
 		if(global.biter_spawn_unseen[force_name][unit_name]) then
 			game.print("A " .. unit_name:gsub("-", " ") .. " was spotted far away on team " .. force_name .. "...")
@@ -251,9 +209,9 @@ local function send_group(unit_group, force_name, side_target)
 	if position then
 		if math.abs(position.y) < math.abs(unit_group.position.y) then
 			commands[#commands + 1] = {
-				type = defines.command.attack_area,
+				type = defines.command.go_to_location,
 				destination = position,
-				radius = 16,
+				radius = 32,
 				distraction = defines.distraction.by_enemy
 			}
 		end
@@ -269,7 +227,7 @@ local function send_group(unit_group, force_name, side_target)
 	commands[#commands + 1] = {
 		type = defines.command.attack,
 		target = global.rocket_silo[force_name],
-		distraction = defines.distraction.by_enemy
+		distraction = defines.distraction.by_damage
 	}
 
 	unit_group.set_command({
@@ -287,24 +245,12 @@ local function get_unit_group_position(spawner)
 	else
 		p = {x = spawner.position.x, y = spawner.position.y - 4}
 	end
-	p = spawner.surface.find_non_colliding_position("electric-furnace", p, 512, 1)
+	p = spawner.surface.find_non_colliding_position("electric-furnace", p, 256, 1)
 	if not p then
 		if global.bb_debug then game.print("No unit_group_position found for team " .. spawner.force.name) end
 		return
 	end
 	return p
-end
-
-local function get_active_threat(biter_force_name)
-	local active_threat = 0
-	for _, biter in pairs(global.active_biters[biter_force_name]) do
-		if biter.entity then
-			if biter.entity.valid then
-				active_threat = active_threat + threat_values[biter.entity.name]
-			end
-		end
-	end
-	return active_threat
 end
 
 local function get_nearby_biter_nest(target_entity)
@@ -330,13 +276,7 @@ end
 
 local function create_attack_group(surface, force_name, biter_force_name)
 	local threat = global.bb_threat[biter_force_name]
-	if get_active_threat(biter_force_name) > threat * 1.20 then return end
 	if threat <= 0 then return false end
-
-	if bb_config.max_active_biters - get_active_biter_count(biter_force_name) < bb_config.max_group_size then
-		if global.bb_debug then game.print("Not enough slots for biters for team " .. force_name .. ". Available slots: " .. bb_config.max_active_biters - get_active_biter_count(biter_force_name)) end
-		return false
-	end
 
 	local side_target = get_target_entity(force_name)
 	if not side_target then
@@ -360,8 +300,6 @@ local function create_attack_group(surface, force_name, biter_force_name)
 	for _, unit in pairs(units) do unit_group.add_member(unit) end
 
 	send_group(unit_group, force_name, side_target)
-
-	global.unit_groups[unit_group.group_number] = unit_group
 end
 
 Public.pre_main_attack = function()
@@ -396,30 +334,6 @@ Public.post_main_attack = function()
 		global.next_attack = "south"
 	else
 		global.next_attack = "north"
-	end
-end
-
-Public.wake_up_sleepy_groups = function()
-	local force_name = global.next_attack
-	local biter_force_name = force_name .. "_biters"
-	local entity
-	local unit_group
-	for _, biter in pairs(global.active_biters[biter_force_name]) do
-		entity = biter.entity
-		if entity then
-			if entity.valid then
-				unit_group = entity.unit_group
-				if unit_group then
-					if unit_group.valid then
-						if unit_group.state == defines.group_state.finished then
-							send_group(unit_group, force_name)
-							--print("BiterBattles: Woke up Unit Group at x" .. unit_group.position.x .. " y" .. unit_group.position.y .. ".")
-							return
-						end
-					end
-				end
-			end
-		end
 	end
 end
 
@@ -480,9 +394,6 @@ end
 --Biter Threat Value Subtraction
 function Public.subtract_threat(entity)
 	if not threat_values[entity.name] then return end
-	if entity.type == "unit" then
-		global.active_biters[entity.force.name][entity.unit_number] = nil
-	end
 
 	global.bb_threat[entity.force.name] = global.bb_threat[entity.force.name] - threat_values[entity.name]
 
