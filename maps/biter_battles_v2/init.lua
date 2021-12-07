@@ -127,7 +127,6 @@ function Public.tables()
 		global.bb_surface_name = "bb0"
 	end
 
-	global.active_biters = {}
 	global.bb_evolution = {}
 	global.bb_game_won_by_team = nil
 	global.bb_threat = {}
@@ -145,10 +144,11 @@ function Public.tables()
 	global.target_entities = {}
 	global.tm_custom_name = {}
 	global.total_passive_feed_redpotion = 0
-	global.unit_groups = {}
 	global.unit_spawners = {}
 	global.unit_spawners.north_biters = {}
 	global.unit_spawners.south_biters = {}
+	global.active_special_games = {}
+	global.special_games_variables = {}
 	global.biter_spawn_unseen = {
 		["north"] = {
 			["medium-spitter"] = true, ["medium-biter"] = true, ["big-spitter"] = true, ["big-biter"] = true, ["behemoth-spitter"] = true, ["behemoth-biter"] = true
@@ -294,7 +294,6 @@ function Public.forces()
 		game.forces[force.name].research_queue_enabled = true
 		global.target_entities[force.index] = {}
 		global.spy_fish_timeout[force.name] = 0
-		global.active_biters[force.name] = {}
 		global.bb_evolution[force.name] = 0
 		global.reanim_chance[force.index] = 0
 		global.bb_threat_income[force.name] = 0

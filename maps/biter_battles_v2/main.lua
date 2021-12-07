@@ -70,7 +70,6 @@ end
 
 local tick_minute_functions = {
 	[300 * 1] = Ai.raise_evo,
-	[300 * 2] = Ai.destroy_inactive_biters,
 	[300 * 3 + 30 * 0] = Ai.pre_main_attack,		-- setup for main_attack
 	[300 * 3 + 30 * 1] = Ai.perform_main_attack,	-- call perform_main_attack 7 times on different ticks
 	[300 * 3 + 30 * 2] = Ai.perform_main_attack,	-- some of these might do nothing (if there are no wave left)
@@ -81,7 +80,6 @@ local tick_minute_functions = {
 	[300 * 3 + 30 * 7] = Ai.perform_main_attack,
 	[300 * 3 + 30 * 8] = Ai.post_main_attack,
 	[300 * 4] = Ai.send_near_biters_to_silo,
-	[300 * 5] = Ai.wake_up_sleepy_groups,
 }
 
 local function on_tick()
@@ -203,6 +201,24 @@ local function on_area_cloned(event)
 	end
 end
 
+local function on_rocket_launch_ordered(event)
+	local vehicles = {
+		["car"] = true,
+		["tank"] = true,
+		["locomotive"] = true,
+		["cargo-wagon"] = true,
+		["fluid-wagon"] = true,
+		["spidertron"] = true,
+	}
+	local inventory = event.rocket.get_inventory(defines.inventory.fuel)
+	local contents = inventory.get_contents()
+	for name, _ in pairs(contents) do
+		if vehicles[name] then
+			inventory.clear()
+		end
+	end
+end
+
 local function clear_corpses(cmd)
 	local player = game.player
         local trusted = Session.get_trusted_table()
@@ -258,6 +274,7 @@ local function on_init()
 end
 
 local Event = require 'utils.event'
+Event.add(defines.events.on_rocket_launch_ordered, on_rocket_launch_ordered)
 Event.add(defines.events.on_area_cloned, on_area_cloned)
 Event.add(defines.events.on_research_finished, Ai.unlock_satellite)			--free silo space tech
 Event.add(defines.events.on_post_entity_died, Ai.schedule_reanimate)
