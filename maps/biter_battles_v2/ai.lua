@@ -493,12 +493,15 @@ function Public.reanimate_units()
 	for _, id in pairs(global.dead_units) do
 		-- Check for each side if there are any biters to reanimate.
 		if not fifo.empty(id) then
-			-- Balance amount of unit creation requests to get rid off
-			-- excess stored in memory.
-			local cycles = fifo.length(id) / global.reanim_balancer
-			cycles = math.floor(cycles) + 1
-			_reanimate_units(id, cycles)
+			goto reanim_units_cont
 		end
+
+		-- Balance amount of unit creation requests to get rid off
+		-- excess stored in memory.
+		local cycles = fifo.length(id) / global.reanim_balancer
+		cycles = math.floor(cycles) + 1
+		_reanimate_units(id, cycles)
+		::reanim_units_cont::
 	end
 end
 
