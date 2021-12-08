@@ -44,70 +44,191 @@ local function create_sprite_button(player)
 	element_style({element = button, x= 38, y = 38, pad = -2})
 end
 
-local function clock(frame)
+local function get_current_clock_time_string()
 	local total_minutes = math.floor(game.ticks_played / (60 * 60))
 	local total_hours = math.floor(total_minutes / 60)
 	local minutes = total_minutes - (total_hours * 60)
+	return "Game time: " .. string.format("%02d", total_hours) .. ":" .. string.format("%02d", minutes)
+end
 
-	local clock = frame.add {type = "label", caption = "Game time: " .. string.format("%02d", total_hours) .. ":" .. string.format("%02d", minutes)}
+local function add_clock_element(frame)
+	local clock = frame.add{name="clock", type = "label", caption = get_current_clock_time_string()}
 	clock.style.font = "default-bold"
 	clock.style.font_color = {r = 0.98, g = 0.66, b = 0.22}
-	frame.add {type = "line"}
+	frame.add{type = "line"}
 end
+
+local function update_waiting_text(frame, gui_value)
+	local font_color = gui_value.color1
+	local c = gui_value.c2
+	if global.game_lobby_active then
+		font_color = {r=0.7, g=0.7, b=0.7}
+		c = c .. " (waiting for players...  " ..
+			 math.ceil((global.game_lobby_timeout - game.tick)/60) .. ")"
+	end
+	frame[gui_value.n1].caption = c
+end
+
+local function update_player_count_string(t, force)
+	local c = #game.forces[force].connected_players .. " Player"
+	if #game.forces[force].connected_players ~= 1 then c = c .. "s" end
+	t.player_count_string.caption = c
+end
+
+local function update_player_list_table(frame, force, font)
+	local connected_players_table = frame.connected_players_table
+	local connected_players_table_size = #connected_players_table.children
+	local new_connected_players = game.forces[force].connected_players
+	local new_connected_players_size = #new_connected_players
+	if connected_players_table_size == new_connected_players_size then
+		for i=1, new_connected_players_size, 1 do
+			local p = new_connected_players[i]
+			local entry = connected_players_table.children[i]
+			entry.caption = p.name
+			entry.style.font_color = {r = p.color.r * 0.6 + 0.4, g = p.color.g * 0.6 + 0.4, b = p.color.b * 0.6 + 0.4, a = 1}
+			entry.style.font = font
+		end
+	elseif connected_players_table_size < new_connected_players_size then -- if more players than currently in table
+		for i=1, connected_players_table_size, 1 do
+			local p = new_connected_players[i]
+			local entry = connected_players_table.children[i]
+			entry.caption = p.name
+			entry.style.font_color = {r = p.color.r * 0.6 + 0.4, g = p.color.g * 0.6 + 0.4, b = p.color.b * 0.6 + 0.4, a = 1}
+			entry.style.font = font
+		end
+		for i=connected_players_table_size+1, new_connected_players_size, 1 do
+			local p = new_connected_players[i]
+			local entry = connected_players_table.add{ type = "label", caption = p.name }
+			entry.style.font_color = {r = p.color.r * 0.6 + 0.4, g = p.color.g * 0.6 + 0.4, b = p.color.b * 0.6 + 0.4, a = 1}
+			entry.style.font = font
+		end
+	elseif connected_players_table_size > new_connected_players_size then -- if less players than currently in table
+		for i=1, new_connected_players_size, 1 do
+			local p = new_connected_players[i]
+			local entry = connected_players_table.children[i]
+			entry.caption = p.name
+			entry.style.font_color = {r = p.color.r * 0.6 + 0.4, g = p.color.g * 0.6 + 0.4, b = p.color.b * 0.6 + 0.4, a = 1}
+			entry.style.font = font
+		end
+		for i=connected_players_table_size, new_connected_players_size+1, -1 do
+			connected_players_table.children[i].destroy()
+		end
+	end
+end
+
+local function update_evo_text_and_tooltip(table, gui_value, biter_force)
+	local tooltip = gui_value.t1 ..
+		"\nDamage: " .. (biter_force.get_ammo_damage_modifier("melee") + 1) * 100 .. "%" ..
+		"\nRevive: " .. global.reanim_chance[biter_force.index] .. "%"
+	table.evo_text.tooltip = tooltip
+	table.evo_value.tooltip = tooltip
+	table.evo_value.caption = (math.floor(1000 * global.bb_evolution[gui_value.biter_force]) * 0.1) .. "%"
+end
+
+local function update_threat_text(table, gui_value, biter_force)
+	table["threat_" .. gui_value.force].caption = tostring(math.floor(global.bb_threat[gui_value.force]))
+end
+
+local function create_statistics_table(frame, gui_value)
+	local biter_force = game.forces[gui_value.biter_force]
+	local t = frame.add{ type = "table", name = "stats_" .. gui_value.force, column_count = 5 }
+
+	local evo_text = t.add{name="evo_text", type = "label", caption = "Evo:", tooltip = ""}
+	local evo_value = t.add{ name="evo_value", type = "label", caption = "", tooltip = ""}
+	evo_value.style.minimal_width = 40
+	evo_value.style.font_color = gui_value.color2
+	evo_value.style.font = "default-bold"
+	update_evo_text_and_tooltip(t, gui_value, biter_force)
+
+	-- Threat
+	local threat_text = t.add{type = "label", caption = "Threat: "}
+	threat_text.style.minimal_width = 25
+	threat_text.tooltip = gui_value.t2
+
+	local threat_value = t.add{type = "label", name = "threat_" .. gui_value.force, caption = ""}
+	threat_value.style.font_color = gui_value.color2
+	threat_value.style.font = "default-bold"
+	threat_value.style.width = 50
+	threat_value.tooltip = gui_value.t2
+	update_threat_text(t, gui_value, biter_force)
+end
+
+
 
 local function create_first_join_gui(player)
 	if not global.game_lobby_timeout then global.game_lobby_timeout = 5999940 end
 	if global.game_lobby_timeout - game.tick < 0 then global.game_lobby_active = false end
-	local frame = player.gui.left.add { type = "frame", name = "bb_main_gui", direction = "vertical" }
-	local b = frame.add{ type = "label", caption = "Defend your Rocket Silo!" }
+	local bb_main_gui_frame = player.gui.left.add{ type = "frame", name = "bb_main_gui", direction = "vertical" }
+	local b = bb_main_gui_frame.add{type = "label", caption = "Defend your Rocket Silo!" }
 	b.style.font = "heading-1"
 	b.style.font_color = {r=0.98, g=0.66, b=0.22}
-	local b = frame.add  { type = "label", caption = "Feed the enemy team's biters to gain advantage!" }
+	local b = bb_main_gui_frame.add{ type = "label", caption = "Feed the enemy team's biters to gain advantage!" }
 	b.style.font = "heading-2"
 	b.style.font_color = {r=0.98, g=0.66, b=0.22}
-	clock(frame)
-	local d = frame.add{type = "sprite-button", name = "join_random_button", caption = "AUTO JOIN"}
+	add_clock_element(bb_main_gui_frame)
+	local d = bb_main_gui_frame.add{type = "sprite-button", name = "join_random_button", caption = "AUTO JOIN"}
 	d.style.font = "default-large-bold"
 	d.style.font_color = { r=1, g=0, b=1}
 	d.style.width = 350
-	frame.add{ type = "line"}
-	frame.style.bottom_padding = 2
+	bb_main_gui_frame.add{ type = "line"}
+	bb_main_gui_frame.style.bottom_padding = 2
 	
-	for _, gui_value in pairs(gui_values) do
-		local t = frame.add { type = "table", column_count = 3 }
+	for gui_key, gui_value in pairs(gui_values) do
+		local frame = bb_main_gui_frame.add{type="frame", name=gui_key, direction = "vertical", style="borderless_frame"}
+		local t = frame.add{ name="table", type = "table", column_count = 3 }
 		local c = gui_value.c1
 		if global.tm_custom_name[gui_value.force] then c = global.tm_custom_name[gui_value.force] end
-		local l = t.add  { type = "label", caption = c}
+		local l = t.add{ name="c1", type = "label", caption = c}
 		l.style.font = "heading-2"
 		l.style.font_color = gui_value.color1
 		l.style.single_line = false
 		l.style.maximal_width = 290
-		local l = t.add  { type = "label", caption = "  -  "}
-		local l = t.add  { type = "label", caption = #game.forces[gui_value.force].connected_players .. " Players "}
-		l.style.font_color = { r=0.22, g=0.88, b=0.22}
+		local l = t.add{ type = "label", caption = "  -  "}
+		local l = t.add{ name="player_count_string", type = "label", caption = ""}
+		l.style.font_color = {r=0.22, g=0.88, b=0.22}
+		update_player_count_string(t, gui_value.force)
 
-		local c = gui_value.c2
-		local font_color =  gui_value.color1
-		if global.game_lobby_active then
-			font_color = {r=0.7, g=0.7, b=0.7}
-			c = c .. " (waiting for players...  "
-			c = c .. math.ceil((global.game_lobby_timeout - game.tick)/60)
-			c = c .. ")"
+		local t = frame.add{ name="connected_players_table", type = "table", column_count = 4 }
+		if global.bb_view_players[player.name] == true then
+			frame.connected_players_table.visible = true
+			update_player_list_table(frame, gui_value.force, "heading-2")
+		else
+			frame.connected_players_table.visible = false
 		end
-		local t = frame.add  { type = "table", column_count = 4 }
-		for _, p in pairs(game.forces[gui_value.force].connected_players) do
-			local l = t.add({type = "label", caption = p.name})
-			l.style.font_color = {r = p.color.r * 0.6 + 0.4, g = p.color.g * 0.6 + 0.4, b = p.color.b * 0.6 + 0.4, a = 1}
-			l.style.font = "heading-2"
-		end
-		local b = frame.add  { type = "sprite-button", name = gui_value.n1, caption = c}
+
+		local b = frame.add{ type = "sprite-button", name = gui_value.n1, caption = ""}
 		b.style.font = "default-large-bold"
 		b.style.font_color = font_color
 		b.style.width = 350
+		update_waiting_text(frame, gui_value)
 		frame.add{ type = "line"}
 	end
-	
-	
+end
+
+local function update_first_join_gui(player)
+	local bb_main_gui_frame = player.gui.left.bb_main_gui
+	for gui_key, gui_value in pairs(gui_values) do
+		local frame = bb_main_gui_frame[gui_key]
+		local current_table = frame.table
+		if global.tm_custom_name[gui_value.force] then current_table.c1.caption = global.tm_custom_name[gui_value.force] end
+		update_player_count_string(current_table, gui_value.force)
+		if global.bb_view_players[player.name] == true then
+			frame.connected_players_table.visible = true
+			update_player_list_table(frame, gui_value.force, "heading-2")
+		else
+			frame.connected_players_table.visible = false
+		end
+
+		update_waiting_text(frame, gui_value)
+	end
+end
+
+local function create_or_update_first_join_gui(player)
+	if not player.gui.left.bb_main_gui then
+		create_first_join_gui(player)
+	else
+		update_first_join_gui(player)
+	end
 end
 
 local function add_tech_button(elem, gui_value)
@@ -119,6 +240,7 @@ local function add_tech_button(elem, gui_value)
 	tech_button.style.height = 25
 	tech_button.style.width = 25
 	tech_button.style.left_margin = 3
+	tech_button.visible = false
 end
 
 local function add_prod_button(elem, gui_value)
@@ -131,135 +253,147 @@ local function add_prod_button(elem, gui_value)
 	prod_button.style.width = 25
 end
 
-function Public.create_main_gui(player)
-	local is_spec = player.force.name == "spectator"
-	if player.gui.left["bb_main_gui"] then player.gui.left["bb_main_gui"].destroy() end
+function Public.update_or_create_main_gui(player)
 
 	if global.bb_game_won_by_team then return end
 	if not global.chosen_team[player.name] then
 		if not global.tournament_mode then
-			create_first_join_gui(player)
+			create_or_update_first_join_gui(player)
 			return
 		end
 	end
 
-	local frame = player.gui.left.add { type = "frame", name = "bb_main_gui", direction = "vertical" }
-	
-	clock(frame)
-	-- Science sending GUI
-	if not is_spec then
-		frame.add { type = "table", name = "biter_battle_table", column_count = 4 }
-		local t = frame.biter_battle_table
-		for food_name, tooltip in pairs(food_names) do
-			local s = t.add { type = "sprite-button", name = food_name, sprite = "item/" .. food_name }
-			s.tooltip = tooltip
-			s.style.minimal_height = 41
-			s.style.minimal_width = 41
-			s.style.top_padding = 0
-			s.style.left_padding = 0
-			s.style.right_padding = 0
-			s.style.bottom_padding = 0
-		end
-		frame.add{type="line"}
+	if not player.gui.left.bb_main_gui then
+		Public.create_main_gui(player)
+	else
+		Public.update_main_gui(player)
 	end
+end
+
+
+function Public.update_main_gui(player)
+	local is_spec = player.force.name == "spectator"
+	local bb_main_gui_frame = player.gui.left.bb_main_gui
+
+	if bb_main_gui_frame.visible == false then return end
+	bb_main_gui_frame.clock.caption = get_current_clock_time_string()
+	if is_spec then
+		bb_main_gui_frame.bb_science_frame.visible = false
+		bb_main_gui_frame.action_table.bb_spectate.caption = "Join Team"
+	else
+		bb_main_gui_frame.bb_science_frame.visible = true
+		bb_main_gui_frame.action_table.bb_spectate.caption = "Spectate"
+	end
+
+	for gui_key, gui_value in pairs(gui_values) do
+		local biter_force = game.forces[gui_value.biter_force]
+		-- Future improvements - we could only update most of these when value is changed
+		local frame = bb_main_gui_frame[gui_key]
+		local current_table = frame.table
+		if global.tm_custom_name[gui_value.force] then current_table.c1.caption = global.tm_custom_name[gui_value.force] end
+		update_player_count_string(current_table, gui_value.force)
+
+
+		if is_spec and not global.chosen_team[player.name] then
+			current_table[gui_value.tech_spy].visible = true
+		end
+
+		if global.bb_view_players[player.name] == true then
+			frame.connected_players_table.visible = true
+			update_player_list_table(frame, gui_value.force, "default")
+		else
+			frame.connected_players_table.visible = false
+		end
+
+		local stats_table = frame["stats_"..gui_value.force]
+		update_evo_text_and_tooltip(stats_table, gui_value, biter_force)
+		update_threat_text(stats_table, gui_value, biter_force)
+		bb_diff.update_difficulty_gui_for_player(player, math.floor(global.difficulty_vote_value*100))
+
+	end
+end
+
+function Public.create_main_gui(player)
+	local is_spec = player.force.name == "spectator"
+	if player.gui.left.bb_main_gui then player.gui.left.bb_main_gui.destroy() end
+	local bb_main_gui_frame = player.gui.left.add{ type = "frame", name = "bb_main_gui", direction = "vertical" }
 	
+	add_clock_element(bb_main_gui_frame)
+	-- Science sending GUI
+	local bb_table_frame = bb_main_gui_frame.add{name="bb_science_frame", type="frame", style="borderless_frame"}
+	local t = bb_table_frame.add{ type = "table", name = "biter_battle_table", column_count = 4 }
+	for food_name, tooltip in pairs(food_names) do
+		local s = t.add { type = "sprite-button", name = food_name, sprite = "item/" .. food_name }
+		s.tooltip = tooltip
+		s.style.minimal_height = 41
+		s.style.minimal_width = 41
+		s.style.top_padding = 0
+		s.style.left_padding = 0
+		s.style.right_padding = 0
+		s.style.bottom_padding = 0
+	end
+	if is_spec then
+		bb_table_frame.visible = false
+	end
+
 	local first_team = true
-	for _, gui_value in pairs(gui_values) do
+	for gui_key, gui_value in pairs(gui_values) do
+		local frame = bb_main_gui_frame.add{type="frame", name=gui_key, style="borderless_frame", direction="vertical"}
 		-- Line separator
 		if not first_team then
-			frame.add { type = "line", caption = "this line", direction = "horizontal" }
+			frame.add{ type = "line", direction = "horizontal" }
 		else
 			first_team = false
 		end
 
 		-- Team name & Player count
-		local t = frame.add { type = "table", column_count = 4 }
+		local t = frame.add{ name="table", type = "table", column_count = 4 }
 
 		-- Team name
 		local c = gui_value.c1
 		if global.tm_custom_name[gui_value.force] then c = global.tm_custom_name[gui_value.force] end
-		local l = t.add  { type = "label", caption = c}
+		local l = t.add{ name="c1", type = "label", caption = c}
 		l.style.font = "default-bold"
 		l.style.font_color = gui_value.color1
 		l.style.single_line = false
 		l.style.maximal_width = 102
 
 		-- Number of players
-		local l = t.add  { type = "label", caption = " - "}
-		local c = #game.forces[gui_value.force].connected_players .. " Player"
-		if #game.forces[gui_value.force].connected_players ~= 1 then c = c .. "s" end
-		local l = t.add  { type = "label", caption = c}
-		l.style.font = "default"
-		l.style.font_color = { r=0.22, g=0.88, b=0.22}
+		local l = t.add{type = "label", caption = " - "}
+		local player_count_string = t.add{ name="player_count_string", type = "label", caption = ""}
+		player_count_string.style.font = "default"
+		player_count_string.style.font_color = { r=0.22, g=0.88, b=0.22}
+		update_player_count_string(t, gui_value.force)
 		
 		-- Tech button
-		if is_spec and not global.chosen_team[player.name] then
-			add_tech_button(t, gui_value)
-			-- add_prod_button(t, gui_value)
-		end
+		add_tech_button(t, gui_value)
 
 		-- Player list
+		local t = frame.add{ name="connected_players_table", type = "table", column_count = 4 }
 		if global.bb_view_players[player.name] == true then
-			local t = frame.add  { type = "table", column_count = 4 }
-			for _, p in pairs(game.forces[gui_value.force].connected_players) do
-				local l = t.add  { type = "label", caption = p.name }
-				l.style.font_color = {r = p.color.r * 0.6 + 0.4, g = p.color.g * 0.6 + 0.4, b = p.color.b * 0.6 + 0.4, a = 1}
-			end
+			frame.connected_players_table.visible = true
+			update_player_list_table(frame, gui_value.force, "default")
+		else
+			frame.connected_players_table.visible = false
 		end
-
 		-- Statistics
-		local t = frame.add { type = "table", name = "stats_" .. gui_value.force, column_count = 5 }
-
-		-- Evolution
-		local l = t.add  { type = "label", caption = "Evo:"}
-		--l.style.minimal_width = 25
-		local biter_force = game.forces[gui_value.biter_force]
-		local tooltip = gui_value.t1 .. "\nDamage: " .. (biter_force.get_ammo_damage_modifier("melee") + 1) * 100 .. "%\nRevive: " .. global.reanim_chance[biter_force.index] .. "%"
-		
-		l.tooltip = tooltip		
-		
-		local evo = math.floor(1000 * global.bb_evolution[gui_value.biter_force]) * 0.1
-		local l = t.add  {type = "label", caption = evo .. "%"}
-		l.style.minimal_width = 40
-		l.style.font_color = gui_value.color2
-		l.style.font = "default-bold"
-		l.tooltip = tooltip
-
-		-- Threat
-		local l = t.add  {type = "label", caption = "Threat: "}
-		l.style.minimal_width = 25
-		l.tooltip = gui_value.t2
-		local l = t.add  {type = "label", name = "threat_" .. gui_value.force, caption = math.floor(global.bb_threat[gui_value.biter_force])}
-		l.style.font_color = gui_value.color2
-		l.style.font = "default-bold"
-		l.style.width = 50
-		l.tooltip = gui_value.t2
+		create_statistics_table(frame, gui_value)
 	end
 
-	-- Difficulty mutagen effectivness update
-	bb_diff.difficulty_gui()
+	bb_diff.update_difficulty_gui_for_player(player, math.floor(global.difficulty_vote_value*100))
 
 	-- Action frame
-	local t = frame.add  { type = "table", column_count = 2 }
-
+	local action_table = bb_main_gui_frame.add{ name="action_table", type = "table", column_count = 2 }
 	-- Spectate / Rejoin team
-	if is_spec then
-		local b = t.add  { type = "sprite-button", name = "bb_leave_spectate", caption = "Join Team" }
-	else
-		local b = t.add  { type = "sprite-button", name = "bb_spectate", caption = "Spectate" }
+	local b = action_table.add{ type = "sprite-button", name = "bb_spectate", caption = "Join Team" }
+	if not is_spec then
+		b.caption = "Spectate"
 	end
-
-	-- Playerlist button
-	if global.bb_view_players[player.name] == true then
-		local b = t.add  { type = "sprite-button", name = "bb_hide_players", caption = "Playerlist" }
-	else
-		local b = t.add  { type = "sprite-button", name = "bb_view_players", caption = "Playerlist" }
-	end
-
+	local b = action_table.add{ type = "sprite-button", name = "bb_players", caption = "Playerlist" }
 
 	local b_width = is_spec and 97 or 86
 	-- 111 when prod_spy button will be there
-	for _, b in pairs(t.children) do
+	for _, b in pairs(action_table.children) do
 		b.style.font = "default-bold"
 		b.style.font_color = { r=0.98, g=0.66, b=0.22}
 		b.style.top_padding = 1
@@ -273,9 +407,7 @@ end
 
 function Public.refresh()
 	for _, player in pairs(game.connected_players) do
-		if player.gui.left["bb_main_gui"] then
-			Public.create_main_gui(player)
-		end
+		Public.update_or_create_main_gui(player)
 	end
 	global.gui_refresh_delay = game.tick + 5
 end
@@ -357,17 +489,18 @@ function join_team(player, force_name, forced_join, auto_join)
 	end
 	local i = player.get_inventory(defines.inventory.character_main)
 	i.clear()
-	player.insert {name = 'pistol', count = 1}
-	player.insert {name = 'raw-fish', count = 3}
-	player.insert {name = 'firearm-magazine', count = 32}
-	player.insert {name = 'iron-gear-wheel', count = 8}
-	player.insert {name = 'iron-plate', count = 16}
-	player.insert {name = 'burner-mining-drill', count = 10}
-	player.insert {name = 'wood', count = 2}
+	player.insert{name = 'pistol', count = 1}
+	player.insert{name = 'raw-fish', count = 3}
+	player.insert{name = 'firearm-magazine', count = 32}
+	player.insert{name = 'iron-gear-wheel', count = 8}
+	player.insert{name = 'iron-plate', count = 16}
+	player.insert{name = 'burner-mining-drill', count = 10}
+	player.insert{name = 'wood', count = 2}
 	global.chosen_team[player.name] = force_name
 	global.spectator_rejoin_delay[player.name] = game.tick
 	player.spectator = false
 	clear_copy_history(player)
+	player.gui.left.bb_main_gui.destroy()
 	Public.refresh()
 end
 
@@ -386,7 +519,7 @@ function spectate(player, forced_join)
 	end
 	game.permissions.get_group("spectator").add_player(player)
 	global.spectator_rejoin_delay[player.name] = game.tick
-	Public.create_main_gui(player)
+	Public.update_or_create_main_gui(player)
 	player.spectator = true
 end
 
@@ -427,10 +560,11 @@ local function on_gui_click(event)
 	local player = game.players[event.player_index]
 	local name = event.element.name
 	if name == "bb_toggle_button" then
-		if player.gui.left["bb_main_gui"] then
-			player.gui.left["bb_main_gui"].destroy()
+		if player.gui.left["bb_main_gui"].visible then
+			player.gui.left["bb_main_gui"].visible = false
 		else
-			Public.create_main_gui(player)
+			player.gui.left["bb_main_gui"].visible = true
+			Public.update_main_gui(player)
 		end
 		return
 	end
@@ -473,24 +607,22 @@ local function on_gui_click(event)
 
 	if food_names[name] then feed_the_biters(player, name) return end
 
-	if name == "bb_leave_spectate" then join_team(player, global.chosen_team[player.name])	end
-
 	if name == "bb_spectate" then
-		if player.position.y ^ 2 + player.position.x ^ 2 < 12000 then
-			spectate(player)
+		if player.spectator then
+			join_team(player, global.chosen_team[player.name])
 		else
-			player.print("You are too far away from spawn to spectate.",{ r=0.98, g=0.66, b=0.22})
+			if player.position.y ^ 2 + player.position.x ^ 2 < 12000 then
+				spectate(player)
+			else
+				player.print("You are too far away from spawn to spectate.",{ r=0.98, g=0.66, b=0.22})
+			end
 		end
 		return
 	end
 
-	if name == "bb_hide_players" then
-		global.bb_view_players[player.name] = false
-		Public.create_main_gui(player)
-	end
-	if name == "bb_view_players" then
-		global.bb_view_players[player.name] = true
-		Public.create_main_gui(player)
+	if name == "bb_players" then
+		global.bb_view_players[player.name] = not global.bb_view_players[player.name]
+		Public.update_main_gui(player)
 	end
 end
 
@@ -508,16 +640,8 @@ local function on_player_joined_game(event)
 		global.game_lobby_timeout = 599940
 	end
 
-	--if not global.chosen_team[player.name] then
-	--	if global.tournament_mode then
-	--		player.force = game.forces.spectator
-	--	else
-	--		player.force = game.forces.player
-	--	end
-	--end
-
 	create_sprite_button(player)
-	Public.create_main_gui(player)
+	Public.update_or_create_main_gui(player)
 end
 
 

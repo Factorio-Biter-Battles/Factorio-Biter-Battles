@@ -7,15 +7,27 @@ require 'utils/gui_styles'
 
 local difficulties = Tables.difficulties
 
-local function difficulty_gui()
+local function create_difficulty_gui_for_player(player)
+	local diff_gui = player.gui.top.add{ type = "sprite-button", caption = difficulties[global.difficulty_vote_index].name, tooltip = "", name = "difficulty_gui" }
+	diff_gui.style.font = "heading-2"
+	diff_gui.style.font_color = difficulties[global.difficulty_vote_index].print_color
+	element_style({element = diff_gui, x = 114, y = 38, pad = -2})
+end
+
+local function update_difficulty_gui_for_player(player, value)
+	if not player.gui.top.difficulty_gui then create_difficulty_gui_for_player(player) end
+	local diff_gui = player.gui.top.difficulty_gui
+	local str = table.concat({"Global map difficulty is ",
+		difficulties[global.difficulty_vote_index].name,
+		". Mutagen has ", math.floor(global.difficulty_vote_value*100),
+		"% effectiveness."})
+	diff_gui.tooltip = str
+end
+
+local function update_difficulty_gui_for_all()
 	local value = math.floor(global.difficulty_vote_value*100)
 	for _, player in pairs(game.connected_players) do
-		if player.gui.top["difficulty_gui"] then player.gui.top["difficulty_gui"].destroy() end
-		local str = table.concat({"Global map difficulty is ", difficulties[global.difficulty_vote_index].name, ". Mutagen has ", value, "% effectiveness."})
-		local b = player.gui.top.add { type = "sprite-button", caption = difficulties[global.difficulty_vote_index].name, tooltip = str, name = "difficulty_gui" }
-		b.style.font = "heading-2"
-		b.style.font_color = difficulties[global.difficulty_vote_index].print_color
-		element_style({element = b, x = 114, y = 38, pad = -2})		
+		update_difficulty_gui_for_player(player, value)
 	end
 end
 
@@ -93,7 +105,7 @@ local function on_player_joined_game(event)
 		if player.gui.center["difficulty_poll"] then player.gui.center["difficulty_poll"].destroy() end
 	end
 	
-	difficulty_gui()
+	update_difficulty_gui_for_all()
 end
 
 local function on_player_left_game(event)
@@ -124,7 +136,7 @@ local function on_gui_click(event)
 			game.print(player.name .. " has voted for " .. difficulties[i].name .. " difficulty!", difficulties[i].print_color)
 			global.difficulty_player_votes[player.name] = i
 			set_difficulty()
-			difficulty_gui()				
+			update_difficulty_gui_for_all()
 		end
 		event.element.parent.destroy()
 		return
@@ -148,7 +160,7 @@ local function on_gui_click(event)
 	game.print(player.name .. " has voted for " .. difficulties[i].name .. " difficulty!", difficulties[i].print_color)
 	global.difficulty_player_votes[player.name] = i
 	set_difficulty()
-	difficulty_gui()	
+	update_difficulty_gui_for_all()
 	event.element.parent.destroy()
 end
 	
@@ -158,6 +170,7 @@ event.add(defines.events.on_player_joined_game, on_player_joined_game)
 
 local Public = {}
 Public.difficulties = difficulties
-Public.difficulty_gui = difficulty_gui
+Public.update_difficulty_gui_for_all = update_difficulty_gui_for_all
+Public.update_difficulty_gui_for_player = update_difficulty_gui_for_player
 
 return Public

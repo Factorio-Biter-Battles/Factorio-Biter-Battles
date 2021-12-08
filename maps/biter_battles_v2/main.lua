@@ -85,7 +85,9 @@ local tick_minute_functions = {
 local function on_tick()
 	local tick = game.tick
 
-	Ai.reanimate_units()
+	if tick % 30 == 0 then 
+		Ai.reanimate_units()
+	end
 
 	if tick % 60 == 0 then 
 		global.bb_threat["north_biters"] = global.bb_threat["north_biters"] + global.bb_threat_income["north_biters"]
@@ -94,7 +96,6 @@ local function on_tick()
 
 	if tick % 180 == 0 then
 		Gui.refresh()
-		diff_vote.difficulty_gui()
 	end
 
 	if tick % 300 == 0 then
@@ -134,6 +135,7 @@ end
 
 local function on_chunk_generated(event)
 	local surface = event.surface
+	if true then return end
 
 	-- Check if we're out of init.
 	if not surface or not surface.valid then return end
