@@ -234,8 +234,7 @@ local function clear_corpses(cmd)
         end
 		
         local p = player.print
-        if not trusted[player.name] and param > 100 then
-            if not player.admin then
+        if not trusted[player.name] and param > 100 and not player.admin then
 				player.print('[ERROR] Value is too big. Max radius is 100', Color.fail)
                 return
             end
