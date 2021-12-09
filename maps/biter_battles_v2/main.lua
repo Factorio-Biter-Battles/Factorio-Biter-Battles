@@ -11,7 +11,6 @@ local Team_manager = require "maps.biter_battles_v2.team_manager"
 local Terrain = require "maps.biter_battles_v2.terrain"
 local Session = require 'utils.datastore.session_data'
 local Color = require 'utils.color_presets'
-local diff_vote = require "maps.biter_battles_v2.difficulty_vote"
 
 require "maps.biter_battles_v2.sciencelogs_tab"
 require 'maps.biter_battles_v2.commands'
@@ -47,6 +46,7 @@ end
 
 local function on_built_entity(event)
 	Functions.no_turret_creep(event)
+	Terrain.deny_enemy_side_ghosts(event)
 	Functions.add_target_entity(event.created_entity)
 end
 
@@ -92,12 +92,11 @@ local function on_tick()
 		global.bb_threat["south_biters"] = global.bb_threat["south_biters"] + global.bb_threat_income["south_biters"]
 	end
 
-	if tick % 180 == 0 then
+	if (tick+5) % 180 == 0 then
 		Gui.refresh()
-		diff_vote.difficulty_gui()
 	end
 
-	if tick % 300 == 0 then
+	if (tick+11) % 300 == 0 then
 		Gui.spy_fish()
 
 		if global.bb_game_won_by_team then
@@ -221,12 +220,19 @@ end
 
 local function clear_corpses(cmd)
 	local player = game.player
+        local trusted = Session.get_trusted_table()
         local param = tonumber(cmd.parameter)
 
         if not player or not player.valid then
             return
         end
-		
+        local p = player.print
+        if not trusted[player.name] and param > 100 then
+            if not player.admin then
+            player.print('[ERROR] Value is too big. Max radius is 100', Color.fail)
+                return
+            end
+        end
         if param == nil then
             player.print('[ERROR] Must specify radius!', Color.fail)
             return
