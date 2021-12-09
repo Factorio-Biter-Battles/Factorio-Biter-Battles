@@ -227,16 +227,18 @@ local function clear_corpses(cmd)
         if not player or not player.valid then
             return
         end
+		
+        if param == nil then
+            player.print('[ERROR] Must specify radius!', Color.fail)
+            return
+        end
+		
         local p = player.print
         if not trusted[player.name] and param > 100 then
             if not player.admin then
             player.print('[ERROR] Value is too big. Max radius is 100', Color.fail)
                 return
             end
-        end
-        if param == nil then
-            player.print('[ERROR] Must specify radius!', Color.fail)
-            return
         end
         if param < 0 then
             player.print('[ERROR] Value is too low.', Color.fail)
