@@ -46,6 +46,7 @@ local function on_console_chat(event)
 end
 
 local function on_built_entity(event)
+	Functions.no_landfill_by_untrusted_user(event)
 	Functions.no_turret_creep(event)
 	Functions.add_target_entity(event.created_entity)
 end

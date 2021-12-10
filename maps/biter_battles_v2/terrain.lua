@@ -693,7 +693,7 @@ function Public.restrict_landfill(surface, user, tiles)
 		local trusted = session.get_trusted_table()
 		if is_horizontal_border_river(check_position) or distance_to_center < spawn_circle_size then
 			surface.set_tiles({{name = t.old_tile.name, position = t.position}}, true)
-	    elseif not trusted[user.name] then
+	    elseif user ~= nil and not trusted[user.name] then
 			surface.set_tiles({{name = t.old_tile.name, position = t.position}}, true)
 			user.print('You have not grown accustomed to this technology yet.', {r = 0.22, g = 0.99, b = 0.99})
 		end
@@ -701,7 +701,7 @@ function Public.restrict_landfill(surface, user, tiles)
 end
 
 function Public.deny_bot_landfill(event)
-    Public.restrict_landfill(event.robot.surface, event.robot.associated_player, event.tiles)
+    Public.restrict_landfill(event.robot.surface, nil, event.tiles)
 end
 
 --Construction Robot Restriction
