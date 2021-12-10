@@ -693,8 +693,13 @@ function Public.restrict_landfill(surface, user, tiles)
 		local trusted = session.get_trusted_table()
 		if is_horizontal_border_river(check_position) or distance_to_center < spawn_circle_size then
 			surface.set_tiles({{name = t.old_tile.name, position = t.position}}, true)
+			if user ~= nil then
+				user.print('You can not landfill the river', {r = 0.22, g = 0.99, b = 0.99})
+				user.insert({name = "landfill", count = 1})	
+			end
 	    elseif user ~= nil and not trusted[user.name] then
 			surface.set_tiles({{name = t.old_tile.name, position = t.position}}, true)
+			user.insert({name = "landfill", count = 1})	
 			user.print('You have not grown accustomed to this technology yet.', {r = 0.22, g = 0.99, b = 0.99})
 		end
 	end

@@ -124,11 +124,6 @@ local function on_player_built_tile(event)
 	Terrain.restrict_landfill(player.surface, player, event.tiles)
 end
 
-local function on_player_built_tile(event)
-	local player = game.players[event.player_index]
-	Terrain.restrict_landfill(player.surface, player, event.tiles)
-end
-
 local function on_player_mined_entity(event)
 	Terrain.minable_wrecks(event)
 end
