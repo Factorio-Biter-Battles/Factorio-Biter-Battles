@@ -706,7 +706,9 @@ function Public.restrict_landfill(surface, user, tiles)
 end
 
 function Public.deny_bot_landfill(event)
-    Public.restrict_landfill(event.robot.surface, nil, event.tiles)
+	if event.item ~= nil and event.item.name == "landfill" then
+		Public.restrict_landfill(event.robot.surface, nil, event.tiles)
+	end
 end
 
 --Construction Robot Restriction
