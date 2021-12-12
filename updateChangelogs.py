@@ -1,5 +1,6 @@
 import requests
 import os
+import sys
 
 f = open("changelogs.txt", "w")
 
@@ -9,13 +10,27 @@ gitNameToFactorioUsername =	{
   "Ragnarok77-factorio": "Ragnarok77",
 }
 
+print("Usage of script with usage of github token for more api requests : python scriptName username token")
+print("Usage of script without any token : python scriptName")
+print("If the script crashes with typerror, it should be because you spammed api of github too much, use token instead (if token doesn't work, you failed to give the python script correct git username and token")
+
+if len(sys.argv) == 1:
+    print ('no argument used, will use default connection to github api without any token')
+elif len(sys.argv) == 3:
+    print ('2 arguments provided, will use the token to connect to api')
+else:
+    print('Wrong number of arguments (should be 2 or 0) for script, will use default connection to github api without any token')
+        
 for i in range(1, 10):
+    payload = None
     linkAPI = "https://api.github.com/repos/Factorio-Biter-Battles/Factorio-Biter-Battles/pulls?state=closed&per_page=100&"+"page="+str(i)
-    #username = ''
-    #token = ''
-    payload = requests.get(linkAPI).json()
-    #payload = requests.get(linkAPI, auth=(username,token)).json()
-    
+    if len(sys.argv) == 3:
+        username = sys.argv[1]
+        token = sys.argv[2]
+        payload = requests.get(linkAPI,auth=(username,token)).json()
+    else:
+        payload = requests.get(linkAPI).json()
+        
     for data in payload:
         mergedAt = data["merged_at"]
         if mergedAt is not None:
