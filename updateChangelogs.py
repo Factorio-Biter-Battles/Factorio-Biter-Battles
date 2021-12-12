@@ -2,6 +2,13 @@ import requests
 import os
 
 f = open("changelogs.txt", "w")
+
+#Dictionary used if a dev wants to change the gitusername  to their factorio username
+#Left : Git username // Right : Factorio username
+gitNameToFactorioUsername =	{
+  "Ragnarok77-factorio": "Ragnarok77",
+}
+
 for i in range(1, 10):
     linkAPI = "https://api.github.com/repos/Factorio-Biter-Battles/Factorio-Biter-Battles/pulls?state=closed&per_page=100&"+"page="+str(i)
     #username = ''
@@ -36,7 +43,11 @@ for line in lines:
             if "[HIDDEN]" not in formatedLine[1]:
                 f.write("	table.insert(changelogs_change,\""+formatedLine[0].rstrip("\n").replace('"',"'")+"\")\n")
                 f.write("	table.insert(changelogs_change,\""+formatedLine[1].rstrip("\n").replace('"',"'")+"\")\n")
-                f.write("	table.insert(changelogs_change,\""+formatedLine[2].rstrip("\n").replace('"',"'").replace("Ragnarok77-factorio","Ragnarok77")+"\")\n")
+                
+                cleanedName = formatedLine[2].rstrip("\n").replace('"',"'")
+                if cleanedName in gitNameToFactorioUsername:
+                    cleanedName=gitNameToFactorioUsername[cleanedName]
+                f.write("	table.insert(changelogs_change,\""+cleanedName+"\")\n")
     if "table.insert(changelogs_change" not in line:
         f.write(line)
 f.close()
