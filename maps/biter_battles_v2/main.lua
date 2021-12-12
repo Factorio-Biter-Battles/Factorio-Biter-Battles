@@ -227,7 +227,6 @@ local function clear_corpses(cmd)
         if not player or not player.valid then
             return
         end
-		
         if param == nil then
             player.print('[ERROR] Must specify radius!', Color.fail)
             return
