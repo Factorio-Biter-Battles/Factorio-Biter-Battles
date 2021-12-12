@@ -2,7 +2,7 @@ import requests
 import os
 import sys
 
-f = open("changelogs.txt", "w")
+f = open("changelog.txt", "w")
 
 #Dictionary used if a dev wants to change the gitusername  to their factorio username
 #Left : Git username // Right : Factorio username
@@ -41,42 +41,42 @@ f.close()
 
 
 
-fChangelogsTab = open("maps/biter_battles_v2/changelogs_tab.lua", "r")
-lines = fChangelogsTab.readlines()
-fChangelogsTab.close()
+fchangelogTab = open("maps/biter_battles_v2/changelog_tab.lua", "r")
+lines = fchangelogTab.readlines()
+fchangelogTab.close()
 
-f = open("maps/biter_battles_v2/changelogs_tab_temp.lua", "w")
+f = open("maps/biter_battles_v2/changelog_tab_temp.lua", "w")
 foundFirstLine=0
 for line in lines:
-    if "table.insert(changelogs_change" in line and foundFirstLine == 0:
+    if "table.insert(changelog_change" in line and foundFirstLine == 0:
         foundFirstLine=1
-        fnewlogs = open("changelogs.txt", "r")
+        fnewlogs = open("changelog.txt", "r")
         linesnewLogs = fnewlogs.readlines()
         fnewlogs.close()
         for lineNew in linesnewLogs:
             formatedLine=lineNew.split(";")
             if "[HIDDEN]" not in formatedLine[1]:
-                f.write("	table.insert(changelogs_change,\""+formatedLine[0].rstrip("\n").replace('"',"'")+"\")\n")
-                f.write("	table.insert(changelogs_change,\""+formatedLine[1].rstrip("\n").replace('"',"'")+"\")\n")
+                f.write("	table.insert(changelog_change,\""+formatedLine[0].rstrip("\n").replace('"',"'")+"\")\n")
+                f.write("	table.insert(changelog_change,\""+formatedLine[1].rstrip("\n").replace('"',"'")+"\")\n")
                 
                 cleanedName = formatedLine[2].rstrip("\n").replace('"',"'")
                 if cleanedName in gitNameToFactorioUsername:
                     cleanedName=gitNameToFactorioUsername[cleanedName]
-                f.write("	table.insert(changelogs_change,\""+cleanedName+"\")\n")
-    if "table.insert(changelogs_change" not in line:
+                f.write("	table.insert(changelog_change,\""+cleanedName+"\")\n")
+    if "table.insert(changelog_change" not in line:
         f.write(line)
 f.close()
 
 
 
 
-fa = open("maps/biter_battles_v2/changelogs_tab_temp.lua", "r")
-fb = open("maps/biter_battles_v2/changelogs_tab.lua", "w")
+fa = open("maps/biter_battles_v2/changelog_tab_temp.lua", "r")
+fb = open("maps/biter_battles_v2/changelog_tab.lua", "w")
 lines = fa.readlines()
 for line in lines:
     fb.write(line)
 fa.close()
 fb.close()
 
-os.remove("maps/biter_battles_v2/changelogs_tab_temp.lua") 
-os.remove("changelogs.txt") 
+os.remove("maps/biter_battles_v2/changelog_tab_temp.lua") 
+os.remove("changelog.txt") 
