@@ -1,11 +1,11 @@
 -- changelogs tab -- 
 local Tabs = require 'comfy_panel.main'
 
-local function add_changelogs(player, element)
+local function add_changelog(player, element)
 	local changelogs_scrollpanel = element.add { type = "scroll-pane", name = "scroll_pane", direction = "vertical", horizontal_scroll_policy = "never", vertical_scroll_policy = "auto"}
 	changelogs_scrollpanel.style.maximal_height = 530
 	
-	local changelogs_change = {}
+	local changelog_change = {}
 	table.insert(changelogs_change,"2021-12-09")
 	table.insert(changelogs_change,"Do not allow ghosts on enemy side")
 	table.insert(changelogs_change,"developer-8")
@@ -505,7 +505,7 @@ local build_config_gui = (function (player, frame)
 		return
 	end
 	frame_changelogs.clear()
-	add_changelogs(player, frame_changelogs)
+	add_changelog(player, frame_changelogs)
 end)
 
-comfy_panel_tabs["Changelogs"] = {gui = build_config_gui, admin = false}
+comfy_panel_tabs["Changelog"] = {gui = build_config_gui, admin = false}
