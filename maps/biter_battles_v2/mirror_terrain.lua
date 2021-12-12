@@ -81,7 +81,7 @@ function Public.invert_entity(event)
 		destination.force = "south_biters"
 	end
 
-	if destination.name == "rocket-silo" then
+	if destination.name == "rocket-silo" and destination.position.y > -150 and destination.position.y < 150 and destination.position.x > -100 and destination.position.x < 100 then
 		global.rocket_silo[destination.force.name] = destination
 		Functions.add_target_entity(destination)
 	elseif destination.name == "gun-turret" then
