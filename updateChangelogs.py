@@ -33,9 +33,10 @@ for line in lines:
         fnewlogs.close()
         for lineNew in linesnewLogs:
             formatedLine=lineNew.split(";")
-            f.write("	table.insert(changelogs_change,\""+formatedLine[0].rstrip("\n").replace('"',"'")+"\")\n")
-            f.write("	table.insert(changelogs_change,\""+formatedLine[1].rstrip("\n").replace('"',"'")+"\")\n")
-            f.write("	table.insert(changelogs_change,\""+formatedLine[2].rstrip("\n").replace('"',"'")+"\")\n")
+            if "[HIDDEN]" not in formatedLine[1]:
+                f.write("	table.insert(changelogs_change,\""+formatedLine[0].rstrip("\n").replace('"',"'")+"\")\n")
+                f.write("	table.insert(changelogs_change,\""+formatedLine[1].rstrip("\n").replace('"',"'")+"\")\n")
+                f.write("	table.insert(changelogs_change,\""+formatedLine[2].rstrip("\n").replace('"',"'").replace("Ragnarok77-factorio","Ragnarok77")+"\")\n")
     if "table.insert(changelogs_change" not in line:
         f.write(line)
 f.close()
