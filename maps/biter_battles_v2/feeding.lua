@@ -179,6 +179,8 @@ function set_evo_and_threat(flask_amount, food, biter_force_name)
 			game.forces[biter_force_name].evolution_factor = global.bb_evolution[biter_force_name]
 		else
 			game.forces[biter_force_name].evolution_factor = 1
+			-- Adjust threat for revive
+			food_value = food_value * (1 / (1.001 - global.reanim_chance[biter_force_name]))
 		end
 		
 		--ADD INSTANT THREAT
