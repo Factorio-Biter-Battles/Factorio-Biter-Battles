@@ -730,7 +730,9 @@ end
 comfy_panel_tabs['Admin'] = {gui = create_admin_panel, admin = true}
 
 commands.add_command("kill", "Kill a player. Usage: /kill <name>", function(cmd)
+	if not cmd.player_index then return end
 	local killer = game.get_player(cmd.player_index)
+	if not killer then return end
 	if cmd.parameter then
 		local victim = game.get_player(cmd.parameter)
 		if killer.admin and victim and victim.valid then
@@ -746,7 +748,9 @@ commands.add_command("kill", "Kill a player. Usage: /kill <name>", function(cmd)
 end)
 
 commands.add_command("punish", "Kill and ban a player. Usage: /punish <name> <reason>", function(cmd)
+	if not cmd.player_index then return end
 	local punisher = game.get_player(cmd.player_index)
+	if not punisher then return end
 	local t = {}
 	local message
 	if punisher.admin and cmd.parameter then
