@@ -88,8 +88,8 @@ function Public.playground_surface()
 	map_gen_settings.cliff_settings = {cliff_elevation_interval = 0, cliff_elevation_0 = 0}
 	map_gen_settings.autoplace_controls = {
 		["coal"] = {frequency = 6.5, size = 0.34, richness = 0.24},
-		["stone"] = {frequency = 6, size = 0.35, richness = 0.25},
-		["copper-ore"] = {frequency = 7, size = 0.32, richness = 0.35},
+		["stone"] = {frequency = 6, size = 0.385, richness = 0.25},
+		["copper-ore"] = {frequency = 7, size = 0.352, richness = 0.35},
 		["iron-ore"] = {frequency = 8.5, size = 0.8, richness = 0.23},
 		["uranium-ore"] = {frequency = 2, size = 1, richness = 1},
 		["crude-oil"] = {frequency = 8, size = 1.4, richness = 0.45},
