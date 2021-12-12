@@ -45,6 +45,7 @@ local function on_console_chat(event)
 end
 
 local function on_built_entity(event)
+	Functions.no_landfill_by_untrusted_user(event)
 	Functions.no_turret_creep(event)
 	Terrain.deny_enemy_side_ghosts(event)
 	Functions.add_target_entity(event.created_entity)
@@ -119,12 +120,9 @@ end
 
 local function on_player_built_tile(event)
 	local player = game.players[event.player_index]
-	Terrain.restrict_landfill(player.surface, player, event.tiles)
-end
-
-local function on_player_built_tile(event)
-	local player = game.players[event.player_index]
-	Terrain.restrict_landfill(player.surface, player, event.tiles)
+	if event.item ~= nil and event.item.name == "landfill" then
+		Terrain.restrict_landfill(player.surface, player, event.tiles)
+	end
 end
 
 local function on_player_mined_entity(event)

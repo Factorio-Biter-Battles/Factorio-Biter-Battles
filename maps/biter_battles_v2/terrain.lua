@@ -4,6 +4,7 @@ local BiterRaffle = require "maps.biter_battles_v2.biter_raffle"
 local bb_config = require "maps.biter_battles_v2.config"
 local Functions = require "maps.biter_battles_v2.functions"
 local tables = require "maps.biter_battles_v2.tables"
+local session = require 'utils.datastore.session_data'
 
 local spawn_ore = tables.spawn_ore
 local table_insert = table.insert
@@ -684,19 +685,30 @@ function Public.minable_wrecks(event)
 end
 
 --Landfill Restriction
-function Public.restrict_landfill(surface, inventory, tiles)
+function Public.restrict_landfill(surface, user, tiles)
 	for _, t in pairs(tiles) do
 		local distance_to_center = math_sqrt(t.position.x ^ 2 + t.position.y ^ 2)
 		local check_position = t.position
 		if check_position.y > 0 then check_position = {x = check_position.x * -1, y = (check_position.y * -1) - 1} end
+		local trusted = session.get_trusted_table()
 		if is_horizontal_border_river(check_position) or distance_to_center < spawn_circle_size then
 			surface.set_tiles({{name = t.old_tile.name, position = t.position}}, true)
+			if user ~= nil then
+				user.print('You can not landfill the river', {r = 0.22, g = 0.99, b = 0.99})
+				user.insert({name = "landfill", count = 1})	
+			end
+	    elseif user ~= nil and not trusted[user.name] then
+			surface.set_tiles({{name = t.old_tile.name, position = t.position}}, true)
+			user.insert({name = "landfill", count = 1})	
+			user.print('You have not grown accustomed to this technology yet.', {r = 0.22, g = 0.99, b = 0.99})
 		end
 	end
 end
 
 function Public.deny_bot_landfill(event)
-    Public.restrict_landfill(event.robot.surface, event.robot.get_inventory(defines.inventory.robot_cargo), event.tiles)
+	if event.item ~= nil and event.item.name == "landfill" then
+		Public.restrict_landfill(event.robot.surface, nil, event.tiles)
+	end
 end
 
 --Construction Robot Restriction
