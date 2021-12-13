@@ -26,7 +26,7 @@ local gui_values = {
 		tech_spy = "spy-south-tech", prod_spy = "spy-south-prod"}
 	}
 
-local function clear_copy_history(player) 
+function Public.clear_copy_history(player)
 	if player and player.valid then
 		for i=1,21 do
 			-- Imports blueprint of single burner miner into the cursor stack
@@ -367,7 +367,7 @@ function join_team(player, force_name, forced_join, auto_join)
 	global.chosen_team[player.name] = force_name
 	global.spectator_rejoin_delay[player.name] = game.tick
 	player.spectator = false
-	clear_copy_history(player)
+	Public.clear_copy_history(player)
 	Public.refresh()
 end
 
