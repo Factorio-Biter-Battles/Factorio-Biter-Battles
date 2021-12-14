@@ -489,13 +489,13 @@ function join_team(player, force_name, forced_join, auto_join)
 	end
 	local i = player.get_inventory(defines.inventory.character_main)
 	i.clear()
-	player.insert{name = 'pistol', count = 1}
-	player.insert{name = 'raw-fish', count = 3}
-	player.insert{name = 'firearm-magazine', count = 32}
-	player.insert{name = 'iron-gear-wheel', count = 8}
-	player.insert{name = 'iron-plate', count = 16}
-	player.insert{name = 'burner-mining-drill', count = 10}
-	player.insert{name = 'wood', count = 2}
+	player.insert {name = 'pistol', count = 1}
+	player.insert {name = 'raw-fish', count = 3}
+	player.insert {name = 'firearm-magazine', count = 32}
+	player.insert {name = 'iron-gear-wheel', count = 8}
+	player.insert {name = 'iron-plate', count = 16}
+	player.insert {name = 'burner-mining-drill', count = 10}
+	player.insert {name = 'wood', count = 2}
 	global.chosen_team[player.name] = force_name
 	global.spectator_rejoin_delay[player.name] = game.tick
 	player.spectator = false
