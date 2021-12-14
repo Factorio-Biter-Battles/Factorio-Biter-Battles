@@ -17,6 +17,29 @@ require "maps.biter_battles_v2.sciencelogs_tab"
 require 'maps.biter_battles_v2.commands'
 require "modules.spawners_contain_biters"
 
+local function reorder_top_buttons(player)
+	local expected_ordering = {
+		["difficulty_gui"] = 7,
+	}
+	for button_name, target_idx in pairs(expected_ordering) do
+		local found_index = player.gui.top[button_name].get_index_in_parent()
+		local needed_change = target_idx - found_index
+		if found_index < target_idx then
+			while needed_change ~= 0 do
+				player.gui.top.swap_children(found_index, found_index+1)
+				needed_change = needed_change - 1
+				found_index = found_index + 1
+			end
+		elseif found_index > target_idx then
+			while needed_change ~= 0 do
+				player.gui.top.swap_children(found_index, found_index-1)
+				needed_change = needed_change + 1
+				found_index = found_index - 1
+			end
+		end
+	end
+end
+
 local function on_player_joined_game(event)
 	local surface = game.surfaces[global.bb_surface_name]
 	local player = game.players[event.player_index]
@@ -25,6 +48,7 @@ local function on_player_joined_game(event)
 	end
 	Functions.create_map_intro_button(player)
 	Team_manager.draw_top_toggle_button(player)
+	reorder_top_buttons(player)
 end
 
 local function on_gui_click(event)
