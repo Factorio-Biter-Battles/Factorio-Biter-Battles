@@ -175,18 +175,18 @@ local function create_first_join_gui(player)
 	
 	for gui_key, gui_value in pairs(gui_values) do
 		local frame = bb_main_gui_frame.add{type="frame", name=gui_key, direction = "vertical", style="borderless_frame"}
-		local t = frame.add{ name="basic_team_info_table", type = "table", column_count = 3 }
+		local team_name_and_playercount_table = frame.add{ name="team_name_and_playercount_table", type = "table", column_count = 3 }
 		local c = gui_value.c1
 		if global.tm_custom_name[gui_value.force] then c = global.tm_custom_name[gui_value.force] end
-		local l = t.add{ name="c1", type = "label", caption = c}
+		local l = team_name_and_playercount_table.add{ name="c1", type = "label", caption = c}
 		l.style.font = "heading-2"
 		l.style.font_color = gui_value.color1
 		l.style.single_line = false
 		l.style.maximal_width = 290
-		local l = t.add{ type = "label", caption = "  -  "}
-		local l = t.add{ name="player_count_string", type = "label", caption = ""}
+		local l = team_name_and_playercount_table.add{ type = "label", caption = "  -  "}
+		local l = team_name_and_playercount_table.add{ name="player_count_string", type = "label", caption = ""}
 		l.style.font_color = {r=0.22, g=0.88, b=0.22}
-		update_player_count_string(t, gui_value.force)
+		update_player_count_string(team_name_and_playercount_table, gui_value.force)
 
 		local t = frame.add{ name="connected_players_table", type = "table", column_count = 4 }
 		if global.bb_view_players[player.name] == true then
@@ -209,7 +209,7 @@ local function update_first_join_gui(player)
 	local bb_main_gui_frame = player.gui.left.bb_main_gui
 	for gui_key, gui_value in pairs(gui_values) do
 		local frame = bb_main_gui_frame[gui_key]
-		local current_table = frame.table
+		local current_table = frame.team_name_and_playercount_table
 		if global.tm_custom_name[gui_value.force] then current_table.c1.caption = global.tm_custom_name[gui_value.force] end
 		update_player_count_string(current_table, gui_value.force)
 		if global.bb_view_players[player.name] == true then
@@ -289,7 +289,7 @@ function Public.update_main_gui(player)
 		local biter_force = game.forces[gui_value.biter_force]
 		-- Future improvements - we could only update most of these when value is changed
 		local frame = bb_main_gui_frame[gui_key]
-		local current_table = frame.table
+		local current_table = frame.team_name_and_playercount_table
 		if global.tm_custom_name[gui_value.force] then current_table.c1.caption = global.tm_custom_name[gui_value.force] end
 		update_player_count_string(current_table, gui_value.force)
 
