@@ -197,8 +197,10 @@ function set_evo_and_threat(flask_amount, food, biter_force_name)
 	global.bb_evolution[biter_force_name] = evo
 	set_biter_endgame_modifiers(game.forces[biter_force_name])
 	-- Adjust threat for revive
-	if global.reanim_chance[biter_force_name] ~= nil then
-		threat = threat * (100 / (100.001 - global.reanim_chance[biter_force_name]))
+	local force_index = game.forces[biter_force_name].index
+	local reanim_chance = global.reanim_chance[force_index]
+	if reanim_chance ~= nil and reanim_chance > 0 then
+		threat = threat * (100 / (100.001 - reanim_chance))
 	end
 	global.bb_threat[biter_force_name] = math_round(global.bb_threat[biter_force_name] + threat, decimals)
 end
