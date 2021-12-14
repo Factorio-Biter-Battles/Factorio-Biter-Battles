@@ -380,6 +380,7 @@ function Public.create_main_gui(player)
 		create_statistics_table(frame, gui_value)
 	end
 
+	-- Difficulty mutagen effectivness update
 	bb_diff.update_difficulty_gui_for_player(player, math.floor(global.difficulty_vote_value*100))
 
 	-- Action frame

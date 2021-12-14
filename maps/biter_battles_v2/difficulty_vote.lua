@@ -19,7 +19,7 @@ local function update_difficulty_gui_for_player(player, value)
 	local diff_gui = player.gui.top.difficulty_gui
 	local str = table.concat({"Global map difficulty is ",
 		difficulties[global.difficulty_vote_index].name,
-		". Mutagen has ", math.floor(global.difficulty_vote_value*100),
+		". Mutagen has ", value,
 		"% effectiveness."})
 	diff_gui.tooltip = str
 end
