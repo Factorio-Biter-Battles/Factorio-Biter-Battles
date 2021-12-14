@@ -48,7 +48,7 @@ local function get_current_clock_time_string()
 	local total_minutes = math.floor(game.ticks_played / (60 * 60))
 	local total_hours = math.floor(total_minutes / 60)
 	local minutes = total_minutes - (total_hours * 60)
-	return "Game time: " .. string.format("%02d", total_hours) .. ":" .. string.format("%02d", minutes)
+	return string.format("Game time: %02d:%02d", total_hours, minutes)
 end
 
 local function add_clock_element(frame)
@@ -63,8 +63,7 @@ local function update_waiting_text(frame, gui_value)
 	local c = gui_value.c2
 	if global.game_lobby_active then
 		font_color = {r=0.7, g=0.7, b=0.7}
-		c = c .. " (waiting for players...  " ..
-			 math.ceil((global.game_lobby_timeout - game.tick)/60) .. ")"
+		c = string.format("%s (waiting for players... %d", c, math.ceil((global.game_lobby_timeout - game.tick)/60))
 	end
 	frame[gui_value.n1].caption = c
 end
@@ -117,9 +116,10 @@ local function update_player_list_table(frame, force, font)
 end
 
 local function update_evo_text_and_tooltip(table, gui_value, biter_force)
-	local tooltip = gui_value.t1 ..
-		"\nDamage: " .. (biter_force.get_ammo_damage_modifier("melee") + 1) * 100 .. "%" ..
-		"\nRevive: " .. global.reanim_chance[biter_force.index] .. "%"
+	local tooltip = string.format("%s\nDamage: %d%%\nRevive: %d%%",
+		gui_value.t1,
+		(biter_force.get_ammo_damage_modifier("melee") + 1) * 100,
+		global.reanim_chance[biter_force.index])
 	table.evo_text.tooltip = tooltip
 	table.evo_value.tooltip = tooltip
 	table.evo_value.caption = (math.floor(1000 * global.bb_evolution[gui_value.biter_force]) * 0.1) .. "%"
@@ -175,7 +175,7 @@ local function create_first_join_gui(player)
 	
 	for gui_key, gui_value in pairs(gui_values) do
 		local frame = bb_main_gui_frame.add{type="frame", name=gui_key, direction = "vertical", style="borderless_frame"}
-		local t = frame.add{ name="table", type = "table", column_count = 3 }
+		local t = frame.add{ name="basic_team_info_table", type = "table", column_count = 3 }
 		local c = gui_value.c1
 		if global.tm_custom_name[gui_value.force] then c = global.tm_custom_name[gui_value.force] end
 		local l = t.add{ name="c1", type = "label", caption = c}
@@ -347,7 +347,7 @@ function Public.create_main_gui(player)
 		end
 
 		-- Team name & Player count
-		local t = frame.add{ name="table", type = "table", column_count = 4 }
+		local t = frame.add{ name="team_name_and_playercount_table", type = "table", column_count = 4 }
 
 		-- Team name
 		local c = gui_value.c1
