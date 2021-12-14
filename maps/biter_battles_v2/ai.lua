@@ -490,7 +490,7 @@ end
 
 function Public.reanimate_units()
 	-- This FIFOs can be accessed by force indices.
-	for _, id in pairs(global.dead_units) do
+	for force, id in pairs(global.dead_units) do
 		-- Check for each side if there are any biters to reanimate.
 		if fifo.empty(id) then
 			goto reanim_units_cont
@@ -501,6 +501,7 @@ function Public.reanimate_units()
 		local cycles = fifo.length(id) / global.reanim_balancer
 		cycles = math.floor(cycles) + 1
 		_reanimate_units(id, cycles)
+
 		::reanim_units_cont::
 	end
 end
