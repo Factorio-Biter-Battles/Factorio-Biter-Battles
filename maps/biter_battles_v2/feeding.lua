@@ -201,7 +201,7 @@ function set_evo_and_threat(flask_amount, food, biter_force_name)
 	if not global.reanim_chance[biter_force_name] then
 		global.bb_threat[biter_force_name] = math_round(threat, decimals)
 	else
-		global.bb_threat[biter_force_name] = math_round(threat + (threat - pre_threat) * (1 / (1.001 - global.reanim_chance[biter_force_name])), decimals)
+		global.bb_threat[biter_force_name] = math_round(threat + (threat - pre_threat) * (100 / (100.001 - global.reanim_chance[biter_force_name])), decimals)
 	end
 end
 
