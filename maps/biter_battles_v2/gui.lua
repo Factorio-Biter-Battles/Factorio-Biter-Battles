@@ -38,7 +38,7 @@ local function clear_copy_history(player)
 end
 
 local function create_sprite_button(player)
-	if player.gui.top["bb_toggle_button"] then return end
+	if player.gui.top.bb_toggle_button then return end
 	local button = player.gui.top.add({type = "sprite-button", name = "bb_toggle_button", sprite = "entity/big-biter"})
 	button.style.font = "default-bold"
 	element_style({element = button, x= 38, y = 38, pad = -2})
