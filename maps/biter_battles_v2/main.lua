@@ -13,6 +13,7 @@ local Session = require 'utils.datastore.session_data'
 local Color = require 'utils.color_presets'
 
 require "maps.biter_battles_v2.sciencelogs_tab"
+require "maps.biter_battles_v2.changelog_tab"
 require 'maps.biter_battles_v2.commands'
 require "modules.spawners_contain_biters"
 
