@@ -156,25 +156,31 @@ end
 
 
 local function create_first_join_gui(player)
+	if player.gui.left.bb_main_gui then
+		player.gui.left.bb_main_gui.destroy()
+	end
+	if player.gui.left.bb_main_fj_gui then
+		player.gui.left.bb_main_fj_gui.destroy()
+	end
 	if not global.game_lobby_timeout then global.game_lobby_timeout = 5999940 end
 	if global.game_lobby_timeout - game.tick < 0 then global.game_lobby_active = false end
-	local bb_main_gui_frame = player.gui.left.add{ type = "frame", name = "bb_main_gui", direction = "vertical" }
-	local b = bb_main_gui_frame.add{type = "label", caption = "Defend your Rocket Silo!" }
+	local bb_main_fj_gui_frame = player.gui.left.add{ type = "frame", name = "bb_main_fj_gui", direction = "vertical" }
+	local b = bb_main_fj_gui_frame.add{type = "label", caption = "Defend your Rocket Silo!" }
 	b.style.font = "heading-1"
 	b.style.font_color = {r=0.98, g=0.66, b=0.22}
-	local b = bb_main_gui_frame.add{ type = "label", caption = "Feed the enemy team's biters to gain advantage!" }
+	local b = bb_main_fj_gui_frame.add{ type = "label", caption = "Feed the enemy team's biters to gain advantage!" }
 	b.style.font = "heading-2"
 	b.style.font_color = {r=0.98, g=0.66, b=0.22}
-	add_clock_element(bb_main_gui_frame)
-	local d = bb_main_gui_frame.add{type = "sprite-button", name = "join_random_button", caption = "AUTO JOIN"}
+	add_clock_element(bb_main_fj_gui_frame)
+	local d = bb_main_fj_gui_frame.add{type = "sprite-button", name = "join_random_button", caption = "AUTO JOIN"}
 	d.style.font = "default-large-bold"
 	d.style.font_color = { r=1, g=0, b=1}
 	d.style.width = 350
-	bb_main_gui_frame.add{ type = "line"}
-	bb_main_gui_frame.style.bottom_padding = 2
+	bb_main_fj_gui_frame.add{ type = "line"}
+	bb_main_fj_gui_frame.style.bottom_padding = 2
 	
 	for gui_key, gui_value in pairs(gui_values) do
-		local frame = bb_main_gui_frame.add{type="frame", name=gui_key, direction = "vertical", style="borderless_frame"}
+		local frame = bb_main_fj_gui_frame.add{type="frame", name=gui_key, direction = "vertical", style="borderless_frame"}
 		local team_name_and_playercount_table = frame.add{ name="team_name_and_playercount_table", type = "table", column_count = 3 }
 		local c = gui_value.c1
 		if global.tm_custom_name[gui_value.force] then c = global.tm_custom_name[gui_value.force] end
@@ -206,9 +212,9 @@ local function create_first_join_gui(player)
 end
 
 local function update_first_join_gui(player)
-	local bb_main_gui_frame = player.gui.left.bb_main_gui
+	local bb_main_fj_gui_frame = player.gui.left.bb_main_fj_gui
 	for gui_key, gui_value in pairs(gui_values) do
-		local frame = bb_main_gui_frame[gui_key]
+		local frame = bb_main_fj_gui_frame[gui_key]
 		local current_table = frame.team_name_and_playercount_table
 		if global.tm_custom_name[gui_value.force] then current_table.c1.caption = global.tm_custom_name[gui_value.force] end
 		update_player_count_string(current_table, gui_value.force)
@@ -224,7 +230,7 @@ local function update_first_join_gui(player)
 end
 
 local function create_or_update_first_join_gui(player)
-	if not player.gui.left.bb_main_gui then
+	if not player.gui.left.bb_main_fj_gui then
 		create_first_join_gui(player)
 	else
 		update_first_join_gui(player)
@@ -256,14 +262,12 @@ end
 function Public.update_or_create_main_gui(player)
 
 	if global.bb_game_won_by_team then return end
-	if not global.chosen_team[player.name] then
-		if not global.tournament_mode then
-			create_or_update_first_join_gui(player)
-			return
-		end
-	end
 
-	if not player.gui.left.bb_main_gui then
+	if not global.chosen_team[player.name] and not global.tournament_mode then
+		create_or_update_first_join_gui(player)
+	elseif not global.chosen_team[player.name] and global.tournament_mode and not player.gui.left.bb_main_gui then
+		Public.create_main_gui(player)
+	elseif not player.gui.left.bb_main_gui then
 		Public.create_main_gui(player)
 	else
 		Public.update_main_gui(player)
@@ -315,7 +319,12 @@ end
 
 function Public.create_main_gui(player)
 	local is_spec = player.force.name == "spectator"
-	if player.gui.left.bb_main_gui then player.gui.left.bb_main_gui.destroy() end
+	if player.gui.left.bb_main_fj_gui then
+		player.gui.left.bb_main_fj_gui.destroy()
+	end
+	if player.gui.left.bb_main_gui then
+		player.gui.left.bb_main_gui.destroy()
+	end
 	local bb_main_gui_frame = player.gui.left.add{ type = "frame", name = "bb_main_gui", direction = "vertical" }
 	
 	add_clock_element(bb_main_gui_frame)
@@ -561,8 +570,8 @@ local function on_gui_click(event)
 	local player = game.players[event.player_index]
 	local name = event.element.name
 	if name == "bb_toggle_button" then
-		if player.gui.left["bb_main_gui"].visible then
-			player.gui.left["bb_main_gui"].visible = false
+		if player.gui.left.bb_main_gui.visible then
+			player.gui.left.bb_main_gui.visible = false
 		else
 			player.gui.left["bb_main_gui"].visible = true
 			Public.update_main_gui(player)
