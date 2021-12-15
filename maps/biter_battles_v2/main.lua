@@ -13,6 +13,7 @@ local Session = require 'utils.datastore.session_data'
 local Color = require 'utils.color_presets'
 
 require "maps.biter_battles_v2.sciencelogs_tab"
+require "maps.biter_battles_v2.changelog_tab"
 require 'maps.biter_battles_v2.commands'
 require "modules.spawners_contain_biters"
 
@@ -45,6 +46,7 @@ local function on_player_joined_game(event)
 	if player.online_time == 0 or player.force.name == "player" then
 		Functions.init_player(player)
 	end
+	Gui.clear_copy_history(player)
 	Functions.create_map_intro_button(player)
 	Team_manager.draw_top_toggle_button(player)
 	reorder_top_buttons(player)
@@ -69,6 +71,7 @@ local function on_console_chat(event)
 end
 
 local function on_built_entity(event)
+	Functions.no_landfill_by_untrusted_user(event)
 	Functions.no_turret_creep(event)
 	Terrain.deny_enemy_side_ghosts(event)
 	Functions.add_target_entity(event.created_entity)
@@ -143,12 +146,9 @@ end
 
 local function on_player_built_tile(event)
 	local player = game.players[event.player_index]
-	Terrain.restrict_landfill(player.surface, player, event.tiles)
-end
-
-local function on_player_built_tile(event)
-	local player = game.players[event.player_index]
-	Terrain.restrict_landfill(player.surface, player, event.tiles)
+	if event.item ~= nil and event.item.name == "landfill" then
+		Terrain.restrict_landfill(player.surface, player, event.tiles)
+	end
 end
 
 local function on_player_mined_entity(event)
@@ -250,16 +250,13 @@ local function clear_corpses(cmd)
         if not player or not player.valid then
             return
         end
-        local p = player.print
-        if not trusted[player.name] then
-            if not player.admin then
-                p('[ERROR] Only admins and trusted weebs are allowed to run this command!', Color.fail)
-                return
-            end
-        end
         if param == nil then
             player.print('[ERROR] Must specify radius!', Color.fail)
             return
+        end
+        if not trusted[player.name] and not player.admin and param > 100 then
+				player.print('[ERROR] Value is too big. Max radius is 100', Color.fail)
+				return
         end
         if param < 0 then
             player.print('[ERROR] Value is too low.', Color.fail)

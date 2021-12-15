@@ -167,30 +167,42 @@ function set_evo_and_threat(flask_amount, food, biter_force_name)
 	local instant_threat_player_count_modifier = get_instant_threat_player_count_modifier()
 	
 	local food_value = food_values[food].value * global.difficulty_vote_value
+
+	local evo = global.bb_evolution[biter_force_name]
+	local biter_evo = game.forces[biter_force_name].evolution_factor
+	local threat = 0.0
 	
 	for _ = 1, flask_amount, 1 do
 		---SET EVOLUTION
-		local e2 = (game.forces[biter_force_name].evolution_factor * 100) + 1
+		local e2 = (biter_evo * 100) + 1
 		local diminishing_modifier = (1 / (10 ^ (e2 * 0.015))) / (e2 * 0.5)
 		local evo_gain = (food_value * diminishing_modifier)
-		global.bb_evolution[biter_force_name] = global.bb_evolution[biter_force_name] + evo_gain
-		global.bb_evolution[biter_force_name] = math_round(global.bb_evolution[biter_force_name], decimals)
-		if global.bb_evolution[biter_force_name] <= 1 then
-			game.forces[biter_force_name].evolution_factor = global.bb_evolution[biter_force_name]
+		evo = evo + evo_gain
+		if evo <= 1 then
+			biter_evo = evo
 		else
-			game.forces[biter_force_name].evolution_factor = 1
+			biter_evo = 1
 		end
 		
 		--ADD INSTANT THREAT
 		local diminishing_modifier = 1 / (0.2 + (e2 * 0.016))
-		global.bb_threat[biter_force_name] = global.bb_threat[biter_force_name] + (food_value * instant_threat_player_count_modifier * diminishing_modifier)
-		global.bb_threat[biter_force_name] = math_round(global.bb_threat[biter_force_name], decimals)		
+		threat = threat + (food_value * instant_threat_player_count_modifier * diminishing_modifier)
 	end
+	evo = math_round(evo, decimals)
 	
 	--SET THREAT INCOME
-	global.bb_threat_income[biter_force_name] = global.bb_evolution[biter_force_name] * 25
+	global.bb_threat_income[biter_force_name] = evo * 25
 	
+	game.forces[biter_force_name].evolution_factor = biter_evo
+	global.bb_evolution[biter_force_name] = evo
 	set_biter_endgame_modifiers(game.forces[biter_force_name])
+	-- Adjust threat for revive
+	local force_index = game.forces[biter_force_name].index
+	local reanim_chance = global.reanim_chance[force_index]
+	if reanim_chance ~= nil and reanim_chance > 0 then
+		threat = threat * (100 / (100.001 - reanim_chance))
+	end
+	global.bb_threat[biter_force_name] = math_round(global.bb_threat[biter_force_name] + threat, decimals)
 end
 
 local function feed_biters(player, food)	

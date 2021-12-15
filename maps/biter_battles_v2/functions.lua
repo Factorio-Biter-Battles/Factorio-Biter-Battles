@@ -1,6 +1,7 @@
 local Server = require 'utils.server'
 local Muted = require 'utils.muted'
 local Tables = require "maps.biter_battles_v2.tables"
+local Session = require 'utils.datastore.session_data'
 local string_sub = string.sub
 local math_random = math.random
 local math_round = math.round
@@ -296,6 +297,18 @@ function Public.no_turret_creep(event)
 	})
 	
 	entity.destroy()
+end
+
+function Public.no_landfill_by_untrusted_user(event)
+	local entity = event.created_entity
+	if not entity.valid or not event.player_index or entity.name ~= "tile-ghost" or entity.ghost_name ~= "landfill" then return end
+	local player = game.players[event.player_index]
+	local trusted = Session.get_trusted_table()
+	if not trusted[player.name] then
+		player.print('You have not grown accustomed to this technology yet.', {r = 0.22, g = 0.99, b = 0.99})
+		entity.destroy()
+		return
+	end
 end
 
 --Share chat with spectator force
