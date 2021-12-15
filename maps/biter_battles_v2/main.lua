@@ -22,6 +22,7 @@ local function on_player_joined_game(event)
 	if player.online_time == 0 or player.force.name == "player" then
 		Functions.init_player(player)
 	end
+	Gui.clear_copy_history(player)
 	Functions.create_map_intro_button(player)
 	Team_manager.draw_top_toggle_button(player)
 end
