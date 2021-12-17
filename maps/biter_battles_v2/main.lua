@@ -80,8 +80,8 @@ local function getTagOutpostName(pos)
 end
 
 local function autotagging_outposters()
-    for _, p in pairs(game.players) do
-		if p and p.valid and p.connected then
+    for _, p in pairs(game.connected_players) do
+		if p and p.valid then
 		
 			if (p.force.name == "north" or p.force.name == "south") then
 				if math.abs(p.position.x) < autoTagDistance then
@@ -115,6 +115,7 @@ local tick_minute_functions = {
 	[300 * 3 + 30 * 6] = Ai.perform_main_attack,
 	[300 * 3 + 30 * 7] = Ai.perform_main_attack,
 	[300 * 3 + 30 * 8] = Ai.post_main_attack,
+	[300 * 3 + 30 * 9] = autotagging_outposters,
 	[300 * 4] = Ai.send_near_biters_to_silo,
 }
 
@@ -145,10 +146,6 @@ local function on_tick()
 	if tick % 30 == 0 then	
 		local key = tick % 3600
 		if tick_minute_functions[key] then tick_minute_functions[key]() end
-	end
-	
-	if tick % 10800 == 0 then -- every 3 min : 60*180
-		autotagging_outposters()
 	end
 end
 
