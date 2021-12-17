@@ -11,6 +11,9 @@ local Team_manager = require "maps.biter_battles_v2.team_manager"
 local Terrain = require "maps.biter_battles_v2.terrain"
 local Session = require 'utils.datastore.session_data'
 local Color = require 'utils.color_presets'
+local autoTagWestOutpost = "[WestOutpost]"
+local autoTagEastOutpost = "[EastOutpost]"
+local autoTagDistance = 600
 
 require "maps.biter_battles_v2.sciencelogs_tab"
 require "maps.biter_battles_v2.changelog_tab"
@@ -71,6 +74,40 @@ local function on_entity_died(event)
 	Game_over.silo_death(event)
 end
 
+local function getTagOutpostName(pos)
+	if pos < 0 then
+		return autoTagWestOutpost
+	else
+		return autoTagEastOutpost
+	end
+end
+
+local function hasOutpostTag(tagName)
+	return (string.find(tagName, '%'..autoTagWestOutpost) or string.find(tagName, '%'..autoTagEastOutpost))
+end
+
+local function autotagging_outposters()
+    for _, p in pairs(game.connected_players) do
+		if (p.force.name == "north" or p.force.name == "south") then
+			if math.abs(p.position.x) < autoTagDistance then
+				if hasOutpostTag(p.tag) then
+					p.tag = p.tag:gsub("%"..autoTagWestOutpost, "")
+					p.tag = p.tag:gsub("%"..autoTagEastOutpost, "")
+				end
+			else
+				if not hasOutpostTag(p.tag) then
+					p.tag = p.tag .. getTagOutpostName(p.position.x)
+				end
+			end
+		end
+		
+		if p.force.name == "spectator" and hasOutpostTag(p.tag) then
+				p.tag = p.tag:gsub("%"..autoTagWestOutpost, "")
+				p.tag = p.tag:gsub("%"..autoTagEastOutpost, "")
+		end
+	end
+end
+
 local tick_minute_functions = {
 	[300 * 1] = Ai.raise_evo,
 	[300 * 3 + 30 * 0] = Ai.pre_main_attack,		-- setup for main_attack
@@ -82,6 +119,7 @@ local tick_minute_functions = {
 	[300 * 3 + 30 * 6] = Ai.perform_main_attack,
 	[300 * 3 + 30 * 7] = Ai.perform_main_attack,
 	[300 * 3 + 30 * 8] = Ai.post_main_attack,
+	[300 * 3 + 30 * 9] = autotagging_outposters,
 	[300 * 4] = Ai.send_near_biters_to_silo,
 }
 
