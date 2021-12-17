@@ -81,25 +81,22 @@ end
 
 local function autotagging_outposters()
     for _, p in pairs(game.connected_players) do
-		if p and p.valid then
-		
-			if (p.force.name == "north" or p.force.name == "south") then
-				if math.abs(p.position.x) < autoTagDistance then
-					if string.find(p.tag, '%'..autoTagWestOutpost) or string.find(p.tag, '%'..autoTagEastOutpost) then
-						p.tag = p.tag:gsub("%"..autoTagWestOutpost, "")
-						p.tag = p.tag:gsub("%"..autoTagEastOutpost, "")
-					end
-				else
-					if not string.find(p.tag, '%'..autoTagWestOutpost) and not string.find(p.tag, '%'..autoTagEastOutpost) then
-						p.tag = p.tag .. getTagOutpostName(p.position.x)
-					end
-				end
-			end
-			
-			if p.force.name == "spectator" and (string.find(p.tag, '%'..autoTagWestOutpost) or string.find(p.tag, '%'..autoTagEastOutpost)) then
+		if (p.force.name == "north" or p.force.name == "south") then
+			if math.abs(p.position.x) < autoTagDistance then
+				if string.find(p.tag, '%'..autoTagWestOutpost) or string.find(p.tag, '%'..autoTagEastOutpost) then
 					p.tag = p.tag:gsub("%"..autoTagWestOutpost, "")
 					p.tag = p.tag:gsub("%"..autoTagEastOutpost, "")
+				end
+			else
+				if not string.find(p.tag, '%'..autoTagWestOutpost) and not string.find(p.tag, '%'..autoTagEastOutpost) then
+					p.tag = p.tag .. getTagOutpostName(p.position.x)
+				end
 			end
+		end
+		
+		if p.force.name == "spectator" and (string.find(p.tag, '%'..autoTagWestOutpost) or string.find(p.tag, '%'..autoTagEastOutpost)) then
+				p.tag = p.tag:gsub("%"..autoTagWestOutpost, "")
+				p.tag = p.tag:gsub("%"..autoTagEastOutpost, "")
 		end
 	end
 end
