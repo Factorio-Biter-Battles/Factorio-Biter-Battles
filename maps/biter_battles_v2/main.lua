@@ -96,7 +96,7 @@ local function autotagging_outposters()
 				end
 			end
 			
-			if p.force.name == "spectator" and (string.find(p.tag, '%'..autoTagWestOutpost) or string.find(p.tag, '%'..autoTagEastOutpost)) then
+			if p.force.name == "spectator" and string.find(p.tag, 'Outpost') then
 					p.tag = p.tag:gsub("%"..autoTagWestOutpost, "")
 					p.tag = p.tag:gsub("%"..autoTagEastOutpost, "")
 			end
