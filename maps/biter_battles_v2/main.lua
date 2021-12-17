@@ -80,7 +80,7 @@ local function getTagOutpostName(pos)
 end
 
 local function hasOutpostTag(tagName)
-	if string.find(p.tag, '%'..autoTagWestOutpost) or string.find(p.tag, '%'..autoTagEastOutpost) then
+	if string.find(tagName, '%'..autoTagWestOutpost) or string.find(tagName, '%'..autoTagEastOutpost) then
 		return true
 	else
 		return false
