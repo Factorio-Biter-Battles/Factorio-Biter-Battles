@@ -956,6 +956,14 @@ Gui.on_click(
     function(event)
         local data = Gui.get_data(event.element)
 
+        if not data then
+            return
+        end
+
+        if data and #data.answers > 10 then
+            return
+        end
+
         insert(data.answers, {text = ''})
         redraw_create_poll_content(data)
     end
