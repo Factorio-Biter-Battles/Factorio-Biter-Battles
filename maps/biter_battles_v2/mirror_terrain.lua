@@ -151,4 +151,25 @@ function Public.invert_tiles(event)
 	surface.set_tiles(tiles)
 end
 
+
+function Public.invert_decoratives(event)
+	local surface = event.destination_surface
+	local src_decoratives = surface.find_decoratives_filtered {
+		area = event.source_area
+	}
+
+	local dest_decoratives = {}
+	for i, d in pairs(src_decoratives) do
+		local pos = d.position
+		pos.y = -pos.y - 1
+		dest_decoratives[i] = {
+			amount = d.amount,
+			position = pos,
+			name = d.decorative.name
+		}
+	end
+
+	surface.create_decoratives{check_collision = false, decoratives = dest_decoratives}
+end
+
 return Public

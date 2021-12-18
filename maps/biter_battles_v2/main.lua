@@ -189,6 +189,7 @@ local function on_area_cloned(event)
 
 	-- Event is fired only for south side.
 	Mirror_terrain.invert_tiles(event)
+	Mirror_terrain.invert_decoratives(event)
 
 	-- Check chunks around southen silo to remove water tiles under stone-path.
 	-- Silo can be removed by picking bricks from under it in a situation where
