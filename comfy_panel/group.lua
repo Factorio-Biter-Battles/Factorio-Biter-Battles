@@ -151,6 +151,13 @@ local function refresh_gui()
                 local new_group_name = frame.frame2.group_table.new_group_name.text
                 local new_group_description = frame.frame2.group_table.new_group_description.text
 
+                if new_group_name:len() > 30 then
+                    new_group_name = string.sub(new_group_name, 1, 30)
+                end
+
+                if new_group_description:len() > 60 then
+                    new_group_description = string.sub(new_group_description, 1, 60)
+                end
                 build_group_gui(p, frame)
 
                 local frame = Tabs.comfy_panel_get_active_frame(p)
@@ -170,6 +177,27 @@ local function on_player_joined_game(event)
 
     if not this.join_spam_protection[player.name] then
         this.join_spam_protection[player.name] = game.tick
+    end
+end
+
+local function on_gui_text_changed(event)
+    local element = event.element
+    if not element or not element.valid then
+        return
+    end
+
+    local name = element.name
+    local text = element.text
+
+    if name == 'new_group_name' then
+        if text:len() > 30 then
+            element.text = string.sub(element.text, 1, 30)
+        end
+    end
+    if name == 'new_group_description' then
+        if text:len() > 60 then
+            element.text = string.sub(element.text, 1, 60)
+        end
     end
 end
 
@@ -315,5 +343,6 @@ comfy_panel_tabs['Groups'] = {gui = build_group_gui, admin = false}
 local event = require 'utils.event'
 event.add(defines.events.on_gui_click, on_gui_click)
 event.add(defines.events.on_player_joined_game, on_player_joined_game)
+event.add(defines.events.on_gui_text_changed, on_gui_text_changed)
 
 return Public
