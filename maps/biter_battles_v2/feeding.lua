@@ -29,8 +29,8 @@ local function set_biter_endgame_modifiers(force)
 	threshold = math.floor((threshold - 1.0) * 100.0)
 	threshold = threshold / global.max_reanim_thresh * 100
 	threshold = math.floor(threshold)
-	if threshold > 90.0 then
-		threshold = 90.0
+	if threshold > 95.0 then
+		threshold = 95.0
 	end
 	global.reanim_chance[force.index] = threshold
 
