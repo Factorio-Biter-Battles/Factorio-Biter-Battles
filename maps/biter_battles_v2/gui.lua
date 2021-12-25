@@ -376,6 +376,15 @@ function spectate(player, forced_join)
 	if not forced_join then
 		if global.tournament_mode then player.print("The game is set to tournament mode. Teams can only be changed via team manager.", {r = 0.98, g = 0.66, b = 0.22}) return end
 	end
+	
+	if player.crafting_queue_size > 0 then
+		for i=player.crafting_queue_size, 1,-1 do
+			if player.crafting_queue and player.crafting_queue[i] then
+				player.cancel_crafting(player.crafting_queue[i])
+			end
+		end
+	end
+	
 	player.teleport(player.surface.find_non_colliding_position("character", {0,0}, 4, 1))
 	player.force = game.forces.spectator
 	player.character.destructible = false
