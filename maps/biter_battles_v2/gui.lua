@@ -1,4 +1,5 @@
 local Public = {}
+local player_data = {}
 local Server = require 'utils.server'
 
 local bb_config = require "maps.biter_battles_v2.config"
@@ -35,6 +36,10 @@ function Public.clear_copy_history(player)
 			player.clear_cursor() 
 		end
 	end
+end
+
+function Public.reset_tables_gui()
+	player_data = {}
 end
 
 local function create_sprite_button(player)
@@ -293,6 +298,17 @@ function Public.refresh_threat()
 	global.gui_refresh_delay = game.tick + 5
 end
 
+local get_player_data = function(player, remove)
+    if remove and player_data[player.name] then
+        player_data[player.name] = nil
+        return
+    end
+    if not player_data[player.name] then
+        player_data[player.name] = {}
+    end
+    return player_data[player.name]
+end
+
 function join_team(player, force_name, forced_join, auto_join)
 	if not player.character then return end
 	if not forced_join then
@@ -324,7 +340,14 @@ function join_team(player, force_name, forced_join, auto_join)
 				return
 			end
 		end
-		local p = surface.find_non_colliding_position("character", game.forces[force_name].get_spawn_position(surface), 16, 0.5)
+		local p = nil
+		local p_data = get_player_data(player)
+		if p_data and p_data.position then
+			p = surface.find_non_colliding_position("character", p_data.position,16, 0.5)
+            get_player_data(player, true)
+		else
+			p = surface.find_non_colliding_position("character", game.forces[force_name].get_spawn_position(surface), 16, 0.5)
+		end
 		if not p then
 			game.print("No spawn position found for " .. player.name .. "!", {255, 0, 0})
 			return 
@@ -371,10 +394,14 @@ function join_team(player, force_name, forced_join, auto_join)
 	Public.refresh()
 end
 
-function spectate(player, forced_join)
+function spectate(player, forced_join, positionStored)
 	if not player.character then return end
 	if not forced_join then
 		if global.tournament_mode then player.print("The game is set to tournament mode. Teams can only be changed via team manager.", {r = 0.98, g = 0.66, b = 0.22}) return end
+	end
+	if positionStored then
+        local p_data = get_player_data(player)
+        p_data.position = player.position
 	end
 	player.teleport(player.surface.find_non_colliding_position("character", {0,0}, 4, 1))
 	player.force = game.forces.spectator

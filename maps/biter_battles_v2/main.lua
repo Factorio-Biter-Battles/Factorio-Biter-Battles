@@ -108,6 +108,23 @@ local function autotagging_outposters()
 	end
 end
 
+local function afk_kick(player)
+	if player.afk_time > antiAfkTimeBeforeEnabled then
+		player.print('You were sent back to island as you were afk for too long, you can still join to come back at your position with all your equipment')
+		spectate(player,false,true)
+	end
+end
+
+local function anti_afk_system()
+	antiAfkTimeBeforeEnabled = 60 * 60 * 5 -- in tick : 5 minutes
+    for _, player in pairs(game.forces.north.connected_players) do
+		afk_kick(player)
+	end
+    for _, player in pairs(game.forces.south.connected_players) do
+		afk_kick(player)
+	end
+end
+
 local tick_minute_functions = {
 	[300 * 1] = Ai.raise_evo,
 	[300 * 3 + 30 * 0] = Ai.pre_main_attack,		-- setup for main_attack
@@ -121,6 +138,7 @@ local tick_minute_functions = {
 	[300 * 3 + 30 * 8] = Ai.post_main_attack,
 	[300 * 3 + 30 * 9] = autotagging_outposters,
 	[300 * 4] = Ai.send_near_biters_to_silo,
+	[300 * 4 + 30 * 1] = anti_afk_system,
 }
 
 local function on_tick()
