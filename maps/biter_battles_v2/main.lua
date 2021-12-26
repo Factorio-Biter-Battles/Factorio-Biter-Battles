@@ -11,8 +11,8 @@ local Team_manager = require "maps.biter_battles_v2.team_manager"
 local Terrain = require "maps.biter_battles_v2.terrain"
 local Session = require 'utils.datastore.session_data'
 local Color = require 'utils.color_presets'
-local autoTagWestOutpost = "[WestOutpost]"
-local autoTagEastOutpost = "[EastOutpost]"
+local autoTagWestOutpost = "[West]"
+local autoTagEastOutpost = "[East]"
 local autoTagDistance = 600
 
 require "maps.biter_battles_v2.sciencelogs_tab"
