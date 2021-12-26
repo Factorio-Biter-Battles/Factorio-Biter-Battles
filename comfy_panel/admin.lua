@@ -159,14 +159,16 @@ end
 local function turn_off_global_speakers(player)
     local counter = 0
     for _, surface in pairs(game.surfaces) do
-        local speakers = surface.find_entities_filtered({name = 'programmable-speaker'})
-        for i, speaker in pairs(speakers) do
-            if speaker.parameters.playback_globally == true then
-                speaker.surface.create_entity({name = 'massive-explosion', position = speaker.position})
-                speaker.die('player')
-                counter = counter + 1
-            end
-        end
+		if surface.name ~= "gulag" then
+			local speakers = surface.find_entities_filtered({name = 'programmable-speaker'})
+			for i, speaker in pairs(speakers) do
+				if speaker.parameters.playback_globally == true then
+					speaker.surface.create_entity({name = 'massive-explosion', position = speaker.position})
+					speaker.die('player')
+					counter = counter + 1
+				end
+			end
+		end
     end
     if counter == 0 then
         return
