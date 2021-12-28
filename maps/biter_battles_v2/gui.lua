@@ -378,8 +378,10 @@ function spectate(player, forced_join)
 	end
 	
 	if player.crafting_queue_size > 0 then
-		for _, cq in pairs(player.crafting_queue) do
-			player.cancel_crafting(cq)
+		for i=player.crafting_queue_size, 1,-1 do
+			if player.crafting_queue and player.crafting_queue[i] then
+				player.cancel_crafting(player.crafting_queue[i])
+			end
 		end
 	end
 	
