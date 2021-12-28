@@ -21,6 +21,9 @@ function Public.initial_setup()
 	game.map_settings.path_finder.max_clients_to_accept_any_new_request = 16 -- 10
 	game.map_settings.path_finder.max_clients_to_accept_short_new_request = 150 -- 100
 	game.map_settings.path_finder.negative_path_cache_delay_interval = 80 -- 20
+	game.map_settings.path_finder.cache_max_connect_to_cache_steps_multiplier = 200 -- 100
+	game.map_settings.path_finder.cache_accept_path_start_distance_ratio = 0.3 -- 0.2
+	game.map_settings.path_finder.cache_accept_path_end_distance_ratio = 0.3 -- 0.15
 
 
 	game.create_force("north")
