@@ -378,7 +378,7 @@ function spectate(player, forced_join)
 	end
 	
 	while player.crafting_queue_size > 0 do
-		player.cancel_crafting(player.crafting_queue[0])
+		player.cancel_crafting(player.crafting_queue[1])
 	end
 	
 	player.teleport(player.surface.find_non_colliding_position("character", {0,0}, 4, 1))
