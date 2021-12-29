@@ -399,6 +399,11 @@ function spectate(player, forced_join, positionStored)
 	if not forced_join then
 		if global.tournament_mode then player.print("The game is set to tournament mode. Teams can only be changed via team manager.", {r = 0.98, g = 0.66, b = 0.22}) return end
 	end
+	
+	while player.crafting_queue_size > 0 do
+		player.cancel_crafting(player.crafting_queue[1])
+	end
+	
 	if positionStored then
         local p_data = get_player_data(player)
         p_data.position = player.position
