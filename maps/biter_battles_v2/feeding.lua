@@ -238,4 +238,8 @@ local function feed_biters(player, food)
 	end
 end
 
+feed_cmd = function()
+    set_evo_and_threat(100000, "automation-science-pack", "north_biters")
+end
+
 return feed_biters
