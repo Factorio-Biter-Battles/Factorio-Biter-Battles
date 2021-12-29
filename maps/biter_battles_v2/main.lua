@@ -14,7 +14,8 @@ local Color = require 'utils.color_presets'
 local autoTagWestOutpost = "[WestOutpost]"
 local autoTagEastOutpost = "[EastOutpost]"
 local autoTagDistance = 600
-
+local antiAfkTimeBeforeEnabled = 60 * 60 * 5 -- in tick : 5 minutes
+local antiAfkTimeBeforeWarning = 60 * 60 * 3 + 60*40 -- in tick : 3 minutes 40s
 require "maps.biter_battles_v2.sciencelogs_tab"
 require "maps.biter_battles_v2.changelog_tab"
 require 'maps.biter_battles_v2.commands'
@@ -109,14 +110,16 @@ local function autotagging_outposters()
 end
 
 local function afk_kick(player)
+	if player.afk_time > antiAfkTimeBeforeWarning and player.afk_time < antiAfkTimeBeforeEnabled then
+		player.print('Please move within the next move or you will be sent back to spectator island ! But even if you keep staying afk and sent back to spectator island, you will be able to join back to your position with your equipment')
+	end
 	if player.afk_time > antiAfkTimeBeforeEnabled then
-		player.print('You were sent back to island as you were afk for too long, you can still join to come back at your position with all your equipment')
+		player.print('You were sent back to spectator island as you were afk for too long, you can still join to come back at your position with all your equipment')
 		spectate(player,false,true)
 	end
 end
 
 local function anti_afk_system()
-	antiAfkTimeBeforeEnabled = 60 * 60 * 5 -- in tick : 5 minutes
     for _, player in pairs(game.forces.north.connected_players) do
 		afk_kick(player)
 	end

@@ -344,7 +344,7 @@ function join_team(player, force_name, forced_join, auto_join)
 		local p_data = get_player_data(player)
 		if p_data and p_data.position then
 			p = surface.find_non_colliding_position("character", p_data.position,16, 0.5)
-            get_player_data(player, true)
+			get_player_data(player, true)
 		else
 			p = surface.find_non_colliding_position("character", game.forces[force_name].get_spawn_position(surface), 16, 0.5)
 		end
@@ -394,7 +394,7 @@ function join_team(player, force_name, forced_join, auto_join)
 	Public.refresh()
 end
 
-function spectate(player, forced_join, positionStored)
+function spectate(player, forced_join, stored_position)
 	if not player.character then return end
 	if not forced_join then
 		if global.tournament_mode then player.print("The game is set to tournament mode. Teams can only be changed via team manager.", {r = 0.98, g = 0.66, b = 0.22}) return end
@@ -404,7 +404,7 @@ function spectate(player, forced_join, positionStored)
 		player.cancel_crafting(player.crafting_queue[1])
 	end
 	
-	if positionStored then
+	if stored_position then
         local p_data = get_player_data(player)
         p_data.position = player.position
 	end

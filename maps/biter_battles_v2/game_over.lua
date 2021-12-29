@@ -323,7 +323,7 @@ function Public.server_restart()
         Init.playground_surface()
         Init.forces()
         Init.draw_structures()
-		Gui.reset_tables_gui()
+        Gui.reset_tables_gui()
             Init.load_spawn()
 
             for _, player in pairs(game.players) do
