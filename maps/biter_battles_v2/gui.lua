@@ -1,5 +1,5 @@
 local Public = {}
-local player_data = {}
+global.player_data_afk = {}
 local Server = require 'utils.server'
 
 local bb_config = require "maps.biter_battles_v2.config"
@@ -39,7 +39,7 @@ function Public.clear_copy_history(player)
 end
 
 function Public.reset_tables_gui()
-	player_data = {}
+	global.player_data_afk = {}
 end
 
 local function create_sprite_button(player)
@@ -299,14 +299,14 @@ function Public.refresh_threat()
 end
 
 local get_player_data = function(player, remove)
-    if remove and player_data[player.name] then
-        player_data[player.name] = nil
+    if remove and global.player_data_afk[player.name] then
+        global.player_data_afk[player.name] = nil
         return
     end
-    if not player_data[player.name] then
-        player_data[player.name] = {}
+    if not global.player_data_afk[player.name] then
+        global.player_data_afk[player.name] = {}
     end
-    return player_data[player.name]
+    return global.player_data_afk[player.name]
 end
 
 function join_team(player, force_name, forced_join, auto_join)

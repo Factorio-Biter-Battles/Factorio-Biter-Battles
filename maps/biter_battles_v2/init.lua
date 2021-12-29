@@ -187,6 +187,7 @@ function Public.tables()
 	global.unit_spawners.south_biters = {}
 	global.active_special_games = {}
 	global.special_games_variables = {}
+	global.player_data_afk = {}
 	global.biter_spawn_unseen = {
 		["north"] = {
 			["medium-spitter"] = true, ["medium-biter"] = true, ["big-spitter"] = true, ["big-biter"] = true, ["behemoth-spitter"] = true, ["behemoth-biter"] = true
