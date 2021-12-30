@@ -17,11 +17,13 @@ end
 local function update_difficulty_gui_for_player(player, value)
 	if not player.gui.top.difficulty_gui then create_difficulty_gui_for_player(player) end
 	local diff_gui = player.gui.top.difficulty_gui
+	local diff_name = difficulties[global.difficulty_vote_index].name
 	local str = table.concat({"Global map difficulty is ",
-		difficulties[global.difficulty_vote_index].name,
+		diff_name,
 		". Mutagen has ", value,
 		"% effectiveness."})
 	diff_gui.tooltip = str
+	diff_gui.caption = diff_name
 end
 
 local function update_difficulty_gui_for_all()
