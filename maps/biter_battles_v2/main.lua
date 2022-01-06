@@ -200,10 +200,6 @@ local function on_chunk_generated(event)
 	-- sure everything is cloned properly. Normally we would use mutex
 	-- but this is not reliable in this environment.
 	Mirror_terrain.clone(event)
-
-	if event.position.y == 0 and event.position.x == 1 then
-		Terrain.add_holiday_decorations(surface)
-	end
 end
 
 local function on_entity_cloned(event)

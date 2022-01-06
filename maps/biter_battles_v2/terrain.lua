@@ -439,9 +439,9 @@ function Public.draw_spawn_circle(surface)
 				table_insert(tiles, {name = "deepwater", position = pos})
 
 				if distance_to_center < 9.5 then 
-					table_insert(tiles, {name = "blue-refined-concrete", position = pos})
+					table_insert(tiles, {name = "refined-concrete", position = pos})
 					if distance_to_center < 7 then 
-						table_insert(tiles, {name = "lab-white", position = pos})
+						table_insert(tiles, {name = "sand-1", position = pos})
 					end
 			--	else
 					--
@@ -737,90 +737,6 @@ function Public.deny_enemy_side_ghosts(event)
 	if not robot_build_restriction[force] then return end
 	if not robot_build_restriction[force](event.created_entity.position.y) then return end
 	event.created_entity.destroy()
-end
-
-
-function Public.add_gifts(surface)
-	-- exclude dangerous goods
-	local blacklist = LootRaffle.get_tech_blacklist(0.95)
-	for k, _ in pairs(loot_blacklist) do blacklist[k] = true end
-
-	for i = 1, math_random(8, 12) do
-		local loot_worth = math_random(1, 35000)
-		local item_stacks = LootRaffle.roll(loot_worth, 3, blacklist)
-		for k, stack in pairs(item_stacks) do
-			surface.spill_item_stack(
-				{
-					x = math_random(-10, 10) * 0.1,
-					y = math_random(-5, 15) * 0.1
-				},
-				{name = stack.name, count = 1}, false, nil, true)
-		end
-	end
-end
-
-function Public.add_holiday_decorations(surface)
-	for _ = 1, math_random(0, 4) do
-		local stump = surface.create_entity({
-			name = "tree-05-stump",
-			position = {x = math_random(-40, 40) * 0.1, y = math_random(-40, 40) * 0.1}
-		})
-		stump.minable = false
-		stump.destructible = false
-	end
-
-	surface.create_entity({
-		name = "medium-scorchmark-tintable",
-		position = {x = 0, y = 0}
-	})
-
-	local tree = surface.create_entity({
-		name = "tree-01",
-		position = {x = 0, y = 0.05}
-	})
-	tree.minable = false
-	tree.destructible = false
-
-	Public.add_gifts(surface)
-
-	local signals = {
-		{name = "rail-signal", position = {-0.5, -5.5}, direction = defines.direction.west},
-		{name = "rail-signal", position = {0.5, -5.5}, direction = defines.direction.west},
-		{name = "rail-signal", position = {2.5, -4.5}, direction = defines.direction.northwest},
-		{name = "rail-signal", position = {4.5, -2.5}, direction = defines.direction.northwest},
-		{name = "rail-signal", position = {5.5, -0.5}, direction = defines.direction.north},
-		{name = "rail-signal", position = {5.5, 0.5}, direction = defines.direction.north},
-		{name = "rail-signal", position = {4.5, 2.5}, direction = defines.direction.northeast},
-		{name = "rail-signal", position = {2.5, 4.5}, direction = defines.direction.northeast},
-		{name = "rail-signal", position = {0.5, 5.5}, direction = defines.direction.east},
-		{name = "rail-signal", position = {-0.5, 5.5}, direction = defines.direction.east},
-		{name = "rail-signal", position = {-2.5, 4.5}, direction = defines.direction.southeast},
-		{name = "rail-signal", position = {-4.5, 2.5}, direction = defines.direction.southeast},
-		{name = "rail-signal", position = {-5.5, 0.5}, direction = defines.direction.south},
-		{name = "rail-signal", position = {-5.5, -0.5}, direction = defines.direction.south},
-		{name = "rail-signal", position = {-4.5, -2.5}, direction = defines.direction.southwest},
-		{name = "rail-signal", position = {-2.5, -4.5}, direction = defines.direction.southwest},
-	}
-	for _, v in pairs(signals) do
-		local signal = surface.create_entity(v)
-		signal.minable = false
-		signal.destructible = false
-	end
-
-	for _ = 1, math_random(0, 6) do
-		surface.create_decoratives{check_collision = false, decoratives = {{
-			name = "green-asterisk-mini",
-			position = {x = math_random(-40, 40) * 0.1, y = math_random(-40, 40) * 0.1},
-			amount = 1
-		}}}
-	end
-	for _ = 1, math_random(0, 6) do
-		surface.create_decoratives{check_collision = false, decoratives = {{
-			name = "rock-tiny",
-			position = {x = math_random(-40, 40) * 0.1, y = math_random(-40, 40) * 0.1},
-			amount = 1
-		}}}
-	end
 end
 
 return Public
