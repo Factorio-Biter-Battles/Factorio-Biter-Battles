@@ -343,7 +343,7 @@ local vote_to_free = function(player, griefer)
     return
 end
 
-local jail = function(player, griefer, msg)
+function Public.jail(player, griefer, msg)
     player = player or 'script'
     if jailed[griefer] then
         return false
@@ -381,7 +381,7 @@ local jail = function(player, griefer, msg)
     return true
 end
 
-local free = function(player, griefer)
+function Public.free(player, griefer)
     player = player or 'script'
     if not jailed[griefer] then
         return false

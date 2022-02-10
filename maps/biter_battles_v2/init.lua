@@ -56,7 +56,25 @@ function Public.initial_setup()
 		defines.input_action.write_to_console,
 	}
 	for _, d in pairs(defs) do p.set_allows_action(d, true) end
+	
 
+	p = game.permissions.create_group("frozen")
+	for action_name, _ in pairs(defines.input_action) do
+		p.set_allows_action(defines.input_action[action_name], false)
+	end
+	local defs = {
+		defines.input_action.write_to_console,
+		defines.input_action.gui_click,
+		defines.input_action.gui_selection_state_changed,
+		defines.input_action.gui_checked_state_changed	,
+		defines.input_action.gui_elem_changed,
+		defines.input_action.gui_text_changed,
+		defines.input_action.gui_value_changed,
+		defines.input_action.edit_permission_group,
+	}	
+	for _, d in pairs(defs) do p.set_allows_action(d, true) end
+
+	
 	global.gui_refresh_delay = 0
 	global.game_lobby_active = true
 	global.bb_debug = false
