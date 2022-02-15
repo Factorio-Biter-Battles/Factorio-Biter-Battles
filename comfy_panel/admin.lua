@@ -12,7 +12,8 @@ local show_inventory = require 'modules.show_inventory'
 
 local this = {
     sorting_method = {},
-    player_search_text = {}
+    player_search_text = {},
+    history_search_text = {}
 }
 global.custom_permissions = {
     disable_sci = {},
@@ -212,7 +213,7 @@ local function disable_sci(player, source_player)
     end
     if global.custom_permissions.disable_sci[player.name] then return end
     global.custom_permissions.disable_sci[player.name] = true
-    game.print(source_player.name .. " took away the privlego of sending sci form ".. player.name)
+    game.print(source_player.name .. " took away the privilege of sending sci form ".. player.name)
 end
 
 local function enable_sci(player, source_player)
@@ -387,10 +388,9 @@ end
 local function draw_events(data)
     local frame = data.frame
     local antigrief = data.antigrief
-    local search_text = data.search_text or nil
-    local player_search = frame.player_search.player_search_text.text or nil
+    local search_text = this.history_search_text[data.player.name]
+    local player_search = this.player_search_text[data.player.name]
     local history = frame['admin_history_select'].items[frame['admin_history_select'].selected_index]
-
     local history_index = {
         ['Capsule History'] = antigrief.capsule_history,
         ['Friendly Fire History'] = antigrief.friendly_fire_history,
@@ -417,8 +417,8 @@ local function draw_events(data)
         scroll_pane.style.maximal_height = 200
         scroll_pane.style.minimal_width = 790
     end
+    if not player_search == nil and not search_text == nil then
 
-    if player_search ~= nil and search_text ~= nil then
         if not history_index or not history_index[history] or #history_index[history] <= 0 then
             return
         end
@@ -435,7 +435,7 @@ local function draw_events(data)
                 )
             end
         end
-    elseif player_search == nil and search_text ~= nil then
+    elseif search_text ~= nil then
         for i = #history_index[history], 1, -1 do
             if contains_text(history_index[history][i], nil, search_text) then
                 frame.datalog.add(
@@ -448,7 +448,7 @@ local function draw_events(data)
                 
             end
         end
-    elseif player_search ~= nil and search_text == nil then
+    elseif player_search ~= nil then
         for i = #history_index[history], 1, -1 do
             if contains_text(history_index[history][i], nil, player_search) then                
                 frame.datalog.add(
@@ -460,8 +460,8 @@ local function draw_events(data)
                 )
             end
         end 
-    elseif player_search == nil and search_text == nil then
-        for i = #history_index[history], 1, -1 do           
+    else
+        for i = #history_index[history], 1, -1 do          
             frame.datalog.add(
                 {
                     type = 'label',
@@ -474,8 +474,9 @@ local function draw_events(data)
     end
 end
 
-local function draw_playerlist(player, data)
+local function draw_playerlist(data)
     local frame = data.frame
+    local player = data.player
     local player_search = this.player_search_text[player.name]
     local sort_by = this.sorting_method[player.name]
     local playerlist = get_sorted_playerlist(sort_by)
@@ -594,18 +595,20 @@ local function text_changed(event)
     end
         
     local data = {
+        player = player,
         frame = frame,
         antigrief = antigrief,
         search_text = element.text
     }
 
     if element.name == "player_search_text" then
-        log("lol")
         this.player_search_text[player.name] = element.text
-        draw_playerlist(player, data)
-    else
-        draw_events(data)
+    elseif element.name == "history_search_text" then
+        this.history_search_text[player.name] = element.text
     end
+        draw_playerlist(data)
+        draw_events(data)
+    
 end
 
 
@@ -659,7 +662,7 @@ local create_admin_panel = (function(player, frame)
 
     local search_table = frame.add({type = 'table', column_count = 2})
     search_table.add({type = 'label', caption = 'Search: '})
-    local search_text = search_table.add({type = 'textfield'})
+    local search_text = search_table.add({type = 'textfield', name = "history_search_text"})
     search_text.style.width = 140
 
     local l = frame.add({type = 'label', caption = '----------------------------------------------'})
@@ -681,6 +684,7 @@ local create_admin_panel = (function(player, frame)
     drop_down_2.style.left_padding = 12
 
     local data = {
+        player = player,
         frame = frame,
         antigrief = antigrief
     }
@@ -885,7 +889,7 @@ local function on_gui_click(event)
     local caption = event.element.caption
     if sorting_methods[caption] then
         this.sorting_method[player.name] = sorting_methods[caption]
-        draw_playerlist(player, {frame = frame})
+        draw_playerlist({frame = frame, player = player})
         return
     end
     if not frame then
