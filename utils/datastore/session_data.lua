@@ -200,7 +200,7 @@ function Public.trust(player, target_player)
             end
             trusted[target_player.name] = true
             game.print(target_player.name .. ' is now a trusted player.', {r = 0.22, g = 0.99, b = 0.99})
-            Utils.print_admins(player.name .. ' trusted ' .. target_player.name, {r = 1, g = 0.5, b = 0.1})
+            Utils.print_admins(player.name .. ' trusted ' .. target_player.name)
         end
     end
 end
@@ -219,7 +219,7 @@ function Public.untrust(player, target_player)
             end
             trusted[target_player.name] = false
             game.print(target_player.name .. ' is now untrusted.', {r = 0.22, g = 0.99, b = 0.99})
-            Utils.print_admins(player.name .. ' untrusted ' .. target_player.name, {r = 1, g = 0.5, b = 0.1})
+            Utils.print_admins(player.name .. ' untrusted ' .. target_player.name)
         end
     end
 end

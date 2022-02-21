@@ -419,7 +419,7 @@ local is_jailed =
         local value = data.value
         if value then
             if value.jailed then
-                jail(value.actor, key)
+                Public.jail(value.actor, key)
             end
         end
     end
@@ -433,9 +433,9 @@ local update_jailed =
         local player = data.player or 'script'
         local message = data.message
         if value then
-            jail(player, key, message)
+            Public.jail(player, key, message)
         else
-            free(player, key)
+            Public.free(player, key)
         end
     end
 )
@@ -597,10 +597,10 @@ Server.on_data_set_changed(
     function(data)
         if data and data.value then
             if data.value.jailed and data.value.actor then
-                jail(data.value.actor, data.key)
+                Public.jail(data.value.actor, data.key)
             end
         else
-            free('script', data.key)
+            Public.free('script', data.key)
         end
     end
 )

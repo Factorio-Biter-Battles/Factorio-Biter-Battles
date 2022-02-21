@@ -13,7 +13,9 @@ local show_inventory = require 'modules.show_inventory'
 local this = {
     sorting_method = {},
     player_search_text = {},
-    history_search_text = {}
+    history_search_text = {},
+    waiting_for_gps = {},
+    filter_by_gps = {}
 }
 global.custom_permissions = {
     disable_sci = {},
@@ -27,18 +29,22 @@ local function admin_only_message(str)
     end
 end
 
-local function jail(player, source_player)
+local function jail(player, source_player, button)
     if player.name == source_player.name then
-        return player.print("You can't select yourself!", {r = 1, g = 0.5, b = 0.1})
+        --return player.print("You can't select yourself!", {r = 1, g = 0.5, b = 0.1})
     end
-    Jailed.jail(source_player, player, "Jailed with admin panel")
+    Jailed.jail(source_player.name, player.name, "Jailed with admin panel")
+    button.name = "jail"
+    button.caption = "Jail"
 end
 
-local function free(player, source_player)
+local function free(player, source_player, button)
     if player.name == source_player.name then
-        return player.print("You can't select yourself!", {r = 1, g = 0.5, b = 0.1})
+        --return player.print("You can't select yourself!", {r = 1, g = 0.5, b = 0.1})
     end
-    Jailed.free(source_player, player)
+    Jailed.free(source_player.name, player.name)
+    button.name = "free"
+    button.caption = "Free"
 end
 
 local bring_player_messages = {
@@ -169,7 +175,7 @@ end
 
 local function freeze(player, source_player)
     if player.name == source_player.name then
-        return player.print("You can't select yourself!", {r = 1, g = 0.5, b = 0.1})
+       return player.print("You can't select yourself!", {r = 1, g = 0.5, b = 0.1})
     end
     game.permissions.get_group("frozen").add_player(player)
     game.print(source_player.name .. " has frozen " .. player.name .. "!")
@@ -180,9 +186,10 @@ local function unfreeze(player, source_player)
         return player.print("You can't select yourself!", {r = 1, g = 0.5, b = 0.1})
     end
     local f = player.force.name
-    if Jailed.exist(player.name) then game.permissions.get_group("gulag").add_player(player)
+    if Jailed.exists(player.name) then game.permissions.get_group("gulag").add_player(player)
     elseif f == "north" or f == "south" then game.permissions.get_group("Default").add_player(player)
     else game.permissions.get_group("spectator").add_player(player) end
+    game.print(source_player.name .. " has unfrozen " .. player.name .. "!")
 end
 
 local function open_inventory(player, source_player)
@@ -199,21 +206,27 @@ local function show_on_map(player, source_player)
     source_player.zoom_to_world(player.position)
 end
 
-local function trust(player, source_player)
+local function trust(player, source_player, button)
     Session.trust(source_player, player)
+    button.name = "untrust"
+    button.caption = "Untrust"
 end
 
-local function untrust(player, source_player)
+local function untrust(player, source_player, button)
     Session.untrust(source_player, player)
+    button.name = "trust"
+    button.caption = "Trust"
 end
 
-local function disable_sci(player, source_player)
+local function disable_sci(player, source_player, button)
     if player.name == source_player.name then
         --return player.print("You can't select yourself!", {r = 1, g = 0.5, b = 0.1})
     end
     if global.custom_permissions.disable_sci[player.name] then return end
     global.custom_permissions.disable_sci[player.name] = true
     game.print(source_player.name .. " took away the privilege of sending sci form ".. player.name)
+    button.name = "enable_sci"
+    button.caption = "Enable sci buttons"
 end
 
 local function enable_sci(player, source_player)
@@ -223,12 +236,13 @@ local function enable_sci(player, source_player)
     if not global.custom_permissions.disable_sci[player.name] then return end
     global.custom_permissions.disable_sci[player.name] = nil
     game.print(player.name .. " is able to send sci again")
-
+    button.name = "disable_sci"
+    button.caption = "Disable sci buttons"
 end
 
 local function move_to_spec(player, source_player)
     if player.name == source_player.name then
-        --return player.print("You can't select yourself!", {r = 1, g = 0.5, b = 0.1})
+        return player.print("You can't select yourself!", {r = 1, g = 0.5, b = 0.1})
     end
     if player.force.name == "spectator" then
         return player.print(player.name .. " is already spectating!")
@@ -385,11 +399,64 @@ local function get_sorted_playerlist(sort_by)
     return playerlist
 end
 
+local function get_position_from_string(str)
+    if not str then
+        return
+    end
+    if str == '' then
+        return
+    end
+    str = string.lower(str)
+    local x_pos = string.find(str, 'x:')
+    local y_pos = string.find(str, 'y:')
+    if not x_pos then
+        return false
+    end
+    if not y_pos then
+        return false
+    end
+    x_pos = x_pos + 2
+    y_pos = y_pos + 2
+
+    local a = 1
+    for i = 1, string.len(str), 1 do
+        local s = string.sub(str, x_pos + i, x_pos + i)
+        if not s then
+            break
+        end
+        if string.byte(s) == 32 then
+            break
+        end
+        a = a + 1
+    end
+    local x = string.sub(str, x_pos, x_pos + a)
+
+    local a = 1
+    for i = 1, string.len(str), 1 do
+        local s = string.sub(str, y_pos + i, y_pos + i)
+        if not s then
+            break
+        end
+        if string.byte(s) == 32 then
+            break
+        end
+        a = a + 1
+    end
+
+    local y = string.sub(str, y_pos, y_pos + a)
+    x = tonumber(x)
+    y = tonumber(y)
+    local position = {x = x, y = y}
+    return position
+end
+
 local function draw_events(data)
+    local radius = 10
     local frame = data.frame
     local antigrief = data.antigrief
-    local search_text = this.history_search_text[data.player.name]
-    local player_search = this.player_search_text[data.player.name]
+    local player = data.player
+    local search_text = this.history_search_text[player.name]
+    local player_search = this.player_search_text[player.name]
     local history = frame['admin_history_select'].items[frame['admin_history_select'].selected_index]
     local history_index = {
         ['Capsule History'] = antigrief.capsule_history,
@@ -399,7 +466,7 @@ local function draw_events(data)
         ['Corpse Looting History'] = antigrief.corpse_history,
         ['Cancel Crafting History'] = antigrief.cancel_crafting_history
     }
-
+    --game.print(this.filter_by_gps[player.name].x .. "   " .. this.filter_by_gps[player.name].y)
     local scroll_pane
     if frame.datalog then
         frame.datalog.clear()
@@ -417,59 +484,78 @@ local function draw_events(data)
         scroll_pane.style.maximal_height = 200
         scroll_pane.style.minimal_width = 790
     end
-    if not player_search == nil and not search_text == nil then
-
-        if not history_index or not history_index[history] or #history_index[history] <= 0 then
-            return
-        end
-
-        for i = #history_index[history], 1, -1 do
-            if contains_text(history_index[history][i], nil, player_search) and contains_text(history_index[history][i], nil, search_text) then
-                
-                frame.datalog.add(
-                    {
-                        type = 'label',
-                        caption = history_index[history][i],
-                        tooltip = 'Click to open mini camera.'
-                    }
-                )
-            end
-        end
-    elseif search_text ~= nil then
-        for i = #history_index[history], 1, -1 do
-            if contains_text(history_index[history][i], nil, search_text) then
-                frame.datalog.add(
-                    {
-                        type = 'label',
-                        caption = history_index[history][i],
-                        tooltip = 'Click to open mini camera.'
-                    }
-                )
-                
-            end
-        end
-    elseif player_search ~= nil then
-        for i = #history_index[history], 1, -1 do
-            if contains_text(history_index[history][i], nil, player_search) then                
-                frame.datalog.add(
-                    {
-                        type = 'label',
-                        caption = history_index[history][i],
-                        tooltip = 'Click to open mini camera.'
-                    }
-                )
-            end
-        end 
-    else
-        for i = #history_index[history], 1, -1 do          
-            frame.datalog.add(
-                {
-                    type = 'label',
-                    caption = history_index[history][i],
-                    tooltip = 'Click to open mini camera.'
-                }
-            )
+    if not history_index or not history_index[history] or #history_index[history] <= 0 then
+        return
+    end
+    if this.filter_by_gps[player.name] then
+        if player_search then
+            if search_text then
+                for i = #history_index[history], 1, -1 do
+                    local pos = get_position_from_string(history_index[history][i])
+                    if pos.x < this.filter_by_gps[player.name].x + radius and pos.x > this.filter_by_gps[player.name].x - radius and pos.y < this.filter_by_gps[player.name].y + radius and pos.y > this.filter_by_gps[player.name].y - radius then
+                        if contains_text(history_index[history][i], nil, player_search) and contains_text(history_index[history][i], nil, search_text) then
+                            frame.datalog.add({type = 'label', caption = history_index[history][i], tooltip = 'Click to open mini camera.'})
+                        end
+                    end
+                end
             
+            else
+                for i = #history_index[history], 1, -1 do
+                    local pos = get_position_from_string(history_index[history][i])
+                    if pos.x < this.filter_by_gps[player.name].x + radius and pos.x > this.filter_by_gps[player.name].x - radius and pos.y < this.filter_by_gps[player.name].y + radius and pos.y > this.filter_by_gps[player.name].y - radius then
+                        if contains_text(history_index[history][i], nil, player_search) then
+                            frame.datalog.add({type = 'label', caption = history_index[history][i], tooltip = 'Click to open mini camera.'})
+                        end
+                    end
+                end
+            end
+        else
+            if search_text then
+                for i = #history_index[history], 1, -1 do
+                    local pos = get_position_from_string(history_index[history][i])
+                    if pos.x < this.filter_by_gps[player.name].x + radius and pos.x > this.filter_by_gps[player.name].x - radius and pos.y < this.filter_by_gps[player.name].y + radius and pos.y > this.filter_by_gps[player.name].y - radius then
+                        if contains_text(history_index[history][i], nil, search_text) then
+                            frame.datalog.add({type = 'label', caption = history_index[history][i], tooltip = 'Click to open mini camera.'})
+                        end
+                    end
+                end
+            
+            else
+                for i = #history_index[history], 1, -1 do
+                    local pos = get_position_from_string(history_index[history][i])
+                    if pos.x < this.filter_by_gps[player.name].x + radius and pos.x > this.filter_by_gps[player.name].x - radius and pos.y < this.filter_by_gps[player.name].y + radius and pos.y > this.filter_by_gps[player.name].y - radius then
+                        frame.datalog.add({type = 'label', caption = history_index[history][i], tooltip = 'Click to open mini camera.'})
+                    end
+                end
+            end
+        end
+    else
+        if player_search then
+            if search_text then
+                for i = #history_index[history], 1, -1 do
+                    if contains_text(history_index[history][i], nil, player_search) and contains_text(history_index[history][i], nil, search_text) then
+                        frame.datalog.add({type = 'label', caption = history_index[history][i], tooltip = 'Click to open mini camera.'})
+                    end
+                end
+            else
+                for i = #history_index[history], 1, -1 do
+                    if contains_text(history_index[history][i], nil, player_search) then
+                        frame.datalog.add({type = 'label', caption = history_index[history][i], tooltip = 'Click to open mini camera.'})
+                    end
+                end
+            end
+        else
+            if search_text  then
+                for i = #history_index[history], 1, -1 do
+                    if contains_text(history_index[history][i], nil, search_text) then
+                        frame.datalog.add({type = 'label', caption = history_index[history][i], tooltip = 'Click to open mini camera.'})
+                    end
+                end
+            else 
+                for i = #history_index[history], 1, -1 do
+                    frame.datalog.add({type = 'label', caption = history_index[history][i], tooltip = 'Click to open mini camera.'})
+                end
+            end
         end
     end
 end
@@ -611,11 +697,14 @@ local function text_changed(event)
     
 end
 
-
 local create_admin_panel = (function(player, frame)
     local antigrief = AntiGrief.get()
+    this.filter_by_gps[player.name] = nil
+    this.waiting_for_gps[player.name] = false
+    this.player_search_text[player.name] = nil
+    this.history_search_text[player.name] = nil
     frame.clear()
-
+    --local frame = frame.add{type = "scroll-pane", name = "admin_scroll_pane", direction = 'vertical', horizontal_scroll_policy = 'never', vertical_scroll_policy = 'auto'}
     local search_table = frame.add({type = 'table', column_count = 2, name = "player_search"})
     search_table.add({type = 'label', caption = 'Search players: '})
     local search_text = search_table.add({type = 'textfield', name = "player_search_text"})
@@ -623,11 +712,11 @@ local create_admin_panel = (function(player, frame)
 
     local player_list_headers = frame.add{type = "table", name = "players_headers", column_count = 6}
     local player_list_panel = frame.add {type = 'scroll-pane', name = 'players_panel', direction = 'vertical', horizontal_scroll_policy = 'never', vertical_scroll_policy = 'auto' }
-    player_list_panel.style.maximal_height = 530
-    local data = {sort_by = "name_desc", frame = frame, player_search = nil }
+    player_list_panel.style.height = 330
+    local data = {player = player, sort_by = "name_desc", frame = frame, player_search = nil }
     this.sorting_method[player.name] = "name_desc"
     this.player_search_text[player.name] = nil
-    draw_playerlist(player, data)
+    draw_playerlist(data)
    
     --global actions buttons
     frame.add{type = "line", direction = "horizontal"}
@@ -660,11 +749,11 @@ local create_admin_panel = (function(player, frame)
         return
     end
 
-    local search_table = frame.add({type = 'table', column_count = 2})
+    local search_table = frame.add({type = 'table', column_count = 3, name = "search_table"})
     search_table.add({type = 'label', caption = 'Search: '})
     local search_text = search_table.add({type = 'textfield', name = "history_search_text"})
     search_text.style.width = 140
-
+    search_table.add{type = "button", name = "filter_by_gps", caption = "Filter by GPS", tooltip = "Click this button and then ping on map to filter history"}
     local l = frame.add({type = 'label', caption = '----------------------------------------------'})
     l.style.font = 'default-listbox'
     l.style.font_color = {r = 0.98, g = 0.66, b = 0.22}
@@ -754,56 +843,7 @@ local function get_surface_from_string(str)
     return surface
 end
 
-local function get_position_from_string(str)
-    if not str then
-        return
-    end
-    if str == '' then
-        return
-    end
-    str = string.lower(str)
-    local x_pos = string.find(str, 'x:')
-    local y_pos = string.find(str, 'y:')
-    if not x_pos then
-        return false
-    end
-    if not y_pos then
-        return false
-    end
-    x_pos = x_pos + 2
-    y_pos = y_pos + 2
 
-    local a = 1
-    for i = 1, string.len(str), 1 do
-        local s = string.sub(str, x_pos + i, x_pos + i)
-        if not s then
-            break
-        end
-        if string.byte(s) == 32 then
-            break
-        end
-        a = a + 1
-    end
-    local x = string.sub(str, x_pos, x_pos + a)
-
-    local a = 1
-    for i = 1, string.len(str), 1 do
-        local s = string.sub(str, y_pos + i, y_pos + i)
-        if not s then
-            break
-        end
-        if string.byte(s) == 32 then
-            break
-        end
-        a = a + 1
-    end
-
-    local y = string.sub(str, y_pos, y_pos + a)
-    x = tonumber(x)
-    y = tonumber(y)
-    local position = {x = x, y = y}
-    return position
-end
 
 local function on_gui_click(event)
     local player = game.players[event.player_index]
@@ -828,10 +868,16 @@ local function on_gui_click(event)
 
     if name == "actions" then
         local target_player = game.get_player(event.element.parent.parent.name)
-        if event.element.parent.parent[target_player.name .. "_actions"] then
-            event.element.parent.parent[target_player.name .. "_actions"].destroy()
-            return 
+        for k, v in pairs(frame.players_panel.children) do
+            if v.children[2] then
+                if v.children[2].name == target_player.name .. "_actions" then
+                    v.children[2].destroy()
+                    return
+                end
+                v.children[2].destroy()            
+            end
         end
+
         local t = event.element.parent.parent.add{type = "table", name = target_player.name .. "_actions", column_count = 6}
         if Jailed.exists(target_player.name) then                
             t.add({type = 'button', caption = 'Free', name = 'free', tooltip = 'Frees the player from jail.'})
@@ -847,8 +893,8 @@ local function on_gui_click(event)
         t.add({type = 'button',caption = 'Go to',name = 'go_to_player',tooltip = 'Teleport yourself to the selected player.'})
         t.add({type = "button", caption = "Send to spec", name = "move_to_spec", tooltip = "Send player to spectator. Doesn't kill, the player can join only his team later."})
         
-        if game.permissions.get_group("frozen").players[target_player] then
-            t.add({type = "button", caption = "Unreeze", name = "unfreeze", tooltip = "Unfreezes the player."})
+        if target_player.permission_group.name == "frozen" then
+            t.add({type = "button", caption = "Unfreeze", name = "unfreeze", tooltip = "Unfreezes the player."})
         else
             t.add({type = "button", caption = "Freeze", name = "freeze", tooltip = "Freezes the player. Allows for using the chat"})
         end
@@ -877,13 +923,18 @@ local function on_gui_click(event)
         end
         local target_player = game.players[target_player_name]
         if target_player.connected == true then
-            admin_functions[name](target_player, player)
+            admin_functions[name](target_player, player, event.element)
         end
         return
     end
 
     if admin_global_functions[name] then
         admin_global_functions[name](player)
+        return
+    end
+    if name == "filter_by_gps" then
+        event.element.caption = "Waiting for ping..."
+        this.waiting_for_gps[player.name] = true
         return
     end
     local caption = event.element.caption
@@ -956,6 +1007,27 @@ local function on_gui_selection_state_changed(event)
     end
 end
 
+local function on_console_chat(event)
+    local player = game.players[event.player_index]
+    if not this.waiting_for_gps[player.name] then
+        return
+    end
+    game.print(event.message)
+    local a, b = string.find(event.message, "gps=")
+    if not b then return end
+    local dot = string.find(event.message, ",", b)
+    local ending = string.find(event.message, ",", dot+1)
+    local x = string.sub(event.message, b+1, dot-1)
+    local y = string.sub(event.message, dot+1, ending-1)
+    this.filter_by_gps[player.name] = {x=tonumber(x), y=tonumber(y)}
+    this.waiting_for_gps[player.name] = false
+    local frame = player.gui.left["comfy_panel"]["tabbed_pane"]["Admin"]
+    frame["search_table"]["filter_by_gps"].caption = "Filter by GPS"
+    draw_events({player = player, frame = frame, antigrief = AntiGrief.get()})
+    --game.print("lol")
+    --game.print(this.filter_by_gps[player.name].x .. "   " .. this.filter_by_gps[player.name].y)
+end
+
 comfy_panel_tabs['Admin'] = {gui = create_admin_panel, admin = true}
 
 commands.add_command("kill", "Kill a player. Usage: /kill <name>", function(cmd)
@@ -1001,7 +1073,7 @@ commands.add_command("punish", "Kill and ban a player. Usage: /punish <name> <re
 	end
 end)
         
-
+Event.add(defines.events.on_console_chat, on_console_chat)
 Event.add(defines.events.on_gui_text_changed, text_changed)
 Event.add(defines.events.on_gui_click, on_gui_click)
 Event.add(defines.events.on_gui_selection_state_changed, on_gui_selection_state_changed)
