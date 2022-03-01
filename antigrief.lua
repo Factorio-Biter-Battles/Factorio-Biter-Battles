@@ -23,6 +23,7 @@ local this = {
     capsule_history = {},
     friendly_fire_history = {},
     mining_history = {},
+    belt_mining_history = {},
     corpse_history = {},
     cancel_crafting_history = {},
     whitelist_types = {},
@@ -69,6 +70,17 @@ local chests = {
     ['logistic-container'] = true
 }
 
+local belts = {
+    ['transport-belt'] = true,
+    ['fast-transport-belt'] = true,
+    ['express-transport-belt'] = true,
+    ['underground-belt'] = true,
+    ['fast-underground-belt'] = true,
+    ['express-underground-belt'] = true,
+    ['splitter'] = true,
+    ['fast-splitter'] = true,
+    ['express-splitter'] = true
+}
 Global.register(
     this,
     function(t)
@@ -308,9 +320,38 @@ local function on_player_used_capsule(event)
     if not this.enabled then
         return
     end
-    local trusted = session.get_trusted_table()
+    
     local player = game.get_player(event.player_index)
+    if not player or not player.valid then
+        return
+    end
 
+    local item = event.item
+    if not item then
+        return
+    end
+
+    if ammo_names[name] then
+        if not this.capsule_history then
+            this.capsule_history = {}
+        end
+        local data = {
+            player = player.name,
+            item = item.name,
+            x = event.position.x,
+            y = event.position.y,
+            surface = player.surface.index,
+            time = game.ticks_played,
+            server_time = game.tick
+        }
+        table.insert(this.capsule_history, 0, data)
+        if #this.capsule_history > 1000 then
+            table.remove(this.capsule_history)
+        end
+    end
+
+    --[[
+    local trusted = session.get_trusted_table()
     if trusted[player.name] and this.do_not_check_trusted then
         return
     end
@@ -380,6 +421,7 @@ local function on_player_used_capsule(event)
         str = str .. 'surface:' .. player.surface.index
         increment(this.capsule_history, str)
     end
+    ]]
 end
 
 --Friendly Fire History
@@ -482,6 +524,56 @@ local function on_player_mined_entity(event)
         return
     end
 
+    if belts[entity.name] then
+        if not this.belt_mining_history then
+            this.belt_mining_history = {}
+        end
+    
+        if not this.belt_mining_history[player.name] then
+            this.belt_mining_history[player.name] = {}
+        end
+            
+        local data = {
+            type = entity.type,
+            x = entity.position.x
+            y = entity.position.y,
+            time = game.ticks_played,
+            server_time = game.tick,
+            surface = entity.surface.index
+        }
+        table.insert(this.belt_mining_history[player.name], 0, data)
+        if #this.belt_mining_history[player.name] > 100 then
+            table.remove(this.belt_mining_history[player.name])
+        end
+        return
+    end
+
+    if blacklisted_types[event.entity.type] then
+        return
+    end
+
+    if not this.mining_history then
+        this.mining_history = {}
+    end
+
+    if not this.mining_history[player.name] then
+        this.mining_history[player.name] = {}
+    end    
+
+    local data = {
+        player = player.name,
+        type = entity.type,
+        x = entity.position.x
+        y = entity.position.y,
+        time = game.ticks_played,
+        server_time = game.tick,
+        surface = entity.surface.index
+    }
+    table.insert(this.mining_history[player.name], 0, data)
+    if #this.mining_history[player.name] > 100 then
+        table.remove(this.mining_history[player.name])
+    end
+
     if entity.type == 'offshore-pump' then
         Utils.print_admins(
             player.name .. ' mined an offshore pump at' ..
@@ -490,6 +582,7 @@ local function on_player_mined_entity(event)
         )
     end
 
+    --[[
     if this.whitelist_types[entity.type] then
         if not this.mining_history then
             this.mining_history = {}
@@ -542,6 +635,7 @@ local function on_player_mined_entity(event)
     str = str .. ' '
     str = str .. 'surface:' .. event.entity.surface.index
     increment(this.mining_history, str)
+    ]]
 end
 
 local function on_gui_opened(event)
