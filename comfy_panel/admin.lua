@@ -21,6 +21,7 @@ global.custom_permissions = {
     disable_sci = {},
     disable_join = {}
 }
+
 local function admin_only_message(str)
     for _, player in pairs(game.connected_players) do
         if player.admin == true then
@@ -58,7 +59,7 @@ local function bring_player(player, source_player)
         return player.print("You can't select yourself!", {r = 1, g = 0.5, b = 0.1})
     end
     if player.driving == true then
-        source_player.print('Target player is in a vehicle, teleport not available.', {r = 0.88, g = 0.88, b = 0.88})
+        player.driving = false
         return
     end
     local pos = source_player.surface.find_non_colliding_position('character', source_player.position, 50, 1)
@@ -450,116 +451,6 @@ local function get_position_from_string(str)
     return position
 end
 
-local function draw_events(data)
-    local radius = 10
-    local frame = data.frame
-    local antigrief = data.antigrief
-    local player = data.player
-    local search_text = this.history_search_text[player.name]
-    local player_search = this.player_search_text[player.name]
-    local history = frame['admin_history_select'].items[frame['admin_history_select'].selected_index]
-    local history_index = {
-        ['Capsule History'] = antigrief.capsule_history,
-        ['Friendly Fire History'] = antigrief.friendly_fire_history,
-        ['Mining History'] = antigrief.mining_history,
-        ['Landfill History'] = antigrief.landfill_history,
-        ['Corpse Looting History'] = antigrief.corpse_history,
-        ['Cancel Crafting History'] = antigrief.cancel_crafting_history
-    }
-    --game.print(this.filter_by_gps[player.name].x .. "   " .. this.filter_by_gps[player.name].y)
-    local scroll_pane
-    if frame.datalog then
-        frame.datalog.clear()
-    else
-        scroll_pane =
-            frame.add(
-            {
-                type = 'scroll-pane',
-                name = 'datalog',
-                direction = 'vertical',
-                horizontal_scroll_policy = 'never',
-                vertical_scroll_policy = 'auto'
-            }
-        )
-        scroll_pane.style.maximal_height = 200
-        scroll_pane.style.minimal_width = 790
-    end
-    if not history_index or not history_index[history] or #history_index[history] <= 0 then
-        return
-    end
-    if this.filter_by_gps[player.name] then
-        if player_search then
-            if search_text then
-                for i = #history_index[history], 1, -1 do
-                    local pos = get_position_from_string(history_index[history][i])
-                    if pos.x < this.filter_by_gps[player.name].x + radius and pos.x > this.filter_by_gps[player.name].x - radius and pos.y < this.filter_by_gps[player.name].y + radius and pos.y > this.filter_by_gps[player.name].y - radius then
-                        if contains_text(history_index[history][i], nil, player_search) and contains_text(history_index[history][i], nil, search_text) then
-                            frame.datalog.add({type = 'label', caption = history_index[history][i], tooltip = 'Click to open mini camera.'})
-                        end
-                    end
-                end
-            
-            else
-                for i = #history_index[history], 1, -1 do
-                    local pos = get_position_from_string(history_index[history][i])
-                    if pos.x < this.filter_by_gps[player.name].x + radius and pos.x > this.filter_by_gps[player.name].x - radius and pos.y < this.filter_by_gps[player.name].y + radius and pos.y > this.filter_by_gps[player.name].y - radius then
-                        if contains_text(history_index[history][i], nil, player_search) then
-                            frame.datalog.add({type = 'label', caption = history_index[history][i], tooltip = 'Click to open mini camera.'})
-                        end
-                    end
-                end
-            end
-        else
-            if search_text then
-                for i = #history_index[history], 1, -1 do
-                    local pos = get_position_from_string(history_index[history][i])
-                    if pos.x < this.filter_by_gps[player.name].x + radius and pos.x > this.filter_by_gps[player.name].x - radius and pos.y < this.filter_by_gps[player.name].y + radius and pos.y > this.filter_by_gps[player.name].y - radius then
-                        if contains_text(history_index[history][i], nil, search_text) then
-                            frame.datalog.add({type = 'label', caption = history_index[history][i], tooltip = 'Click to open mini camera.'})
-                        end
-                    end
-                end
-            
-            else
-                for i = #history_index[history], 1, -1 do
-                    local pos = get_position_from_string(history_index[history][i])
-                    if pos.x < this.filter_by_gps[player.name].x + radius and pos.x > this.filter_by_gps[player.name].x - radius and pos.y < this.filter_by_gps[player.name].y + radius and pos.y > this.filter_by_gps[player.name].y - radius then
-                        frame.datalog.add({type = 'label', caption = history_index[history][i], tooltip = 'Click to open mini camera.'})
-                    end
-                end
-            end
-        end
-    else
-        if player_search then
-            if search_text then
-                for i = #history_index[history], 1, -1 do
-                    if contains_text(history_index[history][i], nil, player_search) and contains_text(history_index[history][i], nil, search_text) then
-                        frame.datalog.add({type = 'label', caption = history_index[history][i], tooltip = 'Click to open mini camera.'})
-                    end
-                end
-            else
-                for i = #history_index[history], 1, -1 do
-                    if contains_text(history_index[history][i], nil, player_search) then
-                        frame.datalog.add({type = 'label', caption = history_index[history][i], tooltip = 'Click to open mini camera.'})
-                    end
-                end
-            end
-        else
-            if search_text  then
-                for i = #history_index[history], 1, -1 do
-                    if contains_text(history_index[history][i], nil, search_text) then
-                        frame.datalog.add({type = 'label', caption = history_index[history][i], tooltip = 'Click to open mini camera.'})
-                    end
-                end
-            else 
-                for i = #history_index[history], 1, -1 do
-                    frame.datalog.add({type = 'label', caption = history_index[history][i], tooltip = 'Click to open mini camera.'})
-                end
-            end
-        end
-    end
-end
-
 local function draw_playerlist(data)
     local frame = data.frame
     local player = data.player
@@ -572,7 +463,6 @@ local function draw_playerlist(data)
     if frame.players_headers then
         frame.players_headers.clear()
     end
-
     if player_search then
         for i, player in pairs(playerlist) do
             if not contains_text(player.name, nil, player_search) then
@@ -689,8 +579,6 @@ local function text_changed(event)
 
     if element.name == "player_search_text" then
         this.player_search_text[player.name] = element.text
-    elseif element.name == "history_search_text" then
-        this.history_search_text[player.name] = element.text
     end
         draw_playerlist(data)
         draw_events(data)
@@ -699,12 +587,8 @@ end
 
 local create_admin_panel = (function(player, frame)
     local antigrief = AntiGrief.get()
-    this.filter_by_gps[player.name] = nil
-    this.waiting_for_gps[player.name] = false
     this.player_search_text[player.name] = nil
-    this.history_search_text[player.name] = nil
     frame.clear()
-    --local frame = frame.add{type = "scroll-pane", name = "admin_scroll_pane", direction = 'vertical', horizontal_scroll_policy = 'never', vertical_scroll_policy = 'auto'}
     local search_table = frame.add({type = 'table', column_count = 2, name = "player_search"})
     search_table.add({type = 'label', caption = 'Search players: '})
     local search_text = search_table.add({type = 'textfield', name = "player_search_text"})
@@ -724,61 +608,6 @@ local create_admin_panel = (function(player, frame)
     local f = frame.add{type = "flow", direction = "horizontal"}
     f.add({type = 'button', caption = 'Destroy global speakers', name = 'turn_off_global_speakers', tooltip = 'Destroys all speakers that are set to play sounds globally.'})
     f.add({type = 'button', caption = 'Delete blueprints', name = 'delete_all_blueprints', tooltip = 'Deletes all placed blueprints on the map.'})
-    
-    local histories = {}
-    if antigrief.capsule_history then
-        table.insert(histories, 'Capsule History')
-    end
-    if antigrief.friendly_fire_history then
-        table.insert(histories, 'Friendly Fire History')
-    end
-    if antigrief.mining_history then
-        table.insert(histories, 'Mining History')
-    end
-    if antigrief.landfill_history then
-        table.insert(histories, 'Landfill History')
-    end
-    if antigrief.corpse_history then
-        table.insert(histories, 'Corpse Looting History')
-    end
-    if antigrief.cancel_crafting_history then
-        table.insert(histories, 'Cancel Crafting History')
-    end
-
-    if #histories == 0 then
-        return
-    end
-
-    local search_table = frame.add({type = 'table', column_count = 3, name = "search_table"})
-    search_table.add({type = 'label', caption = 'Search: '})
-    local search_text = search_table.add({type = 'textfield', name = "history_search_text"})
-    search_text.style.width = 140
-    search_table.add{type = "button", name = "filter_by_gps", caption = "Filter by GPS", tooltip = "Click this button and then ping on map to filter history"}
-    local l = frame.add({type = 'label', caption = '----------------------------------------------'})
-    l.style.font = 'default-listbox'
-    l.style.font_color = {r = 0.98, g = 0.66, b = 0.22}
-
-    local selected_index_2 = 1
-    if global.admin_panel_selected_history_index then
-        if global.admin_panel_selected_history_index[player.name] then
-            selected_index_2 = global.admin_panel_selected_history_index[player.name]
-        end
-    end
-
-    local drop_down_2 =
-        frame.add(
-        {type = 'drop-down', name = 'admin_history_select', items = histories, selected_index = selected_index_2}
-    )
-    drop_down_2.style.right_padding = 12
-    drop_down_2.style.left_padding = 12
-
-    local data = {
-        player = player,
-        frame = frame,
-        antigrief = antigrief
-    }
-
-    draw_events(data)
 end)
 
 local sorting_methods = {
@@ -842,8 +671,6 @@ local function get_surface_from_string(str)
 
     return surface
 end
-
-
 
 local function on_gui_click(event)
     local player = game.players[event.player_index]
@@ -1007,27 +834,6 @@ local function on_gui_selection_state_changed(event)
     end
 end
 
-local function on_console_chat(event)
-    local player = game.players[event.player_index]
-    if not this.waiting_for_gps[player.name] then
-        return
-    end
-    game.print(event.message)
-    local a, b = string.find(event.message, "gps=")
-    if not b then return end
-    local dot = string.find(event.message, ",", b)
-    local ending = string.find(event.message, ",", dot+1)
-    local x = string.sub(event.message, b+1, dot-1)
-    local y = string.sub(event.message, dot+1, ending-1)
-    this.filter_by_gps[player.name] = {x=tonumber(x), y=tonumber(y)}
-    this.waiting_for_gps[player.name] = false
-    local frame = player.gui.left["comfy_panel"]["tabbed_pane"]["Admin"]
-    frame["search_table"]["filter_by_gps"].caption = "Filter by GPS"
-    draw_events({player = player, frame = frame, antigrief = AntiGrief.get()})
-    --game.print("lol")
-    --game.print(this.filter_by_gps[player.name].x .. "   " .. this.filter_by_gps[player.name].y)
-end
-
 comfy_panel_tabs['Admin'] = {gui = create_admin_panel, admin = true}
 
 commands.add_command("kill", "Kill a player. Usage: /kill <name>", function(cmd)
@@ -1073,7 +879,6 @@ commands.add_command("punish", "Kill and ban a player. Usage: /punish <name> <re
 	end
 end)
         
-Event.add(defines.events.on_console_chat, on_console_chat)
 Event.add(defines.events.on_gui_text_changed, text_changed)
 Event.add(defines.events.on_gui_click, on_gui_click)
 Event.add(defines.events.on_gui_selection_state_changed, on_gui_selection_state_changed)
