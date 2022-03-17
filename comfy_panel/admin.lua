@@ -580,9 +580,7 @@ local function text_changed(event)
     if element.name == "player_search_text" then
         this.player_search_text[player.name] = element.text
     end
-        draw_playerlist(data)
-        draw_events(data)
-    
+    draw_playerlist(data)
 end
 
 local create_admin_panel = (function(player, frame)

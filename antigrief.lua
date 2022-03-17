@@ -52,7 +52,8 @@ local blacklisted_types = {
     ['gate'] = true,
     ['lamp'] = true,
     ['mining-drill'] = true,
-    ['splitter'] = true
+    ['splitter'] = true,
+    ['tree'] = true
 }
 
 local ammo_names = {
@@ -278,9 +279,8 @@ local function on_player_built_tile(event)
         y = math.floor(placed_tiles[1].position.y),
         time = game.ticks_played,
         server_time = game.tick,
-        surface = player.surface.name
     }
-    table.insert(this.landfill_history, 0, data)
+    table.insert(this.landfill_history, 1, data)
     if #this.landfill_history > 1000 then
         table.remove(this.landfill_history)
     end
@@ -336,11 +336,10 @@ local function on_player_used_capsule(event)
             event = item.name,
             x = math.floor(event.position.x),
             y = math.floor(event.position.y),
-            surface = player.surface.name,
             time = game.ticks_played,
             server_time = game.tick
         }
-        table.insert(this.capsule_history, 0, data)
+        table.insert(this.capsule_history, 1, data)
         if #this.capsule_history > 1000 then
             table.remove(this.capsule_history)
         end
@@ -357,7 +356,7 @@ local function on_entity_died(event)
     if not cause.player then return end
     local player = cause.player
     if blacklisted_types[event.entity.type] then
-        if not whitelist_types[event.entity_type] then return end
+        if not this.whitelist_types[event.entity_type] then return end
     end
 
     if not this.friendly_fire_history then
@@ -370,14 +369,13 @@ local function on_entity_died(event)
         x = math.floor(event.entity.position.x),
         y = math.floor(event.entity.position.y),
         time = game.ticks_played,
-        server_time = game.tick,
-        surface = event.entity.surface.name
+        server_time = game.tick
     }
     if chests[event.entity.type] then
         local inv = event.entity.get_inventory(1)
-        data.event = data.event .. " with " .. inv.get_item_count() .. "items"
+        data.event = data.event .. " with " .. inv.get_item_count() .. " items"
     end
-    table.insert(this.friendly_fire_history, 0, data)
+    table.insert(this.friendly_fire_history, 1, data)
     if #this.friendly_fire_history > 1000 then
         table.remove(this.friendly_fire_history)
     end
@@ -409,10 +407,9 @@ local function on_player_mined_entity(event)
             x = math.floor(entity.position.x),
             y = math.floor(entity.position.y),
             time = game.ticks_played,
-            server_time = game.tick,
-            surface = entity.surface.name
+            server_time = game.tick
         }
-        table.insert(this.belt_mining_history, 0, data)
+        table.insert(this.belt_mining_history, 1, data)
         if #this.belt_mining_history > 1000 then
             table.remove(this.belt_mining_history)
         end
@@ -433,10 +430,9 @@ local function on_player_mined_entity(event)
         x = math.floor(entity.position.x),
         y = math.floor(entity.position.y),
         time = game.ticks_played,
-        server_time = game.tick,
-        surface = entity.surface.name
+        server_time = game.tick
     }
-    table.insert(this.mining_history, 0, data)
+    table.insert(this.mining_history, 1, data)
     if #this.mining_history > 1000 then
         table.remove(this.mining_history)
     end
@@ -487,10 +483,9 @@ local function on_gui_opened(event)
             x = math.floor(event.entity.position.x),
             y = math.floor(event.entity.position.y),
             time = game.ticks_played,
-            server_time = game.tick,
-            surface = entity.surface.name
+            server_time = game.tick
         }
-        table.insert(this.corpse_history, 0, data)
+        table.insert(this.corpse_history, 1, data)
         if #this.corpse_history > 1000 then
             table.remove(this.corpse_history)
         end
@@ -540,10 +535,9 @@ local function on_pre_player_mined_item(event)
             x = math.floor(event.entity.position.x),
             y = math.floor(event.entity.position.y),
             time = game.ticks_played,
-            server_time = game.tick,
-            surface = entity.surface.name
+            server_time = game.tick
         }
-        table.insert(this.corpse_history, 0, data)
+        table.insert(this.corpse_history, 1, data)
         if #this.corpse_history > 1000 then
             table.remove(this.corpse_history)
         end
@@ -634,9 +628,8 @@ local function on_player_cancelled_crafting(event)
             y = math.floor(player.position.y),
             time = game.ticks_played,
             server_time = game.tick,
-            surface = player.surface
         }
-        table.insert(this.cancel_crafting_history, 0, data)
+        table.insert(this.cancel_crafting_history, 1, data)
         if #this.cancel_crafting_history > 1000 then
             table.remove(this.cancel_crafting_history)
         end
