@@ -77,6 +77,7 @@ commands.add_command(
     'Promotes a player to trusted!',
     function(cmd)
         local player = game.player
+        if cmd.parameter == nil then return end
         local target_player = game.players[cmd.parameter]
         session.trust(player, target_player)
     end
@@ -87,6 +88,7 @@ commands.add_command(
     'Demotes a player from trusted!',
     function(cmd)
         local player = game.player
+        if cmd.parameter == nil then return end
         local target_player = game.players[cmd.parameter]
         session.untrust(player, target_player)
     end
