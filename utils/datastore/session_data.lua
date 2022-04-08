@@ -188,39 +188,33 @@ function Public.is_trusted(player_name)
 end
 
 function Public.trust(player, target_player)
-    local p
+    if not target_player then return end
     if player and player.valid then
         if not player.admin then
             player.print("You're not admin!", {r = 1, g = 0.5, b = 0.1})
             return
         end
-        p = player.name
-    else
-        p = "Server"
-    end
-    if target_player then
         if trusted[target_player.name] then
             game.print(target_player.name .. ' is already trusted!')
             return
         end
         trusted[target_player.name] = true
         game.print(target_player.name .. ' is now a trusted player.', {r = 0.22, g = 0.99, b = 0.99})
-        Utils.print_admins(p .. ' trusted ' .. target_player.name)
+        Utils.print_admins(player.name .. ' trusted ' .. target_player.name)
+    else
+        if trusted[target_player.name] then return end
+        trusted[target_player.name] = true
     end
 end
 
 function Public.untrust(player, target_player)
-    local p
+    if not target_player then return end
+    
     if player and player.valid then
         if not player.admin then
             player.print("You're not admin!", {r = 1, g = 0.5, b = 0.1})
             return
         end
-        p = player.name
-    else
-        p = "Server"
-    end
-    if target_player then
         if trusted[target_player.name] == false then
             game.print(target_player.name .. ' is already untrusted!')
             return
@@ -228,6 +222,9 @@ function Public.untrust(player, target_player)
         trusted[target_player.name] = false
         game.print(target_player.name .. ' is now untrusted.', {r = 0.22, g = 0.99, b = 0.99})
         Utils.print_admins(p .. ' untrusted ' .. target_player.name)
+    else
+        if trusted[target_player.name] == false then return end
+        trusted[target_player.name] = false
     end
 end
         

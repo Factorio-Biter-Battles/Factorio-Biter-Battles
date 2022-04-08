@@ -9,6 +9,7 @@ local Color = require 'utils.color_presets'
 local lower = string.lower
 local Session = require 'utils.datastore.session_data'
 local show_inventory = require 'modules.show_inventory'
+local Global = require 'utils.global'
 
 local this = {
     sorting_method = {},
@@ -17,6 +18,14 @@ local this = {
     waiting_for_gps = {},
     filter_by_gps = {}
 }
+
+Global.register(
+    this,
+    function(t)
+        this = t
+    end
+)
+
 global.custom_permissions = {
     disable_sci = {},
     disable_join = {}

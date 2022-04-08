@@ -3,6 +3,8 @@ local AntiGrief = require 'antigrief'
 local lower = string.lower
 local Event = require 'utils.event'
 local Admin = require 'comfy_panel.admin'
+local Global = require 'utils.global'
+
 local this = {
     player_search = {},
     event_search = {},
@@ -10,6 +12,13 @@ local this = {
     filter_by_gps = {},
     sort_by = {}
 }
+
+Global.register(
+    this,
+    function(t)
+        this = t
+    end
+)
 
 local Public = {}
 function Public.get_this()
@@ -299,7 +308,7 @@ local function on_gui_click(event)
 		player.gui.left.comfy_panel.tabbed_pane.selected_tab_index = 2 -- Admin
 		Tabs.comfy_panel_refresh_active_tab(player)
 		local new_frame = Tabs.comfy_panel_get_active_frame(player)
-		new_frame.player_search.player_search_text.text = element.caption
+		new_frame.player_search.player_search_text.text = string.lower(element.caption)
 		return
 	end
 	if contains_text(element.name, nil, "coords_") then
