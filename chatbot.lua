@@ -16,7 +16,7 @@ local brain = {
         'and report it in #support',
         'If you are trusted, you are eligible to run the command /jail <player-name> "reason" and /free'
     },
-    [3] = {'Scenario repository for download:', 'https://github.com/1pulse/Factorio-Biter-Battles'},
+    [3] = {'Scenario repository for download:', 'https://github.com/Factorio-Biter-Battles/Factorio-Biter-Battles'},
     [4] = {
         "If you're not trusted and have been playing here for awhile, ask an admin to trust you.  Use the /admins command to see if any are available."
     },
