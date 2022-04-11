@@ -51,6 +51,21 @@ local valid_special_games = {
 			[11] = {name = "eq7", type = "choose-elem-button", elem_type = "item"}
 		},
 		button = {name = "infinity_chest_apply", type = "button", caption = "Apply"}
+	}, 
+	disabled_research = {
+		name = {type = "label", caption = "Disabled research", tooltip = "Disables choosen technologies from being researched"},
+		config = {
+			[1] = {name = "team", type = "switch", switch_state = "none", allow_none_state = true, tooltip = "North / Both / South"},
+			[2] = {name = "eq1", type = "choose-elem-button", elem_type = "technology"},
+			[3] = {name = "eq2", type = "choose-elem-button", elem_type = "technology"},
+			[4] = {name = "eq3", type = "choose-elem-button", elem_type = "technology"},
+			[5] = {name = "eq4", type = "choose-elem-button", elem_type = "technology"},
+			[6] = {name = "eq5", type = "choose-elem-button", elem_type = "technology"},
+			[7] = {name = "eq6", type = "choose-elem-button", elem_type = "technology"},
+			[8] = {name = "eq7", type = "choose-elem-button", elem_type = "technology"}, 
+			[9] = {name = "reset_disabled_research", type = "button", caption = "Reset", tooltip = "Enable all the disabled research again"}
+		},
+		button = {name = "disabled_research_apply", type = "button", caption = "Apply"}
 	}
 
 }
@@ -147,6 +162,59 @@ local function generate_infinity_chest(separate_chests, operable, gap, eq)
 	global.active_special_games["infinity_chest"] = true
 end
 
+local function generate_disabled_research(team, eq)
+	if not global.special_games_variables["disabled_research"] then
+		global.special_games_variables["disabled_research"] = {["north"] = {}, ["south"] = {}}
+	end
+	global.active_special_games["disabled_research"] = true
+	local tab = {
+		["left"] = "north",
+		["right"] = "south"
+	}
+	if tab[team] then
+		for k, v in pairs(eq) do
+			table.insert(global.special_games_variables["disabled_research"][tab[team]], v)
+			game.forces[tab[team]].technologies[v].enabled = false
+		end
+		game.print("Special game Disabled research: ".. table.concat(eq, ", ") .. " for team " .. tab[team] .. " is being generated!", Color.warning)
+		return
+	end
+	
+	for k, v in pairs(eq) do
+		table.insert(global.special_games_variables["disabled_research"]["south"], v)
+		table.insert(global.special_games_variables["disabled_research"]["north"], v)
+		game.forces["north"].technologies[v].enabled = false
+		game.forces["south"].technologies[v].enabled = false
+	end
+	game.print("Special game Disabled research: ".. table.concat(eq, ", ") .. " for both teams is being generated!", Color.warning)
+end
+
+local function reset_disabled_research(team)
+	if not global.active_special_games["disabled_research"] then return end
+	local tab = {
+		["left"] = "north",
+		["right"] = "south"
+	}
+	if tab[team] then
+		for k, v in pairs(global.special_games_variables["disabled_research"][tab[team]]) do
+			game.forces[tab[team]].technologies[v].enabled = true
+		end
+		global.special_games_variables["disabled_research"][tab[team]] = {}
+		game.print("All disabled research has been enabled again for team " .. tab[team], Color.warning)
+		return
+	else
+		for k, v in pairs(global.special_games_variables["disabled_research"]["north"]) do
+			game.forces["north"].technologies[v].enabled = true
+		end
+		for k, v in pairs(global.special_games_variables["disabled_research"]["south"]) do
+			game.forces["south"].technologies[v].enabled = true
+		end
+		global.special_games_variables["disabled_research"]["north"] = {}
+		global.special_games_variables["disabled_research"]["south"] = {}
+		game.print("All disabled research has been enabled again for both teams", Color.warning)
+	end
+end
+
 local create_special_games_panel = (function(player, frame)
 	frame.clear()
 	frame.add{type = "label", caption = "Configure and apply special games here"}.style.single_line = false
@@ -221,7 +289,25 @@ local function on_gui_click(event)
 		}
 
 		generate_infinity_chest(separate_chests, operable, gap, eq)
+	
+	elseif element.name == "disabled_research_confirm" then
+		local team = config["team"].switch_state
+		local eq = {
+			config["eq1"].elem_value, 
+			config["eq2"].elem_value, 
+			config["eq3"].elem_value, 
+			config["eq4"].elem_value,
+			config["eq5"].elem_value,
+			config["eq6"].elem_value,
+			config["eq7"].elem_value
+		}
 
+		generate_disabled_research(team, eq)
+
+	elseif element.name == "reset_disabled_research" then
+		config = element.parent.parent.children[2]
+		local team = config["team"].switch_state
+		reset_disabled_research(team)
 	end
 	if string.find(element.name, "_confirm") or element.name == "cancel" then
 		element.parent.parent.children[3].visible = true -- shows back Apply button
