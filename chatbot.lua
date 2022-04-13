@@ -212,6 +212,7 @@ local function on_console_command(event)
     if (cmd == "shout" or cmd == "s") and player and param then
         local chatmsg = "[shout] " .. player.name .. " (" .. player.force.name .. "): " .. param
         Server.to_discord_player_chat(chatmsg)
+        return
     elseif not player.admin or not commands[cmd] then
         return
     end
