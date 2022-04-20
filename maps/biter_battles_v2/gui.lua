@@ -494,9 +494,12 @@ local function on_gui_click(event)
 	end
 end
 
+
 local function on_player_joined_game(event)
 	local player = game.players[event.player_index]
-
+	if player.online_time == 0 then
+		Functions.show_intro(player)
+	end
 	if not global.bb_view_players then global.bb_view_players = {} end
 	if not global.chosen_team then global.chosen_team = {} end
 

@@ -416,8 +416,7 @@ function Public.show_intro(player)
 	local frame = frame.add {type = "frame"}
 	local l = frame.add {type = "label", caption = {"biter_battles.map_info"}, name = "biter_battles_map_intro"}
 	l.style.single_line = false
-	l.style.font = "heading-2"
-	l.style.font_color = {r=0.7, g=0.6, b=0.99}
+	l.style.font_color = {r=255, g=255, b=255}
 end
 
 function Public.map_intro_click(player, element)
