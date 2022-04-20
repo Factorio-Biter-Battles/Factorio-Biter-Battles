@@ -51,7 +51,8 @@ local valid_special_games = {
 			[11] = {name = "eq7", type = "choose-elem-button", elem_type = "item"}
 		},
 		button = {name = "infinity_chest_apply", type = "button", caption = "Apply"}
-	}, 
+	},
+  
 	disabled_research = {
 		name = {type = "label", caption = "Disabled research", tooltip = "Disables choosen technologies from being researched"},
 		config = {
@@ -66,6 +67,21 @@ local valid_special_games = {
 			[9] = {name = "reset_disabled_research", type = "button", caption = "Reset", tooltip = "Enable all the disabled research again"}
 		},
 		button = {name = "disabled_research_apply", type = "button", caption = "Apply"}
+	},
+
+	disabled_entities = {
+		name = {type = "label", caption = "Disabled entities", tooltip = "Disables choosen entities from being placed"},
+		config = {
+			[1] = {name = "team", type = "switch", switch_state = "none", allow_none_state = true, tooltip = "North / Both / South"},
+			[2] = {name = "eq1", type = "choose-elem-button", elem_type = "item"},
+			[3] = {name = "eq2", type = "choose-elem-button", elem_type = "item"},
+			[4] = {name = "eq3", type = "choose-elem-button", elem_type = "item"},
+			[5] = {name = "eq4", type = "choose-elem-button", elem_type = "item"},
+			[6] = {name = "eq5", type = "choose-elem-button", elem_type = "item"},
+			[7] = {name = "eq6", type = "choose-elem-button", elem_type = "item"},
+			[8] = {name = "eq7", type = "choose-elem-button", elem_type = "item"}
+		},
+		button = {name = "disabled_entities_apply", type = "button", caption = "Apply"}
 	}
 
 }
@@ -212,6 +228,42 @@ local function reset_disabled_research(team)
 		global.special_games_variables["disabled_research"]["north"] = {}
 		global.special_games_variables["disabled_research"]["south"] = {}
 		game.print("All disabled research has been enabled again for both teams", Color.warning)
+  end
+end
+
+local function generate_disabled_entities(team, eq)
+	if not global.special_games_variables["disabled_entities"] then
+		global.special_games_variables["disabled_entities"] = {["north"] = {}, ["south"] = {}}
+	end
+	local tab = {}
+	for k, v in pairs(eq) do
+		if v then
+			tab[v] = true
+		end
+	end
+	if team == "left" then
+		global.special_games_variables["disabled_entities"]["north"] = tab
+		game.print("Special game Disabled entities: ".. table.concat(eq, ", ") .. " for team North is being generated!", Color.warning)
+	elseif team == "right" then
+		global.special_games_variables["disabled_entities"]["south"] = tab
+		game.print("Special game Disabled entities: ".. table.concat(eq, ", ") .. " for team South is being generated!", Color.warning)
+	else
+		global.special_games_variables["disabled_entities"]["south"] = tab
+		global.special_games_variables["disabled_entities"]["north"] = tab
+		game.print("Special game Disabled entities: ".. table.concat(eq, ", ") .. " for both teams is being generated!", Color.warning)
+	end
+	global.active_special_games["disabled_entities"] = true
+end
+
+local function on_built_entity(event)
+	if not global.active_special_games["disabled_entities"] then return end
+	local player = game.get_player(event.player_index)
+	local force = player.force
+	local entity = event.created_entity
+	if global.special_games_variables["disabled_entities"][force.name][entity.name] then
+		player.create_local_flying_text({text = "Disabled by special game", position = entity.position})
+		player.get_inventory(defines.inventory.character_main).insert({name = entity.name, count = 1})
+		entity.destroy()
 	end
 end
 
@@ -308,6 +360,25 @@ local function on_gui_click(event)
 		config = element.parent.parent.children[2]
 		local team = config["team"].switch_state
 		reset_disabled_research(team)
+
+	elseif element.name == "disabled_entities_confirm" then
+		local team = config["team"].switch_state
+		local eq = {}
+		for v = 1, 1, 7 do
+			if config["eq"..v].elem_value then
+				eq[config["eq"..v].elem_value] = true
+			end
+		end
+		eq = {
+			config["eq1"].elem_value, 
+			config["eq2"].elem_value, 
+			config["eq3"].elem_value, 
+			config["eq4"].elem_value,
+			config["eq5"].elem_value,
+			config["eq6"].elem_value,
+			config["eq7"].elem_value
+		}
+		generate_disabled_entities(team, eq)
 	end
 	if string.find(element.name, "_confirm") or element.name == "cancel" then
 		element.parent.parent.children[3].visible = true -- shows back Apply button
@@ -317,5 +388,6 @@ end
 comfy_panel_tabs['Special games'] = {gui = create_special_games_panel, admin = true}
 
 Event.add(defines.events.on_gui_click, on_gui_click)
+Event.add(defines.events.on_built_entity, on_built_entity)
 return Public
 
