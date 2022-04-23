@@ -11,8 +11,8 @@ local Team_manager = require "maps.biter_battles_v2.team_manager"
 local Terrain = require "maps.biter_battles_v2.terrain"
 local Session = require 'utils.datastore.session_data'
 local Color = require 'utils.color_presets'
-local autoTagWestOutpost = "[WestOutpost]"
-local autoTagEastOutpost = "[EastOutpost]"
+local autoTagWestOutpost = "[West]"
+local autoTagEastOutpost = "[East]"
 local autoTagDistance = 600
 
 require "maps.biter_battles_v2.sciencelogs_tab"
@@ -200,10 +200,6 @@ local function on_chunk_generated(event)
 	-- sure everything is cloned properly. Normally we would use mutex
 	-- but this is not reliable in this environment.
 	Mirror_terrain.clone(event)
-
-	if event.position.y == 0 and event.position.x == 1 then
-		Terrain.add_holiday_decorations(surface)
-	end
 end
 
 local function on_entity_cloned(event)
