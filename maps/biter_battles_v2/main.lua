@@ -312,10 +312,17 @@ local function on_init()
 	Init.load_spawn()
 end
 
+--By Maksiu1000 skip the last tech
+local unlock_satellite = function(event)
+    if event.research.name == 'rocket-silo' then
+		event.research.force.technologies['space-science-pack'].researched = true
+    end
+end
+
 local Event = require 'utils.event'
 Event.add(defines.events.on_rocket_launch_ordered, on_rocket_launch_ordered)
 Event.add(defines.events.on_area_cloned, on_area_cloned)
-Event.add(defines.events.on_research_finished, Ai.unlock_satellite)			--free silo space tech
+Event.add(defines.events.on_research_finished, unlock_satellite)			--free silo space tech
 Event.add(defines.events.on_post_entity_died, Ai.schedule_reanimate)
 Event.add_event_filter(defines.events.on_post_entity_died, {
 	filter = "type",
