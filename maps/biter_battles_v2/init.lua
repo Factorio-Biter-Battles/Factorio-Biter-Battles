@@ -64,16 +64,22 @@ function Public.initial_setup()
 	game.create_force("spectator")
 
 	game.forces.spectator.research_all_technologies()
-
-	game.permissions.get_group("Default").set_allows_action(defines.input_action.open_blueprint_library_gui, false)
-	game.permissions.get_group("Default").set_allows_action(defines.input_action.import_blueprint_string, false)
-
-	local p = game.permissions.create_group("spectator")
+	local defs = {
+		defines.input_action.open_blueprint_library_gui,
+		defines.input_action.import_blueprint_string,
+		defines.input_action.launch_rocket
+	}
+	local p = game.permissions.get_group("Default")
+	for k, v in pairs(defs) do
+		p.set_allows_action(v, false)
+	end
+	
+	p = game.permissions.create_group("spectator")
 	for action_name, _ in pairs(defines.input_action) do
 		p.set_allows_action(defines.input_action[action_name], false)
 	end
 
-	local defs = {
+	defs = {
 		defines.input_action.activate_copy,
 		defines.input_action.activate_cut,
 		defines.input_action.activate_paste,
