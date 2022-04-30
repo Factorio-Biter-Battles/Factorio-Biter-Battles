@@ -150,8 +150,10 @@ function Public.create_main_gui(player)
 	if not is_spec then
 		frame.add { type = "table", name = "biter_battle_table", column_count = 4 }
 		local t = frame.biter_battle_table
+		local enable = true
+		if global.custom_permissions.disable_sci[player.name] then enable = false end
 		for food_name, tooltip in pairs(food_names) do
-			local s = t.add { type = "sprite-button", name = food_name, sprite = "item/" .. food_name }
+			local s = t.add { type = "sprite-button", name = food_name, sprite = "item/" .. food_name, enabled = enable }
 			s.tooltip = tooltip
 			s.style.minimal_height = 41
 			s.style.minimal_width = 41

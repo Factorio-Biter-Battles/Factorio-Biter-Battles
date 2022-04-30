@@ -202,7 +202,7 @@ local function add_inventory(panel, source, target, caption, panel_type)
     redraw_inventory(scroll_pane, source, target, caption, panel_type)
 end
 
-local function open_inventory(source, target)
+function Public.open_inventory(source, target)
     if not validate_player(source) then
         return
     end

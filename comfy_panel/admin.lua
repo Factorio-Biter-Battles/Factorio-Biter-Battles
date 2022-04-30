@@ -7,6 +7,29 @@ local AntiGrief = require 'antigrief'
 local Server = require 'utils.server'
 local Color = require 'utils.color_presets'
 local lower = string.lower
+local Session = require 'utils.datastore.session_data'
+local show_inventory = require 'modules.show_inventory'
+local Global = require 'utils.global'
+
+local this = {
+    sorting_method = {},
+    player_search_text = {},
+    history_search_text = {},
+    waiting_for_gps = {},
+    filter_by_gps = {}
+}
+
+Global.register(
+    this,
+    function(t)
+        this = t
+    end
+)
+
+global.custom_permissions = {
+    disable_sci = {},
+    disable_join = {}
+}
 
 local function admin_only_message(str)
     for _, player in pairs(game.connected_players) do
@@ -16,18 +39,22 @@ local function admin_only_message(str)
     end
 end
 
-local function jail(player, source_player)
+local function jail(player, source_player, button)
     if player.name == source_player.name then
-        return player.print("You can't select yourself!", {r = 1, g = 0.5, b = 0.1})
+        --return player.print("You can't select yourself!", {r = 1, g = 0.5, b = 0.1})
     end
-    Jailed.try_ul_data(player.name, true, source_player.name)
+    Jailed.jail(source_player.name, player.name, "Jailed with admin panel")
+    button.name = "jail"
+    button.caption = "Jail"
 end
 
-local function free(player, source_player)
+local function free(player, source_player, button)
     if player.name == source_player.name then
-        return player.print("You can't select yourself!", {r = 1, g = 0.5, b = 0.1})
+        --return player.print("You can't select yourself!", {r = 1, g = 0.5, b = 0.1})
     end
-    Jailed.try_ul_data(player.name, false, source_player.name)
+    Jailed.free(source_player.name, player.name)
+    button.name = "free"
+    button.caption = "Free"
 end
 
 local bring_player_messages = {
@@ -41,7 +68,7 @@ local function bring_player(player, source_player)
         return player.print("You can't select yourself!", {r = 1, g = 0.5, b = 0.1})
     end
     if player.driving == true then
-        source_player.print('Target player is in a vehicle, teleport not available.', {r = 0.88, g = 0.88, b = 0.88})
+        player.driving = false
         return
     end
     local pos = source_player.surface.find_non_colliding_position('character', source_player.position, 50, 1)
@@ -156,6 +183,84 @@ local function ally(player, source_player)
     admin_only_message(source_player.name .. ' made ' .. player.name .. ' our ally')
 end
 
+local function freeze(player, source_player)
+    if player.name == source_player.name then
+       return player.print("You can't select yourself!", {r = 1, g = 0.5, b = 0.1})
+    end
+    game.permissions.get_group("frozen").add_player(player)
+    game.print(source_player.name .. " has frozen " .. player.name .. "!")
+end
+
+local function unfreeze(player, source_player)
+    if player.name == source_player.name then
+        return player.print("You can't select yourself!", {r = 1, g = 0.5, b = 0.1})
+    end
+    local f = player.force.name
+    if Jailed.exists(player.name) then game.permissions.get_group("gulag").add_player(player)
+    elseif f == "north" or f == "south" then game.permissions.get_group("Default").add_player(player)
+    else game.permissions.get_group("spectator").add_player(player) end
+    game.print(source_player.name .. " has unfrozen " .. player.name .. "!")
+end
+
+local function open_inventory(player, source_player)
+    if player.name == source_player.name then
+        --return player.print("You can't select yourself!", {r = 1, g = 0.5, b = 0.1})
+    end
+    show_inventory.open_inventory(source_player, player)
+end
+
+local function show_on_map(player, source_player)
+    if player.name == source_player.name then
+       -- return player.print("You can't select yourself!", {r = 1, g = 0.5, b = 0.1})
+    end
+    source_player.zoom_to_world(player.position)
+end
+
+local function trust(player, source_player, button)
+    Session.trust(source_player, player)
+    button.name = "untrust"
+    button.caption = "Untrust"
+end
+
+local function untrust(player, source_player, button)
+    Session.untrust(source_player, player)
+    button.name = "trust"
+    button.caption = "Trust"
+end
+
+local function disable_sci(player, source_player, button)
+    if player.name == source_player.name then
+        --return player.print("You can't select yourself!", {r = 1, g = 0.5, b = 0.1})
+    end
+    if global.custom_permissions.disable_sci[player.name] then return end
+    global.custom_permissions.disable_sci[player.name] = true
+    game.print(source_player.name .. " took away the privilege of sending sci form ".. player.name)
+    button.name = "enable_sci"
+    button.caption = "Enable sci buttons"
+end
+
+local function enable_sci(player, source_player)
+    if player.name == source_player.name then
+        --return player.print("You can't select yourself!", {r = 1, g = 0.5, b = 0.1})
+    end
+    if not global.custom_permissions.disable_sci[player.name] then return end
+    global.custom_permissions.disable_sci[player.name] = nil
+    game.print(player.name .. " is able to send sci again")
+    button.name = "disable_sci"
+    button.caption = "Disable sci buttons"
+end
+
+local function move_to_spec(player, source_player)
+    if player.name == source_player.name then
+        return player.print("You can't select yourself!", {r = 1, g = 0.5, b = 0.1})
+    end
+    if player.force.name == "spectator" then
+        return player.print(player.name .. " is already spectating!")
+    end
+    spectate(player, true)
+    game.print(player.name .. " was sent to spectator island by" .. source_player.name)
+end
+
 local function turn_off_global_speakers(player)
     local counter = 0
     for _, surface in pairs(game.surfaces) do
@@ -241,332 +346,67 @@ local function contains_text(key, value, search_text)
     return true
 end
 
-local function draw_events(data)
-    local frame = data.frame
-    local antigrief = data.antigrief
-    local search_text = data.search_text or nil
-    local history = frame['admin_history_select'].items[frame['admin_history_select'].selected_index]
-
-    local history_index = {
-        ['Capsule History'] = antigrief.capsule_history,
-        ['Friendly Fire History'] = antigrief.friendly_fire_history,
-        ['Mining History'] = antigrief.mining_history,
-        ['Landfill History'] = antigrief.landfill_history,
-        ['Corpse Looting History'] = antigrief.corpse_history,
-        ['Cancel Crafting History'] = antigrief.cancel_crafting_history
-    }
-
-    local scroll_pane
-    if frame.datalog then
-        frame.datalog.clear()
-    else
-        scroll_pane =
-            frame.add(
-            {
-                type = 'scroll-pane',
-                name = 'datalog',
-                direction = 'vertical',
-                horizontal_scroll_policy = 'never',
-                vertical_scroll_policy = 'auto'
-            }
-        )
-        scroll_pane.style.maximal_height = 200
-        scroll_pane.style.minimal_width = 790
+local comparators = {
+    ['afk_time_asc'] = function(a, b)
+        return a.afk_time < b.afk_time
+    end,
+    ['afk_time_desc'] = function(a, b)
+        return a.afk_time > b.afk_time
+    end,
+    ['space_sci_asc'] = function(a, b)
+        return a.space_sci < b.space_sci
+    end,
+    ['space_sci_desc'] = function(a, b)
+        return a.space_sci > b.space_sci
+    end,
+    ['trusted_asc'] = function(a, b)
+        return a.trusted > b.trusted
+    end,
+    ['trusted_desc'] = function(a, b)
+        return a.trusted < b.trusted
+    end,
+    ['name_asc'] = function(a, b)
+        return a.name:lower() < b.name:lower()
+    end,
+    ['name_desc'] = function(a, b)
+        return a.name:lower() > b.name:lower()
+    end,
+    ['force_asc'] = function(a, b)
+        return a.force:lower() < b.force:lower()
+    end,
+    ['force_desc'] = function(a, b)
+        return a.force:lower() > b.force:lower()
     end
-
-    local target_player_name = frame['admin_player_select'].items[frame['admin_player_select'].selected_index]
-    if game.players[target_player_name] then
-        if not history_index or not history_index[history] or #history_index[history] <= 0 then
-            return
-        end
-
-        for i = #history_index[history], 1, -1 do
-            if history_index[history][i]:find(target_player_name) then
-                if search_text then
-                    local success = contains_text(history_index[history][i], nil, search_text)
-                    if not success then
-                        goto continue
-                    end
-                end
-
-                frame.datalog.add(
-                    {
-                        type = 'label',
-                        caption = history_index[history][i],
-                        tooltip = 'Click to open mini camera.'
-                    }
-                )
-                ::continue::
-            end
-        end
-    else
-        for i = #history_index[history], 1, -1 do
-            if search_text then
-                local success = contains_text(history_index[history][i], nil, search_text)
-                if not success then
-                    goto continue
-                end
-            end
-
-            frame.datalog.add(
-                {
-                    type = 'label',
-                    caption = history_index[history][i],
-                    tooltip = 'Click to open mini camera.'
-                }
-            )
-            ::continue::
-        end
-    end
-end
-
-local function text_changed(event)
-    local element = event.element
-    if not element then
-        return
-    end
-    if not element.valid then
-        return
-    end
-
-    local antigrief = AntiGrief.get()
-    local player = game.players[event.player_index]
-
-    local frame = Tabs.comfy_panel_get_active_frame(player)
-    if not frame then
-        return
-    end
-    if frame.name ~= 'Admin' then
-        return
-    end
-
-    local data = {
-        frame = frame,
-        antigrief = antigrief,
-        search_text = element.text
-    }
-
-    draw_events(data)
-end
-
-local create_admin_panel = (function(player, frame)
-    local antigrief = AntiGrief.get()
-    frame.clear()
-
-    local player_names = {}
-    for _, p in pairs(game.connected_players) do
-        table.insert(player_names, tostring(p.name))
-    end
-    table.insert(player_names, 'Select Player')
-
-    local selected_index = #player_names
-    if global.admin_panel_selected_player_index then
-        if global.admin_panel_selected_player_index[player.name] then
-            if player_names[global.admin_panel_selected_player_index[player.name]] then
-                selected_index = global.admin_panel_selected_player_index[player.name]
-            end
-        end
-    end
-
-    local drop_down =
-        frame.add(
-        {type = 'drop-down', name = 'admin_player_select', items = player_names, selected_index = selected_index}
-    )
-    drop_down.style.minimal_width = 326
-    drop_down.style.right_padding = 12
-    drop_down.style.left_padding = 12
-
-    local t = frame.add({type = 'table', column_count = 3})
-    local buttons = {
-        t.add(
-            {
-                type = 'button',
-                caption = 'Jail',
-                name = 'jail',
-                tooltip = 'Jails the player, they will no longer be able to perform any actions except writing in chat.'
-            }
-        ),
-        t.add({type = 'button', caption = 'Free', name = 'free', tooltip = 'Frees the player from jail.'}),
-        t.add(
-            {
-                type = 'button',
-                caption = 'Bring Player',
-                name = 'bring_player',
-                tooltip = 'Teleports the selected player to your position.'
-            }
-        ),
-        t.add(
-            {
-                type = 'button',
-                caption = 'Make Enemy',
-                name = 'enemy',
-                tooltip = 'Sets the selected players force to enemy_players.          DO NOT USE IN PVP MAPS!!'
-            }
-        ),
-        t.add(
-            {
-                type = 'button',
-                caption = 'Make Ally',
-                name = 'ally',
-                tooltip = 'Sets the selected players force back to the default player force.           DO NOT USE IN PVP MAPS!!'
-            }
-        ),
-        t.add(
-            {
-                type = 'button',
-                caption = 'Go to Player',
-                name = 'go_to_player',
-                tooltip = 'Teleport yourself to the selected player.'
-            }
-        ),
-        t.add(
-            {
-                type = 'button',
-                caption = 'Spank',
-                name = 'spank',
-                tooltip = 'Hurts the selected player with minor damage. Can not kill the player.'
-            }
-        ),
-        t.add(
-            {
-                type = 'button',
-                caption = 'Damage',
-                name = 'damage',
-                tooltip = 'Damages the selected player with greater damage. Can not kill the player.'
-            }
-        ),
-        t.add({type = 'button', caption = 'Kill', name = 'kill', tooltip = 'Kills the selected player instantly.'})
-    }
-    for _, button in pairs(buttons) do
-        button.style.font = 'default-bold'
-        --button.style.font_color = { r=0.99, g=0.11, b=0.11}
-        button.style.font_color = {r = 0.99, g = 0.99, b = 0.99}
-        button.style.minimal_width = 106
-    end
-
-    local line = frame.add {type = 'line'}
-    line.style.top_margin = 8
-    line.style.bottom_margin = 8
-
-    local l = frame.add({type = 'label', caption = 'Global Actions:'})
-    local t = frame.add({type = 'table', column_count = 2})
-    local buttons = {
-        t.add(
-            {
-                type = 'button',
-                caption = 'Destroy global speakers',
-                name = 'turn_off_global_speakers',
-                tooltip = 'Destroys all speakers that are set to play sounds globally.'
-            }
-        ),
-        t.add(
-            {
-                type = 'button',
-                caption = 'Delete blueprints',
-                name = 'delete_all_blueprints',
-                tooltip = 'Deletes all placed blueprints on the map.'
-            }
-        )
-        ---	t.add({type = "button", caption = "Cancel all deconstruction orders", name = "remove_all_deconstruction_orders"})
-    }
-    for _, button in pairs(buttons) do
-        button.style.font = 'default-bold'
-        button.style.font_color = {r = 0.98, g = 0.66, b = 0.22}
-        button.style.minimal_width = 80
-    end
-
-    local line = frame.add {type = 'line'}
-    line.style.top_margin = 8
-    line.style.bottom_margin = 8
-
-    local histories = {}
-    if antigrief.capsule_history then
-        table.insert(histories, 'Capsule History')
-    end
-    if antigrief.friendly_fire_history then
-        table.insert(histories, 'Friendly Fire History')
-    end
-    if antigrief.mining_history then
-        table.insert(histories, 'Mining History')
-    end
-    if antigrief.landfill_history then
-        table.insert(histories, 'Landfill History')
-    end
-    if antigrief.corpse_history then
-        table.insert(histories, 'Corpse Looting History')
-    end
-    if antigrief.cancel_crafting_history then
-        table.insert(histories, 'Cancel Crafting History')
-    end
-
-    if #histories == 0 then
-        return
-    end
-
-    local search_table = frame.add({type = 'table', column_count = 2})
-    search_table.add({type = 'label', caption = 'Search: '})
-    local search_text = search_table.add({type = 'textfield'})
-    search_text.style.width = 140
-
-    local l = frame.add({type = 'label', caption = '----------------------------------------------'})
-    l.style.font = 'default-listbox'
-    l.style.font_color = {r = 0.98, g = 0.66, b = 0.22}
-
-    local selected_index_2 = 1
-    if global.admin_panel_selected_history_index then
-        if global.admin_panel_selected_history_index[player.name] then
-            selected_index_2 = global.admin_panel_selected_history_index[player.name]
-        end
-    end
-
-    local drop_down_2 =
-        frame.add(
-        {type = 'drop-down', name = 'admin_history_select', items = histories, selected_index = selected_index_2}
-    )
-    drop_down_2.style.right_padding = 12
-    drop_down_2.style.left_padding = 12
-
-    local data = {
-        frame = frame,
-        antigrief = antigrief
-    }
-
-    draw_events(data)
-end)
-
-local admin_functions = {
-    ['jail'] = jail,
-    ['free'] = free,
-    ['bring_player'] = bring_player,
-    ['spank'] = spank,
-    ['damage'] = damage,
-    ['kill'] = kill,
-    ['enemy'] = enemy,
-    ['ally'] = ally,
-    ['go_to_player'] = go_to_player
 }
 
-local admin_global_functions = {
-    ['turn_off_global_speakers'] = turn_off_global_speakers,
-    ['delete_all_blueprints'] = delete_all_blueprints
-}
+local function get_comparator(sort_by)
+    return comparators[sort_by]
+end
 
-local function get_surface_from_string(str)
-    if not str then
-        return
+local function get_sorted_playerlist(sort_by)
+    local playerlist = {}
+    local trustlist = Session.get_trusted_table()
+    for i, player in pairs(game.connected_players) do
+        playerlist[i] = {}
+        playerlist[i].name = player.name
+        playerlist[i].afk_time = player.afk_time    --in ticks
+        if trustlist[player.name] then playerlist[i].trusted = "Trusted"
+        else playerlist[i].trusted = "Untrusted" end
+        local eq = player.get_inventory(defines.inventory.character_main)
+        if eq ~= nil then
+            playerlist[i].space_sci = eq.get_item_count("space-science-pack")
+        else
+            playerlist[i].space_sci = 0
+        end
+        playerlist[i].force = player.force.name
+        if player.force.name == "spectator" and global.chosen_team[player.name] ~= nil then
+            playerlist[i].force = playerlist[i].force .. "(" .. global.chosen_team[player.name] .. ")"
+        end
     end
-    if str == '' then
-        return
-    end
-    str = string.lower(str)
-    local start = string.find(str, 'surface:')
-    local sname = string.len(str)
-    local surface = string.sub(str, start + 8, sname)
-    if not surface then
-        return false
-    end
+    local comparator = get_comparator(sort_by)
+    table.sort(playerlist, comparator)
 
-    return surface
+    return playerlist
 end
 
 local function get_position_from_string(str)
@@ -620,6 +460,225 @@ local function get_position_from_string(str)
     return position
 end
 
+local function draw_playerlist(data)
+    local frame = data.frame
+    local player = data.player
+    local player_search = this.player_search_text[player.name]
+    local sort_by = this.sorting_method[player.name]
+    local playerlist = get_sorted_playerlist(sort_by)
+    if frame.players_panel then
+        frame.players_panel.clear()
+    end
+    if frame.players_headers then
+        frame.players_headers.clear()
+    end
+    if player_search then
+        for i, player in pairs(playerlist) do
+            if not contains_text(player.name, nil, player_search) then
+                table.remove(playerlist, i)
+            end
+        end
+    end
+    local column_widths = {200, 100, 100, 100, 100, 100}
+    local headers = {
+        [1] = "Player name",
+        [2] = "Force",
+        [3] = "Trusted",
+        [4] = "Afk time",
+        [5] = "Hoarding [img=item/space-science-pack]",
+        [6] = "Actions"
+    }
+    local symbol_asc = '▲'
+    local symbol_desc = '▼'
+    local header_modifier = {
+        ['name_asc'] = function(h)
+            h[1] = symbol_asc .. h[1]
+        end,
+        ['name_desc'] = function(h)
+            h[1] = symbol_desc .. h[1]
+        end,
+        ['force_asc'] = function(h)
+            h[2] = symbol_asc .. h[2]
+        end,
+        ['force_desc'] = function(h)
+            h[2] = symbol_desc .. h[2]
+        end,
+        ['trust_asc'] = function(h)
+            h[3] = symbol_asc .. h[3]
+        end,
+        ['trust_desc'] = function(h)
+            h[3] = symbol_desc .. h[3]
+        end,
+        ['afk_time_asc'] = function(h)
+            h[4] = symbol_asc .. h[4]
+        end,
+        ['afk_time_desc'] = function(h)
+            h[4] = symbol_desc .. h[4]
+        end,
+        ['hoarding_asc'] = function(h)
+            h[5] = symbol_asc .. h[5]
+        end,
+        ['hoarding_desc'] = function(h)
+            h[5] = symbol_desc .. h[5]
+        end,
+        
+    }
+
+    header_modifier[sort_by](headers)
+    for k,v in pairs(headers) do
+        local h = frame.players_headers.add{type="label", caption = v, name = v}
+        h.style.width = column_widths[k]
+        h.style.font = 'default-bold'
+        h.style.font_color = {r = 0.98, g = 0.66, b = 0.22}
+    end
+    local panel = frame.players_panel
+    for i, p in pairs(playerlist) do
+        local flow = panel.add{type = "flow", name = p.name, direction = "vertical"}
+        local t = flow.add{type="table", column_count = 6}
+        local name_label = t.add{type = "label", caption = p.name  }
+        name_label.style.width = column_widths[1]
+        player_color = game.get_player(p.name).color
+        name_label.style.font_color = {
+            r = .4 + player_color.r * 0.6,
+            g = .4 + player_color.g * 0.6,
+            b = .4 + player_color.b * 0.6
+        }
+        t.add{type = "label", caption = p.force}.style.width = column_widths[2]
+        t.add{type = "label", caption = p.trusted}.style.width = column_widths[3]
+
+        local afk_time_label = t.add{type = "label", caption = math.floor(p.afk_time/3600)}
+        afk_time_label.style.width = column_widths[4]
+        if p.afk_time > 54000 and game.get_player(p.name).force.name == ("north" or "south") then
+            afk_time_label.style.color = {r=0.99, g = 0.11, b = 0.11}
+        end
+
+        t.add{type = "label", caption = p.space_sci}.style.width=column_widths[5]
+
+        t.add{type = "button", name = "actions",  caption = "Actions"}.style.width = column_widths[6]
+
+    end
+end
+
+local function text_changed(event)
+    local element = event.element
+    if not element then
+        return
+    end
+    if not element.valid then
+        return
+    end
+
+    local antigrief = AntiGrief.get()
+    local player = game.players[event.player_index]
+
+    local frame = Tabs.comfy_panel_get_active_frame(player)
+    if not frame then
+        return
+    end
+    if frame.name ~= 'Admin' then
+        return
+    end
+        
+    local data = {
+        player = player,
+        frame = frame,
+        antigrief = antigrief,
+        search_text = element.text
+    }
+
+    if element.name == "player_search_text" then
+        this.player_search_text[player.name] = element.text
+    end
+    draw_playerlist(data)
+end
+
+local create_admin_panel = (function(player, frame)
+    local antigrief = AntiGrief.get()
+    this.player_search_text[player.name] = nil
+    frame.clear()
+    local search_table = frame.add({type = 'table', column_count = 2, name = "player_search"})
+    search_table.add({type = 'label', caption = 'Search players: '})
+    local search_text = search_table.add({type = 'textfield', name = "player_search_text"})
+    search_text.style.width = 140
+
+    local player_list_headers = frame.add{type = "table", name = "players_headers", column_count = 6}
+    local player_list_panel = frame.add {type = 'scroll-pane', name = 'players_panel', direction = 'vertical', horizontal_scroll_policy = 'never', vertical_scroll_policy = 'auto' }
+    player_list_panel.style.height = 330
+    local data = {player = player, sort_by = "name_desc", frame = frame, player_search = nil }
+    this.sorting_method[player.name] = "name_desc"
+    this.player_search_text[player.name] = nil
+    draw_playerlist(data)
+   
+    --global actions buttons
+    frame.add{type = "line", direction = "horizontal"}
+    frame.add{type = "label", caption = "Global actions"}
+    local f = frame.add{type = "flow", direction = "horizontal"}
+    f.add({type = 'button', caption = 'Destroy global speakers', name = 'turn_off_global_speakers', tooltip = 'Destroys all speakers that are set to play sounds globally.'})
+    f.add({type = 'button', caption = 'Delete blueprints', name = 'delete_all_blueprints', tooltip = 'Deletes all placed blueprints on the map.'})
+end)
+
+local sorting_methods = {
+    ["Player name"] = "name_desc",
+    ["▲Player name"] = "name_desc",
+    ["▼Player name"] = "name_asc",
+    ["Force"] = "force_desc",
+    ["▲Force"] = "force_desc",
+    ["▼Force"] = "force_asc",
+    ["Trusted"] = "trust_desc",
+    ["▲Trusted"] = "trust_desc",
+    ["▼Trusted"] = "trust_asc",
+    ["Afk time"] = "afk_time_desc",
+    ["▲Afk time"] = "afk_time_desc",
+    ["▼Afk time"] = "afk_time_asc",
+    ["Hoarding [img=item/space-science-pack]"] = "hoarding_desc",
+    ["▲Hoarding [img=item/space-science-pack]"] = "hoarding_desc",
+    ["▼Hoarding [img=item/space-science-pack]"] = "hoarding_asc",
+}
+
+local admin_functions = {
+    ['jail'] = jail,
+    ['free'] = free,
+    ['bring_player'] = bring_player,
+    ['spank'] = spank,
+    ['damage'] = damage,
+    ['kill'] = kill,
+    --['enemy'] = enemy,
+    --['ally'] = ally,
+    ['go_to_player'] = go_to_player,
+    ["show_on_map"] = show_on_map,
+    ["freeze"] = freeze,
+    ["unfreeze"] = unfreeze,
+    ["trust"] = trust,
+    ["untrust"] = untrust,
+    ["disable_sci"] = disable_sci,
+    ["enable_sci"] = enable_sci,
+    ["move_to_spec"] = move_to_spec,
+    ["open_inventory"] = open_inventory
+}
+
+local admin_global_functions = {
+    ['turn_off_global_speakers'] = turn_off_global_speakers,
+    ['delete_all_blueprints'] = delete_all_blueprints
+}
+
+local function get_surface_from_string(str)
+    if not str then
+        return
+    end
+    if str == '' then
+        return
+    end
+    str = string.lower(str)
+    local start = string.find(str, 'surface:')
+    local sname = string.len(str)
+    local surface = string.sub(str, start + 8, sname)
+    if not surface then
+        return false
+    end
+
+    return surface
+end
+
 local function on_gui_click(event)
     local player = game.players[event.player_index]
     local frame = Tabs.comfy_panel_get_active_frame(player)
@@ -632,7 +691,6 @@ local function on_gui_click(event)
     end
 
     local name = event.element.name
-
     if name == 'mini_camera' or name == 'mini_cam_element' then
         player.gui.center['mini_camera'].destroy()
         return
@@ -642,18 +700,64 @@ local function on_gui_click(event)
         return
     end
 
-    if admin_functions[name] then
-        local target_player_name = frame['admin_player_select'].items[frame['admin_player_select'].selected_index]
-        if not target_player_name then
-            return
+    if name == "actions" then
+        local target_player = game.get_player(event.element.parent.parent.name)
+        for k, v in pairs(frame.players_panel.children) do
+            if v.children[2] then
+                if v.children[2].name == target_player.name .. "_actions" then
+                    v.children[2].destroy()
+                    return
+                end
+                v.children[2].destroy()            
+            end
         end
-        if target_player_name == 'Select Player' then
-            player.print('No target player selected.', {r = 0.88, g = 0.88, b = 0.88})
+
+        local t = event.element.parent.parent.add{type = "table", name = target_player.name .. "_actions", column_count = 6}
+        if Jailed.exists(target_player.name) then                
+            t.add({type = 'button', caption = 'Free', name = 'free', tooltip = 'Frees the player from jail.'})
+        else
+            t.add({type = 'button',caption = 'Jail',name = 'jail',tooltip = 'Jails the player, they will no longer be able to perform any actions except writing in chat.'})
+        end
+        if Session.is_trusted(target_player.name) then 
+            t.add({type = "button", caption = "Untrust", name = "untrust", tooptip = "Removes trust privleges from the player"})
+        else
+            t.add({type = "button", caption = "Trust", name = "trust", tooptip = "Grants trust privleges to the player"})
+        end
+        t.add({type = 'button',caption = 'Bring',name = 'bring_player',tooltip = 'Teleports the selected player to your position.'})
+        t.add({type = 'button',caption = 'Go to',name = 'go_to_player',tooltip = 'Teleport yourself to the selected player.'})
+        t.add({type = "button", caption = "Send to spec", name = "move_to_spec", tooltip = "Send player to spectator. Doesn't kill, the player can join only his team later."})
+        
+        if target_player.permission_group.name == "frozen" then
+            t.add({type = "button", caption = "Unfreeze", name = "unfreeze", tooltip = "Unfreezes the player."})
+        else
+            t.add({type = "button", caption = "Freeze", name = "freeze", tooltip = "Freezes the player. Allows for using the chat"})
+        end
+        t.add({type = 'button',caption = 'Spank',name = 'spank',tooltip = 'Hurts the selected player with minor damage. Can not kill the player.'})
+        t.add({type = 'button',caption = 'Damage',name = 'damage',tooltip = 'Damages the selected player with greater damage. Can not kill the player.'})
+        t.add({type = 'button', caption = 'Kill', name = 'kill', tooltip = 'Kills the selected player instantly.'})
+        t.add({type = "button", caption = "Show", name = "show_on_map", tooltip = "Shows the player on the map."})
+        t.add({type = "button", caption = "Inventory", name = "open_inventory", tooltip = "Opens player's inventory"})
+        if global.custom_permissions.disable_sci[target_player.name] then
+            t.add({type = "button", caption = "Enable sci buttons", name = "enable_sci", tooltip = "Enables players sci sending buttons"})
+        else
+            t.add({type = "button", caption = "Disable sci buttons", name = "disable_sci", tooltip = "Disables players sci sending buttons"})
+        end
+        for _, button in pairs(t.children) do
+            button.style.font = 'default-bold'
+            --button.style.font_color = { r=0.99, g=0.11, b=0.11}
+            --button.style.font_color = {r = 0.99, g = 0.99, b = 0.99}
+            button.style.minimal_width = 100
+        end
+        return
+    end
+    if admin_functions[name] then
+        local target_player_name = event.element.parent.parent.name
+        if not target_player_name then
             return
         end
         local target_player = game.players[target_player_name]
         if target_player.connected == true then
-            admin_functions[name](target_player, player)
+            admin_functions[name](target_player, player, event.element)
         end
         return
     end
@@ -662,7 +766,17 @@ local function on_gui_click(event)
         admin_global_functions[name](player)
         return
     end
-
+    if name == "filter_by_gps" then
+        event.element.caption = "Waiting for ping..."
+        this.waiting_for_gps[player.name] = true
+        return
+    end
+    local caption = event.element.caption
+    if sorting_methods[caption] then
+        this.sorting_method[player.name] = sorting_methods[caption]
+        draw_playerlist({frame = frame, player = player})
+        return
+    end
     if not frame then
         return
     end
@@ -776,7 +890,6 @@ commands.add_command("punish", "Kill and ban a player. Usage: /punish <name> <re
 	end
 end)
         
-
 Event.add(defines.events.on_gui_text_changed, text_changed)
 Event.add(defines.events.on_gui_click, on_gui_click)
 Event.add(defines.events.on_gui_selection_state_changed, on_gui_selection_state_changed)
