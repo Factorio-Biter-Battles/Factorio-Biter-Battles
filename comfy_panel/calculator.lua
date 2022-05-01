@@ -261,7 +261,7 @@ local function handle_calculator_button(frame)
 		if starting_evo_number == nil then
 			return
 		end
-		starting_evo_number = starting_evo_number / 1000.0
+		starting_evo_number = starting_evo_number / 100.0
 		local target_evo_number = tonumber(target_evo_input_text)
 		if target_evo_number == nil then
 			return
