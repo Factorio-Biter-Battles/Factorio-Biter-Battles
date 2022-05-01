@@ -1,5 +1,6 @@
 local Public = {}
 local BiterRaffle = require "maps.biter_battles_v2.biter_raffle"
+local Feeding = require "maps.biter_battles_v2.feeding"
 local Functions = require "maps.biter_battles_v2.functions"
 local bb_config = require "maps.biter_battles_v2.config"
 local fifo = require "maps.biter_battles_v2.fifo"
@@ -368,7 +369,7 @@ Public.raise_evo = function()
 	local a_team_has_players = false
 	for bf, pf in pairs(biter_teams) do
 		if #game.forces[pf].connected_players > 0 then
-			set_evo_and_threat(amount, "automation-science-pack", bf)
+			Feeding.set_evo_and_threat(amount, "automation-science-pack", bf)
 			a_team_has_players = true
 		end
 	end
@@ -387,7 +388,7 @@ Public.reset_evo = function()
 	local biter_teams = {["north_biters"] = "north", ["south_biters"] = "south"}
 	for bf, _ in pairs(biter_teams) do
 		global.bb_evolution[bf] = 0
-		set_evo_and_threat(amount, "automation-science-pack", bf)
+		Feeding.set_evo_and_threat(amount, "automation-science-pack", bf)
 	end
 end
 

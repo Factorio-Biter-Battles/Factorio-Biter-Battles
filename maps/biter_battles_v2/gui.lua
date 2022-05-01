@@ -5,7 +5,7 @@ local bb_config = require "maps.biter_battles_v2.config"
 local bb_diff = require "maps.biter_battles_v2.difficulty_vote"
 local event = require 'utils.event'
 local Functions = require "maps.biter_battles_v2.functions"
-local feed_the_biters = require "maps.biter_battles_v2.feeding"
+local Feeding = require "maps.biter_battles_v2.feeding"
 local Tables = require "maps.biter_battles_v2.tables"
 
 local wait_messages = Tables.wait_messages
@@ -476,7 +476,7 @@ local function on_gui_click(event)
 
 	if name == "raw-fish" then Functions.spy_fish(player, event) return end
 
-	if food_names[name] then feed_the_biters(player, name) return end
+	if food_names[name] then Feeding.feed_biters(player, name) return end
 
 	if name == "bb_leave_spectate" then join_team(player, global.chosen_team[player.name])	end
 

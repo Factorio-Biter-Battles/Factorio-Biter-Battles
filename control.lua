@@ -32,6 +32,7 @@ require 'comfy_panel.poll'
 require 'comfy_panel.score'
 require 'comfy_panel.config'
 require 'comfy_panel.special_games'
+require 'comfy_panel.calculator'
 
 --require 'modules.autostash'
 

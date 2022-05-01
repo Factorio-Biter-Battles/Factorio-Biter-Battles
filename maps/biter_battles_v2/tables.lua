@@ -50,6 +50,21 @@ Public.force_translation = {
 	["north_biters"] = "north"
 }
 
+Public.biter_mutagen_initial_slopes = {
+	["small"] = -1.75,
+	["medium"] = 1.5,
+	["big"] = 2,
+	["behemoth"] = 8,
+}
+
+-- Minimum mutagen to see each biter size
+Public.biter_mutagen_thresholds = {
+	["small"] = 0,
+	["medium"] = 166.66,
+	["big"] = 500,
+	["behemoth"] = 900,
+}
+
 Public.enemy_team_of = {
 	["north"] = "south",
 	["south"] = "north"
