@@ -230,9 +230,11 @@ local function add_calculator(frame)
 	t2.style.column_alignments[1] = "left"
 	t2.style.column_alignments[2] = "right"
 
-	t2.add({ type = "label", caption = "Final Evo:" })
+	local final_for_pad = t2.add({ type = "label", caption = "Final Evo:" })
+	final_for_pad.style.bottom_padding = 8
 	t2.add({ name = CALCULATOR_FINAL_EVO_TEXT_RESULT_NAME, type = "label", caption = "_" })
-	t2.add({ type = "label", caption = "Food Required:" })
+	local food_for_pad = t2.add({ type = "label", caption = "Food Required:" })
+	food_for_pad.style.bottom_padding = 8
 	t2.add({ type = "label", caption = "" })
 	for k, _ in pairs(Tables.food_values) do
 		t2.add({ type = "sprite", sprite = "item/" .. k })
