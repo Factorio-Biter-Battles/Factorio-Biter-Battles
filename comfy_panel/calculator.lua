@@ -112,18 +112,16 @@ end
 local function add_biter_puberty_thresholds_for_team(frame, t, team)
 	local biter_force_name = team .. "_biters"
 	local current_evo = global.bb_evolution[biter_force_name]
-	local upcoming_biter_list = get_upcoming_biter_tier_list_from_current_evo(current_evo)
+	local upcoming_biter_list = get_upcoming_biter_tier_list_from_current_evo(current_evo*1000.0)
 	local current_evo_factor = game.forces[biter_force_name].evolution_factor
 
-	if #upcoming_biter_list == 0 then
-		return
-	end
-
 	t.add({ type = "label", caption = team })
-	t.add({ type = "label", caption = "Evo: " .. tostring(global.bb_evolution[biter_force_name] * 100) })
+	t.add({ type = "label", caption = "Evo: " .. string.format("%.1f", current_evo * 100.0) })
 	for _ = 1, 6 do
 		t.add({ type = "label", caption = "" })
 	end
+
+	if #upcoming_biter_list == 0 then return end
 
 	t.add({ type = "label", caption = "" })
 	for k, _ in pairs(Tables.food_values) do
