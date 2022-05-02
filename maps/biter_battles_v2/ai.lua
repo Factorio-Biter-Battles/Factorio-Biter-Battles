@@ -512,9 +512,8 @@ Public.schedule_reanimate = function(event)
 	-- takes few ticks to spawn, there is also a short dying animation. This
 	-- combined makes renimation to miss corpses on the battle field
 	-- sometimes.
-	
 	-- If rocket silo was blown up - disable reanimate logic.
-	if global.server_restart_timer ~= nil then
+	if global.server_restart_timer ~= nil or not global.reanimate_on then
 		return
 	end
 
