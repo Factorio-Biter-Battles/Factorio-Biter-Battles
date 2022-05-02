@@ -142,8 +142,7 @@ local functions = {
 			game.print("Team balancing has been disabled!")
 		end
 	end,
-	
-	["bb_only_admins_vote"] = function(event) 
+	["bb_only_admins_vote"] = function(event)
 		if event.element.switch_state == "left" then
 			global.bb_settings.only_admins_vote = true
 			global.difficulty_player_votes = {}
@@ -153,6 +152,15 @@ local functions = {
 			game.print("Admin-only difficulty voting has been disabled!")
 		end
 	end,
+	["bb_reanimate_on"] = function(event)
+		if event.element.switch_state == "left" then
+			global.reanimate_on = true
+			game.print("Biter reanimation has been enabled!")
+		else
+			global.reanimate_on = false
+			game.print("Biter reanimation has been disabled!")
+		end
+	end
 }
 
 local poll_function = {
@@ -467,22 +475,28 @@ local build_config_gui = (function(player, frame)
             label.style.font_color = Color.green
 
             scroll_pane.add({type = 'line'})
-			
+
 			local switch_state = "right"
 			if global.bb_settings.team_balancing then switch_state = "left" end
 			local switch = add_switch(scroll_pane, switch_state, "bb_team_balancing_toggle", "Team Balancing", "Players can only join a team that has less or equal players than the opposing.")
 			if not admin then switch.ignored_by_interaction = true end
-			
+
 			scroll_pane.add({type = 'line'})
-				
+
 			local switch_state = "right"
 			if global.bb_settings.only_admins_vote then switch_state = "left" end
 			local switch = add_switch(scroll_pane, switch_state, "bb_only_admins_vote", "Admin Vote", "Only admins can vote for map difficulty. Clears all currently existing votes.")
 			if not admin then switch.ignored_by_interaction = true end
-			
+
+
+			local switch_state = "right"
+			if global.reanimate_on then switch_state = "left" end
+			local switch = add_switch(scroll_pane, switch_state, "bb_reanimate_on", "Reanimating Biters", "Turns reanimating biters on, or off.")
+			if not admin then switch.ignored_by_interaction = true end
+
 			scroll_pane.add({type = 'line'})
+
 		end
-		
         if package.loaded['maps.mountain_fortress_v3.main'] then
             label = scroll_pane.add({type = 'label', caption = 'Mountain Fortress Settings'})
             label.style.font = 'default-bold'

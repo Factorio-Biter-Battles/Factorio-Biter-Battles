@@ -5,7 +5,7 @@ local bb_config = require "maps.biter_battles_v2.config"
 local bb_diff = require "maps.biter_battles_v2.difficulty_vote"
 local event = require 'utils.event'
 local Functions = require "maps.biter_battles_v2.functions"
-local feed_the_biters = require "maps.biter_battles_v2.feeding"
+local Feeding = require "maps.biter_battles_v2.feeding"
 local Tables = require "maps.biter_battles_v2.tables"
 
 local wait_messages = Tables.wait_messages
@@ -211,13 +211,16 @@ function Public.create_main_gui(player)
 		local t = frame.add { type = "table", name = "stats_" .. gui_value.force, column_count = 5 }
 
 		-- Evolution
-		local l = t.add  { type = "label", caption = "Evo:"}
-		--l.style.minimal_width = 25
+		local l = t.add({ type = "label", caption = "Evo:"})
 		local biter_force = game.forces[gui_value.biter_force]
-		local tooltip = gui_value.t1 .. "\nDamage: " .. (biter_force.get_ammo_damage_modifier("melee") + 1) * 100 .. "%\nRevive: " .. global.reanim_chance[biter_force.index] .. "%"
-		
-		l.tooltip = tooltip		
-		
+		local tooltip = ""
+		if global.reanimate_on then
+			tooltip = gui_value.t1 .. "\nDamage: " .. (biter_force.get_ammo_damage_modifier("melee") + 1) * 100 .. "%\nRevive: " .. global.reanim_chance[biter_force.index] .. "%"
+		else
+			tooltip = gui_value.t1 .. "\nDamage: " .. (biter_force.get_ammo_damage_modifier("melee") + 1) * 100 .. "%\nExtra Biter Resistance: " .. string.format("%.1f", 100.0*(Feeding.get_endgame_damage_multiplier(gui_value.force))) .. "%"
+		end
+		l.tooltip = tooltip
+
 		local evo = math.floor(1000 * global.bb_evolution[gui_value.biter_force]) * 0.1
 		local l = t.add  {type = "label", caption = evo .. "%"}
 		l.style.minimal_width = 40
@@ -476,7 +479,7 @@ local function on_gui_click(event)
 
 	if name == "raw-fish" then Functions.spy_fish(player, event) return end
 
-	if food_names[name] then feed_the_biters(player, name) return end
+	if food_names[name] then Feeding.feed_biters(player, name) return end
 
 	if name == "bb_leave_spectate" then join_team(player, global.chosen_team[player.name])	end
 

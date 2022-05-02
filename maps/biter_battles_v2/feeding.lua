@@ -11,12 +11,38 @@ local minimum_modifier = 125
 local maximum_modifier = 250
 local player_amount_for_maximum_threat_gain = 20
 
-function get_instant_threat_player_count_modifier()
+Public = {}
+
+local function get_instant_threat_player_count_modifier()
 	local current_player_count = #game.forces.north.connected_players + #game.forces.south.connected_players
 	local gain_per_player = (maximum_modifier - minimum_modifier) / player_amount_for_maximum_threat_gain
 	local m = minimum_modifier + gain_per_player * current_player_count
 	if m > maximum_modifier then m = maximum_modifier end
 	return m
+end
+
+function Public.get_endgame_damage_multiplier(force_name)
+	force_name = force_name .. "_biters"
+	if not global.bb_evolution[force_name] then return 0 end
+	return math.min(1.0, (math.max(0.0, global.bb_evolution[force_name] - 1.0)*100.0)/global.max_reanim_thresh)
+end
+
+local function set_team_endgame_modifiers(force)
+	if not global.reanimate_on then
+		local evo_multi = Public.get_endgame_damage_multiplier(force.name)
+		if not global.combat_balance[force.name] then
+			global.combat_balance[force.name] = {}
+			global.bb_endgame_unmodified_dmg[force.name] = {}
+		end
+		for _, k in ipairs(tables.endgame_base_dmg_names) do
+			if not global.combat_balance[force.name][k] then
+				global.bb_endgame_unmodified_dmg[force.name][k] = force.get_ammo_damage_modifier(k)
+				global.combat_balance[force.name][k] = force.get_ammo_damage_modifier(k)
+			end
+			local tochange = -1*(global.bb_endgame_unmodified_dmg[force.name][k]*evo_multi)
+			Functions.ammo_mod(tochange, k, force.name, true)
+		end
+	end
 end
 
 local function set_biter_endgame_modifiers(force)
@@ -25,20 +51,22 @@ local function set_biter_endgame_modifiers(force)
 	-- Calculates reanimation chance. This value is normalized onto
 	-- maximum re-animation threshold. For example if real evolution is 150
 	-- and max is 350, then 150 / 350 = 42% chance.
-	local threshold = global.bb_evolution[force.name]
-	threshold = math.floor((threshold - 1.0) * 100.0)
-	threshold = threshold / global.max_reanim_thresh * 100
-	threshold = math.floor(threshold)
-	if threshold > 90.0 then
-		threshold = 90.0
-	end
-	global.reanim_chance[force.index] = threshold
+	if global.reanimate_on then
+		local threshold = global.bb_evolution[force.name]
+		threshold = math.floor((threshold - 1.0) * 100.0)
+		threshold = threshold / global.max_reanim_thresh * 100
+		threshold = math.floor(threshold)
+		if threshold > 90.0 then
+			threshold = 90.0
+		end
+		global.reanim_chance[force.index] = threshold
 
-	local damage_mod = math.round((global.bb_evolution[force.name] - 1) * 1.0, 3)
-	force.set_ammo_damage_modifier("melee", damage_mod)
-	force.set_ammo_damage_modifier("biological", damage_mod)
-	force.set_ammo_damage_modifier("artillery-shell", damage_mod)
-	force.set_ammo_damage_modifier("flamethrower", damage_mod)
+		local damage_mod = math.round((global.bb_evolution[force.name] - 1) * 1.0, 3)
+		force.set_ammo_damage_modifier("melee", damage_mod)
+		force.set_ammo_damage_modifier("biological", damage_mod)
+		force.set_ammo_damage_modifier("artillery-shell", damage_mod)
+		force.set_ammo_damage_modifier("flamethrower", damage_mod)
+	end
 end
 
 local function get_enemy_team_of(team)
@@ -198,14 +226,16 @@ function set_evo_and_threat(flask_amount, food, biter_force_name)
 	set_biter_endgame_modifiers(game.forces[biter_force_name])
 	-- Adjust threat for revive
 	local force_index = game.forces[biter_force_name].index
-	local reanim_chance = global.reanim_chance[force_index]
-	if reanim_chance ~= nil and reanim_chance > 0 then
-		threat = threat * (100 / (100.001 - reanim_chance))
+	if global.reanimate_on then
+		local reanim_chance = global.reanim_chance[force_index]
+		if reanim_chance ~= nil and reanim_chance > 0 then
+			threat = threat * (100 / (100.001 - reanim_chance))
+		end
 	end
 	global.bb_threat[biter_force_name] = math_round(global.bb_threat[biter_force_name] + threat, decimals)
 end
 
-local function feed_biters(player, food)	
+function Public.feed_biters(player, food)
 		if game.ticks_played < global.difficulty_votes_timeout then
 		player.print("Please wait for voting to finish before feeding")
 		return
@@ -213,29 +243,30 @@ local function feed_biters(player, food)
 
 	local enemy_force_name = get_enemy_team_of(player.force.name)  ---------------
 	--enemy_force_name = player.force.name
-	
+
 	local biter_force_name = enemy_force_name .. "_biters"
-	
+
 	local i = player.get_main_inventory()
 	local flask_amount = i.get_item_count(food)
 	if flask_amount == 0 then
 		player.print("You have no " .. food_values[food].name .. " flask in your inventory.", {r = 0.98, g = 0.66, b = 0.22})
 		return
 	end
-	
+
 	i.remove({name = food, count = flask_amount})
-	
-	print_feeding_msg(player, food, flask_amount)	
+
+	print_feeding_msg(player, food, flask_amount)
 	local evolution_before_feed = global.bb_evolution[biter_force_name]
-	local threat_before_feed = global.bb_threat[biter_force_name]						
-	
+	local threat_before_feed = global.bb_threat[biter_force_name]
+
 	set_evo_and_threat(flask_amount, food, biter_force_name)
-	
+	set_team_endgame_modifiers(game.forces[enemy_force_name])
+
 	add_stats(player, food, flask_amount ,biter_force_name, evolution_before_feed, threat_before_feed)
-	
+
 	if (food == "space-science-pack") then
 		global.spy_fish_timeout[player.force.name] = game.tick + 99999999
 	end
 end
 
-return feed_biters
+return Public

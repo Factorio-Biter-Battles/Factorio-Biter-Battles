@@ -181,6 +181,7 @@ function Public.tables()
 	global.bb_threat_income = {}
 	global.chosen_team = {}
 	global.combat_balance = {}
+	global.bb_endgame_unmodified_dmg = {}
 	global.difficulty_player_votes = {}
 	global.evo_raise_counter = 1
 	global.force_area = {}
@@ -241,6 +242,7 @@ function Public.tables()
 	-- Container for storing chance of reanimation. The stored value
 	-- is a range between [0, 100], accessed by key with force's index.
 	global.reanim_chance = {}
+	global.reanimate_on = true
 
 	fifo.init()
 

@@ -66,6 +66,7 @@ local function on_unit_added_to_group(event)
 end
 
 local function on_init()
+	global.reanimate_on = true
 	global.biter_reanimator = {}
 	global.biter_reanimator.forces = {}
 	global.biter_reanimator.units = {}

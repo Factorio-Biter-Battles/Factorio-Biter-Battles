@@ -126,7 +126,7 @@ local tick_minute_functions = {
 local function on_tick()
 	local tick = game.tick
 
-	Ai.reanimate_units()
+	if global.reanimate_on then Ai.reanimate_units() end
 
 	if tick % 60 == 0 then 
 		global.bb_threat["north_biters"] = global.bb_threat["north_biters"] + global.bb_threat_income["north_biters"]
@@ -282,7 +282,7 @@ local function clear_corpses(cmd)
             return
         end
 
-	if not Ai.empty_reanim_scheduler() then
+	if global.reanimate_on and not Ai.empty_reanim_scheduler() then
 		player.print("[ERROR] Some corpses are waiting to be reanimated...")
 		player.print(" => Try again in short moment")
 		return

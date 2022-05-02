@@ -21,12 +21,34 @@ Public.base_turret_attack_modifiers = {
 }
 
 Public.upgrade_modifiers = {
-	["flamethrower"] = 0.02,
 	["flamethrower-turret"] = 0.02,
 	["laser-turret"] = 0.3,
-	["shotgun-shell"] = 0.6,
+
 	["grenade"] = 0.48,
-	["landmine"] = 0.04
+	["landmine"] = 0.04,
+	["flamethrower"] = 0.04,
+	["shotgun-shell"] = 0.6,
+	["bullet"] = 0.3,
+	["beam"] = 0.71,
+	["laser"] = 0.71,
+}
+
+-- just keep all for now in case we need to modify everything
+Public.endgame_base_dmg_names = {
+	"bullet",
+	"rocket",
+	"laser",
+	"electric",
+	"flamethrower",
+	"shotgun-shell",
+	"capsule",
+	"grenade",
+	"melee",
+	"biological",
+	"cannon-shell",
+	"artillery-shell",
+	"beam",
+	"landmine",
 }
 
 Public.food_values = {
