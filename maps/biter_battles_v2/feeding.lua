@@ -27,21 +27,26 @@ function Public.get_endgame_damage_multiplier(force_name)
 	return math.min(1.0, (math.max(0.0, global.bb_evolution[force_name] - 1.0)*100.0)/global.max_reanim_thresh)
 end
 
-local function set_team_endgame_modifiers(force)
-	if not global.reanimate_on then
-		local evo_multi = Public.get_endgame_damage_multiplier(force.name)
-		if not global.combat_balance[force.name] then
-			global.combat_balance[force.name] = {}
-			global.bb_endgame_unmodified_dmg[force.name] = {}
+function Public.set_team_endgame_modifiers(force)
+	if not global.combat_balance[force.name] then
+		global.combat_balance[force.name] = {}
+		global.bb_endgame_unmodified_dmg[force.name] = {}
+	end
+	local evo_multi = Public.get_endgame_damage_multiplier(force.name)
+	for _, k in ipairs(tables.endgame_base_dmg_names) do
+		if not global.combat_balance[force.name][k] then
+			global.bb_endgame_unmodified_dmg[force.name][k] = force.get_ammo_damage_modifier(k)
+			global.combat_balance[force.name][k] = force.get_ammo_damage_modifier(k)
 		end
-		for _, k in ipairs(tables.endgame_base_dmg_names) do
-			if not global.combat_balance[force.name][k] then
-				global.bb_endgame_unmodified_dmg[force.name][k] = force.get_ammo_damage_modifier(k)
-				global.combat_balance[force.name][k] = force.get_ammo_damage_modifier(k)
-			end
+
+		if not global.reanimate_on then
 			local tochange = -1*(global.bb_endgame_unmodified_dmg[force.name][k]*evo_multi)
 			Functions.ammo_mod(tochange, k, force.name, true)
+		else
+			force.set_ammo_damage_modifier(k, global.bb_endgame_unmodified_dmg[force.name][k])
+			global.combat_balance[force.name][k] = global.bb_endgame_unmodified_dmg[force.name][k]
 		end
+
 	end
 end
 
@@ -260,7 +265,7 @@ function Public.feed_biters(player, food)
 	local threat_before_feed = global.bb_threat[biter_force_name]
 
 	set_evo_and_threat(flask_amount, food, biter_force_name)
-	set_team_endgame_modifiers(game.forces[enemy_force_name])
+	Public.set_team_endgame_modifiers(game.forces[enemy_force_name])
 
 	add_stats(player, food, flask_amount ,biter_force_name, evolution_before_feed, threat_before_feed)
 

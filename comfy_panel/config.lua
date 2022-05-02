@@ -4,6 +4,7 @@ local Antigrief = require 'antigrief'
 local Color = require 'utils.color_presets'
 local SessionData = require 'utils.datastore.session_data'
 local Utils = require 'utils.core'
+local Feeding = require 'maps.biter_battles_v2.feeding'
 
 local spaghett_entity_blacklist = {
     ['logistic-chest-requester'] = true,
@@ -155,9 +156,15 @@ local functions = {
 	["bb_reanimate_on"] = function(event)
 		if event.element.switch_state == "left" then
 			global.reanimate_on = true
+			for _, k in ipairs({"north", "south"}) do
+				Feeding.set_team_endgame_modifiers(game.forces[k])
+			end
 			game.print("Biter reanimation has been enabled!")
 		else
 			global.reanimate_on = false
+			for _, k in ipairs({"north", "south"}) do
+				Feeding.set_team_endgame_modifiers(game.forces[k])
+			end
 			game.print("Biter reanimation has been disabled!")
 		end
 	end
