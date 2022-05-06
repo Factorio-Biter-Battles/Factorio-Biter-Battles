@@ -343,7 +343,7 @@ local vote_to_free = function(player, griefer)
     return
 end
 
-function Public.jail(player, griefer, msg)
+local jail = function(player, griefer, msg)
     player = player or 'script'
     if jailed[griefer] then
         return false
@@ -381,7 +381,7 @@ function Public.jail(player, griefer, msg)
     return true
 end
 
-function Public.free(player, griefer)
+local free = function(player, griefer)
     player = player or 'script'
     if not jailed[griefer] then
         return false
@@ -419,7 +419,7 @@ local is_jailed =
         local value = data.value
         if value then
             if value.jailed then
-                Public.jail(value.actor, key)
+                jail(value.actor, key)
             end
         end
     end
@@ -433,9 +433,9 @@ local update_jailed =
         local player = data.player or 'script'
         local message = data.message
         if value then
-            Public.jail(player, key, message)
+            jail(player, key, message)
         else
-            Public.free(player, key)
+            free(player, key)
         end
     end
 )
@@ -597,10 +597,10 @@ Server.on_data_set_changed(
     function(data)
         if data and data.value then
             if data.value.jailed and data.value.actor then
-                Public.jail(data.value.actor, data.key)
+                jail(data.value.actor, data.key)
             end
         else
-            Public.free('script', data.key)
+            free('script', data.key)
         end
     end
 )
