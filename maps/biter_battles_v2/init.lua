@@ -2,8 +2,43 @@ local Terrain = require "maps.biter_battles_v2.terrain"
 local Score = require "comfy_panel.score"
 local Tables = require "maps.biter_battles_v2.tables"
 local fifo = require "maps.biter_battles_v2.fifo"
+local Blueprint = require 'maps.biter_battles_v2.blueprints'
 
 local Public = {}
+
+local function createTrollSong()
+	local bp_string = Blueprint.get_blueprint("jail_song")
+	local jailSurface = game.surfaces['gulag']
+	local offset = {x = 6, y = 0 }
+	local bp_entity = jailSurface.create_entity{name = 'item-on-ground', position= {0,0}, stack = 'blueprint'}
+	bp_entity.stack.import_stack(bp_string)
+	local bp_entities = bp_entity.stack.get_blueprint_entities()
+	local bpInfo = {surface = jailSurface, force = 'spectator', position = offset, force_build = 'true'}
+	local bpResult = bp_entity.stack.build_blueprint(bpInfo)
+	bp_entity.destroy()
+	for k, v in pairs(bpResult) do
+		if k == 27 then
+			v.get_control_behavior().enabled = false
+		end
+		if k == 28 then
+			v.get_control_behavior().enabled = true
+		end
+		v.revive()
+	end
+	local songBuildings = jailSurface.find_entities_filtered{area={{-5, -23}, {18, 25}}, name = {
+		"constant-combinator",
+		"decider-combinator", 
+		"substation",
+		"programmable-speaker",
+		"arithmetic-combinator",
+		"electric-energy-interface"
+	}}
+	for k, v in pairs(songBuildings) do
+		v.minable = false
+		v.destructible = false
+		v.operable = false
+	end
+end
 
 function Public.initial_setup()
 	game.map_settings.enemy_evolution.time_factor = 0
@@ -11,6 +46,16 @@ function Public.initial_setup()
 	game.map_settings.enemy_evolution.pollution_factor = 0
 	game.map_settings.pollution.enabled = false
 	game.map_settings.enemy_expansion.enabled = false
+
+	game.map_settings.path_finder.fwd2bwd_ratio = 2
+	game.map_settings.path_finder.goal_pressure_ratio = 3
+	game.map_settings.path_finder.short_cache_size = 30
+	game.map_settings.path_finder.long_cache_size = 50
+	game.map_settings.path_finder.short_cache_min_cacheable_distance = 8
+	game.map_settings.path_finder.long_cache_min_cacheable_distance = 60
+	game.map_settings.path_finder.max_clients_to_accept_any_new_request = 4
+	game.map_settings.path_finder.max_clients_to_accept_short_new_request = 150
+	game.map_settings.path_finder.start_to_goal_cost_multiplier_to_terminate_path_find = 10000
 
 	game.create_force("north")
 	game.create_force("south")
@@ -75,8 +120,11 @@ function Public.initial_setup()
 	for chunk in surface.get_chunks() do
 		surface.delete_chunk({chunk.x, chunk.y})
 	end
+	createTrollSong()
 end
 
+
+	  
 --Terrain Playground Surface
 function Public.playground_surface()
 	local map_gen_settings = {}
@@ -88,8 +136,8 @@ function Public.playground_surface()
 	map_gen_settings.cliff_settings = {cliff_elevation_interval = 0, cliff_elevation_0 = 0}
 	map_gen_settings.autoplace_controls = {
 		["coal"] = {frequency = 6.5, size = 0.34, richness = 0.24},
-		["stone"] = {frequency = 6, size = 0.35, richness = 0.25},
-		["copper-ore"] = {frequency = 7, size = 0.32, richness = 0.35},
+		["stone"] = {frequency = 6, size = 0.385, richness = 0.25},
+		["copper-ore"] = {frequency = 7, size = 0.352, richness = 0.35},
 		["iron-ore"] = {frequency = 8.5, size = 0.8, richness = 0.23},
 		["uranium-ore"] = {frequency = 2, size = 1, richness = 1},
 		["crude-oil"] = {frequency = 8, size = 1.4, richness = 0.45},

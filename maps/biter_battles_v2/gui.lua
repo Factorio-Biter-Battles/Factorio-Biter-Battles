@@ -26,7 +26,7 @@ local gui_values = {
 		tech_spy = "spy-south-tech", prod_spy = "spy-south-prod"}
 	}
 
-local function clear_copy_history(player) 
+function Public.clear_copy_history(player)
 	if player and player.valid then
 		for i=1,21 do
 			-- Imports blueprint of single burner miner into the cursor stack
@@ -367,7 +367,7 @@ function join_team(player, force_name, forced_join, auto_join)
 	global.chosen_team[player.name] = force_name
 	global.spectator_rejoin_delay[player.name] = game.tick
 	player.spectator = false
-	clear_copy_history(player)
+	Public.clear_copy_history(player)
 	Public.refresh()
 end
 
@@ -376,6 +376,11 @@ function spectate(player, forced_join)
 	if not forced_join then
 		if global.tournament_mode then player.print("The game is set to tournament mode. Teams can only be changed via team manager.", {r = 0.98, g = 0.66, b = 0.22}) return end
 	end
+	
+	while player.crafting_queue_size > 0 do
+		player.cancel_crafting(player.crafting_queue[1])
+	end
+	
 	player.teleport(player.surface.find_non_colliding_position("character", {0,0}, 4, 1))
 	player.force = game.forces.spectator
 	player.character.destructible = false
@@ -494,9 +499,12 @@ local function on_gui_click(event)
 	end
 end
 
+
 local function on_player_joined_game(event)
 	local player = game.players[event.player_index]
-
+	if player.online_time == 0 then
+		Functions.show_intro(player)
+	end
 	if not global.bb_view_players then global.bb_view_players = {} end
 	if not global.chosen_team then global.chosen_team = {} end
 

@@ -81,7 +81,7 @@ function Public.invert_entity(event)
 		destination.force = "south_biters"
 	end
 
-	if destination.name == "rocket-silo" then
+	if destination.name == "rocket-silo" and math.abs(destination.position.y) < 150 and math.abs(destination.position.x) < 100 then
 		global.rocket_silo[destination.force.name] = destination
 		Functions.add_target_entity(destination)
 	elseif destination.name == "gun-turret" then
@@ -149,6 +149,27 @@ function Public.invert_tiles(event)
 	end
 
 	surface.set_tiles(tiles)
+end
+
+
+function Public.invert_decoratives(event)
+	local surface = event.destination_surface
+	local src_decoratives = surface.find_decoratives_filtered {
+		area = event.source_area
+	}
+
+	local dest_decoratives = {}
+	for i, d in pairs(src_decoratives) do
+		local pos = d.position
+		pos.y = -pos.y - 1
+		dest_decoratives[i] = {
+			amount = d.amount,
+			position = pos,
+			name = d.decorative.name
+		}
+	end
+
+	surface.create_decoratives{check_collision = false, decoratives = dest_decoratives}
 end
 
 return Public

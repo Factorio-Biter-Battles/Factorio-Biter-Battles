@@ -1,6 +1,7 @@
 local Server = require 'utils.server'
 local Muted = require 'utils.muted'
 local Tables = require "maps.biter_battles_v2.tables"
+local Session = require 'utils.datastore.session_data'
 local string_sub = string.sub
 local math_random = math.random
 local math_round = math.round
@@ -298,6 +299,18 @@ function Public.no_turret_creep(event)
 	entity.destroy()
 end
 
+function Public.no_landfill_by_untrusted_user(event)
+	local entity = event.created_entity
+	if not entity.valid or not event.player_index or entity.name ~= "tile-ghost" or entity.ghost_name ~= "landfill" then return end
+	local player = game.players[event.player_index]
+	local trusted = Session.get_trusted_table()
+	if not trusted[player.name] then
+		player.print('You have not grown accustomed to this technology yet.', {r = 0.22, g = 0.99, b = 0.99})
+		entity.destroy()
+		return
+	end
+end
+
 --Share chat with spectator force
 function Public.share_chat(event)
 	if not event.message or not event.player_index then return end
@@ -403,8 +416,7 @@ function Public.show_intro(player)
 	local frame = frame.add {type = "frame"}
 	local l = frame.add {type = "label", caption = {"biter_battles.map_info"}, name = "biter_battles_map_intro"}
 	l.style.single_line = false
-	l.style.font = "heading-2"
-	l.style.font_color = {r=0.7, g=0.6, b=0.99}
+	l.style.font_color = {r=255, g=255, b=255}
 end
 
 function Public.map_intro_click(player, element)

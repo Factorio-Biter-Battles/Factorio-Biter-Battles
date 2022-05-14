@@ -11,8 +11,12 @@ local Team_manager = require "maps.biter_battles_v2.team_manager"
 local Terrain = require "maps.biter_battles_v2.terrain"
 local Session = require 'utils.datastore.session_data'
 local Color = require 'utils.color_presets'
+local autoTagWestOutpost = "[West]"
+local autoTagEastOutpost = "[East]"
+local autoTagDistance = 600
 
 require "maps.biter_battles_v2.sciencelogs_tab"
+require "maps.biter_battles_v2.changelog_tab"
 require 'maps.biter_battles_v2.commands'
 require "modules.spawners_contain_biters"
 
@@ -22,6 +26,7 @@ local function on_player_joined_game(event)
 	if player.online_time == 0 or player.force.name == "player" then
 		Functions.init_player(player)
 	end
+	Gui.clear_copy_history(player)
 	Functions.create_map_intro_button(player)
 	Team_manager.draw_top_toggle_button(player)
 end
@@ -45,6 +50,7 @@ local function on_console_chat(event)
 end
 
 local function on_built_entity(event)
+	Functions.no_landfill_by_untrusted_user(event)
 	Functions.no_turret_creep(event)
 	Terrain.deny_enemy_side_ghosts(event)
 	Functions.add_target_entity(event.created_entity)
@@ -68,6 +74,40 @@ local function on_entity_died(event)
 	Game_over.silo_death(event)
 end
 
+local function getTagOutpostName(pos)
+	if pos < 0 then
+		return autoTagWestOutpost
+	else
+		return autoTagEastOutpost
+	end
+end
+
+local function hasOutpostTag(tagName)
+	return (string.find(tagName, '%'..autoTagWestOutpost) or string.find(tagName, '%'..autoTagEastOutpost))
+end
+
+local function autotagging_outposters()
+    for _, p in pairs(game.connected_players) do
+		if (p.force.name == "north" or p.force.name == "south") then
+			if math.abs(p.position.x) < autoTagDistance then
+				if hasOutpostTag(p.tag) then
+					p.tag = p.tag:gsub("%"..autoTagWestOutpost, "")
+					p.tag = p.tag:gsub("%"..autoTagEastOutpost, "")
+				end
+			else
+				if not hasOutpostTag(p.tag) then
+					p.tag = p.tag .. getTagOutpostName(p.position.x)
+				end
+			end
+		end
+		
+		if p.force.name == "spectator" and hasOutpostTag(p.tag) then
+				p.tag = p.tag:gsub("%"..autoTagWestOutpost, "")
+				p.tag = p.tag:gsub("%"..autoTagEastOutpost, "")
+		end
+	end
+end
+
 local tick_minute_functions = {
 	[300 * 1] = Ai.raise_evo,
 	[300 * 3 + 30 * 0] = Ai.pre_main_attack,		-- setup for main_attack
@@ -79,6 +119,7 @@ local tick_minute_functions = {
 	[300 * 3 + 30 * 6] = Ai.perform_main_attack,
 	[300 * 3 + 30 * 7] = Ai.perform_main_attack,
 	[300 * 3 + 30 * 8] = Ai.post_main_attack,
+	[300 * 3 + 30 * 9] = autotagging_outposters,
 	[300 * 4] = Ai.send_near_biters_to_silo,
 }
 
@@ -119,12 +160,9 @@ end
 
 local function on_player_built_tile(event)
 	local player = game.players[event.player_index]
-	Terrain.restrict_landfill(player.surface, player, event.tiles)
-end
-
-local function on_player_built_tile(event)
-	local player = game.players[event.player_index]
-	Terrain.restrict_landfill(player.surface, player, event.tiles)
+	if event.item ~= nil and event.item.name == "landfill" then
+		Terrain.restrict_landfill(player.surface, player, event.tiles)
+	end
 end
 
 local function on_player_mined_entity(event)
@@ -189,6 +227,7 @@ local function on_area_cloned(event)
 
 	-- Event is fired only for south side.
 	Mirror_terrain.invert_tiles(event)
+	Mirror_terrain.invert_decoratives(event)
 
 	-- Check chunks around southen silo to remove water tiles under stone-path.
 	-- Silo can be removed by picking bricks from under it in a situation where
@@ -226,16 +265,13 @@ local function clear_corpses(cmd)
         if not player or not player.valid then
             return
         end
-        local p = player.print
-        if not trusted[player.name] then
-            if not player.admin then
-                p('[ERROR] Only admins and trusted weebs are allowed to run this command!', Color.fail)
-                return
-            end
-        end
         if param == nil then
             player.print('[ERROR] Must specify radius!', Color.fail)
             return
+        end
+        if not trusted[player.name] and not player.admin and param > 100 then
+				player.print('[ERROR] Value is too big. Max radius is 100', Color.fail)
+				return
         end
         if param < 0 then
             player.print('[ERROR] Value is too low.', Color.fail)
