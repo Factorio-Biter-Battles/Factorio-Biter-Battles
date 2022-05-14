@@ -378,7 +378,7 @@ local jail = function(player, griefer, msg)
 
     game.players[griefer].clear_console()
     Utils.print_to(griefer, message)
-	game.players[griefer].character.die()
+	game.players[griefer].character.opened = none
     return true
 end
 
