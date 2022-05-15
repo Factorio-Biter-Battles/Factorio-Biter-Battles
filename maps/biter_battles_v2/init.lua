@@ -128,7 +128,6 @@ end
 local function createTrollSong(forceName,offset)
 	local bp_string = Blueprint.get_blueprint("jail_song")
 	local jailSurface = game.surfaces['gulag']
-	local offset = {x = 6, y = 0 }
 	local bp_entity = jailSurface.create_entity{name = 'item-on-ground', position= offset, stack = 'blueprint'}
 	bp_entity.stack.import_stack(bp_string)
 	local bp_entities = bp_entity.stack.get_blueprint_entities()
