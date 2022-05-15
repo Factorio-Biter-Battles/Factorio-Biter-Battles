@@ -705,12 +705,6 @@ end
 
 function Public.deny_bot_landfill(event)
 	if event.item ~= nil and event.item.name == "landfill" then
-		for _, t in pairs(event.tiles) do
-			if (event.robot.force == game.forces.north and t.position.y > 0) or (event.robot.force == game.forces.south and t.position.y < 0) then
-				event.robot.surface.set_tiles({{name = t.old_tile.name, position = t.position}}, true)
-				return
-			end
-		end
 		Public.restrict_landfill(event.robot.surface, nil, event.tiles)
 	end
 end
@@ -737,11 +731,13 @@ end
 
 function Public.deny_enemy_side_ghosts(event)
 	if not event.created_entity.valid then return end
-	if event.created_entity.type ~= 'entity-ghost' then return end
-	local force = game.get_player(event.player_index).force.name
-	if not robot_build_restriction[force] then return end
-	if not robot_build_restriction[force](event.created_entity.position.y) then return end
-	event.created_entity.destroy()
+	
+	if event.created_entity.type == 'entity-ghost' or event.created_entity.type == 'tile-ghost' then
+		local force = game.get_player(event.player_index).force.name
+		if not robot_build_restriction[force] then return end
+		if not robot_build_restriction[force](event.created_entity.position.y) then return end
+		event.created_entity.destroy()
+	end
 end
 
 return Public
