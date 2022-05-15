@@ -705,6 +705,10 @@ end
 
 function Public.deny_bot_landfill(event)
 	if event.item ~= nil and event.item.name == "landfill" then
+		if (event.robot.force == game.forces.north and t.position.y > 0) or (event.robot.force == game.forces.south and t.position.y < 0) then
+			event.robot.surface.set_tiles({{name = t.old_tile.name, position = t.position}}, true)
+			return
+		end
 		Public.restrict_landfill(event.robot.surface, nil, event.tiles)
 	end
 end
