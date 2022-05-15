@@ -718,10 +718,10 @@ end
 --Construction Robot Restriction
 local robot_build_restriction = {
 	["north"] = function(y)
-		if y >= -10 then return true end
+		if y >= -bb_config.border_river_width / 2 then return true end
 	end,
 	["south"] = function(y)
-		if y <= 10 then return true end
+		if y <= bb_config.border_river_width / 2 then return true end
 	end
 }
 
