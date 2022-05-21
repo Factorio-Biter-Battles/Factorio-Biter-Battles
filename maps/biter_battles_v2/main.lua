@@ -11,8 +11,8 @@ local Team_manager = require "maps.biter_battles_v2.team_manager"
 local Terrain = require "maps.biter_battles_v2.terrain"
 local Session = require 'utils.datastore.session_data'
 local Color = require 'utils.color_presets'
-local autoTagWestOutpost = "[WestOutpost]"
-local autoTagEastOutpost = "[EastOutpost]"
+local autoTagWestOutpost = "[West]"
+local autoTagEastOutpost = "[East]"
 local autoTagDistance = 600
 
 require "maps.biter_battles_v2.sciencelogs_tab"
@@ -201,10 +201,6 @@ local function on_chunk_generated(event)
 	-- but this is not reliable in this environment.
 	Mirror_terrain.clone(event)
 
-	if event.position.y == 0 and event.position.x == 1 then
-		Terrain.add_holiday_decorations(surface)
-	end
-
 	-- The game pregenerate tiles within a radius of 3 chunks from the generated chunk.
 	-- Bites can use these tiles for pathing.
 	-- This creates a problem that bites pathfinder can cross the river at the edge of the map.
@@ -325,10 +321,17 @@ local function on_init()
 	Init.load_spawn()
 end
 
+--By Maksiu1000 skip the last tech
+local unlock_satellite = function(event)
+    if event.research.name == 'rocket-silo' then
+		event.research.force.technologies['space-science-pack'].researched = true
+    end
+end
+
 local Event = require 'utils.event'
 Event.add(defines.events.on_rocket_launch_ordered, on_rocket_launch_ordered)
 Event.add(defines.events.on_area_cloned, on_area_cloned)
-Event.add(defines.events.on_research_finished, Ai.unlock_satellite)			--free silo space tech
+Event.add(defines.events.on_research_finished, unlock_satellite)			--free silo space tech
 Event.add(defines.events.on_post_entity_died, Ai.schedule_reanimate)
 Event.add_event_filter(defines.events.on_post_entity_died, {
 	filter = "type",

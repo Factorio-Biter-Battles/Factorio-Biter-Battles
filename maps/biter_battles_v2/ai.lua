@@ -337,19 +337,6 @@ Public.post_main_attack = function()
 	end
 end
 
---By Maksiu1000 skip the last two tech
-Public.unlock_satellite = function(event)
-    -- Skip unrelated events
-    if event.research.name ~= 'speed-module-3' then
-        return
-    end
-    local force = event.research.force
-    if not force.technologies['rocket-silo'].researched then
-        force.technologies['rocket-silo'].researched=true
-        force.technologies['space-science-pack'].researched=true
-    end
-end
-
 Public.raise_evo = function()
 	if global.freeze_players then return end
 	if not global.training_mode and (#game.forces.north.connected_players == 0 or #game.forces.south.connected_players == 0) then return end
