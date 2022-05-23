@@ -19,6 +19,21 @@ function get_instant_threat_player_count_modifier()
 	return m
 end
 
+
+local function update_boss_modifiers(force_name_biter,damage_mod_mult,speed_mod_mult)
+	local damage_mod = math.round((global.bb_evolution[force.name]) * 1.0, 3) * damage_mod_mult
+	local speed_mod = math.round((global.bb_evolution[force.name]) * 1.0, 3) * speed_mod_mult
+	local force = game.forces[force_name_biter .. "_boss"]
+	force.set_ammo_damage_modifier("melee", damage_mod) 
+	force.set_ammo_damage_modifier("biological", damage_mod)
+	force.set_ammo_damage_modifier("artillery-shell", damage_mod)
+	force.set_ammo_damage_modifier("flamethrower", damage_mod)
+	force.set_gun_speed_modifier("melee", speed_mod)
+	force.set_gun_speed_modifier("biological", speed_mod)
+	force.set_gun_speed_modifier("artillery-shell", speed_mod)
+	force.set_gun_speed_modifier("flamethrower", speed_mod)
+end
+
 local function set_biter_endgame_modifiers(force)
 	if force.evolution_factor ~= 1 then return end
 
@@ -196,6 +211,40 @@ function set_evo_and_threat(flask_amount, food, biter_force_name)
 	game.forces[biter_force_name].evolution_factor = biter_evo
 	global.bb_evolution[biter_force_name] = evo
 	set_biter_endgame_modifiers(game.forces[biter_force_name])
+	
+	if evo > 1 then
+		update_boss_modifiers(biter_force_name, 2,2)
+	end
+	if evo > 3.3 then -- 330% evo => 3.3
+		if biter_force_name == "north_biters" and bb_config.max_group_size_north ~= 37 then
+			bb_config.max_group_size_north = 50
+		end
+		if biter_force_name == "south_biters" and bb_config.max_group_size_north ~= 37 then
+			bb_config.max_group_size_south = 50
+		end
+	elseif evo > 2.3 then
+		if biter_force_name == "north_biters" and bb_config.max_group_size_north ~= 75 then
+			bb_config.max_group_size_north = 75
+		end
+		if biter_force_name == "south_biters" and bb_config.max_group_size_north ~= 75 then
+			bb_config.max_group_size_south = 75
+		end
+	elseif evo > 1.3 then  
+		if biter_force_name == "north_biters" and bb_config.max_group_size_north ~= 100 then
+			bb_config.max_group_size_north = 100
+		end
+		if biter_force_name == "south_biters" and bb_config.max_group_size_north ~= 100 then
+			bb_config.max_group_size_south = 100
+		end
+	elseif evo > 0.7 then 
+		if biter_force_name == "north_biters" and bb_config.max_group_size_north ~= 200 then
+			bb_config.max_group_size_north = 200
+		end
+		if biter_force_name == "south_biters" and bb_config.max_group_size_north ~= 200 then
+			bb_config.max_group_size_south = 200
+		end
+	end
+	
 	-- Adjust threat for revive
 	local force_index = game.forces[biter_force_name].index
 	local reanim_chance = global.reanim_chance[force_index]

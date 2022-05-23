@@ -4,6 +4,7 @@ local Functions = require "maps.biter_battles_v2.functions"
 local bb_config = require "maps.biter_battles_v2.config"
 local fifo = require "maps.biter_battles_v2.fifo"
 local Tables = require "maps.biter_battles_v2.tables"
+local Unit_health_booster = require 'modules.biter_health_booster_v2'
 local math_random = math.random
 local math_abs = math.abs
 
@@ -139,16 +140,31 @@ end
 
 local function select_units_around_spawner(spawner, force_name, side_target)
 	local biter_force_name = spawner.force.name
+	local boss_biter_force_name = biter_force_name .. "_boss" -- TODO FIXME BRO NOT USED FORCE!!
 
 	local valid_biters = {}
 	local i = 0
+	local max_group_size_biters_force = bb_config.max_group_size_north
+	if biter_force_name == 'south_biters' then
+		game.print('here....' .. biter_force_name)
+		max_group_size_biters_force = bb_config.max_group_size_south
+	end
 
 	local threat = global.bb_threat[biter_force_name] / 10
 
-	local unit_count = 0
+	local unit_count = 0 
 	local max_unit_count = math.floor(global.bb_threat[biter_force_name] * 0.25) + math_random(6,12)
-	if max_unit_count > bb_config.max_group_size then max_unit_count = bb_config.max_group_size end
+	if max_unit_count > max_group_size_biters_force then max_unit_count = max_group_size_biters_force end
 
+	game.print('--bb threat is : ' .. global.bb_threat[biter_force_name])
+	game.print('-bb max_unit_count : ' .. max_unit_count)
+	game.print('-bb max_group_size_biters_force : ' .. max_group_size_biters_force)
+	
+	-- 1.5 because we add 50% health bonus as it's just one unit.  
+	-- 20 because one boss is equal of 20 biters in theory
+	-- 90% revive chance is 1/(1-0.9) = 10, which means biters needs to be killed 10 times, so *10 . easy fast-check : 50% revive is 2 biters worth, formula matches
+    local health_factor = 1.5*20*1.0/(1.0-global.reanim_chance[game.forces[biter_force_name].index]/100)
+    local biter_health_boost = Unit_health_booster.get('biter_health_boost')
 	--Collect biters around spawners
 	if math_random(1, 2) == 1 then
 		local biters = spawner.surface.find_enemy_units(spawner.position, 96, force_name)
@@ -160,12 +176,24 @@ local function select_units_around_spawner(spawner, force_name, side_target)
 					valid_biters[i] = biter
 					unit_count = unit_count + 1
 					threat = threat - threat_values[biter.name]
+					biter.speed = biter.speed * 2
+					global.boss_biters[biter.unit_number] = biter
+					Unit_health_booster.add_boss_unit(biter, biter_health_boost * health_factor, 0.55)
+					local damage_mod = 500
+					local force = biter.force --BREAKING BITER FORCE INSTEAD OF BOSS FORCE!!
+					force.set_ammo_damage_modifier("melee", 3) 
+					force.set_ammo_damage_modifier("biological", 3)
+					force.set_ammo_damage_modifier("artillery-shell", 3)
+					force.set_ammo_damage_modifier("flamethrower", 3)
+					force.set_gun_speed_modifier("melee", damage_mod)
+					force.set_gun_speed_modifier("biological", damage_mod)
+					force.set_gun_speed_modifier("artillery-shell", damage_mod)
+					force.set_gun_speed_modifier("flamethrower", damage_mod)
 				end
 				if threat < 0 then break end
 			end
 		end
 	end
-
 	--Manual spawning of units
 	local roll_type = unit_type_raffle[math_random(1, size_of_unit_type_raffle)]
 	for _ = 1, max_unit_count - unit_count, 1 do
@@ -177,6 +205,19 @@ local function select_units_around_spawner(spawner, force_name, side_target)
 		threat = threat - threat_values[biter.name]
 		i = i + 1
 		valid_biters[i] = biter
+		biter.speed = biter.speed * 2
+		global.boss_biters[biter.unit_number] = biter
+		Unit_health_booster.add_boss_unit(biter, biter_health_boost * health_factor, 0.55)
+		local damage_mod = 500
+		local force = biter.force --BREAKING BITER FORCE INSTEAD OF BOSS FORCE!!
+		force.set_ammo_damage_modifier("melee", 3) 
+		force.set_ammo_damage_modifier("biological", 3)
+		force.set_ammo_damage_modifier("artillery-shell", 3)
+		force.set_ammo_damage_modifier("flamethrower", 3)
+		force.set_gun_speed_modifier("melee", damage_mod)
+		force.set_gun_speed_modifier("biological", damage_mod)
+		force.set_gun_speed_modifier("artillery-shell", damage_mod)
+		force.set_gun_speed_modifier("flamethrower", damage_mod)
 		--Announce New Spawn
 		if(global.biter_spawn_unseen[force_name][unit_name]) then
 			game.print("A " .. unit_name:gsub("-", " ") .. " was spotted far away on team " .. force_name .. "...")
