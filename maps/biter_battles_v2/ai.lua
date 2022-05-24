@@ -461,7 +461,7 @@ function Public.subtract_threat(entity)
 	if not threat_values[entity.name] then return end
 	local biter_not_boss_force = entity.force.name
 	local threat_modifier = 1
-	if global.boss_biters[entity.unit_number] ~= nil then
+	if global.boss_units[entity.unit_number] ~= nil then
 		if entity.force.name == 'south_biters_boss' then
 			biter_not_boss_force = 'south_biters'
 		else

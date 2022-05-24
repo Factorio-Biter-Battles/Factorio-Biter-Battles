@@ -195,12 +195,11 @@ function Public.tables()
 	global.tm_custom_name = {}
 	global.total_passive_feed_redpotion = 0
 	global.unit_spawners = {}
-	global.boss_biters = {}
+	global.boss_units = {}
 	global.unit_spawners.north_biters = {}
 	global.unit_spawners.south_biters = {}
 	global.active_special_games = {}
 	global.special_games_variables = {}
-	global.boss_units = {}
 	global.biter_spawn_unseen = {
 		["north"] = {
 			["medium-spitter"] = true, ["medium-biter"] = true, ["big-spitter"] = true, ["big-biter"] = true, ["behemoth-spitter"] = true, ["behemoth-biter"] = true
