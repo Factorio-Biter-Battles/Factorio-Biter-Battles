@@ -70,7 +70,6 @@ end
 local function on_entity_died(event)
 	local entity = event.entity
 	if not entity.valid then return end
-	game.print('entity died and came here..' .. entity.name)
 	if Ai.subtract_threat(entity) then Gui.refresh_threat() end
 	if Functions.biters_landfill(entity) then return end
 	Game_over.silo_death(event)
