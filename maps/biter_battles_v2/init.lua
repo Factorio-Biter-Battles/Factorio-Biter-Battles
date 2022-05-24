@@ -200,6 +200,7 @@ function Public.tables()
 	global.unit_spawners.south_biters = {}
 	global.active_special_games = {}
 	global.special_games_variables = {}
+	global.boss_units = {}
 	global.biter_spawn_unseen = {
 		["north"] = {
 			["medium-spitter"] = true, ["medium-biter"] = true, ["big-spitter"] = true, ["big-biter"] = true, ["behemoth-spitter"] = true, ["behemoth-biter"] = true
@@ -305,6 +306,7 @@ function Public.forces()
 	local f = game.forces["north_biters"]
 	f.set_friend("south_biters", true)
 	f.set_friend("south_biters_boss", true)
+	f.set_friend("north_biters_boss", true)
 	f.set_friend("south", true)
 	f.set_friend("player", true)
 	f.set_friend("spectator", true)
@@ -314,6 +316,7 @@ function Public.forces()
 	local f = game.forces["south_biters"]
 	f.set_friend("north_biters", true)
 	f.set_friend("north_biters_boss", true)
+	f.set_friend("south_biters_boss", true)
 	f.set_friend("north", true)
 	f.set_friend("player", true)
 	f.set_friend("spectator", true)
@@ -323,6 +326,7 @@ function Public.forces()
 
 	local f = game.forces["north_biters_boss"]
 	f.set_friend("south_biters", true)
+	f.set_friend("north_biters", true)
 	f.set_friend("south_biters_boss", true)
 	f.set_friend("south", true)
 	f.set_friend("player", true)
@@ -332,6 +336,7 @@ function Public.forces()
 
 	local f = game.forces["south_biters_boss"]
 	f.set_friend("north_biters", true)
+	f.set_friend("south_biters", true)
 	f.set_friend("north_biters_boss", true)
 	f.set_friend("north", true)
 	f.set_friend("player", true)

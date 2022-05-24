@@ -21,8 +21,8 @@ end
 
 
 local function update_boss_modifiers(force_name_biter,damage_mod_mult,speed_mod_mult)
-	local damage_mod = math.round((global.bb_evolution[force.name]) * 1.0, 3) * damage_mod_mult
-	local speed_mod = math.round((global.bb_evolution[force.name]) * 1.0, 3) * speed_mod_mult
+	local damage_mod = math.round((global.bb_evolution[force_name_biter]) * 1.0, 3) * damage_mod_mult
+	local speed_mod = math.round((global.bb_evolution[force_name_biter]) * 1.0, 3) * speed_mod_mult
 	local force = game.forces[force_name_biter .. "_boss"]
 	force.set_ammo_damage_modifier("melee", damage_mod) 
 	force.set_ammo_damage_modifier("biological", damage_mod)
@@ -216,31 +216,31 @@ function set_evo_and_threat(flask_amount, food, biter_force_name)
 		update_boss_modifiers(biter_force_name, 2,2)
 	end
 	if evo > 3.3 then -- 330% evo => 3.3
-		if biter_force_name == "north_biters" and bb_config.max_group_size_north ~= 37 then
+		if biter_force_name == "north_biters" and bb_config.max_group_size_north ~= 50 then
 			bb_config.max_group_size_north = 50
 		end
-		if biter_force_name == "south_biters" and bb_config.max_group_size_north ~= 37 then
+		if biter_force_name == "south_biters" and bb_config.max_group_size_south ~= 50 then
 			bb_config.max_group_size_south = 50
 		end
 	elseif evo > 2.3 then
 		if biter_force_name == "north_biters" and bb_config.max_group_size_north ~= 75 then
 			bb_config.max_group_size_north = 75
 		end
-		if biter_force_name == "south_biters" and bb_config.max_group_size_north ~= 75 then
+		if biter_force_name == "south_biters" and bb_config.max_group_size_south ~= 75 then
 			bb_config.max_group_size_south = 75
 		end
 	elseif evo > 1.3 then  
 		if biter_force_name == "north_biters" and bb_config.max_group_size_north ~= 100 then
 			bb_config.max_group_size_north = 100
 		end
-		if biter_force_name == "south_biters" and bb_config.max_group_size_north ~= 100 then
+		if biter_force_name == "south_biters" and bb_config.max_group_size_south ~= 100 then
 			bb_config.max_group_size_south = 100
 		end
 	elseif evo > 0.7 then 
 		if biter_force_name == "north_biters" and bb_config.max_group_size_north ~= 200 then
 			bb_config.max_group_size_north = 200
 		end
-		if biter_force_name == "south_biters" and bb_config.max_group_size_north ~= 200 then
+		if biter_force_name == "south_biters" and bb_config.max_group_size_south ~= 200 then
 			bb_config.max_group_size_south = 200
 		end
 	end

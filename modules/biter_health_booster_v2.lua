@@ -348,6 +348,7 @@ local function on_entity_damaged(event)
 end
 
 local function on_entity_died(event)
+	game.print('BBBentity died and came here..' .. event.entity.name) --FIXME TODO WHO CARES, CODE NOT GOING HERE
     if not this.check_on_entity_died then
         return
     end
@@ -359,7 +360,9 @@ local function on_entity_died(event)
     if not entity_types[biter.type] then
         return
     end
-
+	game.print('BBBaentity died and came here..' .. event.entity.name)
+	
+	
     local biter_health_boost_units = this.biter_health_boost_units
 
     local unit_number = biter.unit_number
@@ -549,7 +552,5 @@ Event.on_init(
 
 Event.add(defines.events.on_entity_died, on_entity_died)
 Event.on_nth_tick(7200, check_clear_table)
---Event.add(defines.events.on_entity_died, on_entity_died, {filter = 'name', name = 'behemoth-spitter'})
---Event.add(defines.events.on_entity_died, on_entity_died, {filter = 'type', type = 'unit'})
 
 return Public

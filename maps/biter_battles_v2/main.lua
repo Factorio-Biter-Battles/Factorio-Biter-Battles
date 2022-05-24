@@ -12,6 +12,7 @@ local Terrain = require "maps.biter_battles_v2.terrain"
 local Session = require 'utils.datastore.session_data'
 local Color = require 'utils.color_presets'
 local Unit_health_booster = require 'modules.biter_health_booster_v2'
+local BossUnit = require 'functions.boss_unit'
 local autoTagWestOutpost = "[West]"
 local autoTagEastOutpost = "[East]"
 local autoTagDistance = 600
@@ -70,6 +71,7 @@ end
 local function on_entity_died(event)
 	local entity = event.entity
 	if not entity.valid then return end
+	game.print('entity died and came here..' .. entity.name)
 	if Ai.subtract_threat(entity) then Gui.refresh_threat() end
 	if Functions.biters_landfill(entity) then return end
 	Game_over.silo_death(event)
@@ -148,8 +150,7 @@ local function spawn_boss_units(surface)
                 local biter = surface.create_entity({name = entry.name, position = pos,force=boss_biter_force_name})
                 biter.ai_settings.allow_try_return_to_spawner = false
 				biter.speed = biter.speed * 1.5
-                global.boss_biters[biter.unit_number] = biter
-                Unit_health_booster.add_boss_unit(biter, biter_health_boost * health_factor, 0.55)
+				BossUnit.add_boss_unit(biter, biter_health_boost * health_factor, 0.55)
 				local force = biter.force
 				
 				local unit_group = surface.create_unit_group({position = position, force = boss_biter_force_name})
@@ -176,11 +177,14 @@ local function on_tick()
 
 	Ai.reanimate_units()
 
-	if tick == 60 then 
+	if tick % 60 == 0 then 
 		global.bb_threat["north_biters"] = global.bb_threat["north_biters"] + global.bb_threat_income["north_biters"]
 		global.bb_threat["south_biters"] = global.bb_threat["south_biters"] + global.bb_threat_income["south_biters"]
-		--spawn_boss_units(game.surfaces[global.bb_surface_name])
 	end
+	
+	--if tick == 60 then 
+	--	spawn_boss_units(game.surfaces[global.bb_surface_name])
+	--end
 
 	if (tick+5) % 180 == 0 then
 		Gui.refresh()
