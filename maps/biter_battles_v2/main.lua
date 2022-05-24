@@ -11,7 +11,6 @@ local Team_manager = require "maps.biter_battles_v2.team_manager"
 local Terrain = require "maps.biter_battles_v2.terrain"
 local Session = require 'utils.datastore.session_data'
 local Color = require 'utils.color_presets'
-local Unit_health_booster = require 'modules.biter_health_booster_v2'
 local BossUnit = require 'functions.boss_unit'
 local autoTagWestOutpost = "[West]"
 local autoTagEastOutpost = "[East]"
@@ -127,15 +126,11 @@ local tick_minute_functions = {
 }
 
 
-local function spawn_boss_units(surface)
-	game.print('boss is coming for your !$zù$', {r = 0.8, g = 0.1, b = 0.1})
-	
-	--local boss_biter_force_name = global.next_attack .. "_biters_boss"
-	local boss_biter_force_name = game.forces.north.name .. "_biters_boss" -- FIXME TODO PLZ JUST TEST TEMPORARY
+local function spawn_boss_units(surface) -- TEMPORARY TEST
+	game.print('boss is coming for your life!', {r = 0.8, g = 0.1, b = 0.1})
+	local boss_biter_force_name = game.forces.north.name .. "_biters_boss"
 
-    local biter_health_boost = Unit_health_booster.get('biter_health_boost')
     local health_factor = 200
-	
 	local boss_waves = {
 		--{name = 'behemoth-spitter', count = 6},
 		{name = 'behemoth-biter', count = 1}
@@ -150,7 +145,7 @@ local function spawn_boss_units(surface)
                 local biter = surface.create_entity({name = entry.name, position = pos,force=boss_biter_force_name})
                 biter.ai_settings.allow_try_return_to_spawner = false
 				biter.speed = biter.speed * 1.5
-				BossUnit.add_boss_unit(biter, biter_health_boost * health_factor, 0.55)
+				BossUnit.add_boss_unit(biter, health_factor, 0.55)
 				local force = biter.force
 				
 				local unit_group = surface.create_unit_group({position = position, force = boss_biter_force_name})
