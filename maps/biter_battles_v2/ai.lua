@@ -456,16 +456,20 @@ function Public.subtract_threat(entity)
 	if not threat_values[entity.name] then return end
 	local biter_not_boss_force = entity.force.name
 	local threat_modifier = 1
-	if global.boss_units[entity.unit_number] ~= nil then
-		if entity.force.name == 'south_biters_boss' then
-			biter_not_boss_force = 'south_biters'
-		else
-			biter_not_boss_force = 'north_biters'
-		end
-		local health_buff_equivalent_revive = 1.0/(1.0-global.reanim_chance[game.forces[biter_not_boss_force].index]/100)
-		local health_factor = bb_config.health_multiplier_boss*health_buff_equivalent_revive
-		threat_modifier = 1 * health_factor
+	local is_boss = false
+	local health_factor = 1
+	if entity.force.name == 'south_biters_boss' then
+		biter_not_boss_force = 'south_biters'
+		is_boss = true
+	elseif entity.force.name == 'north_biters_boss' then
+		biter_not_boss_force = 'north_biters'
+		is_boss = true
 	end
+	if is_boss == true then
+		local health_buff_equivalent_revive = 1.0/(1.0-global.reanim_chance[game.forces[biter_not_boss_force].index]/100)
+		health_factor = bb_config.health_multiplier_boss*health_buff_equivalent_revive
+	end
+	threat_modifier = 1 * health_factor
 	global.bb_threat[biter_not_boss_force] = global.bb_threat[biter_not_boss_force] - threat_values[entity.name] * threat_modifier
 	return true
 end
