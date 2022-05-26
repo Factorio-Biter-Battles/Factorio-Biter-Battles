@@ -20,7 +20,8 @@ local bb_config = {
 	["max_group_evo1"] = 200,						--Limit of unit group size for biters depending on evo.
 	["max_group_evo2"] = 100,						--Limit of unit group size for biters depending on evo.
 	["max_group_evo3"] = 75,						--Limit of unit group size for biters depending on evo.
-	["max_group_evo4"] = 50						--Limit of unit group size for biters depending on evo.
+	["max_group_evo4"] = 50,						--Limit of unit group size for biters depending on evo.
+	["health_multiplier_boss"] = 20*1.3				--Health multiplier for boss biters
 }
 
 return bb_config

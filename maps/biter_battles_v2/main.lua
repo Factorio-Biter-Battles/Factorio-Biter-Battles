@@ -15,6 +15,7 @@ local BossUnit = require 'functions.boss_unit'
 local autoTagWestOutpost = "[West]"
 local autoTagEastOutpost = "[East]"
 local autoTagDistance = 600
+local bb_config = require "maps.biter_battles_v2.config"
 
 require "maps.biter_battles_v2.sciencelogs_tab"
 require "maps.biter_battles_v2.changelog_tab"
@@ -166,6 +167,81 @@ local function spawn_boss_units(surface) -- TEMPORARY TEST
     end
 end
 
+local function spawn_wave(surface,amountBossMelee,amountBossSpit,amountNormalBiters, positionSpawn)
+	game.print('Wave enabled ! Time to fear', {r = 0.8, g = 0.1, b = 0.1})
+	local boss_biter_force_name = game.forces.north.name .. "_biters_boss"
+	local biter_force_name = game.forces.north.name .. "_biters"
+	local health_buff_equivalent_revive = 1.0/(1.0-global.reanim_chance[game.forces[biter_force_name].index]/100)
+    local health_factor = bb_config.health_multiplier_boss*health_buff_equivalent_revive
+
+	local biters_boss_wave = {
+		{name = 'behemoth-spitter', count = amountBossSpit},
+		{name = 'behemoth-biter', count = amountBossMelee}
+	}
+	local biters_wave = {
+		{name = 'behemoth-spitter', count = amountNormalBiters/2},
+		{name = 'behemoth-biter', count = amountNormalBiters/2}
+	}
+		
+    local biter_group = surface.create_unit_group({position = positionSpawn})
+    for _, entry in pairs(biters_boss_wave) do
+        for _ = 1, entry.count, 1 do
+            local pos = surface.find_non_colliding_position(entry.name, positionSpawn, 64, 3)
+            if pos then
+                local biter = surface.create_entity({name = entry.name, position = pos,force=boss_biter_force_name})
+                biter.ai_settings.allow_try_return_to_spawner = false
+				biter.speed = biter.speed * 1.5
+				BossUnit.add_boss_unit(biter, health_factor, 0.55)
+				local force = biter.force
+				
+				local unit_group = surface.create_unit_group({position = positionSpawn, force = boss_biter_force_name})
+				unit_group.add_member(biter)
+				local commands = {}
+					commands[1] = {
+						type = defines.command.attack,
+						target = global.rocket_silo["north"],
+						distraction = defines.distraction.by_enemy
+					}
+
+					biter.unit_group.set_command({
+						type = defines.command.compound,
+						structure_type = defines.compound_command.logical_and,
+						commands = commands
+						})
+            end
+        end
+    end
+	
+		
+    biter_group = surface.create_unit_group({position = positionSpawn})
+    for _, entry in pairs(biters_wave) do
+        for _ = 1, entry.count, 1 do
+            local pos = surface.find_non_colliding_position(entry.name, positionSpawn, 64, 3)
+            if pos then
+                local biter = surface.create_entity({name = entry.name, position = pos,force=biter_force_name})
+                biter.ai_settings.allow_try_return_to_spawner = false
+				local force = biter.force
+				
+				local unit_group = surface.create_unit_group({position = positionSpawn, force = biter_force_name})
+				unit_group.add_member(biter)
+				local commands = {}
+					commands[1] = {
+						type = defines.command.attack,
+						target = global.rocket_silo["north"],
+						distraction = defines.distraction.by_enemy
+					}
+
+					biter.unit_group.set_command({
+						type = defines.command.compound,
+						structure_type = defines.compound_command.logical_and,
+						commands = commands
+						})
+            end
+        end
+    end
+end
+
+
 local function on_tick()
 	local tick = game.tick
 
@@ -179,7 +255,78 @@ local function on_tick()
 	--if tick == 60 then 
 	--	spawn_boss_units(game.surfaces[global.bb_surface_name])
 	--end
-
+	if tick % 60 == 0 then 
+		local posSpawn= {x = 0 , y=-200}
+		if global.wave1 == true then
+			posSpawn.x = 0
+			game.forces["north"].technologies['laser-shooting-speed-4'].researched = true
+			game.forces["north"].technologies['energy-weapons-damage-4'].researched = true
+			game.forces["north"].technologies['refined-flammables-4'].researched = true
+			game.forces["north_biters"].evolution_factor = 1
+			global.bb_evolution["north_biters"] = 1
+			global.bb_threat["north_biters"] = 0
+			set_evo_and_threat(1,"automation-science-pack","north_biters")
+			game.print("Wave 1 enabled :" .. game.forces["north_biters"].evolution_factor .. "," .. global.bb_evolution["north_biters"] .. "," .. global.bb_threat["north_biters"])
+			spawn_wave(game.surfaces[global.bb_surface_name],3,2,50,posSpawn)
+			posSpawn.x = posSpawn.x - 175 
+			spawn_wave(game.surfaces[global.bb_surface_name],3,2,50,posSpawn)
+			posSpawn.x = posSpawn.x + 350 
+			spawn_wave(game.surfaces[global.bb_surface_name],3,2,50,posSpawn)
+			global.wave1 = falseZ
+		end
+		if global.wave2 == true then
+			posSpawn.x = 0
+			game.forces["north"].technologies['laser-shooting-speed-4'].researched = true
+			game.forces["north"].technologies['energy-weapons-damage-4'].researched = true
+			game.forces["north"].technologies['refined-flammables-4'].researched = true
+			game.forces["north_biters"].evolution_factor = 1
+			global.bb_evolution["north_biters"] = 1
+			global.bb_threat["north_biters"] = 0
+			set_evo_and_threat(1,"automation-science-pack","north_biters")
+			game.print("Wave 1 enabled :" .. game.forces["north_biters"].evolution_factor .. "," .. global.bb_evolution["north_biters"] .. "," .. global.bb_threat["north_biters"])
+			spawn_wave(game.surfaces[global.bb_surface_name],0,0,150,posSpawn)
+			posSpawn.x = posSpawn.x - 175 
+			spawn_wave(game.surfaces[global.bb_surface_name],0,0,150,posSpawn)
+			posSpawn.x = posSpawn.x + 350 
+			spawn_wave(game.surfaces[global.bb_surface_name],0,0,150,posSpawn)
+			global.wave2 = false
+		end
+		if global.wave3 == true then
+			posSpawn.x = 0
+			game.forces["north"].technologies['laser-shooting-speed-7'].researched = true
+			game.forces["north"].technologies['energy-weapons-damage-6'].researched = true
+			game.forces["north"].technologies['refined-flammables-6'].researched = true
+			game.forces["north_biters"].evolution_factor = 1
+			global.bb_evolution["north_biters"] = 2
+			global.bb_threat["north_biters"] = 0
+			set_evo_and_threat(1,"automation-science-pack","north_biters")
+			game.print("Wave 1 enabled :" .. game.forces["north_biters"].evolution_factor .. "," .. global.bb_evolution["north_biters"] .. "," .. global.bb_threat["north_biters"])
+			spawn_wave(game.surfaces[global.bb_surface_name],5,5,50,posSpawn)
+			posSpawn.x = posSpawn.x - 175 
+			spawn_wave(game.surfaces[global.bb_surface_name],5,5,50,posSpawn)
+			posSpawn.x = posSpawn.x + 350 
+			spawn_wave(game.surfaces[global.bb_surface_name],5,5,50,posSpawn)
+			global.wave3 = false
+		end
+		if global.wave4 == true then
+			posSpawn.x = 0
+			game.forces["north"].technologies['laser-shooting-speed-7'].researched = true
+			game.forces["north"].technologies['energy-weapons-damage-6'].researched = true
+			game.forces["north"].technologies['refined-flammables-6'].researched = true
+			game.forces["north_biters"].evolution_factor = 2
+			global.bb_evolution["north_biters"] = 2
+			global.bb_threat["north_biters"] = 0
+			set_evo_and_threat(1,"automation-science-pack","north_biters")
+			game.print("Wave 1 enabled :" .. game.forces["north_biters"].evolution_factor .. "," .. global.bb_evolution["north_biters"] .. "," .. global.bb_threat["north_biters"])
+			spawn_wave(game.surfaces[global.bb_surface_name],0,0,250,posSpawn)
+			posSpawn.x = posSpawn.x - 175 
+			spawn_wave(game.surfaces[global.bb_surface_name],0,0,250,posSpawn)
+			posSpawn.x = posSpawn.x + 350 
+			spawn_wave(game.surfaces[global.bb_surface_name],0,0,250,posSpawn)
+			global.wave4 = false
+		end
+	end
+	
 	if (tick+5) % 180 == 0 then
 		Gui.refresh()
 	end

@@ -22,7 +22,7 @@ end
 
 local function update_boss_modifiers(force_name_biter,damage_mod_mult,speed_mod_mult)
 	local damage_mod = math.round((global.bb_evolution[force_name_biter]) * 1.0, 3) * damage_mod_mult
-	local speed_mod = math.round((global.bb_evolution[force_name_biter]) * 1.0, 3) * speed_mod_mult
+	local speed_mod = math.round((global.bb_evolution[force_name_biter]) *0.25, 3) * speed_mod_mult
 	local force = game.forces[force_name_biter .. "_boss"]
 	force.set_ammo_damage_modifier("melee", damage_mod) 
 	force.set_ammo_damage_modifier("biological", damage_mod)
