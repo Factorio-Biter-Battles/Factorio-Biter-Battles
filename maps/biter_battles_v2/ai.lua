@@ -153,17 +153,12 @@ local function generate_boss_units_around_spawner(spawner, force_name, side_targ
 
 	local max_unit_count = math.floor(global.bb_threat[biter_force_name] * 0.25) + math_random(6,12)
 	if max_unit_count > max_group_size_biters_force then max_unit_count = max_group_size_biters_force end
-
-	game.print('--bb threat is : ' .. global.bb_threat[biter_force_name])
-	game.print('-bb max_unit_count : ' .. max_unit_count)
-	game.print('-bb max_group_size_biters_force : ' .. max_group_size_biters_force)
 	
 	-- *1.5 because we add 50% health bonus as it's just one unit.  
 	-- *20 because one boss is equal of 20 biters in theory
 	-- formula because 90% revive chance is 1/(1-0.9) = 10, which means biters needs to be killed 10 times, so *10 . easy fast-check : 50% revive is 2 biters worth, formula matches. 0% revive -> 1 biter worth
 	local health_buff_equivalent_revive = 1.0/(1.0-global.reanim_chance[game.forces[biter_force_name].index]/100)
     local health_factor = bb_config.health_multiplier_boss*health_buff_equivalent_revive
-	game.print('health buff is '.. health_factor)
 	
 	--Manual spawning of boss units
 	local roll_type = unit_type_raffle[math_random(1, size_of_unit_type_raffle)]
@@ -178,7 +173,6 @@ local function generate_boss_units_around_spawner(spawner, force_name, side_targ
 			i = i + 1
 			valid_biters[i] = biter
 			BossUnit.add_boss_unit(biter, health_factor, 0.55)
-			game.print('made a boss !' .. position.x .. "," .. position.y)
 			--Announce New Spawn
 			if(global.biter_spawn_unseen[force_name][unit_name]) then
 				game.print("A " .. unit_name:gsub("-", " ") .. " was spotted far away on team " .. force_name .. "...")
@@ -187,6 +181,7 @@ local function generate_boss_units_around_spawner(spawner, force_name, side_targ
 		end
 	end
 	
+	game.print('DELETEME ||force : ' .. force_name .. ' , maxGroupSize:' .. max_group_size_biters_force..' ,maxUnitcount:'..max_unit_count.. ', amount of bosses created : ' .. math.ceil((bb_config.max_group_size_initial - max_group_size_biters_force)/20))
 	if global.bb_debug then game.print(get_active_biter_count(biter_force_name) .. " active units for " .. biter_force_name) end
 
 	return valid_biters
@@ -245,6 +240,7 @@ local function select_units_around_spawner(spawner, force_name, side_target)
 	end
 
 	if global.bb_debug then game.print(get_active_biter_count(biter_force_name) .. " active units for " .. biter_force_name) end
+	game.print('DELETEME ||force : ' .. force_name .. 'amount of norm biters made for wave :' .. max_unit_count)
 
 	return valid_biters
 end
