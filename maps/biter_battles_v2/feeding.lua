@@ -213,7 +213,7 @@ function set_evo_and_threat(flask_amount, food, biter_force_name)
 	set_biter_endgame_modifiers(game.forces[biter_force_name])
 	
 	if evo > 1 then
-		update_boss_modifiers(biter_force_name, 2,2)
+		update_boss_modifiers(biter_force_name, 2,1)
 	end
 	if evo > 3.3 then -- 330% evo => 3.3
 		if biter_force_name == "north_biters" and bb_config.max_group_size_north ~= 50 then
