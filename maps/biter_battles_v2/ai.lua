@@ -177,7 +177,6 @@ local function generate_boss_units_around_spawner(spawner, force_name, side_targ
 			threat = threat - threat_values[biter.name] * 20 * health_buff_equivalent_revive -- 20 because boss is 20 biters equivalent with health buff included
 			i = i + 1
 			valid_biters[i] = biter
-			--biter.speed = biter.speed * 2
 			BossUnit.add_boss_unit(biter, health_factor, 0.55)
 			game.print('made a boss !' .. position.x .. "," .. position.y)
 			--Announce New Spawn
