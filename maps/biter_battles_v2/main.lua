@@ -125,48 +125,6 @@ local tick_minute_functions = {
 	[300 * 4] = Ai.send_near_biters_to_silo,
 }
 
-
-local function spawn_boss_units(surface) -- TEMPORARY TEST
-	game.print('boss is coming for your life!', {r = 0.8, g = 0.1, b = 0.1})
-	local boss_biter_force_name = game.forces.north.name .. "_biters_boss"
-
-    local health_factor = 200
-	local boss_waves = {
-		--{name = 'behemoth-spitter', count = 6},
-		{name = 'behemoth-biter', count = 1}
-	}
-		
-    local position = {x = 5, y = -140}
-    local biter_group = surface.create_unit_group({position = position})
-    for _, entry in pairs(boss_waves) do
-        for _ = 1, entry.count, 1 do
-            local pos = surface.find_non_colliding_position(entry.name, position, 64, 3)
-            if pos then
-                local biter = surface.create_entity({name = entry.name, position = pos,force=boss_biter_force_name})
-                biter.ai_settings.allow_try_return_to_spawner = false
-				biter.speed = biter.speed * 1.5
-				BossUnit.add_boss_unit(biter, health_factor, 0.55)
-				local force = biter.force
-				
-				local unit_group = surface.create_unit_group({position = position, force = boss_biter_force_name})
-				unit_group.add_member(biter)
-				local commands = {}
-					commands[1] = {
-						type = defines.command.attack,
-						target = global.rocket_silo["north"],
-						distraction = defines.distraction.by_enemy
-					}
-
-					biter.unit_group.set_command({
-						type = defines.command.compound,
-						structure_type = defines.compound_command.logical_and,
-						commands = commands
-						})
-            end
-        end
-    end
-end
-
 local function spawn_wave(surface,amountBossMelee,amountBossSpit,amountNormalBiters, positionSpawn)
 	game.print('Wave enabled ! Time to fear', {r = 0.8, g = 0.1, b = 0.1})
 	local boss_biter_force_name = game.forces.north.name .. "_biters_boss"
@@ -252,9 +210,6 @@ local function on_tick()
 		global.bb_threat["south_biters"] = global.bb_threat["south_biters"] + global.bb_threat_income["south_biters"]
 	end
 	
-	--if tick == 60 then 
-	--	spawn_boss_units(game.surfaces[global.bb_surface_name])
-	--end
 	if tick % 60 == 0 then 
 		local posSpawn= {x = 0 , y=-200}
 		if global.wave1 == true then
