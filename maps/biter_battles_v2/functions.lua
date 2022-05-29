@@ -2,6 +2,7 @@ local Server = require 'utils.server'
 local Muted = require 'utils.muted'
 local Tables = require "maps.biter_battles_v2.tables"
 local Session = require 'utils.datastore.session_data'
+local bb_config = require "maps.biter_battles_v2.config"
 local string_sub = string.sub
 local math_random = math.random
 local math_round = math.round
@@ -263,10 +264,28 @@ function Public.init_player(player)
 	game.permissions.get_group("spectator").add_player(player)
 end
 
+local function is_biter_area_no_noise(position)
+	local bitera_area_distance = bb_config.bitera_area_distance * -1
+	local biter_area_angle = 0.45
+	local a = bitera_area_distance - (math_abs(position.x) * biter_area_angle)
+	if position.y - 70 > a then return false end
+	if position.y + 70 < a then return true end	
+	if position.y > a then return false end
+	return true
+end
+
 function Public.no_turret_creep(event)
 	local entity = event.created_entity
 	if not entity.valid then return end
 	if not no_turret_blacklist[event.created_entity.type] then return end
+	
+	local posEntity = entity.position
+	if posEntity.y > 0 then posEntity.y = (posEntity.y + 140) * -1 end
+	if posEntity.y < 0 then posEntity.y = posEntity.y - 140 end
+	if not is_biter_area_no_noise(posEntity) then
+		return
+	end
+	
 	local surface = event.created_entity.surface				
 	local spawners = surface.find_entities_filtered({type = "unit-spawner", area = {{entity.position.x - 70, entity.position.y - 70}, {entity.position.x + 70, entity.position.y + 70}}})
 	if #spawners == 0 then return end
