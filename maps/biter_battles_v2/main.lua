@@ -126,15 +126,9 @@ local tick_minute_functions = {
 local function on_tick()
 	local tick = game.tick
 
-	Ai.reanimate_units()
-
 	if tick % 60 == 0 then 
 		global.bb_threat["north_biters"] = global.bb_threat["north_biters"] + global.bb_threat_income["north_biters"]
 		global.bb_threat["south_biters"] = global.bb_threat["south_biters"] + global.bb_threat_income["south_biters"]
-	end
-
-	if (tick+5) % 180 == 0 then
-		Gui.refresh()
 	end
 
 	if (tick+11) % 300 == 0 then
@@ -149,8 +143,18 @@ local function on_tick()
 
 	if tick % 30 == 0 then	
 		local key = tick % 3600
-		if tick_minute_functions[key] then tick_minute_functions[key]() end
+		if tick_minute_functions[key] then
+			tick_minute_functions[key]()
+			return
+		end
 	end
+
+	if (tick+5) % 180 == 0 then
+		Gui.refresh()
+		return
+	end
+
+	Ai.reanimate_units()
 end
 
 local function on_marked_for_deconstruction(event)
