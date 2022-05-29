@@ -315,7 +315,6 @@ function Public.no_turret_creep(event)
 	if posEntity.y > 0 then posEntity.y = (posEntity.y + 100) * -1 end
 	if posEntity.y < 0 then posEntity.y = posEntity.y - 100 end
 	if not Public.is_biter_area(posEntity,false) then
-		game.print('NOPE too far' .. entity.position.y)
 		return
 	end
 	
