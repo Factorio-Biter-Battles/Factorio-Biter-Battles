@@ -137,9 +137,9 @@ function Public.playground_surface()
 	map_gen_settings.autoplace_controls = {
 		["coal"] = {frequency = 6.5, size = 0.34, richness = 0.24},
 		["stone"] = {frequency = 6, size = 0.385, richness = 0.25},
-		["copper-ore"] = {frequency = 7, size = 0.352, richness = 0.35},
+		["copper-ore"] = {frequency = 8.05, size = 0.352, richness = 0.35},
 		["iron-ore"] = {frequency = 8.5, size = 0.8, richness = 0.23},
-		["uranium-ore"] = {frequency = 2, size = 1, richness = 1},
+		["uranium-ore"] = {frequency = 2.2, size = 1, richness = 1},
 		["crude-oil"] = {frequency = 8, size = 1.4, richness = 0.45},
 		["trees"] = {frequency = math.random(8, 28) * 0.1, size = math.random(6, 14) * 0.1, richness = math.random(2, 4) * 0.1},
 		["enemy-base"] = {frequency = 0, size = 0, richness = 0}
