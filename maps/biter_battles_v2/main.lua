@@ -134,7 +134,7 @@ local function on_tick()
 		global.bb_threat["north_biters"] = global.bb_threat["north_biters"] + global.bb_threat_income["north_biters"]
 		global.bb_threat["south_biters"] = global.bb_threat["south_biters"] + global.bb_threat_income["south_biters"]
 	end
-	
+
 	if (tick+5) % 180 == 0 then
 		Gui.refresh()
 	end
