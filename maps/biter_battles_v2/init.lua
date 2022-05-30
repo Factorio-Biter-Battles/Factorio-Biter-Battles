@@ -67,8 +67,8 @@ function Public.initial_setup()
 
 	game.forces.spectator.research_all_technologies()
 
-	game.permissions.get_group("Default").set_allows_action(defines.input_action.open_blueprint_library_gui, true)
-	game.permissions.get_group("Default").set_allows_action(defines.input_action.import_blueprint_string, true)
+	game.permissions.get_group("Default").set_allows_action(defines.input_action.open_blueprint_library_gui, false)
+	game.permissions.get_group("Default").set_allows_action(defines.input_action.import_blueprint_string, false)
 
 	local p = game.permissions.create_group("spectator")
 	for action_name, _ in pairs(defines.input_action) do
@@ -132,7 +132,7 @@ function Public.playground_surface()
 	local map_gen_settings = {}
 	local int_max = 2 ^ 31
 	map_gen_settings.seed = math.random(1, int_max)
-	map_gen_settings.water = 0
+	map_gen_settings.water = math.random(15, 65) * 0.01
 	map_gen_settings.starting_area = 2.5
 	map_gen_settings.terrain_segmentation = math.random(30, 40) * 0.1
 	map_gen_settings.cliff_settings = {cliff_elevation_interval = 0, cliff_elevation_0 = 0}
@@ -143,7 +143,7 @@ function Public.playground_surface()
 		["iron-ore"] = {frequency = 8.5, size = 0.8, richness = 0.23},
 		["uranium-ore"] = {frequency = 2, size = 1, richness = 1},
 		["crude-oil"] = {frequency = 8, size = 1.4, richness = 0.45},
-		["trees"] = {frequency = 0, size = math.random(6, 14) * 0.1, richness = math.random(2, 4) * 0.1},
+		["trees"] = {frequency = math.random(8, 28) * 0.1, size = math.random(6, 14) * 0.1, richness = math.random(2, 4) * 0.1},
 		["enemy-base"] = {frequency = 0, size = 0, richness = 0}
 	}
 	local surface = game.create_surface(global.bb_surface_name, map_gen_settings)
@@ -200,10 +200,6 @@ function Public.tables()
 	global.unit_spawners.south_biters = {}
 	global.active_special_games = {}
 	global.special_games_variables = {}
-	global.wave1 = {}
-	global.wave2 = {}
-	global.wave3 = {}
-	global.wave4 = {}
 	global.biter_spawn_unseen = {
 		["north"] = {
 			["medium-spitter"] = true, ["medium-biter"] = true, ["big-spitter"] = true, ["big-biter"] = true, ["behemoth-spitter"] = true, ["behemoth-biter"] = true

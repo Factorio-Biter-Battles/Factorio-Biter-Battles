@@ -181,7 +181,6 @@ local function generate_boss_units_around_spawner(spawner, force_name, side_targ
 		end
 	end
 	
-	game.print('DELETEME ||force : ' .. force_name .. ' , maxGroupSize:' .. max_group_size_biters_force..' ,maxUnitcount:'..max_unit_count.. ', amount of bosses created : ' .. math.ceil((bb_config.max_group_size_initial - max_group_size_biters_force)/20))
 	if global.bb_debug then game.print(get_active_biter_count(biter_force_name) .. " active units for " .. biter_force_name) end
 
 	return valid_biters
@@ -240,7 +239,6 @@ local function select_units_around_spawner(spawner, force_name, side_target)
 	end
 
 	if global.bb_debug then game.print(get_active_biter_count(biter_force_name) .. " active units for " .. biter_force_name) end
-	game.print('DELETEME ||force : ' .. force_name .. 'amount of norm biters made for wave :' .. max_unit_count)
 
 	return valid_biters
 end
