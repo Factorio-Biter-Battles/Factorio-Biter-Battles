@@ -9,6 +9,7 @@ local Utils = require 'utils.core'
 local Color = require 'utils.color_presets'
 local Server = require 'utils.server'
 local Jail = require 'utils.datastore.jail_data'
+local pool = require 'maps.biter_battles_v2.pool'
 
 local Public = {}
 local match = string.match
@@ -16,17 +17,26 @@ local capsule_bomb_threshold = 8
 local de = defines.events
 
 local format = string.format
-
+local size = 1000
 local this = {
     enabled = true,
     histories = {
-        landfill = {},
-        capsule = {},
-        friendly_fire = {},
-        mining = {},
-        belt_mining = {},
-        corpse = {},
-        cancel_crafting = {},
+        landfill = pool.malloc(size),
+        capsule = pool.malloc(size),
+        friendly_fire = pool.malloc(size),
+        mining = pool.malloc(size),
+        belt_mining = pool.malloc(size),
+        corpse = pool.malloc(size),
+        cancel_crafting = pool.malloc(size),
+    },
+    histories_idx = {
+        landfill = 0,
+        capsule = 0,
+        friendly_fire = 0,
+        mining = 0,
+        belt_mining = 0,
+        corpse = 0,
+        cancel_crafting = 0
     },
     whitelist_types = {},
     permission_group_editing = {},
@@ -275,10 +285,15 @@ local function on_player_built_tile(event)
         time = game.ticks_played,
         server_time = game.tick,
     }
+    this.histories_idx.landfill = this.histories_idx.landfill % size + 1 
+    this.histories.landfill[this.histories_idx.landfill] = data
+
+    --[[
     table.insert(this.histories.landfill, 1, data)
     if #this.histories.landfill > 1000 then
         table.remove(this.histories.landfill)
     end
+    ]]
 end
 
 local function on_built_entity(event)
@@ -330,11 +345,8 @@ local function on_player_used_capsule(event)
             time = game.ticks_played,
             server_time = game.tick
         }
-        table.insert(this.histories.capsule, 1, data)
-        if #this.histories.capsule > 1000 then
-            table.remove(this.histories.capsule)
-        end
-
+        this.histories_idx.capsule = this.histories_idx.capsule % size + 1
+        this.histories.capsule[this.histories_idx.capsule] = data
     end
 end
 
@@ -362,10 +374,8 @@ local function on_entity_died(event)
             local contents = inv.get_contents()
             data.event = table.concat({data.event, " with ", inv.get_item_count(), " items"})
         end
-        table.insert(this.histories.friendly_fire, 1, data)
-        if #this.histories.friendly_fire > 1000 then
-            table.remove(this.histories.friendly_fire)
-        end
+        this.histories_idx.friendly_fire = this.histories_idx.friendly_fire % size + 1
+        this.histories.friendly_fire[this.histories_idx.friendly_fire] = data
     end
 end
 
@@ -400,17 +410,13 @@ local function on_player_mined_entity(event)
         server_time = game.tick
     }
     if belt_types[entity.type] then
-        table.insert(this.histories.belt_mining, 1, data)
-        if #this.histories.belt_mining > 1000 then
-            table.remove(this.histories.belt_mining)
-        end
+        this.histories_idx.belt_mining = this.histories_idx.belt_mining % size + 1
+        this.histories.belt_mining[this.histories_idx.belt_mining] = data
         return
     end
     if this.whitelist_types[entity.type] or not blacklisted_types[entity.type] then
-        table.insert(this.histories.mining, 1, data)
-        if #this.histories.mining > 1000 then
-            table.remove(this.histories.mining)
-        end
+        this.histories_idx.mining = this.histories_idx.mining % size + 1
+        this.histories.mining[this.histories_idx.mining] = data
     end
 end
 
@@ -448,10 +454,8 @@ local function on_gui_opened(event)
             time = game.ticks_played,
             server_time = game.tick
         }
-        table.insert(this.histories.corpse, 1, data)
-        if #this.histories.corpse > 1000 then
-            table.remove(this.histories.corpse)
-        end        
+        this.histories_idx.corpse = this.histories_idx.corpse % size + 1
+        this.histories.corpse[this.histories_idx.corpse] = data    
     end
 end
 
@@ -495,10 +499,8 @@ local function on_pre_player_mined_item(event)
             time = game.ticks_played,
             server_time = game.tick
         }
-        table.insert(this.histories.corpse, 1, data)
-        if #this.histories.corpse > 1000 then
-            table.remove(this.histories.corpse)
-        end
+        this.histories_idx.corpse = this.histories_idx.corpse % size + 1
+        this.histories.corpse[this.histories_idx.corpse] = data
     end
 end
 
@@ -582,10 +584,8 @@ local function on_player_cancelled_crafting(event)
             time = game.ticks_played,
             server_time = game.tick,
         }
-        table.insert(this.histories.cancel_crafting, 1, data)
-        if #this.histories.cancel_crafting > 1000 then
-            table.remove(this.histories.cancel_crafting)
-        end
+        this.histories_idx.cancel_crafting = this.histories_idx.cancel_crafting % size + 1
+        this.histories.cancel_crafting[this.histories_idx.cancel_crafting] = data
     end
 end
 

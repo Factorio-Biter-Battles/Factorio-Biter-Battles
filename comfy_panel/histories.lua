@@ -6,6 +6,7 @@ local Admin = require 'comfy_panel.admin'
 local Global = require 'utils.global'
 local String = require 'utils.string'
 local pos_from_gps = String.position_from_gps_tag
+local pool = require "maps.biter_battles_v2.pool"
 
 local this = {
     player_name_search = {},
@@ -94,6 +95,7 @@ local function draw_events(player, frame)
 	end
 	local histories = AntiGrief.get("histories")
 	local history = histories[histories_dict[selected_history_index].history]
+
 	--Headers captions
 	local history_headers = {
 		[1] = "Time",
@@ -144,16 +146,18 @@ local function draw_events(player, frame)
 	if not history then return end
 	-- filtering the history
 	for k, v in pairs(history) do
-		if gps_position and not in_radius(gps_position, v.position, radius) then
-			goto CONTINUE
+		if v ~= 0 then
+			if gps_position and not in_radius(gps_position, v.position, radius) then
+				goto CONTINUE
+			end
+			if player_name_search and not contains_text(v.player_name, nil, player_name_search) then
+				goto CONTINUE
+			end
+			if event_search and not contains_text(v.event, nil, event_search) then
+				goto CONTINUE
+			end
+			table.insert(temp, v)
 		end
-		if player_name_search and not contains_text(v.player_name, nil, player_name_search) then
-			goto CONTINUE
-		end
-		if event_search and not contains_text(v.event, nil, event_search) then
-			goto CONTINUE
-		end
-		table.insert(temp, v)
 		::CONTINUE::
 	end
 	table.sort(temp, comparators[sort_by])
@@ -170,7 +174,6 @@ local function draw_events(player, frame)
 end
 
 local create_histories_panel = (function(player, frame)
-	local histories = AntiGrief.get("histories")
 	frame.clear()
 	this.player_name_search[player.name] = nil
 	this.event_search[player.name] = nil
