@@ -2,7 +2,7 @@ local Public = {}
 local BiterRaffle = require "maps.biter_battles_v2.biter_raffle"
 local Functions = require "maps.biter_battles_v2.functions"
 local bb_config = require "maps.biter_battles_v2.config"
-local fifo = require "maps.biter_battles_v2.fifo"
+local stack = require "maps.biter_battles_v2.stack"
 local Tables = require "maps.biter_battles_v2.tables"
 local math_random = math.random
 local math_abs = math.abs
@@ -428,8 +428,8 @@ local CORPSE_NAMES = {
 	'small-spitter-corpse',
 }
 
-local function reanimate_unit(id)
-	local position = fifo.pop(id)
+local function reanimate_unit(force_stack)
+	local position = stack.pop(force_stack)
 
 	-- Find corpse to spawn unit on top of.
 	local surface = game.surfaces[global.bb_surface_name]
@@ -446,8 +446,8 @@ local function reanimate_unit(id)
 		force = 'north_biters'
 	end
 
-	local direction = nil
-	local name = nil
+	local direction
+	local name
 	if corpse == nil then
 		-- No corpse data, choose unit based on evolution %.
 		name = likely_biter_name(force)
@@ -467,27 +467,27 @@ local function reanimate_unit(id)
 	}
 end
 
-local function _reanimate_units(id, cycles)
+local function _reanimate_units(force_stack, cycles)
 	repeat
 		-- Reanimate unit and reassign current fifo state
-		reanimate_unit(id)
+		reanimate_unit(force_stack)
 		cycles = cycles - 1
 	until cycles == 0
 end
 
 function Public.reanimate_units()
-	-- This FIFOs can be accessed by force indices.
-	for force, id in pairs(global.dead_units) do
+	-- Get a stack for each force
+	for _, force_stack in pairs(global.dead_units) do
 		-- Check for each side if there are any biters to reanimate.
-		if fifo.empty(id) then
+		if stack.empty(force_stack) then
 			goto reanim_units_cont
 		end
 
 		-- Balance amount of unit creation requests to get rid off
 		-- excess stored in memory.
-		local cycles = fifo.length(id) / global.reanim_balancer
+		local cycles = stack.length(force_stack) / global.reanim_balancer
 		cycles = math.floor(cycles) + 1
-		_reanimate_units(id, cycles)
+		_reanimate_units(force_stack, cycles)
 
 		::reanim_units_cont::
 	end
@@ -524,14 +524,14 @@ Public.schedule_reanimate = function(event)
 		return
 	end
 
-	-- Store only position, that is enough to guess force and type of biter.
-	fifo.push(global.dead_units[idx], position)
+	-- Store only position, that is enough to guess the type of biter.
+	stack.push(global.dead_units[idx], position)
 end
 
 function Public.empty_reanim_scheduler()
-	for force, id in pairs(global.dead_units) do
+	for _, force_stack in pairs(global.dead_units) do
 		-- Check for each side if there are any biters to reanimate.
-		if not fifo.empty(id) then
+		if not stack.empty(force_stack) then
 			return false
 		end
 	end

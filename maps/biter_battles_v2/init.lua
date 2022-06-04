@@ -1,7 +1,7 @@
 local Terrain = require "maps.biter_battles_v2.terrain"
 local Score = require "comfy_panel.score"
 local Tables = require "maps.biter_battles_v2.tables"
-local fifo = require "maps.biter_battles_v2.fifo"
+local stack = require "maps.biter_battles_v2.stack"
 local Blueprint = require 'maps.biter_battles_v2.blueprints'
 
 local Public = {}
@@ -223,6 +223,7 @@ function Public.tables()
 	-- A size of pre-allocated pool memory to be used in every FIFO.
 	-- Higher value = higher memory footprint, faster I/O.
 	-- Lower value = more resize cycles during push, dynamic memory footprint.
+	-- 1024 is the maximum size supported by a fast table.
 	global.bb_fifo_size = 1024
 
 	-- A balancer threshold that instructs reanimation logic to increase
@@ -247,8 +248,6 @@ function Public.tables()
 	-- Container for storing chance of reanimation. The stored value
 	-- is a range between [0, 100], accessed by key with force's index.
 	global.reanim_chance = {}
-
-	fifo.init()
 
 	global.next_attack = "north"
 	if math.random(1,2) == 1 then global.next_attack = "south" end
@@ -309,7 +308,7 @@ function Public.forces()
 	f.set_friend("player", true)
 	f.set_friend("spectator", true)
 	f.share_chart = false
-	global.dead_units[f.index] = fifo.create(global.bb_fifo_size)
+	global.dead_units[f.index] = stack.new()
 
 	local f = game.forces["south_biters"]
 	f.set_friend("north_biters", true)
@@ -317,7 +316,7 @@ function Public.forces()
 	f.set_friend("player", true)
 	f.set_friend("spectator", true)
 	f.share_chart = false
-	global.dead_units[f.index] = fifo.create(global.bb_fifo_size)
+	global.dead_units[f.index] = stack.new()
 
 	local f = game.forces["spectator"]
 	f.set_spawn_position({0,0},surface)
