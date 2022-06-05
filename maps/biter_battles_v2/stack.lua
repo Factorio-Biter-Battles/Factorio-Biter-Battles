@@ -6,19 +6,14 @@ local pool = require "maps.biter_battles_v2.pool"
 stack = {}
 
 function stack.new()
-    local new_obj = {}
-    new_obj.id = 0
-    new_obj.table_id = 1
-    new_obj.tables = {}
-    new_obj.tables[1] = pool.malloc(1024)
-    return new_obj
+    return {id = 0, table_id = 1, tables = {pool.malloc(1024), table = tables[1]}}
 end
 
 function stack.reset(self)
     self.id = 0
     self.table_id = 1
-    self.tables = {} -- GC
-    self.tables[1] = pool.malloc(1024)
+    self.tables = {pool.malloc(1024)} -- GC
+    self.table = self.tables[1]
 end
 
 function stack.empty(self)
@@ -26,33 +21,40 @@ function stack.empty(self)
 end
 
 function stack.push(self,val)
-    self.id = self.id + 1
+    local id = self.id + 1
 
-    if self.id == 1025 then
-        self.id = 1
-        self.table_id = self.table_id + 1
-        self.tables[self.table_id] = pool.malloc(1024)
+    if id == 1025 then
+        id = 1
+        local table_id = self.table_id + 1
+        self.tables[table_id] = pool.malloc(1024)
+        self.table = self.tables[table_id]
+        self.table_id = table_id
     end
 
-    self.tables[self.table_id][self.id] = val
+    self.table[id] = val
+    self.id = id
 end
 
 function stack.pop(self)
-    local ref = self.tables[self.table_id][self.id]
+    local id = self.id
+    local ref = self.table[id]
 
-    self.id = self.id - 1
-
-    if self.id == 0 then
-        self.id = 1024
-        self.table_id = self.table_id - 1
-        self.tables[self.table_id] = nil
+    if id == 1 then
+        id = 1025
+        local table_id = self.table_id
+        self.tables[table_id] = nil
+        table_id = table_id - 1
+        self.table = self.tables[table_id]
+        self.table_id = table_id
     end
+
+    self.id = id - 1
 
     return ref
 end
 
 function stack.peek(self)
-    return self.tables[self.table_id][self.id]
+    return self.table[self.id]
 end
 
 function stack.length(self)
