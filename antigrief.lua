@@ -17,7 +17,7 @@ local capsule_bomb_threshold = 8
 local de = defines.events
 
 local format = string.format
-local size = 1000
+local size = 1024
 local this = {
     enabled = true,
     histories = {
@@ -287,13 +287,6 @@ local function on_player_built_tile(event)
     }
     this.histories_idx.landfill = this.histories_idx.landfill % size + 1 
     this.histories.landfill[this.histories_idx.landfill] = data
-
-    --[[
-    table.insert(this.histories.landfill, 1, data)
-    if #this.histories.landfill > 1000 then
-        table.remove(this.histories.landfill)
-    end
-    ]]
 end
 
 local function on_built_entity(event)
@@ -335,9 +328,9 @@ local function on_player_used_capsule(event)
     if not item then
         return
     end
-
-    local position = {x = math.floor(event.position.x), y = math.floor(event.position.y)}
-    if ammo_names[item.name] then
+    local x, y = event.position.x, event.position.y
+    local position = {x = math.floor(x), y = math.floor(y)} 
+    if ammo_names[item.name] and player.surface.count_entities_filtered({force = player.force.name .. "_biters", area = {{x - 10, y - 10}, {x + 10, y + 10}}, limit = 1}) <= 0 then
         local data = {
             player_name = player.name,
             event = item.name,
@@ -696,12 +689,24 @@ end
 
 --- This will reset the table of antigrief
 function Public.reset_tables()
-    this.histories.landfill = {}
-    this.histories.capsule = {}
-    this.histories.friendly_fire = {}
-    this.histories.mining = {}
-    this.histories.corpse = {}
-    this.histories.cancel_crafting = {}
+    this.histories = {
+        landfill = pool.malloc(size),
+        capsule = pool.malloc(size),
+        friendly_fire = pool.malloc(size),
+        mining = pool.malloc(size),
+        belt_mining = pool.malloc(size),
+        corpse = pool.malloc(size),
+        cancel_crafting = pool.malloc(size),
+    }
+    this.histories_idx = {
+        landfill = 0,
+        capsule = 0,
+        friendly_fire = 0,
+        mining = 0,
+        belt_mining = 0,
+        corpse = 0,
+        cancel_crafting = 0
+    }
 end
 
 --- Enable this to log when trees are destroyed

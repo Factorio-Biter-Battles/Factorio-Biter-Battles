@@ -61,8 +61,8 @@ local sorting_methods = {
 }
 
 local comparators = {
-	['name_asc'] = function(a, b) return a.player:lower() < b.player:lower() end,
-	['name_desc'] = function(a, b) return a.player:lower() > b.player:lower() end,
+	['name_asc'] = function(a, b) return a.player_name:lower() < b.player_name:lower() end,
+	['name_desc'] = function(a, b) return a.player_name:lower() > b.player_name:lower() end,
 	['time_asc'] = function(a, b) return a.server_time < b.server_time end,
 	['time_desc'] = function(a, b) return a.server_time > b.server_time end,
 	['event_asc'] = function(a, b) return a.event:lower() < b.event:lower() end,
