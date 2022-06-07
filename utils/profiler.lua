@@ -197,6 +197,7 @@ function Profiler.Stop(averageMs, message)
         text[#text + 1] = string.format('Reason: %s\n', message)
     end
     log(text)
+    game.write_file("profiler_output.txt", text, true)
     Profiler.CallTree = nil
     Profiler.IsRunning = false
 end
