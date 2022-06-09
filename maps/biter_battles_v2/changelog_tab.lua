@@ -6,7 +6,6 @@ local function add_changelog(player, element)
 	changelog_scrollpanel.style.maximal_height = 530
 	
 	local changelog_change = {}
-
 	table.insert(changelog_change,"2022-05-15")
 	table.insert(changelog_change,"Fixed exploit landfill enemy side and no decon on enemy side")
 	table.insert(changelog_change,"Ragnarok77")
