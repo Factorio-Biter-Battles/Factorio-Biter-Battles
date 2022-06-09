@@ -712,10 +712,10 @@ end
 --Construction Robot Restriction
 local robot_build_restriction = {
 	["north"] = function(y)
-		if y >= -10 then return true end
+		if y >= -bb_config.border_river_width / 2 then return true end
 	end,
 	["south"] = function(y)
-		if y <= 10 then return true end
+		if y <= bb_config.border_river_width / 2 then return true end
 	end
 }
 
@@ -730,11 +730,14 @@ function Public.deny_construction_bots(event)
 end
 
 function Public.deny_enemy_side_ghosts(event)
-	if event.created_entity.type ~= 'entity-ghost' then return end
-	local force = game.get_player(event.player_index).force.name
-	if not robot_build_restriction[force] then return end
-	if not robot_build_restriction[force](event.created_entity.position.y) then return end
-	event.created_entity.destroy()
+	if not event.created_entity.valid then return end
+	
+	if event.created_entity.type == 'entity-ghost' or event.created_entity.type == 'tile-ghost' then
+		local force = game.get_player(event.player_index).force.name
+		if not robot_build_restriction[force] then return end
+		if not robot_build_restriction[force](event.created_entity.position.y) then return end
+		event.created_entity.destroy()
+	end
 end
 
 return Public
