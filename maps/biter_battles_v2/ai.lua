@@ -178,7 +178,7 @@ local function generate_boss_units_around_spawner(spawner, force_name, side_targ
 				game.print("A " .. unit_name:gsub("-", " ") .. " was spotted far away on team " .. force_name .. "...")
 				global.biter_spawn_unseen[force_name][unit_name] = false
 			end
-			if threat + threat_values[biter.name] * 20 * health_buff_equivalent_revive < 0 then break end
+			if threat - threat_values[biter.name] * 20 * health_buff_equivalent_revive < 0 then break end
 		end
 	end
 	if global.bb_debug then game.print(get_active_biter_count(biter_force_name) .. " active units for " .. biter_force_name) end
