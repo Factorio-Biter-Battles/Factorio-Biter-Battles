@@ -149,8 +149,8 @@ local function generate_boss_units_around_spawner(spawner, force_name, side_targ
 		max_group_size_biters_force = bb_config.max_group_size_south
 	end
 
-	local threat = global.bb_threat[biter_force_name] / 10
-
+	local threat = global.bb_threat[biter_force_name] / 10 / 2 -- divide by 2 since 2 waves are spawned, one normal and one boss
+	
 	local max_unit_count = math.floor(global.bb_threat[biter_force_name] * 0.25) + math_random(6,12)
 	if max_unit_count > max_group_size_biters_force then max_unit_count = max_group_size_biters_force end
 	
@@ -178,9 +178,9 @@ local function generate_boss_units_around_spawner(spawner, force_name, side_targ
 				game.print("A " .. unit_name:gsub("-", " ") .. " was spotted far away on team " .. force_name .. "...")
 				global.biter_spawn_unseen[force_name][unit_name] = false
 			end
+			if threat + threat_values[biter.name] * 20 * health_buff_equivalent_revive < 0 then break end
 		end
 	end
-	
 	if global.bb_debug then game.print(get_active_biter_count(biter_force_name) .. " active units for " .. biter_force_name) end
 
 	return valid_biters
@@ -197,6 +197,11 @@ local function select_units_around_spawner(spawner, force_name, side_target)
 	local max_group_size_biters_force = bb_config.max_group_size_north
 	if biter_force_name == 'south_biters' then
 		max_group_size_biters_force = bb_config.max_group_size_south
+	end
+	
+	
+	if max_group_size_biters_force ~= bb_config.max_group_size_initial then
+		threat = threat / 2 -- divide by 2 since 2 waves are spawned, one normal and one boss 
 	end
 	
 	local unit_count = 0
