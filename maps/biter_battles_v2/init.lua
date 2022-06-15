@@ -213,6 +213,12 @@ function Public.tables()
 		},
 		["south"] = {
 			["medium-spitter"] = true, ["medium-biter"] = true, ["big-spitter"] = true, ["big-biter"] = true, ["behemoth-spitter"] = true, ["behemoth-biter"] = true
+		},
+		["north_biters_boss"] = {
+			["medium-spitter"] = true, ["medium-biter"] = true, ["big-spitter"] = true, ["big-biter"] = true, ["behemoth-spitter"] = true, ["behemoth-biter"] = true
+		},
+		["south_biters_boss"] = {
+			["medium-spitter"] = true, ["medium-biter"] = true, ["big-spitter"] = true, ["big-biter"] = true, ["behemoth-spitter"] = true, ["behemoth-biter"] = true
 		}
 	}
 	global.difficulty_vote_value = 1

@@ -138,70 +138,23 @@ local function get_random_spawner(biter_force_name)
 	end
 end
 
-local function generate_boss_units_around_spawner(spawner, force_name, side_target)
-	local biter_force_name = spawner.force.name
-	local boss_biter_force_name = biter_force_name .. "_boss"
-
-	local valid_biters = {}
-	local i = 0
-	local max_group_size_biters_force = bb_config.max_group_size_north
-	if biter_force_name == 'south_biters' then
-		max_group_size_biters_force = bb_config.max_group_size_south
-	end
-
-	local threat = global.bb_threat[biter_force_name] / 10 / 2 -- divide by 2 since 2 waves are spawned, one normal and one boss
-	
-	local max_unit_count = math.floor(global.bb_threat[biter_force_name] * 0.25) + math_random(6,12)
-	if max_unit_count > max_group_size_biters_force then max_unit_count = max_group_size_biters_force end
-	
-	-- *1.5 because we add 50% health bonus as it's just one unit.  
-	-- *20 because one boss is equal of 20 biters in theory
-	-- formula because 90% revive chance is 1/(1-0.9) = 10, which means biters needs to be killed 10 times, so *10 . easy fast-check : 50% revive is 2 biters worth, formula matches. 0% revive -> 1 biter worth
-	local health_buff_equivalent_revive = 1.0/(1.0-global.reanim_chance[game.forces[biter_force_name].index]/100)
-	local health_factor = bb_config.health_multiplier_boss*health_buff_equivalent_revive
-	
-	--Manual spawning of boss units
-	local roll_type = unit_type_raffle[math_random(1, size_of_unit_type_raffle)]
-	if max_group_size_biters_force ~= bb_config.max_group_size_initial then
-		for _ = 1, math.ceil((bb_config.max_group_size_initial - max_group_size_biters_force)/20), 1 do
-			if threat < 0 then break end
-			local unit_name = BiterRaffle.roll(roll_type, global.bb_evolution[biter_force_name])
-			local position = spawner.surface.find_non_colliding_position(unit_name, spawner.position, 128, 2)
-			if not position then break end
-			local biter = spawner.surface.create_entity({name = unit_name, force = boss_biter_force_name, position = position})
-			threat = threat - threat_values[biter.name] * 20 * health_buff_equivalent_revive -- 20 because boss is 20 biters equivalent with health buff included
-			i = i + 1
-			valid_biters[i] = biter
-			BossUnit.add_boss_unit(biter, health_factor, 0.55)
-			--Announce New Spawn
-			if(global.biter_spawn_unseen[force_name][unit_name]) then
-				game.print("A " .. unit_name:gsub("-", " ") .. " was spotted far away on team " .. force_name .. "...")
-				global.biter_spawn_unseen[force_name][unit_name] = false
-			end
-			if threat - threat_values[biter.name] * 20 * health_buff_equivalent_revive < 0 then break end
-		end
-	end
-	if global.bb_debug then game.print(get_active_biter_count(biter_force_name) .. " active units for " .. biter_force_name) end
-
-	return valid_biters
-end
-
 local function select_units_around_spawner(spawner, force_name, side_target)
 	local biter_force_name = spawner.force.name
 
 	local valid_biters = {}
 	local i = 0
 
+	-- Half threat goes to normal biters, half threat goes for bosses, to get half bosses and half normal bosses
 	local threat = global.bb_threat[biter_force_name] / 10
+	local threat_for_normal_biters = threat
+	if max_group_size_biters_force ~= bb_config.max_group_size_initial then
+		threat_for_normal_biters = threat_for_normal_biters / 2
+	end
+	local threat_for_boss_biters = threat  / 2
 
 	local max_group_size_biters_force = bb_config.max_group_size_north
 	if biter_force_name == 'south_biters' then
 		max_group_size_biters_force = bb_config.max_group_size_south
-	end
-	
-	
-	if max_group_size_biters_force ~= bb_config.max_group_size_initial then
-		threat = threat / 2 -- divide by 2 since 2 waves are spawned, one normal and one boss 
 	end
 	
 	local unit_count = 0
@@ -218,9 +171,9 @@ local function select_units_around_spawner(spawner, force_name, side_target)
 					i = i + 1
 					valid_biters[i] = biter
 					unit_count = unit_count + 1
-					threat = threat - threat_values[biter.name]
+					threat_for_normal_biters = threat_for_normal_biters - threat_values[biter.name]
 				end
-				if threat < 0 then break end
+				if threat_for_normal_biters < 0 then break end
 			end
 		end
 	end
@@ -228,18 +181,50 @@ local function select_units_around_spawner(spawner, force_name, side_target)
 	--Manual spawning of units
 	local roll_type = unit_type_raffle[math_random(1, size_of_unit_type_raffle)]
 	for _ = 1, max_unit_count - unit_count, 1 do
-		if threat < 0 then break end
+		if threat_for_normal_biters < 0 then break end
 		local unit_name = BiterRaffle.roll(roll_type, global.bb_evolution[biter_force_name])
 		local position = spawner.surface.find_non_colliding_position(unit_name, spawner.position, 128, 2)
 		if not position then break end
 		local biter = spawner.surface.create_entity({name = unit_name, force = biter_force_name, position = position})
-		threat = threat - threat_values[biter.name]
+		threat_for_normal_biters = threat_for_normal_biters - threat_values[biter.name]
 		i = i + 1
 		valid_biters[i] = biter
 		--Announce New Spawn
 		if(global.biter_spawn_unseen[force_name][unit_name]) then
 			game.print("A " .. unit_name:gsub("-", " ") .. " was spotted far away on team " .. force_name .. "...")
 			global.biter_spawn_unseen[force_name][unit_name] = false
+		end
+	end
+
+	--Boss units
+	local boss_biter_force_name = biter_force_name .. "_boss"
+	max_unit_count = math.floor(global.bb_threat[biter_force_name] * 0.25) + math_random(6,12)
+	if max_unit_count > max_group_size_biters_force then max_unit_count = max_group_size_biters_force end
+	
+	-- *1.5 because we add 50% health bonus as it's just one unit.  
+	-- *20 because one boss is equal of 20 biters in theory
+	-- formula because 90% revive chance is 1/(1-0.9) = 10, which means biters needs to be killed 10 times, so *10 . easy fast-check : 50% revive is 2 biters worth, formula matches. 0% revive -> 1 biter worth
+	local health_buff_equivalent_revive = 1.0/(1.0-global.reanim_chance[game.forces[biter_force_name].index]/100)
+	local health_factor = bb_config.health_multiplier_boss*health_buff_equivalent_revive
+	
+	--Manual spawning of boss units
+	roll_type = unit_type_raffle[math_random(1, size_of_unit_type_raffle)]
+	if max_group_size_biters_force ~= bb_config.max_group_size_initial then
+		for _ = 1, math.ceil((bb_config.max_group_size_initial - max_group_size_biters_force)/20), 1 do
+			local unit_name = BiterRaffle.roll(roll_type, global.bb_evolution[biter_force_name])
+			if threat_for_boss_biters - threat_values[unit_name] * 20 * health_buff_equivalent_revive < 0 then break end -- Do not add a biter if it will make the threat goes negative when all the biters of wave were killed
+			local position = spawner.surface.find_non_colliding_position(unit_name, spawner.position, 128, 2)
+			if not position then break end
+			local biter = spawner.surface.create_entity({name = unit_name, force = boss_biter_force_name, position = position})
+			threat_for_boss_biters = threat_for_boss_biters - threat_values[biter.name] * 20 * health_buff_equivalent_revive -- 20 because boss is 20 biters equivalent with health buff included
+			i = i + 1
+			valid_biters[i] = biter
+			BossUnit.add_boss_unit(biter, health_factor, 0.55)
+			--Announce New Spawn
+			if(global.biter_spawn_unseen[boss_biter_force_name][unit_name]) then
+				game.print("A " .. unit_name:gsub("-", " ") .. " boss was spotted far away on team " .. force_name .. "...")
+				global.biter_spawn_unseen[boss_biter_force_name][unit_name] = false
+			end
 		end
 	end
 
@@ -353,16 +338,19 @@ local function create_attack_group(surface, force_name, biter_force_name)
 	if not unit_group_position then return end
 	local units = select_units_around_spawner(spawner, force_name, side_target)
 	if not units then return end
-	local unit_group = surface.create_unit_group({position = unit_group_position, force = biter_force_name})
-	for _, unit in pairs(units) do unit_group.add_member(unit) end
-	send_group(unit_group, force_name, side_target)
-	
 	local boss_force_name = biter_force_name .. "_boss"
-	units = generate_boss_units_around_spawner(spawner, force_name, side_target)
-	if not units then return end
-	unit_group = surface.create_unit_group({position = unit_group_position, force = boss_force_name})
-	for _, unit in pairs(units) do unit_group.add_member(unit) end
+	local unit_group = surface.create_unit_group({position = unit_group_position, force = biter_force_name})
+	local unit_group_boss = surface.create_unit_group({position = unit_group_position, force = boss_force_name})
+	for _, unit in pairs(units)
+	do
+		if unit.force.name == boss_force_name then
+			unit_group_boss.add_member(unit)
+		else
+			unit_group.add_member(unit)
+		end
+	end
 	send_group(unit_group, force_name, side_target)
+	send_group(unit_group_boss, force_name, side_target)
 end
 
 Public.pre_main_attack = function()
