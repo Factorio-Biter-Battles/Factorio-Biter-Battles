@@ -144,7 +144,7 @@ local function select_units_around_spawner(spawner, force_name, side_target)
 	local valid_biters = {}
 	local i = 0
 
-	-- Half threat goes to normal biters, half threat goes for bosses, to get half bosses and half normal bosses
+	-- Half threat goes to normal biters, half threat goes for bosses, to get half bosses and half normal biters
 	local threat = global.bb_threat[biter_force_name] / 10
 	local threat_for_normal_biters = threat
 	if max_group_size_biters_force ~= bb_config.max_group_size_initial then
