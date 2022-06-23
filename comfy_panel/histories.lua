@@ -1,13 +1,10 @@
-local Tabs = require 'comfy_panel.main'
-local AntiGrief = require 'antigrief'
+local get_active_frame = require 'comfy_panel.main'.comfy_panel_get_active_frame
+local AntiGrief_get = require 'antigrief'.get
 local lower = string.lower
 local Event = require 'utils.event'
-local Admin = require 'comfy_panel.admin'
 local Global = require 'utils.global'
-local String = require 'utils.string'
-local pos_from_gps = String.position_from_gps_tag
-local pool = require "maps.biter_battles_v2.pool"
-
+local pos_from_gps = require 'utils.string'.position_from_gps_tag
+local distance =  require 'utils.core'.distance
 local this = {
     player_name_search = {},
     event_search = {},
@@ -79,10 +76,6 @@ local histories_dict = {
 	[7] = {history = "cancel_crafting", name = "Cancel Crafting History"}
 }
 
-local function in_radius(center_pos, tested_pos, radius)
-	return (math.abs(center_pos.x - tested_pos.x) < radius and math.abs(center_pos.y - tested_pos.y) < radius)
-end
-
 local function draw_events(player, frame)
 	local radius = 10
 	local event_search = this.event_search[player.name]
@@ -93,7 +86,7 @@ local function draw_events(player, frame)
 	if not this.sort_by[player.name] then
 		this.sort_by[player.name] = "time_desc"
 	end
-	local histories = AntiGrief.get("histories")
+	local histories = AntiGrief_get("histories")
 	local history = histories[histories_dict[selected_history_index].history]
 
 	--Headers captions
@@ -147,7 +140,7 @@ local function draw_events(player, frame)
 	-- filtering the history
 	for k, v in pairs(history) do
 		if v ~= 0 then
-			if gps_position and not in_radius(gps_position, v.position, radius) then
+			if gps_position and distance(gps_position, v.position)>radius then
 				goto CONTINUE
 			end
 			if player_name_search and not contains_text(v.player_name, nil, player_name_search) then
@@ -210,7 +203,7 @@ local function on_gui_selection_state_changed(event)
 	local name = event.element.name
 	if name == "history_select" then
 		this.selected_history_index[player.name] = event.element.selected_index
-		local frame = Tabs.comfy_panel_get_active_frame(player)
+		local frame = get_active_frame(player)
 		if frame then
 			draw_events(player, frame)
 		end
@@ -221,7 +214,7 @@ local function on_gui_text_changed(event)
 	local element = event.element
 	if element and element.valid then
 		local player = game.get_player(event.player_index)
-		local frame = Tabs.comfy_panel_get_active_frame(player)
+		local frame = get_active_frame(player)
 		if frame and frame.name == "Histories" then
 			if event.text == "" then event.text = nil end
 			if element.name == "player_search_text" then
@@ -239,7 +232,7 @@ local function on_gui_click(event)
 	local player = game.get_player(event.player_index)
 	local element = event.element
 	if element and element.valid then
-		local frame = Tabs.comfy_panel_get_active_frame(player)
+		local frame = get_active_frame(player)
 		if frame and frame.name == "Histories" then
 			if sorting_methods[element.name] then
 				this.sort_by[player.name] = sorting_methods[element.name]
@@ -276,7 +269,7 @@ end
 local function on_console_chat(event)
 	local player = game.get_player(event.player_index)
 	if this.waiting_for_gps[player.name] then
-		local frame = Tabs.comfy_panel_get_active_frame(player)
+		local frame = get_active_frame(player)
 		if frame and frame.name == "Histories" then
 			this.filter_by_gps[player.name] = pos_from_gps(event.message)
 			frame.filter_table.gps.filter_by_gps.caption = "Filter by GPS"
