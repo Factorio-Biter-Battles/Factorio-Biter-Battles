@@ -6,14 +6,13 @@ local Blueprint = require 'maps.biter_battles_v2.blueprints'
 
 local Public = {}
 
-local function createTrollSong()
+local function createTrollSong(forceName,offset)
 	local bp_string = Blueprint.get_blueprint("jail_song")
 	local jailSurface = game.surfaces['gulag']
-	local offset = {x = 6, y = 0 }
-	local bp_entity = jailSurface.create_entity{name = 'item-on-ground', position= {0,0}, stack = 'blueprint'}
+	local bp_entity = jailSurface.create_entity{name = 'item-on-ground', position= offset, stack = 'blueprint'}
 	bp_entity.stack.import_stack(bp_string)
 	local bp_entities = bp_entity.stack.get_blueprint_entities()
-	local bpInfo = {surface = jailSurface, force = 'spectator', position = offset, force_build = 'true'}
+	local bpInfo = {surface = jailSurface, force = forceName, position = offset, force_build = 'true'}
 	local bpResult = bp_entity.stack.build_blueprint(bpInfo)
 	bp_entity.destroy()
 	for k, v in pairs(bpResult) do
@@ -25,7 +24,7 @@ local function createTrollSong()
 		end
 		v.revive()
 	end
-	local songBuildings = jailSurface.find_entities_filtered{area={{-5, -23}, {18, 25}}, name = {
+	local songBuildings = jailSurface.find_entities_filtered{area={{-11+offset.x, -23+offset.y}, {12+offset.x, 25+offset.y}}, name = {
 		"constant-combinator",
 		"decider-combinator", 
 		"substation",
@@ -128,11 +127,13 @@ function Public.initial_setup()
 	for chunk in surface.get_chunks() do
 		surface.delete_chunk({chunk.x, chunk.y})
 	end
-	createTrollSong()
+	createTrollSong(game.forces.south.name,{x=6,y=0})
+	createTrollSong(game.forces.north.name,{x=-40,y=0})
+	createTrollSong(game.forces.spectator.name,{x=-80,y=0})
 end
 
 
-	  
+
 --Terrain Playground Surface
 function Public.playground_surface()
 	local map_gen_settings = {}
