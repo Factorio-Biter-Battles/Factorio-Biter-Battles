@@ -478,7 +478,7 @@ end
 
 function Public.reanimate_units()
 	-- This FIFOs can be accessed by force indices.
-	for force, id in pairs(global.dead_units) do
+	for _, id in pairs(global.dead_units) do
 		-- Check for each side if there are any biters to reanimate.
 		if fifo.empty(id) then
 			goto reanim_units_cont
