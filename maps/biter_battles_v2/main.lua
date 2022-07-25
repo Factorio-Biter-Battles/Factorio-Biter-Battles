@@ -324,6 +324,7 @@ end
 local Event = require 'utils.event'
 Event.add(defines.events.on_rocket_launch_ordered, on_rocket_launch_ordered)
 Event.add(defines.events.on_area_cloned, on_area_cloned)
+Event.add(defines.events.on_research_finished, unlock_satellite)			--free silo space tech
 Event.add(defines.events.on_post_entity_died, Ai.schedule_reanimate)
 Event.add_event_filter(defines.events.on_post_entity_died, {
 	filter = "type",
