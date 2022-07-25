@@ -34,7 +34,7 @@ end
 local function on_gui_closed(event)
 	local player = game.players[event.player_index]
 	local trusted = Session.get_trusted_table()
-	if event.entity == nil or event.entity.last_user == nil then return end
+	if event.entity == nil or event.entity.last_user == nil or event.entity.get_recipe() == nil then return end
 	
 	if not trusted[player.name]
 	and (event.entity.get_recipe().name == "fast-transport-belt" or event.entity.get_recipe().name == "fast-underground-belt" or event.entity.get_recipe().name == "fast-splitter")
