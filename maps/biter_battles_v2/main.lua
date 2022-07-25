@@ -31,6 +31,19 @@ local function on_player_joined_game(event)
 	Team_manager.draw_top_toggle_button(player)
 end
 
+local function on_gui_closed(event)
+	local player = game.players[event.player_index]
+	local trusted = Session.get_trusted_table()
+	if event.entity == nil or event.entity.last_user == nil then return end
+	
+	if not trusted[player.name]
+	and (event.entity.get_recipe().name == "fast-transport-belt" or event.entity.get_recipe().name == "fast-underground-belt" or event.entity.get_recipe().name == "fast-splitter")
+	and event.entity.last_user.name == player.name then
+		event.entity.set_recipe(nil)
+		player.print('You have not grown accustomed to this technology yet')
+	end
+end 
+
 local function on_gui_click(event)
 	local player = game.players[event.player_index]
 	local element = event.element
@@ -330,6 +343,7 @@ Event.add(defines.events.on_chunk_generated, on_chunk_generated)
 Event.add(defines.events.on_console_chat, on_console_chat)
 Event.add(defines.events.on_entity_died, on_entity_died)
 Event.add(defines.events.on_gui_click, on_gui_click)
+Event.add(defines.events.on_gui_closed, on_gui_closed)
 Event.add(defines.events.on_marked_for_deconstruction, on_marked_for_deconstruction)
 Event.add(defines.events.on_player_built_tile, on_player_built_tile)
 Event.add(defines.events.on_player_joined_game, on_player_joined_game)
