@@ -64,22 +64,16 @@ function Public.initial_setup()
 	game.create_force("spectator")
 
 	game.forces.spectator.research_all_technologies()
-	local defs = {
-		defines.input_action.open_blueprint_library_gui,
-		defines.input_action.import_blueprint_string,
-		defines.input_action.launch_rocket
-	}
-	local p = game.permissions.get_group("Default")
-	for k, v in pairs(defs) do
-		p.set_allows_action(v, false)
-	end
-	
-	p = game.permissions.create_group("spectator")
+
+	game.permissions.get_group("Default").set_allows_action(defines.input_action.open_blueprint_library_gui, false)
+	game.permissions.get_group("Default").set_allows_action(defines.input_action.import_blueprint_string, false)
+
+	local p = game.permissions.create_group("spectator")
 	for action_name, _ in pairs(defines.input_action) do
 		p.set_allows_action(defines.input_action[action_name], false)
 	end
 
-	defs = {
+	local defs = {
 		defines.input_action.activate_copy,
 		defines.input_action.activate_cut,
 		defines.input_action.activate_paste,
@@ -143,9 +137,9 @@ function Public.playground_surface()
 	map_gen_settings.autoplace_controls = {
 		["coal"] = {frequency = 6.5, size = 0.34, richness = 0.24},
 		["stone"] = {frequency = 6, size = 0.385, richness = 0.25},
-		["copper-ore"] = {frequency = 8.05, size = 0.352, richness = 0.35},
+		["copper-ore"] = {frequency = 7, size = 0.352, richness = 0.35},
 		["iron-ore"] = {frequency = 8.5, size = 0.8, richness = 0.23},
-		["uranium-ore"] = {frequency = 2.2, size = 1, richness = 1},
+		["uranium-ore"] = {frequency = 2, size = 1, richness = 1},
 		["crude-oil"] = {frequency = 8, size = 1.4, richness = 0.45},
 		["trees"] = {frequency = math.random(8, 28) * 0.1, size = math.random(6, 14) * 0.1, richness = math.random(2, 4) * 0.1},
 		["enemy-base"] = {frequency = 0, size = 0, richness = 0}
@@ -345,7 +339,6 @@ function Public.forces()
 		game.forces[force.name].technologies["atomic-bomb"].enabled = false
 		game.forces[force.name].technologies["cliff-explosives"].enabled = false
 		game.forces[force.name].technologies["land-mine"].enabled = false
-		game.forces[force.name].technologies["uranium-ammo"].researched = true
 		game.forces[force.name].research_queue_enabled = true
 		global.target_entities[force.index] = {}
 		global.spy_fish_timeout[force.name] = 0
