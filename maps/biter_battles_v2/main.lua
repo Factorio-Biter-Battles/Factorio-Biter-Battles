@@ -37,19 +37,10 @@ local function clear_recipe_asm_if_redbelt_and_untrusted(entity, playerIndex,clo
 	if entity == nil or entity.last_user == nil or entity.get_recipe() == nil then return end
 
 	local belts = { ["fast-transport-belt"]=true, ["fast-underground-belt"]=true, ["fast-splitter"]=true }
-	
-	game.print('here>' .. player.name)
-	game.print('hereA>>'..entity.get_recipe().name)
-	game.print('here>><' ..entity.last_user.name)
-	game.print('here>><<' ..player.name)
-	game.print('here>><<<' ..tostring(cloneCase))
-	game.print('here>>>>>>' .. tostring(trusted[player.name]))
-	
-	--Clone case variable added because you paste a recipe, the last user is not the one that did the cloning
+	--Clone case variable added because when you paste a recipe, the last user is not the one that did the cloning strangely
 	if not trusted[player.name]
 	and belts[entity.get_recipe().name]
 	and ((cloneCase == false and entity.last_user.name == player.name) or cloneCase == true) then
-		game.print('hereA')
 		entity.set_recipe(nil)
 		player.print('You have not grown accustomed to this technology yet')
 	end
