@@ -31,17 +31,32 @@ local function on_player_joined_game(event)
 	Team_manager.draw_top_toggle_button(player)
 end
 
-local function on_gui_closed(event)
-	local player = game.players[event.player_index]
+local function clear_recipe_asm_if_redbelt_and_untrusted(entity, playerIndex,cloneCase)
+	local player = game.players[playerIndex]
 	local trusted = Session.get_trusted_table()
-	if event.entity == nil or event.entity.last_user == nil or event.entity.get_recipe() == nil then return end
+	if entity == nil or entity.last_user == nil or entity.get_recipe() == nil then return end
+
+	local belts = { ["fast-transport-belt"]=true, ["fast-underground-belt"]=true, ["fast-splitter"]=true }
 	
+	game.print('here>' .. player.name)
+	game.print('hereA>>'..entity.get_recipe().name)
+	game.print('here>><' ..entity.last_user.name)
+	game.print('here>><<' ..player.name)
+	game.print('here>><<<' ..tostring(cloneCase))
+	game.print('here>>>>>>' .. tostring(trusted[player.name]))
+	
+	--Clone case variable added because you paste a recipe, the last user is not the one that did the cloning
 	if not trusted[player.name]
-	and (event.entity.get_recipe().name == "fast-transport-belt" or event.entity.get_recipe().name == "fast-underground-belt" or event.entity.get_recipe().name == "fast-splitter")
-	and event.entity.last_user.name == player.name then
-		event.entity.set_recipe(nil)
+	and belts[entity.get_recipe().name]
+	and ((cloneCase == false and entity.last_user.name == player.name) or cloneCase == true) then
+		game.print('hereA')
+		entity.set_recipe(nil)
 		player.print('You have not grown accustomed to this technology yet')
 	end
+end
+
+local function on_gui_closed(event)
+	clear_recipe_asm_if_redbelt_and_untrusted(event.entity,event.player_index,false)
 end 
 
 local function on_gui_click(event)
@@ -330,6 +345,13 @@ Event.add_event_filter(defines.events.on_post_entity_died, {
 	filter = "type",
 	type = "unit",
 })
+
+local function on_entity_settings_pasted(event)
+	if event.destination == nil then return end
+	clear_recipe_asm_if_redbelt_and_untrusted(event.destination,event.player_index,true)
+end
+
+Event.add(defines.events.on_entity_settings_pasted, on_entity_settings_pasted)
 Event.add(defines.events.on_entity_cloned, on_entity_cloned)
 Event.add(defines.events.on_built_entity, on_built_entity)
 Event.add(defines.events.on_chunk_generated, on_chunk_generated)
