@@ -204,6 +204,19 @@ local function on_chunk_generated(event)
 	-- sure everything is cloned properly. Normally we would use mutex
 	-- but this is not reliable in this environment.
 	Mirror_terrain.clone(event)
+
+	-- The game pregenerate tiles within a radius of 3 chunks from the generated chunk.
+	-- Bites can use these tiles for pathing.
+	-- This creates a problem that bites pathfinder can cross the river at the edge of the map.
+	-- To prevent this, divide the north and south land by drawing a strip of water on these pregenerated tiles.
+	if event.position.y >= 0 and event.position.y <= 3 then
+		for x = -3, 3 do
+			local chunk_pos = { x = event.position.x + x, y = 0 }
+			if not surface.is_chunk_generated(chunk_pos) then
+				Terrain.draw_water_for_river_ends(surface, chunk_pos)
+			end
+		end
+	end
 end
 
 local function on_entity_cloned(event)
