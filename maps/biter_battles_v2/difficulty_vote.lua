@@ -53,7 +53,7 @@ local function poll_difficulty(player)
 				amount_voters_of_diff = amount_voters_of_diff + 1
 			end
 		end
-		if amount_voters_of_diff > 0 then voter_text = "votes" end
+		if amount_voters_of_diff > 1 then voter_text = "votes" end
 		local b = frame.add({type = "button", name = tostring(key), caption = difficulties[key].name .. " (" .. difficulties[key].str .. ")" .. " : " .. amount_voters_of_diff .. " " .. voter_text})
 		b.style.font_color = difficulties[key].color
 		b.style.font = "heading-2"
