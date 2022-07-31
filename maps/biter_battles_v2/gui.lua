@@ -234,7 +234,18 @@ function Public.create_main_gui(player)
 		local l = t.add  {type = "label", caption = "Threat: "}
 		l.style.minimal_width = 25
 		l.tooltip = gui_value.t2
-		local l = t.add  {type = "label", name = "threat_" .. gui_value.force, caption = math.floor(global.bb_threat[gui_value.biter_force])}
+		
+		local threat_value = math.floor(global.bb_threat[gui_value.biter_force])
+		if threat_value > 1000000 then
+			threat_value = threat_value / 1000000
+			threat_value = tonumber(string.format("%.2f", threat_value))
+			threat_value = threat_value .. "M"
+		elseif threat_value > 100000 then
+			threat_value = threat_value / 1000
+			threat_value = tonumber(string.format("%.0f", threat_value))
+			threat_value = threat_value .. "k"
+		end
+		local l = t.add  {type = "label", name = "threat_" .. gui_value.force, caption = threat_value}
 		l.style.font_color = gui_value.color2
 		l.style.font = "default-bold"
 		l.style.width = 50
