@@ -404,15 +404,7 @@ function spectate(player, forced_join, stored_position)
 		player.cancel_crafting(player.crafting_queue[1])
 	end
 	
-	local vehicle = player.vehicle
-	if vehicle then
-		if vehicle.get_driver() == player.character then
-			vehicle.set_driver(nil) 
-		end
-		if vehicle.get_passenger() == player.character then
-			vehicle.set_passenger(nil) 
-		end
-	end
+	player.driving = false
 
 	if stored_position then
         local p_data = get_player_data(player)
