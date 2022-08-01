@@ -45,16 +45,14 @@ local function poll_difficulty(player)
 	
 	local frame = player.gui.center.add { type = "frame", caption = "Vote global difficulty:", name = "difficulty_poll", direction = "vertical" }
 	for key, _ in pairs(difficulties) do
+	local vote_amounts = {0,0,0,0,0,0,0}
+	for k, v in pairs(global.difficulty_player_votes) do
+		vote_amounts[v] = vote_amounts[v] + 1
+	end
 	
-		local amount_voters_of_diff = 0
-		local voter_text = "vote"
-		for _, playerVoting in pairs(game.connected_players) do
-			if key == global.difficulty_player_votes[playerVoting.name] then
-				amount_voters_of_diff = amount_voters_of_diff + 1
-			end
-		end
-		if amount_voters_of_diff > 1 then voter_text = "votes" end
-		local b = frame.add({type = "button", name = tostring(key), caption = difficulties[key].name .. " (" .. difficulties[key].str .. ")" .. " : " .. amount_voters_of_diff .. " " .. voter_text})
+	for key, difficulty in pairs(difficulties) do
+		local caption = table.concat({difficulty.name, " (", difficulty.str, ")", " : ", vote_amounts[key]})
+		local b = frame.add{type = "button", name = tostring(key), caption = caption}
 		b.style.font_color = difficulties[key].color
 		b.style.font = "heading-2"
 		b.style.minimal_width = 180
