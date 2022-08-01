@@ -13,7 +13,7 @@ local wait_messages = Tables.wait_messages
 local food_names = Tables.gui_foods
 
 local math_random = math.random
-
+local math_abs = math.abs
 require "maps.biter_battles_v2.spec_spy"
 require 'utils/gui_styles'
 local gui_values = {
@@ -236,11 +236,11 @@ function Public.create_main_gui(player)
 		l.tooltip = gui_value.t2
 		
 		local threat_value = math.floor(global.bb_threat[gui_value.biter_force])
-		if threat_value > 1000000 then
+		if math_abs(threat_value) > 1000000 then
 			threat_value = threat_value / 1000000
 			threat_value = tonumber(string.format("%.2f", threat_value))
 			threat_value = threat_value .. "M"
-		elseif threat_value > 100000 then
+		elseif math_abs(threat_value) > 100000 then
 			threat_value = threat_value / 1000
 			threat_value = tonumber(string.format("%.0f", threat_value))
 			threat_value = threat_value .. "k"
