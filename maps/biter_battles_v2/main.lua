@@ -45,8 +45,8 @@ local function on_research_finished(event)
 	Functions.combat_balance(event)
     if event.research.name == 'uranium-processing' then
 		event.research.force.technologies["uranium-ammo"].researched = true
-    end
-    if event.research.name == 'stone-wall' then
+		event.research.force.technologies["kovarex-enrichment-process"].researched = true
+    elseif event.research.name == 'stone-wall' then
 		event.research.force.technologies["gate"].researched = true
     end
 end
