@@ -732,6 +732,7 @@ function Public.deny_construction_bots(event)
 end
 
 function Public.deny_enemy_side_ghosts(event)
+	if not event.created_entity.valid then return end
 	if event.created_entity.type ~= 'entity-ghost' then return end
 	local force = game.get_player(event.player_index).force.name
 	if not robot_build_restriction[force] then return end
