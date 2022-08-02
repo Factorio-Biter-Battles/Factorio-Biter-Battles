@@ -257,9 +257,12 @@ end
 
 local function on_built_entity(event)
 	if not global.active_special_games["disabled_entities"] then return end
-	local player = game.get_player(event.player_index)
-	local force = player.force
 	local entity = event.created_entity
+	if not entity then return end
+	if not entity.valid then return end
+	
+	local player = game.get_player(event.player_index)
+	local force = player.force	
 	if global.special_games_variables["disabled_entities"][force.name][entity.name] then
 		player.create_local_flying_text({text = "Disabled by special game", position = entity.position})
 		player.get_inventory(defines.inventory.character_main).insert({name = entity.name, count = 1})
@@ -288,8 +291,11 @@ local create_special_games_panel = (function(player, frame)
 end)
 
 local function on_gui_click(event)
-	local player = game.get_player(event.player_index)
 	local element = event.element
+	if not element then return end
+	if not element.valid then return end
+	
+	local player = game.get_player(event.player_index)	
 	if not element.type == "button" then return end
 	local config = element.parent.children[2]
 
