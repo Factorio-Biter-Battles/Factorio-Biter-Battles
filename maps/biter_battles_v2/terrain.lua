@@ -148,13 +148,15 @@ function is_within_spawn_circle(pos)
 	return true
 end
 
-local river_y_1 = bb_config.border_river_width * -1.5
-local river_y_2 = bb_config.border_river_width * 1.5
-local river_width_half = math_floor(bb_config.border_river_width * -0.5)
-function is_horizontal_border_river(pos)
-	if pos.y < river_y_1 then return false end
-	if pos.y > river_y_2 then return false end
-	if pos.y >= river_width_half - (math_abs(Functions.get_noise(1, pos)) * 4) then return true end
+-- border_river_noise is the maximum random value that can be added to each side of the river
+local border_river_noise = 4
+local river_width_half_min = math_floor(bb_config.border_river_width * -0.5)
+local river_width_half_max = river_width_half_min - border_river_noise
+-- pos must be from the North side
+local function is_horizontal_border_river(pos)
+	if pos.y < river_width_half_max then return false end
+	if pos.y > river_width_half_min then return true end
+	if pos.y >= river_width_half_min - (math_abs(Functions.get_noise(1, pos)) * border_river_noise) then return true end
 	return false
 end
 
