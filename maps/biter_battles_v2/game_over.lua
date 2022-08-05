@@ -4,8 +4,6 @@ local Init = require "maps.biter_battles_v2.init"
 local Score = require "comfy_panel.score"
 local Server = require 'utils.server'
 local Special_games = require 'comfy_panel.special_games'
-local Event = require 'utils.event'
-local Tables = require 'maps.biter_battles_v2.tables'
 
 local math_random = math.random
 
@@ -325,7 +323,6 @@ function Public.server_restart()
         Init.playground_surface()
         Init.forces()
         Init.draw_structures()
-        Gui.reset_tables_gui()
             Init.load_spawn()
 
             for _, player in pairs(game.players) do
@@ -477,16 +474,4 @@ function Public.silo_death(event)
     end
 end
 
-local function chat_with_everyone(event)
-    if not global.server_restart_timer then return end
-    if not event.message then return end
-    local player = game.get_player(event.player_index)
-    if not player or not player.valid then return end
-    local enemy = Tables.enemy_team_of[player.force.name]
-    if not enemy then return end
-    local message = player.name .."[auto-shout]: " .. event.message
-    game.forces[enemy].print(message, player.chat_color)
-end
-
-Event.add(defines.events.on_console_chat, chat_with_everyone)
 return Public

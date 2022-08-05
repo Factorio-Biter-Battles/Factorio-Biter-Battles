@@ -2,11 +2,9 @@ local Public = {}
 local BiterRaffle = require "maps.biter_battles_v2.biter_raffle"
 local Functions = require "maps.biter_battles_v2.functions"
 local bb_config = require "maps.biter_battles_v2.config"
-local BossUnit = require "functions.boss_unit"
 local fifo = require "maps.biter_battles_v2.fifo"
 local Tables = require "maps.biter_battles_v2.tables"
 local math_random = math.random
-local math_floor = math.floor
 local math_abs = math.abs
 
 local vector_radius = 512
@@ -139,54 +137,6 @@ local function get_random_spawner(biter_force_name)
 	end
 end
 
-local function generate_boss_units_around_spawner(spawner, force_name, side_target)
-	local biter_force_name = spawner.force.name
-	local boss_biter_force_name = biter_force_name .. "_boss"
-
-	local valid_biters = {}
-	local i = 0
-	local max_group_size_biters_force = bb_config.max_group_size_north
-	if biter_force_name == 'south_biters' then
-		max_group_size_biters_force = bb_config.max_group_size_south
-	end
-
-	local threat = global.bb_threat[biter_force_name] / 10
-
-	local max_unit_count = math.floor(global.bb_threat[biter_force_name] * 0.25) + math_random(6,12)
-	if max_unit_count > max_group_size_biters_force then max_unit_count = max_group_size_biters_force end
-	
-	-- *1.5 because we add 50% health bonus as it's just one unit.  
-	-- *20 because one boss is equal of 20 biters in theory
-	-- formula because 90% revive chance is 1/(1-0.9) = 10, which means biters needs to be killed 10 times, so *10 . easy fast-check : 50% revive is 2 biters worth, formula matches. 0% revive -> 1 biter worth
-	local health_buff_equivalent_revive = 1.0/(1.0-global.reanim_chance[game.forces[biter_force_name].index]/100)
-	local health_factor = bb_config.health_multiplier_boss*health_buff_equivalent_revive
-	
-	--Manual spawning of boss units
-	local roll_type = unit_type_raffle[math_random(1, size_of_unit_type_raffle)]
-	if max_group_size_biters_force ~= bb_config.max_group_size_initial then
-		for _ = 1, math.ceil((bb_config.max_group_size_initial - max_group_size_biters_force)/20), 1 do
-			if threat < 0 then break end
-			local unit_name = BiterRaffle.roll(roll_type, global.bb_evolution[biter_force_name])
-			local position = spawner.surface.find_non_colliding_position(unit_name, spawner.position, 128, 2)
-			if not position then break end
-			local biter = spawner.surface.create_entity({name = unit_name, force = boss_biter_force_name, position = position})
-			threat = threat - threat_values[biter.name] * 20 * health_buff_equivalent_revive -- 20 because boss is 20 biters equivalent with health buff included
-			i = i + 1
-			valid_biters[i] = biter
-			BossUnit.add_boss_unit(biter, health_factor, 0.55)
-			--Announce New Spawn
-			if(global.biter_spawn_unseen[force_name][unit_name]) then
-				game.print("A " .. unit_name:gsub("-", " ") .. " was spotted far away on team " .. force_name .. "...")
-				global.biter_spawn_unseen[force_name][unit_name] = false
-			end
-		end
-	end
-	
-	if global.bb_debug then game.print(get_active_biter_count(biter_force_name) .. " active units for " .. biter_force_name) end
-
-	return valid_biters
-end
-
 local function select_units_around_spawner(spawner, force_name, side_target)
 	local biter_force_name = spawner.force.name
 
@@ -195,13 +145,8 @@ local function select_units_around_spawner(spawner, force_name, side_target)
 
 	local threat = global.bb_threat[biter_force_name] / 10
 
-	local max_group_size_biters_force = bb_config.max_group_size_north
-	if biter_force_name == 'south_biters' then
-		max_group_size_biters_force = bb_config.max_group_size_south
-	end
-	
 	local unit_count = 0
-	local max_unit_count = math_floor(global.bb_threat[biter_force_name] * 0.25) + math_random(6,12)
+	local max_unit_count = math.floor(global.bb_threat[biter_force_name] * 0.25) + math_random(6,12)
 	if max_unit_count > bb_config.max_group_size then max_unit_count = bb_config.max_group_size end
 
 	--Collect biters around spawners
@@ -262,7 +207,7 @@ local function send_group(unit_group, force_name, side_target)
 	local position = {target.x + (vector[1] * distance_modifier), target.y + (vector[2] * distance_modifier)}
 	position = unit_group.surface.find_non_colliding_position("stone-furnace", position, 96, 1)
 	if position then
-		if math_abs(position.y) < math_abs(unit_group.position.y) then
+		if math.abs(position.y) < math.abs(unit_group.position.y) then
 			commands[#commands + 1] = {
 				type = defines.command.go_to_location,
 				destination = position,
@@ -347,17 +292,13 @@ local function create_attack_group(surface, force_name, biter_force_name)
 
 	local unit_group_position = get_unit_group_position(spawner)
 	if not unit_group_position then return end
+
 	local units = select_units_around_spawner(spawner, force_name, side_target)
 	if not units then return end
+
 	local unit_group = surface.create_unit_group({position = unit_group_position, force = biter_force_name})
 	for _, unit in pairs(units) do unit_group.add_member(unit) end
-	send_group(unit_group, force_name, side_target)
-	
-	local boss_force_name = biter_force_name .. "_boss"
-	units = generate_boss_units_around_spawner(spawner, force_name, side_target)
-	if not units then return end
-	unit_group = surface.create_unit_group({position = unit_group_position, force = boss_force_name})
-	for _, unit in pairs(units) do unit_group.add_member(unit) end
+
 	send_group(unit_group, force_name, side_target)
 end
 
@@ -394,6 +335,19 @@ Public.post_main_attack = function()
 	else
 		global.next_attack = "north"
 	end
+end
+
+--By Maksiu1000 skip the last two tech
+Public.unlock_satellite = function(event)
+    -- Skip unrelated events
+    if event.research.name ~= 'speed-module-3' then
+        return
+    end
+    local force = event.research.force
+    if not force.technologies['rocket-silo'].researched then
+        force.technologies['rocket-silo'].researched=true
+        force.technologies['space-science-pack'].researched=true
+    end
 end
 
 Public.raise_evo = function()
@@ -440,23 +394,9 @@ end
 --Biter Threat Value Subtraction
 function Public.subtract_threat(entity)
 	if not threat_values[entity.name] then return end
-	local biter_not_boss_force = entity.force.name
-	local threat_modifier = 1
-	local is_boss = false
-	local health_factor = 1
-	if entity.force.name == 'south_biters_boss' then
-		biter_not_boss_force = 'south_biters'
-		is_boss = true
-	elseif entity.force.name == 'north_biters_boss' then
-		biter_not_boss_force = 'north_biters'
-		is_boss = true
-	end
-	if is_boss == true then
-		local health_buff_equivalent_revive = 1.0/(1.0-global.reanim_chance[game.forces[biter_not_boss_force].index]/100)
-		health_factor = bb_config.health_multiplier_boss*health_buff_equivalent_revive
-	end
-	threat_modifier = 1 * health_factor
-	global.bb_threat[biter_not_boss_force] = global.bb_threat[biter_not_boss_force] - threat_values[entity.name] * threat_modifier
+
+	global.bb_threat[entity.force.name] = global.bb_threat[entity.force.name] - threat_values[entity.name]
+
 	return true
 end
 
@@ -484,7 +424,7 @@ local function likely_biter_name(force_name)
 
 	-- Randomly choose between pair and respect array boundaries.
 	if idx > 1 then
-		idx = math_random(idx - 1, idx)
+		idx = math.random(idx - 1, idx)
 	end
 
 	return UNIT_NAMES[idx]
@@ -550,7 +490,7 @@ end
 
 function Public.reanimate_units()
 	-- This FIFOs can be accessed by force indices.
-	for _, id in pairs(global.dead_units) do
+	for force, id in pairs(global.dead_units) do
 		-- Check for each side if there are any biters to reanimate.
 		if fifo.empty(id) then
 			goto reanim_units_cont
@@ -559,7 +499,7 @@ function Public.reanimate_units()
 		-- Balance amount of unit creation requests to get rid off
 		-- excess stored in memory.
 		local cycles = fifo.length(id) / global.reanim_balancer
-		cycles = math_floor(cycles) + 1
+		cycles = math.floor(cycles) + 1
 		_reanimate_units(id, cycles)
 
 		::reanim_units_cont::
@@ -592,7 +532,7 @@ Public.schedule_reanimate = function(event)
 		return
 	end
 
-	local reanimate = math_random(1, 100) <= chance
+	local reanimate = math.random(1, 100) <= chance
 	if not reanimate then
 		return
 	end
