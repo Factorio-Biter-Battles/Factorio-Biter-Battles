@@ -45,11 +45,8 @@ local function poll_difficulty(player)
 	
 	local frame = player.gui.center.add { type = "frame", caption = "Vote global difficulty:", name = "difficulty_poll", direction = "vertical" }
 	local vote_amounts = {0,0,0,0,0,0,0}
-		for k, v in pairs(global.difficulty_player_votes) do
-			if key == v then
-				vote_amounts[v] = vote_amounts[v] + 1
-			end
-		end
+	for k, v in pairs(global.difficulty_player_votes) do
+		vote_amounts[v] = vote_amounts[v] + 1
 	end
 	
 	for key, difficulty in pairs(difficulties) do
