@@ -138,11 +138,11 @@ end
 
 local function show_pretty_threat(forceName)
 	local threat_value = math.floor(global.bb_threat[forceName])
-	if math_abs(threat_value) > 1000000 then
+	if math_abs(threat_value) >= 1000000 then
 		threat_value = threat_value / 1000000
 		threat_value = tonumber(string.format("%.2f", threat_value))
 		threat_value = threat_value .. "M"
-	elseif math_abs(threat_value) > 100000 then
+	elseif math_abs(threat_value) >= 100000 then
 		threat_value = threat_value / 1000
 		threat_value = tonumber(string.format("%.0f", threat_value))
 		threat_value = threat_value .. "k"
