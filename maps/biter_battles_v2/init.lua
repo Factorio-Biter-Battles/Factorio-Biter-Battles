@@ -345,7 +345,6 @@ function Public.forces()
 		game.forces[force.name].technologies["atomic-bomb"].enabled = false
 		game.forces[force.name].technologies["cliff-explosives"].enabled = false
 		game.forces[force.name].technologies["land-mine"].enabled = false
-		game.forces[force.name].technologies["uranium-ammo"].researched = true
 		game.forces[force.name].research_queue_enabled = true
 		global.target_entities[force.index] = {}
 		global.spy_fish_timeout[force.name] = 0
