@@ -99,7 +99,6 @@ function Public.initial_setup()
 		defines.input_action.open_kills_gui,
 		defines.input_action.quick_bar_set_selected_page,
 		defines.input_action.quick_bar_set_slot,
-		defines.input_action.rotate_entity,
 		defines.input_action.set_filter,
 		defines.input_action.set_player_color,
 		defines.input_action.start_walking,
