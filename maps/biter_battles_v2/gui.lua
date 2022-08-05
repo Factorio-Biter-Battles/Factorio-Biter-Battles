@@ -1,12 +1,11 @@
 local Public = {}
-global.player_data_afk = {}
 local Server = require 'utils.server'
 
 local bb_config = require "maps.biter_battles_v2.config"
 local bb_diff = require "maps.biter_battles_v2.difficulty_vote"
 local event = require 'utils.event'
 local Functions = require "maps.biter_battles_v2.functions"
-local feed_the_biters = require "maps.biter_battles_v2.feeding"
+local Feeding = require "maps.biter_battles_v2.feeding"
 local Tables = require "maps.biter_battles_v2.tables"
 
 local wait_messages = Tables.wait_messages
@@ -36,10 +35,6 @@ function Public.clear_copy_history(player)
 			player.clear_cursor() 
 		end
 	end
-end
-
-function Public.reset_tables_gui()
-	global.player_data_afk = {}
 end
 
 local function create_sprite_button(player)
@@ -165,6 +160,14 @@ function Public.create_main_gui(player)
 			s.style.right_padding = 0
 			s.style.bottom_padding = 0
 		end
+		local s = t.add { type = "sprite-button", name = "send_all", caption = "All", tooltip = "LMB - low to high, RMB - high to low"}
+		s.style.minimal_height = 41
+		s.style.minimal_width = 41
+		s.style.top_padding = 0
+		s.style.left_padding = 0
+		s.style.right_padding = 0
+		s.style.bottom_padding = 0
+		s.style.font_color = {r = 0.9, g = 0.9, b = 0.9}
 		frame.add{type="line"}
 	end
 	
@@ -298,17 +301,6 @@ function Public.refresh_threat()
 	global.gui_refresh_delay = game.tick + 5
 end
 
-local get_player_data = function(player, remove)
-    if remove and global.player_data_afk[player.name] then
-        global.player_data_afk[player.name] = nil
-        return
-    end
-    if not global.player_data_afk[player.name] then
-        global.player_data_afk[player.name] = {}
-    end
-    return global.player_data_afk[player.name]
-end
-
 function join_team(player, force_name, forced_join, auto_join)
 	if not player.character then return end
 	if not forced_join then
@@ -340,14 +332,7 @@ function join_team(player, force_name, forced_join, auto_join)
 				return
 			end
 		end
-		local p = nil
-		local p_data = get_player_data(player)
-		if p_data and p_data.position then
-			p = surface.find_non_colliding_position("character", p_data.position,16, 0.5)
-			get_player_data(player, true)
-		else
-			p = surface.find_non_colliding_position("character", game.forces[force_name].get_spawn_position(surface), 16, 0.5)
-		end
+		local p = surface.find_non_colliding_position("character", game.forces[force_name].get_spawn_position(surface), 16, 0.5)
 		if not p then
 			game.print("No spawn position found for " .. player.name .. "!", {255, 0, 0})
 			return 
@@ -394,7 +379,7 @@ function join_team(player, force_name, forced_join, auto_join)
 	Public.refresh()
 end
 
-function spectate(player, forced_join, stored_position)
+function spectate(player, forced_join)
 	if not player.character then return end
 	if not forced_join then
 		if global.tournament_mode then player.print("The game is set to tournament mode. Teams can only be changed via team manager.", {r = 0.98, g = 0.66, b = 0.22}) return end
@@ -404,10 +389,6 @@ function spectate(player, forced_join, stored_position)
 		player.cancel_crafting(player.crafting_queue[1])
 	end
 	
-	if stored_position then
-        local p_data = get_player_data(player)
-        p_data.position = player.position
-	end
 	player.teleport(player.surface.find_non_colliding_position("character", {0,0}, 4, 1))
 	player.force = game.forces.spectator
 	player.character.destructible = false
@@ -503,8 +484,9 @@ local function on_gui_click(event)
 
 	if name == "raw-fish" then Functions.spy_fish(player, event) return end
 
-	if food_names[name] then feed_the_biters(player, name) return end
+	if food_names[name] then Feeding.feed_biters(player, name) return end
 
+	if name == "send_all" then Feeding.feed_biters_mixed(player, event.button) return end
 	if name == "bb_leave_spectate" then join_team(player, global.chosen_team[player.name])	end
 
 	if name == "bb_spectate" then
