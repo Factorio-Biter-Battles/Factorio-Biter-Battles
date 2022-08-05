@@ -6,6 +6,7 @@ local BossUnit = require "functions.boss_unit"
 local fifo = require "maps.biter_battles_v2.fifo"
 local Tables = require "maps.biter_battles_v2.tables"
 local math_random = math.random
+local math_floor = math.floor
 local math_abs = math.abs
 
 local vector_radius = 512
@@ -200,8 +201,8 @@ local function select_units_around_spawner(spawner, force_name, side_target)
 	end
 	
 	local unit_count = 0
-	local max_unit_count = math.floor(global.bb_threat[biter_force_name] * 0.25) + math_random(6,12)
-	if max_unit_count > max_group_size_biters_force then max_unit_count = max_group_size_biters_force end
+	local max_unit_count = math_floor(global.bb_threat[biter_force_name] * 0.25) + math_random(6,12)
+	if max_unit_count > bb_config.max_group_size then max_unit_count = bb_config.max_group_size end
 
 	--Collect biters around spawners
 	if math_random(1, 2) == 1 then
@@ -261,7 +262,7 @@ local function send_group(unit_group, force_name, side_target)
 	local position = {target.x + (vector[1] * distance_modifier), target.y + (vector[2] * distance_modifier)}
 	position = unit_group.surface.find_non_colliding_position("stone-furnace", position, 96, 1)
 	if position then
-		if math.abs(position.y) < math.abs(unit_group.position.y) then
+		if math_abs(position.y) < math_abs(unit_group.position.y) then
 			commands[#commands + 1] = {
 				type = defines.command.go_to_location,
 				destination = position,
@@ -483,7 +484,7 @@ local function likely_biter_name(force_name)
 
 	-- Randomly choose between pair and respect array boundaries.
 	if idx > 1 then
-		idx = math.random(idx - 1, idx)
+		idx = math_random(idx - 1, idx)
 	end
 
 	return UNIT_NAMES[idx]
@@ -549,7 +550,7 @@ end
 
 function Public.reanimate_units()
 	-- This FIFOs can be accessed by force indices.
-	for force, id in pairs(global.dead_units) do
+	for _, id in pairs(global.dead_units) do
 		-- Check for each side if there are any biters to reanimate.
 		if fifo.empty(id) then
 			goto reanim_units_cont
@@ -558,7 +559,7 @@ function Public.reanimate_units()
 		-- Balance amount of unit creation requests to get rid off
 		-- excess stored in memory.
 		local cycles = fifo.length(id) / global.reanim_balancer
-		cycles = math.floor(cycles) + 1
+		cycles = math_floor(cycles) + 1
 		_reanimate_units(id, cycles)
 
 		::reanim_units_cont::
@@ -591,7 +592,7 @@ Public.schedule_reanimate = function(event)
 		return
 	end
 
-	local reanimate = math.random(1, 100) <= chance
+	local reanimate = math_random(1, 100) <= chance
 	if not reanimate then
 		return
 	end
