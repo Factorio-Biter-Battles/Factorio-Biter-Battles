@@ -13,7 +13,7 @@ local wait_messages = Tables.wait_messages
 local food_names = Tables.gui_foods
 
 local math_random = math.random
-
+local math_abs = math.abs
 require "maps.biter_battles_v2.spec_spy"
 require 'utils/gui_styles'
 local gui_values = {
@@ -136,6 +136,20 @@ local function add_prod_button(elem, gui_value)
 	prod_button.style.width = 25
 end
 
+local function show_pretty_threat(forceName)
+	local threat_value = math.floor(global.bb_threat[forceName])
+	if math_abs(threat_value) >= 1000000 then
+		threat_value = threat_value / 1000000
+		threat_value = tonumber(string.format("%.2f", threat_value))
+		threat_value = threat_value .. "M"
+	elseif math_abs(threat_value) >= 100000 then
+		threat_value = threat_value / 1000
+		threat_value = tonumber(string.format("%.0f", threat_value))
+		threat_value = threat_value .. "k"
+	end
+	return threat_value
+end
+
 function Public.create_main_gui(player)
 	local is_spec = player.force.name == "spectator"
 	if player.gui.left["bb_main_gui"] then player.gui.left["bb_main_gui"].destroy() end
@@ -234,7 +248,9 @@ function Public.create_main_gui(player)
 		local l = t.add  {type = "label", caption = "Threat: "}
 		l.style.minimal_width = 25
 		l.tooltip = gui_value.t2
-		local l = t.add  {type = "label", name = "threat_" .. gui_value.force, caption = math.floor(global.bb_threat[gui_value.biter_force])}
+		
+		local threat_value = show_pretty_threat(gui_value.biter_force)
+		local l = t.add  {type = "label", name = "threat_" .. gui_value.force, caption = threat_value}
 		l.style.font_color = gui_value.color2
 		l.style.font = "default-bold"
 		l.style.width = 50
@@ -290,8 +306,8 @@ function Public.refresh_threat()
 	for _, player in pairs(game.connected_players) do
 		if player.gui.left["bb_main_gui"] then
 			if player.gui.left["bb_main_gui"].stats_north then
-				player.gui.left["bb_main_gui"].stats_north.threat_north.caption = math.floor(global.bb_threat["north_biters"])
-				player.gui.left["bb_main_gui"].stats_south.threat_south.caption = math.floor(global.bb_threat["south_biters"])
+				player.gui.left["bb_main_gui"].stats_north.threat_north.caption = show_pretty_threat("north_biters")
+				player.gui.left["bb_main_gui"].stats_south.threat_south.caption = show_pretty_threat("south_biters")
 			end
 		end
 	end
