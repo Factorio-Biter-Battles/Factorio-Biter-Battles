@@ -279,7 +279,7 @@ local function on_console_chat(event)
 end
 
 
-comfy_panel_tabs["Histories"] = {gui = create_histories_panel, adimn = true}
+comfy_panel_tabs["Histories"] = {gui = create_histories_panel, admin = true}
 
 Event.add(defines.events.on_gui_selection_state_changed, on_gui_selection_state_changed)
 Event.add(defines.events.on_gui_text_changed, on_gui_text_changed)
