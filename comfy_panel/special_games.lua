@@ -391,9 +391,26 @@ local function on_gui_click(event)
 		element.parent.destroy() -- removes confirm/Cancel buttons
 	end
 end
+
+local function on_robot_built_entity(event)
+	if not global.active_special_games["disabled_entities"] then return end
+	local entity = event.created_entity
+	if not entity then return end
+	if not entity.valid then return end
+	local robot = event.robot
+	if not robot then return end
+	if not robot.valid then return end
+	local force = robot.force	
+	if global.special_games_variables["disabled_entities"][force.name][entity.name] then
+		entity.destroy()
+		--issue luaentity not valid
+	end
+end
+
 comfy_panel_tabs['Special games'] = {gui = create_special_games_panel, admin = true}
 
 Event.add(defines.events.on_gui_click, on_gui_click)
 Event.add(defines.events.on_built_entity, on_built_entity)
+Event.add(defines.events.on_robot_built_entity, on_robot_built_entity)
 return Public
 
