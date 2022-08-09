@@ -15,7 +15,8 @@ local autoTagWestOutpost = "[West]"
 local autoTagEastOutpost = "[East]"
 local autoTagDistance = 600
 local prohibitedRecipesToAutomatedForUntrustedPlayers = { ["fast-transport-belt"]=true, ["fast-underground-belt"]=true, ["fast-splitter"]=true }
-
+local antiAfkTimeBeforeEnabled = 60 * 60 * 5 -- in tick : 5 minutes
+local antiAfkTimeBeforeWarning = 60 * 60 * 3 + 60*40 -- in tick : 3 minutes 40s
 require "maps.biter_battles_v2.sciencelogs_tab"
 require "maps.biter_battles_v2.changelog_tab"
 require 'maps.biter_battles_v2.commands'
@@ -127,6 +128,25 @@ local function autotagging_outposters()
 	end
 end
 
+local function afk_kick(player)
+	if player.afk_time > antiAfkTimeBeforeWarning and player.afk_time < antiAfkTimeBeforeEnabled then
+		player.print('Please move within the next minute or you will be sent back to spectator island ! But even if you keep staying afk and sent back to spectator island, you will be able to join back to your position with your equipment')
+	end
+	if player.afk_time > antiAfkTimeBeforeEnabled then
+		player.print('You were sent back to spectator island as you were afk for too long, you can still join to come back at your position with all your equipment')
+		spectate(player,false,true)
+	end
+end
+
+local function anti_afk_system()
+    for _, player in pairs(game.forces.north.connected_players) do
+		afk_kick(player)
+	end
+    for _, player in pairs(game.forces.south.connected_players) do
+		afk_kick(player)
+	end
+end
+
 local tick_minute_functions = {
 	[300 * 1] = Ai.raise_evo,
 	[300 * 3 + 30 * 0] = Ai.pre_main_attack,		-- setup for main_attack
@@ -140,6 +160,7 @@ local tick_minute_functions = {
 	[300 * 3 + 30 * 8] = Ai.post_main_attack,
 	[300 * 3 + 30 * 9] = autotagging_outposters,
 	[300 * 4] = Ai.send_near_biters_to_silo,
+	[300 * 4 + 30 * 1] = anti_afk_system,
 }
 
 local function on_tick()
@@ -175,6 +196,10 @@ end
 local function on_marked_for_deconstruction(event)
 	if not event.entity.valid then return end
 	if event.entity.name == "fish" then event.entity.cancel_deconstruction(game.players[event.player_index].force.name) end
+	
+	if (game.players[event.player_index].force == game.forces.north and event.entity.position.y > 0) or (game.players[event.player_index].force == game.forces.south and event.entity.position.y < 0) then
+		event.entity.cancel_deconstruction(game.players[event.player_index].force.name)
+	end
 end
 
 local function on_player_built_tile(event)
@@ -327,10 +352,17 @@ local function on_init()
 	Init.load_spawn()
 end
 
+--By Maksiu1000 skip the last tech
+local unlock_satellite = function(event)
+    if event.research.name == 'rocket-silo' then
+		event.research.force.technologies['space-science-pack'].researched = true
+    end
+end
+
 local Event = require 'utils.event'
 Event.add(defines.events.on_rocket_launch_ordered, on_rocket_launch_ordered)
 Event.add(defines.events.on_area_cloned, on_area_cloned)
-Event.add(defines.events.on_research_finished, Ai.unlock_satellite)			--free silo space tech
+Event.add(defines.events.on_research_finished, unlock_satellite)			--free silo space tech
 Event.add(defines.events.on_post_entity_died, Ai.schedule_reanimate)
 Event.add_event_filter(defines.events.on_post_entity_died, {
 	filter = "type",
