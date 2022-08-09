@@ -394,11 +394,9 @@ local function on_gui_click(event)
 		element.parent.destroy() -- removes confirm/Cancel buttons
 	end
 end
-
 comfy_panel_tabs['Special games'] = {gui = create_special_games_panel, admin = true}
 
 Event.add(defines.events.on_gui_click, on_gui_click)
-Event.add(defines.events.on_built_entity, on_built_entity)
 Event.add(defines.events.on_robot_built_entity, on_robot_built_entity)
 return Public
 
