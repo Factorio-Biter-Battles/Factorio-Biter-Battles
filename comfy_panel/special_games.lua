@@ -267,6 +267,9 @@ local function on_built_entity(event)
 		player.create_local_flying_text({text = "Disabled by special game", position = entity.position})
 		player.get_inventory(defines.inventory.character_main).insert({name = entity.name, count = 1})
 		entity.destroy()
+	elseif entity.name == "entity-ghost" and global.special_games_variables["disabled_entities"][force.name][entity.ghost_name] then
+		player.create_local_flying_text({text = "Disabled by special game", position = entity.position})
+		entity.destroy()
 	end
 end
 
