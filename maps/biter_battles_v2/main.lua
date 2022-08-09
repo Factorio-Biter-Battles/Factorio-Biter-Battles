@@ -14,6 +14,7 @@ local Color = require 'utils.color_presets'
 local autoTagWestOutpost = "[West]"
 local autoTagEastOutpost = "[East]"
 local autoTagDistance = 600
+local prohibitedRecipesToAutomatedForUntrustedPlayers = { ["fast-transport-belt"]=true, ["fast-underground-belt"]=true, ["fast-splitter"]=true }
 
 require "maps.biter_battles_v2.sciencelogs_tab"
 require "maps.biter_battles_v2.changelog_tab"
@@ -36,13 +37,12 @@ local function clear_recipe_asm_if_redbelt_and_untrusted(entity, playerIndex,clo
 	local trusted = Session.get_trusted_table()
 	if entity == nil or entity.last_user == nil or entity.get_recipe() == nil then return end
 
-	local belts = { ["fast-transport-belt"]=true, ["fast-underground-belt"]=true, ["fast-splitter"]=true }
 	--Clone case variable added because when you paste a recipe, the last user is not the one that did the cloning strangely
 	if not trusted[player.name]
-	and belts[entity.get_recipe().name]
+	and prohibitedRecipesToAutomatedForUntrustedPlayers[entity.get_recipe().name]
 	and ((cloneCase == false and entity.last_user.name == player.name) or cloneCase == true) then
 		entity.set_recipe(nil)
-		player.print('You have not grown accustomed to this technology yet')
+		player.create_local_flying_text({text = "You have not grown accustomed to this technology", position = player.position})
 	end
 end
 
@@ -342,6 +342,29 @@ local function on_entity_settings_pasted(event)
 	clear_recipe_asm_if_redbelt_and_untrusted(event.destination,event.player_index,true)
 end
 
+local function prevent_player_paste_prohibited_items_when_untrusted(playerIndex)
+	local player = game.players[playerIndex]
+	local cursorStack = player.cursor_stack
+	if not cursorStack.valid or not cursorStack.valid_for_read or cursorStack.name ~= "blueprint" then return end
+	local trusted = Session.get_trusted_table()
+	if trusted[player.name] then return end
+	
+	local bpString = string.sub(player.cursor_stack.export_stack(),2)
+	local bpDecoded = game.decode_string(bpString)
+	
+	for k,v in pairs(prohibitedRecipesToAutomatedForUntrustedPlayers) do
+		if string.find(bpDecoded, k,1,true) then
+			player.create_local_flying_text({text = "You have not grown accustomed to this technology", position = player.position})
+			player.clear_cursor()
+			return
+		end
+	end
+end
+
+local function on_player_cursor_stack_changed(event)
+	prevent_player_paste_prohibited_items_when_untrusted(event.player_index)
+end
+
 Event.add(defines.events.on_entity_settings_pasted, on_entity_settings_pasted)
 Event.add(defines.events.on_entity_cloned, on_entity_cloned)
 Event.add(defines.events.on_built_entity, on_built_entity)
@@ -357,6 +380,7 @@ Event.add(defines.events.on_player_mined_entity, on_player_mined_entity)
 Event.add(defines.events.on_research_finished, on_research_finished)
 Event.add(defines.events.on_robot_built_entity, on_robot_built_entity)
 Event.add(defines.events.on_robot_built_tile, on_robot_built_tile)
+Event.add(defines.events.on_player_cursor_stack_changed, on_player_cursor_stack_changed)
 Event.add(defines.events.on_tick, on_tick)
 Event.on_init(on_init)
 
