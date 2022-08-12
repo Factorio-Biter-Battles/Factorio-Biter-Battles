@@ -199,10 +199,13 @@ local create_histories_panel = (function(player, frame)
 end)
 
 local function on_gui_selection_state_changed(event)
+	local element = event.element
+	if not element then rteturn end
+	if not element.valid then return end
 	local player = game.get_player(event.player_index)
 	local name = event.element.name
 	if name == "history_select" then
-		this.selected_history_index[player.name] = event.element.selected_index
+		this.selected_history_index[player.name] = element.selected_index
 		local frame = get_active_frame(player)
 		if frame then
 			draw_events(player, frame)
@@ -267,6 +270,7 @@ end
 
 
 local function on_console_chat(event)
+	if not event.player_index then return end
 	local player = game.get_player(event.player_index)
 	if this.waiting_for_gps[player.name] then
 		local frame = get_active_frame(player)

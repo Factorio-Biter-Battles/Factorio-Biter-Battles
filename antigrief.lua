@@ -395,6 +395,9 @@ local function on_player_mined_entity(event)
         )
     end
 
+    if not entity.force.name == player.force.name then return end
+    if not entity.last_user then return end
+    if entity.last_user.name == player.name then return end
     local data = {
         player_name = player.name,
         event = event.entity.name,

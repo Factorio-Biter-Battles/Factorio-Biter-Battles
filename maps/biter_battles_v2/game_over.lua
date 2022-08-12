@@ -479,6 +479,7 @@ end
 local function chat_with_everyone(event)
     if not global.server_restart_timer then return end
     if not event.message then return end
+    if not event.player_index then return end
     local player = game.get_player(event.player_index)
     if not player or not player.valid then return end
     local enemy = Tables.enemy_team_of[player.force.name]
