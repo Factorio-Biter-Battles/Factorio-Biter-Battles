@@ -200,7 +200,7 @@ end)
 
 local function on_gui_selection_state_changed(event)
 	local element = event.element
-	if not element then rteturn end
+	if not element then return end
 	if not element.valid then return end
 	local player = game.get_player(event.player_index)
 	local name = event.element.name
