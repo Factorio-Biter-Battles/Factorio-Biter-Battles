@@ -193,14 +193,14 @@ local function select_units_around_spawner(spawner, force_name, side_target)
 	-- Half threat goes to normal biters, half threat goes for bosses, to get half bosses and half normal biters
 	local threat = global.bb_threat[biter_force_name] / 10
 	local threat_for_normal_biters = threat
-	if max_group_size_biters_force ~= bb_config.max_group_size_initial then
+	if max_group_size_biters_force ~= global.max_group_size_initial then
 		threat_for_normal_biters = threat_for_normal_biters / 2
 	end
 	local threat_for_boss_biters = threat  / 2
 
-	local max_group_size_biters_force = bb_config.max_group_size_north
+	local max_group_size_biters_force = global.max_group_size_north
 	if biter_force_name == 'south_biters' then
-		max_group_size_biters_force = bb_config.max_group_size_south
+		max_group_size_biters_force = global.max_group_size_south
 	end
 	
 	local unit_count = 0
@@ -228,8 +228,8 @@ local function select_units_around_spawner(spawner, force_name, side_target)
 	spawn_biters(true,max_unit_count - unit_count,spawner,threat_for_normal_biters,biter_force_name,max_unit_count,valid_biters,force_name)
 	
 	--Manual spawning of boss units
-	if max_group_size_biters_force ~= bb_config.max_group_size_initial then
-		spawn_biters(false,math.ceil((bb_config.max_group_size_initial - max_group_size_biters_force)/20),spawner,threat_for_boss_biters,biter_force_name,max_unit_count,valid_biters,force_name)
+	if max_group_size_biters_force ~= global.max_group_size_initial then
+		spawn_biters(false,math.ceil((global.max_group_size_initial - max_group_size_biters_force)/20),spawner,threat_for_boss_biters,biter_force_name,max_unit_count,valid_biters,force_name)
 	end
 
 	if global.bb_debug then game.print(get_active_biter_count(biter_force_name) .. " active units for " .. biter_force_name) end
