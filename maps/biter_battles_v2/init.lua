@@ -60,8 +60,6 @@ function Public.initial_setup()
 	game.create_force("south")
 	game.create_force("north_biters")
 	game.create_force("south_biters")
-	game.create_force("north_biters_boss")
-	game.create_force("south_biters_boss")
 	game.create_force("spectator")
 
 	game.forces.spectator.research_all_technologies()
@@ -167,7 +165,6 @@ function Public.draw_structures()
 	Terrain.generate_additional_rocks(surface)
 	Terrain.generate_silo(surface)
 	Terrain.draw_spawn_circle(surface)
-	game.surfaces[global.bb_surface_name].create_entity({name="flying-text",position={-4,-13},text="Experimental version: Boss biters",color = {r = 0, g = 1, b = 0, a = 0.5},text_align="right"}).active=false
 	--Terrain.generate_spawn_goodies(surface)
 end
 
@@ -203,7 +200,6 @@ function Public.tables()
 	global.tm_custom_name = {}
 	global.total_passive_feed_redpotion = 0
 	global.unit_spawners = {}
-	global.boss_units = {}
 	global.unit_spawners.north_biters = {}
 	global.unit_spawners.south_biters = {}
 	global.active_special_games = {}
@@ -300,7 +296,6 @@ function Public.forces()
 	f.set_cease_fire('player', true)
 	f.set_friend("spectator", true)
 	f.set_friend("south_biters", true)
-	f.set_friend("south_biters_boss", true)
 	f.share_chart = true
 
 	local f = game.forces["south"]
@@ -308,13 +303,10 @@ function Public.forces()
 	f.set_cease_fire('player', true)
 	f.set_friend("spectator", true)
 	f.set_friend("north_biters", true)
-	f.set_friend("north_biters_boss", true)
 	f.share_chart = true
 
 	local f = game.forces["north_biters"]
 	f.set_friend("south_biters", true)
-	f.set_friend("south_biters_boss", true)
-	f.set_friend("north_biters_boss", true)
 	f.set_friend("south", true)
 	f.set_friend("player", true)
 	f.set_friend("spectator", true)
@@ -323,29 +315,6 @@ function Public.forces()
 
 	local f = game.forces["south_biters"]
 	f.set_friend("north_biters", true)
-	f.set_friend("north_biters_boss", true)
-	f.set_friend("south_biters_boss", true)
-	f.set_friend("north", true)
-	f.set_friend("player", true)
-	f.set_friend("spectator", true)
-	f.share_chart = false
-	global.dead_units[f.index] = fifo.create(global.bb_fifo_size)
-	
-
-	local f = game.forces["north_biters_boss"]
-	f.set_friend("south_biters", true)
-	f.set_friend("north_biters", true)
-	f.set_friend("south_biters_boss", true)
-	f.set_friend("south", true)
-	f.set_friend("player", true)
-	f.set_friend("spectator", true)
-	f.share_chart = false
-	global.dead_units[f.index] = fifo.create(global.bb_fifo_size)
-
-	local f = game.forces["south_biters_boss"]
-	f.set_friend("north_biters", true)
-	f.set_friend("south_biters", true)
-	f.set_friend("north_biters_boss", true)
 	f.set_friend("north", true)
 	f.set_friend("player", true)
 	f.set_friend("spectator", true)
