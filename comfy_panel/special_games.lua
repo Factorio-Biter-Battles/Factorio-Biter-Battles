@@ -396,7 +396,20 @@ local function on_gui_click(event)
 end
 comfy_panel_tabs['Special games'] = {gui = create_special_games_panel, admin = true}
 
+local function on_marked_for_upgrade(event)
+	if not global.active_special_games["disabled_entities"] then return end
+	local entity = event.entity
+	if not entity or not entity.valid then return end
+	if not entity.get_upgrade_target() then return end
+	local player = game.get_player(event.player_index)	
+	
+	if global.special_games_variables["disabled_entities"][player.force.name][entity.get_upgrade_target().name] then
+		entity.cancel_upgrade(player.force)
+	end
+end
+
 Event.add(defines.events.on_gui_click, on_gui_click)
 Event.add(defines.events.on_built_entity, on_built_entity)
+Event.add(defines.events.on_marked_for_upgrade, on_marked_for_upgrade)
 return Public
 
