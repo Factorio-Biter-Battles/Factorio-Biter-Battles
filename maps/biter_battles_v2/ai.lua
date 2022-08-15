@@ -194,10 +194,7 @@ local function select_units_around_spawner(spawner, force_name, side_target)
 	local threat = global.bb_threat[biter_force_name] / 10
 	local threat_for_normal_biters = threat
 	
-	local max_group_size_biters_force = global.max_group_size_north
-	if biter_force_name == 'south_biters' then
-		max_group_size_biters_force = global.max_group_size_south
-	end
+	local max_group_size_biters_force = global.max_group_size[biter_force_name]
 	
 	if max_group_size_biters_force ~= global.max_group_size_initial then
 		threat_for_normal_biters = threat_for_normal_biters / 2
