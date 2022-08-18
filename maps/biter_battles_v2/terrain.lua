@@ -2,7 +2,7 @@ local Public = {}
 local LootRaffle = require "functions.loot_raffle"
 local BiterRaffle = require "maps.biter_battles_v2.biter_raffle"
 local bb_config = require "maps.biter_battles_v2.config"
-local Functions = require "maps.biter_battles_v2.functions"
+local AiTargets = require "maps.biter_battles_v2.ai_targets"
 local tables = require "maps.biter_battles_v2.tables"
 local session = require 'utils.datastore.session_data'
 
@@ -225,7 +225,7 @@ local function generate_starting_area(pos, distance_to_center, surface)
 						if surface.can_place_entity({name = "gun-turret", position = pos}) then
 							local e = surface.create_entity({name = "gun-turret", position = pos, force = "north"})
 							e.insert({name = "firearm-magazine", count = math_random(2,16)})
-							Functions.add_target_entity(e)
+							AiTargets.start_tracking(e)
 						end
 					else
 						if math_random(1, 24) == 1 and not is_horizontal_border_river(pos) then
@@ -563,7 +563,7 @@ function Public.generate_silo(surface)
 	})
 	silo.minable = false
 	global.rocket_silo[silo.force.name] = silo
-	Functions.add_target_entity(global.rocket_silo[silo.force.name])
+	AiTargets.start_tracking(silo)
 
 	for _ = 1, 32, 1 do
 		create_mirrored_tile_chain(surface, {name = "stone-path", position = silo.position}, 32, 10)
@@ -577,8 +577,10 @@ function Public.generate_silo(surface)
 	end
 	local turret1 = surface.create_entity({name = "gun-turret", position = {x=pos.x, y=pos.y-5}, force = "north"})
 	turret1.insert({name = "firearm-magazine", count = 10})
+	AiTargets.start_tracking(turret1)
 	local turret2 = surface.create_entity({name = "gun-turret", position = {x=pos.x+2, y=pos.y-5}, force = "north"})
 	turret2.insert({name = "firearm-magazine", count = 10})
+	AiTargets.start_tracking(turret2)
 end
 --[[
 function Public.generate_spawn_goodies(surface)

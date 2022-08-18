@@ -1,26 +1,12 @@
 local Public = {}
 local BiterRaffle = require "maps.biter_battles_v2.biter_raffle"
-local Functions = require "maps.biter_battles_v2.functions"
 local bb_config = require "maps.biter_battles_v2.config"
 local BossUnit = require "functions.boss_unit"
 local fifo = require "maps.biter_battles_v2.fifo"
 local Tables = require "maps.biter_battles_v2.tables"
+local AiStrikes = require "maps.biter_battles_v2.ai_strikes"
+local AiTargets = require "maps.biter_battles_v2.ai_targets"
 local math_random = math.random
-local math_abs = math.abs
-
-local vector_radius = 512
-local attack_vectors = {}
-attack_vectors.north = {}
-attack_vectors.south = {}
---awesomepatrol's pathing  updates
-for p = 0.3, 0.71, 0.1 do
-	local a = math.pi * p
-	local x = vector_radius * math.cos(a)
-	local y = vector_radius * math.sin(a)
-	attack_vectors.north[#attack_vectors.north + 1] = {x, y * -1}
-	attack_vectors.south[#attack_vectors.south + 1] = {x, y}
-end
-local size_of_vectors = #attack_vectors.north
 
 local unit_type_raffle = {"biter", "mixed", "mixed", "spitter", "spitter"}
 local size_of_unit_type_raffle = #unit_type_raffle
@@ -42,21 +28,6 @@ local threat_values = {
 	["spitter-spawner"] = 32
 }
 
-local function get_target_entity(force_name)
-	local force_index = game.forces[force_name].index
-	local target_entity = Functions.get_random_target_entity(force_index)
-	if not target_entity then print("Unable to get target entity for " .. force_name .. ".") return end
-	for _ = 1, 2, 1 do
-		local e = Functions.get_random_target_entity(force_index)
-		if math_abs(e.position.x) < math_abs(target_entity.position.x) then
-			target_entity = e
-		end
-	end
-	if not target_entity then print("Unable to get target entity for " .. force_name .. ".") return end
-	--print("Target entity for " .. force_name .. ": " .. target_entity.name .. " at x=" .. target_entity.position.x .. " y=" .. target_entity.position.y)
-	return target_entity
-end
-
 local function get_threat_ratio(biter_force_name)
 	if global.bb_threat[biter_force_name] <= 0 then return 0 end
 	local t1 = global.bb_threat["north_biters"]
@@ -67,30 +38,6 @@ local function get_threat_ratio(biter_force_name)
 	local total_threat = t1 + t2
 	local ratio = global.bb_threat[biter_force_name] / total_threat
 	return ratio
-end
-
-local function is_biter_inactive(biter, unit_number, biter_force_name)
-	if not biter.entity then
-		if global.bb_debug then print("BiterBattles: active unit " .. unit_number .. " removed, possibly died.") end
-		return true
-	end
-	if not biter.entity.valid then
-		if global.bb_debug then print("BiterBattles: active unit " .. unit_number .. " removed, biter invalid.") end
-		return true
-	end
-	if not biter.entity.unit_group then
-		if global.bb_debug then print("BiterBattles: active unit " .. unit_number .. "  at x" .. biter.entity.position.x .. " y" .. biter.entity.position.y .. " removed, had no unit group.") end
-		return true
-	end
-	if not biter.entity.unit_group.valid then
-		if global.bb_debug then print("BiterBattles: active unit " .. unit_number .. " removed, unit group invalid.") end
-		return true
-	end
-	if game.tick - biter.active_since > bb_config.biter_timeout then
-		if global.bb_debug then print("BiterBattles: " .. biter_force_name .. " unit " .. unit_number .. " timed out at tick age " .. game.tick - biter.active_since .. ".") end
-		biter.entity.destroy()
-		return true
-	end
 end
 
 Public.send_near_biters_to_silo = function()
@@ -138,7 +85,7 @@ local function get_random_spawner(biter_force_name)
 	end
 end
 
-local function generate_boss_units_around_spawner(spawner, force_name, side_target)
+local function generate_boss_units_around_spawner(spawner, force_name)
 	local biter_force_name = spawner.force.name
 	local boss_biter_force_name = biter_force_name .. "_boss"
 
@@ -153,13 +100,13 @@ local function generate_boss_units_around_spawner(spawner, force_name, side_targ
 
 	local max_unit_count = math.floor(global.bb_threat[biter_force_name] * 0.25) + math_random(6,12)
 	if max_unit_count > max_group_size_biters_force then max_unit_count = max_group_size_biters_force end
-	
-	-- *1.5 because we add 50% health bonus as it's just one unit.  
+
+	-- *1.5 because we add 50% health bonus as it's just one unit.
 	-- *20 because one boss is equal of 20 biters in theory
 	-- formula because 90% revive chance is 1/(1-0.9) = 10, which means biters needs to be killed 10 times, so *10 . easy fast-check : 50% revive is 2 biters worth, formula matches. 0% revive -> 1 biter worth
 	local health_buff_equivalent_revive = 1.0/(1.0-global.reanim_chance[game.forces[biter_force_name].index]/100)
 	local health_factor = bb_config.health_multiplier_boss*health_buff_equivalent_revive
-	
+
 	--Manual spawning of boss units
 	local roll_type = unit_type_raffle[math_random(1, size_of_unit_type_raffle)]
 	if max_group_size_biters_force ~= bb_config.max_group_size_initial then
@@ -180,13 +127,11 @@ local function generate_boss_units_around_spawner(spawner, force_name, side_targ
 			end
 		end
 	end
-	
-	if global.bb_debug then game.print(get_active_biter_count(biter_force_name) .. " active units for " .. biter_force_name) end
 
 	return valid_biters
 end
 
-local function select_units_around_spawner(spawner, force_name, side_target)
+local function select_units_around_spawner(spawner, force_name)
 	local biter_force_name = spawner.force.name
 
 	local valid_biters = {}
@@ -198,7 +143,7 @@ local function select_units_around_spawner(spawner, force_name, side_target)
 	if biter_force_name == 'south_biters' then
 		max_group_size_biters_force = bb_config.max_group_size_south
 	end
-	
+
 	local unit_count = 0
 	local max_unit_count = math.floor(global.bb_threat[biter_force_name] * 0.25) + math_random(6,12)
 	if max_unit_count > max_group_size_biters_force then max_unit_count = max_group_size_biters_force end
@@ -237,59 +182,7 @@ local function select_units_around_spawner(spawner, force_name, side_target)
 			global.biter_spawn_unseen[force_name][unit_name] = false
 		end
 	end
-
-	if global.bb_debug then game.print(get_active_biter_count(biter_force_name) .. " active units for " .. biter_force_name) end
-
 	return valid_biters
-end
-
-local function send_group(unit_group, force_name, side_target)
-	local target
-	if side_target then
-		target = side_target
-	else
-		target = get_target_entity(force_name)
-	end
-	if not target then print("No target for " .. force_name .. " biters.") return end
-
-	target = target.position
-
-	local commands = {}
-	local vector = attack_vectors[force_name][math_random(1, size_of_vectors)]
-	local distance_modifier = math_random(25, 100) * 0.01
-
-	local position = {target.x + (vector[1] * distance_modifier), target.y + (vector[2] * distance_modifier)}
-	position = unit_group.surface.find_non_colliding_position("stone-furnace", position, 96, 1)
-	if position then
-		if math.abs(position.y) < math.abs(unit_group.position.y) then
-			commands[#commands + 1] = {
-				type = defines.command.go_to_location,
-				destination = position,
-				radius = 32,
-				distraction = defines.distraction.by_enemy
-			}
-		end
-	end
-
-	commands[#commands + 1] = {
-		type = defines.command.attack_area,
-		destination = target,
-		radius = 32,
-		distraction = defines.distraction.by_enemy
-	}
-
-	commands[#commands + 1] = {
-		type = defines.command.attack,
-		target = global.rocket_silo[force_name],
-		distraction = defines.distraction.by_damage
-	}
-
-	unit_group.set_command({
-		type = defines.command.compound,
-		structure_type = defines.compound_command.logical_and,
-		commands = commands
-	})
-	return true
 end
 
 local function get_unit_group_position(spawner)
@@ -307,9 +200,7 @@ local function get_unit_group_position(spawner)
 	return p
 end
 
-local function get_nearby_biter_nest(target_entity)
-	local center = target_entity.position
-	local biter_force_name = target_entity.force.name .. "_biters"
+local function get_nearby_biter_nest(center, biter_force_name)
 	local spawner = get_random_spawner(biter_force_name)
 	if not spawner then return end
 	local best_distance = (center.x - spawner.position.x) ^ 2 + (center.y - spawner.position.y) ^ 2
@@ -332,13 +223,13 @@ local function create_attack_group(surface, force_name, biter_force_name)
 	local threat = global.bb_threat[biter_force_name]
 	if threat <= 0 then return false end
 
-	local side_target = get_target_entity(force_name)
-	if not side_target then
+	local target_position = AiTargets.pick(force_name)
+	if not target_position then
 		print("No side target found for " .. force_name .. ".")
 		return
 	end
 
-	local spawner = get_nearby_biter_nest(side_target)
+	local spawner = get_nearby_biter_nest(target_position, biter_force_name)
 	if not spawner then
 		print("No spawner found for " .. force_name .. ".")
 		return
@@ -346,23 +237,23 @@ local function create_attack_group(surface, force_name, biter_force_name)
 
 	local unit_group_position = get_unit_group_position(spawner)
 	if not unit_group_position then return end
-	local units = select_units_around_spawner(spawner, force_name, side_target)
+	local units = select_units_around_spawner(spawner, force_name)
 	if not units then return end
 	local unit_group = surface.create_unit_group({position = unit_group_position, force = biter_force_name})
 	for _, unit in pairs(units) do unit_group.add_member(unit) end
-	send_group(unit_group, force_name, side_target)
-	
+	AiStrikes.initiate(unit_group, force_name, target_position)
+
 	local boss_force_name = biter_force_name .. "_boss"
-	units = generate_boss_units_around_spawner(spawner, force_name, side_target)
+	units = generate_boss_units_around_spawner(spawner, force_name)
 	if not units then return end
 	unit_group = surface.create_unit_group({position = unit_group_position, force = boss_force_name})
 	for _, unit in pairs(units) do unit_group.add_member(unit) end
-	send_group(unit_group, force_name, side_target)
+	AiStrikes.initiate(unit_group, force_name, target_position)
 end
 
 Public.pre_main_attack = function()
-	local surface = game.surfaces[global.bb_surface_name]
 	local force_name = global.next_attack
+	AiTargets.select(force_name)
 
 	if not global.training_mode or (global.training_mode and #game.forces[force_name].connected_players > 0) then
 		local biter_force_name = force_name .. "_biters"
