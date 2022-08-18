@@ -1,26 +1,13 @@
 local Public = {}
 local BiterRaffle = require "maps.biter_battles_v2.biter_raffle"
-local Functions = require "maps.biter_battles_v2.functions"
 local bb_config = require "maps.biter_battles_v2.config"
 local fifo = require "maps.biter_battles_v2.fifo"
 local Tables = require "maps.biter_battles_v2.tables"
+local AiStrikes = require "maps.biter_battles_v2.ai_strikes"
+local AiTargets = require "maps.biter_battles_v2.ai_targets"
 local math_random = math.random
 local math_floor = math.floor
 local math_abs = math.abs
-
-local vector_radius = 512
-local attack_vectors = {}
-attack_vectors.north = {}
-attack_vectors.south = {}
---awesomepatrol's pathing  updates
-for p = 0.3, 0.71, 0.1 do
-	local a = math.pi * p
-	local x = vector_radius * math.cos(a)
-	local y = vector_radius * math.sin(a)
-	attack_vectors.north[#attack_vectors.north + 1] = {x, y * -1}
-	attack_vectors.south[#attack_vectors.south + 1] = {x, y}
-end
-local size_of_vectors = #attack_vectors.north
 
 local unit_type_raffle = {"biter", "mixed", "mixed", "spitter", "spitter"}
 local size_of_unit_type_raffle = #unit_type_raffle
@@ -41,21 +28,6 @@ local threat_values = {
 	["biter-spawner"] = 32,
 	["spitter-spawner"] = 32
 }
-
-local function get_target_entity(force_name)
-	local force_index = game.forces[force_name].index
-	local target_entity = Functions.get_random_target_entity(force_index)
-	if not target_entity then print("Unable to get target entity for " .. force_name .. ".") return end
-	for _ = 1, 2, 1 do
-		local e = Functions.get_random_target_entity(force_index)
-		if math_abs(e.position.x) < math_abs(target_entity.position.x) then
-			target_entity = e
-		end
-	end
-	if not target_entity then print("Unable to get target entity for " .. force_name .. ".") return end
-	--print("Target entity for " .. force_name .. ": " .. target_entity.name .. " at x=" .. target_entity.position.x .. " y=" .. target_entity.position.y)
-	return target_entity
-end
 
 local function get_threat_ratio(biter_force_name)
 	if global.bb_threat[biter_force_name] <= 0 then return 0 end
@@ -138,7 +110,7 @@ local function get_random_spawner(biter_force_name)
 	end
 end
 
-local function select_units_around_spawner(spawner, force_name, side_target)
+local function select_units_around_spawner(spawner, force_name)
 	local biter_force_name = spawner.force.name
 
 	local valid_biters = {}
@@ -190,55 +162,6 @@ local function select_units_around_spawner(spawner, force_name, side_target)
 	return valid_biters
 end
 
-local function send_group(unit_group, force_name, side_target)
-	local target
-	if side_target then
-		target = side_target
-	else
-		target = get_target_entity(force_name)
-	end
-	if not target then print("No target for " .. force_name .. " biters.") return end
-
-	target = target.position
-
-	local commands = {}
-	local vector = attack_vectors[force_name][math_random(1, size_of_vectors)]
-	local distance_modifier = math_random(25, 100) * 0.01
-
-	local position = {target.x + (vector[1] * distance_modifier), target.y + (vector[2] * distance_modifier)}
-	position = unit_group.surface.find_non_colliding_position("stone-furnace", position, 96, 1)
-	if position then
-		if math_abs(position.y) < math_abs(unit_group.position.y) then
-			commands[#commands + 1] = {
-				type = defines.command.go_to_location,
-				destination = position,
-				radius = 32,
-				distraction = defines.distraction.by_enemy
-			}
-		end
-	end
-
-	commands[#commands + 1] = {
-		type = defines.command.attack_area,
-		destination = target,
-		radius = 32,
-		distraction = defines.distraction.by_enemy
-	}
-
-	commands[#commands + 1] = {
-		type = defines.command.attack,
-		target = global.rocket_silo[force_name],
-		distraction = defines.distraction.by_damage
-	}
-
-	unit_group.set_command({
-		type = defines.command.compound,
-		structure_type = defines.compound_command.logical_and,
-		commands = commands
-	})
-	return true
-end
-
 local function get_unit_group_position(spawner)
 	local p
 	if spawner.force.name == "north_biters" then
@@ -254,9 +177,7 @@ local function get_unit_group_position(spawner)
 	return p
 end
 
-local function get_nearby_biter_nest(target_entity)
-	local center = target_entity.position
-	local biter_force_name = target_entity.force.name .. "_biters"
+local function get_nearby_biter_nest(center, biter_force_name)
 	local spawner = get_random_spawner(biter_force_name)
 	if not spawner then return end
 	local best_distance = (center.x - spawner.position.x) ^ 2 + (center.y - spawner.position.y) ^ 2
@@ -279,13 +200,13 @@ local function create_attack_group(surface, force_name, biter_force_name)
 	local threat = global.bb_threat[biter_force_name]
 	if threat <= 0 then return false end
 
-	local side_target = get_target_entity(force_name)
-	if not side_target then
+	local target_position = AiTargets.pick(force_name)
+	if not target_position then
 		print("No side target found for " .. force_name .. ".")
 		return
 	end
 
-	local spawner = get_nearby_biter_nest(side_target)
+	local spawner = get_nearby_biter_nest(target_position, biter_force_name)
 	if not spawner then
 		print("No spawner found for " .. force_name .. ".")
 		return
@@ -294,18 +215,19 @@ local function create_attack_group(surface, force_name, biter_force_name)
 	local unit_group_position = get_unit_group_position(spawner)
 	if not unit_group_position then return end
 
-	local units = select_units_around_spawner(spawner, force_name, side_target)
+	local units = select_units_around_spawner(spawner, force_name)
 	if not units then return end
 
 	local unit_group = surface.create_unit_group({position = unit_group_position, force = biter_force_name})
 	for _, unit in pairs(units) do unit_group.add_member(unit) end
 
-	send_group(unit_group, force_name, side_target)
+	AiStrikes.initiate(unit_group, force_name, target_position)
 end
 
 Public.pre_main_attack = function()
 	local surface = game.surfaces[global.bb_surface_name]
 	local force_name = global.next_attack
+	AiTargets.select(force_name)
 
 	if not global.training_mode or (global.training_mode and #game.forces[force_name].connected_players > 0) then
 		local biter_force_name = force_name .. "_biters"
@@ -331,6 +253,7 @@ end
 
 Public.post_main_attack = function()
 	global.main_attack_wave_amount = 0
+	AiTargets.deselect(global.next_attack)
 	if global.next_attack == "north" then
 		global.next_attack = "south"
 	else
