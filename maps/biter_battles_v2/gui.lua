@@ -54,42 +54,91 @@ local function clock(frame)
 	local total_hours = math.floor(total_minutes / 60)
 	local minutes = total_minutes - (total_hours * 60)
 
-	local clock = frame.add {type = "label", caption = "Game time: " .. string.format("%02d", total_hours) .. ":" .. string.format("%02d", minutes)}
-	clock.style.font = "default-bold"
-	clock.style.font_color = {r = 0.98, g = 0.66, b = 0.22}
-	frame.add {type = "line"}
+	if frame["clockPart"] then
+		frame["clockPart"].caption = "Game time: " .. string.format("%02d", total_hours) .. ":" .. string.format("%02d", minutes)
+	else
+		local clock = frame.add {name = "clockPart", type = "label", caption = "Game time: " .. string.format("%02d", total_hours) .. ":" .. string.format("%02d", minutes)}
+		clock.style.font = "default-bold"
+		clock.style.font_color = {r = 0.98, g = 0.66, b = 0.22}
+		frame.add {type = "line"}
+	end
 end
 
 local function create_first_join_gui(player)
 	if not global.game_lobby_timeout then global.game_lobby_timeout = 5999940 end
 	if global.game_lobby_timeout - game.tick < 0 then global.game_lobby_active = false end
-	local frame = player.gui.left.add { type = "frame", name = "bb_main_gui", direction = "vertical" }
-	local b = frame.add{ type = "label", caption = "Defend your Rocket Silo!" }
-	b.style.font = "heading-1"
-	b.style.font_color = {r=0.98, g=0.66, b=0.22}
-	local b = frame.add  { type = "label", caption = "Feed the enemy team's biters to gain advantage!" }
-	b.style.font = "heading-2"
-	b.style.font_color = {r=0.98, g=0.66, b=0.22}
+	
+	
+	local frame = player.gui.left["bb_main_gui"]
+	if not player.gui.left["bb_main_gui"] then
+		frame = player.gui.left.add { type = "frame", name = "bb_main_gui", direction = "vertical" }
+	end
+	
+	local t = player.gui.left["bb_main_gui"]["spectatorFrame"]
+	if not t then
+		t = frame.add { name="spectatorFrame",type = "table", column_count = 1 }
+	end
+	
+	local b = player.gui.left["bb_main_gui"]["spectatorFrame"]["defSiloLabel"]
+	if not b then
+		b = t.add{ name="defSiloLabel",type = "label", caption = "Defend your Rocket Silo!" }
+		b.style.font = "heading-1"
+		b.style.font_color = {r=0.98, g=0.66, b=0.22}
+	end
+	
+	local b = player.gui.left["bb_main_gui"]["spectatorFrame"]["feedLabelFrame"]
+	if not b then
+		local b = t.add  { name="feedLabelFrame",type = "label", caption = "Feed the enemy team's biters to gain advantage!" }
+		b.style.font = "heading-2"
+		b.style.font_color = {r=0.98, g=0.66, b=0.22}
+	end
 	clock(frame)
-	local d = frame.add{type = "sprite-button", name = "join_random_button", caption = "AUTO JOIN"}
-	d.style.font = "default-large-bold"
-	d.style.font_color = { r=1, g=0, b=1}
-	d.style.width = 350
-	frame.add{ type = "line"}
-	frame.style.bottom_padding = 2
+	
+	
+	local d = player.gui.left["bb_main_gui"]["join_random_button"]
+	if not d then
+		d = frame.add{type = "sprite-button", name = "join_random_button", caption = "AUTO JOIN"}
+		d.style.font = "default-large-bold"
+		d.style.font_color = { r=1, g=0, b=1}
+		d.style.width = 350
+	end
+	local lineGuiSeparator = player.gui.left["bb_main_gui"]["lineSeparatorGui"]
+	if not lineGuiSeparator then
+		frame.add{ name="lineSeparatorGui",type = "line"}
+		frame.style.bottom_padding = 2
+	end
 	
 	for _, gui_value in pairs(gui_values) do
-		local t = frame.add { type = "table", column_count = 3 }
+		local t = player.gui.left["bb_main_gui"]["tableGuiValue"..gui_value.force]
+		if not t then
+			t = frame.add { name="tableGuiValue"..gui_value.force,type = "table", column_count = 3 }
+		end
+		
 		local c = gui_value.c1
 		if global.tm_custom_name[gui_value.force] then c = global.tm_custom_name[gui_value.force] end
-		local l = t.add  { type = "label", caption = c}
-		l.style.font = "heading-2"
-		l.style.font_color = gui_value.color1
-		l.style.single_line = false
-		l.style.maximal_width = 290
-		local l = t.add  { type = "label", caption = "  -  "}
-		local l = t.add  { type = "label", caption = #game.forces[gui_value.force].connected_players .. " Players "}
-		l.style.font_color = { r=0.22, g=0.88, b=0.22}
+		local l = player.gui.left["bb_main_gui"]["tableGuiValue"..gui_value.force]["labelGuiValue"..gui_value.force]
+		if not l then
+			l = t.add  {name="labelGuiValue"..gui_value.force, type = "label", caption = c}
+			l.style.font = "heading-2"
+			l.style.font_color = gui_value.color1
+			l.style.single_line = false
+			l.style.maximal_width = 290
+		else
+			l.caption = c
+		end
+		
+		l = player.gui.left["bb_main_gui"]["tableGuiValue"..gui_value.force]["labelSeparatorGuiValueOne"..gui_value.force]
+		if not l then
+			l = t.add  { name = "labelSeparatorGuiValueOne"..gui_value.force, type = "label", caption = "  -  "}
+		end
+		
+		l = player.gui.left["bb_main_gui"]["tableGuiValue"..gui_value.force]["labelConnectedPlayersGuiTwo"..gui_value.force]
+		if not l then
+			l = t.add  { name = "labelConnectedPlayersGuiTwo"..gui_value.force, type = "label", caption = #game.forces[gui_value.force].connected_players .. " Players "}
+			l.style.font_color = { r=0.22, g=0.88, b=0.22}
+		else
+			l.caption = #game.forces[gui_value.force].connected_players .. " Players "
+		end
 
 		local c = gui_value.c2
 		local font_color =  gui_value.color1
@@ -99,31 +148,50 @@ local function create_first_join_gui(player)
 			c = c .. math.ceil((global.game_lobby_timeout - game.tick)/60)
 			c = c .. ")"
 		end
-		local t = frame.add  { type = "table", column_count = 4 }
-		for _, p in pairs(game.forces[gui_value.force].connected_players) do
-			local l = t.add({type = "label", caption = p.name})
-			l.style.font_color = {r = p.color.r * 0.6 + 0.4, g = p.color.g * 0.6 + 0.4, b = p.color.b * 0.6 + 0.4, a = 1}
-			l.style.font = "heading-2"
+		
+		-- TODO FIXME smart optimization there todo plz no?
+		local t = player.gui.left["bb_main_gui"]["frameTableConnectedPlayerThree"..gui_value.force]
+		if t then t.destroy() end
+		t = frame.add  { name="frameTableConnectedPlayerThree"..gui_value.force,type = "table", column_count = 4 }
+		if t then
+			for _, p in pairs(game.forces[gui_value.force].connected_players) do
+				local l = t.add({type = "label", caption = p.name.."zz"})
+				l.style.font_color = {r = p.color.r * 0.6 + 0.4, g = p.color.g * 0.6 + 0.4, b = p.color.b * 0.6 + 0.4, a = 1}
+				l.style.font = "heading-2"
+			end
 		end
-		local b = frame.add  { type = "sprite-button", name = gui_value.n1, caption = c}
-		b.style.font = "default-large-bold"
-		b.style.font_color = font_color
-		b.style.width = 350
-		frame.add{ type = "line"}
+		
+		
+		local b = player.gui.left["bb_main_gui"][gui_value.n1]
+		if not b then
+			local b = frame.add  { type = "sprite-button", name = gui_value.n1, caption = c .. "UWU"}
+			b.style.font = "default-large-bold"
+			b.style.font_color = font_color
+			b.style.width = 350
+			
+			local tmpGui = player.gui.left["bb_main_gui"]["lineSeparator10"..gui_value.n1]
+			if not tmpGui then
+				frame.add{ name="lineSeparator10" .. gui_value.n1,type = "line"}
+			end
+		else
+			b.caption = c
+		end
 	end
-	
-	
 end
 
 local function add_tech_button(elem, gui_value)
-	local tech_button = elem.add {
-		type = "sprite-button",
-		name = gui_value.tech_spy,
-		sprite = "item/space-science-pack"
-	}
-	tech_button.style.height = 25
-	tech_button.style.width = 25
-	tech_button.style.left_margin = 3
+
+	local tmpGui = elem["gui_value.tech_spy"]
+	if not tmpGui then
+		local tech_button = elem.add {
+			type = "sprite-button",
+			name = gui_value.tech_spy,
+			sprite = "item/space-science-pack"
+		}
+		tech_button.style.height = 25
+		tech_button.style.width = 25
+		tech_button.style.left_margin = 3
+	end
 end
 
 local function add_prod_button(elem, gui_value)
@@ -152,143 +220,260 @@ end
 
 function Public.create_main_gui(player)
 	local is_spec = player.force.name == "spectator"
-	if player.gui.left["bb_main_gui"] then player.gui.left["bb_main_gui"].destroy() end
-
 	if global.bb_game_won_by_team then return end
 	if not global.chosen_team[player.name] then
 		if not global.tournament_mode then
+			game.print('calling here!')
 			create_first_join_gui(player)
 			return
 		end
 	end
 
-	local frame = player.gui.left.add { type = "frame", name = "bb_main_gui", direction = "vertical" }
+	local frame = player.gui.left["bb_main_gui"]
+	if not frame then
+		frame = player.gui.left.add { type = "frame", name = "bb_main_gui", direction = "vertical" }
+	end
+	
+	
+	local t = player.gui.left["bb_main_gui"]["spectatorFrame"] 
+	if not t then
+		t = frame.add { name="spectatorFrame",type = "table", column_count = 1 }
+	end
+	
+	local b =t["defSiloLabel"]
+	if not b and is_spec then
+		b = t.add{ name="defSiloLabel",type = "label", caption = "Defend your Rocket Silo!" }
+		b.style.font = "heading-1"
+		b.style.font_color = {r=0.98, g=0.66, b=0.22}
+	end
+	
+	local b = t["feedLabelFrame"]
+	local feedCaption =  "Feed the enemy team's biters to gain advantage!"
+	if not b and is_spec then
+		local b = t.add  { name="feedLabelFrame",type = "label", caption = feedCaption }
+		b.style.font = "heading-2"
+		b.style.font_color = {r=0.98, g=0.66, b=0.22}
+	end
+	
+	if not is_spec and #t > 0 then
+		t.clear()
+	end
 	
 	clock(frame)
 	-- Science sending GUI
 	if not is_spec then
-		frame.add { type = "table", name = "biter_battle_table", column_count = 4 }
+		local tmpGuiElt = player.gui.left["bb_main_gui"]["biter_battle_table"]
+		if not tmpGuiElt then
+			frame.add { type = "table", name = "biter_battle_table", column_count = 4 }
+		end
 		local t = frame.biter_battle_table
 		for food_name, tooltip in pairs(food_names) do
-			local s = t.add { type = "sprite-button", name = food_name, sprite = "item/" .. food_name }
-			s.tooltip = tooltip
-			s.style.minimal_height = 41
-			s.style.minimal_width = 41
-			s.style.top_padding = 0
-			s.style.left_padding = 0
-			s.style.right_padding = 0
-			s.style.bottom_padding = 0
+			local s = player.gui.left["bb_main_gui"]["biter_battle_table"][food_name]
+			if not s then
+				s = t.add { type = "sprite-button", name = food_name, sprite = "item/" .. food_name }
+				s.tooltip = tooltip
+				s.style.minimal_height = 41
+				s.style.minimal_width = 41
+				s.style.top_padding = 0
+				s.style.left_padding = 0
+				s.style.right_padding = 0
+				s.style.bottom_padding = 0
+			end
 		end
-		frame.add{type="line"}
+		tmpGuiElt = player.gui.left["bb_main_gui"]["linefood"]
+		if not tmpGuiElt then
+			frame.add{name="linefood",type="line"}
+		end
+	else
+		--Had to add this case  as gui is not destroyed anymore , could be smarter than destroy to hide something though
+		local tmpGui = player.gui.left["bb_main_gui"]["biter_battle_table"]
+		if tmpGui then
+			tmpGui.destroy()
+		end
+		local tmpGui = player.gui.left["bb_main_gui"]["linefood"]
+		if tmpGui then
+			tmpGui.destroy()
+		end
 	end
 	
 	local first_team = true
 	for _, gui_value in pairs(gui_values) do
 		-- Line separator
 		if not first_team then
-			frame.add { type = "line", caption = "this line", direction = "horizontal" }
+			local tmpGuiElt = player.gui.left["bb_main_gui"]["firstLine"..gui_value.force]
+			if not tmpGuiElt then
+				frame.add { name="firstLine"..gui_value.force,type = "line", caption = "this line", direction = "horizontal" }
+			end
 		else
 			first_team = false
 		end
 
 		-- Team name & Player count
-		local t = frame.add { type = "table", column_count = 4 }
+		local t = player.gui.left["bb_main_gui"]["TeamNamePlayerCountFrame"..gui_value.force]
+		if not t then
+			t = frame.add { name="TeamNamePlayerCountFrame"..gui_value.force,type = "table", column_count = 4 }
+		end
 
 		-- Team name
 		local c = gui_value.c1
 		if global.tm_custom_name[gui_value.force] then c = global.tm_custom_name[gui_value.force] end
-		local l = t.add  { type = "label", caption = c}
-		l.style.font = "default-bold"
-		l.style.font_color = gui_value.color1
-		l.style.single_line = false
-		l.style.maximal_width = 102
+		local tmpGuiElt = player.gui.left["bb_main_gui"]["TeamNamePlayerCountFrame"..gui_value.force]["forceNameLabel"..gui_value.force]
+		if not tmpGuiElt then
+			local l = t.add  { name="forceNameLabel"..gui_value.force,type = "label", caption = c}
+			l.style.font = "default-bold"
+			l.style.font_color = gui_value.color1
+			l.style.single_line = false
+			l.style.maximal_width = 102
+		else
+			tmpGuiElt.caption = c
+		end
 
 		-- Number of players
-		local l = t.add  { type = "label", caption = " - "}
+		local l = player.gui.left["bb_main_gui"]["TeamNamePlayerCountFrame"..gui_value.force]["separatorAmountPlayerHere"..gui_value.force]
+		if not l then
+			l = t.add  { name="separatorAmountPlayerHere"..gui_value.force, type = "label", caption = " - "}
+		end
+		
 		local c = #game.forces[gui_value.force].connected_players .. " Player"
 		if #game.forces[gui_value.force].connected_players ~= 1 then c = c .. "s" end
-		local l = t.add  { type = "label", caption = c}
-		l.style.font = "default"
-		l.style.font_color = { r=0.22, g=0.88, b=0.22}
+		
+		local l = player.gui.left["bb_main_gui"]["TeamNamePlayerCountFrame"..gui_value.force]["amountPlayersLabel"..gui_value.force]
+		if not l then
+			l = t.add  { name="amountPlayersLabel"..gui_value.force,type = "label", caption = c}
+			l.style.font = "default"
+			l.style.font_color = { r=0.22, g=0.88, b=0.22}
+		else
+			l.caption = c
+		end
 		
 		-- Tech button
+		-- HERE PROBABLY ISSUE BRO FIXME!!!
 		if is_spec and not global.chosen_team[player.name] then
 			add_tech_button(t, gui_value)
-			-- add_prod_button(t, gui_value)
 		end
-
+		
 		-- Player list
-		if global.bb_view_players[player.name] == true then
-			local t = frame.add  { type = "table", column_count = 4 }
-			for _, p in pairs(game.forces[gui_value.force].connected_players) do
-				local l = t.add  { type = "label", caption = p.name }
-				l.style.font_color = {r = p.color.r * 0.6 + 0.4, g = p.color.g * 0.6 + 0.4, b = p.color.b * 0.6 + 0.4, a = 1}
-			end
+		local t = player.gui.left["bb_main_gui"]["framePlayerList"..gui_value.force]
+		if not t then
+			t = frame.add { name="framePlayerList"..gui_value.force,type = "table", column_count = 4 }
 		end
-
+		if global.bb_view_players[player.name] == true then
+			t.clear()
+			for _, p in pairs(game.forces[gui_value.force].connected_players) do
+				game.print('herrREEEE'..game.tick..','..gui_value.force)
+				local tmpGui = t.add  { name="playerListLabel"..gui_value.force .. p.name,type = "label", caption = p.name }
+				tmpGui.style.font_color = {r = p.color.r * 0.6 + 0.4, g = p.color.g * 0.6 + 0.4, b = p.color.b * 0.6 + 0.4, a = 1}
+			end
+		else
+			t.clear()
+		end
+		
 		-- Statistics
-		local t = frame.add { type = "table", name = "stats_" .. gui_value.force, column_count = 5 }
+		local t = player.gui.left["bb_main_gui"]["stats_"..gui_value.force]
+		if not t then
+			t = frame.add { name="statLabel",type = "table", name = "stats_" .. gui_value.force, column_count = 5 }
+		end
+		 
 
 		-- Evolution
-		local l = t.add  { type = "label", caption = "Evo:"}
-		--l.style.minimal_width = 25
+		local l = player.gui.left["bb_main_gui"]["stats_"..gui_value.force]["evoLabel"..gui_value.force]
+		if not l then
+			l = t.add  { name="evoLabel"..gui_value.force,type = "label", caption = "Evo:"}
+		end
 		local biter_force = game.forces[gui_value.biter_force]
 		local tooltip = gui_value.t1 .. "\nDamage: " .. (biter_force.get_ammo_damage_modifier("melee") + 1) * 100 .. "%\nRevive: " .. global.reanim_chance[biter_force.index] .. "%"
-		
 		l.tooltip = tooltip		
 		
 		local evo = math.floor(1000 * global.bb_evolution[gui_value.biter_force]) * 0.1
-		local l = t.add  {type = "label", caption = evo .. "%"}
-		l.style.minimal_width = 40
-		l.style.font_color = gui_value.color2
-		l.style.font = "default-bold"
+		l = player.gui.left["bb_main_gui"]["stats_"..gui_value.force]["evoPercentagelabel"..gui_value.force]
+		if not l then
+			l = t.add  {name="evoPercentagelabel"..gui_value.force,type = "label", caption = evo .. "%"}
+			l.style.minimal_width = 40
+			l.style.font_color = gui_value.color2
+			l.style.font = "default-bold"
+		end
+		l.caption = evo .. "%"
 		l.tooltip = tooltip
 
 		-- Threat
-		local l = t.add  {type = "label", caption = "Threat: "}
-		l.style.minimal_width = 25
+		l = player.gui.left["bb_main_gui"]["stats_"..gui_value.force]["threattooltiplabel"..gui_value.force]
+		if not l then
+			l = t.add  {name="threattooltiplabel"..gui_value.force,type = "label", caption = "Threat: "}
+			l.style.minimal_width = 25
+		end
 		l.tooltip = gui_value.t2
 		
 		local threat_value = show_pretty_threat(gui_value.biter_force)
-		local l = t.add  {type = "label", name = "threat_" .. gui_value.force, caption = threat_value}
-		l.style.font_color = gui_value.color2
-		l.style.font = "default-bold"
-		l.style.width = 50
+		l = player.gui.left["bb_main_gui"]["stats_"..gui_value.force]["threat_"..gui_value.force]
+		if not l then
+			l = t.add  {type = "label", name = "threat_" .. gui_value.force, caption = threat_value}
+			l.style.font_color = gui_value.color2
+			l.style.font = "default-bold"
+			l.style.width = 50
+		end
+		l.caption = threat_value
 		l.tooltip = gui_value.t2
-	end
+		
+		--had to add these 2 new lines as the gui is not destroyed anymore..
+		local tmpGui = player.gui.left["bb_main_gui"][gui_value.n1]
+		if not is_spec and tmpGui then tmpGui.destroy() end
+		tmpGui = player.gui.left["bb_main_gui"]["tableGuiValue"..gui_value.force]
+		if not is_spec and tmpGui then tmpGui.destroy() end
+		tmpGui = player.gui.left["bb_main_gui"]["lineSeparator10"..gui_value.n1]
+		if not is_spec and tmpGui then tmpGui.destroy() end
+		
+		--had to add these 4 new lines as the gui is not destroyed anymore..
+		local tmpGui = player.gui.left["bb_main_gui"]["join_random_button"]
+		if not is_spec and tmpGui then tmpGui.destroy() end
+		tmpGui = player.gui.left["bb_main_gui"]["lineSeparatorGui"]
+		if not is_spec and tmpGui then tmpGui.destroy() end
+			
+		
+		
+		-- Difficulty mutagen effectivness update
+		bb_diff.difficulty_gui(player)
 
-	-- Difficulty mutagen effectivness update
-	bb_diff.difficulty_gui(player)
+		local tmpGui = player.gui.left["bb_main_gui"]["actionFrameLine"]
+		if is_spec and not first_team then
+			if not tmpGui then
+				frame.add{name="actionFrameLine",type="line"}
+			end
+		end
+		
+		local t = player.gui.left["bb_main_gui"]["actionFrame"]
+		if t then t.destroy() end --NO EASY FIXME, CAN BE OPTIMIZED..?
+		t = frame.add  { name="actionFrame",type = "table", column_count = 2 }
+		
+		-- Spectate / Rejoin team
+		if is_spec then
+			local joinCaption = "Join Team"
+			if global.chosen_team[player.name] then joinCaption = "Rejoin " .. global.chosen_team[player.name] end
+			local b = t.add  { type = "sprite-button", name = "bb_leave_spectate", caption = joinCaption }
+			
+			--l.style.font_color = gui_value.color2
+		else
+			local b = t.add  { type = "sprite-button", name = "bb_spectate", caption = "Spectate" }
+		end
 
-	-- Action frame
-	local t = frame.add  { type = "table", column_count = 2 }
+		-- Playerlist button
+		if global.bb_view_players[player.name] == true then
+			local b = t.add  { type = "sprite-button", name = "bb_hide_players", caption = "Playerlist" }
+		else
+			local b = t.add  { type = "sprite-button", name = "bb_view_players", caption = "Playerlist" }
+		end
 
-	-- Spectate / Rejoin team
-	if is_spec then
-		local b = t.add  { type = "sprite-button", name = "bb_leave_spectate", caption = "Join Team" }
-	else
-		local b = t.add  { type = "sprite-button", name = "bb_spectate", caption = "Spectate" }
-	end
-
-	-- Playerlist button
-	if global.bb_view_players[player.name] == true then
-		local b = t.add  { type = "sprite-button", name = "bb_hide_players", caption = "Playerlist" }
-	else
-		local b = t.add  { type = "sprite-button", name = "bb_view_players", caption = "Playerlist" }
-	end
-
-
-	local b_width = is_spec and 97 or 86
-	-- 111 when prod_spy button will be there
-	for _, b in pairs(t.children) do
-		b.style.font = "default-bold"
-		b.style.font_color = { r=0.98, g=0.66, b=0.22}
-		b.style.top_padding = 1
-		b.style.left_padding = 1
-		b.style.right_padding = 1
-		b.style.bottom_padding = 1
-		b.style.maximal_height = 30
-		b.style.width = b_width
+		local b_width = is_spec and 97 or 86
+		-- 111 when prod_spy button will be there
+		for _, b in pairs(t.children) do
+			b.style.font = "default-bold"
+			b.style.font_color = { r=0.98, g=0.66, b=0.22}
+			b.style.top_padding = 1
+			b.style.left_padding = 1
+			b.style.right_padding = 1
+			b.style.bottom_padding = 1
+			b.style.maximal_height = 30
+			b.style.width = b_width
+		end
 	end
 end
 
