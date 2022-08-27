@@ -333,6 +333,7 @@ function Public.server_restart()
                 for _, e in pairs(player.gui.left.children) do
                     e.destroy()
                 end
+				Gui.clear_main_gui(player)
                 Gui.create_main_gui(player)
             end
             game.reset_time_played()

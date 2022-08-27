@@ -164,7 +164,7 @@ local function create_first_join_gui(player)
 		
 		local b = player.gui.left["bb_main_gui"][gui_value.n1]
 		if not b then
-			local b = frame.add  { type = "sprite-button", name = gui_value.n1, caption = c .. "UWU"}
+			local b = frame.add  { type = "sprite-button", name = gui_value.n1, caption = c}
 			b.style.font = "default-large-bold"
 			b.style.font_color = font_color
 			b.style.width = 350
@@ -218,17 +218,19 @@ local function show_pretty_threat(forceName)
 	return threat_value
 end
 
+function Public.clear_main_gui(player)
+	player.gui.left["bb_main_gui"].destroy()
+end
+
 function Public.create_main_gui(player)
 	local is_spec = player.force.name == "spectator"
 	if global.bb_game_won_by_team then return end
 	if not global.chosen_team[player.name] then
 		if not global.tournament_mode then
-			game.print('calling here!')
 			create_first_join_gui(player)
 			return
 		end
 	end
-
 	local frame = player.gui.left["bb_main_gui"]
 	if not frame then
 		frame = player.gui.left.add { type = "frame", name = "bb_main_gui", direction = "vertical" }
@@ -255,7 +257,7 @@ function Public.create_main_gui(player)
 		b.style.font_color = {r=0.98, g=0.66, b=0.22}
 	end
 	
-	if not is_spec and #t > 0 then
+	if not is_spec and #t.children > 0 then
 		t.clear()
 	end
 	
@@ -427,44 +429,31 @@ function Public.create_main_gui(player)
 		if not is_spec and tmpGui then tmpGui.destroy() end
 		tmpGui = player.gui.left["bb_main_gui"]["lineSeparatorGui"]
 		if not is_spec and tmpGui then tmpGui.destroy() end
-			
-		
-		
 		-- Difficulty mutagen effectivness update
 		bb_diff.difficulty_gui(player)
-
-		local tmpGui = player.gui.left["bb_main_gui"]["actionFrameLine"]
-		if is_spec and not first_team then
-			if not tmpGui then
-				frame.add{name="actionFrameLine",type="line"}
-			end
-		end
-		
-		local t = player.gui.left["bb_main_gui"]["actionFrame"]
-		if t then t.destroy() end --NO EASY FIXME, CAN BE OPTIMIZED..?
+	end
+	
+	local tmpGui = player.gui.left["bb_main_gui"]["actionFrameLine"]
+	if is_spec and not tmpGui then
+		--if player.gui.left["bb_main_gui"]["actionFrame"] and player.gui.left["bb_main_gui"]["actionFrame"]["bb_spectate"] then
+		--	player.gui.left["bb_main_gui"]["actionFrame"].destroy() --destroy to avoid getting the line at end of gui, must be before the buttons below
+			frame.add{name="actionFrameLine",type="line"}
+		--end
+	end
+	
+	local t = player.gui.left["bb_main_gui"]["actionFrame"]
+	if not t then
 		t = frame.add  { name="actionFrame",type = "table", column_count = 2 }
+	end
+	
+	local b_width = is_spec and 97 or 86
+	if is_spec then
+		local joinCaption = "Join Team"
+		if global.chosen_team[player.name] then joinCaption = "Rejoin " .. global.chosen_team[player.name] end
 		
-		-- Spectate / Rejoin team
-		if is_spec then
-			local joinCaption = "Join Team"
-			if global.chosen_team[player.name] then joinCaption = "Rejoin " .. global.chosen_team[player.name] end
-			local b = t.add  { type = "sprite-button", name = "bb_leave_spectate", caption = joinCaption }
-			
-			--l.style.font_color = gui_value.color2
-		else
-			local b = t.add  { type = "sprite-button", name = "bb_spectate", caption = "Spectate" }
-		end
-
-		-- Playerlist button
-		if global.bb_view_players[player.name] == true then
-			local b = t.add  { type = "sprite-button", name = "bb_hide_players", caption = "Playerlist" }
-		else
-			local b = t.add  { type = "sprite-button", name = "bb_view_players", caption = "Playerlist" }
-		end
-
-		local b_width = is_spec and 97 or 86
-		-- 111 when prod_spy button will be there
-		for _, b in pairs(t.children) do
+		local b = t["bb_leave_spectate"]
+		if not b then
+			b = t.add  { type = "sprite-button", name = "bb_leave_spectate", caption = joinCaption }
 			b.style.font = "default-bold"
 			b.style.font_color = { r=0.98, g=0.66, b=0.22}
 			b.style.top_padding = 1
@@ -474,16 +463,68 @@ function Public.create_main_gui(player)
 			b.style.maximal_height = 30
 			b.style.width = b_width
 		end
+		if t["bb_spectate"] then
+			t["bb_spectate"].destroy()
+		end
+	else
+		local b = t["bb_spectate"]
+		if not b then
+			b = t.add  { type = "sprite-button", name = "bb_spectate", caption = "Spectate" }
+			b.style.font = "default-bold"
+			b.style.font_color = { r=0.98, g=0.66, b=0.22}
+			b.style.top_padding = 1
+			b.style.left_padding = 1
+			b.style.right_padding = 1
+			b.style.bottom_padding = 1
+			b.style.maximal_height = 30
+			b.style.width = b_width
+		end
+		if t["bb_leave_spectate"] then
+			t["bb_leave_spectate"].destroy()
+		end
+	end
+
+	-- Playerlist button
+	if global.bb_view_players[player.name] == true then
+		local b = t["bb_hide_players"]
+		if not b then
+			b = t.add  { type = "sprite-button", name = "bb_hide_players", caption = "Playerlist" }
+			b.style.font = "default-bold"
+			b.style.font_color = { r=0.98, g=0.66, b=0.22}
+			b.style.top_padding = 1
+			b.style.left_padding = 1
+			b.style.right_padding = 1
+			b.style.bottom_padding = 1
+			b.style.maximal_height = 30
+			b.style.width = b_width
+		end
+		if t["bb_view_players"] then
+			t["bb_view_players"].destroy()
+		end
+	else
+		local b = t["bb_view_players"]
+		if not b then
+			b = t.add  { type = "sprite-button", name = "bb_view_players", caption = "Playerlist" }
+			b.style.font = "default-bold"
+			b.style.font_color = { r=0.98, g=0.66, b=0.22}
+			b.style.top_padding = 1
+			b.style.left_padding = 1
+			b.style.right_padding = 1
+			b.style.bottom_padding = 1
+			b.style.maximal_height = 30
+			b.style.width = b_width
+		end
+		if t["bb_hide_players"] then
+			t["bb_hide_players"].destroy()
+		end
 	end
 end
 
 function Public.refresh()
 	for _, player in pairs(game.connected_players) do
-		if player.gui.left["bb_main_gui"] then
-			Public.create_main_gui(player)
-		end
+		Public.create_main_gui(player)
 	end
-	global.gui_refresh_delay = game.tick + 5
+	global.gui_refresh_delay = game.tick + 30
 end
 
 function Public.refresh_threat()
@@ -496,7 +537,7 @@ function Public.refresh_threat()
 			end
 		end
 	end
-	global.gui_refresh_delay = game.tick + 5
+	global.gui_refresh_delay = game.tick + 30
 end
 
 local get_player_data = function(player, remove)
@@ -592,6 +633,7 @@ function join_team(player, force_name, forced_join, auto_join)
 	global.spectator_rejoin_delay[player.name] = game.tick
 	player.spectator = false
 	Public.clear_copy_history(player)
+	Public.clear_main_gui(player)
 	Public.refresh()
 end
 
@@ -621,6 +663,7 @@ function spectate(player, forced_join, stored_position)
 	end
 	game.permissions.get_group("spectator").add_player(player)
 	global.spectator_rejoin_delay[player.name] = game.tick
+	Public.clear_main_gui(player)
 	Public.create_main_gui(player)
 	player.spectator = true
 end
@@ -663,7 +706,7 @@ local function on_gui_click(event)
 	local name = event.element.name
 	if name == "bb_toggle_button" then
 		if player.gui.left["bb_main_gui"] then
-			player.gui.left["bb_main_gui"].destroy()
+			Public.clear_main_gui(player)
 		else
 			Public.create_main_gui(player)
 		end
