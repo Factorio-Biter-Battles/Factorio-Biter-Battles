@@ -154,7 +154,22 @@ local function on_tick()
 		global.bb_threat["south_biters"] = global.bb_threat["south_biters"] + global.bb_threat_income["south_biters"]
 	end
 
-	if (tick+5) % 180 == 0 then
+	if tick == 36000 then
+		game.print("10 min")
+		game.speed = 1
+	end
+	if tick == 36000+60*20 then
+		game.print("10 min 20s")
+	end
+	if tick == 39600 then
+		game.print("11 min")
+		game.speed = 1
+	end
+	if tick == 39600+60*20 then
+		game.print("11 min 20s")
+	end
+	
+	if (tick+5) % 3600 == 0 then --have to update due to minute and passive feed every minute
 		Gui.refresh()
 	end
 
