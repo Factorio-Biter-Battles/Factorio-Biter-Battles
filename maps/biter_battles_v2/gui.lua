@@ -362,7 +362,6 @@ function Public.create_main_gui(player)
 		if global.bb_view_players[player.name] == true then
 			t.clear()
 			for _, p in pairs(game.forces[gui_value.force].connected_players) do
-				game.print('herrREEEE'..game.tick..','..gui_value.force)
 				local tmpGui = t.add  { name="playerListLabel"..gui_value.force .. p.name,type = "label", caption = p.name }
 				tmpGui.style.font_color = {r = p.color.r * 0.6 + 0.4, g = p.color.g * 0.6 + 0.4, b = p.color.b * 0.6 + 0.4, a = 1}
 			end
