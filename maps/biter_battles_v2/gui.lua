@@ -236,7 +236,6 @@ function Public.create_main_gui(player)
 		frame = player.gui.left.add { type = "frame", name = "bb_main_gui", direction = "vertical" }
 	end
 	
-	
 	local t = player.gui.left["bb_main_gui"]["spectatorFrame"] 
 	if not t then
 		t = frame.add { name="spectatorFrame",type = "table", column_count = 1 }
@@ -523,20 +522,22 @@ function Public.refresh()
 	for _, player in pairs(game.connected_players) do
 		Public.create_main_gui(player)
 	end
-	global.gui_refresh_delay = game.tick + 30
+	global.gui_refresh_delay = game.tick + 600
 end
 
 function Public.refresh_threat()
 	if global.gui_refresh_delay > game.tick then return end
+	local northThreat = show_pretty_threat("north_biters")
+	local southThreat = show_pretty_threat("south_biters")
 	for _, player in pairs(game.connected_players) do
 		if player.gui.left["bb_main_gui"] then
 			if player.gui.left["bb_main_gui"].stats_north then
-				player.gui.left["bb_main_gui"].stats_north.threat_north.caption = show_pretty_threat("north_biters")
-				player.gui.left["bb_main_gui"].stats_south.threat_south.caption = show_pretty_threat("south_biters")
+				player.gui.left["bb_main_gui"].stats_north.threat_north.caption = northThreat
+				player.gui.left["bb_main_gui"].stats_south.threat_south.caption = southThreat
 			end
 		end
 	end
-	global.gui_refresh_delay = game.tick + 30
+	global.gui_refresh_delay = game.tick + 600
 end
 
 local get_player_data = function(player, remove)
