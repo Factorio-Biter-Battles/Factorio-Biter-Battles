@@ -520,7 +520,9 @@ end
 
 function Public.refresh()
 	for _, player in pairs(game.connected_players) do
-		Public.create_main_gui(player)
+		if player.gui.left["bb_main_gui"] then
+			Public.create_main_gui(player)
+		end
 	end
 	global.gui_refresh_delay = game.tick + 600
 end
