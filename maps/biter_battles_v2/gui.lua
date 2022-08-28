@@ -456,6 +456,17 @@ function Public.refresh_threat()
 	global.gui_refresh_delay = game.tick + 5
 end
 
+local get_player_data = function(player, remove)
+    if remove and global.player_data_afk[player.name] then
+        global.player_data_afk[player.name] = nil
+        return
+    end
+    if not global.player_data_afk[player.name] then
+        global.player_data_afk[player.name] = {}
+    end
+    return global.player_data_afk[player.name]
+end
+
 function join_team(player, force_name, forced_join, auto_join)
 	if not player.character then return end
 	if not forced_join then
