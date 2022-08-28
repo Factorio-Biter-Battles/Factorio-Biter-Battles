@@ -42,6 +42,20 @@ function Public.reset_tables_gui()
 	global.player_data_afk = {}
 end
 
+local function show_pretty_threat(forceName)
+	local threat_value = math.floor(global.bb_threat[forceName])
+	if math_abs(threat_value) >= 1000000 then
+		threat_value = threat_value / 1000000
+		threat_value = tonumber(string.format("%.2f", threat_value))
+		threat_value = threat_value .. "M"
+	elseif math_abs(threat_value) >= 100000 then
+		threat_value = threat_value / 1000
+		threat_value = tonumber(string.format("%.0f", threat_value))
+		threat_value = threat_value .. "k"
+	end
+	return threat_value
+end
+
 local function create_sprite_button(player)
 	if player.gui.top.bb_toggle_button then return end
 	local button = player.gui.top.add({type = "sprite-button", name = "bb_toggle_button", sprite = "entity/big-biter"})
@@ -132,7 +146,7 @@ local function update_evo_text_and_tooltip(table, gui_value, biter_force)
 end
 
 local function update_threat_text(table, gui_value, biter_force)
-	table["threat_" .. gui_value.force].caption = tostring(math.floor(global.bb_threat[gui_value.force]))
+	table["threat_" .. gui_value.force].caption = show_pretty_threat(gui_value.biter_force)
 end
 
 local function create_statistics_table(frame, gui_value)
@@ -263,20 +277,6 @@ local function add_prod_button(elem, gui_value)
 	}
 	prod_button.style.height = 25
 	prod_button.style.width = 25
-end
-
-local function show_pretty_threat(forceName)
-	local threat_value = math.floor(global.bb_threat[forceName])
-	if math_abs(threat_value) >= 1000000 then
-		threat_value = threat_value / 1000000
-		threat_value = tonumber(string.format("%.2f", threat_value))
-		threat_value = threat_value .. "M"
-	elseif math_abs(threat_value) >= 100000 then
-		threat_value = threat_value / 1000
-		threat_value = tonumber(string.format("%.0f", threat_value))
-		threat_value = threat_value .. "k"
-	end
-	return threat_value
 end
 
 function Public.update_or_create_main_gui(player)
