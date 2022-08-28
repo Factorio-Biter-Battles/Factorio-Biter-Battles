@@ -497,8 +497,15 @@ function join_team(player, force_name, forced_join, auto_join)
 				)
 				return
 			end
+		end	
+		local p = nil
+		local p_data = get_player_data(player)
+		if p_data and p_data.position then
+			p = surface.find_non_colliding_position("character", p_data.position,16, 0.5)
+			get_player_data(player, true)
+		else
+			p = surface.find_non_colliding_position("character", game.forces[force_name].get_spawn_position(surface), 16, 0.5)
 		end
-		local p = surface.find_non_colliding_position("character", game.forces[force_name].get_spawn_position(surface), 16, 0.5)
 		if not p then
 			game.print("No spawn position found for " .. player.name .. "!", {255, 0, 0})
 			return 
