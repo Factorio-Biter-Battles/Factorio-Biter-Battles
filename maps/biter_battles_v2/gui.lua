@@ -549,7 +549,9 @@ function join_team(player, force_name, forced_join, auto_join)
 	global.spectator_rejoin_delay[player.name] = game.tick
 	player.spectator = false
 	Public.clear_copy_history(player)
-	player.gui.left.bb_main_gui.destroy()
+	if player.gui.left.bb_main_gui then
+		player.gui.left.bb_main_gui.destroy()
+	end
 	Public.refresh()
 end
 
