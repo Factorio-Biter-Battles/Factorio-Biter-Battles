@@ -439,7 +439,7 @@ function Public.refresh()
 	for _, player in pairs(game.connected_players) do
 		Public.update_or_create_main_gui(player)
 	end
-	global.gui_refresh_delay = game.tick + 5
+	global.gui_refresh_delay = game.tick + 60
 end
 
 function Public.refresh_threat()
@@ -454,7 +454,7 @@ function Public.refresh_threat()
 			end
 		end
 	end
-	global.gui_refresh_delay = game.tick + 5
+	global.gui_refresh_delay = game.tick + 180
 end
 
 local get_player_data = function(player, remove)
