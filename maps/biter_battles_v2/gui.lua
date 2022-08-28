@@ -303,7 +303,9 @@ function Public.update_main_gui(player)
 	bb_main_gui_frame.clock.caption = get_current_clock_time_string()
 	if is_spec then
 		bb_main_gui_frame.bb_science_frame.visible = false
-		bb_main_gui_frame.action_table.bb_spectate.caption = "Join Team"
+		local joinCaption = "Join Team"
+		if global.chosen_team[player.name] then joinCaption = "Rejoin " .. global.chosen_team[player.name] end
+		bb_main_gui_frame.action_table.bb_spectate.caption = joinCaption
 	else
 		bb_main_gui_frame.bb_science_frame.visible = true
 		bb_main_gui_frame.action_table.bb_spectate.caption = "Spectate"
