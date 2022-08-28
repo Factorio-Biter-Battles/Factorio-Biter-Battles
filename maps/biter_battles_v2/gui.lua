@@ -71,6 +71,7 @@ local function update_waiting_text(frame, gui_value)
 		c = string.format("%s (waiting for players... %d", c, math.ceil((global.game_lobby_timeout - game.tick)/60))
 	end
 	frame[gui_value.n1].caption = c
+	frame[gui_value.n1].style.font_color = font_color
 end
 
 local function update_player_count_string(t, force)
