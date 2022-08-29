@@ -405,11 +405,30 @@ local function on_marked_for_upgrade(event)
 	
 	if global.special_games_variables["disabled_entities"][player.force.name][entity.get_upgrade_target().name] then
 		entity.cancel_upgrade(player.force)
+		player.create_local_flying_text({text = "Disabled by special game", position = entity.position})
+	end
+end
+
+local function on_pre_ghost_upgraded(event)
+	if not global.active_special_games["disabled_entities"] then return end
+	local entity = event.ghost
+	if not entity or not entity.valid then return end
+	local player = game.get_player(event.player_index)	
+	
+	if global.special_games_variables["disabled_entities"][player.force.name][event.target.name] then
+		local entityName = entity.ghost_name
+		local entitySurface = entity.surface
+		local entityPosition = entity.position
+		local entityForce = entity.force
+		entity.destroy()
+		entitySurface.create_entity({name = "entity-ghost", ghost_name=entityName, position = entityPosition, force=entityForce})
+		player.create_local_flying_text({text = "Disabled by special game", position = entityPosition})
 	end
 end
 
 Event.add(defines.events.on_gui_click, on_gui_click)
 Event.add(defines.events.on_built_entity, on_built_entity)
 Event.add(defines.events.on_marked_for_upgrade, on_marked_for_upgrade)
+Event.add(defines.events.on_pre_ghost_upgraded, on_pre_ghost_upgraded)
 return Public
 
