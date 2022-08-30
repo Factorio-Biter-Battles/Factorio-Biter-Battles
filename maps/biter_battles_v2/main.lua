@@ -34,7 +34,7 @@ local function on_player_joined_game(event)
 end
 
 local function clear_recipe_asm_if_redbelt_and_untrusted(entity, playerIndex,cloneCase)
-	local player = game.players[playerIndex]
+	local player = game.get_player(playerIndex)
 	local trusted = Session.get_trusted_table()
 	if entity == nil or entity.last_user == nil or entity.get_recipe() == nil then return end
 
