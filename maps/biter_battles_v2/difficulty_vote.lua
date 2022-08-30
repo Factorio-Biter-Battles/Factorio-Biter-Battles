@@ -50,7 +50,7 @@ local function poll_difficulty(player)
 	end
 	
 	for key, difficulty in pairs(difficulties) do
-		local caption = table.concat({difficulty.name, " (", difficulty.str, ")", " : ", vote_amounts[key]})
+		local caption = table.concat({difficulty.name, " (", difficulty.str, ")", " : ", (vote_amounts[key] or 0)})
 		local b = frame.add{type = "button", name = tostring(key), caption = caption}
 		b.style.font_color = difficulty.color
 		b.style.font = "heading-2"
