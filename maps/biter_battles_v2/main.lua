@@ -375,7 +375,7 @@ local function on_entity_settings_pasted(event)
 end
 
 local function prevent_player_paste_prohibited_items_when_untrusted(playerIndex)
-	local player = game.players[playerIndex]
+	local player = game.get_player(playerIndex)
 	local cursorStack = player.cursor_stack
 	if not cursorStack.valid or not cursorStack.valid_for_read or cursorStack.name ~= "blueprint" then return end
 	local trusted = Session.get_trusted_table()
