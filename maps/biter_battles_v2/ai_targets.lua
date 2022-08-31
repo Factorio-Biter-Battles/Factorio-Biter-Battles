@@ -29,14 +29,10 @@ local target_entity_type = {
     ["radar"] = false,
 }
 
-local function distance_from_origin(position)
+local function origin_distance(position)
     local x = position.x
     local y = position.y
     return math.sqrt(x * x + y * y)
-end
-
-local function distance_from_origin_ascending(first, second)
-    return distance_from_origin(first) < distance_from_origin(second)
 end
 
 local function simple_random_sample(population_list, sample_size)
@@ -87,16 +83,14 @@ function Public.select(force_name)
     for i = 1, #sample, 2 do
         local first = sample[i]
         local second = sample[i + 1]
-        if distance_from_origin_ascending(first, second) then
-            table.insert(selected, { x = first.x, y = first.y })
-        else
-            table.insert(selected, { x = second.x, y = second.y })
-        end
+        local selection
+        if origin_distance(first) < origin_distance(second) then selection = first else selection = second end
+        table.insert(selected, { x = selection.x, y = selection.y })
     end
     targets.selected = selected
 end
 
-function Public.pick(force_name)
+function Public.poll(force_name)
     local targets = global.ai_targets[force_name]
     return table.remove(targets.selected)
 end

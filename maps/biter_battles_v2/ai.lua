@@ -223,7 +223,7 @@ local function create_attack_group(surface, force_name, biter_force_name)
 	local threat = global.bb_threat[biter_force_name]
 	if threat <= 0 then return false end
 
-	local target_position = AiTargets.pick(force_name)
+	local target_position = AiTargets.poll(force_name)
 	if not target_position then
 		print("No side target found for " .. force_name .. ".")
 		return
