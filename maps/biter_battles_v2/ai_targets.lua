@@ -1,5 +1,10 @@
 local Public = {}
 
+local math_sqrt = math.sqrt
+local math_random = math.random
+local table_insert = table.insert
+local table_remove = table.remove
+
 -- the current dirt simple "strike" model assumes the target is part of a spherical base with a perimeter less than 256-512
 -- the ideal target entity would lie at the center of that, in the "core" of a base
 local target_entity_type = {
@@ -32,7 +37,7 @@ local target_entity_type = {
 local function origin_distance(position)
     local x = position.x
     local y = position.y
-    return math.sqrt(x * x + y * y)
+    return math_sqrt(x * x + y * y)
 end
 
 local function simple_random_sample(population_list, sample_size)
@@ -40,9 +45,9 @@ local function simple_random_sample(population_list, sample_size)
     local sample = {}
     if population_size > 0 then
         for _ = 1, sample_size, 1 do
-            local random_index = math.random(1, population_size)
+            local random_index = math_random(1, population_size)
             local individual = population_list[random_index]
-            table.insert(sample, individual)
+            table_insert(sample, individual)
         end
     end
     return sample
@@ -72,7 +77,7 @@ function Public.select(force_name)
     local available = targets.available
     for unit_number, entity in pairs(available) do
         if entity.valid then
-            table.insert(population_list, entity.position)
+            table_insert(population_list, entity.position)
         else
             available[unit_number] = nil
         end
@@ -85,14 +90,14 @@ function Public.select(force_name)
         local second = sample[i + 1]
         local selection
         if origin_distance(first) < origin_distance(second) then selection = first else selection = second end
-        table.insert(selected, { x = selection.x, y = selection.y })
+        table_insert(selected, { x = selection.x, y = selection.y })
     end
     targets.selected = selected
 end
 
 function Public.poll(force_name)
     local targets = global.ai_targets[force_name]
-    return table.remove(targets.selected)
+    return table_remove(targets.selected)
 end
 
 return Public
