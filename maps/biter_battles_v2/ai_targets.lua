@@ -82,7 +82,7 @@ function Public.select(force_name)
             available[unit_number] = nil
         end
     end
-    -- (max) 7 targets per wave * 2 resample size = 14 required global samples per wave
+    -- (max) 7 targets per wave * 2 sub-sample size = 14 global sample size per wave
     local sample = simple_random_sample(population_list, 14)
     local selected = {}
     for i = 1, #sample, 2 do

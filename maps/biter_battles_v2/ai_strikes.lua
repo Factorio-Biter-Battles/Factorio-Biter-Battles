@@ -2,16 +2,18 @@ local Public = {}
 
 local bb_config = require "maps.biter_battles_v2.config"
 
-local math_sqrt = math.sqrt
-local math_atan2 = math.atan2
-local math_abs = math.abs
 local math_random = math.random
+local math_sqrt = math.sqrt
+local math_fmod = math.fmod
+local math_floor = math.floor
+local math_abs = math.abs
 local math_max = math.max
 local math_min = math.min
-local math_floor = math.floor
 local math_pi = math.pi
+local math_2pi = 2 * math_pi
 local math_sin = math.sin
 local math_cos = math.cos
+local math_atan2 = math.atan2
 
 -- these parameters roughly approximate the radius of the average player base
 -- TODO: use some metric to drive adjustments on these values as the game progresses
@@ -48,47 +50,64 @@ local function calculate_tangent_line(r, d)
     }
 end
 
-local function calculate_strike_angle_bounds(source_position, target_position, inner_radius, outer_radius)
-    local dx = target_position.x - source_position.x
-    local dy = target_position.y - source_position.y
-    local d = math_sqrt(dx * dx + dy * dy)
-    local t = calculate_tangent_line(inner_radius, d);
+local function normalize_angle(angle)
+    angle = math_fmod(angle + math_2pi, math_2pi)
+    if angle > math_pi then
+        angle = angle - math_2pi
+    end
+    return angle
+end
+
+local function calculate_strike_range(source_position, target_position, inner_radius, outer_radius)
+    local dx = source_position.x - target_position.x
+    local dy = source_position.y - target_position.y
+    local r = math_sqrt(dx * dx + dy * dy)
+    local theta = math_atan2(dy, dx)
+    local t = calculate_tangent_line(inner_radius, r);
     local intersections = calculate_secant_intersections(outer_radius, t.a, t.b, t.c)
-    local start = math_atan2(-intersections.b.y, intersections.b.x)
-    local finish = math_atan2(intersections.b.y, intersections.b.x)
-    local phi = math_atan2(-dy, -dx)
+    local phi = math_atan2(intersections.b.y, intersections.b.x)
+    local start = normalize_angle(theta - phi)
+    local finish = normalize_angle(theta + phi)
+    if finish < start then
+        finish = finish + math_2pi
+    end
     return {
-        start = start + phi,
-        finish = finish + phi,
+        start = start,
+        finish = finish,
     }
 end
 
-local function clamp_angle_bounds(angle_bounds, boundary_offset, target_position, strike_zone_radius)
-    local strike_zone_boundary_offset = boundary_offset - target_position.y
-    if strike_zone_boundary_offset <= 0 and strike_zone_boundary_offset < strike_zone_radius then
-        local boundary_intersection = calculate_secant_intersections(strike_zone_radius, 0, 1, strike_zone_boundary_offset)
-        local boundary_angle_start = math_atan2(boundary_intersection.a.y, boundary_intersection.a.x)
-        local boundary_angle_finish = math_atan2(boundary_intersection.b.y, boundary_intersection.b.x)
-        return {
-            start = math_max(angle_bounds.start, boundary_angle_start),
-            finish = math_min(angle_bounds.finish, boundary_angle_finish),
-        }
-    else
-        return angle_bounds
+local function calculate_boundary_range(boundary_offset, target_position, strike_radius)
+    local c = target_position.y - boundary_offset
+    local boundary_intersection = calculate_secant_intersections(strike_radius, 0, 1, c)
+    local boundary_angle_start = math_atan2(boundary_intersection.a.y, boundary_intersection.a.x)
+    local boundary_angle_finish = math_atan2(boundary_intersection.b.y, boundary_intersection.b.x)
+    if boundary_angle_finish < boundary_angle_start then
+        boundary_angle_finish = boundary_angle_finish + math_2pi
     end
+    return {
+        start = boundary_angle_start,
+        finish = boundary_angle_finish,
+    }
 end
 
 local function select_strike_position(source_position, target_position, boundary_offset)
-    local strike_distance = math_random(min_strike_distance, max_strike_distance)
-    local strike_angle_bounds = calculate_strike_angle_bounds(source_position, target_position, min_strike_distance, strike_distance)
-    local clamped_strike_angle_bounds = clamp_angle_bounds(strike_angle_bounds, boundary_offset, target_position, strike_distance)
-    local strike_angle_range = math_abs(clamped_strike_angle_bounds.finish - clamped_strike_angle_bounds.start)
-    local strike_zone_circumference = math_floor(2 * math_pi * strike_distance)
-    local random_angle_offset = math_random(0, strike_zone_circumference) * strike_angle_range / strike_zone_circumference
-    local strike_angle = clamped_strike_angle_bounds.start + random_angle_offset
+    local strike_distance = math_random(min_strike_distance+1, max_strike_distance)
+    local strike_angle_range = calculate_strike_range(source_position, target_position, min_strike_distance, strike_distance)
+    if boundary_offset > target_position.y - strike_distance then
+        local boundary_angle_range = calculate_boundary_range(boundary_offset, target_position, strike_distance)
+        strike_angle_range.start = math_max(strike_angle_range.start, boundary_angle_range.start)
+        strike_angle_range.finish = math_min(strike_angle_range.finish, boundary_angle_range.finish)
+    end
+    local strike_angle_magnitude = strike_angle_range.finish - strike_angle_range.start
+    local strike_zone_circumference = math_floor(math_2pi * strike_distance)
+    local random_angle_offset = math_random(0, strike_zone_circumference) * strike_angle_magnitude / strike_zone_circumference
+    local strike_angle = strike_angle_range.start + random_angle_offset
+    local dx = strike_distance * math_cos(strike_angle)
+    local dy = strike_distance * math_sin(strike_angle)
     return {
-        x = strike_distance * math_cos(strike_angle),
-        y = strike_distance * math_sin(strike_angle),
+        x = target_position.x + dx,
+        y = target_position.y + dy,
     }
 end
 
