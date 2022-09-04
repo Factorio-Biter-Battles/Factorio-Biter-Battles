@@ -18,7 +18,8 @@ local math_atan2 = math.atan2
 -- these parameters roughly approximate the radius of the average player base
 -- TODO: use some metric to drive adjustments on these values as the game progresses
 local max_strike_distance = 512
-local min_strike_distance = 256
+local min_strike_distance = 257
+local strike_target_clearance = 256
 
 local function calculate_secant_intersections(r, a, b, c)
     local t = a * a + b * b
@@ -92,16 +93,16 @@ local function calculate_boundary_range(boundary_offset, target_position, strike
 end
 
 local function select_strike_position(source_position, target_position, boundary_offset)
-    local strike_distance = math_random(min_strike_distance+1, max_strike_distance)
-    local strike_angle_range = calculate_strike_range(source_position, target_position, min_strike_distance, strike_distance)
+    local strike_distance = math_random(min_strike_distance, max_strike_distance)
+    local strike_angle_range = calculate_strike_range(source_position, target_position, strike_target_clearance, strike_distance)
     if boundary_offset > target_position.y - strike_distance then
         local boundary_angle_range = calculate_boundary_range(boundary_offset, target_position, strike_distance)
         strike_angle_range.start = math_max(strike_angle_range.start, boundary_angle_range.start)
         strike_angle_range.finish = math_min(strike_angle_range.finish, boundary_angle_range.finish)
     end
     local strike_angle_magnitude = strike_angle_range.finish - strike_angle_range.start
-    local strike_zone_circumference = math_floor(math_2pi * strike_distance)
-    local random_angle_offset = math_random(0, strike_zone_circumference) * strike_angle_magnitude / strike_zone_circumference
+    local strike_zone_arc_length = math_floor(strike_distance * strike_angle_magnitude)
+    local random_angle_offset = (math_random(0, strike_zone_arc_length) / strike_zone_arc_length) * strike_angle_magnitude
     local strike_angle = strike_angle_range.start + random_angle_offset
     local dx = strike_distance * math_cos(strike_angle)
     local dy = strike_distance * math_sin(strike_angle)
