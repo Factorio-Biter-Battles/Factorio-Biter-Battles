@@ -167,7 +167,6 @@ function Public.draw_structures()
 	Terrain.generate_additional_rocks(surface)
 	Terrain.generate_silo(surface)
 	Terrain.draw_spawn_circle(surface)
-	game.surfaces[global.bb_surface_name].create_entity({name="flying-text",position={-4,-13},text="Experimental version: Boss biters",color = {r = 0, g = 1, b = 0, a = 0.5},text_align="right"}).active=false
 	--Terrain.generate_spawn_goodies(surface)
 end
 
