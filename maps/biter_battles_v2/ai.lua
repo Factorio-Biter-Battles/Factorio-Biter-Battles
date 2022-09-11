@@ -139,37 +139,7 @@ local function get_random_spawner(biter_force_name)
 	end
 end
 
-
-local function select_units_around_spawner(spawner, force_name, side_target)
-	local biter_force_name = spawner.force.name
-
-	local valid_biters = {}
-	local i = 0
-
-	local threat = global.bb_threat[biter_force_name] / 10
-
-	local unit_count = 0
-	local max_unit_count = math_floor(global.bb_threat[biter_force_name] * 0.25) + math_random(6,12)
-	if max_unit_count > bb_config.max_group_size then max_unit_count = bb_config.max_group_size end
-
-	--Collect biters around spawners
-	if math_random(1, 2) == 1 then
-		local biters = spawner.surface.find_enemy_units(spawner.position, 96, force_name)
-		if biters[1] then
-			for _, biter in pairs(biters) do
-				if unit_count >= max_unit_count then break end
-				if biter.force.name == biter_force_name then
-					i = i + 1
-					valid_biters[i] = biter
-					unit_count = unit_count + 1
-					threat = threat - threat_values[biter.name]
-				end
-				if threat < 0 then break end
-			end
-		end
-	end
-
-	--Manual spawning of units
+--Manual spawning of units
 local function spawn_biters(isItnormalBiters, maxLoopIteration,spawner,biter_threat,biter_force_name,max_unit_count,valid_biters,force_name)
 	local roll_type = unit_type_raffle[math_random(1, size_of_unit_type_raffle)]
 	local boss_biter_force_name = biter_force_name .. "_boss"
