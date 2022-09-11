@@ -6,6 +6,7 @@ local BossUnit = require "functions.boss_unit"
 local fifo = require "maps.biter_battles_v2.fifo"
 local Tables = require "maps.biter_battles_v2.tables"
 local math_random = math.random
+local math_floor = math.floor
 local math_abs = math.abs
 
 local vector_radius = 512
@@ -138,6 +139,37 @@ local function get_random_spawner(biter_force_name)
 	end
 end
 
+
+local function select_units_around_spawner(spawner, force_name, side_target)
+	local biter_force_name = spawner.force.name
+
+	local valid_biters = {}
+	local i = 0
+
+	local threat = global.bb_threat[biter_force_name] / 10
+
+	local unit_count = 0
+	local max_unit_count = math_floor(global.bb_threat[biter_force_name] * 0.25) + math_random(6,12)
+	if max_unit_count > bb_config.max_group_size then max_unit_count = bb_config.max_group_size end
+
+	--Collect biters around spawners
+	if math_random(1, 2) == 1 then
+		local biters = spawner.surface.find_enemy_units(spawner.position, 96, force_name)
+		if biters[1] then
+			for _, biter in pairs(biters) do
+				if unit_count >= max_unit_count then break end
+				if biter.force.name == biter_force_name then
+					i = i + 1
+					valid_biters[i] = biter
+					unit_count = unit_count + 1
+					threat = threat - threat_values[biter.name]
+				end
+				if threat < 0 then break end
+			end
+		end
+	end
+
+	--Manual spawning of units
 local function spawn_biters(isItnormalBiters, maxLoopIteration,spawner,biter_threat,biter_force_name,max_unit_count,valid_biters,force_name)
 	local roll_type = unit_type_raffle[math_random(1, size_of_unit_type_raffle)]
 	local boss_biter_force_name = biter_force_name .. "_boss"
@@ -234,7 +266,7 @@ local function send_group(unit_group, force_name, side_target)
 	local position = {target.x + (vector[1] * distance_modifier), target.y + (vector[2] * distance_modifier)}
 	position = unit_group.surface.find_non_colliding_position("stone-furnace", position, 96, 1)
 	if position then
-		if math.abs(position.y) < math.abs(unit_group.position.y) then
+		if math_abs(position.y) < math_abs(unit_group.position.y) then
 			commands[#commands + 1] = {
 				type = defines.command.go_to_location,
 				destination = position,
@@ -459,7 +491,7 @@ local function likely_biter_name(force_name)
 
 	-- Randomly choose between pair and respect array boundaries.
 	if idx > 1 then
-		idx = math.random(idx - 1, idx)
+		idx = math_random(idx - 1, idx)
 	end
 
 	return UNIT_NAMES[idx]
@@ -525,7 +557,7 @@ end
 
 function Public.reanimate_units()
 	-- This FIFOs can be accessed by force indices.
-	for force, id in pairs(global.dead_units) do
+	for _, id in pairs(global.dead_units) do
 		-- Check for each side if there are any biters to reanimate.
 		if fifo.empty(id) then
 			goto reanim_units_cont
@@ -534,7 +566,7 @@ function Public.reanimate_units()
 		-- Balance amount of unit creation requests to get rid off
 		-- excess stored in memory.
 		local cycles = fifo.length(id) / global.reanim_balancer
-		cycles = math.floor(cycles) + 1
+		cycles = math_floor(cycles) + 1
 		_reanimate_units(id, cycles)
 
 		::reanim_units_cont::
@@ -567,7 +599,7 @@ Public.schedule_reanimate = function(event)
 		return
 	end
 
-	local reanimate = math.random(1, 100) <= chance
+	local reanimate = math_random(1, 100) <= chance
 	if not reanimate then
 		return
 	end

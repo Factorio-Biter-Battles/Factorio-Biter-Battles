@@ -3,7 +3,6 @@
 local Event = require 'utils.event'
 local Jailed = require 'utils.datastore.jail_data'
 local Tabs = require 'comfy_panel.main'
-local AntiGrief = require 'antigrief'
 local Server = require 'utils.server'
 local Color = require 'utils.color_presets'
 local lower = string.lower
@@ -243,116 +242,7 @@ local function contains_text(key, value, search_text)
     return true
 end
 
-local function draw_events(data)
-    local frame = data.frame
-    local antigrief = data.antigrief
-    local search_text = data.search_text or nil
-    local history = frame['admin_history_select'].items[frame['admin_history_select'].selected_index]
-
-    local history_index = {
-        ['Capsule History'] = antigrief.capsule_history,
-        ['Friendly Fire History'] = antigrief.friendly_fire_history,
-        ['Mining History'] = antigrief.mining_history,
-        ['Landfill History'] = antigrief.landfill_history,
-        ['Corpse Looting History'] = antigrief.corpse_history,
-        ['Cancel Crafting History'] = antigrief.cancel_crafting_history
-    }
-
-    local scroll_pane
-    if frame.datalog then
-        frame.datalog.clear()
-    else
-        scroll_pane =
-            frame.add(
-            {
-                type = 'scroll-pane',
-                name = 'datalog',
-                direction = 'vertical',
-                horizontal_scroll_policy = 'never',
-                vertical_scroll_policy = 'auto'
-            }
-        )
-        scroll_pane.style.maximal_height = 200
-        scroll_pane.style.minimal_width = 790
-    end
-
-    local target_player_name = frame['admin_player_select'].items[frame['admin_player_select'].selected_index]
-    if game.players[target_player_name] then
-        if not history_index or not history_index[history] or #history_index[history] <= 0 then
-            return
-        end
-
-        for i = #history_index[history], 1, -1 do
-            if history_index[history][i]:find(target_player_name) then
-                if search_text then
-                    local success = contains_text(history_index[history][i], nil, search_text)
-                    if not success then
-                        goto continue
-                    end
-                end
-
-                frame.datalog.add(
-                    {
-                        type = 'label',
-                        caption = history_index[history][i],
-                        tooltip = 'Click to open mini camera.'
-                    }
-                )
-                ::continue::
-            end
-        end
-    else
-        for i = #history_index[history], 1, -1 do
-            if search_text then
-                local success = contains_text(history_index[history][i], nil, search_text)
-                if not success then
-                    goto continue
-                end
-            end
-
-            frame.datalog.add(
-                {
-                    type = 'label',
-                    caption = history_index[history][i],
-                    tooltip = 'Click to open mini camera.'
-                }
-            )
-            ::continue::
-        end
-    end
-end
-
-local function text_changed(event)
-    local element = event.element
-    if not element then
-        return
-    end
-    if not element.valid then
-        return
-    end
-
-    local antigrief = AntiGrief.get()
-    local player = game.players[event.player_index]
-
-    local frame = Tabs.comfy_panel_get_active_frame(player)
-    if not frame then
-        return
-    end
-    if frame.name ~= 'Admin' then
-        return
-    end
-
-    local data = {
-        frame = frame,
-        antigrief = antigrief,
-        search_text = element.text
-    }
-
-    draw_events(data)
-end
-
 local create_admin_panel = (function(player, frame)
-    local antigrief = AntiGrief.get()
     frame.clear()
 
     local player_names = {}
@@ -480,60 +370,6 @@ local create_admin_panel = (function(player, frame)
     local line = frame.add {type = 'line'}
     line.style.top_margin = 8
     line.style.bottom_margin = 8
-
-    local histories = {}
-    if antigrief.capsule_history then
-        table.insert(histories, 'Capsule History')
-    end
-    if antigrief.friendly_fire_history then
-        table.insert(histories, 'Friendly Fire History')
-    end
-    if antigrief.mining_history then
-        table.insert(histories, 'Mining History')
-    end
-    if antigrief.landfill_history then
-        table.insert(histories, 'Landfill History')
-    end
-    if antigrief.corpse_history then
-        table.insert(histories, 'Corpse Looting History')
-    end
-    if antigrief.cancel_crafting_history then
-        table.insert(histories, 'Cancel Crafting History')
-    end
-
-    if #histories == 0 then
-        return
-    end
-
-    local search_table = frame.add({type = 'table', column_count = 2})
-    search_table.add({type = 'label', caption = 'Search: '})
-    local search_text = search_table.add({type = 'textfield'})
-    search_text.style.width = 140
-
-    local l = frame.add({type = 'label', caption = '----------------------------------------------'})
-    l.style.font = 'default-listbox'
-    l.style.font_color = {r = 0.98, g = 0.66, b = 0.22}
-
-    local selected_index_2 = 1
-    if global.admin_panel_selected_history_index then
-        if global.admin_panel_selected_history_index[player.name] then
-            selected_index_2 = global.admin_panel_selected_history_index[player.name]
-        end
-    end
-
-    local drop_down_2 =
-        frame.add(
-        {type = 'drop-down', name = 'admin_history_select', items = histories, selected_index = selected_index_2}
-    )
-    drop_down_2.style.right_padding = 12
-    drop_down_2.style.left_padding = 12
-
-    local data = {
-        frame = frame,
-        antigrief = antigrief
-    }
-
-    draw_events(data)
 end)
 
 local admin_functions = {
@@ -694,23 +530,6 @@ end
 local function on_gui_selection_state_changed(event)
     local player = game.players[event.player_index]
     local name = event.element.name
-
-    if name == 'admin_history_select' then
-        if not global.admin_panel_selected_history_index then
-            global.admin_panel_selected_history_index = {}
-        end
-        global.admin_panel_selected_history_index[player.name] = event.element.selected_index
-
-        local frame = Tabs.comfy_panel_get_active_frame(player)
-        if not frame then
-            return
-        end
-        if frame.name ~= 'Admin' then
-            return
-        end
-
-        create_admin_panel(player, frame)
-    end
     if name == 'admin_player_select' then
         if not global.admin_panel_selected_player_index then
             global.admin_panel_selected_player_index = {}
@@ -779,6 +598,5 @@ commands.add_command("punish", "Kill and ban a player. Usage: /punish <name> <re
 end)
         
 
-Event.add(defines.events.on_gui_text_changed, text_changed)
 Event.add(defines.events.on_gui_click, on_gui_click)
 Event.add(defines.events.on_gui_selection_state_changed, on_gui_selection_state_changed)

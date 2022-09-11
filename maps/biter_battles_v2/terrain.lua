@@ -443,7 +443,13 @@ function Public.draw_spawn_area(surface)
 	surface.regenerate_decorative()
 end
 
-
+function Public.draw_water_for_river_ends(surface, chunk_pos)
+	local left_top_x = chunk_pos.x * 32
+	for x = 0, 31, 1 do
+		local pos = {x = left_top_x + x, y = 1}
+		surface.set_tiles({{name = "deepwater", position = pos}})
+	end
+end
 
 
 local function draw_grid_ore_patch(count, grid, name, surface, size, density)
@@ -693,7 +699,6 @@ end
 
 function Public.deny_enemy_side_ghosts(event)
 	if not event.created_entity.valid then return end
-	
 	if event.created_entity.type == 'entity-ghost' or event.created_entity.type == 'tile-ghost' then
 		local force = game.get_player(event.player_index).force.name
 		if not robot_build_restriction[force] then return end

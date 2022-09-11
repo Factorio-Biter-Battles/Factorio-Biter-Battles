@@ -44,6 +44,12 @@ end
 
 local function on_research_finished(event)
 	Functions.combat_balance(event)
+    if event.research.name == 'uranium-processing' then
+		event.research.force.technologies["uranium-ammo"].researched = true
+		event.research.force.technologies["kovarex-enrichment-process"].researched = true
+    elseif event.research.name == 'stone-wall' then
+		event.research.force.technologies["gate"].researched = true
+    end
 end
 
 local function on_console_chat(event)
@@ -147,15 +153,9 @@ local tick_minute_functions = {
 local function on_tick()
 	local tick = game.tick
 
-	Ai.reanimate_units()
-
 	if tick % 60 == 0 then 
 		global.bb_threat["north_biters"] = global.bb_threat["north_biters"] + global.bb_threat_income["north_biters"]
 		global.bb_threat["south_biters"] = global.bb_threat["south_biters"] + global.bb_threat_income["south_biters"]
-	end
-
-	if (tick+5) % 180 == 0 then
-		Gui.refresh()
 	end
 
 	if (tick+11) % 300 == 0 then
@@ -170,8 +170,18 @@ local function on_tick()
 
 	if tick % 30 == 0 then	
 		local key = tick % 3600
-		if tick_minute_functions[key] then tick_minute_functions[key]() end
+		if tick_minute_functions[key] then
+			tick_minute_functions[key]()
+			return
+		end
 	end
+
+	if (tick+5) % 180 == 0 then
+		Gui.refresh()
+		return
+	end
+
+	Ai.reanimate_units()
 end
 
 local function on_marked_for_deconstruction(event)
@@ -225,6 +235,19 @@ local function on_chunk_generated(event)
 	-- sure everything is cloned properly. Normally we would use mutex
 	-- but this is not reliable in this environment.
 	Mirror_terrain.clone(event)
+
+	-- The game pregenerate tiles within a radius of 3 chunks from the generated chunk.
+	-- Bites can use these tiles for pathing.
+	-- This creates a problem that bites pathfinder can cross the river at the edge of the map.
+	-- To prevent this, divide the north and south land by drawing a strip of water on these pregenerated tiles.
+	if event.position.y >= 0 and event.position.y <= 3 then
+		for x = -3, 3 do
+			local chunk_pos = { x = event.position.x + x, y = 0 }
+			if not surface.is_chunk_generated(chunk_pos) then
+				Terrain.draw_water_for_river_ends(surface, chunk_pos)
+			end
+		end
+	end
 end
 
 local function on_entity_cloned(event)

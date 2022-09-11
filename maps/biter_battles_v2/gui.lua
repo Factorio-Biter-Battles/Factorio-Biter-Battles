@@ -6,7 +6,7 @@ local bb_config = require "maps.biter_battles_v2.config"
 local bb_diff = require "maps.biter_battles_v2.difficulty_vote"
 local event = require 'utils.event'
 local Functions = require "maps.biter_battles_v2.functions"
-local feed_the_biters = require "maps.biter_battles_v2.feeding"
+local Feeding = require "maps.biter_battles_v2.feeding"
 local Tables = require "maps.biter_battles_v2.tables"
 
 local wait_messages = Tables.wait_messages
@@ -179,6 +179,14 @@ function Public.create_main_gui(player)
 			s.style.right_padding = 0
 			s.style.bottom_padding = 0
 		end
+		local s = t.add { type = "sprite-button", name = "send_all", caption = "All", tooltip = "LMB - low to high, RMB - high to low"}
+		s.style.minimal_height = 41
+		s.style.minimal_width = 41
+		s.style.top_padding = 0
+		s.style.left_padding = 0
+		s.style.right_padding = 0
+		s.style.bottom_padding = 0
+		s.style.font_color = {r = 0.9, g = 0.9, b = 0.9}
 		frame.add{type="line"}
 	end
 	
@@ -521,8 +529,9 @@ local function on_gui_click(event)
 
 	if name == "raw-fish" then Functions.spy_fish(player, event) return end
 
-	if food_names[name] then feed_the_biters(player, name) return end
+	if food_names[name] then Feeding.feed_biters(player, name) return end
 
+	if name == "send_all" then Feeding.feed_biters_mixed(player, event.button) return end
 	if name == "bb_leave_spectate" then join_team(player, global.chosen_team[player.name])	end
 
 	if name == "bb_spectate" then
