@@ -373,6 +373,12 @@ local function freeze_all_biters(surface)
     for _, e in pairs(surface.find_entities_filtered({force = "south_biters"})) do
         e.active = false
     end
+    for _, e in pairs(surface.find_entities_filtered({force = "north_biters_boss"})) do
+        e.active = false
+    end
+    for _, e in pairs(surface.find_entities_filtered({force = "south_biters_boss"})) do
+        e.active = false
+    end
 end
 
 local function biter_killed_the_silo(event)

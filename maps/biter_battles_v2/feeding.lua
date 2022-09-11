@@ -2,7 +2,6 @@ local bb_config = require "maps.biter_battles_v2.config"
 local Functions = require "maps.biter_battles_v2.functions"
 local Server = require 'utils.server'
 
-local Profiler = require 'utils.profiler'
 local tables = require "maps.biter_battles_v2.tables"
 local food_values = tables.food_values
 local force_translation = tables.force_translation
@@ -218,33 +217,13 @@ function set_evo_and_threat(flask_amount, food, biter_force_name)
 		update_boss_modifiers(biter_force_name, 2,1)
 	end
 	if evo > 3.3 then -- 330% evo => 3.3
-		if biter_force_name == "north_biters" and bb_config.max_group_size_north ~= 50 then
-			bb_config.max_group_size_north = 50
-		end
-		if biter_force_name == "south_biters" and bb_config.max_group_size_south ~= 50 then
-			bb_config.max_group_size_south = 50
-		end
+		global.max_group_size[biter_force_name] = 50
 	elseif evo > 2.3 then
-		if biter_force_name == "north_biters" and bb_config.max_group_size_north ~= 75 then
-			bb_config.max_group_size_north = 75
-		end
-		if biter_force_name == "south_biters" and bb_config.max_group_size_south ~= 75 then
-			bb_config.max_group_size_south = 75
-		end
+		global.max_group_size[biter_force_name] = 75
 	elseif evo > 1.3 then  
-		if biter_force_name == "north_biters" and bb_config.max_group_size_north ~= 100 then
-			bb_config.max_group_size_north = 100
-		end
-		if biter_force_name == "south_biters" and bb_config.max_group_size_south ~= 100 then
-			bb_config.max_group_size_south = 100
-		end
+		global.max_group_size[biter_force_name] = 100
 	elseif evo > 0.7 then 
-		if biter_force_name == "north_biters" and bb_config.max_group_size_north ~= 200 then
-			bb_config.max_group_size_north = 200
-		end
-		if biter_force_name == "south_biters" and bb_config.max_group_size_south ~= 200 then
-			bb_config.max_group_size_south = 200
-		end
+		global.max_group_size[biter_force_name] = 200
 	end
 	
 	-- Adjust threat for revive
