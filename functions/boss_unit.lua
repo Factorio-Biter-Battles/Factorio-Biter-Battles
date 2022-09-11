@@ -1,4 +1,5 @@
 --adds a health bar and health increase to a unit
+local Public = {}
 
 local function create_healthbar(entity, size)
 	return rendering.draw_sprite({
@@ -16,7 +17,7 @@ local function set_healthbar(boss_unit)
 	rendering.set_color(boss_unit.healthbar_id, {math.floor(255 - 255 * m), math.floor(200 * m), 0})
 end
 
-function add_boss_unit(entity, health_factor, size)
+function Public.add_boss_unit(entity, health_factor, size)
 	if not entity then return end
 	if not entity.unit_number then return end
 	if not health_factor then return end
@@ -53,3 +54,4 @@ end
 local event = require 'utils.event'
 event.on_init(on_init)
 event.add(defines.events.on_entity_damaged, on_entity_damaged)
+return Public

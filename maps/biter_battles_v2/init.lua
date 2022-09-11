@@ -6,14 +6,13 @@ local Blueprint = require 'maps.biter_battles_v2.blueprints'
 
 local Public = {}
 
-local function createTrollSong()
+local function createTrollSong(forceName,offset)
 	local bp_string = Blueprint.get_blueprint("jail_song")
 	local jailSurface = game.surfaces['gulag']
-	local offset = {x = 6, y = 0 }
-	local bp_entity = jailSurface.create_entity{name = 'item-on-ground', position= {0,0}, stack = 'blueprint'}
+	local bp_entity = jailSurface.create_entity{name = 'item-on-ground', position= offset, stack = 'blueprint'}
 	bp_entity.stack.import_stack(bp_string)
 	local bp_entities = bp_entity.stack.get_blueprint_entities()
-	local bpInfo = {surface = jailSurface, force = 'spectator', position = offset, force_build = 'true'}
+	local bpInfo = {surface = jailSurface, force = forceName, position = offset, force_build = 'true'}
 	local bpResult = bp_entity.stack.build_blueprint(bpInfo)
 	bp_entity.destroy()
 	for k, v in pairs(bpResult) do
@@ -25,7 +24,7 @@ local function createTrollSong()
 		end
 		v.revive()
 	end
-	local songBuildings = jailSurface.find_entities_filtered{area={{-5, -23}, {18, 25}}, name = {
+	local songBuildings = jailSurface.find_entities_filtered{area={{-11+offset.x, -23+offset.y}, {12+offset.x, 25+offset.y}}, name = {
 		"constant-combinator",
 		"decider-combinator", 
 		"substation",
@@ -61,6 +60,8 @@ function Public.initial_setup()
 	game.create_force("south")
 	game.create_force("north_biters")
 	game.create_force("south_biters")
+	game.create_force("north_biters_boss")
+	game.create_force("south_biters_boss")
 	game.create_force("spectator")
 
 	game.forces.spectator.research_all_technologies()
@@ -129,11 +130,13 @@ function Public.initial_setup()
 	for chunk in surface.get_chunks() do
 		surface.delete_chunk({chunk.x, chunk.y})
 	end
-	createTrollSong()
+	createTrollSong(game.forces.south.name,{x=6,y=0})
+	createTrollSong(game.forces.north.name,{x=-40,y=0})
+	createTrollSong(game.forces.spectator.name,{x=-80,y=0})
 end
 
 
-	  
+
 --Terrain Playground Surface
 function Public.playground_surface()
 	local map_gen_settings = {}
@@ -202,15 +205,27 @@ function Public.tables()
 	global.tm_custom_name = {}
 	global.total_passive_feed_redpotion = 0
 	global.unit_spawners = {}
+	global.boss_units = {}
 	global.unit_spawners.north_biters = {}
 	global.unit_spawners.south_biters = {}
 	global.active_special_games = {}
 	global.special_games_variables = {}
+	global.player_data_afk = {}
+	global.max_group_size_initial = 300							--Maximum unit group size for all biters at start, just used as a reference, doesnt change initial group size.
+	global.max_group_size = {}
+	global.max_group_size["north_biters"] = 300							--Maximum unit group size for north biters.
+	global.max_group_size["south_biters"] = 300							--Maximum unit group size for south biters.
 	global.biter_spawn_unseen = {
 		["north"] = {
 			["medium-spitter"] = true, ["medium-biter"] = true, ["big-spitter"] = true, ["big-biter"] = true, ["behemoth-spitter"] = true, ["behemoth-biter"] = true
 		},
 		["south"] = {
+			["medium-spitter"] = true, ["medium-biter"] = true, ["big-spitter"] = true, ["big-biter"] = true, ["behemoth-spitter"] = true, ["behemoth-biter"] = true
+		},
+		["north_biters_boss"] = {
+			["medium-spitter"] = true, ["medium-biter"] = true, ["big-spitter"] = true, ["big-biter"] = true, ["behemoth-spitter"] = true, ["behemoth-biter"] = true
+		},
+		["south_biters_boss"] = {
 			["medium-spitter"] = true, ["medium-biter"] = true, ["big-spitter"] = true, ["big-biter"] = true, ["behemoth-spitter"] = true, ["behemoth-biter"] = true
 		}
 	}
@@ -297,6 +312,7 @@ function Public.forces()
 	f.set_cease_fire('player', true)
 	f.set_friend("spectator", true)
 	f.set_friend("south_biters", true)
+	f.set_friend("south_biters_boss", true)
 	f.share_chart = true
 
 	local f = game.forces["south"]
@@ -304,10 +320,13 @@ function Public.forces()
 	f.set_cease_fire('player', true)
 	f.set_friend("spectator", true)
 	f.set_friend("north_biters", true)
+	f.set_friend("north_biters_boss", true)
 	f.share_chart = true
 
 	local f = game.forces["north_biters"]
 	f.set_friend("south_biters", true)
+	f.set_friend("south_biters_boss", true)
+	f.set_friend("north_biters_boss", true)
 	f.set_friend("south", true)
 	f.set_friend("player", true)
 	f.set_friend("spectator", true)
@@ -316,6 +335,29 @@ function Public.forces()
 
 	local f = game.forces["south_biters"]
 	f.set_friend("north_biters", true)
+	f.set_friend("north_biters_boss", true)
+	f.set_friend("south_biters_boss", true)
+	f.set_friend("north", true)
+	f.set_friend("player", true)
+	f.set_friend("spectator", true)
+	f.share_chart = false
+	global.dead_units[f.index] = fifo.create(global.bb_fifo_size)
+	
+
+	local f = game.forces["north_biters_boss"]
+	f.set_friend("south_biters", true)
+	f.set_friend("north_biters", true)
+	f.set_friend("south_biters_boss", true)
+	f.set_friend("south", true)
+	f.set_friend("player", true)
+	f.set_friend("spectator", true)
+	f.share_chart = false
+	global.dead_units[f.index] = fifo.create(global.bb_fifo_size)
+
+	local f = game.forces["south_biters_boss"]
+	f.set_friend("north_biters", true)
+	f.set_friend("south_biters", true)
+	f.set_friend("north_biters_boss", true)
 	f.set_friend("north", true)
 	f.set_friend("player", true)
 	f.set_friend("spectator", true)
@@ -348,6 +390,7 @@ function Public.forces()
 		game.forces[force.name].technologies["atomic-bomb"].enabled = false
 		game.forces[force.name].technologies["cliff-explosives"].enabled = false
 		game.forces[force.name].technologies["land-mine"].enabled = false
+		game.forces[force.name].technologies["uranium-ammo"].researched = true
 		game.forces[force.name].research_queue_enabled = true
 		global.target_entities[force.index] = {}
 		global.spy_fish_timeout[force.name] = 0

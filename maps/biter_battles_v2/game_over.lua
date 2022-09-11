@@ -325,6 +325,7 @@ function Public.server_restart()
         Init.playground_surface()
         Init.forces()
         Init.draw_structures()
+        Gui.reset_tables_gui()
             Init.load_spawn()
 
             for _, player in pairs(game.players) do
@@ -370,6 +371,12 @@ local function freeze_all_biters(surface)
         e.active = false
     end
     for _, e in pairs(surface.find_entities_filtered({force = "south_biters"})) do
+        e.active = false
+    end
+    for _, e in pairs(surface.find_entities_filtered({force = "north_biters_boss"})) do
+        e.active = false
+    end
+    for _, e in pairs(surface.find_entities_filtered({force = "south_biters_boss"})) do
         e.active = false
     end
 end
