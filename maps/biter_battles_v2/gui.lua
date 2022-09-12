@@ -6,14 +6,14 @@ local bb_config = require "maps.biter_battles_v2.config"
 local bb_diff = require "maps.biter_battles_v2.difficulty_vote"
 local event = require 'utils.event'
 local Functions = require "maps.biter_battles_v2.functions"
-local feed_the_biters = require "maps.biter_battles_v2.feeding"
+local Feeding = require "maps.biter_battles_v2.feeding"
 local Tables = require "maps.biter_battles_v2.tables"
 
 local wait_messages = Tables.wait_messages
 local food_names = Tables.gui_foods
 
 local math_random = math.random
-
+local math_abs = math.abs
 require "maps.biter_battles_v2.spec_spy"
 require 'utils/gui_styles'
 local gui_values = {
@@ -136,6 +136,20 @@ local function add_prod_button(elem, gui_value)
 	prod_button.style.width = 25
 end
 
+local function show_pretty_threat(forceName)
+	local threat_value = math.floor(global.bb_threat[forceName])
+	if math_abs(threat_value) >= 1000000 then
+		threat_value = threat_value / 1000000
+		threat_value = tonumber(string.format("%.2f", threat_value))
+		threat_value = threat_value .. "M"
+	elseif math_abs(threat_value) >= 100000 then
+		threat_value = threat_value / 1000
+		threat_value = tonumber(string.format("%.0f", threat_value))
+		threat_value = threat_value .. "k"
+	end
+	return threat_value
+end
+
 function Public.create_main_gui(player)
 	local is_spec = player.force.name == "spectator"
 	if player.gui.left["bb_main_gui"] then player.gui.left["bb_main_gui"].destroy() end
@@ -165,6 +179,14 @@ function Public.create_main_gui(player)
 			s.style.right_padding = 0
 			s.style.bottom_padding = 0
 		end
+		local s = t.add { type = "sprite-button", name = "send_all", caption = "All", tooltip = "LMB - low to high, RMB - high to low"}
+		s.style.minimal_height = 41
+		s.style.minimal_width = 41
+		s.style.top_padding = 0
+		s.style.left_padding = 0
+		s.style.right_padding = 0
+		s.style.bottom_padding = 0
+		s.style.font_color = {r = 0.9, g = 0.9, b = 0.9}
 		frame.add{type="line"}
 	end
 	
@@ -234,7 +256,9 @@ function Public.create_main_gui(player)
 		local l = t.add  {type = "label", caption = "Threat: "}
 		l.style.minimal_width = 25
 		l.tooltip = gui_value.t2
-		local l = t.add  {type = "label", name = "threat_" .. gui_value.force, caption = math.floor(global.bb_threat[gui_value.biter_force])}
+		
+		local threat_value = show_pretty_threat(gui_value.biter_force)
+		local l = t.add  {type = "label", name = "threat_" .. gui_value.force, caption = threat_value}
 		l.style.font_color = gui_value.color2
 		l.style.font = "default-bold"
 		l.style.width = 50
@@ -290,8 +314,8 @@ function Public.refresh_threat()
 	for _, player in pairs(game.connected_players) do
 		if player.gui.left["bb_main_gui"] then
 			if player.gui.left["bb_main_gui"].stats_north then
-				player.gui.left["bb_main_gui"].stats_north.threat_north.caption = math.floor(global.bb_threat["north_biters"])
-				player.gui.left["bb_main_gui"].stats_south.threat_south.caption = math.floor(global.bb_threat["south_biters"])
+				player.gui.left["bb_main_gui"].stats_north.threat_north.caption = show_pretty_threat("north_biters")
+				player.gui.left["bb_main_gui"].stats_south.threat_south.caption = show_pretty_threat("south_biters")
 			end
 		end
 	end
@@ -404,6 +428,8 @@ function spectate(player, forced_join, stored_position)
 		player.cancel_crafting(player.crafting_queue[1])
 	end
 	
+	player.driving = false
+
 	if stored_position then
         local p_data = get_player_data(player)
         p_data.position = player.position
@@ -503,8 +529,9 @@ local function on_gui_click(event)
 
 	if name == "raw-fish" then Functions.spy_fish(player, event) return end
 
-	if food_names[name] then feed_the_biters(player, name) return end
+	if food_names[name] then Feeding.feed_biters(player, name) return end
 
+	if name == "send_all" then Feeding.feed_biters_mixed(player, event.button) return end
 	if name == "bb_leave_spectate" then join_team(player, global.chosen_team[player.name])	end
 
 	if name == "bb_spectate" then

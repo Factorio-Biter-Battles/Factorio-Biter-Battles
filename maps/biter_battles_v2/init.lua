@@ -100,12 +100,15 @@ function Public.initial_setup()
 		defines.input_action.open_kills_gui,
 		defines.input_action.quick_bar_set_selected_page,
 		defines.input_action.quick_bar_set_slot,
-		defines.input_action.rotate_entity,
 		defines.input_action.set_filter,
 		defines.input_action.set_player_color,
 		defines.input_action.start_walking,
 		defines.input_action.toggle_show_entity_info,
 		defines.input_action.write_to_console,
+		defines.input_action.map_editor_action,
+		defines.input_action.toggle_map_editor,
+		defines.input_action.change_multiplayer_config,
+		defines.input_action.admin_action,
 	}
 	for _, d in pairs(defs) do p.set_allows_action(d, true) end
 
@@ -167,7 +170,6 @@ function Public.draw_structures()
 	Terrain.generate_additional_rocks(surface)
 	Terrain.generate_silo(surface)
 	Terrain.draw_spawn_circle(surface)
-	game.surfaces[global.bb_surface_name].create_entity({name="flying-text",position={-4,-13},text="Experimental version: Boss biters",color = {r = 0, g = 1, b = 0, a = 0.5},text_align="right"}).active=false
 	--Terrain.generate_spawn_goodies(surface)
 end
 
@@ -209,11 +211,21 @@ function Public.tables()
 	global.active_special_games = {}
 	global.special_games_variables = {}
 	global.player_data_afk = {}
+	global.max_group_size_initial = 300							--Maximum unit group size for all biters at start, just used as a reference, doesnt change initial group size.
+	global.max_group_size = {}
+	global.max_group_size["north_biters"] = 300							--Maximum unit group size for north biters.
+	global.max_group_size["south_biters"] = 300							--Maximum unit group size for south biters.
 	global.biter_spawn_unseen = {
 		["north"] = {
 			["medium-spitter"] = true, ["medium-biter"] = true, ["big-spitter"] = true, ["big-biter"] = true, ["behemoth-spitter"] = true, ["behemoth-biter"] = true
 		},
 		["south"] = {
+			["medium-spitter"] = true, ["medium-biter"] = true, ["big-spitter"] = true, ["big-biter"] = true, ["behemoth-spitter"] = true, ["behemoth-biter"] = true
+		},
+		["north_biters_boss"] = {
+			["medium-spitter"] = true, ["medium-biter"] = true, ["big-spitter"] = true, ["big-biter"] = true, ["behemoth-spitter"] = true, ["behemoth-biter"] = true
+		},
+		["south_biters_boss"] = {
 			["medium-spitter"] = true, ["medium-biter"] = true, ["big-spitter"] = true, ["big-biter"] = true, ["behemoth-spitter"] = true, ["behemoth-biter"] = true
 		}
 	}
