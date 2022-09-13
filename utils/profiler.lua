@@ -3,6 +3,7 @@ local string_rep = string.rep
 local string_format = string.format
 local debug_getinfo = debug.getinfo
 local Event = require 'utils.event'
+local session = require 'utils.datastore.session_data'
 local admin_autostop = 60 * 60 -- 1 min
 local player_autostop = 60 * 10 -- 10 s
 
@@ -23,6 +24,11 @@ local namedSources = {
 
 local function startCommand(command)
     local player = game.get_player(command.player_index)
+    local trusted = session.get_trusted_table()
+    if not trusted[player.name] then
+        player.print('You have not grown accustomed to this technology yet.', {r = 0.22, g = 0.99, b = 0.99})
+        return
+    end
     Profiler.Start(command.parameter ~= nil, player.admin, command.tick)
 end
 local function stopCommand(command)
