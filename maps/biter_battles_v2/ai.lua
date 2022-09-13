@@ -90,7 +90,7 @@ end
 local function spawn_biters(isItnormalBiters, maxLoopIteration,spawner,biter_threat,biter_force_name,max_unit_count,valid_biters,force_name)
 	local roll_type = unit_type_raffle[math_random(1, size_of_unit_type_raffle)]
 	local boss_biter_force_name = biter_force_name .. "_boss"
-	-- *1.5 because we add 50% health bonus as it's just one unit.  
+	-- *1.5 because we add 50% health bonus as it's just one unit.
 	-- *20 because one boss is equal of 20 biters in theory
 	-- formula because 90% revive chance is 1/(1-0.9) = 10, which means biters needs to be killed 10 times, so *10 . easy fast-check : 50% revive is 2 biters worth, formula matches. 0% revive -> 1 biter worth
 	local health_buff_equivalent_revive = 1.0/(1.0-global.reanim_chance[game.forces[biter_force_name].index]/100)
@@ -117,9 +117,9 @@ local function spawn_biters(isItnormalBiters, maxLoopIteration,spawner,biter_thr
 		i = i + 1
 		valid_biters[i] = biter
 		if not isItnormalBiters then
-			BossUnit.add_boss_unit(biter, health_factor, 0.55)	
+			BossUnit.add_boss_unit(biter, health_factor, 0.55)
 		end
-		
+
 		--Announce New Spawn
 		if(isItnormalBiters and global.biter_spawn_unseen[force_name][unit_name]) then
 			game.print("A " .. unit_name:gsub("-", " ") .. " was spotted far away on team " .. force_name .. "...")
@@ -142,9 +142,9 @@ local function select_units_around_spawner(spawner, force_name)
 	-- Half threat goes to normal biters, half threat goes for bosses, to get half bosses and half normal biters
 	local threat = global.bb_threat[biter_force_name] / 10
 	local threat_for_normal_biters = threat
-	
+
 	local max_group_size_biters_force = global.max_group_size[biter_force_name]
-	
+
 	if max_group_size_biters_force ~= global.max_group_size_initial then
 		threat_for_normal_biters = threat_for_normal_biters / 2
 	end
@@ -154,11 +154,12 @@ local function select_units_around_spawner(spawner, force_name)
 
 	--Manual spawning of units
 	spawn_biters(true,max_unit_count,spawner,threat_for_normal_biters,biter_force_name,max_unit_count,valid_biters,force_name)
-	
+
 	--Manual spawning of boss units
 	if max_group_size_biters_force ~= global.max_group_size_initial then
 		spawn_biters(false,math.ceil((global.max_group_size_initial - max_group_size_biters_force)/20),spawner,threat_for_boss_biters,biter_force_name,max_unit_count,valid_biters,force_name)
 	end
+
 	return valid_biters
 end
 
