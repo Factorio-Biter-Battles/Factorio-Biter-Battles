@@ -18,8 +18,8 @@ local math_atan2 = math.atan2
 -- these parameters roughly approximate the radius of the average player base
 -- TODO: use some metric to drive adjustments on these values as the game progresses
 local max_strike_distance = 512
-local min_strike_distance = 257
-local strike_target_clearance = 256
+local min_strike_distance = 256
+local strike_target_clearance = 255
 
 local function calculate_secant_intersections(r, a, b, c)
     local t = a * a + b * b
@@ -92,8 +92,15 @@ local function calculate_boundary_range(boundary_offset, target_position, strike
     }
 end
 
+local function select_strike_distance(source_position, target_position)
+    local dx = source_position.x - target_position.x
+    local dy = source_position.y - target_position.y
+    local distance = math_sqrt(dx * dx + dy * dy)
+    return math_random(min_strike_distance, math_max(min_strike_distance, math_min(distance, max_strike_distance)))
+end
+
 local function select_strike_position(source_position, target_position, boundary_offset)
-    local strike_distance = math_random(min_strike_distance, max_strike_distance)
+    local strike_distance = select_strike_distance(source_position, target_position)
     local strike_angle_range = calculate_strike_range(source_position, target_position, strike_target_clearance, strike_distance)
     if boundary_offset > target_position.y - strike_distance then
         local boundary_angle_range = calculate_boundary_range(boundary_offset, target_position, strike_distance)
