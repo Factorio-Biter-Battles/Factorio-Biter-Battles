@@ -11,8 +11,6 @@ local Table = require 'utils.table'
 local jailed_data_set = 'jailed'
 local jailed = {}
 local player_data = {}
-local votejail = {}
-local votefree = {}
 local vote = {
     running = false,
     type = "",
@@ -262,16 +260,6 @@ local validate_args = function(data)
         return false
     end
 
-    if votejail[player.name] and not player.admin then
-        Utils.print_to(player, 'You are currently being investigated since you have griefed.')
-        return false
-    end
-
-    if votefree[player.name] and not player.admin then
-        Utils.print_to(player, 'You are currently being investigated since you have griefed.')
-        return false
-    end
-
     if jailed[player.name] and not player.admin then
         Utils.print_to(player, 'You are jailed, you can´t run this command.')
         return false
@@ -310,51 +298,6 @@ local validate_args = function(data)
     return true
 end
 
-local vote_to_jail = function(player, griefer, msg)
-    if not votejail[griefer] then
-        votejail[griefer] = {index = 0, actor = player.name}
-        local message = player.name .. ' has started a vote to jail player ' .. griefer
-        Utils.print_to(nil, message)
-    end
-    if not votejail[griefer][player.name] then
-        votejail[griefer][player.name] = true
-        votejail[griefer].index = votejail[griefer].index + 1
-        Utils.print_to(player, 'You have voted to jail player ' .. griefer .. '.')
-        if
-            votejail[griefer].index >= settings.votejail_count or
-                (votejail[griefer].index == #game.connected_players - 1 and #game.connected_players > votejail[griefer].index)
-         then
-            Public.try_ul_data(griefer, true, votejail[griefer].actor, msg)
-        end
-    else
-        Utils.print_to(player, 'You have already voted to kick ' .. griefer .. '.')
-    end
-end
-
-local vote_to_free = function(player, griefer)
-    if not votefree[griefer] then
-        votefree[griefer] = {index = 0, actor = player.name}
-        local message = player.name .. ' has started a vote to free player ' .. griefer
-        Utils.print_to(nil, message)
-    end
-    if not votefree[griefer][player.name] then
-        votefree[griefer][player.name] = true
-        votefree[griefer].index = votefree[griefer].index + 1
-
-        Utils.print_to(player, 'You have voted to free player ' .. griefer .. '.')
-        if
-            votefree[griefer].index >= settings.votejail_count or
-                (votefree[griefer].index == #game.connected_players - 1 and #game.connected_players > votefree[griefer].index)
-         then
-            Public.try_ul_data(griefer, false, votefree[griefer].actor)
-            votejail[griefer] = nil
-            votefree[griefer] = nil
-        end
-    else
-        Utils.print_to(player, 'You have already voted to free ' .. griefer .. '.')
-    end
-    return
-end
 
 local jail = function(player, griefer, msg)
     player = player or 'script'
@@ -708,16 +651,6 @@ Event.add(
 
             if game.players[griefer] then
                 griefer = game.players[griefer].name
-            end
-
-            if trusted and playtime >= settings.playtime_for_vote and playtime < settings.playtime_for_instant_jail and not player.admin then
-                if cmd == 'jail' then
-                    vote_to_jail(player, griefer, message)
-                    return
-                elseif cmd == 'free' then
-                    vote_to_free(player, griefer)
-                    return
-                end
             end
 
             if player.admin or playtime >= settings.playtime_for_instant_jail then
