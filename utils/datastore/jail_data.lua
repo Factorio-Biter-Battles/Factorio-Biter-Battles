@@ -6,16 +6,27 @@ local Task = require 'utils.task'
 local Server = require 'utils.server'
 local Event = require 'utils.event'
 local Utils = require 'utils.core'
+local Table = require 'utils.table'
 
 local jailed_data_set = 'jailed'
 local jailed = {}
 local player_data = {}
 local votejail = {}
 local votefree = {}
+local vote = {
+    running = false,
+    type = "",
+    timer = 0,
+    yes = {},
+    no = {},
+    suspect = "",
+    reason = ""
+}
 local settings = {
     playtime_for_vote = 3600,
     playtime_for_instant_jail = 103680000, -- 20 days
-    votejail_count = 3
+    votejail_count = 3,
+    vote_duration = 60 --in seconds
 }
 local set_data = Server.set_data
 local try_get_data = Server.try_get_data
@@ -23,7 +34,8 @@ local concat = table.concat
 
 local valid_commands = {
     ['free'] = true,
-    ['jail'] = true
+    ['jail'] = true,
+    --['vote'] = true
 }
 
 Global.register(
@@ -32,7 +44,8 @@ Global.register(
         votejail = votejail,
         votefree = votefree,
         settings = settings,
-        player_data = player_data
+        player_data = player_data,
+        vote = vote
     },
     function(t)
         jailed = t.jailed
@@ -441,6 +454,142 @@ local update_jailed =
     end
 )
 
+local function draw_voting_gui(action, initiator, suspect, reason)
+    vote.timer = settings.vote_duration
+    if reason then reason = "for:\n" .. reason end
+    for _, player in pairs(game.connected_players) do
+        if player.gui.left.vote_gui then
+            player.gui.left.vote_gui.destroy()
+        end
+        local frame = player.gui.left.add{type = "frame", name = "vote_gui", direction = "vertical"}        
+        local label = frame.add{type = "label", caption = string.format("%s wants to %s %s %s", initiator, action, suspect, (reason or ""))}
+        label.style.single_line = false
+        local table = frame.add{type = "table", name = "button_table", column_count = 3}
+        local b = table.add{type = "sprite-button", name = "vote_yes", sprite = "utility/check_mark_white"}
+
+        b = table.add{type = "sprite-button", name = "vote_no", sprite = "utility/close_white"}
+        local timer = table.add{type = "label", name = "vote_timer", caption = vote.timer .. "s"}        
+    end
+end
+
+local function start_vote(command)
+    if not command.player_index then return end
+    local player = game.get_player(command.player_index)
+    if not validate_trusted(player) then
+        player.print('You have not grown accustomed to this technology yet.', {r = 0.22, g = 0.99, b = 0.99})
+        return
+    end
+    local error_invalid_usage = "Usage: /vote <jail/free> <player name> <reason>"
+    local parameter = command.parameter
+    if not parameter then
+        player.print(error_invalid_usage)
+        return
+    end
+
+    local t = {}
+
+    for i in string.gmatch(parameter, '%S+') do
+        t[#t + 1] = i
+    end
+    if #t < 2 then
+        player.print(error_invalid_usage)
+        return
+    end
+
+    local suspect = game.get_player(t[2])
+    if not (suspect or suspect.valid) then
+        player.print(error_invalid_usage)
+        return
+    end
+    local reason
+    if t[1] == "jail" then
+        if jailed[suspect.name] then
+            player.print(suspect.name ..  " is already in jail.")
+            return
+        end
+
+        reason = table.concat(t, " ", 3)
+        if string.len(reason) <= 10 then
+            player.print('Reason is too short.')
+            return
+        end
+        draw_voting_gui("jail", player.name, suspect.name, reason)
+
+    elseif t[1] == "free" then
+        if not jailed[suspect.name] then
+            player.print(suspect.name ..  " is not in in jail.")
+            return
+        end
+
+        draw_voting_gui("free", player.name, suspect.name)
+
+    else
+        player.print(error_invalid_usage)
+        return
+    end
+    vote.running = true
+    vote.suspect = suspect.name
+    vote.reason = reason
+    vote.type = t[1]
+end
+
+local function vote_result()
+    local types = {["jail"] = jail, ["free"] = free}
+    if #vote.yes > #vote.no then
+        local message = string.format("Vote to %s player %s passed with votes:\n Yes (%d) - %s\n No (%d) - %s", vote.type, vote.suspect, #vote.yes, table.concat(vote.yes, " "), #vote.no, table.concat(vote.no, " "))
+        game.print(message)
+        types[vote.type](nil, vote.suspect, (vote.reason or nil))
+    else
+        local message = string.format("Vote to %s player %s failed with:\n Yes (%d) - %s\n No (%d) - %s", vote.type, vote.suspect, #vote.yes, table.concat(vote.yes, " "), #vote.no, table.concat(vote.no, " "))
+        game.print(message)
+    end
+end
+
+local function on_gui_click(event)
+    if not vote.running then return end
+    local player = game.get_player(event.player_index)
+    if not (player or player.valid) then return end
+    if event.element.name == "vote_yes" then
+        table.remove_element(vote.no, player.name)
+        table.insert(vote.yes, player.name)
+        player.gui.left.vote_gui.button_table.vote_yes.enabled = false
+        player.gui.left.vote_gui.button_table.vote_no.enabled = true
+    elseif event.element.name == "vote_no" then
+        table.remove_element(vote.yes, player.name)
+        table.insert(vote.no, player.name)
+        player.gui.left.vote_gui.button_table.vote_yes.enabled = true
+        player.gui.left.vote_gui.button_table.vote_no.enabled = false
+    end
+end
+
+local function on_nth_tick(event)
+    if not vote.running then return end
+    
+    vote.timer = vote.timer - 1
+    local timer = vote.timer
+    if timer == 0 then
+        vote_result()
+        for _, player in pairs(game.players) do
+            if player.gui.left.vote_gui then
+                player.gui.left.vote_gui.destroy()
+            end
+        end
+        vote.running = false
+        vote.type = ""
+        vote.timer = 0
+        vote.yes = {}
+        vote.no = {}
+        vote.suspect = ""
+        vote.reason = ""
+        return
+    end
+    for _, player in pairs(game.connected_players) do
+        if player.gui.left.vote_gui then
+            player.gui.left.vote_gui.button_table.vote_timer.caption = timer .. "s"
+        end
+    end
+end
+
 --- Tries to get data from the webpanel and updates the local table with values.
 -- @param data_set player token
 function Public.try_dl_data(key)
@@ -590,6 +739,8 @@ Event.add(
     end
 )
 
+Event.on_nth_tick(60, on_nth_tick) -- every second
+Event.add(defines.events.on_gui_click, on_gui_click)
 Event.add(defines.events.on_player_changed_surface, on_player_changed_surface)
 Event.on_init(create_gulag_surface)
 
@@ -622,6 +773,13 @@ commands.add_command(
     end
 )
 
+commands.add_command(
+    "vote",
+    "Start a vote to jail or free a player. Usage: /vote <jail/free> <player name> <reason>",
+    function(command)
+        start_vote(command)
+    end
+)
 function Public.required_playtime_for_instant_jail(value)
     if value then
         settings.playtime_for_instant_jail = value
