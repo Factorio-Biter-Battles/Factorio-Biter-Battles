@@ -319,9 +319,7 @@ local function draw_biter_area(surface, left_top_x, left_top_y)
 			end
 		end
 	end
-	
-	surface.set_tiles(out_of_map, false)
-	surface.set_tiles(tiles, true)
+
 	
 	for _ = 1, 4, 1 do
 		local v = chunk_tile_vectors[math_random(1, size_of_chunk_tile_vectors)]
