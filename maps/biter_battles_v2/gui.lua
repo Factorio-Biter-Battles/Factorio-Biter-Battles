@@ -509,6 +509,7 @@ local function on_gui_click(event)
 
 	if food_names[name] then Feeding.feed_biters(player, name) return end
 
+	if name == "send_all" then Feeding.feed_biters_mixed(player, event.button) return end
 
 	if name == "toggle_spectate" then
 		if player.force.name == "spectator" then
