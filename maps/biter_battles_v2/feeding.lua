@@ -6,17 +6,34 @@ local tables = require "maps.biter_battles_v2.tables"
 local food_values = tables.food_values
 local force_translation = tables.force_translation
 local enemy_team_of = tables.enemy_team_of
+local math_floor = math.floor
+local math_round = math.round
 
 local minimum_modifier = 125
 local maximum_modifier = 250
 local player_amount_for_maximum_threat_gain = 20
-
+local Public = {}
 function get_instant_threat_player_count_modifier()
 	local current_player_count = #game.forces.north.connected_players + #game.forces.south.connected_players
 	local gain_per_player = (maximum_modifier - minimum_modifier) / player_amount_for_maximum_threat_gain
 	local m = minimum_modifier + gain_per_player * current_player_count
 	if m > maximum_modifier then m = maximum_modifier end
 	return m
+end
+
+
+local function update_boss_modifiers(force_name_biter,damage_mod_mult,speed_mod_mult)
+	local damage_mod = math_round((global.bb_evolution[force_name_biter]) * 1.0, 3) * damage_mod_mult
+	local speed_mod = math_round((global.bb_evolution[force_name_biter]) *0.25, 3) * speed_mod_mult
+	local force = game.forces[force_name_biter .. "_boss"]
+	force.set_ammo_damage_modifier("melee", damage_mod) 
+	force.set_ammo_damage_modifier("biological", damage_mod)
+	force.set_ammo_damage_modifier("artillery-shell", damage_mod)
+	force.set_ammo_damage_modifier("flamethrower", damage_mod)
+	force.set_gun_speed_modifier("melee", speed_mod)
+	force.set_gun_speed_modifier("biological", speed_mod)
+	force.set_gun_speed_modifier("artillery-shell", speed_mod)
+	force.set_gun_speed_modifier("flamethrower", speed_mod)
 end
 
 local function set_biter_endgame_modifiers(force)
@@ -26,15 +43,15 @@ local function set_biter_endgame_modifiers(force)
 	-- maximum re-animation threshold. For example if real evolution is 150
 	-- and max is 350, then 150 / 350 = 42% chance.
 	local threshold = global.bb_evolution[force.name]
-	threshold = math.floor((threshold - 1.0) * 100.0)
+	threshold = math_floor((threshold - 1.0) * 100.0)
 	threshold = threshold / global.max_reanim_thresh * 100
-	threshold = math.floor(threshold)
+	threshold = math_floor(threshold)
 	if threshold > 90.0 then
 		threshold = 90.0
 	end
 	global.reanim_chance[force.index] = threshold
 
-	local damage_mod = math.round((global.bb_evolution[force.name] - 1) * 1.0, 3)
+	local damage_mod = math_round((global.bb_evolution[force.name] - 1) * 1.0, 3)
 	force.set_ammo_damage_modifier("melee", damage_mod)
 	force.set_ammo_damage_modifier("biological", damage_mod)
 	force.set_ammo_damage_modifier("artillery-shell", damage_mod)
@@ -96,7 +113,7 @@ local function add_stats(player, food, flask_amount,biter_force_name,evo_before_
 	}
 	if flask_amount > 0 then
 		local tick = game.ticks_played
-		local feed_time_mins = math.round(tick / (60*60), 0)
+		local feed_time_mins = math_round(tick / (60*60), 0)
 		local minute_unit = ""
 		if feed_time_mins <= 1 then
 			minute_unit = "min"
@@ -108,14 +125,14 @@ local function add_stats(player, food, flask_amount,biter_force_name,evo_before_
 		local shown_feed_time_mins = ""
 		shown_feed_time_mins = feed_time_mins .. minute_unit
 		local formatted_feed_time = shown_feed_time_hours .. shown_feed_time_mins
-		evo_before_science_feed = math.round(evo_before_science_feed*100,1) 
-		threat_before_science_feed = math.round(threat_before_science_feed,0) 
-		local formatted_evo_after_feed = math.round(global.bb_evolution[biter_force_name]*100,1)
-		local formatted_threat_after_feed = math.round(global.bb_threat[biter_force_name],0)
+		evo_before_science_feed = math_round(evo_before_science_feed*100,1) 
+		threat_before_science_feed = math_round(threat_before_science_feed,0) 
+		local formatted_evo_after_feed = math_round(global.bb_evolution[biter_force_name]*100,1)
+		local formatted_threat_after_feed = math_round(global.bb_threat[biter_force_name],0)
 		local evo_jump = table.concat({evo_before_science_feed .. " to " .. formatted_evo_after_feed})
 		local threat_jump = table.concat({threat_before_science_feed .. " to ".. formatted_threat_after_feed})
-		local evo_jump_difference =  math.round(formatted_evo_after_feed - evo_before_science_feed,1)
-		local threat_jump_difference =  math.round(formatted_threat_after_feed - threat_before_science_feed,0)
+		local evo_jump_difference =  math_round(formatted_evo_after_feed - evo_before_science_feed,1)
+		local threat_jump_difference =  math_round(formatted_threat_after_feed - threat_before_science_feed,0)
 		local line_log_stats_to_add = table.concat({ formatted_amount .. " " .. formatted_food .. " by " .. colored_player_name .. " to " })
 		local team_name_fed_by_science = get_enemy_team_of(player.force.name)
 		
@@ -162,7 +179,6 @@ end
 
 function set_evo_and_threat(flask_amount, food, biter_force_name)
 	local decimals = 9
-	local math_round = math.round
 	
 	local instant_threat_player_count_modifier = get_instant_threat_player_count_modifier()
 	
@@ -196,6 +212,20 @@ function set_evo_and_threat(flask_amount, food, biter_force_name)
 	game.forces[biter_force_name].evolution_factor = biter_evo
 	global.bb_evolution[biter_force_name] = evo
 	set_biter_endgame_modifiers(game.forces[biter_force_name])
+	
+	if evo > 1 then
+		update_boss_modifiers(biter_force_name, 2,1)
+	end
+	if evo > 3.3 then -- 330% evo => 3.3
+		global.max_group_size[biter_force_name] = 50
+	elseif evo > 2.3 then
+		global.max_group_size[biter_force_name] = 75
+	elseif evo > 1.3 then  
+		global.max_group_size[biter_force_name] = 100
+	elseif evo > 0.7 then 
+		global.max_group_size[biter_force_name] = 200
+	end
+	
 	-- Adjust threat for revive
 	local force_index = game.forces[biter_force_name].index
 	local reanim_chance = global.reanim_chance[force_index]
@@ -205,7 +235,7 @@ function set_evo_and_threat(flask_amount, food, biter_force_name)
 	global.bb_threat[biter_force_name] = math_round(global.bb_threat[biter_force_name] + threat, decimals)
 end
 
-local function feed_biters(player, food)	
+function Public.feed_biters(player, food)	
 		if game.ticks_played < global.difficulty_votes_timeout then
 		player.print("Please wait for voting to finish before feeding")
 		return
@@ -238,4 +268,62 @@ local function feed_biters(player, food)
 	end
 end
 
-return feed_biters
+function Public.feed_biters_mixed(player, button)
+	if game.ticks_played < global.difficulty_votes_timeout then
+		player.print("Please wait for voting to finish before feeding")
+		return
+	end
+	local enemy_force_name = get_enemy_team_of(player.force.name)
+	local biter_force_name = enemy_force_name .. "_biters"
+	local food = {
+		"automation-science-pack",
+		"logistic-science-pack",
+		"military-science-pack",
+		"chemical-science-pack",
+		"production-science-pack",
+		"utility-science-pack",
+		"space-science-pack"
+	}
+	if button == defines.mouse_button_type.right then
+		food = {
+			"space-science-pack",
+			"utility-science-pack",
+			"production-science-pack",
+			"chemical-science-pack",
+			"military-science-pack",
+			"logistic-science-pack",
+			"automation-science-pack",
+		}
+	end
+	local i = player.get_main_inventory()
+	local colored_player_name = table.concat({"[color=", player.color.r * 0.6 + 0.35, ",", player.color.g * 0.6 + 0.35, ",", player.color.b * 0.6 + 0.35, "]", player.name, "[/color]"})
+	local message = {colored_player_name, " fed "}
+	for k, v in pairs(food) do
+		local evolution_before_feed = global.bb_evolution[biter_force_name]
+		local threat_before_feed = global.bb_threat[biter_force_name]	
+		local flask_amount = i.get_item_count(v)
+		if flask_amount ~= 0 then
+			table.insert(message, "[font=heading-1][color=255,255,255]" .. flask_amount .. "[/color][/font]" .. "[img=item." .. v .. "], ")
+			Server.to_discord_bold(table.concat({player.name, " fed ", flask_amount, " flasks of ", food_values[v].name, " to team ", enemy_force_name, " biters!"}))
+			set_evo_and_threat(flask_amount, v, biter_force_name)
+			add_stats(player, v, flask_amount ,biter_force_name, evolution_before_feed, threat_before_feed)
+			i.remove({name = v, count = flask_amount})
+		end
+	end
+	if #message == 2 then
+		player.print("You have no flasks in your inventory", {r = 0.98, g = 0.66, b = 0.22})
+		return
+	end
+	local n = bb_config.north_side_team_name
+	local s = bb_config.south_side_team_name
+	if global.tm_custom_name["north"] then n = global.tm_custom_name["north"] end
+	if global.tm_custom_name["south"] then s = global.tm_custom_name["south"] end	
+	local team_strings = {
+		["north"] = table.concat({"[color=120, 120, 255]", n, "'s[/color]"}),
+		["south"] = table.concat({"[color=255, 65, 65]", s, "'s[/color]"})
+	}
+	table.insert(message, "to team " .. team_strings[enemy_force_name] .. " biters!")
+	game.print(table.concat(message), {r = 0.9, g = 0.9, b = 0.9})
+end
+
+return Public

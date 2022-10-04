@@ -38,17 +38,17 @@ local valid_special_games = {
 	infinity_chest = {
 		name = {type = "label", caption = "Infinity chest", tooltip = "Spawn infinity chests with given filters"},
 		config = {
-			[1] = {name = "separate_chests", type = "switch", switch_state = "left", tooltip = "Single chest / Multiple chests"},
-			[2] = {name = "operable", type = "switch", switch_state = "left", tooltip = "Operable? Y / N"},
-			[3] = {name = "label1", type = "label", caption = "Gap size"},
-			[4] = {name = "gap", type = "textfield", text = "3", numeric = true, width = 40},
-			[5] = {name = "eq1", type = "choose-elem-button", elem_type = "item"},
-			[6] = {name = "eq2", type = "choose-elem-button", elem_type = "item"},
-			[7] = {name = "eq3", type = "choose-elem-button", elem_type = "item"},
-			[8] = {name = "eq4", type = "choose-elem-button", elem_type = "item"},
-			[9] = {name = "eq5", type = "choose-elem-button", elem_type = "item"},
-			[10] = {name = "eq6", type = "choose-elem-button", elem_type = "item"},
-			[11] = {name = "eq7", type = "choose-elem-button", elem_type = "item"}
+			[1] = {name = "eq1", type = "choose-elem-button", elem_type = "item"},
+			[2] = {name = "eq2", type = "choose-elem-button", elem_type = "item"},
+			[3] = {name = "eq3", type = "choose-elem-button", elem_type = "item"},
+			[4] = {name = "eq4", type = "choose-elem-button", elem_type = "item"},
+			[5] = {name = "eq5", type = "choose-elem-button", elem_type = "item"},
+			[6] = {name = "eq6", type = "choose-elem-button", elem_type = "item"},
+			[7] = {name = "eq7", type = "choose-elem-button", elem_type = "item"},
+			[8] = {name = "separate_chests", type = "switch", switch_state = "left", tooltip = "Single chest / Multiple chests"},
+			[9] = {name = "operable", type = "switch", switch_state = "right", tooltip = "Operable? Y / N"},
+			[10] = {name = "label1", type = "label", caption = "Gap size"},
+			[11] = {name = "gap", type = "textfield", text = "3", numeric = true, width = 40},
 		},
 		button = {name = "infinity_chest_apply", type = "button", caption = "Apply"}
 	},
@@ -56,14 +56,14 @@ local valid_special_games = {
 	disabled_research = {
 		name = {type = "label", caption = "Disabled research", tooltip = "Disables choosen technologies from being researched"},
 		config = {
-			[1] = {name = "team", type = "switch", switch_state = "none", allow_none_state = true, tooltip = "North / Both / South"},
-			[2] = {name = "eq1", type = "choose-elem-button", elem_type = "technology"},
-			[3] = {name = "eq2", type = "choose-elem-button", elem_type = "technology"},
-			[4] = {name = "eq3", type = "choose-elem-button", elem_type = "technology"},
-			[5] = {name = "eq4", type = "choose-elem-button", elem_type = "technology"},
-			[6] = {name = "eq5", type = "choose-elem-button", elem_type = "technology"},
-			[7] = {name = "eq6", type = "choose-elem-button", elem_type = "technology"},
-			[8] = {name = "eq7", type = "choose-elem-button", elem_type = "technology"}, 
+			[1] = {name = "eq1", type = "choose-elem-button", elem_type = "technology"},
+			[2] = {name = "eq2", type = "choose-elem-button", elem_type = "technology"},
+			[3] = {name = "eq3", type = "choose-elem-button", elem_type = "technology"},
+			[4] = {name = "eq4", type = "choose-elem-button", elem_type = "technology"},
+			[5] = {name = "eq5", type = "choose-elem-button", elem_type = "technology"},
+			[6] = {name = "eq6", type = "choose-elem-button", elem_type = "technology"},
+			[7] = {name = "eq7", type = "choose-elem-button", elem_type = "technology"}, 
+			[8] = {name = "team", type = "switch", switch_state = "none", allow_none_state = true, tooltip = "North / Both / South"},
 			[9] = {name = "reset_disabled_research", type = "button", caption = "Reset", tooltip = "Enable all the disabled research again"}
 		},
 		button = {name = "disabled_research_apply", type = "button", caption = "Apply"}
@@ -72,14 +72,14 @@ local valid_special_games = {
 	disabled_entities = {
 		name = {type = "label", caption = "Disabled entities", tooltip = "Disables choosen entities from being placed"},
 		config = {
-			[1] = {name = "team", type = "switch", switch_state = "none", allow_none_state = true, tooltip = "North / Both / South"},
-			[2] = {name = "eq1", type = "choose-elem-button", elem_type = "item"},
-			[3] = {name = "eq2", type = "choose-elem-button", elem_type = "item"},
-			[4] = {name = "eq3", type = "choose-elem-button", elem_type = "item"},
-			[5] = {name = "eq4", type = "choose-elem-button", elem_type = "item"},
-			[6] = {name = "eq5", type = "choose-elem-button", elem_type = "item"},
-			[7] = {name = "eq6", type = "choose-elem-button", elem_type = "item"},
-			[8] = {name = "eq7", type = "choose-elem-button", elem_type = "item"}
+			[1] = {name = "eq1", type = "choose-elem-button", elem_type = "item"},
+			[2] = {name = "eq2", type = "choose-elem-button", elem_type = "item"},
+			[3] = {name = "eq3", type = "choose-elem-button", elem_type = "item"},
+			[4] = {name = "eq4", type = "choose-elem-button", elem_type = "item"},
+			[5] = {name = "eq5", type = "choose-elem-button", elem_type = "item"},
+			[6] = {name = "eq6", type = "choose-elem-button", elem_type = "item"},
+			[7] = {name = "eq7", type = "choose-elem-button", elem_type = "item"},
+			[8] = {name = "team", type = "switch", switch_state = "none", allow_none_state = true, tooltip = "North / Both / South"},
 		},
 		button = {name = "disabled_entities_apply", type = "button", caption = "Apply"}
 	}
@@ -257,9 +257,12 @@ end
 
 local function on_built_entity(event)
 	if not global.active_special_games["disabled_entities"] then return end
-	local player = game.get_player(event.player_index)
-	local force = player.force
 	local entity = event.created_entity
+	if not entity then return end
+	if not entity.valid then return end
+	
+	local player = game.get_player(event.player_index)
+	local force = player.force	
 	if global.special_games_variables["disabled_entities"][force.name][entity.name] then
 		player.create_local_flying_text({text = "Disabled by special game", position = entity.position})
 		player.get_inventory(defines.inventory.character_main).insert({name = entity.name, count = 1})
@@ -288,8 +291,11 @@ local create_special_games_panel = (function(player, frame)
 end)
 
 local function on_gui_click(event)
-	local player = game.get_player(event.player_index)
 	local element = event.element
+	if not element then return end
+	if not element.valid then return end
+	
+	local player = game.get_player(event.player_index)	
 	if not element.type == "button" then return end
 	local config = element.parent.children[2]
 

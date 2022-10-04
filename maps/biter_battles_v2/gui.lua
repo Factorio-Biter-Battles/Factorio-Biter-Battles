@@ -1,11 +1,12 @@
 local Public = {}
+global.player_data_afk = {}
 local Server = require 'utils.server'
 
 local bb_config = require "maps.biter_battles_v2.config"
 local bb_diff = require "maps.biter_battles_v2.difficulty_vote"
 local event = require 'utils.event'
 local Functions = require "maps.biter_battles_v2.functions"
-local feed_the_biters = require "maps.biter_battles_v2.feeding"
+local Feeding = require "maps.biter_battles_v2.feeding"
 local Tables = require "maps.biter_battles_v2.tables"
 local utils = require "utils.utils"
 local wait_messages = Tables.wait_messages
@@ -13,7 +14,7 @@ local food_names = Tables.gui_foods
 local Global = require "utils.global"
 
 local math_random = math.random
-
+local math_abs = math.abs
 require "maps.biter_battles_v2.spec_spy"
 local gui_style = require 'utils.utils'.gui_style
 local gui_values = {
@@ -74,6 +75,10 @@ function Public.clear_copy_history(player)
 	end
 end
 
+function Public.reset_tables_gui()
+	global.player_data_afk = {}
+end
+
 local function create_sprite_button(player)
 	if player.gui.top["bb_toggle_button"] then return end
 	local button = player.gui.top.add({type = "sprite-button", name = "bb_toggle_button", sprite = "entity/big-biter"})
@@ -113,6 +118,7 @@ local function add_prod_button(elem, gui_value)
 	prod_button.style.height = 25
 	prod_button.style.width = 25
 end
+
 
 function Public.create_first_join_gui_2(player, frame)
 	local is_spec = player.force.name == "spectator"
@@ -169,6 +175,7 @@ function Public.create_first_join_gui_2(player, frame)
 		l = frame.add({type = "label", name = "playerlist_" .. side, caption = gui_data.players_str[side], visible = false})
 		gui_style(l, {font = "heading-2", single_line = false})
 		
+
 		--Join button
 		caption = gui_value.c2
 		local font_color =  gui_value.color1
@@ -263,6 +270,17 @@ function Public.update_playerlist(force_name)
 	end
 end
 
+local get_player_data = function(player, remove)
+    if remove and global.player_data_afk[player.name] then
+        global.player_data_afk[player.name] = nil
+        return
+    end
+    if not global.player_data_afk[player.name] then
+        global.player_data_afk[player.name] = {}
+    end
+    return global.player_data_afk[player.name]
+end
+
 function join_team(player, force_name, forced_join, auto_join)
 	if not player.character then return end
 	if not forced_join then
@@ -294,7 +312,14 @@ function join_team(player, force_name, forced_join, auto_join)
 				return
 			end
 		end
-		local p = surface.find_non_colliding_position("character", game.forces[force_name].get_spawn_position(surface), 16, 0.5)
+		local p = nil
+		local p_data = get_player_data(player)
+		if p_data and p_data.position then
+			p = surface.find_non_colliding_position("character", p_data.position,16, 0.5)
+			get_player_data(player, true)
+		else
+			p = surface.find_non_colliding_position("character", game.forces[force_name].get_spawn_position(surface), 16, 0.5)
+		end
 		if not p then
 			game.print("No spawn position found for " .. player.name .. "!", {255, 0, 0})
 			return 
@@ -364,10 +389,21 @@ function join_team(player, force_name, forced_join, auto_join)
 	Public.refresh_playerlist()
 end
 
-function spectate(player, forced_join)
+function spectate(player, forced_join, stored_position)
 	if not player.character then return end
 	if not forced_join then
 		if global.tournament_mode then player.print("The game is set to tournament mode. Teams can only be changed via team manager.", {r = 0.98, g = 0.66, b = 0.22}) return end
+	end
+	
+	while player.crafting_queue_size > 0 do
+		player.cancel_crafting(player.crafting_queue[1])
+	end
+	
+	player.driving = false
+
+	if stored_position then
+        local p_data = get_player_data(player)
+        p_data.position = player.position
 	end
 	player.teleport(player.surface.find_non_colliding_position("character", {0,0}, 4, 1))
 	local old_force_name = player.force.name
@@ -471,7 +507,8 @@ local function on_gui_click(event)
 
 	if name == "raw-fish" then Functions.spy_fish(player, event) return end
 
-	if food_names[name] then feed_the_biters(player, name) return end
+	if food_names[name] then Feeding.feed_biters(player, name) return end
+
 
 	if name == "toggle_spectate" then
 		if player.force.name == "spectator" then
@@ -501,9 +538,12 @@ local function on_gui_click(event)
 	
 end
 
+
 function Public.on_player_joined_game(event)
 	local player = game.players[event.player_index]
-
+	if player.online_time == 0 then
+		Functions.show_intro(player)
+	end
 	if not global.bb_view_players then global.bb_view_players = {} end
 	if not global.chosen_team then global.chosen_team = {} end
 

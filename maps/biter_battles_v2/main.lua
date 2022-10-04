@@ -11,15 +11,17 @@ local Team_manager = require "maps.biter_battles_v2.team_manager"
 local Terrain = require "maps.biter_battles_v2.terrain"
 local Session = require 'utils.datastore.session_data'
 local Color = require 'utils.color_presets'
+
 local ComfyPanel = require 'comfy_panel.main'
 local create_poll_top_button = require 'comfy_panel.poll'.player_joined
 local Simple_tags = require 'modules.simple_tags'
 local create_difficulty_top_button = require "maps.biter_battles_v2.difficulty_vote".on_player_joined
 
-local autoTagWestOutpost = "[WestOutpost]"
-local autoTagEastOutpost = "[EastOutpost]"
+local autoTagWestOutpost = "[West]"
+local autoTagEastOutpost = "[East]"
 local autoTagDistance = 600
-
+local antiAfkTimeBeforeEnabled = 60 * 60 * 5 -- in tick : 5 minutes
+local antiAfkTimeBeforeWarning = 60 * 60 * 3 + 60*40 -- in tick : 3 minutes 40s
 require "maps.biter_battles_v2.sciencelogs_tab"
 require "maps.biter_battles_v2.changelog_tab"
 require 'maps.biter_battles_v2.commands'
@@ -56,6 +58,12 @@ end
 
 local function on_research_finished(event)
 	Functions.combat_balance(event)
+    if event.research.name == 'uranium-processing' then
+		event.research.force.technologies["uranium-ammo"].researched = true
+		event.research.force.technologies["kovarex-enrichment-process"].researched = true
+    elseif event.research.name == 'stone-wall' then
+		event.research.force.technologies["gate"].researched = true
+    end
 end
 
 local function on_console_chat(event)
@@ -121,6 +129,25 @@ local function autotagging_outposters()
 	end
 end
 
+local function afk_kick(player)
+	if player.afk_time > antiAfkTimeBeforeWarning and player.afk_time < antiAfkTimeBeforeEnabled then
+		player.print('Please move within the next minute or you will be sent back to spectator island ! But even if you keep staying afk and sent back to spectator island, you will be able to join back to your position with your equipment')
+	end
+	if player.afk_time > antiAfkTimeBeforeEnabled then
+		player.print('You were sent back to spectator island as you were afk for too long, you can still join to come back at your position with all your equipment')
+		spectate(player,false,true)
+	end
+end
+
+local function anti_afk_system()
+    for _, player in pairs(game.forces.north.connected_players) do
+		afk_kick(player)
+	end
+    for _, player in pairs(game.forces.south.connected_players) do
+		afk_kick(player)
+	end
+end
+
 local tick_minute_functions = {
 	[300 * 1] = Ai.raise_evo,
 	[300 * 3 + 30 * 0] = Ai.pre_main_attack,		-- setup for main_attack
@@ -134,17 +161,17 @@ local tick_minute_functions = {
 	[300 * 3 + 30 * 8] = Ai.post_main_attack,
 	[300 * 3 + 30 * 9] = autotagging_outposters,
 	[300 * 4] = Ai.send_near_biters_to_silo,
+	[300 * 4 + 30 * 1] = anti_afk_system,
 }
 
 local function on_tick()
 	local tick = game.tick
 
-	Ai.reanimate_units()
-
 	if tick % 60 == 0 then 
 		global.bb_threat["north_biters"] = global.bb_threat["north_biters"] + global.bb_threat_income["north_biters"]
 		global.bb_threat["south_biters"] = global.bb_threat["south_biters"] + global.bb_threat_income["south_biters"]
 	end
+
 
 	if (tick+5) % 180 == 0 then
 		Gui.update_evo_and_threat()
@@ -163,13 +190,27 @@ local function on_tick()
 
 	if tick % 30 == 0 then	
 		local key = tick % 3600
-		if tick_minute_functions[key] then tick_minute_functions[key]() end
+		if tick_minute_functions[key] then
+			tick_minute_functions[key]()
+			return
+		end
 	end
+
+	if (tick+5) % 180 == 0 then
+		Gui.refresh()
+		return
+	end
+
+	Ai.reanimate_units()
 end
 
 local function on_marked_for_deconstruction(event)
 	if not event.entity.valid then return end
 	if event.entity.name == "fish" then event.entity.cancel_deconstruction(game.players[event.player_index].force.name) end
+	
+	if (game.players[event.player_index].force == game.forces.north and event.entity.position.y > 0) or (game.players[event.player_index].force == game.forces.south and event.entity.position.y < 0) then
+		event.entity.cancel_deconstruction(game.players[event.player_index].force.name)
+	end
 end
 
 local function on_player_built_tile(event)
@@ -215,8 +256,17 @@ local function on_chunk_generated(event)
 	-- but this is not reliable in this environment.
 	Mirror_terrain.clone(event)
 
-	if event.position.y == 0 and event.position.x == 1 then
-		Terrain.add_holiday_decorations(surface)
+	-- The game pregenerate tiles within a radius of 3 chunks from the generated chunk.
+	-- Bites can use these tiles for pathing.
+	-- This creates a problem that bites pathfinder can cross the river at the edge of the map.
+	-- To prevent this, divide the north and south land by drawing a strip of water on these pregenerated tiles.
+	if event.position.y >= 0 and event.position.y <= 3 then
+		for x = -3, 3 do
+			local chunk_pos = { x = event.position.x + x, y = 0 }
+			if not surface.is_chunk_generated(chunk_pos) then
+				Terrain.draw_water_for_river_ends(surface, chunk_pos)
+			end
+		end
 	end
 end
 
@@ -326,10 +376,17 @@ local function on_init()
 	Init.load_spawn()
 end
 
+--By Maksiu1000 skip the last tech
+local unlock_satellite = function(event)
+    if event.research.name == 'rocket-silo' then
+		event.research.force.technologies['space-science-pack'].researched = true
+    end
+end
+
 local Event = require 'utils.event'
 Event.add(defines.events.on_rocket_launch_ordered, on_rocket_launch_ordered)
 Event.add(defines.events.on_area_cloned, on_area_cloned)
-Event.add(defines.events.on_research_finished, Ai.unlock_satellite)			--free silo space tech
+Event.add(defines.events.on_research_finished, unlock_satellite)			--free silo space tech
 Event.add(defines.events.on_post_entity_died, Ai.schedule_reanimate)
 Event.add_event_filter(defines.events.on_post_entity_died, {
 	filter = "type",
