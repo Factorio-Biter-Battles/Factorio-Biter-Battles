@@ -6,11 +6,16 @@ local Game_over = require "maps.biter_battles_v2.game_over"
 local Gui = require "maps.biter_battles_v2.gui"
 local Init = require "maps.biter_battles_v2.init"
 local Mirror_terrain = require "maps.biter_battles_v2.mirror_terrain"
-require 'modules.simple_tags'
+
 local Team_manager = require "maps.biter_battles_v2.team_manager"
 local Terrain = require "maps.biter_battles_v2.terrain"
 local Session = require 'utils.datastore.session_data'
 local Color = require 'utils.color_presets'
+local ComfyPanel = require 'comfy_panel.main'
+local create_poll_top_button = require 'comfy_panel.poll'.player_joined
+local Simple_tags = require 'modules.simple_tags'
+local create_difficulty_top_button = require "maps.biter_battles_v2.difficulty_vote".on_player_joined
+
 local autoTagWestOutpost = "[WestOutpost]"
 local autoTagEastOutpost = "[EastOutpost]"
 local autoTagDistance = 600
@@ -26,9 +31,17 @@ local function on_player_joined_game(event)
 	if player.online_time == 0 or player.force.name == "player" then
 		Functions.init_player(player)
 	end
-	Gui.clear_copy_history(player)
+
+	--top buttons
+	ComfyPanel.top_button(player)
+	create_poll_top_button(player)
+	Gui.on_player_joined_game(event)
+	Simple_tags.draw_top_gui(player)
 	Functions.create_map_intro_button(player)
+	create_difficulty_top_button(player)
 	Team_manager.draw_top_toggle_button(player)
+	Gui.clear_copy_history(player)
+	-- add clock here
 end
 
 local function on_gui_click(event)
@@ -134,7 +147,8 @@ local function on_tick()
 	end
 
 	if (tick+5) % 180 == 0 then
-		Gui.refresh()
+		Gui.update_evo_and_threat()
+		Gui.refresh_evo_and_threat()
 	end
 
 	if (tick+11) % 300 == 0 then

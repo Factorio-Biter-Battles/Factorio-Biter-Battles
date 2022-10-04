@@ -332,7 +332,8 @@ function Public.server_restart()
                 for _, e in pairs(player.gui.left.children) do
                     e.destroy()
                 end
-                Gui.create_main_gui(player)
+                --Gui.create_main_gui(player)
+                Gui.create_first_join_gui_2(player)
             end
             game.reset_time_played()
             global.server_restart_timer = nil

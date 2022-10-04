@@ -98,6 +98,24 @@ Module.ternary = function(c, t, f)
     end
 end
 
+Module.gui_style = function(element, attributes)
+    for attribute, value in pairs(attributes) do
+        element.style[attribute] = value
+    end
+end
+
+Module.metric_notation = function(number)
+    --Note: This is not an exact metric notation.
+    local str = number
+	if math.abs(number) >= 1000000 then
+		number = number / 1000000
+		str = string.format("%.2f%s", number, "M")
+	elseif math.abs(number) >= 100000 then
+		number = number / 1000
+		str = string.format("%.0f%s", number, "k")
+	end
+	return str
+end
 
 local minutes_to_ticks = 60 * 60
 local hours_to_ticks = 60 * 60 * 60

@@ -5,7 +5,7 @@ local Game = require 'utils.game'
 local Server = require 'utils.server'
 local Tabs = require 'comfy_panel.main'
 local session = require 'utils.datastore.session_data'
-require 'utils.gui_styles'
+local gui_style = require 'utils.utils'.gui_style
 local Class = {}
 
 local insert = table.insert
@@ -813,13 +813,8 @@ local function vote(event)
     end
 end
 
-local function player_joined(event)
-    local player = Game.get_player_by_index(event.player_index)
-    if not player or not player.valid then
-        return
-    end
-
-    if player.gui.top[main_button_name] ~= nil then
+function Class.player_joined(player)
+        if player.gui.top[main_button_name] ~= nil then
         local frame = player.gui.top[main_frame_name]
         if frame and frame.valid then
             local data = Gui.get_data(frame)
@@ -832,14 +827,7 @@ local function player_joined(event)
             sprite = 'item/programmable-speaker',
             tooltip = 'Let your question be heard!'
         }
-        element_style({element = button, x = 38, y = 38, pad = -2})
-        --[[
-        button.style.minimal_width = 38
-        button.style.maximal_width = 38
-        button.style.minimal_height = 38
-        button.style.maximal_height = 38
-        button.style.padding = -2
-        ]]
+        gui_style(button, {width = 38, height = 38, padding = -2})
     end
 end
 
@@ -865,7 +853,7 @@ local function tick()
     end
 end
 
-Event.add(defines.events.on_player_joined_game, player_joined)
+--Event.add(defines.events.on_player_joined_game, player_joined)
 Event.on_nth_tick(60, tick)
 
 Gui.on_click(main_button_name, toggle)

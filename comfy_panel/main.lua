@@ -10,7 +10,7 @@ draw_map_scores would be a function with the player and the frame as arguments
 
 ]]
 local event = require 'utils.event'
-require 'utils.gui_styles'
+local gui_style = require 'utils.utils'.gui_style
 comfy_panel_tabs = {}
 
 local Public = {}
@@ -61,12 +61,12 @@ function Public.comfy_panel_refresh_active_tab(player)
     comfy_panel_tabs[frame.name].gui(player, frame)
 end
 
-local function top_button(player)
+function Public.top_button(player)
     if player.gui.top['comfy_panel_top_button'] then
         return
     end
     local button = player.gui.top.add({type = 'sprite-button', name = 'comfy_panel_top_button', sprite = 'item/raw-fish'})
-    element_style({element = button, x = 38, y = 38, pad = -2})
+    gui_style(button, {width = 38, height = 38, padding = -2})
 end
 
 local function main_frame(player)
@@ -165,7 +165,7 @@ local function on_gui_click(event)
     Public.comfy_panel_refresh_active_tab(player)
 end
 
-event.add(defines.events.on_player_joined_game, on_player_joined_game)
+--event.add(defines.events.on_player_joined_game, on_player_joined_game)
 event.add(defines.events.on_gui_click, on_gui_click)
 
 return Public

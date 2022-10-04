@@ -3,18 +3,24 @@ local ai = require "maps.biter_battles_v2.ai"
 local event = require 'utils.event'
 local Server = require 'utils.server'
 local Tables = require "maps.biter_battles_v2.tables"
-require 'utils/gui_styles'
+local gui_style = require 'utils.utils'.gui_style
 
 local difficulties = Tables.difficulties
 
+local Public = {}
 local function difficulty_gui(player)
 	local value = math.floor(global.difficulty_vote_value*100)
-	if player.gui.top["difficulty_gui"] then player.gui.top["difficulty_gui"].destroy() end
-	local str = table.concat({"Global map difficulty is ", difficulties[global.difficulty_vote_index].name, ". Mutagen has ", value, "% effectiveness."})
-	local b = player.gui.top.add { type = "sprite-button", caption = difficulties[global.difficulty_vote_index].name, tooltip = str, name = "difficulty_gui" }
-	b.style.font = "heading-2"
-	b.style.font_color = difficulties[global.difficulty_vote_index].print_color
-	element_style({element = b, x = 114, y = 38, pad = -2})
+	local b
+	if player.gui.top["difficulty_gui"] then
+		b = player.gui.top["difficulty_gui"]
+	else
+		b = player.gui.top.add{type = "sprite-button", name = "difficulty_gui"}
+	end
+	local tooltip = table.concat({"Global map difficulty is ", difficulties[global.difficulty_vote_index].name, ". Mutagen has ", value, "% effectiveness."})
+	b.caption = difficulties[global.difficulty_vote_index].name
+	b.tooltip = tooltip
+	
+	gui_style(b, {width = 114, height = 38, padding = -2, font = "heading-2", font_color = difficulties[global.difficulty_vote_index].print_color})
 end
 
 local function difficulty_gui_all()
@@ -81,12 +87,11 @@ local function set_difficulty()
 	 ai.reset_evo()
 end
 
-local function on_player_joined_game(event)
+function Public.on_player_joined(player)
 	if not global.difficulty_vote_value then global.difficulty_vote_value = 1 end
 	if not global.difficulty_vote_index then global.difficulty_vote_index = 4 end
 	if not global.difficulty_player_votes then global.difficulty_player_votes = {} end
 	
-	local player = game.players[event.player_index]
 	if game.ticks_played < global.difficulty_votes_timeout then
 		if not global.difficulty_player_votes[player.name] then
 			if global.bb_settings.only_admins_vote or global.tournament_mode then
@@ -158,9 +163,8 @@ end
 	
 event.add(defines.events.on_gui_click, on_gui_click)
 event.add(defines.events.on_player_left_game, on_player_left_game)
-event.add(defines.events.on_player_joined_game, on_player_joined_game)
+--event.add(defines.events.on_player_joined_game, on_player_joined_game)
 
-local Public = {}
 Public.difficulties = difficulties
 Public.difficulty_gui = difficulty_gui
 Public.difficulty_gui_all = difficulty_gui_all

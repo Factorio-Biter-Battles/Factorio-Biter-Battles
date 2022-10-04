@@ -1,7 +1,7 @@
 --Adds a small gui to quick select an icon tag for your character - mewmew
 
 local Event = require 'utils.event'
-require 'utils.gui_styles'
+local gui_style = require 'utils.utils'.gui_style
 local icons = {
 	{"[img=item/electric-mining-drill]", "item/electric-mining-drill", "Miner"},
 	{"[img=item/stone-furnace]", "item/stone-furnace", "Smeltery"},
@@ -18,7 +18,7 @@ local icons = {
 local checks = {
 	"minimal_width", "left_margin", "right_margin"
 }
-
+local Public = {}
 local function get_x_offset(player)
 	local x = 0
 	for _, element in pairs(player.gui.top.children) do
@@ -33,12 +33,10 @@ local function get_x_offset(player)
 	return x
 end
 
-local function draw_top_gui(player)
+function Public.draw_top_gui(player)
 	if player.gui.top.simple_tag then return end
 	local button = player.gui.top.add({type = "sprite-button", name = "simple_tag", caption = "Tag"})
-	button.style.font = "heading-2"
-	button.style.font_color = {212, 212, 212}
-	element_style({element = button, x = 38, y = 38, pad = -2})
+	gui_style(button, {height = 38, height = 38, padding = -2, font = "heading-2", font_color = {212, 212, 212}})
 end
 
 local function draw_screen_gui(player)
@@ -59,7 +57,7 @@ local function draw_screen_gui(player)
 	
 	for _, v in pairs(icons) do
 		local button = frame.add({type = "sprite-button", name = v[1], sprite = v[2], tooltip = v[3]})
-		element_style({element = button, x = 38, y = 38, pad = -2})
+		gui_style(button, {width = 38, height = 38, padding - 2})
 	end
 	
 	local tag = player.tag
@@ -103,4 +101,5 @@ local function on_gui_click(event)
 end
 
 Event.add(defines.events.on_gui_click, on_gui_click)
-Event.add(defines.events.on_player_joined_game, on_player_joined_game)
+--Event.add(defines.events.on_player_joined_game, on_player_joined_game)
+return Public
