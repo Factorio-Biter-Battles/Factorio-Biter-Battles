@@ -10,6 +10,7 @@ local Tables = require "maps.biter_battles_v2.tables"
 local utils = require "utils.utils"
 local wait_messages = Tables.wait_messages
 local food_names = Tables.gui_foods
+local Global = require "utils.global"
 
 local math_random = math.random
 
@@ -49,14 +50,18 @@ local gui_values = {
 }
 
 local gui_data = {
-	players = {north = {}, south = {}},
 	players_str = {north = "", south = ""},
 	threat = {north = "0", south = "0"},
 	evo = {north = "0%", south = "0%"},
 	reanim_chance = {north = 0, south = 0},
-	evo_and_threat_str = {north = "", south = ""}
-
 }
+
+Global.register(
+	gui_data,
+	function(t)
+		gui_data = t
+	end
+)
 
 function Public.clear_copy_history(player)
 	if player and player.valid then
