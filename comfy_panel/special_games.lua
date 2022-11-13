@@ -318,33 +318,25 @@ local function poll_captain_player(player)
 end
 
 local function get_player_list()
-		local listPlayers = "" 
-		for _,pl in pairs(global.special_games_variables["captain_mode"]["listPlayers"]) do
-			listPlayers = pl .. " , " .. listPlayers
-		end
+		local listPlayers = table.concat(global.special_games_variables["captain_mode"]["listPlayers"], " ,")	
 		return "List of players playing : " .. listPlayers
 end
+
 local function get_cpt_list()
-		local listPlayers = "" 
-		for _,pl in pairs(global.special_games_variables["captain_mode"]["captainList"]) do
-			listPlayers = pl .. " , " .. listPlayers
-		end
+		local listPlayers = table.concat(global.special_games_variables["captain_mode"]["captainList"], " ,")	
 		return "List of captains : " .. listPlayers
 end
+
 local function get_spectator_list()
-		local listPlayers = "" 
-		for _,pl in pairs(global.special_games_variables["captain_mode"]["listSpectators"]) do
-			listPlayers = pl .. " , " .. listPlayers
-		end
+		local listPlayers = table.concat(global.special_games_variables["captain_mode"]["listSpectators"], " ,")	
 		return "List of spectators : " .. listPlayers
 end
+
 local function get_list_players_who_didnt_vote_yet()
-		local listPlayers = "" 
-		for _,pl in pairs(global.special_games_variables["captain_mode"]["listOfPlayersWhoDidntVoteForRoleYet"]) do
-			listPlayers = pl .. " , " .. listPlayers
-		end
+		local listPlayers = table.concat(global.special_games_variables["captain_mode"]["listOfPlayersWhoDidntVoteForRoleYet"], " ,")
 	return "List of players who didnt answer yet : " .. listPlayers
 end
+
 local function poll_captain_end_captain(player)
 	if player.gui.center["captain_poll_end_frame"] then player.gui.center["captain_poll_end_frame"].destroy() return end
 	local frame = player.gui.center.add { type = "frame", caption = "End poll for players to become captain (beware, need 2 at least to continue!!)", name = "captain_poll_end_frame", direction = "vertical" }
@@ -649,6 +641,7 @@ local function start_captain_event()
 	generateGenericRenderingCaptain()
 	generateRendering("Want to play ? Ask to join a team!",0,-9,1,1,1,1,3,"heading-1")
 end
+
 local function on_gui_click(event)
 	local element = event.element
 	if not element then return end
