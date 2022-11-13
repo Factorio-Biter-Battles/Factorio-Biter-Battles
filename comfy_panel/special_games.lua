@@ -754,10 +754,8 @@ local function on_gui_click(event)
 		delete_player_from_novote_list(player.name)
 		if player.gui.center["captain_poll_frame"] ~= nil then player.gui.center["captain_poll_frame"].destroy() end
 		game.print(player.name .. ' wants to become a captain ! ')
-		local listCaptains = ""
-		for _,cptPlayer in pairs(global.special_games_variables["captain_mode"]["captainList"]) do
-			listCaptains = cptPlayer .. ',' .. listCaptains
-		end
+		local listCaptains = table.concat(global.special_games_variables["captain_mode"]["captainList"], " ,")	
+		
 		game.print('[font=default-large-bold]List of volunteers to become a captain/team picker (total : ' .. #global.special_games_variables["captain_mode"]["captainList"] .. ') : ' .. listCaptains .. '[/font]', Color.cyan)
 		if player.name == global.special_games_variables["captain_mode"]["refereeName"] then
 			poll_captain_end_captain(player)
