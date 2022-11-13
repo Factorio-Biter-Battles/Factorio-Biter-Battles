@@ -239,6 +239,10 @@ local function generate_disabled_entities(team, eq)
 	for k, v in pairs(eq) do
 		if v then
 			tab[v] = true
+			if v == "rail" then 
+				tab["straight-rail"] = true
+				tab["curved-rail"] = true
+			end
 		end
 	end
 	if team == "left" then
@@ -260,12 +264,15 @@ local function on_built_entity(event)
 	local entity = event.created_entity
 	if not entity then return end
 	if not entity.valid then return end
-	
 	local player = game.get_player(event.player_index)
 	local force = player.force	
 	if global.special_games_variables["disabled_entities"][force.name][entity.name] then
 		player.create_local_flying_text({text = "Disabled by special game", position = entity.position})
-		player.get_inventory(defines.inventory.character_main).insert({name = entity.name, count = 1})
+		if entity.name == "straight-rail" or entity.name == "curved-rail" then
+			player.get_inventory(defines.inventory.character_main).insert({name = "rail", count = 1})
+		else
+			player.get_inventory(defines.inventory.character_main).insert({name = entity.name, count = 1})
+		end
 		entity.destroy()
 	elseif entity.name == "entity-ghost" and global.special_games_variables["disabled_entities"][force.name][entity.ghost_name] then
 		player.create_local_flying_text({text = "Disabled by special game", position = entity.position})
