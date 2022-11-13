@@ -88,9 +88,8 @@ local valid_special_games = {
 	captain_mode = {
 		name = {type = "label", caption = "Captain mode", tooltip = "Captain mode"},
 		config = {
-			[1] = {name = "voteCpt", type = "switch", switch_state = "none", allow_none_state = true, tooltip = "CaptainVoted / CaptainElected"},
-			[2] = {name = "label4", type = "label", caption = "Referee"},
-			[3] = {name = 'refereeName', type = "textfield", text = "ReplaceMe", numeric = false, width = 240}
+			[1] = {name = "label4", type = "label", caption = "Referee"},
+			[2] = {name = 'refereeName', type = "textfield", text = "ReplaceMe", numeric = false, width = 240}
 		},
 		button = {name = "captain_mode_apply", type = "button", caption = "Apply"}
 	}
@@ -411,6 +410,16 @@ local function poll_alternate_picking(player)
 end
 
 
+local function poll_captain_team_ready(player, isRef)
+	local textToShow = "Is your team ready ?"
+	if isRef then textToShow = "Do you want to force start event without waiting from go from captain?" end
+	if player.gui.top["captain_poll_team_ready_frame"] then player.gui.top["captain_poll_team_ready_frame"].destroy() return end
+	local frame = player.gui.top.add { type = "frame", caption = textToShow, name = "captain_poll_team_ready_frame", direction = "vertical" }
+	local b = frame.add({type = "button", name = "ready_captain_"..player.name, caption = "Yes"})
+	b.style.font = "heading-2"
+	b.style.minimal_width = 160
+end
+
 local function generateRendering(textChosen, xPos, yPos, rColor,gColor,bColor,aColor, scaleChosen,fontChosen)
 	rendering.draw_text{
 		text = textChosen,
@@ -481,14 +490,19 @@ local function generateGenericRenderingCaptain()
 	--generateRendering("Amount of captain games logged : FIXME",28,10,0,1,0,1,2,"heading-1")
 end
 
-local function generate_captain_mode(eq, refereeName)
-	global.special_games_variables["captain_mode"] = {["captainList"] = {}, ["refereeName"] = refereeName, ["listPlayers"] = {}, ["listSpectators"] = {}, ["listOfPlayersWhoDidntVoteForRoleYet"]={}}
+local function generate_captain_mode(refereeName)
+	global.special_games_variables["captain_mode"] = {["captainList"] = {}, ["refereeName"] = refereeName, ["listPlayers"] = {}, ["listSpectators"] = {}, ["listOfPlayersWhoDidntVoteForRoleYet"]={},["listTeamReadyToPlay"] = {}}
 	
 	if game.get_player(global.special_games_variables["captain_mode"]["refereeName"]) == nil then
 		game.print("Event captain aborted, referee is not a player connected.. Referee name of player was : ".. global.special_games_variables["captain_mode"]["refereeName"])
 		return
 	end
-	game.print("FIXME : when event start, all players should be switched to spectator")
+	for _, pl in pairs(game.connected_players) do
+		if pl.force.name ~= "spectator" then
+			pl.print('Captain event is on the way, switched you to spectator')
+			Team_manager.switch_force(pl.name,"spectator")
+		end
+	end
 	
 	game.print('Captain mode started !! Have fun !')
 	global.tournament_mode = true
@@ -628,8 +642,15 @@ local function delete_player_from_novote_list(playerName)
 		table.remove(global.special_games_variables["captain_mode"]["listOfPlayersWhoDidntVoteForRoleYet"],indexPlayer)
 end
 
+local function isRefereeACaptain()
+	if global.special_games_variables["captain_mode"]["captainList"][1] == global.special_games_variables["captain_mode"]["refereeName"] or  global.special_games_variables["captain_mode"]["captainList"][2] ~= global.special_games_variables["captain_mode"]["refereeName"] then
+		return true
+	else
+		return false
+	end
+end
 local function start_captain_event()
-	game.print('[font=default-large-bold]All the players that wanted to play are picked, time to start the game!! Good luck and have fun everyone ![/font]', Color.cyan)
+	game.print('[font=default-large-bold]Time to start the game!! Good luck and have fun everyone ![/font]', Color.cyan)
 	global.tournament_mode = false
 	global.freeze_players = false
 	Team_manager.unfreeze_players()
@@ -700,11 +721,8 @@ local function on_gui_click(event)
 		generate_infinity_chest(separate_chests, operable, gap, eq)
 	
 	elseif element.name == "captain_mode_confirm" then
-		local eq = {
-			config["voteCpt"].switch_state,
-		}
 		local refereeName = config["refereeName"].text
-		generate_captain_mode(eq,refereeName)
+		generate_captain_mode(refereeName)
 	elseif element.name == "disabled_research_confirm" then
 		local team = config["team"].switch_state
 		local eq = {
@@ -844,7 +862,7 @@ local function on_gui_click(event)
 		end
 	elseif string.find(element.name, "captain_player_picked_") then
 		local playerPicked = element.name:gsub("^captain_player_picked_", "")
-		player.gui.center["captain_poll_alternate_pick_choice_frame"].destroy()
+		if player.gui.center["captain_poll_alternate_pick_choice_frame"] then player.gui.center["captain_poll_alternate_pick_choice_frame"].destroy() end
 		game.print(playerPicked .. " was picked by Captain " .. player.name)
 		Team_manager.switch_force(playerPicked,player.force.name)
 		
@@ -856,12 +874,31 @@ local function on_gui_click(event)
 		table.remove(global.special_games_variables["captain_mode"]["listPlayers"],indexPlayer)
 		
 		if are_all_players_picked() then
-			start_captain_event()
+			game.print('[font=default-large-bold]All players were picked by player, time to start preparation for each team ! Once your team is ready, captain, click on yes on top popup[/font]', Color.cyan)
+			poll_captain_team_ready(game.get_player(global.special_games_variables["captain_mode"]["captainList"][2]),false)
+			poll_captain_team_ready(game.get_player(global.special_games_variables["captain_mode"]["captainList"][1]),false)
+			if not isRefereeACaptain then
+				poll_captain_team_ready(game.get_player(global.special_games_variables["captain_mode"]["refereeName"]),true)
+			end
 		else
-			if player.name == game.get_player(global.special_games_variables["captain_mode"]["captainList"][1]) then
+			if player.name == game.get_player(global.special_games_variables["captain_mode"]["captainList"][1]).name then
 				poll_alternate_picking(game.get_player(global.special_games_variables["captain_mode"]["captainList"][2]))
 			else
 				poll_alternate_picking(game.get_player(global.special_games_variables["captain_mode"]["captainList"][1]))
+			end
+		end
+	elseif string.find(element.name, "ready_captain_") then
+		if player.gui.top["captain_poll_team_ready_frame"] then player.gui.top["captain_poll_team_ready_frame"].destroy() end
+		local refereeName = global.special_games_variables["captain_mode"]["refereeName"]
+		if player.name == refereeName and not isRefereeACaptain then
+			game.print('[font=default-large-bold]Referee ' .. refereeName .. ' force started the game ![/font]', Color.cyan)
+			start_captain_event()
+		else 
+			game.print('[font=default-large-bold]Team of captain ' .. player.name .. ' is ready ![/font]', Color.cyan)
+			table.insert(global.special_games_variables["captain_mode"]["listTeamReadyToPlay"],player.force.name)
+			if #global.special_games_variables["captain_mode"]["listTeamReadyToPlay"] >= 2 then
+				if game.get_player(refereeName).gui.top["captain_poll_team_ready_frame"] then game.get_player(refereeName).gui.top["captain_poll_team_ready_frame"].destroy() end
+				start_captain_event()
 			end
 		end
 	end
