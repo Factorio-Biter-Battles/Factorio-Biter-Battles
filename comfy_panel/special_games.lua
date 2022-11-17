@@ -445,7 +445,7 @@ end
 local function on_player_died(event)
 	if not global.active_special_games["limited_lives"] then return end
 
-    local player = game.players[event.player_index]
+    local player = game.get_player(event.player_index)
 	local player_lives = global.special_games_variables["limited_lives"]["player_lives"][player.name]
 	if player_lives == nil then
 		player_lives = global.special_games_variables["limited_lives"]["lives_limit"]
