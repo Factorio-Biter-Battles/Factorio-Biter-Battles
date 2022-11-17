@@ -455,6 +455,11 @@ local function on_player_died(event)
 
 	if player_lives == 0 then
 		spectate(player)
+	else
+		player.print(
+			table.concat({"You have ", player_lives , ((player_lives == 1) and "life" or "lives"), "left."}, " "),
+			Color.warning
+		)
 	end
 end
 
