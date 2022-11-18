@@ -2,11 +2,16 @@ local table_sort = table.sort
 local string_rep = string.rep
 local string_format = string.format
 local debug_getinfo = debug.getinfo
+local Event = require 'utils.event'
+local session = require 'utils.datastore.session_data'
+local admin_autostop = 60 * 60 -- 1 min
+local player_autostop = 60 * 10 -- 10 s
 
 local Profiler = {
     --	Call
     CallTree = nil,
-    IsRunning = false
+    IsRunning = false,
+    AutoStopTick = nil
 }
 
 local ignoredFunctions = {
@@ -18,7 +23,13 @@ local namedSources = {
 }
 
 local function startCommand(command)
-    Profiler.Start(command.parameter ~= nil)
+    local player = game.get_player(command.player_index)
+    local trusted = session.get_trusted_table()
+    if not trusted[player.name] then
+        player.print('You have not grown accustomed to this technology yet.', {r = 0.22, g = 0.99, b = 0.99})
+        return
+    end
+    Profiler.Start(command.parameter ~= nil, player.admin, command.tick)
 end
 local function stopCommand(command)
     Profiler.Stop(command.parameter ~= nil, nil)
@@ -42,11 +53,17 @@ function error(...)
     error_raw(...)
 end
 
-function Profiler.Start(excludeCalledMs)
+function Profiler.Start(excludeCalledMs, admin, tick)
     if Profiler.IsRunning then
         return
     end
-
+    if admin then
+        Profiler.AutoStopTick = tick + admin_autostop
+        game.print(string_format("====Profiler started====\nIt will be automatically stopped in %d seconds if no action is performed", admin_autostop/60))
+    else
+        Profiler.AutoStopTick = tick + player_autostop
+        game.print(string_format("====Profiler started====\nIt will be automatically stopped in %d seconds if no action is performed", player_autostop/60))
+    end
     local create_profiler = game.create_profiler
 
     Profiler.IsRunning = true
@@ -197,9 +214,20 @@ function Profiler.Stop(averageMs, message)
         text[#text + 1] = string.format('Reason: %s\n', message)
     end
     log(text)
+    --game.write_file("profiler_output.txt", text, true)
     Profiler.CallTree = nil
     Profiler.IsRunning = false
+    Profiler.AutoStopTick = nil
+    game.print("====Profiler stopped====")
 end
 ignoredFunctions[Profiler.Stop] = true
 
+local function on_tick(event)
+    --if not Profiler.IsRunning then return end
+    if not (event.tick == Profiler.AutoStopTick) then return end
+    Profiler.Stop(false, "AutoStop")    
+end
+
+Event.add(defines.events.on_tick, on_tick)
 return Profiler
+
