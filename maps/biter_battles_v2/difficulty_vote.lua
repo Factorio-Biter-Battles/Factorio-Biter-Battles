@@ -3,7 +3,7 @@ local ai = require "maps.biter_battles_v2.ai"
 local event = require 'utils.event'
 local Server = require 'utils.server'
 local Tables = require "maps.biter_battles_v2.tables"
-require 'utils/gui_styles'
+local gui_style = require 'utils.utils'.gui_style
 
 local difficulties = Tables.difficulties
 
@@ -14,7 +14,7 @@ local function difficulty_gui(player)
 	local b = player.gui.top.add { type = "sprite-button", caption = difficulties[global.difficulty_vote_index].name, tooltip = str, name = "difficulty_gui" }
 	b.style.font = "heading-2"
 	b.style.font_color = difficulties[global.difficulty_vote_index].print_color
-	element_style({element = b, x = 114, y = 38, pad = -2})
+	gui_style(b, {width = 114, height = 38, padding = -2})
 end
 
 local function difficulty_gui_all()

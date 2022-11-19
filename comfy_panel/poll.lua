@@ -5,7 +5,7 @@ local Game = require 'utils.game'
 local Server = require 'utils.server'
 local Tabs = require 'comfy_panel.main'
 local session = require 'utils.datastore.session_data'
-require 'utils.gui_styles'
+local gui_style = require 'utils.utils'.gui_style
 local Class = {}
 
 local insert = table.insert
@@ -824,14 +824,7 @@ local function player_joined(event)
             sprite = 'item/programmable-speaker',
             tooltip = 'Let your question be heard!'
         }
-        element_style({element = button, x = 38, y = 38, pad = -2})
-        --[[
-        button.style.minimal_width = 38
-        button.style.maximal_width = 38
-        button.style.minimal_height = 38
-        button.style.maximal_height = 38
-        button.style.padding = -2
-        ]]
+        gui_style(button, {width = 38, height = 38, padding = -2})
     end
 end
 
