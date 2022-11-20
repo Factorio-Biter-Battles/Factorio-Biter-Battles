@@ -36,7 +36,7 @@ end
 local function clear_recipe_asm_if_redbelt_and_untrusted(entity, playerIndex,cloneCase)
 	local player = game.get_player(playerIndex)
 	local trusted = Session.get_trusted_table()
-	if entity == nil or entity.last_user == nil or entity.get_recipe() == nil then return end
+	if entity == nil or entity.last_user == nil or entity.type ~= 'assembling-machine' or (entity.type == 'assembling-machine' and entity.get_recipe() == nil) then return end
 
 	--Clone case variable added because when you paste a recipe, the last user is not the one that did the cloning strangely
 	if not trusted[player.name]
@@ -84,7 +84,7 @@ end
 
 local function on_robot_built_entity(event)
 	Functions.no_turret_creep(event)
-	Terrain.deny_construction_bots(event)
+	Terrain.deny_construction_bots(event,prohibitedRecipesToAutomatedForUntrustedPlayers)
 	Functions.add_target_entity(event.created_entity)
 end
 

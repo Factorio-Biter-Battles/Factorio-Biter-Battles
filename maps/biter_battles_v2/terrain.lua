@@ -687,7 +687,12 @@ local robot_build_restriction = {
 	end
 }
 
-function Public.deny_construction_bots(event)
+function Public.deny_construction_bots(event,prohibitedRecipes)
+	if event.created_entity ~= nil and event.created_entity.last_user ~= nil and event.created_entity.type == 'assembling-machine' and event.created_entity.get_recipe() ~= nil and prohibitedRecipes[event.created_entity.get_recipe().name] and not session.get_trusted_table()[event.created_entity.last_user.name]
+	then
+		event.created_entity.set_recipe(nil)
+		event.created_entity.last_user.create_local_flying_text({text = "You have not grown accustomed to this technology", position = event.created_entity.last_user.position})
+	end
 	if not robot_build_restriction[event.robot.force.name] then return end
 	if not robot_build_restriction[event.robot.force.name](event.created_entity.position.y) then return end
 	local inventory = event.robot.get_inventory(defines.inventory.robot_cargo)
