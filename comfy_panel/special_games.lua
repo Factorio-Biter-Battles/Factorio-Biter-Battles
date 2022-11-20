@@ -286,7 +286,7 @@ local function generate_limited_lives(lives_limit)
 			return player_lives == nil or player_lives > 0
 		end
 	}
-	local special_game_description = table.concat({"Each player has only", lives_limit , ((lives_limit == 1) and "life" or "lives"), "until the end of the game."}, " ")
+	local special_game_description = table.concat({"Each player has only", lives_limit, ((lives_limit == 1) and "life" or "lives"), "until the end of the game."}, " ")
 	global.special_games_variables["limited_lives"]["text_id"] = rendering.draw_text{
 		text = special_game_description,
 		surface = game.surfaces[global.bb_surface_name],
@@ -456,12 +456,12 @@ local function on_player_died(event)
 
 	if player_lives == 0 then
 		spectate(player)
-	else
-		player.print(
-			table.concat({"You have ", player_lives , ((player_lives == 1) and "life" or "lives"), "left."}, " "),
-			Color.warning
-		)
 	end
+
+	player.print(
+		table.concat({"You have", player_lives, ((player_lives == 1) and "life" or "lives"), "left."}, " "),
+		Color.warning
+	)
 end
 
 comfy_panel_tabs['Special games'] = {gui = create_special_games_panel, admin = true}
