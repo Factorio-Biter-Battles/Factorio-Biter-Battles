@@ -76,7 +76,7 @@ local function on_console_chat(event)
 end
 
 local function on_built_entity(event)
-	Functions.no_landfill_by_untrusted_user(event)
+	Functions.no_landfill_or_red_asm_by_untrusted_user(event,prohibitedRecipesToAutomatedForUntrustedPlayers)
 	Functions.no_turret_creep(event)
 	Terrain.deny_enemy_side_ghosts(event)
 	Functions.add_target_entity(event.created_entity)

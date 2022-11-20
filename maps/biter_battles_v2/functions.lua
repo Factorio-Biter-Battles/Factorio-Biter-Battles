@@ -350,8 +350,13 @@ function Public.no_turret_creep(event)
 	entity.destroy()
 end
 
-function Public.no_landfill_by_untrusted_user(event)
+function Public.no_landfill_or_red_asm_by_untrusted_user(event, prohibitedRecipes)
 	local entity = event.created_entity
+	if entity ~= nil and entity.last_user ~= nil and entity.get_recipe() ~= nil and prohibitedRecipes[entity.get_recipe().name] and not Session.get_trusted_table()[entity.last_user.name]
+	then
+		entity.set_recipe(nil)
+		entity.last_user.create_local_flying_text({text = "You have not grown accustomed to this technology", position = entity.last_user.position})
+	end
 	if not entity.valid or not event.player_index or entity.name ~= "tile-ghost" or entity.ghost_name ~= "landfill" then return end
 	local player = game.players[event.player_index]
 	local trusted = Session.get_trusted_table()
