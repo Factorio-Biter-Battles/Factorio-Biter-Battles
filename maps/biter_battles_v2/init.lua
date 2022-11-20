@@ -100,12 +100,15 @@ function Public.initial_setup()
 		defines.input_action.open_kills_gui,
 		defines.input_action.quick_bar_set_selected_page,
 		defines.input_action.quick_bar_set_slot,
-		defines.input_action.rotate_entity,
 		defines.input_action.set_filter,
 		defines.input_action.set_player_color,
 		defines.input_action.start_walking,
 		defines.input_action.toggle_show_entity_info,
 		defines.input_action.write_to_console,
+		defines.input_action.map_editor_action,
+		defines.input_action.toggle_map_editor,
+		defines.input_action.change_multiplayer_config,
+		defines.input_action.admin_action,
 	}
 	for _, d in pairs(defs) do p.set_allows_action(d, true) end
 
@@ -214,6 +217,12 @@ function Public.tables()
 			["medium-spitter"] = true, ["medium-biter"] = true, ["big-spitter"] = true, ["big-biter"] = true, ["behemoth-spitter"] = true, ["behemoth-biter"] = true
 		},
 		["south"] = {
+			["medium-spitter"] = true, ["medium-biter"] = true, ["big-spitter"] = true, ["big-biter"] = true, ["behemoth-spitter"] = true, ["behemoth-biter"] = true
+		},
+		["north_biters_boss"] = {
+			["medium-spitter"] = true, ["medium-biter"] = true, ["big-spitter"] = true, ["big-biter"] = true, ["behemoth-spitter"] = true, ["behemoth-biter"] = true
+		},
+		["south_biters_boss"] = {
 			["medium-spitter"] = true, ["medium-biter"] = true, ["big-spitter"] = true, ["big-biter"] = true, ["behemoth-spitter"] = true, ["behemoth-biter"] = true
 		}
 	}

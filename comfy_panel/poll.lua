@@ -395,20 +395,12 @@ local function draw_main_frame(left, player)
     local right_flow = bottom_flow.add {type = 'flow'}
     right_flow.style.horizontal_align = 'right'
 
-    if (trusted[player.name] or player.admin) or global.comfy_panel_config.poll_trusted == false then
-        local create_poll_button =
-            right_flow.add {type = 'button', name = create_poll_button_name, caption = 'Create Poll'}
-        apply_button_style(create_poll_button)
-    else
-        local create_poll_button =
-            right_flow.add {
-            type = 'button',
-            caption = 'Create Poll',
-            enabled = false,
-            tooltip = 'Sorry, you need to be trusted to create polls.'
-        }
-        apply_button_style(create_poll_button)
+    local create_poll_button = right_flow.add{type = 'button', name = create_poll_button_name, caption = 'Create Poll'}
+    if not player.admin then
+        create_poll_button.enabled = false
+        create_poll_button.tooltip = "Poll creation is disabled"
     end
+    apply_button_style(create_poll_button)
 end
 
 local function remove_create_poll_frame(create_poll_frame, player_index)

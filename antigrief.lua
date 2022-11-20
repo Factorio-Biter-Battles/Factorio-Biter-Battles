@@ -9,6 +9,7 @@ local Utils = require 'utils.core'
 local Color = require 'utils.color_presets'
 local Server = require 'utils.server'
 local Jail = require 'utils.datastore.jail_data'
+local pool = require 'maps.biter_battles_v2.pool'
 
 local Public = {}
 local match = string.match
@@ -16,15 +17,27 @@ local capsule_bomb_threshold = 8
 local de = defines.events
 
 local format = string.format
-
+local size = 1024
 local this = {
     enabled = true,
-    landfill_history = {},
-    capsule_history = {},
-    friendly_fire_history = {},
-    mining_history = {},
-    corpse_history = {},
-    cancel_crafting_history = {},
+    histories = {
+        landfill = pool.malloc(size),
+        capsule = pool.malloc(size),
+        friendly_fire = pool.malloc(size),
+        mining = pool.malloc(size),
+        belt_mining = pool.malloc(size),
+        corpse = pool.malloc(size),
+        cancel_crafting = pool.malloc(size),
+    },
+    histories_idx = {
+        landfill = 0,
+        capsule = 0,
+        friendly_fire = 0,
+        mining = 0,
+        belt_mining = 0,
+        corpse = 0,
+        cancel_crafting = 0
+    },
     whitelist_types = {},
     permission_group_editing = {},
     players_warned = {},
@@ -51,7 +64,9 @@ local blacklisted_types = {
     ['gate'] = true,
     ['lamp'] = true,
     ['mining-drill'] = true,
-    ['splitter'] = true
+    ['splitter'] = true,
+    ['tree'] = true,
+    ['fish'] = true
 }
 
 local ammo_names = {
@@ -62,6 +77,12 @@ local ammo_names = {
     ['atomic-bomb'] = true,
     ['cliff-explosives'] = true,
     ['rocket'] = true
+}
+
+local belt_types = {
+    ["transport-belt"] = true,
+    ["underground-belt"] = true,
+    ["splitter"] = true
 }
 
 local chests = {
@@ -257,22 +278,15 @@ local function on_player_built_tile(event)
 
     --landfill history--
 
-    if not this.landfill_history then
-        this.landfill_history = {}
-    end
-
-    if #this.landfill_history > 1000 then
-        this.landfill_history = {}
-    end
-    local t = math.abs(math.floor((game.tick) / 3600))
-    local str = '[' .. t .. '] '
-    str = str .. player.name .. ' at X:'
-    str = str .. placed_tiles[1].position.x
-    str = str .. ' Y:'
-    str = str .. placed_tiles[1].position.y
-    str = str .. ' '
-    str = str .. 'surface:' .. surface
-    increment(this.landfill_history, str)
+    local data = {
+        player_name = player.name,
+        event = "landfilled",
+        position = {x = math.floor(placed_tiles[1].position.x), y = math.floor(placed_tiles[1].position.y)},
+        time = game.ticks_played,
+        server_time = game.tick,
+    }
+    this.histories_idx.landfill = this.histories_idx.landfill % size + 1 
+    this.histories.landfill[this.histories_idx.landfill] = data
 end
 
 local function on_built_entity(event)
@@ -308,77 +322,24 @@ local function on_player_used_capsule(event)
     if not this.enabled then
         return
     end
-    local trusted = session.get_trusted_table()
     local player = game.get_player(event.player_index)
-
-    if trusted[player.name] and this.do_not_check_trusted then
-        return
-    end
-
+    if not player or not player.valid then return end
     local item = event.item
-
     if not item then
         return
     end
-
-    local name = item.name
-
-    local position = event.position
-    local x, y = position.x, position.y
-    local surface = player.surface
-
-    if ammo_names[name] then
-        local msg
-        if this.enable_capsule_warning then
-            if surface.count_entities_filtered({force = 'enemy', area = {{x - 10, y - 10}, {x + 10, y + 10}}, limit = 1}) > 0 then
-                return
-            end
-            local count = 0
-            local entities = player.surface.find_entities_filtered {force = player.force, area = {{x - 5, y - 5}, {x + 5, y + 5}}}
-
-            for i = 1, #entities do
-                local e = entities[i]
-                local entity_name = e.name
-                if entity_name ~= name and entity_name ~= 'entity-ghost' and not blacklisted_types[e.type] then
-                    count = count + 1
-                end
-            end
-
-            if count <= capsule_bomb_threshold then
-                return
-            end
-
-            local prefix = '{Capsule}'
-            msg = format(player.name .. ' damaged: %s with: %s', get_entities(name, entities), name)
-            local ban_msg =
-                format(
-                'Damaged: %s with: %s. This action was performed automatically. Visit https://discord.com/invite/hAYW3K7J2A for forgiveness',
-                get_entities(name, entities),
-                name
-            )
-
-            do_action(player, prefix, msg, ban_msg, true)
-        else
-            msg = player.name .. ' used ' .. name
-        end
-
-        if not this.capsule_history then
-            this.capsule_history = {}
-        end
-        if #this.capsule_history > 1000 then
-            this.capsule_history = {}
-        end
-
-        local t = math.abs(math.floor((game.tick) / 3600))
-        local str = '[' .. t .. '] '
-        str = str .. msg
-        str = str .. ' at X:'
-        str = str .. math.floor(position.x)
-        str = str .. ' Y:'
-        str = str .. math.floor(position.y)
-        str = str .. ' '
-        str = str .. 'surface:' .. player.surface.index
-        increment(this.capsule_history, str)
+    local x, y = event.position.x, event.position.y
+    local position = {x = math.floor(x), y = math.floor(y)} 
+    if ammo_names[item.name] and player.surface.count_entities_filtered({force = player.force.name .. "_biters", area = {{x - 10, y - 10}, {x + 10, y + 10}}, limit = 1}) <= 0 then
+        local data = {
+            player_name = player.name,
+            event = item.name,
+            position = position,
+            time = game.ticks_played,
+            server_time = game.tick
+        }
+        this.histories_idx.capsule = this.histories_idx.capsule % size + 1
+        this.histories.capsule[this.histories_idx.capsule] = data
     end
 end
 
@@ -388,82 +349,26 @@ local function on_entity_died(event)
         return
     end
     local cause = event.cause
-    local name
-
     if
         (cause and cause.name == 'character' and cause.player and cause.force.name == event.entity.force.name and
             not blacklisted_types[event.entity.type])
      then
         local player = cause.player
-        name = player.name
-
-        if not this.friendly_fire_history then
-            this.friendly_fire_history = {}
-        end
-
-        if #this.friendly_fire_history > 1000 then
-            this.friendly_fire_history = {}
-        end
-
-        local chest
+        if blacklisted_types[event.entity.type] and not this.whitelist_types[event.entity.type] then return end
+        local data = {
+            player_name = player.name,
+            event = "destroyed " .. event.entity.name,
+            position = {x = math.floor(event.entity.position.x), y = math.floor(event.entity.position.y)},            
+            time = game.ticks_played,
+            server_time = game.tick
+        }
         if chests[event.entity.type] then
-            local entity = event.entity
-            local inv = entity.get_inventory(1)
+            local inv = event.entity.get_inventory(1)
             local contents = inv.get_contents()
-            local item_types = ''
-
-            for n, count in pairs(contents) do
-                if n == 'explosives' then
-                    item_types = item_types .. '[color=yellow]' .. n .. '[/color] count: ' .. count .. ' '
-                end
-            end
-
-            if string.len(item_types) > 0 then
-                chest = event.entity.name .. ' with content ' .. item_types
-            else
-                chest = '[color=yellow]' .. event.entity.name .. '[/color]'
-            end
-        else
-            chest = '[color=yellow]' .. event.entity.name .. '[/color]'
+            data.event = table.concat({data.event, " with ", inv.get_item_count(), " items"})
         end
-
-        local t = math.abs(math.floor((game.tick) / 3600))
-        local str = '[' .. t .. '] '
-        str = str .. name .. ' destroyed '
-        str = str .. chest
-        str = str .. ' at X:'
-        str = str .. math.floor(event.entity.position.x)
-        str = str .. ' Y:'
-        str = str .. math.floor(event.entity.position.y)
-        str = str .. ' '
-        str = str .. 'surface:' .. event.entity.surface.index
-        increment(this.friendly_fire_history, str)
-    elseif not blacklisted_types[event.entity.type] and this.whitelist_types[event.entity.type] then
-        if cause then
-            if cause.force.name ~= 'player' then
-                return
-            end
-        end
-        local t = math.abs(math.floor((game.tick) / 3600))
-        local str = '[' .. t .. '] '
-        if cause and cause.name == 'character' and cause.player then
-            str = str .. cause.player.name .. ' destroyed '
-        else
-            str = str .. 'someone destroyed '
-        end
-        str = str .. '[color=yellow]' .. event.entity.name .. '[/color]'
-        str = str .. ' at X:'
-        str = str .. math.floor(event.entity.position.x)
-        str = str .. ' Y:'
-        str = str .. math.floor(event.entity.position.y)
-        str = str .. ' '
-        str = str .. 'surface:' .. event.entity.surface.index
-
-        if cause and cause.name == 'character' and cause.player then
-            increment(this.friendly_fire_history, str)
-        else
-            increment(this.friendly_fire_history, str)
-        end
+        this.histories_idx.friendly_fire = this.histories_idx.friendly_fire % size + 1
+        this.histories.friendly_fire[this.histories_idx.friendly_fire] = data
     end
 end
 
@@ -490,58 +395,25 @@ local function on_player_mined_entity(event)
         )
     end
 
-    if this.whitelist_types[entity.type] then
-        if not this.mining_history then
-            this.mining_history = {}
-        end
-        if #this.mining_history > 1000 then
-            this.mining_history = {}
-        end
-        local t = math.abs(math.floor((game.tick) / 3600))
-        local str = '[' .. t .. '] '
-        str = str .. player.name .. ' mined '
-        str = str .. '[color=yellow]' .. entity.name .. '[/color]'
-        str = str .. ' at X:'
-        str = str .. math.floor(entity.position.x)
-        str = str .. ' Y:'
-        str = str .. math.floor(entity.position.y)
-        str = str .. ' '
-        str = str .. 'surface:' .. entity.surface.index
-        increment(this.mining_history, str)
+    if not entity.force.name == player.force.name then return end
+    if not entity.last_user then return end
+    if entity.last_user.name == player.name then return end
+    local data = {
+        player_name = player.name,
+        event = event.entity.name,
+        position = {x = math.floor(event.entity.position.x), y = math.floor(event.entity.position.y)},
+        time = game.ticks_played,
+        server_time = game.tick
+    }
+    if belt_types[entity.type] then
+        this.histories_idx.belt_mining = this.histories_idx.belt_mining % size + 1
+        this.histories.belt_mining[this.histories_idx.belt_mining] = data
         return
     end
-
-    if not entity.last_user then
-        return
+    if this.whitelist_types[entity.type] or not blacklisted_types[entity.type] then
+        this.histories_idx.mining = this.histories_idx.mining % size + 1
+        this.histories.mining[this.histories_idx.mining] = data
     end
-    if entity.last_user.name == player.name then
-        return
-    end
-    if entity.force.name ~= player.force.name then
-        return
-    end
-    if blacklisted_types[event.entity.type] then
-        return
-    end
-    if not this.mining_history then
-        this.mining_history = {}
-    end
-
-    if #this.mining_history > 1000 then
-        this.mining_history = {}
-    end
-
-    local t = math.abs(math.floor((game.tick) / 3600))
-    local str = '[' .. t .. '] '
-    str = str .. player.name .. ' mined '
-    str = str .. '[color=yellow]' .. event.entity.name .. '[/color]'
-    str = str .. ' at X:'
-    str = str .. math.floor(event.entity.position.x)
-    str = str .. ' Y:'
-    str = str .. math.floor(event.entity.position.y)
-    str = str .. ' '
-    str = str .. 'surface:' .. event.entity.surface.index
-    increment(this.mining_history, str)
 end
 
 local function on_gui_opened(event)
@@ -571,24 +443,15 @@ local function on_gui_opened(event)
 
     if player.name ~= corpse_owner.name then
         Utils.action_warning('{Corpse}', player.name .. ' is looting ' .. corpse_owner.name .. '´s body.')
-        if not this.corpse_history then
-            this.corpse_history = {}
-        end
-        if #this.corpse_history > 1000 then
-            this.corpse_history = {}
-        end
-
-        local t = math.abs(math.floor((game.tick) / 3600))
-        local str = '[' .. t .. '] '
-        str = str .. player.name .. ' opened '
-        str = str .. '[color=yellow]' .. corpse_owner.name .. '[/color] body'
-        str = str .. ' at X:'
-        str = str .. math.floor(event.entity.position.x)
-        str = str .. ' Y:'
-        str = str .. math.floor(event.entity.position.y)
-        str = str .. ' '
-        str = str .. 'surface:' .. event.entity.surface.index
-        increment(this.corpse_history, str)
+        local data = {
+            player_name = player.name,
+            event = table.concat({"opened ", corpse_owner.name, " body"}),
+            position = {x = math.floor(event.entity.position.x), y = math.floor(event.entity.position.y)},
+            time = game.ticks_played,
+            server_time = game.tick
+        }
+        this.histories_idx.corpse = this.histories_idx.corpse % size + 1
+        this.histories.corpse[this.histories_idx.corpse] = data    
     end
 end
 
@@ -625,24 +488,15 @@ local function on_pre_player_mined_item(event)
     end
     if player.name ~= corpse_owner.name then
         Utils.action_warning('{Corpse}', player.name .. ' has looted ' .. corpse_owner.name .. '´s body.')
-        if not this.corpse_history then
-            this.corpse_history = {}
-        end
-        if #this.corpse_history > 1000 then
-            this.corpse_history = {}
-        end
-
-        local t = math.abs(math.floor((game.tick) / 3600))
-        local str = '[' .. t .. '] '
-        str = str .. player.name .. ' mined '
-        str = str .. '[color=yellow]' .. corpse_owner.name .. '[/color] body'
-        str = str .. ' at X:'
-        str = str .. math.floor(entity.position.x)
-        str = str .. ' Y:'
-        str = str .. math.floor(entity.position.y)
-        str = str .. ' '
-        str = str .. 'surface:' .. entity.surface.index
-        increment(this.corpse_history, str)
+        local data = {
+            player_name = player.name,
+            event = table.concat({"looted ", corpse_owner.name, " body"}),
+            position = {x = math.floor(event.entity.position.x), y = math.floor(event.entity.position.y)},
+            time = game.ticks_played,
+            server_time = game.tick
+        }
+        this.histories_idx.corpse = this.histories_idx.corpse % size + 1
+        this.histories.corpse[this.histories_idx.corpse] = data
     end
 end
 
@@ -719,25 +573,15 @@ local function on_player_cancelled_crafting(event)
             )
         end
 
-        if not this.cancel_crafting_history then
-            this.cancel_crafting_history = {}
-        end
-        if #this.cancel_crafting_history > 1000 then
-            this.cancel_crafting_history = {}
-        end
-
-        local t = math.abs(math.floor((game.tick) / 3600))
-        local str = '[' .. t .. '] '
-        str = str .. player.name .. ' canceled '
-        str = str .. ' item [color=yellow]' .. event.recipe.name .. '[/color]'
-        str = str .. ' count was a total of: ' .. crafting_queue_item_count
-        str = str .. ' at X:'
-        str = str .. math.floor(player.position.x)
-        str = str .. ' Y:'
-        str = str .. math.floor(player.position.y)
-        str = str .. ' '
-        str = str .. 'surface:' .. player.surface.index
-        increment(this.cancel_crafting_history, str)
+        local data = {
+            player_name = player.name,
+            event = crafting_queue_item_count .. " " .. event.recipe.name,
+            position = {x = math.floor(player.position.x), y = math.floor(player.position.y)},
+            time = game.ticks_played,
+            server_time = game.tick,
+        }
+        this.histories_idx.cancel_crafting = this.histories_idx.cancel_crafting % size + 1
+        this.histories.cancel_crafting[this.histories_idx.cancel_crafting] = data
     end
 end
 
@@ -848,12 +692,24 @@ end
 
 --- This will reset the table of antigrief
 function Public.reset_tables()
-    this.landfill_history = {}
-    this.capsule_history = {}
-    this.friendly_fire_history = {}
-    this.mining_history = {}
-    this.corpse_history = {}
-    this.cancel_crafting_history = {}
+    this.histories = {
+        landfill = pool.malloc(size),
+        capsule = pool.malloc(size),
+        friendly_fire = pool.malloc(size),
+        mining = pool.malloc(size),
+        belt_mining = pool.malloc(size),
+        corpse = pool.malloc(size),
+        cancel_crafting = pool.malloc(size),
+    }
+    this.histories_idx = {
+        landfill = 0,
+        capsule = 0,
+        friendly_fire = 0,
+        mining = 0,
+        belt_mining = 0,
+        corpse = 0,
+        cancel_crafting = 0
+    }
 end
 
 --- Enable this to log when trees are destroyed

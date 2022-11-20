@@ -21,6 +21,7 @@ if not remote.interfaces['interface'] then
     remote.add_interface('interface', interface)
 end ]]
 local pcall = pcall
+local debug_getinfo = debug.getinfo
 local log = log
 local script_on_event = script.on_event
 local script_on_nth_tick = script.on_nth_tick
@@ -45,7 +46,9 @@ else
             local handler = handlers[i]
             local success, error = pcall(handler, event)
             if not success then
-                log(error)
+                local info = debug_getinfo(handler, 'S')
+                --log(string.format('%s in %s:%d' , error, info.short_src, info.linedefined))
+                log({'', '[ERROR] ', error, ' in ', info.short_src, ":", info.linedefined})
             end
         end
     end
