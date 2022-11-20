@@ -139,7 +139,8 @@ local function get_random_spawner(biter_force_name)
 	end
 end
 
-
+--Manual spawning of units
+local function spawn_biters(isItnormalBiters, maxLoopIteration,spawner,biter_threat,biter_force_name,max_unit_count,valid_biters,force_name)
 	local roll_type = unit_type_raffle[math_random(1, size_of_unit_type_raffle)]
 	local boss_biter_force_name = biter_force_name .. "_boss"
 	-- *1.5 because we add 50% health bonus as it's just one unit.  

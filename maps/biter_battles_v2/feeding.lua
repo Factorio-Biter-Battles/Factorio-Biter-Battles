@@ -2,7 +2,6 @@ local bb_config = require "maps.biter_battles_v2.config"
 local Functions = require "maps.biter_battles_v2.functions"
 local Server = require 'utils.server'
 
-local Profiler = require 'utils.profiler'
 local tables = require "maps.biter_battles_v2.tables"
 local food_values = tables.food_values
 local force_translation = tables.force_translation
@@ -13,7 +12,7 @@ local math_round = math.round
 local minimum_modifier = 125
 local maximum_modifier = 250
 local player_amount_for_maximum_threat_gain = 20
-
+local Public = {}
 function get_instant_threat_player_count_modifier()
 	local current_player_count = #game.forces.north.connected_players + #game.forces.south.connected_players
 	local gain_per_player = (maximum_modifier - minimum_modifier) / player_amount_for_maximum_threat_gain
@@ -236,7 +235,7 @@ function set_evo_and_threat(flask_amount, food, biter_force_name)
 	global.bb_threat[biter_force_name] = math_round(global.bb_threat[biter_force_name] + threat, decimals)
 end
 
-local function feed_biters(player, food)	
+function Public.feed_biters(player, food)	
 		if game.ticks_played < global.difficulty_votes_timeout then
 		player.print("Please wait for voting to finish before feeding")
 		return
@@ -269,4 +268,62 @@ local function feed_biters(player, food)
 	end
 end
 
-return feed_biters
+function Public.feed_biters_mixed(player, button)
+	if game.ticks_played < global.difficulty_votes_timeout then
+		player.print("Please wait for voting to finish before feeding")
+		return
+	end
+	local enemy_force_name = get_enemy_team_of(player.force.name)
+	local biter_force_name = enemy_force_name .. "_biters"
+	local food = {
+		"automation-science-pack",
+		"logistic-science-pack",
+		"military-science-pack",
+		"chemical-science-pack",
+		"production-science-pack",
+		"utility-science-pack",
+		"space-science-pack"
+	}
+	if button == defines.mouse_button_type.right then
+		food = {
+			"space-science-pack",
+			"utility-science-pack",
+			"production-science-pack",
+			"chemical-science-pack",
+			"military-science-pack",
+			"logistic-science-pack",
+			"automation-science-pack",
+		}
+	end
+	local i = player.get_main_inventory()
+	local colored_player_name = table.concat({"[color=", player.color.r * 0.6 + 0.35, ",", player.color.g * 0.6 + 0.35, ",", player.color.b * 0.6 + 0.35, "]", player.name, "[/color]"})
+	local message = {colored_player_name, " fed "}
+	for k, v in pairs(food) do
+		local evolution_before_feed = global.bb_evolution[biter_force_name]
+		local threat_before_feed = global.bb_threat[biter_force_name]	
+		local flask_amount = i.get_item_count(v)
+		if flask_amount ~= 0 then
+			table.insert(message, "[font=heading-1][color=255,255,255]" .. flask_amount .. "[/color][/font]" .. "[img=item." .. v .. "], ")
+			Server.to_discord_bold(table.concat({player.name, " fed ", flask_amount, " flasks of ", food_values[v].name, " to team ", enemy_force_name, " biters!"}))
+			set_evo_and_threat(flask_amount, v, biter_force_name)
+			add_stats(player, v, flask_amount ,biter_force_name, evolution_before_feed, threat_before_feed)
+			i.remove({name = v, count = flask_amount})
+		end
+	end
+	if #message == 2 then
+		player.print("You have no flasks in your inventory", {r = 0.98, g = 0.66, b = 0.22})
+		return
+	end
+	local n = bb_config.north_side_team_name
+	local s = bb_config.south_side_team_name
+	if global.tm_custom_name["north"] then n = global.tm_custom_name["north"] end
+	if global.tm_custom_name["south"] then s = global.tm_custom_name["south"] end	
+	local team_strings = {
+		["north"] = table.concat({"[color=120, 120, 255]", n, "'s[/color]"}),
+		["south"] = table.concat({"[color=255, 65, 65]", s, "'s[/color]"})
+	}
+	table.insert(message, "to team " .. team_strings[enemy_force_name] .. " biters!")
+	game.print(table.concat(message), {r = 0.9, g = 0.9, b = 0.9})
+end
+
+return Public
