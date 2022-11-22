@@ -356,6 +356,13 @@ function join_team(player, force_name, forced_join, auto_join)
 
 	if global.chosen_team[player.name] then
 		if not forced_join then
+			if global.active_special_games["limited_lives"] and not global.special_games_variables["limited_lives"]['has_life'](player.name) then
+				player.print(
+					"Special game in progress. You have no lives left until the end of the game.",
+					{r = 0.98, g = 0.66, b = 0.22}
+				)
+				return
+			end
 			if game.tick - global.spectator_rejoin_delay[player.name] < 3600 then
 				player.print(
 					"Not ready to return to your team yet. Please wait " .. 60-(math.floor((game.tick - global.spectator_rejoin_delay[player.name])/60)) .. " seconds.",
