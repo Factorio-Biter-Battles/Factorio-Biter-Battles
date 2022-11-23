@@ -128,4 +128,10 @@ Module.format_time = function(ticks)
     return table.concat(result, ' ')
 end
 
+Module.gui_style = function(element, attributes)
+    for attribute, value in pairs(attributes) do
+        element.style[attribute] = value
+    end
+end
+
 return Module

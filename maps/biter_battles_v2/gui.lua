@@ -15,7 +15,7 @@ local food_names = Tables.gui_foods
 local math_random = math.random
 local math_abs = math.abs
 require "maps.biter_battles_v2.spec_spy"
-require 'utils/gui_styles'
+local gui_style = require 'utils.utils'.gui_style
 local gui_values = {
 		["north"] = {force = "north", biter_force = "north_biters", c1 = bb_config.north_side_team_name, c2 = "JOIN ", n1 = "join_north_button",
 		t1 = "Evolution of north side biters.",
@@ -45,8 +45,7 @@ end
 local function create_sprite_button(player)
 	if player.gui.top["bb_toggle_button"] then return end
 	local button = player.gui.top.add({type = "sprite-button", name = "bb_toggle_button", sprite = "entity/big-biter"})
-	button.style.font = "default-bold"
-	element_style({element = button, x= 38, y = 38, pad = -2})
+	gui_style(button, {width = 38, height = 38, padding = -2, font = "default-bold"})
 end
 
 local function clock(frame)
@@ -170,23 +169,11 @@ function Public.create_main_gui(player)
 		frame.add { type = "table", name = "biter_battle_table", column_count = 4 }
 		local t = frame.biter_battle_table
 		for food_name, tooltip in pairs(food_names) do
-			local s = t.add { type = "sprite-button", name = food_name, sprite = "item/" .. food_name }
-			s.tooltip = tooltip
-			s.style.minimal_height = 41
-			s.style.minimal_width = 41
-			s.style.top_padding = 0
-			s.style.left_padding = 0
-			s.style.right_padding = 0
-			s.style.bottom_padding = 0
+			local s = t.add { type = "sprite-button", name = food_name, sprite = "item/" .. food_name, tooltip = tooltip}
+			gui_style(s, {minimal_height = 41, minimal_width = 41, padding = 0})
 		end
 		local s = t.add { type = "sprite-button", name = "send_all", caption = "All", tooltip = "LMB - low to high, RMB - high to low"}
-		s.style.minimal_height = 41
-		s.style.minimal_width = 41
-		s.style.top_padding = 0
-		s.style.left_padding = 0
-		s.style.right_padding = 0
-		s.style.bottom_padding = 0
-		s.style.font_color = {r = 0.9, g = 0.9, b = 0.9}
+		gui_style(s, {minimal_height = 41, minimal_width = 41, padding = 0, font_color = {r = 0.9, g = 0.9, b = 0.9}})
 		frame.add{type="line"}
 	end
 	
@@ -206,11 +193,7 @@ function Public.create_main_gui(player)
 		local c = gui_value.c1
 		if global.tm_custom_name[gui_value.force] then c = global.tm_custom_name[gui_value.force] end
 		local l = t.add  { type = "label", caption = c}
-		l.style.font = "default-bold"
-		l.style.font_color = gui_value.color1
-		l.style.single_line = false
-		l.style.maximal_width = 102
-
+		gui_style(l, {font = "default-bold", font_color = gui_value.color1, single_line = false, maximal_width = 102})
 		-- Number of players
 		local l = t.add  { type = "label", caption = " - "}
 		local c = #game.forces[gui_value.force].connected_players .. " Player"
@@ -356,6 +339,13 @@ function join_team(player, force_name, forced_join, auto_join)
 
 	if global.chosen_team[player.name] then
 		if not forced_join then
+			if global.active_special_games["limited_lives"] and not global.special_games_variables["limited_lives"]['has_life'](player.name) then
+				player.print(
+					"Special game in progress. You have no lives left until the end of the game.",
+					{r = 0.98, g = 0.66, b = 0.22}
+				)
+				return
+			end
 			if game.tick - global.spectator_rejoin_delay[player.name] < 3600 then
 				player.print(
 					"Not ready to return to your team yet. Please wait " .. 60-(math.floor((game.tick - global.spectator_rejoin_delay[player.name])/60)) .. " seconds.",
