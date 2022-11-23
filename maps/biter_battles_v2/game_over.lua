@@ -321,6 +321,7 @@ function Public.server_restart()
         local prev_surface = global.bb_surface_name
         Special_games.reset_active_special_games()
         Special_games.reset_special_games_variables()
+        Special_games.clear_gui_special_events()
         Init.tables()
         Init.playground_surface()
         Init.forces()

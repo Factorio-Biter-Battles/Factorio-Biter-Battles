@@ -1,6 +1,7 @@
 local Event = require 'utils.event'
 local Color = require 'utils.color_presets'
 local Team_manager = require "maps.biter_battles_v2.team_manager"
+local math_random = math.random
 local Public = {}
 global.active_special_games = {}
 global.special_games_variables = {}
@@ -105,7 +106,12 @@ local valid_special_games = {
 	}
 }
 
-function Public.reset_active_special_games() for _, i in ipairs(global.active_special_games) do i = false end end
+function Public.reset_active_special_games()
+	if global.active_special_games["captain_mode"] then
+		global.tournament_mode = false
+	end
+	for _, i in ipairs(global.active_special_games) do i = false end
+end
 function Public.reset_special_games_variables() global.special_games_variables = {} end
 
 local function generate_turtle(moat_width, entrance_width, size_x, size_y)
@@ -250,6 +256,22 @@ local function reset_disabled_research(team)
   end
 end
 
+local function clear_gui_captain_mode()
+	for _, player in pairs(game.players) do
+		if player.gui.center["captain_poll_frame"] then player.gui.center["captain_poll_frame"].destroy() end
+		if player.gui.center["captain_poll_end_frame"] then player.gui.center["captain_poll_end_frame"].destroy() end
+		if player.gui.top["captain_poll_team_ready_frame"] then player.gui.top["captain_poll_team_ready_frame"].destroy() end
+		if player.gui.center["captain_poll_chosen_choice_frame"] then player.gui.center["captain_poll_chosen_choice_frame"].destroy() end
+		if player.gui.center["captain_poll_firstpicker_choice_frame"] then player.gui.center["captain_poll_firstpicker_choice_frame"].destroy() end
+		if player.gui.center["captain_poll_alternate_pick_choice_frame"] then player.gui.center["captain_poll_alternate_pick_choice_frame"].destroy() end
+		if player.gui.top["captain_latejoiners_picking"] then player.gui.top["captain_latejoiners_picking"].destroy() end
+	end
+end
+
+function Public.clear_gui_special_events()
+	clear_gui_captain_mode()
+end
+
 local function poll_captain_player(player)
 	if player.gui.center["captain_poll_frame"] then player.gui.center["captain_poll_frame"].destroy() return end
 	local frame = player.gui.center.add { type = "frame", caption = "What do you want to do for the Captain event ?", name = "captain_poll_frame", direction = "vertical" }
@@ -319,8 +341,10 @@ local function force_end_captain_event()
 	global.special_games_variables["captain_mode"] = nil
 	global.tournament_mode = false
 	global.freeze_players = false
+	global.active_special_games["captain_mode"] = false
 	Team_manager.unfreeze_players()
 	rendering.clear()
+	Public.clear_gui_special_events()
 end
 
 local function createButton(frame,nameButton,captionButton, wordToPutInstead)
@@ -332,7 +356,7 @@ local function createButton(frame,nameButton,captionButton, wordToPutInstead)
 	b.style.minimal_width = 100
 end
 
-local function pollGenerator(player,isItTopFrame,tableBeingLooped,frameName,questionText,button1Text,button1Name,button2Text,button2Name)
+local function pollGenerator(player,isItTopFrame,tableBeingLooped,frameName,questionText,button1Text,button1Name,button2Text,button2Name,button3Text,button3Name)
 	local frame = nil
 	if isItTopFrame then
 		if player.gui.top[frameName] then player.gui.top[frameName].destroy() return end
@@ -349,6 +373,9 @@ local function pollGenerator(player,isItTopFrame,tableBeingLooped,frameName,ques
 			if button2Text ~= nil then
 				createButton(frame,button2Name,button2Text,pl)
 			end
+			if button3Text ~= nil then
+				createButton(frame,button3Name,button3Text,pl)
+			end
 		end
 	else
 		if button1Text ~= nil then
@@ -356,6 +383,9 @@ local function pollGenerator(player,isItTopFrame,tableBeingLooped,frameName,ques
 		end
 		if button2Text ~= nil then
 			createButton(frame,button2Name,button2Text,"")
+		end
+		if button3Text ~= nil then
+			createButton(frame,button3Name,button3Text,"")
 		end
 	end
 end
@@ -378,26 +408,27 @@ local function poll_captain_team_ready(player, isRef)
 	local textToShow = "Is your team ready ?"
 	if isRef then textToShow = "Do you want to force start event without waiting from go from captain?" end
 	pollGenerator(player,true,nil,
-	"captain_poll_team_ready_frame",textToShow,"Yes","ready_captain_"..player.name,nil,nil)
+	"captain_poll_team_ready_frame",textToShow,"Yes","ready_captain_"..player.name,nil,nil,nil,nil)
 end
 
 local function poll_captain_picking_first(player)
 	pollGenerator(player,false,nil,
-	"captain_poll_firstpicker_choice_frame","Who should pick first (usually, pick for the weaker one) ? ",
+	"captain_poll_firstpicker_choice_frame","Who should pick first ?",
 	"The player " .. global.special_games_variables["captain_mode"]["captainList"][1] .. " will pick first", "captain_pick_one_in_list_choice",
-	"The player " .. global.special_games_variables["captain_mode"]["captainList"][2] .. " will pick first", "captain_pick_second_in_list_choice")
+	"The player " .. global.special_games_variables["captain_mode"]["captainList"][2] .. " will pick first", "captain_pick_second_in_list_choice",
+	"The captain that will pick first will be chosen randomly","captain_pick_random_in_list_choice")
 end
 
 local function poll_removing_captain(player)
 	pollGenerator(player,false,global.special_games_variables["captain_mode"]["captainList"],
 	"captain_poll_chosen_choice_frame","Who should be removed from captain list (popup until 2 captains remains)?",
-	"The player Magical1@StringHere wont be a captain","removing_captain_in_list_Magical1@StringHere",nil,nil)
+	"The player Magical1@StringHere wont be a captain","removing_captain_in_list_Magical1@StringHere",nil,nil,nil,nil)
 end
 
 local function poll_alternate_picking(player)
 	pollGenerator(player,false,global.special_games_variables["captain_mode"]["listPlayers"],
 	"captain_poll_alternate_pick_choice_frame","Who do you want to pick ?",
-	"Magical1@StringHere","captain_player_picked_Magical1@StringHere",nil,nil)
+	"Magical1@StringHere","captain_player_picked_Magical1@StringHere",nil,nil,nil,nil)
 end
 
 local function generateRendering(textChosen, xPos, yPos, rColor,gColor,bColor,aColor, scaleChosen,fontChosen)
@@ -465,10 +496,12 @@ end
 local function generate_captain_mode(refereeName)
 	global.special_games_variables["captain_mode"] = {["captainList"] = {}, ["refereeName"] = refereeName, ["listPlayers"] = {}, ["listSpectators"] = {}, ["listOfPlayersWhoDidntVoteForRoleYet"]={},["listTeamReadyToPlay"] = {}}
 	
+	global.active_special_games["captain_mode"] = true
 	if game.get_player(global.special_games_variables["captain_mode"]["refereeName"]) == nil then
 		game.print("Event captain aborted, referee is not a player connected.. Referee name of player was : ".. global.special_games_variables["captain_mode"]["refereeName"])
 		return
 	end
+	Public.clear_gui_special_events()
 	for _, pl in pairs(game.connected_players) do
 		if pl.force.name ~= "spectator" then
 			pl.print('Captain event is on the way, switched you to spectator')
@@ -632,7 +665,6 @@ end
 
 local function start_captain_event()
 	game.print('[font=default-large-bold]Time to start the game!! Good luck and have fun everyone ![/font]', Color.cyan)
-	global.tournament_mode = false
 	global.freeze_players = false
 	Team_manager.unfreeze_players()
 	
@@ -848,6 +880,17 @@ local function on_gui_click(event)
 			game.get_player(global.special_games_variables["captain_mode"]["refereeName"]).gui.center["captain_poll_firstpicker_choice_frame"].destroy()
 			poll_alternate_picking(game.get_player(global.special_games_variables["captain_mode"]["captainList"][2]))
 		end
+	elseif element.name == "captain_pick_random_in_list_choice" then
+		if #global.special_games_variables["captain_mode"]["listPlayers"] == 0 then
+			game.print('[font=default-large-bold]No one wanna play as a player, aborting event..[/font]', Color.cyan)
+			force_end_captain_event()
+			player.gui.center["captain_poll_firstpicker_choice_frame"].destroy()
+		else
+			local captainChosen = math_random(1,2)
+			game.print("Fortune has chosen that " .. global.special_games_variables["captain_mode"]["captainList"][captainChosen] .. " will pick first", Color.cyan)
+			game.get_player(global.special_games_variables["captain_mode"]["refereeName"]).gui.center["captain_poll_firstpicker_choice_frame"].destroy()
+			poll_alternate_picking(game.get_player(global.special_games_variables["captain_mode"]["captainList"][captainChosen]))
+		end
 	elseif string.find(element.name, "captain_player_picked_") then
 		local playerPicked = element.name:gsub("^captain_player_picked_", "")
 		if player.gui.center["captain_poll_alternate_pick_choice_frame"] then player.gui.center["captain_poll_alternate_pick_choice_frame"].destroy() end
@@ -887,6 +930,8 @@ local function on_gui_click(event)
 			if #global.special_games_variables["captain_mode"]["listTeamReadyToPlay"] >= 2 then
 				if game.get_player(refereeName).gui.top["captain_poll_team_ready_frame"] then game.get_player(refereeName).gui.top["captain_poll_team_ready_frame"].destroy() end
 				start_captain_event()
+			elseif isRefereeACaptain() and not game.get_player(refereeName).gui.top["captain_poll_team_ready_frame"] then
+				poll_captain_team_ready(game.get_player(global.special_games_variables["captain_mode"]["refereeName"]),true)
 			end
 		end
 	elseif string.find(element.name, "captain_send_north_") then
