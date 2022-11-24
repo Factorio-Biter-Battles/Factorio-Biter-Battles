@@ -336,6 +336,10 @@ local function end_captain_question()
 	end
 end
 
+local function clear_character_corpses()
+	for _, object in pairs(game.surfaces[global.bb_surface_name].find_entities_filtered {name = 'character-corpse'}) do object.destroy() end
+end
+
 local function force_end_captain_event()
 	game.print('Captain event was canceled')
 	global.special_games_variables["captain_mode"] = nil
@@ -345,6 +349,12 @@ local function force_end_captain_event()
 	Team_manager.unfreeze_players()
 	rendering.clear()
 	Public.clear_gui_special_events()
+	for _, pl in pairs(game.connected_players) do
+		if pl.force.name ~= "spectator" then
+			Team_manager.switch_force(pl.name,"spectator")
+		end
+	end
+	clear_character_corpses()
 end
 
 local function createButton(frame,nameButton,captionButton, wordToPutInstead)
@@ -499,6 +509,8 @@ local function generate_captain_mode(refereeName)
 	global.active_special_games["captain_mode"] = true
 	if game.get_player(global.special_games_variables["captain_mode"]["refereeName"]) == nil then
 		game.print("Event captain aborted, referee is not a player connected.. Referee name of player was : ".. global.special_games_variables["captain_mode"]["refereeName"])
+		global.special_games_variables["captain_mode"] = nil
+		global.active_special_games["captain_mode"] = false
 		return
 	end
 	Public.clear_gui_special_events()
@@ -508,7 +520,7 @@ local function generate_captain_mode(refereeName)
 			Team_manager.switch_force(pl.name,"spectator")
 		end
 	end
-	
+	clear_character_corpses()
 	game.print('Captain mode started !! Have fun !')
 	global.tournament_mode = true
 	global.freeze_players = true
@@ -681,6 +693,13 @@ local function start_captain_event()
 	generateRendering("team " .. global.special_games_variables["captain_mode"]["captainList"][1] .. " vs team " .. global.special_games_variables["captain_mode"]["captainList"][2] .. ". Referee: " .. global.special_games_variables["captain_mode"]["refereeName"]  .. ". Teams on VC",0,10,0.87,0.13,0.5,1,1.5,"heading-1")
 	generateGenericRenderingCaptain()
 	generateRendering("Want to play ? Ask to join a team!",0,-9,1,1,1,1,3,"heading-1")
+end
+
+local function allow_vote()
+            local tick = game.ticks_played
+            global.difficulty_votes_timeout = tick + 10800
+            global.difficulty_player_votes = {}
+			game.print('[font=default-large-bold]Difficulty voting is opened for 3 minutes![/font]', Color.cyan)
 end
 
 local function on_gui_click(event)
@@ -905,6 +924,7 @@ local function on_gui_click(event)
 		table.remove(global.special_games_variables["captain_mode"]["listPlayers"],indexPlayer)
 		
 		if are_all_players_picked() then
+			allow_vote()
 			game.print('[font=default-large-bold]All players were picked by player, time to start preparation for each team ! Once your team is ready, captain, click on yes on top popup[/font]', Color.cyan)
 			poll_captain_team_ready(game.get_player(global.special_games_variables["captain_mode"]["captainList"][2]),false)
 			poll_captain_team_ready(game.get_player(global.special_games_variables["captain_mode"]["captainList"][1]),false)

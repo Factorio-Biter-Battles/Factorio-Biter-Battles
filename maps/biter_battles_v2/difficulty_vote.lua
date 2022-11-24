@@ -27,7 +27,7 @@ local function poll_difficulty(player)
 	if player.gui.center["difficulty_poll"] then player.gui.center["difficulty_poll"].destroy() return end
 	
 	if global.bb_settings.only_admins_vote or global.tournament_mode then
-		if not player.admin then return end
+		if not player.admin and not global.active_special_games["captain_mode"] then return end
 	end
 	
 	local tick = game.ticks_played
@@ -96,7 +96,7 @@ local function on_player_joined_game(event)
 	if game.ticks_played < global.difficulty_votes_timeout then
 		if not global.difficulty_player_votes[player.name] then
 			if global.bb_settings.only_admins_vote or global.tournament_mode then
-				if player.admin then poll_difficulty(player) end
+				if player.admin or global.active_special_games["captain_mode"] then poll_difficulty(player) end
 			end
 		end
 	else
@@ -130,7 +130,7 @@ local function on_gui_click(event)
 	local i = tonumber(event.element.name)
 	
 	if global.bb_settings.only_admins_vote or global.tournament_mode then
-		if player.admin then
+		if player.admin or (global.active_special_games["captain_mode"] and not player.spectator) then
 			game.print(player.name .. " has voted for " .. difficulties[i].name .. " difficulty!", difficulties[i].print_color)
 			global.difficulty_player_votes[player.name] = i
 			set_difficulty()
