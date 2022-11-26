@@ -3,7 +3,7 @@ local ai = require "maps.biter_battles_v2.ai"
 local event = require 'utils.event'
 local Server = require 'utils.server'
 local Tables = require "maps.biter_battles_v2.tables"
-require 'utils/gui_styles'
+local gui_style = require 'utils.utils'.gui_style
 
 local difficulties = Tables.difficulties
 
@@ -14,7 +14,7 @@ local function difficulty_gui(player)
 	local b = player.gui.top.add { type = "sprite-button", caption = difficulties[global.difficulty_vote_index].name, tooltip = str, name = "difficulty_gui" }
 	b.style.font = "heading-2"
 	b.style.font_color = difficulties[global.difficulty_vote_index].print_color
-	element_style({element = b, x = 114, y = 38, pad = -2})
+	gui_style(b, {width = 114, height = 38, padding = -2})
 end
 
 local function difficulty_gui_all()
@@ -44,9 +44,15 @@ local function poll_difficulty(player)
 	end
 	
 	local frame = player.gui.center.add { type = "frame", caption = "Vote global difficulty:", name = "difficulty_poll", direction = "vertical" }
-	for key, _ in pairs(difficulties) do
-		local b = frame.add({type = "button", name = tostring(key), caption = difficulties[key].name .. " (" .. difficulties[key].str .. ")"})
-		b.style.font_color = difficulties[key].color
+	local vote_amounts = {}
+	for k, v in pairs(global.difficulty_player_votes) do
+		vote_amounts[v] = (vote_amounts[v] or 0) + 1
+	end
+	
+	for key, difficulty in pairs(difficulties) do
+		local caption = table.concat({difficulty.name, " (", difficulty.str, ")", " : ", (vote_amounts[key] or 0)})
+		local b = frame.add{type = "button", name = tostring(key), caption = caption}
+		b.style.font_color = difficulty.color
 		b.style.font = "heading-2"
 		b.style.minimal_width = 180
 	end

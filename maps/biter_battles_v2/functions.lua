@@ -2,6 +2,8 @@ local Server = require 'utils.server'
 local Muted = require 'utils.muted'
 local Tables = require "maps.biter_battles_v2.tables"
 local Session = require 'utils.datastore.session_data'
+local bb_config = require "maps.biter_battles_v2.config"
+local simplex_noise = require 'utils.simplex_noise'.d2
 local string_sub = string.sub
 local math_random = math.random
 local math_round = math.round
@@ -11,7 +13,7 @@ local math_floor = math.floor
 local table_insert = table.insert
 local table_remove = table.remove
 local string_find = string.find
-require 'utils/gui_styles'
+local gui_style = require 'utils.utils'.gui_style
 
 -- Only add upgrade research balancing logic in this section
 -- All values should be in tables.lua
@@ -263,10 +265,59 @@ function Public.init_player(player)
 	game.permissions.get_group("spectator").add_player(player)
 end
 
+function Public.get_noise(name, pos)
+	local seed = game.surfaces[global.bb_surface_name].map_gen_settings.seed
+	local noise_seed_add = 25000
+	if name == 1 then
+		local noise = simplex_noise(pos.x * 0.0042, pos.y * 0.0042, seed)
+		seed = seed + noise_seed_add
+		noise = noise + simplex_noise(pos.x * 0.031, pos.y * 0.031, seed) * 0.08
+		seed  = seed + noise_seed_add
+		noise = noise + simplex_noise(pos.x * 0.1, pos.y * 0.1, seed) * 0.025
+		return noise
+	end
+
+	if name == 2 then
+		local noise = simplex_noise(pos.x * 0.011, pos.y * 0.011, seed)
+		seed = seed + noise_seed_add
+		noise = noise + simplex_noise(pos.x * 0.08, pos.y * 0.08, seed) * 0.2
+		return noise
+	end
+
+	if name == 3 then
+		local noise = simplex_noise(pos.x * 0.005, pos.y * 0.005, seed)
+		noise = noise + simplex_noise(pos.x * 0.02, pos.y * 0.02, seed) * 0.3
+		noise = noise + simplex_noise(pos.x * 0.15, pos.y * 0.15, seed) * 0.025
+		return noise
+	end
+end
+
+function Public.is_biter_area(position,noise_Enabled)
+	local bitera_area_distance = bb_config.bitera_area_distance * -1
+	local biter_area_angle = 0.45
+	local a = bitera_area_distance - (math_abs(position.x) * biter_area_angle)
+	if position.y - 70 > a then return false end
+	if position.y + 70 < a then return true end	
+	if noise_Enabled then
+		if position.y + (Public.get_noise(3, position) * 64) > a then return false end
+	else
+		if position.y > a then return false end
+	end
+	return true
+end
+
 function Public.no_turret_creep(event)
 	local entity = event.created_entity
 	if not entity.valid then return end
 	if not no_turret_blacklist[event.created_entity.type] then return end
+	
+	local posEntity = entity.position
+	if posEntity.y > 0 then posEntity.y = (posEntity.y + 100) * -1 end
+	if posEntity.y < 0 then posEntity.y = posEntity.y - 100 end
+	if not Public.is_biter_area(posEntity,false) then
+		return
+	end
+	
 	local surface = event.created_entity.surface				
 	local spawners = surface.find_entities_filtered({type = "unit-spawner", area = {{entity.position.x - 70, entity.position.y - 70}, {entity.position.x + 70, entity.position.y + 70}}})
 	if #spawners == 0 then return end
@@ -407,7 +458,7 @@ function Public.create_map_intro_button(player)
 	local b = player.gui.top.add({type = "sprite-button", caption = "?", name = "map_intro_button", tooltip = "Map Info"})
 	b.style.font_color = {r=0.5, g=0.3, b=0.99}
 	b.style.font = "heading-1"
-	element_style({element = b, x = 38, y = 38, pad = -2})
+	gui_style(b, {width = 38, height = 38, padding = -2})
 end
 
 function Public.show_intro(player)

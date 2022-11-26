@@ -1,4 +1,5 @@
 local Public = {}
+global.player_data_afk = {}
 local Server = require 'utils.server'
 
 local bb_config = require "maps.biter_battles_v2.config"
@@ -12,9 +13,9 @@ local wait_messages = Tables.wait_messages
 local food_names = Tables.gui_foods
 
 local math_random = math.random
-
+local math_abs = math.abs
 require "maps.biter_battles_v2.spec_spy"
-require 'utils/gui_styles'
+local gui_style = require 'utils.utils'.gui_style
 local gui_values = {
 		["north"] = {force = "north", biter_force = "north_biters", c1 = bb_config.north_side_team_name, c2 = "JOIN ", n1 = "join_north_button",
 		t1 = "Evolution of north side biters.",
@@ -37,11 +38,14 @@ function Public.clear_copy_history(player)
 	end
 end
 
+function Public.reset_tables_gui()
+	global.player_data_afk = {}
+end
+
 local function create_sprite_button(player)
 	if player.gui.top["bb_toggle_button"] then return end
 	local button = player.gui.top.add({type = "sprite-button", name = "bb_toggle_button", sprite = "entity/big-biter"})
-	button.style.font = "default-bold"
-	element_style({element = button, x= 38, y = 38, pad = -2})
+	gui_style(button, {width = 38, height = 38, padding = -2, font = "default-bold"})
 end
 
 local function clock(frame)
@@ -131,6 +135,20 @@ local function add_prod_button(elem, gui_value)
 	prod_button.style.width = 25
 end
 
+local function show_pretty_threat(forceName)
+	local threat_value = math.floor(global.bb_threat[forceName])
+	if math_abs(threat_value) >= 1000000 then
+		threat_value = threat_value / 1000000
+		threat_value = tonumber(string.format("%.2f", threat_value))
+		threat_value = threat_value .. "M"
+	elseif math_abs(threat_value) >= 100000 then
+		threat_value = threat_value / 1000
+		threat_value = tonumber(string.format("%.0f", threat_value))
+		threat_value = threat_value .. "k"
+	end
+	return threat_value
+end
+
 function Public.create_main_gui(player)
 	local is_spec = player.force.name == "spectator"
 	if player.gui.left["bb_main_gui"] then player.gui.left["bb_main_gui"].destroy() end
@@ -151,23 +169,11 @@ function Public.create_main_gui(player)
 		frame.add { type = "table", name = "biter_battle_table", column_count = 4 }
 		local t = frame.biter_battle_table
 		for food_name, tooltip in pairs(food_names) do
-			local s = t.add { type = "sprite-button", name = food_name, sprite = "item/" .. food_name }
-			s.tooltip = tooltip
-			s.style.minimal_height = 41
-			s.style.minimal_width = 41
-			s.style.top_padding = 0
-			s.style.left_padding = 0
-			s.style.right_padding = 0
-			s.style.bottom_padding = 0
+			local s = t.add { type = "sprite-button", name = food_name, sprite = "item/" .. food_name, tooltip = tooltip}
+			gui_style(s, {minimal_height = 41, minimal_width = 41, padding = 0})
 		end
 		local s = t.add { type = "sprite-button", name = "send_all", caption = "All", tooltip = "LMB - low to high, RMB - high to low"}
-		s.style.minimal_height = 41
-		s.style.minimal_width = 41
-		s.style.top_padding = 0
-		s.style.left_padding = 0
-		s.style.right_padding = 0
-		s.style.bottom_padding = 0
-		s.style.font_color = {r = 0.9, g = 0.9, b = 0.9}
+		gui_style(s, {minimal_height = 41, minimal_width = 41, padding = 0, font_color = {r = 0.9, g = 0.9, b = 0.9}})
 		frame.add{type="line"}
 	end
 	
@@ -187,11 +193,7 @@ function Public.create_main_gui(player)
 		local c = gui_value.c1
 		if global.tm_custom_name[gui_value.force] then c = global.tm_custom_name[gui_value.force] end
 		local l = t.add  { type = "label", caption = c}
-		l.style.font = "default-bold"
-		l.style.font_color = gui_value.color1
-		l.style.single_line = false
-		l.style.maximal_width = 102
-
+		gui_style(l, {font = "default-bold", font_color = gui_value.color1, single_line = false, maximal_width = 102})
 		-- Number of players
 		local l = t.add  { type = "label", caption = " - "}
 		local c = #game.forces[gui_value.force].connected_players .. " Player"
@@ -237,7 +239,9 @@ function Public.create_main_gui(player)
 		local l = t.add  {type = "label", caption = "Threat: "}
 		l.style.minimal_width = 25
 		l.tooltip = gui_value.t2
-		local l = t.add  {type = "label", name = "threat_" .. gui_value.force, caption = math.floor(global.bb_threat[gui_value.biter_force])}
+		
+		local threat_value = show_pretty_threat(gui_value.biter_force)
+		local l = t.add  {type = "label", name = "threat_" .. gui_value.force, caption = threat_value}
 		l.style.font_color = gui_value.color2
 		l.style.font = "default-bold"
 		l.style.width = 50
@@ -293,12 +297,23 @@ function Public.refresh_threat()
 	for _, player in pairs(game.connected_players) do
 		if player.gui.left["bb_main_gui"] then
 			if player.gui.left["bb_main_gui"].stats_north then
-				player.gui.left["bb_main_gui"].stats_north.threat_north.caption = math.floor(global.bb_threat["north_biters"])
-				player.gui.left["bb_main_gui"].stats_south.threat_south.caption = math.floor(global.bb_threat["south_biters"])
+				player.gui.left["bb_main_gui"].stats_north.threat_north.caption = show_pretty_threat("north_biters")
+				player.gui.left["bb_main_gui"].stats_south.threat_south.caption = show_pretty_threat("south_biters")
 			end
 		end
 	end
 	global.gui_refresh_delay = game.tick + 5
+end
+
+local get_player_data = function(player, remove)
+    if remove and global.player_data_afk[player.name] then
+        global.player_data_afk[player.name] = nil
+        return
+    end
+    if not global.player_data_afk[player.name] then
+        global.player_data_afk[player.name] = {}
+    end
+    return global.player_data_afk[player.name]
 end
 
 function join_team(player, force_name, forced_join, auto_join)
@@ -324,6 +339,13 @@ function join_team(player, force_name, forced_join, auto_join)
 
 	if global.chosen_team[player.name] then
 		if not forced_join then
+			if global.active_special_games["limited_lives"] and not global.special_games_variables["limited_lives"]['has_life'](player.name) then
+				player.print(
+					"Special game in progress. You have no lives left until the end of the game.",
+					{r = 0.98, g = 0.66, b = 0.22}
+				)
+				return
+			end
 			if game.tick - global.spectator_rejoin_delay[player.name] < 3600 then
 				player.print(
 					"Not ready to return to your team yet. Please wait " .. 60-(math.floor((game.tick - global.spectator_rejoin_delay[player.name])/60)) .. " seconds.",
@@ -332,7 +354,14 @@ function join_team(player, force_name, forced_join, auto_join)
 				return
 			end
 		end
-		local p = surface.find_non_colliding_position("character", game.forces[force_name].get_spawn_position(surface), 16, 0.5)
+		local p = nil
+		local p_data = get_player_data(player)
+		if p_data and p_data.position then
+			p = surface.find_non_colliding_position("character", p_data.position,16, 0.5)
+			get_player_data(player, true)
+		else
+			p = surface.find_non_colliding_position("character", game.forces[force_name].get_spawn_position(surface), 16, 0.5)
+		end
 		if not p then
 			game.print("No spawn position found for " .. player.name .. "!", {255, 0, 0})
 			return 
@@ -379,7 +408,7 @@ function join_team(player, force_name, forced_join, auto_join)
 	Public.refresh()
 end
 
-function spectate(player, forced_join)
+function spectate(player, forced_join, stored_position)
 	if not player.character then return end
 	if not forced_join then
 		if global.tournament_mode then player.print("The game is set to tournament mode. Teams can only be changed via team manager.", {r = 0.98, g = 0.66, b = 0.22}) return end
@@ -389,6 +418,12 @@ function spectate(player, forced_join)
 		player.cancel_crafting(player.crafting_queue[1])
 	end
 	
+	player.driving = false
+
+	if stored_position then
+        local p_data = get_player_data(player)
+        p_data.position = player.position
+	end
 	player.teleport(player.surface.find_non_colliding_position("character", {0,0}, 4, 1))
 	player.force = game.forces.spectator
 	player.character.destructible = false
