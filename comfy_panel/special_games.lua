@@ -264,7 +264,6 @@ local function clear_gui_captain_mode()
 		if player.gui.center["captain_poll_chosen_choice_frame"] then player.gui.center["captain_poll_chosen_choice_frame"].destroy() end
 		if player.gui.center["captain_poll_firstpicker_choice_frame"] then player.gui.center["captain_poll_firstpicker_choice_frame"].destroy() end
 		if player.gui.center["captain_poll_alternate_pick_choice_frame"] then player.gui.center["captain_poll_alternate_pick_choice_frame"].destroy() end
-		if player.gui.top["captain_latejoiners_picking"] then player.gui.top["captain_latejoiners_picking"].destroy() end
 	end
 end
 
@@ -398,20 +397,6 @@ local function pollGenerator(player,isItTopFrame,tableBeingLooped,frameName,ques
 			createButton(frame,button3Name,button3Text,"")
 		end
 	end
-end
-
-local function poll_pickLateJoiners(player)
-	local frameName = "captain_latejoiners_picking"
-	if player.gui.top[frameName] then player.gui.top[frameName].destroy() end
-	local frame = player.gui.top.add { type = "frame", caption = "Send a player north or south", name = frameName, direction = "vertical", column_count = 2 }
-	frame.style.maximal_height = 160
-    local scroll_pane = frame.add({type = 'scroll-pane',horizontal_scroll_policy = 'never', vertical_scroll_policy = 'auto'})
-	local t = scroll_pane.add({type = "table", name = "table_latejoiners_captain", column_count = 2})	
-	for _,pl in pairs(game.forces.spectator.players) do
-		createButton(t,"captain_send_north_"..pl.name,"Send " .. pl.name .. " north","")
-		createButton(t,"captain_send_south_"..pl.name,"Send " .. pl.name .. " south","")
-	end
-		createButton(scroll_pane,"captain_refresh_list_referee","Update players List","")
 end
 
 local function poll_captain_team_ready(player, isRef)
@@ -686,7 +671,6 @@ local function start_captain_event()
 	if playerToClear.gui.top["captain_poll_team_ready_frame"] then playerToClear.gui.top["captain_poll_team_ready_frame"].destroy() end
 	playerToClear = game.get_player(global.special_games_variables["captain_mode"]["refereeName"])
 	if playerToClear.gui.top["captain_poll_team_ready_frame"] then playerToClear.gui.top["captain_poll_team_ready_frame"].destroy() end
-	poll_pickLateJoiners(playerToClear)
 	local y = 0
 	rendering.clear()
 	generateRendering("Special Captain's tournament mode enabled (Match n°FIXME)",0,-16,1,0,0,1,5,"heading-1")
@@ -954,19 +938,6 @@ local function on_gui_click(event)
 				poll_captain_team_ready(game.get_player(global.special_games_variables["captain_mode"]["refereeName"]),true)
 			end
 		end
-	elseif string.find(element.name, "captain_send_north_") then
-		local playerPicked = element.name:gsub("^captain_send_north_", "")
-		game.print('[font=default-large-bold]' .. playerPicked .. " was sent to north by referee " .. player.name..'[/font]', Color.cyan)
-		Team_manager.switch_force(playerPicked,"north")
-		poll_pickLateJoiners(player)
-	elseif string.find(element.name, "captain_send_south_") then
-		local playerPicked = element.name:gsub("^captain_send_south_", "")
-		game.print('[font=default-large-bold]' .. playerPicked .. " was sent to south by referee " .. player.name..'[/font]', Color.cyan)
-		Team_manager.switch_force(playerPicked,"south")
-		poll_pickLateJoiners(player)
-	elseif element.name == "captain_refresh_list_referee" then
-		player.print("Refreshing list of players..")
-		poll_pickLateJoiners(player)
 	elseif element.name == "limited_lives_confirm" then
 		local lives_limit = tonumber(config["lives_limit"].text)
 		generate_limited_lives(lives_limit)

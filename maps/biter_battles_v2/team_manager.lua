@@ -244,6 +244,14 @@ local function custom_team_name_gui(player, force_name)
 	button.style.font = "heading-2"
 end
 
+local function isReferee(player)
+	if global.active_special_games["captain_mode"] and global.special_games_variables["captain_mode"]["refereeName"] == player.name then
+		return true
+	else
+		return false
+	end
+end
+
 local function team_manager_gui_click(event)
 	local player = game.players[event.player_index]
 	local name = event.element.name
@@ -312,7 +320,7 @@ local function team_manager_gui_click(event)
 	if not element.parent then return end
 	local element = element.parent
 	if element.name ~= "team_manager_root_table" then return end		
-	if not player.admin then player.print("Only admins can manage teams.", {r = 175, g = 0, b = 0}) return end
+	if not player.admin and not isReferee(player) then player.print("Only admins can manage teams.", {r = 175, g = 0, b = 0}) return end
 	
 	local listbox = player.gui.center["team_manager_gui"]["team_manager_root_table"]["team_manager_list_box_" .. tonumber(name)]
 	local selected_index = listbox.selected_index
