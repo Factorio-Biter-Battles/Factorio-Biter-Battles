@@ -343,9 +343,12 @@ local function force_end_captain_event()
 	game.print('Captain event was canceled')
 	global.special_games_variables["captain_mode"] = nil
 	global.tournament_mode = false
-	global.freeze_players = false
+	if global.freeze_players == true then
+		global.freeze_players = false
+		Team_manager.unfreeze_players()
+		game.print(">>> Players have been unfrozen!", {r = 255, g = 77, b = 77})
+	end
 	global.active_special_games["captain_mode"] = false
-	Team_manager.unfreeze_players()
 	rendering.clear()
 	Public.clear_gui_special_events()
 	for _, pl in pairs(game.connected_players) do
@@ -508,9 +511,11 @@ local function generate_captain_mode(refereeName)
 	clear_character_corpses()
 	game.print('Captain mode started !! Have fun !')
 	global.tournament_mode = true
-	global.freeze_players = true
-	game.print(">>> Players have been frozen!", {r = 111, g = 111, b = 255})
-	Team_manager.freeze_players()
+	if global.freeze_players == false then
+		global.freeze_players = true
+		Team_manager.freeze_players()
+		game.print(">>> Players have been frozen!", {r = 111, g = 111, b = 255})
+	end
 	show_captain_question()
 		
 	local y = 0
@@ -662,8 +667,11 @@ end
 
 local function start_captain_event()
 	game.print('[font=default-large-bold]Time to start the game!! Good luck and have fun everyone ![/font]', Color.cyan)
-	global.freeze_players = false
-	Team_manager.unfreeze_players()
+	if global.freeze_players == true then
+		global.freeze_players = false
+		Team_manager.unfreeze_players()
+		game.print(">>> Players have been unfrozen!", {r = 255, g = 77, b = 77})
+	end
 	
 	local playerToClear = game.get_player(global.special_games_variables["captain_mode"]["captainList"][1])
 	if playerToClear.gui.top["captain_poll_team_ready_frame"] then playerToClear.gui.top["captain_poll_team_ready_frame"].destroy() end
