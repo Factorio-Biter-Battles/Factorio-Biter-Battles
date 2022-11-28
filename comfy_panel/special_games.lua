@@ -264,6 +264,10 @@ local function clear_gui_captain_mode()
 		if player.gui.center["captain_poll_chosen_choice_frame"] then player.gui.center["captain_poll_chosen_choice_frame"].destroy() end
 		if player.gui.center["captain_poll_firstpicker_choice_frame"] then player.gui.center["captain_poll_firstpicker_choice_frame"].destroy() end
 		if player.gui.center["captain_poll_alternate_pick_choice_frame"] then player.gui.center["captain_poll_alternate_pick_choice_frame"].destroy() end
+		if player.gui.top["captain_referee_enable_picking_late_joiners"] then player.gui.top["captain_referee_enable_picking_late_joiners"].destroy() end
+		if player.gui.center["captain_poll_latejoiner_question"] then player.gui.center["captain_poll_latejoiner_question"].destroy() end
+		if player.gui.center["captain_poll_end_latejoiners_referee_frame"] then player.gui.center["captain_poll_end_latejoiners_referee_frame"].destroy() end
+		
 	end
 end
 
@@ -322,6 +326,19 @@ local function poll_captain_end_captain(player)
 		local l = frame.add({ type = "label", name="remainPlayersDidntVote" , caption = get_list_players_who_didnt_vote_yet()})		
 end
 
+local function poll_captain_end_late_joiners_referee(player)
+	if player.gui.center["captain_poll_end_latejoiners_referee_frame"] then player.gui.center["captain_poll_end_latejoiners_referee_frame"].destroy() return end
+	local frame = player.gui.center.add { type = "frame", caption = "End poll for players to join late", name = "captain_poll_end_latejoiners_referee_frame", direction = "vertical" }
+		local b = frame.add({type = "button", name = "captain_end_joinlate_choice", caption = "End it"})
+		b.style.font_color = Color.green
+		b.style.font = "heading-2"
+		b.style.minimal_width = 540
+		local l = frame.add({ type = "label", caption = "-----------------------------------------------------------------"})
+		local l = frame.add({ type = "label", name="listPlayers" , caption = get_player_list()})
+		local l = frame.add({ type = "label", name="listSpectators" , caption = get_spectator_list()})
+		local l = frame.add({ type = "label", name="remainPlayersDidntVote" , caption = get_list_players_who_didnt_vote_yet()})		
+end
+
 local function show_captain_question()
 	for _, player in pairs(game.connected_players) do
 		table.insert(global.special_games_variables["captain_mode"]["listOfPlayersWhoDidntVoteForRoleYet"],player.name)
@@ -332,6 +349,12 @@ end
 local function end_captain_question()
 	for _, player in pairs(game.connected_players) do
 		if player.gui.center["captain_poll_frame"] then player.gui.center["captain_poll_frame"].destroy() end
+	end
+end
+
+local function end_captain_latejoiners_question()
+	for _, player in pairs(game.connected_players) do
+		if player.gui.center["captain_poll_latejoiner_question"] then player.gui.center["captain_poll_latejoiner_question"].destroy() end
 	end
 end
 
@@ -429,6 +452,12 @@ local function poll_alternate_picking(player)
 	"Magical1@StringHere","captain_player_picked_Magical1@StringHere",nil,nil,nil,nil)
 end
 
+
+local function poll_captain_late_joiners(player)
+	pollGenerator(player,false,nil,
+	"captain_poll_latejoiner_question","Do you want to play?","Yes","captain_late_joiner_yes","No","captain_late_joiner_no",nil,nil)
+end
+
 local function generateRendering(textChosen, xPos, yPos, rColor,gColor,bColor,aColor, scaleChosen,fontChosen)
 	rendering.draw_text{
 		text = textChosen,
@@ -492,8 +521,7 @@ local function generateGenericRenderingCaptain()
 end
 
 local function generate_captain_mode(refereeName)
-	global.special_games_variables["captain_mode"] = {["captainList"] = {}, ["refereeName"] = refereeName, ["listPlayers"] = {}, ["listSpectators"] = {}, ["listOfPlayersWhoDidntVoteForRoleYet"]={},["listTeamReadyToPlay"] = {}}
-	
+	global.special_games_variables["captain_mode"] = {["captainList"] = {}, ["refereeName"] = refereeName, ["listPlayers"] = {}, ["listSpectators"] = {}, ["listOfPlayersWhoDidntVoteForRoleYet"]={},["listTeamReadyToPlay"] = {}, ["lateJoiners"] = false}
 	global.active_special_games["captain_mode"] = true
 	if game.get_player(global.special_games_variables["captain_mode"]["refereeName"]) == nil then
 		game.print("Event captain aborted, referee is not a player connected.. Referee name of player was : ".. global.special_games_variables["captain_mode"]["refereeName"])
@@ -648,6 +676,12 @@ local function updateEndPollReferee()
 	game.get_player(global.special_games_variables["captain_mode"]["refereeName"]).gui.center["captain_poll_end_frame"]["remainPlayersDidntVote"].caption = get_list_players_who_didnt_vote_yet()
 end
 
+local function updatePollLateJoinReferee()
+	game.get_player(global.special_games_variables["captain_mode"]["refereeName"]).gui.center["captain_poll_end_latejoiners_referee_frame"]["listPlayers"].caption = get_player_list()
+	game.get_player(global.special_games_variables["captain_mode"]["refereeName"]).gui.center["captain_poll_end_latejoiners_referee_frame"]["listSpectators"].caption = get_spectator_list()
+	game.get_player(global.special_games_variables["captain_mode"]["refereeName"]).gui.center["captain_poll_end_latejoiners_referee_frame"]["remainPlayersDidntVote"].caption = get_list_players_who_didnt_vote_yet()
+end
+
 local function delete_player_from_novote_list(playerName)
 		local index={}
 		for k,v in pairs(global.special_games_variables["captain_mode"]["listOfPlayersWhoDidntVoteForRoleYet"]) do
@@ -665,6 +699,11 @@ local function isRefereeACaptain()
 	end
 end
 
+local function poll_pickLateJoiners(player)
+	pollGenerator(player,true,nil,
+	"captain_referee_enable_picking_late_joiners","Enable picking phase for late joiners ?","Yes","captain_enabled_late_picking_by_ref"..player.name,nil,nil,nil,nil)
+end
+
 local function start_captain_event()
 	game.print('[font=default-large-bold]Time to start the game!! Good luck and have fun everyone ![/font]', Color.cyan)
 	if global.freeze_players == true then
@@ -679,6 +718,7 @@ local function start_captain_event()
 	if playerToClear.gui.top["captain_poll_team_ready_frame"] then playerToClear.gui.top["captain_poll_team_ready_frame"].destroy() end
 	playerToClear = game.get_player(global.special_games_variables["captain_mode"]["refereeName"])
 	if playerToClear.gui.top["captain_poll_team_ready_frame"] then playerToClear.gui.top["captain_poll_team_ready_frame"].destroy() end
+	poll_pickLateJoiners(playerToClear)
 	local y = 0
 	rendering.clear()
 	generateRendering("Special Captain's tournament mode enabled (Match n°FIXME)",0,-16,1,0,0,1,5,"heading-1")
@@ -872,7 +912,7 @@ local function on_gui_click(event)
 			force_end_captain_event()
 		end
 	elseif element.name == "captain_pick_one_in_list_choice" then
-		if #global.special_games_variables["captain_mode"]["listPlayers"] == 0 then
+		if #global.special_games_variables["captain_mode"]["listPlayers"] == 0 and global.special_games_variables["captain_mode"]["lateJoiners"] == false then
 			game.print('[font=default-large-bold]No one wanna play as a player, aborting event..[/font]', Color.cyan)
 			force_end_captain_event()
 			player.gui.center["captain_poll_firstpicker_choice_frame"].destroy()
@@ -882,7 +922,7 @@ local function on_gui_click(event)
 			poll_alternate_picking(game.get_player(global.special_games_variables["captain_mode"]["captainList"][1]))
 		end
 	elseif element.name == "captain_pick_second_in_list_choice" then
-		if #global.special_games_variables["captain_mode"]["listPlayers"] == 0 then
+		if #global.special_games_variables["captain_mode"]["listPlayers"] == 0 and global.special_games_variables["captain_mode"]["lateJoiners"] == false then
 			game.print('[font=default-large-bold]No one wanna play as a player, aborting event..[/font]', Color.cyan)
 			force_end_captain_event()
 			player.gui.center["captain_poll_firstpicker_choice_frame"].destroy()
@@ -892,7 +932,7 @@ local function on_gui_click(event)
 			poll_alternate_picking(game.get_player(global.special_games_variables["captain_mode"]["captainList"][2]))
 		end
 	elseif element.name == "captain_pick_random_in_list_choice" then
-		if #global.special_games_variables["captain_mode"]["listPlayers"] == 0 then
+		if #global.special_games_variables["captain_mode"]["listPlayers"] == 0 and global.special_games_variables["captain_mode"]["lateJoiners"] == false then
 			game.print('[font=default-large-bold]No one wanna play as a player, aborting event..[/font]', Color.cyan)
 			force_end_captain_event()
 			player.gui.center["captain_poll_firstpicker_choice_frame"].destroy()
@@ -916,12 +956,21 @@ local function on_gui_click(event)
 		table.remove(global.special_games_variables["captain_mode"]["listPlayers"],indexPlayer)
 		
 		if are_all_players_picked() then
-			allow_vote()
-			game.print('[font=default-large-bold]All players were picked by player, time to start preparation for each team ! Once your team is ready, captain, click on yes on top popup[/font]', Color.cyan)
-			poll_captain_team_ready(game.get_player(global.special_games_variables["captain_mode"]["captainList"][2]),false)
-			poll_captain_team_ready(game.get_player(global.special_games_variables["captain_mode"]["captainList"][1]),false)
-			if not isRefereeACaptain() then
-				poll_captain_team_ready(game.get_player(global.special_games_variables["captain_mode"]["refereeName"]),true)
+			if not global.special_games_variables["captain_mode"]["lateJoiners"] then
+				allow_vote()
+				game.print('[font=default-large-bold]All players were picked by player, time to start preparation for each team ! Once your team is ready, captain, click on yes on top popup[/font]', Color.cyan)
+				local captainOne = game.get_player(global.special_games_variables["captain_mode"]["captainList"][1])
+				local captainTwo = game.get_player(global.special_games_variables["captain_mode"]["captainList"][2])
+				poll_captain_team_ready(captainOne,false)
+				poll_captain_team_ready(captainTwo,false)
+				Team_manager.custom_team_name_gui(captainOne, captainOne.force.name)
+				Team_manager.custom_team_name_gui(captainTwo, captainTwo.force.name)
+				if not isRefereeACaptain() then
+					poll_captain_team_ready(game.get_player(global.special_games_variables["captain_mode"]["refereeName"]),true)
+				end
+				global.special_games_variables["captain_mode"]["lateJoiners"] = true
+			else
+				game.print('[font=default-large-bold]All late joiners were picked by captains[/font]', Color.cyan)
 			end
 		else
 			if player.name == game.get_player(global.special_games_variables["captain_mode"]["captainList"][1]).name then
@@ -944,6 +993,54 @@ local function on_gui_click(event)
 				start_captain_event()
 			elseif isRefereeACaptain() and not game.get_player(refereeName).gui.top["captain_poll_team_ready_frame"] then
 				poll_captain_team_ready(game.get_player(global.special_games_variables["captain_mode"]["refereeName"]),true)
+			end
+		end
+	elseif string.find(element.name, "captain_enabled_late_picking_by_ref") then
+		global.special_games_variables["captain_mode"]["listPlayers"] = {}
+		global.special_games_variables["captain_mode"]["listSpectators"] = {}
+		global.special_games_variables["captain_mode"]["listOfPlayersWhoDidntVoteForRoleYet"] = {}
+		local refPlayer = game.get_player(global.special_games_variables["captain_mode"]["refereeName"])
+		for _, player in pairs(game.connected_players) do
+			if not global.chosen_team[player.name] then
+				table.insert(global.special_games_variables["captain_mode"]["listOfPlayersWhoDidntVoteForRoleYet"],player.name)
+				poll_captain_late_joiners(player)
+			end
+		end
+		if global.chosen_team[refPlayer.name] then
+			poll_captain_end_late_joiners_referee(refPlayer)
+		end
+	elseif string.find(element.name, "captain_late_joiner_yes") then
+		if player.gui.center["captain_poll_latejoiner_question"] then player.gui.center["captain_poll_latejoiner_question"].destroy() end
+		table.insert(global.special_games_variables["captain_mode"]["listPlayers"],player.name)
+		delete_player_from_novote_list(player.name)
+		if player.name == global.special_games_variables["captain_mode"]["refereeName"] then
+			poll_captain_end_late_joiners_referee(player)
+		elseif game.get_player(global.special_games_variables["captain_mode"]["refereeName"]).gui.center["captain_poll_end_latejoiners_referee_frame"] ~=nil then
+			updatePollLateJoinReferee()
+		end
+		
+	elseif string.find(element.name, "captain_late_joiner_no") then
+		if player.gui.center["captain_poll_latejoiner_question"] then player.gui.center["captain_poll_latejoiner_question"].destroy() end
+		table.insert(global.special_games_variables["captain_mode"]["listSpectators"],player.name)
+		delete_player_from_novote_list(player.name)
+		if player.name == global.special_games_variables["captain_mode"]["refereeName"] then
+			poll_captain_end_late_joiners_referee(player)
+		elseif game.get_player(global.special_games_variables["captain_mode"]["refereeName"]).gui.center["captain_poll_end_latejoiners_referee_frame"] ~=nil then
+			updatePollLateJoinReferee()
+		end
+	elseif element.name == "captain_end_joinlate_choice" then
+		game.print('The referee ended the poll to get late joiners to join a team', Color.cyan)
+		end_captain_latejoiners_question()
+		if player.gui.center["captain_poll_end_latejoiners_referee_frame"] then player.gui.center["captain_poll_end_latejoiners_referee_frame"].destroy() end
+		if #global.special_games_variables["captain_mode"]["listPlayers"] > 0 then
+			for _,pl in pairs(global.special_games_variables["captain_mode"]["listOfPlayersWhoDidntVoteForRoleYet"]) do
+				delete_player_from_novote_list(pl)
+			end
+			if #global.special_games_variables["captain_mode"]["captainList"] == 2 then
+				game.print('[font=default-large-bold]Switching to picking phase for late joiners ![/font]', Color.cyan)
+				poll_captain_picking_first(player)
+			else
+				game.print('Bug, case that should not happen, report it to devs', Color.cyan)
 			end
 		end
 	elseif element.name == "limited_lives_confirm" then

@@ -219,7 +219,7 @@ local function set_custom_team_name(force_name, team_name)
 	global.tm_custom_name[force_name] = tostring(team_name)
 end
 
-local function custom_team_name_gui(player, force_name)
+function Public.custom_team_name_gui(player, force_name)
 	if player.gui.center["custom_team_name_gui"] then player.gui.center["custom_team_name_gui"].destroy() return end	
 	local frame = player.gui.center.add({type = "frame", name = "custom_team_name_gui", caption = "Set custom team name:", direction = "vertical"})
 	local text = force_name
@@ -258,7 +258,7 @@ local function team_manager_gui_click(event)
 	
 	if game.forces[name] then
 		if not player.admin then player.print("Only admins can change team names.", {r = 175, g = 0, b = 0}) return end
-		custom_team_name_gui(player, name)
+		Public.custom_team_name_gui(player, name)
 		player.gui.center["team_manager_gui"].destroy()
 		return
 	end
