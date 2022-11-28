@@ -235,12 +235,7 @@ function set_evo_and_threat(flask_amount, food, biter_force_name)
 	global.bb_threat[biter_force_name] = math_round(global.bb_threat[biter_force_name] + threat, decimals)
 	
 	if global.active_special_games["shared_science_throw"] then
-		local enemyBitersForceName = ""
-		if biter_force_name == "south_biters" then
-			enemyBitersForceName = "north_biters"
-		else
-			enemyBitersForceName = "south_biters"
-		end
+		local enemyBitersForceName = tables.enemy_team_of[tables.force_translation[biter_force_name]] .. "_biters"
 		local maxEvo = math.max(game.forces["north_biters"].evolution_factor,game.forces["south_biters"].evolution_factor)
 		game.forces["north_biters"].evolution_factor = maxEvo
 		global.bb_evolution["north_biters"] = maxEvo
