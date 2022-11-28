@@ -152,7 +152,7 @@ local function on_gui_click(event)
 							difficulty_gui(player)
 						end
 					else
-						if not global.bb_settings.only_admins_vote and not player.spectator then
+						if not player.spectator then
 							game.print(player.name .. " has voted for " .. difficulties[i].name .. " difficulty!", difficulties[i].print_color)
 							global.difficulty_player_votes[player.name] = i
 							set_difficulty()
