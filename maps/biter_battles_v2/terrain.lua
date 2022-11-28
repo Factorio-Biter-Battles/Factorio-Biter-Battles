@@ -194,10 +194,7 @@ local function generate_starting_area(pos, distance_to_center, surface)
 	end
 
 	if distance_from_spawn_wall < -10 and not is_horizontal_border_river(pos) then
-		local tile_name = surface.get_tile(pos).name
-		if tile_name == "water" or tile_name == "deepwater" then
-			surface.set_tiles({{name = get_replacement_tile(surface, pos), position = pos}}, true)
-		end
+		surface.set_tiles({{name = "refined-concrete", position = pos}}, true)
 		return
 	end
 
@@ -572,7 +569,7 @@ function Public.generate_silo(surface)
 	Functions.add_target_entity(global.rocket_silo[silo.force.name])
 
 	for _ = 1, 32, 1 do
-		create_mirrored_tile_chain(surface, {name = "stone-path", position = silo.position}, 32, 10)
+		create_mirrored_tile_chain(surface, {name = "refined-concrete", position = silo.position}, 32, 10)
 	end
 	
 	local p = silo.position
