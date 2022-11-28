@@ -236,10 +236,8 @@ function set_evo_and_threat(flask_amount, food, biter_force_name)
 	
 	if global.active_special_games["shared_science_throw"] then
 		local enemyBitersForceName = tables.enemy_team_of[tables.force_translation[biter_force_name]] .. "_biters"
-		local maxEvoFactor = math.max(game.forces[biter_force_name].evolution_factor,game.forces[enemyBitersForceName].evolution_factor)
-		local maxBbEvo = math.max(global.bb_evolution[biter_force_name],global.bb_evolution[enemyBitersForceName])
-		game.forces[enemyBitersForceName].evolution_factor = maxEvoFactor
-		global.bb_evolution[enemyBitersForceName] = maxBbEvo
+		game.forces[enemyBitersForceName].evolution_factor = game.forces[biter_force_name].evolution_factor
+		global.bb_evolution[enemyBitersForceName] = global.bb_evolution[biter_force_name]
 		global.bb_threat_income[enemyBitersForceName] = evo * 25
 		global.bb_threat[enemyBitersForceName] = global.bb_threat[enemyBitersForceName] + threat
 	end
