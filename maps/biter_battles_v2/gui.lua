@@ -16,6 +16,7 @@ local math_random = math.random
 local math_abs = math.abs
 require "maps.biter_battles_v2.spec_spy"
 local gui_style = require 'utils.utils'.gui_style
+local has_life = require 'comfy_panel.special_games'.has_life
 local gui_values = {
 		["north"] = {force = "north", biter_force = "north_biters", c1 = bb_config.north_side_team_name, c2 = "JOIN ", n1 = "join_north_button",
 		t1 = "Evolution of north side biters.",
@@ -339,15 +340,12 @@ function join_team(player, force_name, forced_join, auto_join)
 
 	if global.chosen_team[player.name] then
 		if not forced_join then
-			if global.active_special_games["limited_lives"] then
-				local player_lives = global.special_games_variables["limited_lives"]["player_lives"][player.name]
-				if player_lives ~= nil and player_lives <= 0 then
-					player.print(
-						"Special game in progress. You have no lives left until the end of the game.",
-						{r = 0.98, g = 0.66, b = 0.22}
-					)
-					return
-				end
+			if global.active_special_games["limited_lives"] and not has_life(player.name) then
+				player.print(
+					"Special game in progress. You have no lives left until the end of the game.",
+					{r = 0.98, g = 0.66, b = 0.22}
+				)
+				return
 			end
 			if game.tick - global.spectator_rejoin_delay[player.name] < 3600 then
 				player.print(
