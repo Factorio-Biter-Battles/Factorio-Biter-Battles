@@ -122,7 +122,7 @@ function Public.remove_hidden_tiles(event)
 
 	for i, tile in pairs(to_remove) do
 		if not tile.valid then goto remove_hidden_cont end
-		surface.set_hidden_tile(tile.position, surface.get_hidden_tile(surface.get_tile(tile.position.x,-tile.position.y).position))
+		surface.set_hidden_tile(tile.position, surface.get_hidden_tile(surface.get_tile(tile.position.x,-tile.position.y - 1).position))
 		::remove_hidden_cont::
 	end
 end
