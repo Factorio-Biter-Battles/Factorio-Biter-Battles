@@ -117,13 +117,12 @@ function Public.remove_hidden_tiles(event)
 		area = bb,
 		has_hidden_tile = true,
 		name = "stone-path",
+		name = "refined-concrete"
 	}
 
-	local tiles = {}
 	for i, tile in pairs(to_remove) do
 		if not tile.valid then goto remove_hidden_cont end
-		surface.set_hidden_tile(tile.position, nil)
-
+		surface.set_hidden_tile(tile.position, surface.get_hidden_tile(surface.get_tile(tile.position.x,-tile.position.y).position))
 		::remove_hidden_cont::
 	end
 end
