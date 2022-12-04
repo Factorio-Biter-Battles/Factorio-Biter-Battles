@@ -116,7 +116,6 @@ function Public.remove_hidden_tiles(event)
 	local to_remove = surface.find_tiles_filtered {
 		area = bb,
 		has_hidden_tile = true,
-		name = "stone-path",
 		name = "refined-concrete"
 	}
 
