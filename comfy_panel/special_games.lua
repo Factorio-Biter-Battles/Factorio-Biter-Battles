@@ -536,6 +536,7 @@ local function generate_captain_mode(refereeName)
 			Team_manager.switch_force(pl.name,"spectator")
 		end
 	end
+	global.chosen_team = {}
 	clear_character_corpses()
 	game.print('Captain mode started !! Have fun !')
 	global.tournament_mode = true
