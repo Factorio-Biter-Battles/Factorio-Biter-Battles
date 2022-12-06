@@ -521,7 +521,7 @@ local function generateGenericRenderingCaptain()
 end
 
 local function generate_captain_mode(refereeName)
-	global.special_games_variables["captain_mode"] = {["captainList"] = {}, ["refereeName"] = refereeName, ["listPlayers"] = {}, ["listSpectators"] = {}, ["listOfPlayersWhoDidntVoteForRoleYet"]={},["listTeamReadyToPlay"] = {}, ["lateJoiners"] = false}
+	global.special_games_variables["captain_mode"] = {["captainList"] = {}, ["refereeName"] = refereeName, ["listPlayers"] = {}, ["listSpectators"] = {}, ["listOfPlayersWhoDidntVoteForRoleYet"]={},["listTeamReadyToPlay"] = {}, ["lateJoiners"] = false, ["prepaPhase"] = true}
 	global.active_special_games["captain_mode"] = true
 	if game.get_player(global.special_games_variables["captain_mode"]["refereeName"]) == nil then
 		game.print("Event captain aborted, referee is not a player connected.. Referee name of player was : ".. global.special_games_variables["captain_mode"]["refereeName"])
@@ -711,6 +711,7 @@ local function start_captain_event()
 		Team_manager.unfreeze_players()
 		game.print(">>> Players have been unfrozen!", {r = 255, g = 77, b = 77})
 	end
+	global.special_games_variables["captain_mode"]["prepaPhase"] = false
 	
 	local playerToClear = game.get_player(global.special_games_variables["captain_mode"]["captainList"][1])
 	if playerToClear.gui.top["captain_poll_team_ready_frame"] then playerToClear.gui.top["captain_poll_team_ready_frame"].destroy() end

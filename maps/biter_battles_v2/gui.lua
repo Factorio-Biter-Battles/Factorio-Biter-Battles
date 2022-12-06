@@ -412,6 +412,10 @@ function spectate(player, forced_join, stored_position)
 	if not player.character then return end
 	if not forced_join then
 		if global.tournament_mode and not global.active_special_games["captain_mode"] then player.print("The game is set to tournament mode. Teams can only be changed via team manager.", {r = 0.98, g = 0.66, b = 0.22}) return end
+		if global.active_special_games["captain_mode"] and global.special_games_variables["captain_mode"]["prepaPhase"] then 
+			player.print("The game is in prepa phase of captain event, no spectating allowed until the captain game started", {r = 0.98, g = 0.66, b = 0.22})
+			return
+		end
 	end
 	
 	while player.crafting_queue_size > 0 do
