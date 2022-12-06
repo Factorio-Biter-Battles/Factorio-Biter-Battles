@@ -142,7 +142,7 @@ function Public.playground_surface()
 	local map_gen_settings = {}
 	local int_max = 2 ^ 31
 	map_gen_settings.seed = math.random(1, int_max)
-	map_gen_settings.water = 0.99
+	map_gen_settings.water = math.random(15, 65) * 0.01
 	map_gen_settings.starting_area = 2.5
 	map_gen_settings.terrain_segmentation = math.random(30, 40) * 0.1
 	map_gen_settings.cliff_settings = {cliff_elevation_interval = 0, cliff_elevation_0 = 0}

@@ -103,7 +103,7 @@ local function get_replacement_tile(surface, position)
 		for _, v in pairs(vectors) do
 			local tile = surface.get_tile(position.x + v[1], position.y + v[2])
 			if not tile.collides_with("resource-layer") then
-				if tile.name ~= "stone-path" and tile.name ~= "refined-concrete" then
+				if tile.name ~= "refined-concrete" then
 					return tile.name
 				end
 			end
