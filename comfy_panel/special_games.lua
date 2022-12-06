@@ -949,6 +949,7 @@ local function on_gui_click(event)
 		if player.gui.center["captain_poll_alternate_pick_choice_frame"] then player.gui.center["captain_poll_alternate_pick_choice_frame"].destroy() end
 		game.print(playerPicked .. " was picked by Captain " .. player.name)
 		Team_manager.switch_force(playerPicked,player.force.name)
+		game.get_player(playerPicked).print("Remember to join your team channel voice on discord of biterbattles if possible (even if no mic, it's fine, to just listen, it's not required though but better if you do !", Color.cyan)
 		
 		local index={}
 		for k,v in pairs(global.special_games_variables["captain_mode"]["listPlayers"]) do
