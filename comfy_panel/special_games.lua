@@ -1001,9 +1001,11 @@ local function on_gui_click(event)
 		global.special_games_variables["captain_mode"]["listSpectators"] = {}
 		global.special_games_variables["captain_mode"]["listOfPlayersWhoDidntVoteForRoleYet"] = {}
 		local refPlayer = game.get_player(global.special_games_variables["captain_mode"]["refereeName"])
+		if player.gui.center["captain_poll_end_latejoiners_referee_frame"] then player.gui.center["captain_poll_end_latejoiners_referee_frame"].destroy() end
 		for _, player in pairs(game.connected_players) do
 			if not global.chosen_team[player.name] then
 				table.insert(global.special_games_variables["captain_mode"]["listOfPlayersWhoDidntVoteForRoleYet"],player.name)
+				if player.gui.center["captain_poll_latejoiner_question"] then player.gui.center["captain_poll_latejoiner_question"].destroy() end
 				poll_captain_late_joiners(player)
 			end
 		end
