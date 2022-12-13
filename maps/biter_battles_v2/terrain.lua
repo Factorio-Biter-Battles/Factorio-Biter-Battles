@@ -424,8 +424,8 @@ function Public.draw_spawn_island(surface)
 
 	local island_area = {{-spawn_island_size, -spawn_island_size}, {spawn_island_size, 0}}
 	surface.destroy_decoratives({area = island_area})
-	for _, tree in pairs(surface.find_entities_filtered({type = "tree", area = island_area})) do
-		tree.destroy()
+	for _, entity in pairs(surface.find_entities(island_area)) do
+		entity.destroy()
 	end
 end
 
