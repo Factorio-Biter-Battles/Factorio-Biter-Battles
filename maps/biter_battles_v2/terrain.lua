@@ -656,7 +656,7 @@ end
 function Public.restrict_landfill(surface, user, tiles)
 	for _, t in pairs(tiles) do
 		local check_position = t.position
-		if check_position.y > 0 then check_position = {x = check_position.x * -1, y = (check_position.y * -1) - 1} end
+		if check_position.y > 0 then check_position = {x = check_position.x, y = (check_position.y * -1) - 1} end
 		local trusted = session.get_trusted_table()
 		if is_horizontal_border_river(check_position) then
 			surface.set_tiles({{name = t.old_tile.name, position = t.position}}, true)
