@@ -155,8 +155,10 @@ local function on_gui_click(event)
         return
     end
 	
-	game.print(player.name .. " has voted for " .. difficulties[i].name .. " difficulty!", difficulties[i].print_color)
-	global.difficulty_player_votes[player.name] = i
+	if not (global.difficulty_player_votes[player.name] == i) or global.difficulty_player_votes[player.name] == nil then
+		game.print(player.name .. " has voted for " .. difficulties[i].name .. " difficulty!", difficulties[i].print_color)
+		global.difficulty_player_votes[player.name] = i
+	end
 	set_difficulty()
 	difficulty_gui_all()
 	event.element.parent.destroy()
