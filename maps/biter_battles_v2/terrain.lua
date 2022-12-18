@@ -408,9 +408,8 @@ function Public.draw_spawn_island(surface)
 	for x = math_floor(spawn_island_size) * -1, -1, 1 do
 		for y = math_floor(spawn_island_size) * -1, -1, 1 do
 			local pos = {x = x, y = y}
-			local distance_to_center = math_sqrt(pos.x ^ 2 + pos.y ^ 2)
-			local pos = {x = x, y = y}
 			if is_within_spawn_island(pos) then
+			    local distance_to_center = tile_distance_to_center(pos)
                 local tile_name = "refined-concrete"
                 if distance_to_center < 6.3 then
                     tile_name = "sand-1"
