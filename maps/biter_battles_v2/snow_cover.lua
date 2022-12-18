@@ -12,32 +12,32 @@ Public.type_small = 5
 Public.type_random = 6
 
 Public.types = {
-    [Public.type_none] = "none",
-    [Public.type_full] = "full snow",
-    [Public.type_desert] = "desert+snow",
-    [Public.type_grass] = "grass+snow",
-    [Public.type_small] = "small snow",
-    [Public.type_random] = "random above",
+	[Public.type_none] = "none",
+	[Public.type_full] = "full snow",
+	[Public.type_desert] = "desert+snow",
+	[Public.type_grass] = "grass+snow",
+	[Public.type_small] = "small snow",
+	[Public.type_random] = "random above",
 }
 
 local random_types = {
-    Public.type_full,
-    Public.type_desert,
-    Public.type_grass,
-    Public.type_small,
+	Public.type_full,
+	Public.type_desert,
+	Public.type_grass,
+	Public.type_small,
 }
 
 function Public.get_next_snow_cover()
-    if global.bb_settings["snow_cover_next"] == Public.type_random then
-        return random_types[math_round(#random_types)]
-    end
+	if global.bb_settings["snow_cover_next"] == Public.type_random then
+		return random_types[math_round(#random_types)]
+	end
 
-    return global.bb_settings["snow_cover_next"]
+	return global.bb_settings["snow_cover_next"]
 end
 
 Public.transition_tiles = {
-    ["brown-refined-concrete"] = true,
-    ["orange-refined-concrete"] = true,
+	["brown-refined-concrete"] = true,
+	["orange-refined-concrete"] = true,
 }
 
 local function get_trans_tile(src_tile)
@@ -49,41 +49,41 @@ local function get_trans_tile(src_tile)
 end
 
 function Public.draw_biter_area_border(surface, pos)
-    local adjacent_positions = {
-        {x = pos.x - 1, y = pos.y},
-        {x = pos.x, y = pos.y - 1},
-        {x = pos.x + 1, y = pos.y},
-        {x = pos.x, y = pos.y + 1},
-    }
-    for _, adjacent_pos in pairs(adjacent_positions) do
-        if surface.get_tile(adjacent_pos).name == "lab-white" then
-            surface.set_tiles({{name = "orange-refined-concrete", position = adjacent_pos}})
-        end
-    end
+	local adjacent_positions = {
+		{x = pos.x - 1, y = pos.y},
+		{x = pos.x, y = pos.y - 1},
+		{x = pos.x + 1, y = pos.y},
+		{x = pos.x, y = pos.y + 1},
+	}
+	for _, adjacent_pos in pairs(adjacent_positions) do
+		if surface.get_tile(adjacent_pos).name == "lab-white" then
+			surface.set_tiles({{name = "orange-refined-concrete", position = adjacent_pos}})
+		end
+	end
 end
 
 function Public.generate_snow(surface, left_top_x, left_top_y)
-    local current_type = global.bb_settings["snow_cover"]
+	local current_type = global.bb_settings["snow_cover"]
 	local protected = {
 		["deepwater"] = true,
 		["water"] = true,
 		["stone-path"] = true,
 	}
 
-    if current_type == Public.type_desert or current_type == Public.type_small then
-        protected["red-desert-0"] = true
-        protected["red-desert-1"] = true
-    end
+	if current_type == Public.type_desert or current_type == Public.type_small then
+		protected["red-desert-0"] = true
+		protected["red-desert-1"] = true
+	end
 
-    if current_type == Public.type_grass or current_type == Public.type_small then
-        protected["grass-1"] = true
-        protected["grass-2"] = true
-    end
+	if current_type == Public.type_grass or current_type == Public.type_small then
+		protected["grass-1"] = true
+		protected["grass-2"] = true
+	end
 
-    if current_type == Public.type_small then
-        protected["dirt-1"] = true
-        protected["dirt-2"] = true
-    end
+	if current_type == Public.type_small then
+		protected["dirt-1"] = true
+		protected["dirt-2"] = true
+	end
 
 
 	local tiles = {}
@@ -127,7 +127,7 @@ function Public.generate_snow(surface, left_top_x, left_top_y)
 
 	for _, entity in pairs(surface.find_entities({{left_top_x, left_top_y}, {left_top_x + 32, left_top_y + 32}})) do
 		if entity.type == "tree" then
-            local name = nil
+			local name = nil
 
 			if entity.name == "tree-02"
 				or entity.name == "tree-02-red"
@@ -136,19 +136,19 @@ function Public.generate_snow(surface, left_top_x, left_top_y)
 				or entity.name == "tree-07"
 			then
 				name = "tree-01"
-            end
+			end
 
-            if entity.name == "tree-08"
-                or entity.name == "tree-08-red"
-                or entity.name == "tree-08-brown"
-                or entity.name == "tree-09"
-                or entity.name == "tree-09-red"
-                or entity.name == "tree-09-brown"
-            then
-                name = "tree-04"
-            end
+			if entity.name == "tree-08"
+				or entity.name == "tree-08-red"
+				or entity.name == "tree-08-brown"
+				or entity.name == "tree-09"
+				or entity.name == "tree-09-red"
+				or entity.name == "tree-09-brown"
+			then
+				name = "tree-04"
+			end
 
-            if name then
+			if name then
 				local pos = entity.position
 				local tile_pos = {x = math_floor(pos.x), y = math_floor(pos.y)}
 				if replace_trees[tile_pos.x .. "_" .. tile_pos.y] then

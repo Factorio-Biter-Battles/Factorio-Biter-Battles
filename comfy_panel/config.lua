@@ -155,9 +155,9 @@ local functions = {
 		end
 	end,
 	["comfy_panel_snow_cover"] = function(event)
-        global.bb_settings['snow_cover_next'] = event.element.selected_index
+		global.bb_settings['snow_cover_next'] = event.element.selected_index
 		if global.bb_settings['snow_cover_next'] ~= SnowCover.type_none then
-            get_actor(event, '{Snow Cover}', "Snow Cover \"" .. SnowCover.types[global.bb_settings['snow_cover_next']] .. "\" has been enabled!", true)
+			get_actor(event, '{Snow Cover}', "Snow Cover \"" .. SnowCover.types[global.bb_settings['snow_cover_next']] .. "\" has been enabled!", true)
 		else
 			get_actor(event, '{Snow Cover}', "Snow Cover has been disabled!", true)
 		end
