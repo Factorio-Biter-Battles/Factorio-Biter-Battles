@@ -87,7 +87,7 @@ function Public.generate_snow(surface, left_top_x, left_top_y)
 
 
 	local tiles = {}
-	local replace_trees = {}
+	local replace_tree_positions = {}
 	for x = 0, 31, 1 do
 		for y = 0, 31, 1 do
 			local pos = {x = left_top_x + x, y = left_top_y + y}
@@ -117,7 +117,7 @@ function Public.generate_snow(surface, left_top_x, left_top_y)
 			end
 
 			table_insert(tiles, {name = "lab-white", position = pos})
-			replace_trees[pos.x .. "_" .. pos.y] = true
+			replace_tree_positions[pos.x .. "_" .. pos.y] = true
 
 			::continue::
 		end
@@ -125,33 +125,30 @@ function Public.generate_snow(surface, left_top_x, left_top_y)
 
 	surface.set_tiles(tiles, true)
 
-	for _, entity in pairs(surface.find_entities({{left_top_x, left_top_y}, {left_top_x + 32, left_top_y + 32}})) do
-		if entity.type == "tree" then
-			local name = nil
-
-			if entity.name == "tree-02"
-				or entity.name == "tree-02-red"
-				or entity.name == "tree-03"
-				or entity.name == "tree-05"
-				or entity.name == "tree-07"
-			then
-				name = "tree-01"
-			end
-
-			if entity.name == "tree-08"
-				or entity.name == "tree-08-red"
-				or entity.name == "tree-08-brown"
-				or entity.name == "tree-09"
-				or entity.name == "tree-09-red"
-				or entity.name == "tree-09-brown"
-			then
-				name = "tree-04"
-			end
-
-			if name then
+	local replace_tree_names = {
+		["tree-02"] = "tree-01",
+		["tree-02-red"] = "tree-01",
+		["tree-03"] = "tree-01",
+		["tree-05"] = "tree-01",
+		["tree-07"] = "tree-01",
+		["tree-08"] = "tree-04",
+		["tree-08-red"] = "tree-04",
+		["tree-08-brown"] = "tree-04",
+		["tree-09"] = "tree-04",
+		["tree-09-red"] = "tree-04",
+		["tree-09-brown"] = "tree-04",
+	}
+	local entities = surface.find_entities_filtered({
+		area = {{left_top_x, left_top_y}, {left_top_x + 32, left_top_y + 32}},
+		type = "tree",
+	})
+	for _, entity in pairs(entities) do
+		if entity.valid then
+			local name = replace_tree_names[entity.name]
+			if name ~= nil then
 				local pos = entity.position
 				local tile_pos = {x = math_floor(pos.x), y = math_floor(pos.y)}
-				if replace_trees[tile_pos.x .. "_" .. tile_pos.y] then
+				if replace_tree_positions[tile_pos.x .. "_" .. tile_pos.y] then
 					entity.destroy()
 					surface.create_entity({name = name, position = pos})
 				end

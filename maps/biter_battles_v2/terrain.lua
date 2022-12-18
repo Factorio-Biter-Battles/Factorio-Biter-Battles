@@ -393,7 +393,7 @@ function Public.generate(event)
 	mixed_ore(surface, left_top_x, left_top_y)
 	generate_river(surface, left_top_x, left_top_y)
 	if global.bb_settings["snow_cover"] ~= SnowCover.type_none then
-	    SnowCover.generate_snow(surface, left_top_x, left_top_y)
+		SnowCover.generate_snow(surface, left_top_x, left_top_y)
 	end
 	draw_biter_area(surface, left_top_x, left_top_y)		
 	generate_extra_worm_turrets(surface, left_top)
