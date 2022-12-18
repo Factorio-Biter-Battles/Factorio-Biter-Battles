@@ -171,7 +171,7 @@ function Public.draw_structures()
 	Terrain.generate_spawn_ore(surface)
 	Terrain.generate_additional_rocks(surface)
 	Terrain.generate_silo(surface)
-	Terrain.draw_spawn_circle(surface)
+	Terrain.draw_spawn_island(surface)
 	--Terrain.generate_spawn_goodies(surface)
 end
 
