@@ -160,7 +160,7 @@ local border_river_noise = 4
 local river_width_half_min = math_floor(bb_config.border_river_width * -0.5)
 local river_width_half_max = river_width_half_min - border_river_noise
 -- pos must be from the North side
-local function is_horizontal_border_river(pos)
+function is_horizontal_border_river(pos)
 	if tile_distance_to_center(pos) < river_circle_size then return true end
 	if pos.y < river_width_half_max then return false end
 	if pos.y > river_width_half_min then return true end
