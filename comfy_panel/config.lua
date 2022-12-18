@@ -153,6 +153,15 @@ local functions = {
 			game.print("Admin-only difficulty voting has been disabled!")
 		end
 	end,
+	["comfy_panel_new_year_island"] = function(event)
+		if event.element.switch_state == "left" then
+			global.bb_settings['new_year_island'] = true
+            get_actor(event, '{New Year Island}', "New Year island has been enabled!", true)
+		else
+			global.bb_settings['new_year_island'] = false
+			get_actor(event, '{New Year Island}', "New Year island has been disabled!", true)
+		end
+	end,
 }
 
 local poll_function = {
@@ -578,6 +587,30 @@ local build_config_gui = (function(player, frame)
             )
             scroll_pane.add({type = 'line'})
         end
+
+
+        label = scroll_pane.add({type = 'label', caption = 'Map Settings'})
+        label.style.font = 'default-bold'
+        label.style.padding = 0
+        label.style.left_padding = 10
+        label.style.top_padding = 10
+        label.style.horizontal_align = 'left'
+        label.style.vertical_align = 'bottom'
+        label.style.font_color = Color.hot_pink
+
+        switch_state = 'right'
+        if global.bb_settings['new_year_island'] then
+            switch_state = 'left'
+        end
+        add_switch(
+            scroll_pane,
+            switch_state,
+            'comfy_panel_new_year_island',
+            'New Year Island',
+            'Add New Year(Christmass) theme decorations to spawn island (takes effect after map restart)'
+        )
+        scroll_pane.add({type = 'line'})
+
     end
     for _, e in pairs(scroll_pane.children) do
         if e.type == 'line' then

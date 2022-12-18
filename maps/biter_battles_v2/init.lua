@@ -119,6 +119,8 @@ function Public.initial_setup()
 		--TEAM SETTINGS--
 		["team_balancing"] = true,			--Should players only be able to join a team that has less or equal members than the opposing team?
 		["only_admins_vote"] = false,		--Are only admins able to vote on the global difficulty?
+		--MAP SETTINGS--
+		["new_year_island"] = false,
 	}
 
 	--Disable Nauvis
@@ -169,7 +171,7 @@ function Public.draw_structures()
 	Terrain.generate_spawn_ore(surface)
 	Terrain.generate_additional_rocks(surface)
 	Terrain.generate_silo(surface)
-	Terrain.draw_spawn_circle(surface)
+	Terrain.draw_spawn_island(surface)
 	--Terrain.generate_spawn_goodies(surface)
 end
 
