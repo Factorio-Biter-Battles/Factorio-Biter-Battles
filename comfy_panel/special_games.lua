@@ -478,45 +478,45 @@ end
 
 local function generateGenericRenderingCaptain()
 	local y = -14
-	generateRendering("Special event rule only : ",-50,y,1,1,1,1,3,"heading-1")
+	generateRendering("Special event rule only : ",-65,y,1,1,1,1,3,"heading-1")
 	y = y + 2
-	generateRendering("Use of /nth /sth /north-chat /south-chat /s /shout by spectator can be punished (warn-tempban)",-50,y,0.87,0.13,0.5,1,3,"heading-1")
+	generateRendering("-Use of /nth /sth /north-chat /south-chat /s /shout by spectator can be punished (warn-tempban event)",-65,y,0.87,0.13,0.5,1,3,"heading-1")
+	y = y + 2
+	generateRendering("-Captain is allowed to ask referee to send a player of his team not cooperating back to spectator",-65,y,0.87,0.13,0.5,1,3,"heading-1")
 	y = y + 4
-	generateRendering("Notes : ",-50,y,1,1,1,1,2.5,"heading-1")
+	generateRendering("Notes : ",-65,y,1,1,1,1,2.5,"heading-1")
 	y = y + 2
-	generateRendering("-Chat of spectator can only be seen by spectators for players",-50,y,1,1,1,1,2.5,"heading-1")
+	generateRendering("-Chat of spectator can only be seen by spectators for players",-65,y,1,1,1,1,2.5,"heading-1")
 	y = y + 2
-	generateRendering("-For admins, as spectator, use ping to talk only to spectators",-50,y,1,1,1,1,2.5,"heading-1")
+	generateRendering("-For admins, as spectator, use ping to talk only to spectators",-65,y,1,1,1,1,2.5,"heading-1")
 	y = y + 2
-	generateRendering("-Joining team late : Team with lowest amount of players gets the new player that arrived",-50,y,1,1,1,1,2.5,"heading-1")
+	generateRendering("-Joining team late : Team with lowest amount of players gets the new player that arrived (might change up to referee)",-65,y,1,1,1,1,2.5,"heading-1")
 	y = y + 2
-	generateRendering("-Joining team late : A new player is allowed to join a random team even if teams have even amount of players",-50,y,1,1,1,1,2.5,"heading-1")
+	generateRendering("-Joining team late : A new player is allowed to join a random team even if teams have even amount of players (might change up to referee)",-65,y,1,1,1,1,2.5,"heading-1")
 	y = y + 2
-	generateRendering("-Joining team late : Exception for players that could break balance : poll",-50,y,1,1,1,1,2.5,"heading-1")
+	generateRendering("-Joining team late : Exception for players that could break balance (up to referee)",-65,y,1,1,1,1,2.5,"heading-1")
 	y = y + 2
-	generateRendering("-Teams are locked, if you want to play, ask to be moved to a team",-50,y,1,1,1,1,2.5,"heading-1")
+	generateRendering("-Teams are locked, if you want to play, ask to be moved to a team",-65,y,1,1,1,1,2.5,"heading-1")
 	y = y + 2
-	generateRendering("-We are using discord bb for coms (not required), feel free to join to listen ,even if no mic",-50,y,1,1,1,1,2.5,"heading-1")
+	generateRendering("-We are using discord bb for coms (not required), feel free to join to listen ,even if no mic",-65,y,1,1,1,1,2.5,"heading-1")
 	y = y + 2
-	generateRendering("-If you are not playing, you can listen to any team, but your mic must be off",-50,y,1,1,1,1,2.5,"heading-1")
+	generateRendering("-If you are not playing, you can listen to any team, but your mic must be off",-65,y,1,1,1,1,2.5,"heading-1")
 	y = y + 2
-	generateRendering("-No sign up required, anyone can play the event !",-50,y,1,1,1,1,2.5,"heading-1")
+	generateRendering("-No sign up required, anyone can play the event !",-65,y,1,1,1,1,2.5,"heading-1")
 	y = y + 2
 	
 	y = -8
-	generateRendering("Organization of event :",76,-8,1,1,1,1,3,"heading-1")
+	generateRendering("Organization of event :",66,-8,1,1,1,1,3,"heading-1")
 	y = y + 2
-	generateRendering("2 Team pickers/captains are chosen (one north, one south)",76,y,1,1,1,1,3,"heading-1")
+	generateRendering("2 Team pickers/captains are chosen (one north, one south)",66,y,1,1,1,1,3,"heading-1")
 	y = y + 2
-	generateRendering("-Each captain picks one player at a time",76,y,1,1,1,1,3,"heading-1")
+	generateRendering("-Each captain picks one player at a time",66,y,1,1,1,1,3,"heading-1")
 	y = y + 2
-	generateRendering("-Teams can come to discord voice channel of bb to have easier communication (not required, can just listen too)",76,y,1,1,1,1,3,"heading-1")
+	generateRendering("-Teams can come to discord voice channel of bb to have easier communication (not required, can just listen too)",66,y,1,1,1,1,3,"heading-1")
 	y = y + 2
-	generateRendering("-Vote/poll for difficulty",76,y,1,1,1,1,3,"heading-1")
+	generateRendering("-Vote/poll for difficulty and strategy talk in each team for few minutes until both captains say team is ready",66,y,1,1,1,1,3,"heading-1")
 	y = y + 2
-	generateRendering("-Strategy talk in each team for few minutes until both captains say team is ready",76,y,1,1,1,1,3,"heading-1")
-	y = y + 2
-	generateRendering("-Game starts, GL HF",76,y,1,1,1,1,3,"heading-1")
+	generateRendering("-Game starts, GL HF. Late joiners players can still join a team by asking",66,y,1,1,1,1,3,"heading-1")
 	y = y + 2
 end
 
@@ -549,7 +549,7 @@ local function generate_captain_mode(refereeName)
 		
 	local y = 0
 	rendering.clear()
-	generateRendering("Special Captain's tournament mode enabled (Match n°FIXME)",0,-16,1,0,0,1,5,"heading-1")
+	generateRendering("Special Captain's tournament mode enabled",0,-16,1,0,0,1,5,"heading-1")
 	generateRendering("team xx vs team yy. Referee: " .. refereeName .. ". Teams on VC",0,10,0.87,0.13,0.5,1,1.5,"heading-1")
 	generateGenericRenderingCaptain()
 	rendering.draw_line{surface = game.surfaces[global.bb_surface_name], from = {-9, -2}, to = {-9,3}, color = {r = 1},draw_on_ground = true, width = 3, gap_length = 0, dash_length = 1} 
@@ -723,7 +723,7 @@ local function start_captain_event()
 	poll_pickLateJoiners(playerToClear)
 	local y = 0
 	rendering.clear()
-	generateRendering("Special Captain's tournament mode enabled (Match n°FIXME)",0,-16,1,0,0,1,5,"heading-1")
+	generateRendering("Special Captain's tournament mode enabled",0,-16,1,0,0,1,5,"heading-1")
 	generateRendering("team " .. global.special_games_variables["captain_mode"]["captainList"][1] .. " vs team " .. global.special_games_variables["captain_mode"]["captainList"][2] .. ". Referee: " .. global.special_games_variables["captain_mode"]["refereeName"]  .. ". Teams on VC",0,10,0.87,0.13,0.5,1,1.5,"heading-1")
 	generateGenericRenderingCaptain()
 	generateRendering("Want to play ? Ask to join a team!",0,-9,1,1,1,1,3,"heading-1")
