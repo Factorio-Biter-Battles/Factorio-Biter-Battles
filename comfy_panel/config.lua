@@ -4,6 +4,7 @@ local Antigrief = require 'antigrief'
 local Color = require 'utils.color_presets'
 local SessionData = require 'utils.datastore.session_data'
 local Utils = require 'utils.core'
+local SnowCover = require 'maps.biter_battles_v2.snow_cover'
 
 local spaghett_entity_blacklist = {
     ['logistic-chest-requester'] = true,
@@ -153,6 +154,14 @@ local functions = {
 			game.print("Admin-only difficulty voting has been disabled!")
 		end
 	end,
+	["comfy_panel_snow_cover"] = function(event)
+        global.bb_settings['snow_cover_next'] = event.element.selected_index
+		if global.bb_settings['snow_cover_next'] ~= SnowCover.type_none then
+            get_actor(event, '{Snow Cover}', "Snow Cover \"" .. SnowCover.types[global.bb_settings['snow_cover_next']] .. "\" has been enabled!", true)
+		else
+			get_actor(event, '{Snow Cover}', "Snow Cover has been disabled!", true)
+		end
+	end,
 }
 
 local poll_function = {
@@ -300,6 +309,30 @@ local function add_switch(element, switch_state, name, description_main, descrip
     label.style.font_color = {0.85, 0.85, 0.85}
 
     return switch
+end
+
+
+local function add_dropdown(element, items, selected_index, name, description_main, description)
+    local t = element.add({type = 'table', column_count = 3})
+    local dropdown = t.add({name = name, type = 'drop-down', items = items, selected_index = selected_index})
+    dropdown.style.padding = 0
+    dropdown.style.margin = 0
+
+    local label = t.add({type = 'label', caption = description_main})
+    label.style.padding = 2
+    label.style.left_padding = 10
+    label.style.minimal_width = 120
+    label.style.font = 'heading-2'
+    label.style.font_color = {0.88, 0.88, 0.99}
+
+    local label = t.add({type = 'label', caption = description})
+    label.style.padding = 2
+    label.style.left_padding = 10
+    label.style.single_line = false
+    label.style.font = 'heading-3'
+    label.style.font_color = {0.85, 0.85, 0.85}
+
+    return dropdown
 end
 
 local build_config_gui = (function(player, frame)
@@ -578,6 +611,27 @@ local build_config_gui = (function(player, frame)
             )
             scroll_pane.add({type = 'line'})
         end
+
+
+        label = scroll_pane.add({type = 'label', caption = 'Map Settings'})
+        label.style.font = 'default-bold'
+        label.style.padding = 0
+        label.style.left_padding = 10
+        label.style.top_padding = 10
+        label.style.horizontal_align = 'left'
+        label.style.vertical_align = 'bottom'
+        label.style.font_color = Color.hot_pink
+
+        add_dropdown(
+            scroll_pane,
+            SnowCover.types,
+            global.bb_settings['snow_cover_next'],
+            'comfy_panel_snow_cover',
+            'Snow cover',
+            'Add snow cover cover to the map (takes effect after map restart)'
+        )
+        scroll_pane.add({type = 'line'})
+
     end
     for _, e in pairs(scroll_pane.children) do
         if e.type == 'line' then
@@ -611,6 +665,19 @@ local function on_gui_switch_state_changed(event)
     end
 end
 
+local function on_gui_selection_state_changed(event)
+    if not event.element then
+        return
+    end
+    if not event.element.valid then
+        return
+    end
+    if functions[event.element.name] then
+        functions[event.element.name](event)
+        return
+    end
+end
+
 local function on_force_created()
     spaghett()
 end
@@ -636,6 +703,7 @@ comfy_panel_tabs['Config'] = {gui = build_config_gui, admin = false}
 local Event = require 'utils.event'
 Event.on_init(on_init)
 Event.add(defines.events.on_gui_switch_state_changed, on_gui_switch_state_changed)
+Event.add(defines.events.on_gui_selection_state_changed, on_gui_selection_state_changed)
 Event.add(defines.events.on_force_created, on_force_created)
 Event.add(defines.events.on_built_entity, on_built_entity)
 Event.add(defines.events.on_robot_built_entity, on_robot_built_entity)

@@ -5,6 +5,7 @@ local bb_config = require "maps.biter_battles_v2.config"
 local Functions = require "maps.biter_battles_v2.functions"
 local tables = require "maps.biter_battles_v2.tables"
 local session = require 'utils.datastore.session_data'
+local SnowCover = require "maps.biter_battles_v2.snow_cover"
 
 local spawn_ore = tables.spawn_ore
 local table_insert = table.insert
@@ -103,7 +104,7 @@ local function get_replacement_tile(surface, position)
 		for _, v in pairs(vectors) do
 			local tile = surface.get_tile(position.x + v[1], position.y + v[2])
 			if not tile.collides_with("resource-layer") then
-				if tile.name ~= "stone-path" then
+				if tile.name ~= "stone-path" and not SnowCover.transition_tiles[tile.name] then
 					return tile.name
 				end
 			end
@@ -195,7 +196,7 @@ local function generate_starting_area(pos, distance_to_center, surface)
 
 	if distance_from_spawn_wall < -10 and not is_horizontal_border_river(pos) then
 		local tile_name = surface.get_tile(pos).name
-		if tile_name == "water" or tile_name == "deepwater" then
+		if tile_name == "water" or tile_name == "deepwater" or SnowCover.transition_tiles[tile_name] then
 			surface.set_tiles({{name = get_replacement_tile(surface, pos), position = pos}}, true)
 		end
 		return
@@ -315,7 +316,11 @@ local function draw_biter_area(surface, left_top_x, left_top_y)
 				local index = math_floor(GetNoise("bb_biterland", position, seed) * 48) % 7 + 1
 				out_of_map[i] = {name = "out-of-map", position = position}
 				tiles[i] = {name = "dirt-" .. index, position = position}
-				i = i + 1			
+				i = i + 1
+
+				if global.bb_settings["snow_cover"] ~= SnowCover.type_none then
+					SnowCover.draw_biter_area_border(surface, position)
+				end
 			end
 		end
 	end
@@ -387,6 +392,9 @@ function Public.generate(event)
 
 	mixed_ore(surface, left_top_x, left_top_y)
 	generate_river(surface, left_top_x, left_top_y)
+	if global.bb_settings["snow_cover"] ~= SnowCover.type_none then
+	    SnowCover.generate_snow(surface, left_top_x, left_top_y)
+	end
 	draw_biter_area(surface, left_top_x, left_top_y)		
 	generate_extra_worm_turrets(surface, left_top)
 end
@@ -441,6 +449,18 @@ function Public.draw_spawn_area(surface)
 	
 	surface.destroy_decoratives({})
 	surface.regenerate_decorative()
+end
+
+function Public.draw_snow_spawn_area(surface)
+	-- Redraw snow in spawn area because some tiles may change in Init.draw_structures()
+	if global.bb_settings["snow_cover"] ~= SnowCover.type_none then
+		local chunk_r = 4
+		for x = chunk_r * -1, chunk_r, 1 do
+			for y = chunk_r * -1, -1, 1 do
+				SnowCover.generate_snow(surface, x * 32, y * 32)
+			end
+		end
+	end
 end
 
 function Public.draw_water_for_river_ends(surface, chunk_pos)
