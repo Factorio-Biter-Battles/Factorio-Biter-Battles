@@ -154,14 +154,16 @@ local function is_within_spawn_island(pos)
 	return true
 end
 
-local river_y_1 = bb_config.border_river_width * -1.5
-local river_y_2 = bb_config.border_river_width * 1.5
-local river_width_half = math_floor(bb_config.border_river_width * -0.5)
-function is_horizontal_border_river(pos)
+-- border_river_noise is the maximum random value that can be added to each side of the river
+local border_river_noise = 4
+local river_width_half_min = math_floor(bb_config.border_river_width * -0.5)
+local river_width_half_max = river_width_half_min - border_river_noise
+-- pos must be from the North side
+local function is_horizontal_border_river(pos)
 	if tile_distance_to_center(pos) < river_circle_size then return true end
-	if pos.y < river_y_1 then return false end
-	if pos.y > river_y_2 then return false end
-	if pos.y >= river_width_half - (math_abs(Functions.get_noise(1, pos)) * 4) then return true end
+	if pos.y < river_width_half_max then return false end
+	if pos.y > river_width_half_min then return true end
+	if pos.y >= river_width_half_min - (math_abs(Functions.get_noise(1, pos)) * border_river_noise) then return true end
 	return false
 end
 
@@ -352,7 +354,7 @@ local function draw_biter_area(surface, left_top_x, left_top_y)
 		local v = chunk_tile_vectors[math_random(1, size_of_chunk_tile_vectors)]
 		local position = {x = left_top_x + v[1], y = left_top_y + v[2]}
 		local worm_turret_name = BiterRaffle.roll("worm", e)
-		if Functions.is_biter_area(position,true) and surface.can_place_entity({name = worm_turret_name, position = position}) then			
+		if Functions.is_biter_area(position,true) and surface.can_place_entity({name = worm_turret_name, position = position}) then
 			surface.create_entity({name = worm_turret_name, position = position, force = "north_biters"})
 		end
 	end
@@ -403,15 +405,25 @@ end
 
 function Public.draw_spawn_island(surface)
 	local tiles = {}
-	for x = math.floor(spawn_island_size) * -1, -1, 1 do
-		for y = math.floor(spawn_island_size) * -1, -1, 1 do
+	for x = math_floor(spawn_island_size) * -1, -1, 1 do
+		for y = math_floor(spawn_island_size) * -1, -1, 1 do
+			local pos = {x = x, y = y}
+			local distance_to_center = math_sqrt(pos.x ^ 2 + pos.y ^ 2)
 			local pos = {x = x, y = y}
 			if is_within_spawn_island(pos) then
-				if tile_distance_to_center(pos) < 6.3 then
-					table_insert(tiles, {name = "sand-1", position = pos})
-				else
-					table_insert(tiles, {name = "refined-concrete", position = pos})
-				end
+                local tile_name = "refined-concrete"
+                if distance_to_center < 6.3 then
+                    tile_name = "sand-1"
+                end
+
+                if global.bb_settings['new_year_island'] then
+                    tile_name = "blue-refined-concrete"
+                    if distance_to_center < 6.3 then
+                        tile_name = "lab-white"
+                    end
+                end
+
+                table_insert(tiles, {name = tile_name, position = pos})
 			end
 		end
 	end
@@ -703,6 +715,89 @@ function Public.deny_enemy_side_ghosts(event)
 		if not robot_build_restriction[force] then return end
 		if not robot_build_restriction[force](event.created_entity.position.y) then return end
 		event.created_entity.destroy()
+	end
+end
+
+local function add_gifts(surface)
+	-- exclude dangerous goods
+	local blacklist = LootRaffle.get_tech_blacklist(0.95)
+	for k, _ in pairs(loot_blacklist) do blacklist[k] = true end
+
+	for i = 1, math_random(8, 12) do
+		local loot_worth = math_random(1, 35000)
+		local item_stacks = LootRaffle.roll(loot_worth, 3, blacklist)
+		for k, stack in pairs(item_stacks) do
+			surface.spill_item_stack(
+				{
+					x = math_random(-10, 10) * 0.1,
+					y = math_random(-5, 15) * 0.1
+				},
+				{name = stack.name, count = 1}, false, nil, true)
+		end
+	end
+end
+
+function Public.add_new_year_island_decorations(surface)
+	for _ = 1, math_random(0, 4) do
+		local stump = surface.create_entity({
+			name = "tree-05-stump",
+			position = {x = math_random(-40, 40) * 0.1, y = math_random(-40, 40) * 0.1}
+		})
+		stump.corpse_expires = false
+	end
+
+	local scorchmark = surface.create_entity({
+		name = "medium-scorchmark-tintable",
+		position = {x = 0, y = 0}
+	})
+	scorchmark.corpse_expires = false
+
+	local tree = surface.create_entity({
+		name = "tree-01",
+		position = {x = 0, y = 0.05}
+	})
+	tree.minable = false
+	tree.destructible = false
+
+	add_gifts(surface)
+
+	local signals = {
+		{name = "rail-signal", position = {-0.5, -5.5}, direction = defines.direction.west},
+		{name = "rail-signal", position = {0.5, -5.5}, direction = defines.direction.west},
+		{name = "rail-signal", position = {2.5, -4.5}, direction = defines.direction.northwest},
+		{name = "rail-signal", position = {4.5, -2.5}, direction = defines.direction.northwest},
+		{name = "rail-signal", position = {5.5, -0.5}, direction = defines.direction.north},
+		{name = "rail-signal", position = {5.5, 0.5}, direction = defines.direction.north},
+		{name = "rail-signal", position = {4.5, 2.5}, direction = defines.direction.northeast},
+		{name = "rail-signal", position = {2.5, 4.5}, direction = defines.direction.northeast},
+		{name = "rail-signal", position = {0.5, 5.5}, direction = defines.direction.east},
+		{name = "rail-signal", position = {-0.5, 5.5}, direction = defines.direction.east},
+		{name = "rail-signal", position = {-2.5, 4.5}, direction = defines.direction.southeast},
+		{name = "rail-signal", position = {-4.5, 2.5}, direction = defines.direction.southeast},
+		{name = "rail-signal", position = {-5.5, 0.5}, direction = defines.direction.south},
+		{name = "rail-signal", position = {-5.5, -0.5}, direction = defines.direction.south},
+		{name = "rail-signal", position = {-4.5, -2.5}, direction = defines.direction.southwest},
+		{name = "rail-signal", position = {-2.5, -4.5}, direction = defines.direction.southwest},
+	}
+	for _, v in pairs(signals) do
+		local signal = surface.create_entity(v)
+		signal.minable = false
+		signal.destructible = false
+	end
+
+	for _ = 1, math_random(0, 6) do
+		surface.create_decoratives{check_collision = false, decoratives = {{
+			name = "green-asterisk-mini",
+			position = {x = math_random(-40, 40) * 0.1, y = math_random(-40, 40) * 0.1},
+			amount = 1
+		}}}
+	end
+	for _ = 1, math_random(0, 6) do
+		surface.create_decoratives{check_collision = false, decoratives = {{
+			name = "rock-tiny",
+			position = {x = math_random(-40, 40) * 0.1, y = math_random(-40, 40) * 0.1},
+			amount = 1
+		}}}
 	end
 end
 
