@@ -409,20 +409,20 @@ function Public.draw_spawn_island(surface)
 		for y = math_floor(spawn_island_size) * -1, -1, 1 do
 			local pos = {x = x, y = y}
 			if is_within_spawn_island(pos) then
-			    local distance_to_center = tile_distance_to_center(pos)
-                local tile_name = "refined-concrete"
-                if distance_to_center < 6.3 then
-                    tile_name = "sand-1"
-                end
+				local distance_to_center = tile_distance_to_center(pos)
+				local tile_name = "refined-concrete"
+				if distance_to_center < 6.3 then
+					tile_name = "sand-1"
+				end
 
-                if global.bb_settings['new_year_island'] then
-                    tile_name = "blue-refined-concrete"
-                    if distance_to_center < 6.3 then
-                        tile_name = "lab-white"
-                    end
-                end
+				if global.bb_settings['new_year_island'] then
+					tile_name = "blue-refined-concrete"
+					if distance_to_center < 6.3 then
+						tile_name = "lab-white"
+					end
+				end
 
-                table_insert(tiles, {name = tile_name, position = pos})
+				table_insert(tiles, {name = tile_name, position = pos})
 			end
 		end
 	end
