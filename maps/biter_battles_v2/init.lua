@@ -120,7 +120,8 @@ function Public.initial_setup()
 		--TEAM SETTINGS--
 		["team_balancing"] = true,			--Should players only be able to join a team that has less or equal members than the opposing team?
 		["only_admins_vote"] = false,		--Are only admins able to vote on the global difficulty?
-
+		--MAP SETTINGS--
+		["new_year_island"] = false,
 		["snow_cover"] = SnowCover.type_none,				-- Snow cover for current surface
 		["snow_cover_next"] = SnowCover.type_none,			-- Snow cover for next surface
 	}
@@ -173,7 +174,7 @@ function Public.draw_structures()
 	Terrain.generate_spawn_ore(surface)
 	Terrain.generate_additional_rocks(surface)
 	Terrain.generate_silo(surface)
-	Terrain.draw_spawn_circle(surface)
+	Terrain.draw_spawn_island(surface)
 	Terrain.draw_snow_spawn_area(surface)
 	--Terrain.generate_spawn_goodies(surface)
 end
