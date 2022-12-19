@@ -722,7 +722,6 @@ local function start_captain_event()
 	if playerToClear.gui.top["captain_poll_team_ready_frame"] then playerToClear.gui.top["captain_poll_team_ready_frame"].destroy() end
 	playerToClear = game.get_player(global.special_games_variables["captain_mode"]["refereeName"])
 	if playerToClear.gui.top["captain_poll_team_ready_frame"] then playerToClear.gui.top["captain_poll_team_ready_frame"].destroy() end
-	poll_pickLateJoiners(playerToClear)
 	local y = 0
 	rendering.clear()
 	generateRendering("Special Captain's tournament mode enabled",0,-16,1,0,0,1,5,"heading-1")
@@ -1032,10 +1031,12 @@ local function on_gui_click(event)
 				poll_captain_team_ready(captainTwo,false)
 				Team_manager.custom_team_name_gui(captainOne, captainOne.force.name)
 				Team_manager.custom_team_name_gui(captainTwo, captainTwo.force.name)
+				local refPlayer = game.get_player(global.special_games_variables["captain_mode"]["refereeName"])
 				if not isRefereeACaptain() then
-					poll_captain_team_ready(game.get_player(global.special_games_variables["captain_mode"]["refereeName"]),true)
+					poll_captain_team_ready(refPlayer,true)
 				end
 				global.special_games_variables["captain_mode"]["lateJoiners"] = true
+				poll_pickLateJoiners(refPlayer)
 			else
 				game.print('[font=default-large-bold]All late joiners were picked by captains[/font]', Color.cyan)
 			end
