@@ -1,6 +1,8 @@
 -- Biter Battles v2 -- by MewMew
 
 local Ai = require "maps.biter_battles_v2.ai"
+local AiStrikes = require "maps.biter_battles_v2.ai_strikes"
+local AiTargets = require "maps.biter_battles_v2.ai_targets"
 local Functions = require "maps.biter_battles_v2.functions"
 local Game_over = require "maps.biter_battles_v2.game_over"
 local Gui = require "maps.biter_battles_v2.gui"
@@ -60,13 +62,13 @@ local function on_built_entity(event)
 	Functions.no_landfill_by_untrusted_user(event)
 	Functions.no_turret_creep(event)
 	Terrain.deny_enemy_side_ghosts(event)
-	Functions.add_target_entity(event.created_entity)
+	AiTargets.start_tracking(event.created_entity)
 end
 
 local function on_robot_built_entity(event)
 	Functions.no_turret_creep(event)
 	Terrain.deny_construction_bots(event)
-	Functions.add_target_entity(event.created_entity)
+	AiTargets.start_tracking(event.created_entity)
 end
 
 local function on_robot_built_tile(event)
@@ -77,8 +79,13 @@ local function on_entity_died(event)
 	local entity = event.entity
 	if not entity.valid then return end
 	if Ai.subtract_threat(entity) then Gui.refresh_threat() end
+	AiTargets.stop_tracking(entity)
 	if Functions.biters_landfill(entity) then return end
 	Game_over.silo_death(event)
+end
+
+local function on_ai_command_completed(event)
+	if not event.was_distracted then AiStrikes.step(event.unit_number, event.result) end
 end
 
 local function getTagOutpostName(pos)
@@ -202,6 +209,11 @@ end
 
 local function on_player_mined_entity(event)
 	Terrain.minable_wrecks(event)
+	AiTargets.stop_tracking(event.entity)
+end
+
+local function on_robot_mined_entity(event)
+	AiTargets.stop_tracking(event.entity)
 end
 
 local function on_chunk_generated(event)
@@ -377,11 +389,13 @@ Event.add(defines.events.on_built_entity, on_built_entity)
 Event.add(defines.events.on_chunk_generated, on_chunk_generated)
 Event.add(defines.events.on_console_chat, on_console_chat)
 Event.add(defines.events.on_entity_died, on_entity_died)
+Event.add(defines.events.on_ai_command_completed, on_ai_command_completed)
 Event.add(defines.events.on_gui_click, on_gui_click)
 Event.add(defines.events.on_marked_for_deconstruction, on_marked_for_deconstruction)
 Event.add(defines.events.on_player_built_tile, on_player_built_tile)
 Event.add(defines.events.on_player_joined_game, on_player_joined_game)
 Event.add(defines.events.on_player_mined_entity, on_player_mined_entity)
+Event.add(defines.events.on_robot_mined_entity, on_robot_mined_entity)
 Event.add(defines.events.on_research_finished, on_research_finished)
 Event.add(defines.events.on_robot_built_entity, on_robot_built_entity)
 Event.add(defines.events.on_robot_built_tile, on_robot_built_tile)

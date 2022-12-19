@@ -201,13 +201,14 @@ function Public.tables()
 	global.rocket_silo = {}
 	global.spectator_rejoin_delay = {}
 	global.spy_fish_timeout = {}
-	global.target_entities = {}
 	global.tm_custom_name = {}
 	global.total_passive_feed_redpotion = 0
 	global.unit_spawners = {}
 	global.boss_units = {}
 	global.unit_spawners.north_biters = {}
 	global.unit_spawners.south_biters = {}
+	global.ai_strikes = {}
+	global.ai_targets = {}
 	global.active_special_games = {}
 	global.special_games_variables = {}
 	global.player_data_afk = {}
@@ -392,7 +393,7 @@ function Public.forces()
 		game.forces[force.name].technologies["land-mine"].enabled = false
 		game.forces[force.name].technologies["uranium-ammo"].researched = true
 		game.forces[force.name].research_queue_enabled = true
-		global.target_entities[force.index] = {}
+		global.ai_targets[force.name] = { available = {}, selected = {} }
 		global.spy_fish_timeout[force.name] = 0
 		global.bb_evolution[force.name] = 0
 		global.reanim_chance[force.index] = 0
