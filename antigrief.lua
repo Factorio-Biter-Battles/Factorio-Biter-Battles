@@ -55,6 +55,12 @@ local this = {
     explosive_threshold = 16
 }
 
+this.whitelist_types = {
+    ['wall'] = true,
+    ['offshore-pump'] = true,
+    ['boiler'] = true,
+}
+
 local blacklisted_types = {
     ['transport-belt'] = true,
     ['wall'] = true,
