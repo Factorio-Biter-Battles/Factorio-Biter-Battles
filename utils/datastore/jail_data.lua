@@ -254,11 +254,6 @@ local validate_args = function(data)
         return false
     end
 
-    if votefree[player.name] and not player.admin then
-        Utils.print_to(player, 'You are currently being investigated since you have griefed.')
-        return false
-    end
-
     if jailed[player.name] and not player.admin then
         Utils.print_to(player, 'You are jailed, you can´t run this command.')
         return false
