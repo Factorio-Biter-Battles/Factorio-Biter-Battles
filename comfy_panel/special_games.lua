@@ -455,7 +455,7 @@ end
 
 local function poll_captain_late_joiners(player)
 	pollGenerator(player,false,nil,
-	"captain_poll_latejoiner_question","Do you want to play?","Yes","captain_late_joiner_yes","No","captain_late_joiner_no",nil,nil)
+	"captain_poll_latejoiner_question","Do you want to play?","Yes","captain_late_joiner_yes","No","captain_late_joiner_no","No and please dont ask me again for the event (you will be blacklisted from any other late joiners poll for the current captain match only)","captain_late_joiner_no_blacklist")
 end
 
 local function generateRendering(textChosen, xPos, yPos, rColor,gColor,bColor,aColor, scaleChosen,fontChosen)
@@ -521,7 +521,7 @@ local function generateGenericRenderingCaptain()
 end
 
 local function generate_captain_mode(refereeName)
-	global.special_games_variables["captain_mode"] = {["captainList"] = {}, ["refereeName"] = refereeName, ["listPlayers"] = {}, ["listSpectators"] = {}, ["listOfPlayersWhoDidntVoteForRoleYet"]={},["listTeamReadyToPlay"] = {}, ["lateJoiners"] = false, ["prepaPhase"] = true}
+	global.special_games_variables["captain_mode"] = {["captainList"] = {}, ["refereeName"] = refereeName, ["listPlayers"] = {}, ["listSpectators"] = {}, ["listOfPlayersWhoDidntVoteForRoleYet"]={},["listTeamReadyToPlay"] = {}, ["lateJoiners"] = false, ["prepaPhase"] = true, ["blacklistLateJoin"]={}}
 	global.active_special_games["captain_mode"] = true
 	if game.get_player(global.special_games_variables["captain_mode"]["refereeName"]) == nil then
 		game.print("Event captain aborted, referee is not a player connected.. Referee name of player was : ".. global.special_games_variables["captain_mode"]["refereeName"])
@@ -538,7 +538,7 @@ local function generate_captain_mode(refereeName)
 	end
 	global.chosen_team = {}
 	clear_character_corpses()
-	game.print('Captain mode started !! Have fun !')
+	game.print('Captain mode started !! Have fun ! Referee will be '.. global.special_games_variables["captain_mode"]["refereeName"])
 	global.tournament_mode = true
 	if global.freeze_players == false then
 		global.freeze_players = true
@@ -666,7 +666,7 @@ local create_special_games_panel = (function(player, frame)
 end)
 
 local function are_all_players_picked()
-	if #global.special_games_variables["captain_mode"]["listPlayers"] > 0 then return false end
+	if #global.special_games_variables["captain_mode"]["listPlayers"] > 1 then return false end
 	return true
 end
 
@@ -678,9 +678,11 @@ local function updateEndPollReferee()
 end
 
 local function updatePollLateJoinReferee()
-	game.get_player(global.special_games_variables["captain_mode"]["refereeName"]).gui.center["captain_poll_end_latejoiners_referee_frame"]["listPlayers"].caption = get_player_list()
-	game.get_player(global.special_games_variables["captain_mode"]["refereeName"]).gui.center["captain_poll_end_latejoiners_referee_frame"]["listSpectators"].caption = get_spectator_list()
-	game.get_player(global.special_games_variables["captain_mode"]["refereeName"]).gui.center["captain_poll_end_latejoiners_referee_frame"]["remainPlayersDidntVote"].caption = get_list_players_who_didnt_vote_yet()
+	if game.get_player(global.special_games_variables["captain_mode"]["refereeName"]).gui.center["captain_poll_end_latejoiners_referee_frame"] then
+		game.get_player(global.special_games_variables["captain_mode"]["refereeName"]).gui.center["captain_poll_end_latejoiners_referee_frame"]["listPlayers"].caption = get_player_list()
+		game.get_player(global.special_games_variables["captain_mode"]["refereeName"]).gui.center["captain_poll_end_latejoiners_referee_frame"]["listSpectators"].caption = get_spectator_list()
+		game.get_player(global.special_games_variables["captain_mode"]["refereeName"]).gui.center["captain_poll_end_latejoiners_referee_frame"]["remainPlayersDidntVote"].caption = get_list_players_who_didnt_vote_yet()
+	end
 end
 
 local function delete_player_from_novote_list(playerName)
@@ -921,7 +923,23 @@ local function on_gui_click(event)
 		else
 			game.print("The referee chose that " .. global.special_games_variables["captain_mode"]["captainList"][1] .. " will pick first", Color.cyan)
 			game.get_player(global.special_games_variables["captain_mode"]["refereeName"]).gui.center["captain_poll_firstpicker_choice_frame"].destroy()
-			poll_alternate_picking(game.get_player(global.special_games_variables["captain_mode"]["captainList"][1]))
+			
+			if #global.special_games_variables["captain_mode"]["listPlayers"] == 1 and global.special_games_variables["captain_mode"]["lateJoiners"] == true then
+				local lastPlayerToSend = game.get_player(global.special_games_variables["captain_mode"]["listPlayers"][1])
+				local captainForceName = game.get_player(global.special_games_variables["captain_mode"]["captainList"][1]).force.name
+				game.print(lastPlayerToSend.name .. " was automatically picked")
+				Team_manager.switch_force(lastPlayerToSend.name,captainForceName)
+				lastPlayerToSend.print("Remember to join your team channel voice on discord of free biterbattles (discord link can be found on biterbattles.org website) if possible (even if no mic, it's fine, to just listen, it's not required though but better if you do !)", Color.cyan)
+				local index={}
+				for k,v in pairs(global.special_games_variables["captain_mode"]["listPlayers"]) do
+				   index[v]=k
+				end
+				local indexPlayer = index[lastPlayerToSend.name]
+				table.remove(global.special_games_variables["captain_mode"]["listPlayers"],indexPlayer)
+				game.print('[font=default-large-bold]All late joiners were picked by captains[/font]', Color.cyan)
+			else
+				poll_alternate_picking(game.get_player(global.special_games_variables["captain_mode"]["captainList"][1]))
+			end
 		end
 	elseif element.name == "captain_pick_second_in_list_choice" then
 		if #global.special_games_variables["captain_mode"]["listPlayers"] == 0 and global.special_games_variables["captain_mode"]["lateJoiners"] == false then
@@ -931,7 +949,22 @@ local function on_gui_click(event)
 		else
 			game.print("The referee chose that " .. global.special_games_variables["captain_mode"]["captainList"][2] .. " will pick first", Color.cyan)
 			game.get_player(global.special_games_variables["captain_mode"]["refereeName"]).gui.center["captain_poll_firstpicker_choice_frame"].destroy()
-			poll_alternate_picking(game.get_player(global.special_games_variables["captain_mode"]["captainList"][2]))
+			if #global.special_games_variables["captain_mode"]["listPlayers"] == 1 and global.special_games_variables["captain_mode"]["lateJoiners"] == true then
+				local lastPlayerToSend = game.get_player(global.special_games_variables["captain_mode"]["listPlayers"][1])
+				local captainForceName = game.get_player(global.special_games_variables["captain_mode"]["captainList"][2]).force.name
+				game.print(lastPlayerToSend.name .. " was automatically picked")
+				Team_manager.switch_force(lastPlayerToSend.name,captainForceName)
+				lastPlayerToSend.print("Remember to join your team channel voice on discord of free biterbattles (discord link can be found on biterbattles.org website) if possible (even if no mic, it's fine, to just listen, it's not required though but better if you do !)", Color.cyan)
+				local index={}
+				for k,v in pairs(global.special_games_variables["captain_mode"]["listPlayers"]) do
+				   index[v]=k
+				end
+				local indexPlayer = index[lastPlayerToSend.name]
+				table.remove(global.special_games_variables["captain_mode"]["listPlayers"],indexPlayer)
+				game.print('[font=default-large-bold]All late joiners were picked by captains[/font]', Color.cyan)
+			else
+				poll_alternate_picking(game.get_player(global.special_games_variables["captain_mode"]["captainList"][2]))
+			end
 		end
 	elseif element.name == "captain_pick_random_in_list_choice" then
 		if #global.special_games_variables["captain_mode"]["listPlayers"] == 0 and global.special_games_variables["captain_mode"]["lateJoiners"] == false then
@@ -942,14 +975,29 @@ local function on_gui_click(event)
 			local captainChosen = math_random(1,2)
 			game.print("Fortune has chosen that " .. global.special_games_variables["captain_mode"]["captainList"][captainChosen] .. " will pick first", Color.cyan)
 			game.get_player(global.special_games_variables["captain_mode"]["refereeName"]).gui.center["captain_poll_firstpicker_choice_frame"].destroy()
-			poll_alternate_picking(game.get_player(global.special_games_variables["captain_mode"]["captainList"][captainChosen]))
+			if #global.special_games_variables["captain_mode"]["listPlayers"] == 1 and global.special_games_variables["captain_mode"]["lateJoiners"] == true then
+				local lastPlayerToSend = game.get_player(global.special_games_variables["captain_mode"]["listPlayers"][1])
+				local captainForceName = game.get_player(global.special_games_variables["captain_mode"]["captainList"][captainChosen]).force.name
+				game.print(lastPlayerToSend.name .. " was automatically picked")
+				Team_manager.switch_force(lastPlayerToSend.name,captainForceName)
+				lastPlayerToSend.print("Remember to join your team channel voice on discord of free biterbattles (discord link can be found on biterbattles.org website) if possible (even if no mic, it's fine, to just listen, it's not required though but better if you do !)", Color.cyan)
+				local index={}
+				for k,v in pairs(global.special_games_variables["captain_mode"]["listPlayers"]) do
+				   index[v]=k
+				end
+				local indexPlayer = index[lastPlayerToSend.name]
+				table.remove(global.special_games_variables["captain_mode"]["listPlayers"],indexPlayer)
+				game.print('[font=default-large-bold]All late joiners were picked by captains[/font]', Color.cyan)
+			else
+				poll_alternate_picking(game.get_player(global.special_games_variables["captain_mode"]["captainList"][captainChosen]))
+			end
 		end
 	elseif string.find(element.name, "captain_player_picked_") then
 		local playerPicked = element.name:gsub("^captain_player_picked_", "")
 		if player.gui.center["captain_poll_alternate_pick_choice_frame"] then player.gui.center["captain_poll_alternate_pick_choice_frame"].destroy() end
 		game.print(playerPicked .. " was picked by Captain " .. player.name)
 		Team_manager.switch_force(playerPicked,player.force.name)
-		game.get_player(playerPicked).print("Remember to join your team channel voice on discord of biterbattles if possible (even if no mic, it's fine, to just listen, it's not required though but better if you do !", Color.cyan)
+		game.get_player(playerPicked).print("Remember to join your team channel voice on discord of free biterbattles (discord link can be found on biterbattles.org website) if possible (even if no mic, it's fine, to just listen, it's not required though but better if you do !)", Color.cyan)
 		
 		local index={}
 		for k,v in pairs(global.special_games_variables["captain_mode"]["listPlayers"]) do
@@ -959,9 +1007,25 @@ local function on_gui_click(event)
 		table.remove(global.special_games_variables["captain_mode"]["listPlayers"],indexPlayer)
 		
 		if are_all_players_picked() then
+			if #global.special_games_variables["captain_mode"]["listPlayers"] == 1 then
+				local lastPlayerToSend = game.get_player(global.special_games_variables["captain_mode"]["listPlayers"][1])
+				local oppositeForce = "north"
+				if player.force.name == "north" then
+					oppositeForce = "south"
+				end
+				game.print(lastPlayerToSend.name .. " was automatically picked")
+				Team_manager.switch_force(lastPlayerToSend.name,oppositeForce)
+				lastPlayerToSend.print("Remember to join your team channel voice on discord of free biterbattles (discord link can be found on biterbattles.org website) if possible (even if no mic, it's fine, to just listen, it's not required though but better if you do !)", Color.cyan)
+				local index={}
+				for k,v in pairs(global.special_games_variables["captain_mode"]["listPlayers"]) do
+				   index[v]=k
+				end
+				local indexPlayer = index[lastPlayerToSend.name]
+				table.remove(global.special_games_variables["captain_mode"]["listPlayers"],indexPlayer)
+			end
 			if not global.special_games_variables["captain_mode"]["lateJoiners"] then
 				allow_vote()
-				game.print('[font=default-large-bold]All players were picked by player, time to start preparation for each team ! Once your team is ready, captain, click on yes on top popup[/font]', Color.cyan)
+				game.print('[font=default-large-bold]All players were picked by captains, time to start preparation for each team ! Once your team is ready, captain, click on yes on top popup[/font]', Color.cyan)
 				local captainOne = game.get_player(global.special_games_variables["captain_mode"]["captainList"][1])
 				local captainTwo = game.get_player(global.special_games_variables["captain_mode"]["captainList"][2])
 				poll_captain_team_ready(captainOne,false)
@@ -1011,14 +1075,21 @@ local function on_gui_click(event)
 		if player.gui.center["captain_poll_end_latejoiners_referee_frame"] then player.gui.center["captain_poll_end_latejoiners_referee_frame"].destroy() end
 		for _, player in pairs(game.connected_players) do
 			if not global.chosen_team[player.name] then
-				table.insert(global.special_games_variables["captain_mode"]["listOfPlayersWhoDidntVoteForRoleYet"],player.name)
 				if player.gui.center["captain_poll_latejoiner_question"] then player.gui.center["captain_poll_latejoiner_question"].destroy() end
-				poll_captain_late_joiners(player)
+				if not global.special_games_variables["captain_mode"]["blacklistLateJoin"][player.name] then
+					table.insert(global.special_games_variables["captain_mode"]["listOfPlayersWhoDidntVoteForRoleYet"],player.name)
+					poll_captain_late_joiners(player)
+				else
+					if player.name == refPlayer.name then 
+						poll_captain_end_late_joiners_referee(player)
+					end
+				end
 			end
 		end
 		if global.chosen_team[refPlayer.name] then
 			poll_captain_end_late_joiners_referee(refPlayer)
 		end
+		updatePollLateJoinReferee()
 	elseif string.find(element.name, "captain_late_joiner_yes") then
 		if player.gui.center["captain_poll_latejoiner_question"] then player.gui.center["captain_poll_latejoiner_question"].destroy() end
 		table.insert(global.special_games_variables["captain_mode"]["listPlayers"],player.name)
@@ -1030,6 +1101,10 @@ local function on_gui_click(event)
 		end
 		
 	elseif string.find(element.name, "captain_late_joiner_no") then
+		if element.name == "captain_late_joiner_no_blacklist" then
+			table.insert(global.special_games_variables["captain_mode"]["blacklistLateJoin"],player.name)
+			global.special_games_variables["captain_mode"]["blacklistLateJoin"][player.name] = true
+		end
 		if player.gui.center["captain_poll_latejoiner_question"] then player.gui.center["captain_poll_latejoiner_question"].destroy() end
 		table.insert(global.special_games_variables["captain_mode"]["listSpectators"],player.name)
 		delete_player_from_novote_list(player.name)
@@ -1058,10 +1133,11 @@ local function on_gui_click(event)
 		generate_limited_lives(lives_limit)
 	end
 
-
-	if string.find(element.name, "_confirm") or element.name == "cancel" then
-		element.parent.parent.children[3].visible = true -- shows back Apply button
-		element.parent.destroy() -- removes confirm/Cancel buttons
+	if element.valid then
+		if string.find(element.name, "_confirm") or element.name == "cancel" then
+			element.parent.parent.children[3].visible = true -- shows back Apply button
+			element.parent.destroy() -- removes confirm/Cancel buttons
+		end
 	end
 end
 
