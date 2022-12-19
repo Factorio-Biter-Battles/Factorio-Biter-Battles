@@ -145,19 +145,17 @@ local function select_units_around_spawner(spawner, force_name)
 
 	local max_group_size_biters_force = global.max_group_size[biter_force_name]
 
-	if max_group_size_biters_force ~= global.max_group_size_initial then
-		threat_for_normal_biters = threat_for_normal_biters / 2
-	end
-	local threat_for_boss_biters = threat  / 2
+	local threat_for_boss_biters = threat 
 	local max_unit_count = math.floor(global.bb_threat[biter_force_name] * 0.25) + math_random(6,12)
 	if max_unit_count > max_group_size_biters_force then max_unit_count = max_group_size_biters_force end
 
-	--Manual spawning of units
-	spawn_biters(true,max_unit_count,spawner,threat_for_normal_biters,biter_force_name,max_unit_count,valid_biters,force_name)
 
-	--Manual spawning of boss units
 	if max_group_size_biters_force ~= global.max_group_size_initial then
+		--Manual spawning of boss units
 		spawn_biters(false,math.ceil((global.max_group_size_initial - max_group_size_biters_force)/20),spawner,threat_for_boss_biters,biter_force_name,max_unit_count,valid_biters,force_name)
+	else
+		--Manual spawning of units
+		spawn_biters(true,max_unit_count,spawner,threat_for_normal_biters,biter_force_name,max_unit_count,valid_biters,force_name)
 	end
 
 	return valid_biters
