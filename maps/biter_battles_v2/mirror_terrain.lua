@@ -1,6 +1,6 @@
 local Public = {}
 
-local AiTargets = require "maps.biter_battles_v2.ai_targets"
+local Functions = require "maps.biter_battles_v2.functions"
 local terrain = require "maps.biter_battles_v2.terrain"
 local table_remove = table.remove
 local table_insert = table.insert
@@ -83,9 +83,9 @@ function Public.invert_entity(event)
 
 	if destination.name == "rocket-silo" and math.abs(destination.position.y) < 150 and math.abs(destination.position.x) < 100 then
 		global.rocket_silo[destination.force.name] = destination
-		AiTargets.start_tracking(destination)
+		Functions.add_target_entity(destination)
 	elseif destination.name == "gun-turret" then
-		AiTargets.start_tracking(destination)
+		Functions.add_target_entity(destination)
 	elseif destination.name == "spitter-spawner" or destination.name == 'biter-spawner' then
 		table_insert(global.unit_spawners[destination.force.name], destination)
 	end
