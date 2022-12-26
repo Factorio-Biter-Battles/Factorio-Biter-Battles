@@ -239,7 +239,7 @@ function set_evo_and_threat(flask_amount, food, biter_force_name)
 		game.forces[enemyBitersForceName].evolution_factor = game.forces[biter_force_name].evolution_factor
 		global.bb_evolution[enemyBitersForceName] = global.bb_evolution[biter_force_name]
 		global.bb_threat_income[enemyBitersForceName] = evo * 25
-		global.bb_threat[enemyBitersForceName] = global.bb_threat[enemyBitersForceName] + threat
+		global.bb_threat[enemyBitersForceName] = math_round(global.bb_threat[enemyBitersForceName] + threat, decimals)
 	end
 end
 
