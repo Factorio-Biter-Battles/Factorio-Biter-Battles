@@ -267,7 +267,7 @@ local function clear_gui_captain_mode()
 		if player.gui.top["captain_referee_enable_picking_late_joiners"] then player.gui.top["captain_referee_enable_picking_late_joiners"].destroy() end
 		if player.gui.center["captain_poll_latejoiner_question"] then player.gui.center["captain_poll_latejoiner_question"].destroy() end
 		if player.gui.center["captain_poll_end_latejoiners_referee_frame"] then player.gui.center["captain_poll_end_latejoiners_referee_frame"].destroy() end
-		
+		if player.gui.top["captain_poll_new_joiner_to_current_match"] then player.gui.top["captain_poll_new_joiner_to_current_match"].destroy() end
 	end
 end
 
@@ -342,6 +342,8 @@ end
 local function show_captain_question()
 	for _, player in pairs(game.connected_players) do
 		table.insert(global.special_games_variables["captain_mode"]["listOfPlayersWhoDidntVoteForRoleYet"],player.name)
+		table.insert(global.special_games_variables["captain_mode"]["listPlayersWhoAreNotNewToCurrentMatch"],player.name)
+		global.special_games_variables["captain_mode"]["listPlayersWhoAreNotNewToCurrentMatch"][player.name] = true
 		poll_captain_player(player)
 	end
 end
@@ -521,7 +523,7 @@ local function generateGenericRenderingCaptain()
 end
 
 local function generate_captain_mode(refereeName)
-	global.special_games_variables["captain_mode"] = {["captainList"] = {}, ["refereeName"] = refereeName, ["listPlayers"] = {}, ["listSpectators"] = {}, ["listOfPlayersWhoDidntVoteForRoleYet"]={},["listTeamReadyToPlay"] = {}, ["lateJoiners"] = false, ["prepaPhase"] = true, ["blacklistLateJoin"]={}}
+	global.special_games_variables["captain_mode"] = {["captainList"] = {}, ["refereeName"] = refereeName, ["listPlayers"] = {}, ["listSpectators"] = {}, ["listOfPlayersWhoDidntVoteForRoleYet"]={},["listTeamReadyToPlay"] = {}, ["lateJoiners"] = false, ["prepaPhase"] = true, ["blacklistLateJoin"]={}, ["listPlayersWhoAreNotNewToCurrentMatch"]={}}
 	global.active_special_games["captain_mode"] = true
 	if game.get_player(global.special_games_variables["captain_mode"]["refereeName"]) == nil then
 		game.print("Event captain aborted, referee is not a player connected.. Referee name of player was : ".. global.special_games_variables["captain_mode"]["refereeName"])
@@ -1100,7 +1102,6 @@ local function on_gui_click(event)
 		elseif game.get_player(global.special_games_variables["captain_mode"]["refereeName"]).gui.center["captain_poll_end_latejoiners_referee_frame"] ~=nil then
 			updatePollLateJoinReferee()
 		end
-		
 	elseif string.find(element.name, "captain_late_joiner_no") then
 		if element.name == "captain_late_joiner_no_blacklist" then
 			table.insert(global.special_games_variables["captain_mode"]["blacklistLateJoin"],player.name)
@@ -1129,6 +1130,14 @@ local function on_gui_click(event)
 				game.print('Bug, case that should not happen, report it to devs', Color.cyan)
 			end
 		end
+	elseif element.name == "captain_yes_wanna_play_new_to_current_match" then
+		local refPlayer = game.get_player(global.special_games_variables["captain_mode"]["refereeName"])
+		if player.gui.top["captain_poll_new_joiner_to_current_match"] then player.gui.top["captain_poll_new_joiner_to_current_match"].destroy() end
+		refPlayer.print("Dear referee, the player " .. player.name .. " would like to play, please send him to a team",Color.red)
+		player.print("The message was sent to referee, you should be sent soon to a team",Color.cyan)
+	elseif element.name == "captain_no_wanna_play_new_to_current_match" then
+		player.print("Enjoy the match then ! Don't hesitate to ask if you want a bit later to join a team and have fun",Color.cyan)
+		if player.gui.top["captain_poll_new_joiner_to_current_match"] then player.gui.top["captain_poll_new_joiner_to_current_match"].destroy() end
 	elseif element.name == "limited_lives_confirm" then
 		local lives_limit = tonumber(config["lives_limit"].text)
 		generate_limited_lives(lives_limit)
@@ -1163,10 +1172,23 @@ local function on_player_died(event)
 	)
 end
 
+local function on_player_joined_game(event)
+    local player = game.players[event.player_index]
+	if global.special_games_variables["captain_mode"] ~=nil and not global.special_games_variables["captain_mode"]["listPlayersWhoAreNotNewToCurrentMatch"][player.name] then
+		table.insert(global.special_games_variables["captain_mode"]["listPlayersWhoAreNotNewToCurrentMatch"],player.name)
+		global.special_games_variables["captain_mode"]["listPlayersWhoAreNotNewToCurrentMatch"][player.name] = true
+		pollGenerator(player,true,nil,
+		"captain_poll_new_joiner_to_current_match","Do you want to play in the current match of captain event (no signup required) ? You can also always ask later to be sent to a team if you prefer.",
+		"Yes", "captain_yes_wanna_play_new_to_current_match",
+		"No", "captain_no_wanna_play_new_to_current_match",
+		nil,nil)
+	end
+end
 comfy_panel_tabs['Special games'] = {gui = create_special_games_panel, admin = true}
 
 Event.add(defines.events.on_gui_click, on_gui_click)
 Event.add(defines.events.on_built_entity, on_built_entity)
 Event.add(defines.events.on_player_died, on_player_died)
+Event.add(defines.events.on_player_joined_game, on_player_joined_game)
 return Public
 
