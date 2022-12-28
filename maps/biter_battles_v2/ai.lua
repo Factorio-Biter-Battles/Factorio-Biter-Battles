@@ -175,11 +175,11 @@ local function spawn_biters(isItnormalBiters, maxLoopIteration,spawner,biter_thr
 		
 		--Announce New Spawn
 		if(isItnormalBiters and global.biter_spawn_unseen[force_name][unit_name]) then
-			game.print("A " .. unit_name:gsub("-", " ") .. " was spotted far away on team " .. force_name .. "...")
+			game.print({"", "A ", unit_name:gsub("-", " "), " was spotted far away on team ", (global.tm_custom_name[force_name] or force_name), "..."})
 			global.biter_spawn_unseen[force_name][unit_name] = false
 		end
 		if(not isItnormalBiters and global.biter_spawn_unseen[boss_biter_force_name][unit_name]) then
-			game.print("A " .. unit_name:gsub("-", " ") .. " boss was spotted far away on team " .. force_name .. "...")
+			game.print({"", "A ", unit_name:gsub("-", " "), " boss was spotted far away on team ", (global.tm_custom_name[force_name] or force_name), "..."})
 			global.biter_spawn_unseen[boss_biter_force_name][unit_name] = false
 		end
 	end
