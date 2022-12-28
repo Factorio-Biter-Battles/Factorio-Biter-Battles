@@ -4,15 +4,15 @@ local Public = {}
 global.active_special_games = {}
 global.special_games_variables = {}
 local valid_special_games = {
-	turtle = require 'special_games.turtle',
-	infinity_chest = require 'special_games.infinity_chest',
-	disabled_research = require 'special_games.disabled_research',
-	disabled_entities = require 'special_games.disabled_entities',
-	limited_lives = require 'special_games.limited_lives',
+	turtle = require 'comfy_panel.special_games.turtle',
+	infinity_chest = require 'comfy_panel.special_games.infinity_chest',
+	disabled_research = require 'comfy_panel.special_games.disabled_research',
+	disabled_entities = require 'comfy_panel.special_games.disabled_entities',
+	limited_lives = require 'comfy_panel.special_games.limited_lives',
 	--[[
 	Add your special game here.
 	Syntax:
-	<game_name> = require 'special_games.<game_name>',
+	<game_name> = require 'comfy_panel.special_games.<game_name>',
 
 	Create file special_games/<game_name>.lua
 	See file special_games/example.lua for an example
