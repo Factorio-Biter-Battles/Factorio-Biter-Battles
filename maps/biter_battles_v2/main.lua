@@ -248,6 +248,11 @@ local function on_chunk_generated(event)
 			end
 		end
 	end
+
+	-- add decorations only after the south part of the island is generated
+	if event.position.y == 0 and event.position.x == 1 and global.bb_settings['new_year_island'] then
+		Terrain.add_new_year_island_decorations(surface)
+	end
 end
 
 local function on_entity_cloned(event)
