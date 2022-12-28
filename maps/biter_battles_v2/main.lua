@@ -287,7 +287,7 @@ local function on_area_cloned(event)
 	-- refined-concrete tiles were placed directly onto water tiles. This scenario does
 	-- not appear for north as water is removed during silo generation.
 	local position = event.destination_area.left_top
-	if position.y >= 0 and math.abs(position.y) <= 192 and math.abs(position.x) <= 192 then
+	if position.y >= 0 and position.y <= 192 and math.abs(position.x) <= 192 then
 		Mirror_terrain.remove_hidden_tiles(event)
 	end
 end
