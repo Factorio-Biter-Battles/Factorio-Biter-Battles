@@ -186,7 +186,7 @@ end
 
 local function on_marked_for_deconstruction(event)
 	if not event.entity.valid then return end
-	if not event.player_index == nil then return end
+	if not event.player_index then return end
 	if event.entity.name == "fish" then event.entity.cancel_deconstruction(game.players[event.player_index].force.name) end
 	
 	if (game.players[event.player_index].force == game.forces.north and event.entity.position.y > 0) or (game.players[event.player_index].force == game.forces.south and event.entity.position.y < 0) then
