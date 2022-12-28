@@ -614,10 +614,6 @@ local function generate_limited_lives(lives_limit)
 	global.special_games_variables["limited_lives"] = {
 		lives_limit = lives_limit,
 		player_lives = {},
-		has_life = function (player_name)
-			local player_lives = global.special_games_variables["limited_lives"]["player_lives"][player_name]
-			return player_lives == nil or player_lives > 0
-		end
 	}
 	local special_game_description = table.concat({"Each player has only", lives_limit, ((lives_limit == 1) and "life" or "lives"), "until the end of the game."}, " ")
 	global.special_games_variables["limited_lives"]["text_id"] = rendering.draw_text{
@@ -630,6 +626,11 @@ local function generate_limited_lives(lives_limit)
 		scale_with_zoom = false
 	}
 	game.print("Special game Limited lives: " .. special_game_description)
+end
+
+function Public.has_life(player_name)
+	local player_lives = global.special_games_variables["limited_lives"]["player_lives"][player_name]
+	return player_lives == nil or player_lives > 0
 end
 
 local function on_built_entity(event)
