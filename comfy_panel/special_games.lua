@@ -522,6 +522,15 @@ local function generateGenericRenderingCaptain()
 	y = y + 2
 end
 
+local function reveal_the_map()
+	game.print("Revealing the map..")
+	local radius=2000
+	for _, f in pairs({"north", "south", "player", "spectator"}) do
+		game.forces[f].chart(game.surfaces[global.bb_surface_name], {{x = -radius, y = -800}, {x = radius, y = 0}})
+		game.forces[f].chart(game.surfaces[global.bb_surface_name], {{x = -radius, y = 0}, {x = radius, y = 800}})
+	end
+end
+
 local function generate_captain_mode(refereeName)
 	global.special_games_variables["captain_mode"] = {["captainList"] = {}, ["refereeName"] = refereeName, ["listPlayers"] = {}, ["listSpectators"] = {}, ["listOfPlayersWhoDidntVoteForRoleYet"]={},["listTeamReadyToPlay"] = {}, ["lateJoiners"] = false, ["prepaPhase"] = true, ["blacklistLateJoin"]={}, ["listPlayersWhoAreNotNewToCurrentMatch"]={}}
 	global.active_special_games["captain_mode"] = true
@@ -532,6 +541,7 @@ local function generate_captain_mode(refereeName)
 		return
 	end
 	Public.clear_gui_special_events()
+	reveal_the_map()
 	for _, pl in pairs(game.connected_players) do
 		if pl.force.name ~= "spectator" then
 			pl.print('Captain event is on the way, switched you to spectator')
