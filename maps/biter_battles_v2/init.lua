@@ -3,6 +3,7 @@ local Score = require "comfy_panel.score"
 local Tables = require "maps.biter_battles_v2.tables"
 local fifo = require "maps.biter_battles_v2.fifo"
 local Blueprint = require 'maps.biter_battles_v2.blueprints'
+local SnowCover = require 'maps.biter_battles_v2.snow_cover'
 
 local Public = {}
 
@@ -121,6 +122,8 @@ function Public.initial_setup()
 		["only_admins_vote"] = false,		--Are only admins able to vote on the global difficulty?
 		--MAP SETTINGS--
 		["new_year_island"] = false,
+		["snow_cover"] = SnowCover.type_none,				-- Snow cover for current surface
+		["snow_cover_next"] = SnowCover.type_none,			-- Snow cover for next surface
 	}
 
 	--Disable Nauvis
@@ -172,6 +175,7 @@ function Public.draw_structures()
 	Terrain.generate_additional_rocks(surface)
 	Terrain.generate_silo(surface)
 	Terrain.draw_spawn_island(surface)
+	Terrain.draw_snow_spawn_area(surface)
 	--Terrain.generate_spawn_goodies(surface)
 end
 
@@ -273,6 +277,10 @@ function Public.tables()
 
 	global.next_attack = "north"
 	if math.random(1,2) == 1 then global.next_attack = "south" end
+
+	if global.bb_settings then
+		global.bb_settings["snow_cover"] = SnowCover.get_next_snow_cover()
+	end
 end
 
 function Public.load_spawn()
