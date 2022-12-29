@@ -67,7 +67,7 @@ function Public.generate_snow(surface, left_top_x, left_top_y)
 	local protected = {
 		["deepwater"] = true,
 		["water"] = true,
-		["stone-path"] = true,
+		["refined-concrete"] = true,
 	}
 
 	if current_type == Public.type_desert or current_type == Public.type_small then
