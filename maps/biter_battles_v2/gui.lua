@@ -54,7 +54,7 @@ local function clock(frame)
 	local total_hours = math.floor(total_minutes / 60)
 	local minutes = total_minutes - (total_hours * 60)
 
-	local clock = frame.add {type = "label", caption = string.format("Game time: %02d:%02d    Game speed: %.2f", total_hours, minutes, game.speed)}
+	local clock = frame.add {type = "label", caption = string.format("Time: %02d:%02d   Speed: %.2f", total_hours, minutes, game.speed)}
 	clock.style.font = "default-bold"
 	clock.style.font_color = {r = 0.98, g = 0.66, b = 0.22}
 	frame.add {type = "line"}
