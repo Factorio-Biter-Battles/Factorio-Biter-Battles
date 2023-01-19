@@ -3,6 +3,7 @@ local LootRaffle = require "functions.loot_raffle"
 local BiterRaffle = require "maps.biter_battles_v2.biter_raffle"
 local bb_config = require "maps.biter_battles_v2.config"
 local Functions = require "maps.biter_battles_v2.functions"
+local mixed_ore_map = require "maps.biter_battles_v2.mixed_ore_map"
 local tables = require "maps.biter_battles_v2.tables"
 local session = require 'utils.datastore.session_data'
 
@@ -397,7 +398,11 @@ function Public.generate(event)
 	local left_top_x = left_top.x
 	local left_top_y = left_top.y
 
-	mixed_ore(surface, left_top_x, left_top_y)
+	if global.active_special_games['mixed_ore_map'] then
+		mixed_ore_map(surface, left_top_x, left_top_y)
+	else
+		mixed_ore(surface, left_top_x, left_top_y)
+	end
 	generate_river(surface, left_top_x, left_top_y)
 	draw_biter_area(surface, left_top_x, left_top_y)		
 	generate_extra_worm_turrets(surface, left_top)
@@ -452,6 +457,16 @@ function Public.draw_spawn_area(surface)
 	
 	surface.destroy_decoratives({})
 	surface.regenerate_decorative()
+end
+
+function Public.draw_mixed_ore_spawn_area(surface)
+	-- Redraw mixed ore map in spawn area because some tiles may change in Init.draw_structures()
+	local chunk_r = 4
+	for x = chunk_r * -1, chunk_r, 1 do
+		for y = chunk_r * -1, -1, 1 do
+			mixed_ore_map(surface, x * 32, y * 32)
+		end
+	end
 end
 
 function Public.draw_water_for_river_ends(surface, chunk_pos)

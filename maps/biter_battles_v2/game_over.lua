@@ -319,8 +319,7 @@ function Public.server_restart()
         Server.to_discord_bold(table.concat {'*** ', message, ' ***'})
 
         local prev_surface = global.bb_surface_name
-        Special_games.reset_active_special_games()
-        Special_games.reset_special_games_variables()
+        Special_games.reset_special_games()
         Init.tables()
         Init.playground_surface()
         Init.forces()
@@ -335,6 +334,8 @@ function Public.server_restart()
                 end
                 Gui.create_main_gui(player)
             end
+            -- Special_games.generate_special_games()
+
             game.reset_time_played()
             global.server_restart_timer = nil
             game.speed = 1
