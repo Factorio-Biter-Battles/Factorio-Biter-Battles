@@ -29,7 +29,7 @@ local function mixed_ore(surface, left_top_x, left_top_y)
 
 	clear_ores(surface, left_top_x, left_top_y, ores)
 	local seed = game.surfaces[global.bb_surface_name].map_gen_settings.seed
-	local size = 10 -- 1 + global.special_games_variables['mixed_ore_map']['size']
+	local size = 1 + global.special_games_variables['mixed_ore_map']['size']
 	for x = 0, 31, 1 do
 		for y = 0, 31, 1 do
 			local pos = {x = left_top_x + x, y = left_top_y + y}
@@ -54,7 +54,7 @@ local function checkerboard(surface, left_top_x, left_top_y)
 	local ores = {"uranium-ore", "stone", "copper-ore", "iron-ore", "coal"}
 	clear_ores(surface, left_top_x, left_top_y, ores)
 	local uranium_cells = {}
-	local cell_size = 5 ---global.special_games_variables['mixed_ore_map']['size']
+	local cell_size = global.special_games_variables['mixed_ore_map']['size']
 	local seed = game.surfaces[global.bb_surface_name].map_gen_settings.seed
 	for x = 0, 31, 1 do
 		for y = 0, 31, 1 do
