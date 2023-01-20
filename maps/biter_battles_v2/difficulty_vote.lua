@@ -125,7 +125,7 @@ local function set_reroll_map_voting_status(player)
 		end
 	end
 	local result = math.floor( yes / ( yes + no ) * 100 )
-	if result > 75 then
+	if result >= 75 then
 		global.reroll_map_voting_status = true
 	else
 		global.reroll_map_voting_status = false
