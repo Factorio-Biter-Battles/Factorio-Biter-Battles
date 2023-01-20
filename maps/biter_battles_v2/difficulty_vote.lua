@@ -117,8 +117,8 @@ end
 local function set_reroll_map_voting_status(player)
 	local yes = 0
 	local no = 0
-	for _, players in pairs(global.reroll_map_voting) do
-		if players == 1 then 
+	for _, vote in pairs(global.reroll_map_voting) do
+		if vote == 1 then 
 			yes = yes + 1
 		else 
 			no = no + 1
