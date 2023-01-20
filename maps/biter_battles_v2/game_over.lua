@@ -498,7 +498,6 @@ end
 function Public.reroll_map()
     game.print("Generated new map")
     game.speed = 1
-    global.reroll_voting_status = false
     local prev_surface = global.bb_surface_name
     Special_games.reset_active_special_games()
     Special_games.reset_special_games_variables()
