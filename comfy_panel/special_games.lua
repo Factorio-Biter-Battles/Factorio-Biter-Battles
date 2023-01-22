@@ -92,6 +92,20 @@ local valid_special_games = {
 			[3] = {name = "label2", type = "label", caption = "(0 to reset)"},
 		},
 		button = {name = "limited_lives_apply", type = "button", caption = "Apply"}
+	},
+
+		disable_sciences = {
+		name = {type = "label", caption = "Disable sciences", tooltip = "disable sciences that players wont be able to send."},
+		config = {
+			[1] = {name = "red", type = "checkbox", caption = "red", state = false},
+			[2] = {name = "green", type = "checkbox", caption = "green", state = false},
+			[3] = {name = "gray", type = "checkbox", caption = "gray", state = false},
+			[4] = {name = "blue", type = "checkbox", caption = "blue", state = false},
+			[5] = {name = "purple", type = "checkbox", caption = "purple", state = false},
+			[6] = {name = "yellow", type = "checkbox", caption = "yellow", state = false},
+			[7] = {name = "white", type = "checkbox", caption = "white", state = false}
+		},
+		button = {name = "disable_sciences_apply", type = "button", caption = "Apply"}
 	}
 
 }
@@ -295,6 +309,40 @@ local function generate_limited_lives(lives_limit)
 	game.print("Special game Limited lives: " .. special_game_description)
 end
 
+function generate_disable_sciences(packs)
+	local Epacks = {}
+	local Dpacks = {}
+	local food = {
+		"automation-science-pack",
+		"logistic-science-pack",
+		"military-science-pack",
+		"chemical-science-pack",
+		"production-science-pack",
+		"utility-science-pack",
+		"space-science-pack"
+	}
+
+	for k, v in ipairs(packs)do
+		if not v then Epacks[#Epacks+1]=food[k] 		
+		end
+		if v then Dpacks[#Dpacks+1]=food[k] 
+		end
+	end
+
+	if packs[1] or packs[2] or packs[3] or packs[4] or packs[5] or packs[6] or packs[7] then
+		global.active_special_games["disable_sciences"] = true
+		game.print("Special game generated. DISABLE SCIENCES from sending. Now you are not able to send those sciences below")
+		for k, v in ipairs(Dpacks)do			
+			game.print(v)			
+		end
+	else
+		global.active_special_games["disable_sciences"] = false
+		game.print("all sciences enabled")
+	end
+
+	global.special_games_variables["enabled_sciences"] = Epacks
+end
+
 function Public.has_life(player_name)
 	local player_lives = global.special_games_variables["limited_lives"]["player_lives"][player_name]
 	return player_lives == nil or player_lives > 0
@@ -435,8 +483,20 @@ local function on_gui_click(event)
 		local lives_limit = tonumber(config["lives_limit"].text)
 
 		generate_limited_lives(lives_limit)
-	end
 
+	elseif element.name == "disable_sciences_confirm" then
+		local packs = {
+			config["red"].state,
+			config["green"].state,
+			config["gray"].state,
+			config["blue"].state,
+			config["purple"].state,
+			config["yellow"].state,
+			config["white"].state
+		}
+
+		generate_disable_sciences(packs)
+	end
 
 	if string.find(element.name, "_confirm") or element.name == "cancel" then
 		element.parent.parent.children[3].visible = true -- shows back Apply button
