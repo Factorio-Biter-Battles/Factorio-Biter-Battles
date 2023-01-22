@@ -166,12 +166,14 @@ function Public.create_main_gui(player)
 	
 	clock(frame)
 	-- Science sending GUI
-	if not is_spec then
-		frame.add { type = "table", name = "biter_battle_table", column_count = 4 }
-		local t = frame.biter_battle_table
-		for food_name, tooltip in pairs(food_names) do
-			local s = t.add { type = "sprite-button", name = food_name, sprite = "item/" .. food_name, tooltip = tooltip}
-			gui_style(s, {minimal_height = 41, minimal_width = 41, padding = 0})
+	if not is_spec then		
+			frame.add { type = "table", name = "biter_battle_table", column_count = 4 }
+			local t = frame.biter_battle_table
+		if not global.active_special_games["disable_sciences"] then
+			for food_name, tooltip in pairs(food_names) do
+				local s = t.add { type = "sprite-button", name = food_name, sprite = "item/" .. food_name, tooltip = tooltip}
+				gui_style(s, {minimal_height = 41, minimal_width = 41, padding = 0})
+			end
 		end
 		local s = t.add { type = "sprite-button", name = "send_all", caption = "All", tooltip = "LMB - low to high, RMB - high to low"}
 		gui_style(s, {minimal_height = 41, minimal_width = 41, padding = 0, font_color = {r = 0.9, g = 0.9, b = 0.9}})

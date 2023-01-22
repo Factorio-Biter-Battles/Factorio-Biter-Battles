@@ -295,6 +295,9 @@ function Public.feed_biters_mixed(player, button)
 			"automation-science-pack",
 		}
 	end
+	if global.active_special_games["disable_sciences"] == true then	 
+		food = global.special_games_variables["enabled_sciences"]	
+	end
 	local i = player.get_main_inventory()
 	local colored_player_name = table.concat({"[color=", player.color.r * 0.6 + 0.35, ",", player.color.g * 0.6 + 0.35, ",", player.color.b * 0.6 + 0.35, "]", player.name, "[/color]"})
 	local message = {colored_player_name, " fed "}
