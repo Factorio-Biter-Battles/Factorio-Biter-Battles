@@ -46,14 +46,10 @@ function create_reroll_button(player)
 	end
 	if game.ticks_played < global.reroll_time_limit then
 		local b_reroll_yes = player.gui.top.add { type = "sprite-button", caption = "New map", name = "reroll_yes" }
-		b_reroll_yes.style.font = "heading-2"
-		b_reroll_yes.style.font_color = {r = 0.1, g = 0.9, b = 0.0}
-		gui_style(b_reroll_yes, {width = 150, height = 38})	
+		gui_style(b_reroll_yes, {width = 150, height = 38 , font = "heading-2", font_color = {r = 0.1, g = 0.9, b = 0.0}} )	
 	
 		local b_reroll_no = player.gui.top.add { type = "sprite-button", caption = "Keep this", name = "reroll_no" }
-		b_reroll_no.style.font = "heading-2"
-		b_reroll_no.style.font_color = {r = 0.9, g = 0.1, b = 0.1}
-		gui_style(b_reroll_no, {width = 150, height = 38})	
+		gui_style(b_reroll_no, {width = 150, height = 38 , font = "heading-2", font_color = {r = 0.9, g = 0.1, b = 0.1}} )	
 	end
 end
 
