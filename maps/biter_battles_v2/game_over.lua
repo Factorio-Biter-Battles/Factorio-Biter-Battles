@@ -318,27 +318,7 @@ function Public.server_restart()
         local message = 'Map is restarting! '
         Server.to_discord_bold(table.concat {'*** ', message, ' ***'})
 
-        local prev_surface = global.bb_surface_name
-        Special_games.reset_active_special_games()
-        Special_games.reset_special_games_variables()
-        Init.tables()
-        Init.playground_surface()
-        Init.forces()
-        Init.draw_structures()
-        Gui.reset_tables_gui()
-            Init.load_spawn()
-
-            for _, player in pairs(game.players) do
-                Functions.init_player(player)
-                for _, e in pairs(player.gui.left.children) do
-                    e.destroy()
-                end
-                Gui.create_main_gui(player)
-            end
-            game.reset_time_played()
-            global.server_restart_timer = nil
-            game.speed = 1
-        game.delete_surface(prev_surface)
+	Public.reroll_map()
         return
     end
     if global.server_restart_timer % 30 == 0 then
