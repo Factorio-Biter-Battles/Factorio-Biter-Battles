@@ -240,7 +240,19 @@ function Public.feed_biters(player, food)
 		player.print("Please wait for voting to finish before feeding")
 		return
 	end
-
+	if global.active_special_games["disable_sciences"] then
+		local enabled = false
+		for _, value in pairs(global.special_games_variables["enabled_sciences"]) do
+			if value == food then 
+			enabled = true		
+			end
+		end
+		if not enabled then
+			player.print(food.." is Disabled by special game", {r = 0.98, g = 0.66, b = 0.22})
+			return 
+		end
+	end
+	
 	local enemy_force_name = get_enemy_team_of(player.force.name)  ---------------
 	--enemy_force_name = player.force.name
 	
