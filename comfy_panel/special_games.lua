@@ -92,6 +92,27 @@ local valid_special_games = {
 			[3] = {name = "label2", type = "label", caption = "(0 to reset)"},
 		},
 		button = {name = "limited_lives_apply", type = "button", caption = "Apply"}
+	},
+
+		modifiers = {
+		name = {type = "label", caption = "modifiers", tooltip = "bunch of modifiers \n those modifiers are applied for all players from north and south. \n apply this only on the beginning of the match. if you apply this at middle of the match you will reset all bonuses for both teams from all research they have already done. Every time you open this tab the default values will be already here. So if you want multiple modifies you have to change them at once."},
+		config = {
+			[1] = {name = 'manual_crafting_speed_modifier', type = "textfield", text = "100", numeric = true, width = 30, tooltip = "players manual_crafting_speed_modifier.\n default is 100.\n 200 is +100%. \n 10 is -90%"},
+			[2] = {name = 'manual_mining_speed_modifier', type = "textfield", text = "100", numeric = true, width = 30, tooltip = "players manual_mining_speed_modifier. \n default is 100. \n 200 is +100%. \n 10 is -90%"},
+			[3] = {name = 'character_running_speed_modifier', type = "textfield", text = "100", numeric = true, width = 30, tooltip = "character_running_speed_modifier. \n default is 100. \n 200 is +100%. \n 10 is -90%"},
+			[4] = {name = 'laboratory_productivity_bonus', type = "textfield", text = "0", numeric = true, width = 30, tooltip = "laboratory_productivity_bonus \n default is 0. \n 100 is +100% productivity \n result decreasing cost of reaserch by half. "},
+			[5] = {name = 'laboratory_speed_modifier', type = "textfield", text = "100", numeric = true, width = 30, tooltip = "laboratory_speed_modifier \n default is 100. \n 200 is + 100%. \n 10 is -90% \n consider disabling lab speed reaserch."},
+			[6] = {name = 'character_health_bonus', type = "textfield", text = "0", numeric = true, width = 30, tooltip = "character_health_bonus. \n default is 0. \n 1 is +1hp."},
+			[7] = {name = 'maximum_following_robot_count', type = "textfield", text = "0", numeric = true, width = 30, tooltip = "maximum_following_robot_count. \n default is 0"},
+			[8] = {name = 'worker_robots_speed_modifier', type = "textfield", text = "100", numeric = true, width = 30, tooltip = "worker_robots_speed_modifier. \n default is 100. \n 200 is +100%. \n 10 is -90%"},
+			[9] = {name = 'worker_robots_battery_modifier', type = "textfield", text = "100", numeric = true, width = 30, tooltip = "worker_robots_battery_modifier. \n default is 100. \n 200 is +100%. \n 10 is -90%"},
+			[10] = {name = 'worker_robots_storage_bonus', type = "textfield", text = "0", numeric = true, width = 30, tooltip = "worker_robots_storage_bonus. \n default is 0. \n 10 is 10"},
+			[11] = {name = 'artillery_range_modifier', type = "textfield", text = "0", numeric = true, width = 30, tooltip = "artillery_range_modifier. \n default is 0. \n 100 is +100%."},
+			[12] = {name = 'mining_drill_productivity_bonus', type = "textfield", text = "0", numeric = true, width = 30, tooltip = "mining_drill_productivity_bonus. \n default is 0. \n 100 is +100% "},
+			[13] = {name = 'character_inventory_slots_bonus', type = "textfield", text = "0", numeric = true, width = 30, tooltip = "character_inventory_slots_bonus. \n default is 0. \n 10 is +10."},
+			[14] = {name = 'train_braking_force_bonus', type = "textfield", text = "0", numeric = true, width = 30, tooltip = "train_braking_force_bonus. \n default is 0. \n 100 is +100%"},
+		},
+		button = {name = "modifiers_apply", type = "button", caption = "Apply"}
 	}
 
 }
@@ -300,6 +321,26 @@ function Public.has_life(player_name)
 	return player_lives == nil or player_lives > 0
 end
 
+local function generate_modifiers(modifiers)
+	local forces = {"south" , "north"}
+	for k,force in pairs(forces) do
+		game.forces[force].manual_crafting_speed_modifier = modifiers["manual_crafting_speed_modifier"].text / 100 - 1
+		game.forces[force].manual_mining_speed_modifier = modifiers["manual_mining_speed_modifier"].text / 100 - 1		
+		game.forces[force].character_running_speed_modifier = modifiers["character_running_speed_modifier"].text / 100 - 1
+		game.forces[force].laboratory_productivity_bonus = modifiers["laboratory_productivity_bonus"].text / 100
+		game.forces[force].laboratory_speed_modifier = modifiers["laboratory_speed_modifier"].text / 100 - 1
+		game.forces[force].character_health_bonus = modifiers["character_health_bonus"].text
+		game.forces[force].maximum_following_robot_count = modifiers["maximum_following_robot_count"].text + 1		
+		game.forces[force].worker_robots_speed_modifier = modifiers["worker_robots_speed_modifier"].text / 100 - 1
+		game.forces[force].worker_robots_battery_modifier = modifiers["worker_robots_battery_modifier"].text / 100 - 1
+		game.forces[force].worker_robots_storage_bonus = modifiers["worker_robots_storage_bonus"].text 
+		game.forces[force].artillery_range_modifier = modifiers["artillery_range_modifier"].text / 100
+		game.forces[force].mining_drill_productivity_bonus = modifiers["mining_drill_productivity_bonus"].text / 100
+		game.forces[force].character_inventory_slots_bonus = modifiers["character_inventory_slots_bonus"].text		
+		game.forces[force].train_braking_force_bonus = modifiers["train_braking_force_bonus"].text / 100
+	end
+end
+
 local function on_built_entity(event)
 	if not global.active_special_games["disabled_entities"] then return end
 	local entity = event.created_entity
@@ -435,6 +476,11 @@ local function on_gui_click(event)
 		local lives_limit = tonumber(config["lives_limit"].text)
 
 		generate_limited_lives(lives_limit)
+
+	elseif element.name == "modifiers_confirm" then		 		
+		generate_modifiers(config)
+		game.print("special modifiers applied")
+		
 	end
 
 
