@@ -39,7 +39,7 @@ function Public.clear_copy_history(player)
 	end
 end
 
-function create_reroll_button(player)
+local function create_reroll_button(player)
 	if player.gui.top["reroll_yes"] then 
 		player.gui.top["reroll_yes"].destroy()
 		player.gui.top["reroll_no"].destroy()
