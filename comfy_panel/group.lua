@@ -252,6 +252,11 @@ local function on_gui_click(event)
                 return
             end
 
+            if this.tag_groups[new_group_name] ~= nil then
+                player.print('Group name is taken.', {r = 0.90, g = 0.0, b = 0.0})
+                return
+            end
+
             this.tag_groups[new_group_name] = {
                 name = new_group_name,
                 description = new_group_description,
