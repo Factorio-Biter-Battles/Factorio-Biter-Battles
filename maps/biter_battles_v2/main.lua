@@ -47,14 +47,14 @@ local function on_research_finished(event)
 	
 	local name = event.research.name
 	local force = event.research.force
-    if name == 'uranium-processing' then
+	if name == 'uranium-processing' then
 		force.technologies["uranium-ammo"].researched = true
 		force.technologies["kovarex-enrichment-process"].researched = true
-    elseif name == 'stone-wall' then
+	elseif name == 'stone-wall' then
 		force.technologies["gate"].researched = true
 	elseif name == 'rocket-silo' then
 		force.technologies['space-science-pack'].researched = true
-    end
+	end
 end
 
 local function on_console_chat(event)
