@@ -233,6 +233,14 @@ function set_evo_and_threat(flask_amount, food, biter_force_name)
 		threat = threat * (100 / (100.001 - reanim_chance))
 	end
 	global.bb_threat[biter_force_name] = math_round(global.bb_threat[biter_force_name] + threat, decimals)
+	
+	if global.active_special_games["shared_science_throw"] then
+		local enemyBitersForceName = enemy_team_of[force_translation[biter_force_name]] .. "_biters"
+		game.forces[enemyBitersForceName].evolution_factor = game.forces[biter_force_name].evolution_factor
+		global.bb_evolution[enemyBitersForceName] = global.bb_evolution[biter_force_name]
+		global.bb_threat_income[enemyBitersForceName] = global.bb_threat_income[biter_force_name]
+		global.bb_threat[enemyBitersForceName] = math_round(global.bb_threat[enemyBitersForceName] + threat, decimals)
+	end
 end
 
 function Public.feed_biters(player, food)	
