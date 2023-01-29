@@ -578,7 +578,7 @@ local function on_gui_click(event)
 		Public.create_main_gui(player)
 	end	
 
-	if event.element.name == "reroll_yes" then 
+	if name == "reroll_yes" then 
 		if global.reroll_map_voting[player.name] ~= 1 then 
 			global.reroll_map_voting[player.name] = 1 
 			game.print(player.name .. " want to reroll map ",{r = 0.1, g = 0.9, b = 0.0})	
