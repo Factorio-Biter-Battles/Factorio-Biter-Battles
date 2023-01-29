@@ -120,20 +120,6 @@ local function on_gui_click(event)
 	if not event.element.valid then return end
 
 	local player = game.players[event.element.player_index]
-	if event.element.name == "reroll_yes" then 
-		if global.reroll_map_voting[player.name] ~= 1 then 
-			global.reroll_map_voting[player.name] = 1 
-			game.print(player.name .. " want to reroll map ",{r = 0.1, g = 0.9, b = 0.0})	
-			set_reroll_map_voting_status(player)
-		end
-	end
-	if event.element.name == "reroll_no" then 
-		if global.reroll_map_voting[player.name] ~= 0 then 
-			global.reroll_map_voting[player.name] = 0
-			game.print(player.name .. " want to keep this map", {r = 0.9, g = 0.1, b = 0.1})
-			set_reroll_map_voting_status(player)
-		end		
-	end
 
 	if event.element.name == "difficulty_gui" then
 		poll_difficulty(player)
