@@ -485,6 +485,26 @@ function Public.spy_fish()
 	end
 end
 
+local function set_reroll_map_voting_status()
+	local yes = 0
+	local no = 0
+	for _, vote in pairs(global.reroll_map_voting) do
+		if vote == 1 then 
+			yes = yes + 1
+		else 
+			no = no + 1
+		end
+	end
+	local result = math.floor( yes / ( yes + no ) * 100 )
+	if result >= 75 then
+		global.reroll_map_voting_status = true
+	else
+		global.reroll_map_voting_status = false
+	end
+	local reroll_time_left = math.floor((global.reroll_time_limit - game.ticks_played)/60)
+	game.print(result .. "% votes to reroll." .. " Need 75% to reroll map.".. " Time left " .. reroll_time_left .. "s" )
+end
+
 local function on_gui_click(event)
 	if not event.element then return end
 	if not event.element.valid then return end
@@ -556,7 +576,31 @@ local function on_gui_click(event)
 	if name == "bb_view_players" then
 		global.bb_view_players[player.name] = true
 		Public.create_main_gui(player)
+	end	
+
+	if event.element.name == "reroll_yes" then 
+		if global.reroll_map_voting[player.name] ~= 1 then 
+			global.reroll_map_voting[player.name] = 1 
+			game.print(player.name .. " want to reroll map ",{r = 0.1, g = 0.9, b = 0.0})	
+			set_reroll_map_voting_status()
+		end
 	end
+	if event.element.name == "reroll_no" then 
+		if global.reroll_map_voting[player.name] ~= 0 then 
+			global.reroll_map_voting[player.name] = 0
+			game.print(player.name .. " want to keep this map", {r = 0.9, g = 0.1, b = 0.1})
+			set_reroll_map_voting_status()
+		end		
+	end
+end
+
+
+local function on_player_left_game(event)
+	if game.ticks_played > global.difficulty_votes_timeout then return end
+	local player = game.players[event.player_index]
+	if not global.difficulty_player_votes[player.name] then return end
+	global.difficulty_player_votes[player.name] = nil
+	set_difficulty()
 end
 
 
