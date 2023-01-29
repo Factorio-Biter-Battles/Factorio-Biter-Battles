@@ -502,7 +502,7 @@ local function set_reroll_map_voting_status()
 		global.reroll_map_voting_status = false
 	end
 	local reroll_time_left = math.floor((global.reroll_time_limit - game.ticks_played)/60)
-	game.print(result .. "% votes to reroll." .. " Need 75% to reroll map.".. " Time left " .. reroll_time_left .. "s" )
+	game.print(result .. "% votes to reroll. Need 75% to reroll map. Time left " .. reroll_time_left .. "s" )
 end
 
 local function on_gui_click(event)
