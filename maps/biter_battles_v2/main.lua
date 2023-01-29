@@ -44,12 +44,17 @@ end
 
 local function on_research_finished(event)
 	Functions.combat_balance(event)
-    if event.research.name == 'uranium-processing' then
-		event.research.force.technologies["uranium-ammo"].researched = true
-		event.research.force.technologies["kovarex-enrichment-process"].researched = true
-    elseif event.research.name == 'stone-wall' then
-		event.research.force.technologies["gate"].researched = true
-    end
+	
+	local name = event.research.name
+	local force = event.research.force
+	if name == 'uranium-processing' then
+		force.technologies["uranium-ammo"].researched = true
+		force.technologies["kovarex-enrichment-process"].researched = true
+	elseif name == 'stone-wall' then
+		force.technologies["gate"].researched = true
+	elseif name == 'rocket-silo' then
+		force.technologies['space-science-pack'].researched = true
+	end
 end
 
 local function on_console_chat(event)
@@ -362,17 +367,10 @@ local function on_init()
 	Init.load_spawn()
 end
 
---By Maksiu1000 skip the last tech
-local unlock_satellite = function(event)
-    if event.research.name == 'rocket-silo' then
-		event.research.force.technologies['space-science-pack'].researched = true
-    end
-end
 
 local Event = require 'utils.event'
 Event.add(defines.events.on_rocket_launch_ordered, on_rocket_launch_ordered)
 Event.add(defines.events.on_area_cloned, on_area_cloned)
-Event.add(defines.events.on_research_finished, unlock_satellite)			--free silo space tech
 Event.add(defines.events.on_post_entity_died, Ai.schedule_reanimate)
 Event.add_event_filter(defines.events.on_post_entity_died, {
 	filter = "type",
