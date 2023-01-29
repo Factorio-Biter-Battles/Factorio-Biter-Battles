@@ -476,7 +476,6 @@ local function chat_with_everyone(event)
 end
 
 function Public.reroll_map()
-    game.print("Generated new map")
     game.speed = 1
     local prev_surface = global.bb_surface_name
     Special_games.reset_active_special_games()
