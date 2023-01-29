@@ -157,8 +157,8 @@ local function on_tick()
 		global.bb_threat["north_biters"] = global.bb_threat["north_biters"] + global.bb_threat_income["north_biters"]
 		global.bb_threat["south_biters"] = global.bb_threat["south_biters"] + global.bb_threat_income["south_biters"]
 		if global.reroll_map_voting_status and game.ticks_played >= global.reroll_time_limit then 
-		Game_over.generate_new_map()	
-		game.print("Generated new map")
+			Game_over.generate_new_map()	
+			game.print("Generated new map")
 		end
 	end
 
