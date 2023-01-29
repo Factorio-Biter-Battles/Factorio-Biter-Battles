@@ -595,15 +595,6 @@ local function on_gui_click(event)
 end
 
 
-local function on_player_left_game(event)
-	if game.ticks_played > global.difficulty_votes_timeout then return end
-	local player = game.players[event.player_index]
-	if not global.difficulty_player_votes[player.name] then return end
-	global.difficulty_player_votes[player.name] = nil
-	set_difficulty()
-end
-
-
 local function on_player_joined_game(event)
 	local player = game.players[event.player_index]
 	if player.online_time == 0 then
