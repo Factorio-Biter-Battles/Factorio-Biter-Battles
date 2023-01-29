@@ -9,7 +9,7 @@ local math_random = math.random
 local math_floor = math.floor
 local math_abs = math.abs
 
-local vector_radius = 512
+local vector_radius = 512ddddddd
 local attack_vectors = {}
 attack_vectors.north = {}
 attack_vectors.south = {}
