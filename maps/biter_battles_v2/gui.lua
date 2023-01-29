@@ -585,7 +585,7 @@ local function on_gui_click(event)
 			set_reroll_map_voting_status()
 		end
 	end
-	if event.element.name == "reroll_no" then 
+	if name == "reroll_no" then 
 		if global.reroll_map_voting[player.name] ~= 0 then 
 			global.reroll_map_voting[player.name] = 0
 			game.print(player.name .. " want to keep this map", {r = 0.9, g = 0.1, b = 0.1})
