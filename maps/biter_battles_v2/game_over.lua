@@ -318,7 +318,7 @@ function Public.server_restart()
         local message = 'Map is restarting! '
         Server.to_discord_bold(table.concat {'*** ', message, ' ***'})
 
-	Public.reroll_map()
+	Public.generate_new_map()
         return
     end
     if global.server_restart_timer % 30 == 0 then
@@ -475,7 +475,7 @@ local function chat_with_everyone(event)
     game.forces[enemy].print(message, player.chat_color)
 end
 
-function Public.reroll_map()
+function Public.generate_new_map()
     game.speed = 1
     local prev_surface = global.bb_surface_name
     Special_games.reset_active_special_games()
