@@ -194,7 +194,7 @@ local function on_marked_for_deconstruction(event)
 	if not event.player_index then return end
 	local force_name = game.get_player(event.player_index).force.name
 	if event.entity.name == "fish" then event.entity.cancel_deconstruction(force_name) return end
-	if (force == "north" and event.entity.position.y > 0) or (force_name == "south" and event.entity.position.y < 0) then
+	if (force_name == "north" and event.entity.position.y > 0) or (force_name == "south" and event.entity.position.y < 0) then
 		event.entity.cancel_deconstruction(force_name)
 	end
 end
