@@ -1,72 +1,68 @@
 local Session = require "utils.datastore.session_data"
 local string_split = require "utils.utils".string_split
+local Event = require 'utils.event'
 local data_filename = "data-request.txt"
-local TABLES = {
-	players = {
-		quickbar = "string",
-		color = "string"
-	}
-}
-local valid_parameters = {
-	help,
-	load = {
-		quickbar = true,
-		color = true
-	},
-	save = {
-		quickbar = true,
-		color = true
-	}
-}
-
--- todo: Figure out a way to translate the command with functions in nested table (valid_parameters)
--- instead of dozens of conditions
--- /hg ...
-local function hedwig_command(cmd)
-	if not cmd.player_index then return end
-	if not cmd.parameter then return end
-	local player = game.get_player(cmd.player_index)
-	local arg = string_split(cmd.parameter)
 
 
+
+local function save_quickbar(player)
+	if not player then return end
 	local trusted = Session.get_trusted_table()
-	-- /hg save ...
-	if trusted[player.name] then
-		if arg[1] == "save" then
-			-- /hg save quickbar
-			if arg[2] == "quickbar" then
-				local quickbar = {}
-				for i=1, 20 do
-					if player.get_quick_bar_slot(i) then 
-						quickbar[i] = player.get_quick_bar_slot(i).name
-					end
-				end
-				quickbar = game.table_to_json(quickbar)
-				local data = {type = "[UPLOAD]", player = player.name, table = "players", key = "quickbar", value = quickbar}
-				game.write_file(data_filename, table_to_json(data), true, 0)
-			
-			-- /hg save color
-			elseif arg[2] == "color" then
-				local color = game.table_to_json(player.color)
-				local data = {type = "[UPLOAD]", player = player.name, table = "players", key = "color", value = color}
-				game.write_file(data_filename, table_to_json(data), true, 0)
-			end
-		-- /hg load ...
-		elseif arg[1] == "load" then
-			if arg[2] == "quickbar" then
-				local data = {type = "[DOWNLOAD]", player = player.name, table = "players", key = "quickbar"}
-				game.write_file(data_filename, table_to_json(data), true, 0)
-			-- /hg save color
-			elseif arg[2] == "color" then
-				local data = {type = "[DOWNLOAD]", player = player.name, table = "players", key = "color"}
-				game.write_file(data_filename, table_to_json(data), true, 0)
-			end
+	if not trusted[player.name] then return end
+
+	local quickbar = {}
+	for i=1, 20 do
+		if player.get_quick_bar_slot(i) then 
+			quickbar[i] = player.get_quick_bar_slot(i).name
 		end
 	end
+	quickbar = game.table_to_json(quickbar)
+	local data = {type = "save_quickbar", player = player.name, value = quickbar}
+	game.write_file(data_filename, table_to_json(data), true, 0)
 end
 
-commands.add_command(
-	"hg",
-	"Communicate with Hedwig. Use /hg help for more info"
-	hedwig_command(cmd)
+local function load_quickbar(player)
+	if not player then return end
+	local trusted = Session.get_trusted_table()
+	if not trusted[player.name] then return end
+
+	local data = {type = "load_quickbar", player = player.name}
+	game.write_file(data_filename, table_to_json(data), true, 0)
+end
+
+local function save_color(player)
+	if not player then return end
+	local trusted = Session.get_trusted_table()
+	if not trusted[player.name] then return end
+
+	local color = game.table_to_json(player.color)
+	local data = {type = "save_color", player = player.name, value = color}
+	game.write_file(data_filename, table_to_json(data), true, 0)
+end
+
+local function load_color(player)
+	if not player then return end
+	local trusted = Session.get_trusted_table()
+	if not trusted[player.name] then return end
+
+	local data = {type = "save_color", player = player.name}
+	game.write_file(data_filename, table_to_json(data), true, 0)
+end
+
+
+Event.add(
+	defines.events.on_player_left_game,
+	function(event)
+		local player = game.get_player(event.index)
+		save_quickbar(player)
+		save_color(player)
+	end
+)
+Event.add(
+	defines.events.on_player_joined_game,
+	function(event)
+		local player = game.get_player(event.index)
+		load_quickbar(player)
+		load_color(player)
+	end
 )
