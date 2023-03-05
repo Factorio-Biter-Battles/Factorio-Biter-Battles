@@ -586,7 +586,7 @@ function Public.generate_silo(surface)
 		create_mirrored_tile_chain(surface, {name = "stone-path", position = silo.position}, 32, 10)
 	end
 	
-	for _, entity in pairs(surface.find_entities({{pos.x - 4, pos.y - 5}, {pos.x + 5, pos.y + 6}})) do
+	for _, entity in pairs(surface.find_entities({{pos.x - 4, pos.y - 6}, {pos.x + 5, pos.y + 5}})) do
 		if entity.type == "simple-entity" or entity.type == "tree" or entity.type == "resource" then
 			entity.destroy()
 		end
