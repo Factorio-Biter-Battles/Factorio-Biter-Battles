@@ -587,7 +587,7 @@ function Public.generate_silo(surface)
 	end
 	
 	for _, entity in pairs(surface.find_entities({{pos.x - 4, pos.y - 6}, {pos.x + 5, pos.y + 5}})) do
-		if entity.type == "simple-entity" or entity.type == "tree" or entity.type == "resource" then
+		if entity.type == "simple-entity" or entity.type == "tree" then
 			entity.destroy()
 		end
 	end
