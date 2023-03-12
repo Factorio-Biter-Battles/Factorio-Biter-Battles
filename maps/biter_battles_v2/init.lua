@@ -122,6 +122,7 @@ function Public.initial_setup()
 		["only_admins_vote"] = false,		--Are only admins able to vote on the global difficulty?
 		--MAP SETTINGS--
 		["new_year_island"] = false,
+		["map_reroll_admin_disable"] = true,
 	}
 
 	--Disable Nauvis
