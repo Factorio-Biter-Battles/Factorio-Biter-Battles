@@ -398,18 +398,19 @@ local function mixed_ore(surface, left_top_x, left_top_y)
 	local noise = GetNoise("bb_ore", {x = left_top_x + 16, y = left_top_y + 16}, seed)
 
 	--Draw noise text values to determine which chunks are valid for mixed ore.
-	--rendering.draw_text{text = noise, surface = game.surfaces.biter_battles, target = {x = left_top_x + 16, y = left_top_y + 16}, color = {255, 255, 255}, scale = 2, font = "default-game"}
+	rendering.draw_text{text = noise, surface = surface, target = {left_top_x + 16, left_top_y + 16}, color = {255, 128, 0}, scale = 2, font = "default-game"}
+
 
 	--Skip chunks that are too far off the ore noise value.
-	if noise < 0.42 then return end
+	-- if noise < 0.42 then return end
 
 	--Draw the mixed ore patches.
 	for x = 0, 31, 1 do
 		for y = 0, 31, 1 do
 			local pos = {x = left_top_x + x, y = left_top_y + y}
 			if surface.can_place_entity({name = "iron-ore", position = pos}) then
-				noise = GetNoise("bb_ore", pos, seed)
-				if noise > 0.72 then
+				local noise = GetNoise("bb_ore", pos, seed)
+				if noise > 0.6 then
 					local i = math_floor(noise * 25 + math_abs(pos.x) * 0.05) % 4 + 1
 					local amount = (global.random_generator(800, 1000) + math_sqrt(pos.x ^ 2 + pos.y ^ 2) * 3) * mixed_ore_multiplier[i]
 					surface.create_entity({name = ores[i], position = pos, amount = amount})
@@ -431,7 +432,10 @@ function Public.generate(event)
 
 	if global.active_special_games['mixed_ore_map'] then
 		mixed_ore_map(surface, left_top_x, left_top_y)
-	else
+
+	-- Since a chunk size is 32 in Factorio, therefore we draw mixed ore from -16 to +16. But also we make sure that in the 300x300
+	-- square that we have in Main, we don't draw mixed ore patches. (thats bounded by -150 and +150)
+	elseif left_top_x + 16 < -150 or left_top_x + 16 > 150 or left_top_y + 16 < -150 then
 		mixed_ore(surface, left_top_x, left_top_y)
 	end
 	generate_river(surface, left_top_x, left_top_y)
