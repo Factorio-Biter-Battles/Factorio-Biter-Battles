@@ -1,1 +1,10 @@
-null
+{
+  "name": "Biter Battles - Community Edition",
+  "version": "5.0.0",
+  "title": "Biter Battles CE",
+  "author": "TheBigZet",
+  "factorio_version": "1.1",
+  "dependencies": ["base >= 1.1"],
+  "description": "Biter Battles CE is a community managed version of Comfy's BiterBattles scenario.  Discord: https://discord.gg/xXN9zuUZ"
+}
+
