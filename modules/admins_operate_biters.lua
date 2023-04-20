@@ -1,5 +1,5 @@
 local event = require 'utils.event'
-local math_random = math.random
+local math_random = math.random2
 local math_floor = math.floor
 global.biter_command = {}
 global.biter_command.active_unit_groups = {}

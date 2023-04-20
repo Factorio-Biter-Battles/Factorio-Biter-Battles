@@ -31,7 +31,7 @@ local function omegakaboom(surface, center_pos, projectile, radius, density)
         for y = radius * -1, radius, 1 do
             local pos = {x = center_pos.x + x, y = center_pos.y + y}
             local distance_to_center = math.ceil(math.sqrt((pos.x - center_pos.x) ^ 2 + (pos.y - center_pos.y) ^ 2))
-            if distance_to_center < radius and math.random(1, 100) < density then
+            if distance_to_center < radius and math.random2(1, 100) < density then
                 if not positions[distance_to_center] then
                     positions[distance_to_center] = {}
                 end

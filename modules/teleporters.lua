@@ -145,10 +145,10 @@ local function spawn_teleporter(player)
 		local i = player.get_main_inventory()
 		local removed_item_count = i.remove({name = key_item, count = 1})				
 		if removed_item_count ~= 1 then return end		
-		local str = teleporter_names[math.random(1, #teleporter_names)]
+		local str = teleporter_names[math.random2(1, #teleporter_names)]
 		local str2 = str
 		while str == str2 do
-			str2 = teleporter_names[math.random(1, #teleporter_names)]
+			str2 = teleporter_names[math.random2(1, #teleporter_names)]
 		end		
 		table.insert(global.teleporters, {position = {x = pos.x, y = pos.y}, name = str .. " " .. str2, surface = surface.name})
 		local tiles = {

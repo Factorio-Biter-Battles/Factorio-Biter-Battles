@@ -1,6 +1,6 @@
 --luacheck: globals table
 local Stats = require 'utils.stats'
-local random = math.random
+local random = math.random2
 local floor = math.floor
 local remove = table.remove
 local tonumber = tonumber
@@ -122,7 +122,7 @@ function table.keys(tbl)
 end
 
 --- Chooses a random entry from a table
--- because this uses math.random, it cannot be used outside of events
+-- because this uses math.random2, it cannot be used outside of events
 -- @param t <table>
 -- @param key <boolean> to indicate whether to return the key or value
 -- @return <any> a random element of table t
@@ -142,7 +142,7 @@ function table.get_random_dictionary_entry(t, key)
 end
 
 --- Chooses a random entry from a weighted table
--- because this uses math.random, it cannot be used outside of events
+-- because this uses math.random2, it cannot be used outside of events
 -- @param weighted_table <table> of tables with items and their weights
 -- @param item_index <number> of the index of items, defaults to 1
 -- @param weight_index <number> of the index of the weights, defaults to 2
@@ -186,11 +186,11 @@ function table.get_random_weighted_chances(weighted_table, item_index, weight_in
 end
 
 --- Creates a fisher-yates shuffle of a sequential number-indexed table
--- because this uses math.random, it cannot be used outside of events if no rng is supplied
+-- because this uses math.random2, it cannot be used outside of events if no rng is supplied
 -- from: http://www.sdknews.com/cross-platform/corona/tutorial-how-to-shuffle-table-items
 -- @param t <table> to shuffle
 function table.shuffle_table(t, rng)
-    local rand = rng or math.random
+    local rand = rng or math.random2
     local iterations = #t
     if iterations == 0 then
         error('Not a sequential table')

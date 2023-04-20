@@ -5,7 +5,7 @@ local bb_config = require "maps.biter_battles_v2.config"
 local BossUnit = require "functions.boss_unit"
 local fifo = require "maps.biter_battles_v2.fifo"
 local Tables = require "maps.biter_battles_v2.tables"
-local math_random = math.random
+local math_random = math.random2
 local math_floor = math.floor
 local math_abs = math.abs
 

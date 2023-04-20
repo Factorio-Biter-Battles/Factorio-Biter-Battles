@@ -1,7 +1,7 @@
 local function shuffle(tbl)
 	local size = #tbl
 		for i = size, 1, -1 do
-			local rand = math.random(size)
+			local rand = math.random2(size)
 			tbl[i], tbl[rand] = tbl[rand], tbl[i]
 		end
 	return tbl
@@ -23,7 +23,7 @@ local function create_entity_chain(surface, entity, count, straightness)
 	for a = 1, count, 1 do
 		local entity_placed = false
 		
-		if math.random(0, 100) > straightness then modifiers = shuffle(modifiers) end
+		if math.random2(0, 100) > straightness then modifiers = shuffle(modifiers) end
 		for b = 1, 4, 1 do
 			local pos = {x = position.x + modifiers[b].x, y = position.y + modifiers[b].y}
 			if surface.can_place_entity({name = entity.name, position = pos}) then
@@ -35,7 +35,7 @@ local function create_entity_chain(surface, entity, count, straightness)
 		end		
 		
 		if not entity_placed then
-			if math.random(0, 100) > straightness then modifiers_d = shuffle(modifiers_d) end			
+			if math.random2(0, 100) > straightness then modifiers_d = shuffle(modifiers_d) end			
 			for b = 1, 4, 1 do
 				local pos = {x = position.x + modifiers_d[b].x, y = position.y + modifiers_d[b].y}
 				if surface.can_place_entity({name = entity.name, position = pos}) then

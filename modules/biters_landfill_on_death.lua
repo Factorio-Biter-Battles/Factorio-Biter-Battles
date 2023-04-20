@@ -2,7 +2,7 @@
 
 local r = 6
 local vectors = {{0,0}, {1,0}, {0,1}, {-1,0}, {0,-1}}
-local math_random = math.random
+local math_random = math.random2
 
 local function create_particles(surface, position)
 	local m = math_random(8, 12)

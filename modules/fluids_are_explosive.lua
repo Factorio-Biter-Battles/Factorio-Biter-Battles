@@ -49,7 +49,7 @@ local fluid_damages = { -- Fluid Whitelist -- add fluid and a damage value to en
 local function shuffle(tbl)
 	local size = #tbl
 		for i = size, 1, -1 do
-			local rand = math.random(size)
+			local rand = math.random2(size)
 			tbl[i], tbl[rand] = tbl[rand], tbl[i]
 		end
 	return tbl
@@ -98,7 +98,7 @@ local function process_explosion_tile(pos, explosion_index, current_radius)
 	end
 	
 	if global.fluid_explosion_schedule[explosion_index].damage_remaining > 5000 and current_radius < 2 then
-		if math.random(1,2) ==  1 then
+		if math.random2(1,2) ==  1 then
 			explosion_animation = "big-explosion"
 		else
 			explosion_animation = "big-artillery-explosion"
@@ -168,7 +168,7 @@ local function on_entity_damaged(event)
 	if not fluid_damages[entity.fluidbox[1].name] then return end		
 	if entity.health > entity.prototype.max_health * 0.75 then return end
 		
-	if math.random(1,3) == 1 or entity.health <= 0 then create_explosion_schedule(entity) return end	
+	if math.random2(1,3) == 1 or entity.health <= 0 then create_explosion_schedule(entity) return end	
 end
 
 local function on_tick(event)

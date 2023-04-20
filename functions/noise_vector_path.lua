@@ -15,8 +15,8 @@ local function get_brush(size)
 end
 
 function noise_vector_entity_path(surface, entity_name, position, base_vector, length, collision)
-	local seed_1 = math.random(1, 10000000)
-	local seed_2 = math.random(1, 10000000)
+	local seed_1 = math.random2(1, 10000000)
+	local seed_2 = math.random2(1, 10000000)
 	local vector = {}
 	local entities = {}
 	local minimal_movement = 0.5
@@ -38,7 +38,7 @@ function noise_vector_entity_path(surface, entity_name, position, base_vector, l
 		
 		--enforce minimum movement
 		if math.abs(vector[1]) < minimal_movement and math.abs(vector[2]) < minimal_movement then
-			local i = math.random(1,2)
+			local i = math.random2(1,2)
 			if vector[i] < 0 then
 				vector[i] = minimal_movement * -1
 			else
@@ -53,9 +53,9 @@ function noise_vector_entity_path(surface, entity_name, position, base_vector, l
 end
 
 function noise_vector_tile_path(surface, tile_name, position, base_vector, length, brush_size, whitelist)
-	local seed_1 = math.random(1, 10000000)
-	local seed_2 = math.random(1, 10000000)
-	local m = math.random(1, 100) * 0.001
+	local seed_1 = math.random2(1, 10000000)
+	local seed_2 = math.random2(1, 10000000)
+	local m = math.random2(1, 100) * 0.001
 	local vector = {}
 	local tiles = {}
 	local minimal_movement = 0.65
@@ -85,7 +85,7 @@ function noise_vector_tile_path(surface, tile_name, position, base_vector, lengt
 		vector[2] = base_vector[2] + noise_2
 			
 		if math.abs(vector[1]) < minimal_movement and math.abs(vector[2]) < minimal_movement then
-			local i = math.random(1,2)
+			local i = math.random2(1,2)
 			if vector[i] < 0 then
 				vector[i] = minimal_movement * -1
 			else

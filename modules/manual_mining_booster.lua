@@ -23,7 +23,7 @@ end
 local function on_player_mined_entity(event)
 	if not valid_entities[event.entity.name] then return end
 	local player = game.players[event.player_index]
-	player.character.character_mining_speed_modifier = player.character.character_mining_speed_modifier + (math.random(25, 50) * 0.01)
+	player.character.character_mining_speed_modifier = player.character.character_mining_speed_modifier + (math.random2(25, 50) * 0.01)
 	if player.character.character_mining_speed_modifier > 10 then player.character.character_mining_speed_modifier = 10 end
 	global.manual_mining_booster[event.player_index] = game.tick	
 end

@@ -52,12 +52,12 @@ local function fix_player_position(source_player, original_position)
 end
 
 local function teleport_effects(surface, position)
-    local x = position.x + (4 - (math.random(1, 80) * 0.1))
+    local x = position.x + (4 - (math.random2(1, 80) * 0.1))
     surface.create_entity(
         {
             name = 'railgun-beam',
             position = {x = position.x, y = position.y},
-            target = {x = x, y = position.y - math.random(6, 13)}
+            target = {x = x, y = position.y - math.random2(6, 13)}
         }
     )
     for y = 0, 1, 1 do
@@ -68,24 +68,24 @@ local function teleport_effects(surface, position)
             }
         )
     end
-    if math.random(1, 40) == 1 then
+    if math.random2(1, 40) == 1 then
         surface.create_entity(
             {
                 name = 'explosion',
                 position = {
-                    x = position.x + (3 - (math.random(1, 60) * 0.1)),
-                    y = position.y + (3 - (math.random(1, 60) * 0.1))
+                    x = position.x + (3 - (math.random2(1, 60) * 0.1)),
+                    y = position.y + (3 - (math.random2(1, 60) * 0.1))
                 }
             }
         )
     end
-    if math.random(1, 32) == 1 then
+    if math.random2(1, 32) == 1 then
         surface.create_entity({name = 'blood-explosion-huge', position = position})
     end
-    if math.random(1, 16) == 1 then
+    if math.random2(1, 16) == 1 then
         surface.create_entity({name = 'blood-explosion-big', position = position})
     end
-    if math.random(1, 8) == 1 then
+    if math.random2(1, 8) == 1 then
         surface.create_entity({name = 'blood-explosion-small', position = position})
     end
 end
@@ -113,7 +113,7 @@ local function sync_health_and_direction(player, materializing_character)
         player.character.damage(2, 'player')
         return
     end
-    if math.random(1, 64) == 1 then
+    if math.random2(1, 64) == 1 then
         player.character.damage(2, 'player')
         return
     end

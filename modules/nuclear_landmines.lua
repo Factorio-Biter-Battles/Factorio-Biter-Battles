@@ -1,4 +1,4 @@
-local math_random = math.random
+local math_random = math.random2
 
 local function detonate_nuke(entity)
   local surface = entity.surface

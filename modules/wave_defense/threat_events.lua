@@ -2,7 +2,7 @@ local WD = require 'modules.wave_defense.table'
 local threat_values = require 'modules.wave_defense.threat_values'
 local Event = require 'utils.event'
 local BiterRolls = require 'modules.wave_defense.biter_rolls'
-local math_random = math.random
+local math_random = math.random2
 
 local Public = {}
 
@@ -178,7 +178,7 @@ local function shred_simple_entities(entity)
     if r < 1 then
         r = 1
     end
-    local count = math.random(1, r)
+    local count = math.random2(1, r)
     --local count = 1
     local damage_dealt = 0
     for i = 1, count, 1 do
@@ -214,8 +214,8 @@ local function spawn_unit_spawner_inhabitants(entity)
     end
     BiterRolls.wave_defense_set_unit_raffle(wave_number)
     for _ = 1, count, 1 do
-        local position = {entity.position.x + (-4 + math.random(0, 8)), entity.position.y + (-4 + math.random(0, 8))}
-        if math.random(1, 4) == 1 then
+        local position = {entity.position.x + (-4 + math.random2(0, 8)), entity.position.y + (-4 + math.random2(0, 8))}
+        if math.random2(1, 4) == 1 then
             entity.surface.create_entity({name = BiterRolls.wave_defense_roll_spitter_name(), position = position, force = 'enemy'})
         else
             entity.surface.create_entity({name = BiterRolls.wave_defense_roll_biter_name(), position = position, force = 'enemy'})

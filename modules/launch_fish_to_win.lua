@@ -164,16 +164,16 @@ end
 local function fireworks(entity)
     for x = entity.position.x - 32, entity.position.x + 32, 1 do
         for y = entity.position.y - 32, entity.position.y + 32, 1 do
-            if math.random(1, 150) == 1 then
+            if math.random2(1, 150) == 1 then
                 entity.surface.create_entity({name = 'big-explosion', position = {x = x, y = y}})
             end
-            if math.random(1, 150) == 1 then
+            if math.random2(1, 150) == 1 then
                 entity.surface.create_entity({name = 'uranium-cannon-shell-explosion', position = {x = x, y = y}})
             end
-            if math.random(1, 150) == 1 then
+            if math.random2(1, 150) == 1 then
                 entity.surface.create_entity({name = 'blood-explosion-huge', position = {x = x, y = y}})
             end
-            if math.random(1, 150) == 1 then
+            if math.random2(1, 150) == 1 then
                 entity.surface.create_entity({name = 'big-artillery-explosion', position = {x = x, y = y}})
             end
         end

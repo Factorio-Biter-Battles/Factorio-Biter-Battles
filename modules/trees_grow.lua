@@ -1,7 +1,7 @@
 -- trees multiply --  mewmew
 
 local event = require 'utils.event'
-local math_random = math.random
+local math_random = math.random2
 local Difficulty = require 'modules.difficulty_vote'
 
 local vectors = {}

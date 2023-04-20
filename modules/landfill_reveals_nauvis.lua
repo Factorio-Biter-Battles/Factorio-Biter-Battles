@@ -3,7 +3,7 @@
 local regenerate_decoratives = true
 
 local event = require 'utils.event'
-local math_random = math.random
+local math_random = math.random2
 local table_insert = table.insert
 local water_tile_whitelist = {
 		["water"] = true,
@@ -15,7 +15,7 @@ local water_tile_whitelist = {
 local function shuffle(tbl)
 	local size = #tbl
 		for i = size, 1, -1 do
-			local rand = math.random(size)
+			local rand = math.random2(size)
 			tbl[i], tbl[rand] = tbl[rand], tbl[i]
 		end
 	return tbl

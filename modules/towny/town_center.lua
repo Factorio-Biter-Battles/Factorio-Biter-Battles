@@ -1,7 +1,7 @@
 local Team = require "modules.towny.team"
 local Public = {}
 
-local math_random = math.random
+local math_random = math.random2
 local table_insert = table.insert
 local math_floor = math.floor
 

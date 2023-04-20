@@ -15,7 +15,7 @@ Modified by Gerkiz *-*
 
 require "player_modifiers"
 
-local math_random = math.random
+local math_random = math.random2
 local math_sqrt = math.sqrt
 local math_floor = math.floor
 local Global = require 'utils.global'

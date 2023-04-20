@@ -1,7 +1,7 @@
 -- worms will teleport to where they shoot -- by mewmew
 
 local event = require 'utils.event'
-local math_random = math.random
+local math_random = math.random2
 
 local function on_entity_damaged(event)	
 	if not event.cause then return end

@@ -1,7 +1,7 @@
 -- too many same entities close together will explode 
 
 local event = require 'utils.event'
-local math_random = math.random
+local math_random = math.random2
 require 'utils.table'
 
 local search_radius = 6
@@ -71,12 +71,12 @@ local function spaghett(surface, entity, inventory, player)
 			if not global.last_spaghett_error then global.last_spaghett_error = {} end
 			if not global.last_spaghett_error[player.index] then global.last_spaghett_error[player.index] = 0 end
 			if game.tick - global.last_spaghett_error[player.index] > 30 then
-				local gb = math.random(0, 150)
+				local gb = math.random2(0, 150)
 				surface.create_entity({
 					name = "flying-text",
 					position = entity.position,
 					text = error_message(),
-					color = {r = math.random(200, 255), g = math.random(0, 125), b = math.random(0, 125)}
+					color = {r = math.random2(200, 255), g = math.random2(0, 125), b = math.random2(0, 125)}
 				})
 				global.last_spaghett_error[player.index] = game.tick
 			end

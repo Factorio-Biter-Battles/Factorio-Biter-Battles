@@ -9,7 +9,7 @@ local Public = {}
 local table_shuffle_table = table.shuffle_table
 local table_insert = table.insert
 local table_remove = table.remove
-local math_random = math.random
+local math_random = math.random2
 local math_floor = math.floor
 
 local item_worths = {

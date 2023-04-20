@@ -27,13 +27,13 @@ local function is_entity_on_lava(entity)
 end
 
 local function damage_entity(entity, player)
-	if math.random(1,5) == 1 then
+	if math.random2(1,5) == 1 then
 		entity.surface.create_entity({name = "fire-flame", position = player.position})
 	end
 	entity.health = entity.health - entity.prototype.max_health / 75
 	if entity.health <= 0 then
 		if entity.name == "character" then
-			game.print(player.name .. messages[math.random(1, #messages)], {r = 200, g = 0, b = 0})
+			game.print(player.name .. messages[math.random2(1, #messages)], {r = 200, g = 0, b = 0})
 		end
 		entity.die() 
 	end
@@ -55,7 +55,7 @@ local function process_player(player)
 end
 
 --local function on_player_changed_position(event)
-	--if math.random(1,2) == 1 then return end
+	--if math.random2(1,2) == 1 then return end
 	--local player = game.players[event.player_index]
 	--process_player(player)
 --end

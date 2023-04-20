@@ -664,7 +664,7 @@ local function on_gui_click(event)
             str = str .. ' has poked '
             str = str .. poked_player
             str = str .. ' with '
-            local z = math.random(1, #pokemessages)
+            local z = math.random2(1, #pokemessages)
             str = str .. pokemessages[z]
             str = str .. ' <<'
             game.print(str)

@@ -76,7 +76,7 @@ local function process_explosion_tile(pos, explosion_index, current_radius)
 	end
 	
 	if global.explosion_schedule[explosion_index].damage_remaining > 5000 and current_radius < 2 then
-		if math.random(1,2) ==  1 then
+		if math.random2(1,2) ==  1 then
 			explosion_animation = "big-explosion"
 		else
 			explosion_animation = "big-artillery-explosion"
@@ -126,11 +126,11 @@ local function on_entity_damaged(event)
 	if entity.health > entity.prototype.max_health * 0.75 then return end
 	
 	if entity.type == "container" or entity.type == "logistic-container" then
-		if math.random(1,3) == 1 or entity.health <= 0 then create_explosion_schedule(event.entity) return end
+		if math.random2(1,3) == 1 or entity.health <= 0 then create_explosion_schedule(event.entity) return end
 	end
 	if entity.type == "cargo-wagon" or entity.type == "car" then
 		if entity.health <= 0 then create_explosion_schedule(entity) return end
-		if entity.health < 150 and math.random(1,3) == 1 then create_explosion_schedule(entity) return end
+		if entity.health < 150 and math.random2(1,3) == 1 then create_explosion_schedule(entity) return end
 	end
 end
 

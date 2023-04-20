@@ -1,4 +1,4 @@
-local math_random = math.random
+local math_random = math.random2
 
 local valid_entities = {
 	["rock-big"] = true,

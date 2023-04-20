@@ -143,10 +143,10 @@ end
 function Public.playground_surface()
 	local map_gen_settings = {}
 	local int_max = 2 ^ 31
-	map_gen_settings.seed = math.random(1, int_max)
-	map_gen_settings.water = math.random(15, 65) * 0.01
+	map_gen_settings.seed = math.random2(1, int_max)
+	map_gen_settings.water = math.random2(15, 65) * 0.01
 	map_gen_settings.starting_area = 2.5
-	map_gen_settings.terrain_segmentation = math.random(30, 40) * 0.1
+	map_gen_settings.terrain_segmentation = math.random2(30, 40) * 0.1
 	map_gen_settings.cliff_settings = {cliff_elevation_interval = 0, cliff_elevation_0 = 0}
 	map_gen_settings.autoplace_controls = {
 		["coal"] = {frequency = 6.5, size = 0.34, richness = 0.24},
@@ -155,7 +155,7 @@ function Public.playground_surface()
 		["iron-ore"] = {frequency = 8.5, size = 0.8, richness = 0.23},
 		["uranium-ore"] = {frequency = 2.2, size = 1, richness = 1},
 		["crude-oil"] = {frequency = 8, size = 1.4, richness = 0.45},
-		["trees"] = {frequency = math.random(8, 28) * 0.1, size = math.random(6, 14) * 0.1, richness = math.random(2, 4) * 0.1},
+		["trees"] = {frequency = math.random2(8, 28) * 0.1, size = math.random2(6, 14) * 0.1, richness = math.random2(2, 4) * 0.1},
 		["enemy-base"] = {frequency = 0, size = 0, richness = 0}
 	}
 	local surface = game.create_surface(global.bb_surface_name, map_gen_settings)
@@ -271,7 +271,7 @@ function Public.tables()
 	fifo.init()
 
 	global.next_attack = "north"
-	if math.random(1,2) == 1 then global.next_attack = "south" end
+	if math.random2(1,2) == 1 then global.next_attack = "south" end
 end
 
 function Public.load_spawn()

@@ -1,6 +1,6 @@
 local table_insert = table.insert
 local table_remove = table.remove
-local math_random = math.random
+local math_random = math.random2
 
 local drop_raffle = {}
 for _ = 1, 64, 1 do table_insert(drop_raffle, "iron-ore") end

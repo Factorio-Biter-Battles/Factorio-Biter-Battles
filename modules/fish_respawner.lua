@@ -14,7 +14,7 @@ local valid_water_tiles = {
 		}
 
 local event = require 'utils.event'
-local math_random = math.random
+local math_random = math.random2
 
 local function shuffle(tbl)
 	local size = #tbl

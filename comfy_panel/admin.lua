@@ -49,7 +49,7 @@ local function bring_player(player, source_player)
         game.print(
             player.name ..
                 ' has been teleported to ' ..
-                    source_player.name .. '. ' .. bring_player_messages[math.random(1, #bring_player_messages)],
+                    source_player.name .. '. ' .. bring_player_messages[math.random2(1, #bring_player_messages)],
             {r = 0.98, g = 0.66, b = 0.22}
         )
     end
@@ -68,7 +68,7 @@ local function go_to_player(player, source_player)
         source_player.teleport(pos, player.surface)
         game.print(
             source_player.name ..
-                ' is visiting ' .. player.name .. '. ' .. go_to_player_messages[math.random(1, #go_to_player_messages)],
+                ' is visiting ' .. player.name .. '. ' .. go_to_player_messages[math.random2(1, #go_to_player_messages)],
             {r = 0.98, g = 0.66, b = 0.22}
         )
     end
@@ -103,7 +103,7 @@ local function damage(player, source_player)
         player.character.health = player.character.health - 125
         player.surface.create_entity({name = 'big-explosion', position = player.position})
         game.print(
-            player.name .. damage_messages[math.random(1, #damage_messages)] .. source_player.name,
+            player.name .. damage_messages[math.random2(1, #damage_messages)] .. source_player.name,
             {r = 0.98, g = 0.66, b = 0.22}
         )
     end
@@ -122,7 +122,7 @@ local function kill(player, source_player)
     end
     if player.character then
         player.character.die('player')
-        game.print(player.name .. kill_messages[math.random(1, #kill_messages)], {r = 0.98, g = 0.66, b = 0.22})
+        game.print(player.name .. kill_messages[math.random2(1, #kill_messages)], {r = 0.98, g = 0.66, b = 0.22})
         admin_only_message(source_player.name .. ' killed ' .. player.name)
     end
 end
@@ -140,7 +140,7 @@ local function enemy(player, source_player)
     end
     player.force = game.forces.enemy_players
     game.print(
-        player.name .. ' is now an enemy! ' .. enemy_messages[math.random(1, #enemy_messages)],
+        player.name .. ' is now an enemy! ' .. enemy_messages[math.random2(1, #enemy_messages)],
         {r = 0.95, g = 0.15, b = 0.15}
     )
     admin_only_message(source_player.name .. ' has turned ' .. player.name .. ' into an enemy')

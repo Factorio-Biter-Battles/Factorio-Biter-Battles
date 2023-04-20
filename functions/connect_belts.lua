@@ -57,7 +57,7 @@ end
 function connect_belts(entities, d)
 	for a = 1, 4, 1 do
 		local r = d
-		if not r then r = math.random(1, 4) end
+		if not r then r = math.random2(1, 4) end
 		for k, entity in pairs(entities) do
 			entity.direction = get_optimal_direction(entity, direction_tendencies[r])
 		end

@@ -20,7 +20,7 @@ local side_target_types = {
 local function get_random_target()
     local side_target_count = WD.get('side_target_count')
     local side_targets = WD.get('side_targets')
-    local r = math.random(1, side_target_count)
+    local r = math.random2(1, side_target_count)
     if not side_targets[r] then
         table.remove(side_targets, r)
         WD.set('side_target_count', side_target_count - 1)

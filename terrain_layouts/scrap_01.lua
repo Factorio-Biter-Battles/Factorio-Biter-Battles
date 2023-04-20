@@ -2,7 +2,7 @@ require "modules.mineable_wreckage_yields_scrap"
 require "modules.no_deconstruction_of_neutral_entities"
 
 local get_noise = require "utils.get_noise"
-local math_random = math.random
+local math_random = math.random2
 local math_floor = math.floor
 local math_abs = math.abs
 

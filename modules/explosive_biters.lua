@@ -33,7 +33,7 @@ local function on_entity_died(event)
 			entity.surface,
 			entity.position,
 			biter_values[entity.name][3],
-			math.random(math.ceil(biter_values[entity.name][2] * 0.75), math.ceil(biter_values[entity.name][2] * 1.25))
+			math.random2(math.ceil(biter_values[entity.name][2] * 0.75), math.ceil(biter_values[entity.name][2] * 1.25))
 		)		
 	end
 end

@@ -1,6 +1,6 @@
 local Event = require 'utils.event'
 local max_spill = 40
-local math_random = math.random
+local math_random = math.random2
 local math_floor = math.floor
 local math_sqrt = math.sqrt
 local insert = table.insert

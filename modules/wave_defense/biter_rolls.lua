@@ -8,7 +8,7 @@ function Public.wave_defense_roll_biter_name()
     for k, v in pairs(biter_raffle) do
         max_chance = max_chance + v
     end
-    local r = math.random(0, math.floor(max_chance))
+    local r = math.random2(0, math.floor(max_chance))
     local current_chance = 0
     for k, v in pairs(biter_raffle) do
         current_chance = current_chance + v
@@ -24,7 +24,7 @@ function Public.wave_defense_roll_spitter_name()
     for k, v in pairs(spitter_raffle) do
         max_chance = max_chance + v
     end
-    local r = math.random(0, math.floor(max_chance))
+    local r = math.random2(0, math.floor(max_chance))
     local current_chance = 0
     for k, v in pairs(spitter_raffle) do
         current_chance = current_chance + v
@@ -84,7 +84,7 @@ function Public.wave_defense_roll_worm_name()
     for k, v in pairs(worm_raffle) do
         max_chance = max_chance + v
     end
-    local r = math.random(0, math.floor(max_chance))
+    local r = math.random2(0, math.floor(max_chance))
     local current_chance = 0
     for k, v in pairs(worm_raffle) do
         current_chance = current_chance + v

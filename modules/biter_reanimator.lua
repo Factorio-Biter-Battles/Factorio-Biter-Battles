@@ -4,7 +4,7 @@
 --1.5 = 1 extra life + 50% chance of another life
 --3 = 3 extra lifes
 
-local math_random = math.random
+local math_random = math.random2
 
 local function register_unit(unit, extra_lifes, unit_group)
 	if global.biter_reanimator.units[unit.unit_number] then return end

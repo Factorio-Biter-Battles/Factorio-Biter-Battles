@@ -1,7 +1,7 @@
 -- players trample paths, tiles change as players walk around
 
 local event = require 'utils.event'
-local math_random = math.random
+local math_random = math.random2
 
 local blacklisted_tiles = {	
 		["concrete"] = true,

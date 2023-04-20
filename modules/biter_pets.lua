@@ -1,4 +1,4 @@
-local math_random = math.random
+local math_random = math.random2
 local nom_msg = {'munch', 'munch', 'yum'}
 
 local Public = {}

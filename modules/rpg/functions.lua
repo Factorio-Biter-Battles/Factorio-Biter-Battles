@@ -153,9 +153,9 @@ local function add_to_global_pool(amount, personal_tax)
 end
 
 function Public.suicidal_comfylatron(pos, surface)
-    local str = travelings[math.random(1, #travelings)]
+    local str = travelings[math.random2(1, #travelings)]
     local symbols = {'', '!', '!', '!!', '..'}
-    str = str .. symbols[math.random(1, #symbols)]
+    str = str .. symbols[math.random2(1, #symbols)]
     local text = str
     local e =
         surface.create_entity(
@@ -401,11 +401,11 @@ function Public.level_up_effects(player)
     local b = 0.75
     for _ = 1, 5, 1 do
         local p = {
-            (position.x + 0.4) + (b * -1 + math.random(0, b * 20) * 0.1),
-            position.y + (b * -1 + math.random(0, b * 20) * 0.1)
+            (position.x + 0.4) + (b * -1 + math.random2(0, b * 20) * 0.1),
+            position.y + (b * -1 + math.random2(0, b * 20) * 0.1)
         }
         player.surface.create_entity(
-            {name = 'flying-text', position = p, text = '✚', color = {255, math.random(0, 100), 0}}
+            {name = 'flying-text', position = p, text = '✚', color = {255, math.random2(0, 100), 0}}
         )
     end
     player.play_sound {path = 'utility/achievement_unlocked', volume_modifier = 0.40}
@@ -419,11 +419,11 @@ function Public.xp_effects(player)
     local b = 0.75
     for _ = 1, 5, 1 do
         local p = {
-            (position.x + 0.4) + (b * -1 + math.random(0, b * 20) * 0.1),
-            position.y + (b * -1 + math.random(0, b * 20) * 0.1)
+            (position.x + 0.4) + (b * -1 + math.random2(0, b * 20) * 0.1),
+            position.y + (b * -1 + math.random2(0, b * 20) * 0.1)
         }
         player.surface.create_entity(
-            {name = 'flying-text', position = p, text = '✚', color = {255, math.random(0, 100), 0}}
+            {name = 'flying-text', position = p, text = '✚', color = {255, math.random2(0, 100), 0}}
         )
     end
     player.play_sound {path = 'utility/achievement_unlocked', volume_modifier = 0.40}
@@ -660,7 +660,7 @@ function Public.global_pool(players, count)
 
     local pool = math.floor(rpg_extra.global_pool)
 
-    local random_amount = math.random(5000, 10000)
+    local random_amount = math.random2(5000, 10000)
 
     if pool <= random_amount then
         return

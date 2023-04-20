@@ -4,7 +4,7 @@ local Color = require 'utils.color_presets'
 local Server = require 'utils.server'
 
 -- localized functions
-local random = math.random
+local random = math.random2
 local sqrt = math.sqrt
 local floor = math.floor
 local format = string.format

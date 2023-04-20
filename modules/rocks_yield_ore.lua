@@ -1,6 +1,6 @@
 --destroying and mining rocks yields ore -- load as last module
 local max_spill = 60
-local math_random = math.random
+local math_random = math.random2
 local math_floor = math.floor
 local math_sqrt = math.sqrt
 

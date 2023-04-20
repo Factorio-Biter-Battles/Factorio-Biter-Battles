@@ -21,7 +21,7 @@ local function on_player_changed_position(event)
 	if player.character.driving == true then return end
 	if player.surface.daytime < 0.33 then return end
 	if player.surface.daytime > 0.66 then return end
-	if math.random(1,32) ~= 1 then return end
+	if math.random2(1,32) ~= 1 then return end
 	
 	for _, lamp in pairs(player.surface.find_entities_filtered({area={{player.position.x - 18, player.position.y - 18},{player.position.x + 18, player.position.y + 18}}, name="small-lamp"})) do
 		local circuit = lamp.get_or_create_control_behavior()
@@ -53,10 +53,10 @@ local function on_player_changed_position(event)
 	
 	if #positions == 0 then return end
 	
-	if math.random(1,3) == 1 then
-		unearthing_biters(player.surface, positions[math.random(1, #positions)], math.random(3,9))
+	if math.random2(1,3) == 1 then
+		unearthing_biters(player.surface, positions[math.random2(1, #positions)], math.random2(3,9))
 	else
-		unearthing_worm(player.surface, positions[math.random(1, #positions)])
+		unearthing_worm(player.surface, positions[math.random2(1, #positions)])
 	end
 end
 

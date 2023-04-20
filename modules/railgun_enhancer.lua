@@ -4,7 +4,7 @@
 local event = require 'utils.event'
 local damage_min = 400
 local damage_max = 800
-local math_random = math.random
+local math_random = math.random2
 local additional_visual_effects = true
 local do_splash_damage = true
 

@@ -9,7 +9,7 @@ local Alert = require 'utils.alert'
 local Event = require 'utils.event'
 
 local Public = {}
-local math_random = math.random
+local math_random = math.random2
 local math_floor = math.floor
 local table_insert = table.insert
 local math_sqrt = math.sqrt

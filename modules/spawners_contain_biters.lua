@@ -1,7 +1,7 @@
 -- spawners release biters on death -- by mewmew
 
 local event = require 'utils.event'
-local math_random = math.random
+local math_random = math.random2
 
 local biter_building_inhabitants = {
 	[1] = {{"small-biter",8,16}},

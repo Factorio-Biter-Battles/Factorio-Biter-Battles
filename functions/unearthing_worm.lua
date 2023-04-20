@@ -17,7 +17,7 @@ local function create_particles(surface, position, amount)
     if not surface.valid then
         return
     end
-    local math_random = math.random
+    local math_random = math.random2
     for i = 1, amount, 1 do
         local m = math_random(8, 24)
         local m2 = m * 0.005
@@ -122,7 +122,7 @@ local function spawn_worm(surface, position, evolution_index)
         }
     }
     local raffle = worm_raffle_table[evolution_index]
-    local worm_name = raffle[math.random(1, #raffle)]
+    local worm_name = raffle[math.random2(1, #raffle)]
     surface.create_entity({name = worm_name, position = position})
 end
 

@@ -48,7 +48,7 @@ local function get_random_occupied_cell()
 		end
 	end
 	if not occupied_cells[1] then return end
-	return occupied_cells[math.random(1, #occupied_cells)]
+	return occupied_cells[math.random2(1, #occupied_cells)]
 end
 
 local function set_dead_cells()

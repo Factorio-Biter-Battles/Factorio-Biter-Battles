@@ -5,7 +5,7 @@ local Constants = require "modules.immersive_cargo_wagons.constants"
 local table_insert = table.insert
 local table_remove = table.remove
 local math_round = math.round
-local math_random = math.random
+local math_random = math.random2
 
 function Public.request_reconstruction(icw)
 	icw.rebuild_tick = game.tick + 30

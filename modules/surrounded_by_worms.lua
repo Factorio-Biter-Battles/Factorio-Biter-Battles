@@ -3,7 +3,7 @@
 -- (default = 1)
 
 local event = require 'utils.event'
-local math_random = math.random
+local math_random = math.random2
 local turrets = {
 	[1] = "small-worm-turret",
 	[2] = "medium-worm-turret",

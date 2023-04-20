@@ -513,7 +513,7 @@ local function on_entity_damaged(event)
     --Cause a one punch.
     if enable_one_punch then
         if rpg_t[event.cause.player.index].one_punch then
-            if math.random(0, 999) < Functions.get_one_punch_chance(event.cause.player) * 10 then
+            if math.random2(0, 999) < Functions.get_one_punch_chance(event.cause.player) * 10 then
                 one_punch(event.cause, event.entity, damage)
                 if event.entity.valid then
                     event.entity.die(event.entity.force.name, event.cause)
@@ -524,8 +524,8 @@ local function on_entity_damaged(event)
     end
 
     --Floating messages and particle effects.
-    if math.random(1, 7) == 1 then
-        damage = damage * math.random(250, 350) * 0.01
+    if math.random2(1, 7) == 1 then
+        damage = damage * math.random2(250, 350) * 0.01
         event.cause.surface.create_entity(
             {
                 name = 'flying-text',
@@ -536,7 +536,7 @@ local function on_entity_damaged(event)
         )
         event.cause.surface.create_entity({name = 'blood-explosion-huge', position = event.entity.position})
     else
-        damage = damage * math.random(100, 125) * 0.01
+        damage = damage * math.random2(100, 125) * 0.01
         event.cause.player.create_local_flying_text(
             {
                 text = math.floor(damage),
@@ -576,7 +576,7 @@ local function on_entity_damaged(event)
 end
 
 local function on_player_repaired_entity(event)
-    if math.random(1, 4) ~= 1 then
+    if math.random2(1, 4) ~= 1 then
         return
     end
 
@@ -640,7 +640,7 @@ local function on_player_changed_position(event)
         give_player_flameboots(player)
     end
 
-    if math.random(1, 64) ~= 1 then
+    if math.random2(1, 64) ~= 1 then
         return
     end
     if not player.character then
@@ -749,7 +749,7 @@ local function on_player_crafted_item(event)
 
     local item = event.item_stack
 
-    local amount = 0.30 * math.random(1, 2)
+    local amount = 0.30 * math.random2(1, 2)
 
     if item and item.valid then
         if is_blacklisted[item.name] then
@@ -822,9 +822,9 @@ local function create_projectile(surface, name, position, force, target, max_ran
 end
 
 local function get_near_coord_modifier(range)
-    local coord = {x = (range * -1) + math.random(0, range * 2), y = (range * -1) + math.random(0, range * 2)}
+    local coord = {x = (range * -1) + math.random2(0, range * 2), y = (range * -1) + math.random2(0, range * 2)}
     for i = 1, 5, 1 do
-        local new_coord = {x = (range * -1) + math.random(0, range * 2), y = (range * -1) + math.random(0, range * 2)}
+        local new_coord = {x = (range * -1) + math.random2(0, range * 2), y = (range * -1) + math.random2(0, range * 2)}
         if new_coord.x ^ 2 + new_coord.y ^ 2 < coord.x ^ 2 + coord.y ^ 2 then
             coord = new_coord
         end
@@ -852,7 +852,7 @@ local function damage_entity(e)
         return
     end
 
-    e.health = e.health - math.random(30, 90)
+    e.health = e.health - math.random2(30, 90)
     if e.health <= 0 then
         e.die('enemy')
     end
@@ -863,10 +863,10 @@ local function floaty_hearts(entity, c)
     local b = 1.35
     for _ = 1, c, 1 do
         local p = {
-            (position.x + 0.4) + (b * -1 + math.random(0, b * 20) * 0.1),
-            position.y + (b * -1 + math.random(0, b * 20) * 0.1)
+            (position.x + 0.4) + (b * -1 + math.random2(0, b * 20) * 0.1),
+            position.y + (b * -1 + math.random2(0, b * 20) * 0.1)
         }
-        entity.surface.create_entity({name = 'flying-text', position = p, text = '♥', color = {math.random(150, 255), 0, 255}})
+        entity.surface.create_entity({name = 'flying-text', position = p, text = '♥', color = {math.random2(150, 255), 0, 255}})
     end
 end
 

@@ -1,7 +1,7 @@
 local simplex_noise = require 'utils.simplex_noise'
 simplex_noise = simplex_noise.d2
 local f = {}
-local math_random = math.random
+local math_random = math.random2
 local insert = table.insert
 
 local function shuffle(tbl)
@@ -173,7 +173,7 @@ f.draw_oil_circle = function(position, name, surface, radius, richness)
 	if not surface then return end
 	if not radius then return end
 	if not richness then return end
-	local math_random = math.random		
+	local math_random = math.random2		
 	local count = 0
 	local max_count = 0
 	while count < radius and max_count < 100000 do
@@ -202,7 +202,7 @@ f.draw_smoothed_out_ore_circle = function(position, name, surface, radius, richn
 	if not surface then return end
 	if not radius then return end
 	if not richness then return end
-	local math_random = math.random	
+	local math_random = math.random2	
 	local noise_seed_add = 25000	
 	local richness_part = richness / radius
 	for y = radius * -2, radius * 2, 1 do
@@ -230,7 +230,7 @@ f.draw_crazy_smoothed_out_ore_circle = function(position, name, surface, radius,
 	if not surface then return end
 	if not radius then return end
 	if not richness then return end
-	local math_random = math.random	
+	local math_random = math.random2	
 	local noise_seed_add = 25000	
 	local richness_part = richness / radius
 	for y = radius*-1, radius, 1 do
@@ -254,7 +254,7 @@ end
 
 f.create_cluster = function(name, pos, size, surface, spread, resource_amount)		
 	local p = {x = pos.x, y = pos.y}
-	local math_random = math.random
+	local math_random = math.random2
 	local original_pos = {x = pos.x, y = pos.y}
 	local entity_has_been_placed = false
 	for z = 1, size, 1 do

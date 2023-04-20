@@ -1,10 +1,10 @@
 local event = require 'utils.event'
-local math_random = math.random
+local math_random = math.random2
 
 local function shuffle(tbl)
 	local size = #tbl
 		for i = size, 1, -1 do
-			local rand = math.random(size)
+			local rand = math.random2(size)
 			tbl[i], tbl[rand] = tbl[rand], tbl[i]
 		end
 	return tbl
@@ -204,7 +204,7 @@ local function desync()
 			frame_speed = 0.1,
 			vertical_speed = 0.1,
 			height = 0.1,
-			movement = {m2 - (math.random(0, m) * 0.01), m2 - (math.random(0, m) * 0.01)}
+			movement = {m2 - (math.random2(0, m) * 0.01), m2 - (math.random2(0, m) * 0.01)}
 		})
 	end
 	global.comfylatron.surface.create_entity({name = "medium-explosion", position = global.comfylatron.position})

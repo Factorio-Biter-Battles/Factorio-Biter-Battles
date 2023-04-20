@@ -7,7 +7,7 @@ local Special_games = require 'comfy_panel.special_games'
 local Event = require 'utils.event'
 local Tables = require 'maps.biter_battles_v2.tables'
 
-local math_random = math.random
+local math_random = math.random2
 
 local Public = {}
 
@@ -19,7 +19,7 @@ local gui_values = {
 local function shuffle(tbl)
     local size = #tbl
     for i = size, 1, -1 do
-        local rand = math.random(size)
+        local rand = math.random2(size)
         tbl[i], tbl[rand] = tbl[rand], tbl[i]
     end
     return tbl
@@ -84,8 +84,8 @@ local function silo_kaboom(entity)
         for _ = 1, drop[2], 1 do
             entity.surface.spill_item_stack(
                 {
-                    drop[1].x + math.random(0, 9) * 0.1,
-                    drop[1].y + math.random(0, 9) * 0.1
+                    drop[1].x + math.random2(0, 9) * 0.1,
+                    drop[1].y + math.random2(0, 9) * 0.1
                 }, {name = "raw-fish", count = 1}, false, nil, true)
         end
     end

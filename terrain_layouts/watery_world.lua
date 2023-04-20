@@ -16,7 +16,7 @@ MUgPEjihRgFoQUcmBkQAJi8BPc6XQMAy367Og==<<<
 
 
 local get_noise = require "utils.get_noise"
-local math_random = math.random
+local math_random = math.random2
 local math_floor = math.floor
 local math_abs = math.abs
 

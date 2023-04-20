@@ -9,7 +9,7 @@ local session = require 'utils.datastore.session_data'
 local spawn_ore = tables.spawn_ore
 local table_insert = table.insert
 local math_floor = math.floor
-local math_random = math.random
+local math_random = math.random2
 local math_abs = math.abs
 local math_sqrt = math.sqrt
 
@@ -468,7 +468,7 @@ local function draw_grid_ore_patch(count, grid, name, surface, size, density)
 	-- ore patch on top of it. Grid is held by reference, so this function
 	-- is reentrant.
 	for i = 1, count, 1 do
-		local idx = math.random(1, #grid)
+		local idx = math.random2(1, #grid)
 		local pos = grid[idx]
 		table.remove(grid, idx)
 
@@ -537,8 +537,8 @@ function Public.generate_spawn_ore(surface)
 	-- Calculate left_top position of a chunk. It will be used as origin
 	-- for ore drawing. Reassigns new coordinates to the grid.
 	for i, _ in ipairs(grid) do
-		grid[i][1] = grid[i][1] * 32 + math.random(-12, 12)
-		grid[i][2] = grid[i][2] * 32 + math.random(-24, -1)
+		grid[i][1] = grid[i][1] * 32 + math.random2(-12, 12)
+		grid[i][2] = grid[i][2] * 32 + math.random2(-24, -1)
 	end
 
 	for name, props in pairs(spawn_ore) do

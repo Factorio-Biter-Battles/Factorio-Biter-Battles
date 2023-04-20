@@ -1,7 +1,7 @@
 --moving players attract biters from far away
 
 local event = require 'utils.event'
-local math_random = math.random
+local math_random = math.random2
 
 local function on_player_changed_position(event)
 	if math_random(1, 128) ~= 1 then return end

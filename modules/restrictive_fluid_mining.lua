@@ -1,7 +1,7 @@
 -- restricts mining of fluid filled entities -- by mewmew
 
 local event = require 'utils.event'
-local math_random = math.random
+local math_random = math.random2
 
 local message_color = {r = 255, g = 150, b = 0}
 

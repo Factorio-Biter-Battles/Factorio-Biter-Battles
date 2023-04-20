@@ -2,7 +2,7 @@
 
 local event = require 'utils.event'
 local Difficulty = require 'modules.difficulty_vote'
-local math_random = math.random
+local math_random = math.random2
 
 local difficulties_votes = {
     [1] = 128,
@@ -43,7 +43,7 @@ local function create_particles(surface, name, position, amount)
         {
             name = 'railgun-beam',
             position = {x = position.x, y = position.y},
-            target = {x = (position.x - 6) + math.random(0, 12), y = position.y - math.random(12, 24)}
+            target = {x = (position.x - 6) + math.random2(0, 12), y = position.y - math.random2(12, 24)}
         }
     )
     surface.create_entity(

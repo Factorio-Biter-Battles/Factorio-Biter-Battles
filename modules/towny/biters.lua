@@ -1,5 +1,5 @@
 local Public = {}
-local math_random = math.random
+local math_random = math.random2
 local math_floor = math.floor
 local math_sqrt = math.sqrt
 local math_round = math.round

@@ -1,5 +1,5 @@
 local event = require 'utils.event'
-local math_random = math.random
+local math_random = math.random2
 local radius = 16
 
 local targets = {}
@@ -14,8 +14,8 @@ end
 local function on_entity_died(event)	
 	if not event.entity.valid then return end
 	if event.entity.type ~= "unit-spawner" then return end		
-	for _ = 1, math.random(64, 128) do
-		local i = math.random(1, #targets)		
+	for _ = 1, math.random2(64, 128) do
+		local i = math.random2(1, #targets)		
 		event.entity.surface.create_entity({	
 			name = "acid-stream-worm-medium",
 			position = event.entity.position,

@@ -1,7 +1,7 @@
 -- prints death messages to all forces with custom texts -- by mewmew
 
 local event = require 'utils.event'
-local math_random = math.random
+local math_random = math.random2
 local message_color = {r=0.9, g=0.9, b=0.9}
 
 local messages = {
@@ -37,7 +37,7 @@ local function on_player_died(event)
 			return
 		end
 		if messages[cause.name] then
-			game.print(player.name .. messages[cause.name][math.random(1, #messages[cause.name])], message_color)
+			game.print(player.name .. messages[cause.name][math.random2(1, #messages[cause.name])], message_color)
 			return
 		end
 					

@@ -1,7 +1,7 @@
 --Players will have to carry water barrels or stand next to a water tile, to keep themselves hydrated!
 
 local Player_modifiers = require "player_modifiers"
-local math_random = math.random
+local math_random = math.random2
 local tooltip = "How thirsty your character is.\nStand next to water,\nor keep water-barrels in your inventory to take a sip."
 
 local water_tiles = {

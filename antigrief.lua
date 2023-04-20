@@ -149,14 +149,14 @@ local function damage_player(player, kill, print_to_all)
             end
             return
         end
-        player.character.health = player.character.health - math.random(50, 100)
+        player.character.health = player.character.health - math.random2(50, 100)
         player.character.surface.create_entity({name = 'water-splash', position = player.position})
         local messages = {
             'Ouch.. That hurt! Better be careful now.',
             'Just a fleshwound.',
             'Better keep those hands to yourself or you might loose them.'
         }
-        player.print(messages[math.random(1, #messages)], Color.yellow)
+        player.print(messages[math.random2(1, #messages)], Color.yellow)
         if player.character.health <= 0 then
             player.character.die('enemy')
             game.print(player.name .. msg, Color.yellow)

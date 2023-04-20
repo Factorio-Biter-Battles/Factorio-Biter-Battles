@@ -14,7 +14,7 @@ Global.register(
 )
 
 local Public = {}
-local random = math.random
+local random = math.random2
 local ceil = math.ceil
 
 local function is_player_warned(player, reset)

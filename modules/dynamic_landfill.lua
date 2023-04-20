@@ -2,7 +2,7 @@
 
 local regenerate_decoratives = true
 local event = require 'utils.event'
-local math_random = math.random
+local math_random = math.random2
 local table_insert = table.insert
 local water_tile_whitelist = {
     ['water'] = true,

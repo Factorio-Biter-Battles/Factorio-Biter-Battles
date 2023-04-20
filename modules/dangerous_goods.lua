@@ -13,7 +13,7 @@ Global.register(
     end
 )
 
-local math_random = math.random
+local math_random = math.random2
 
 local valid_container_types = {
     ['container'] = true,

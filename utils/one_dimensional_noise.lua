@@ -27,7 +27,7 @@ end
 
 function testnoise()
 	local surface = game.surfaces[1]
-	local seed = math.random(1, 1000000)
+	local seed = math.random2(1, 1000000)
 	for x = -256, 256, 1 do
 		local noise = get_noise(x / 64, seed)
 		local entity = surface.create_entity({name = "stone-wall", position = {x, noise * 32}, force = "player"})

@@ -12,7 +12,7 @@ local Tables = require "maps.biter_battles_v2.tables"
 local wait_messages = Tables.wait_messages
 local food_names = Tables.gui_foods
 
-local math_random = math.random
+local math_random = math.random2
 local math_abs = math.abs
 require "maps.biter_battles_v2.spec_spy"
 local gui_style = require 'utils.utils'.gui_style
@@ -503,7 +503,7 @@ local function on_gui_click(event)
 		if teams_equal then
 			local teams = {}
 			for _, gui_values in pairs(gui_values) do table.insert(teams, gui_values.force) end
-			join_gui_click(teams[math.random(#teams)], player, true)
+			join_gui_click(teams[math.random2(#teams)], player, true)
 	
 		else -- checking which team is smaller and joining it
 			local smallest_team = gui_values["north"].force -- Idk how to choose the 1st force without calling 'north'

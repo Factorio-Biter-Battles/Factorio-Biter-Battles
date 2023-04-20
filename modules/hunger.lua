@@ -2,7 +2,7 @@
 
 require "player_modifiers"
 
-local math_random = math.random
+local math_random = math.random2
 local P = require "player_modifiers"
 
 local starve_messages = {" ran out of foodstamps.", " starved.", " should not have skipped breakfast today."}
@@ -94,13 +94,13 @@ function hunger_update(player, food_value)
 		global.player_hunger[player.name] = player_hunger_spawn_value
 		player.surface.create_entity({name = "big-artillery-explosion", position = player.character.position})
 		player.character.die("player")
-		game.print(player.name .. overfeed_messages[math.random(1,#overfeed_messages)], { r=0.75, g=0.0, b=0.0})				
+		game.print(player.name .. overfeed_messages[math.random2(1,#overfeed_messages)], { r=0.75, g=0.0, b=0.0})				
 	end	
 	
 	if global.player_hunger[player.name] < 1 then
 		global.player_hunger[player.name] = player_hunger_spawn_value		
 		player.character.die("player")
-		game.print(player.name .. starve_messages[math.random(1,#starve_messages)], { r=0.75, g=0.0, b=0.0})	
+		game.print(player.name .. starve_messages[math.random2(1,#starve_messages)], { r=0.75, g=0.0, b=0.0})	
 	end
 	
 	if player.character then

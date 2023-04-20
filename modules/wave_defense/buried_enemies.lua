@@ -16,7 +16,7 @@ Global.register(
 
 local Public = {}
 local floor = math.floor
-local random = math.random
+local random = math.random2
 local abs = math.abs
 local sqrt = math.sqrt
 

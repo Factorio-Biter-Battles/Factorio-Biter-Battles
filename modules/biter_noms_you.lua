@@ -1,7 +1,7 @@
 --biters make comic like text sounds when they damage something -- mewmew
 
 local event = require 'utils.event'
-local math_random = math.random
+local math_random = math.random2
 
 local strings = {
 	"delicious!",
