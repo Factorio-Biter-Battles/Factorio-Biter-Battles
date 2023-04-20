@@ -1,3 +1,10 @@
+global.info = ""
+function math.random2(...)
+    global.info = debug.getinfo(2, 'nSf')
+    return(math.random(...))
+end
+    
+
 require 'utils.data_stages'
 _LIFECYCLE = _STAGE.control -- Control stage
 _DEBUG = false
