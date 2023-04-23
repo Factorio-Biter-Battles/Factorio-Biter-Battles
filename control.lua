@@ -1,8 +1,20 @@
-global.info = ""
+
+local info_size = 20
+global.info_index = 1
+global.info = {}
 function math.random2(...)
-    global.info = debug.getinfo(2, 'nSf')
+    --global.info = debug.getinfo(2, 'nSf')
     return(math.random(...))
 end
+
+debug.sethook(
+    function(event)
+        local info = debug.getinfo(2, Sl)
+        global.info_index = global.info_index % info_size + 1
+        global.info[global.info_index] = info.short_src .. " at " .. info.currentline
+    end,
+    "cr"
+)
     
 
 require 'utils.data_stages'
