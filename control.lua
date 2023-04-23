@@ -6,14 +6,19 @@ function math.random2(...)
     --global.info = debug.getinfo(2, 'nSf')
     return(math.random(...))
 end
-
-debug.sethook(
-    function(event)
-        local info = debug.getinfo(2, Sl)
-        global.info_index = global.info_index % info_size + 1
-        global.info[global.info_index] = info.short_src .. " at " .. info.currentline
-    end,
-    "cr"
+commands.add_command(
+    "start_info",
+    "Start logging all functions to degug desyncs",
+    function(cmd)
+        debug.sethook(
+            function(event)
+                local info = debug.getinfo(2, Sl)
+                global.info_index = global.info_index % info_size + 1
+                global.info[global.info_index] = info.short_src .. " at " .. info.currentline
+            end,
+            "cr"
+        )
+    end
 )
     
 
