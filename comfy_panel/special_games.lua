@@ -1,6 +1,7 @@
 local Event = require 'utils.event'
 local Color = require 'utils.color_presets'
 local Team_manager = require "maps.biter_battles_v2.team_manager"
+local session = require 'utils.datastore.session_data'
 local math_random = math.random
 local Public = {}
 global.active_special_games = {}
@@ -107,7 +108,10 @@ local valid_special_games = {
 		name = {type = "label", caption = "Captain mode", tooltip = "Captain mode"},
 		config = {
 			[1] = {name = "label4", type = "label", caption = "Referee"},
-			[2] = {name = 'refereeName', type = "textfield", text = "ReplaceMe", numeric = false, width = 240}
+			[2] = {name = 'refereeName', type = "textfield", text = "Ragnarok77", numeric = false, width = 240},
+			[3] = {name = "autoTrust", type = "switch", switch_state = "left", allow_none_state = false, tooltip = "Trust all players automatically : Yes / No"},
+			[4] = {name = "captainKickPower", type = "switch", switch_state = "left", allow_none_state = false, tooltip = "Captain can eject players from his team : Yes / No"},
+			[5] = {name = "pickingMode", type = "switch", switch_state = "left", allow_none_state = false, tooltip = "Picking order at start of event : 1 1 1 1 1 1 1 / 1 2 1 1 1 1 1"}
 		},
 		button = {name = "captain_mode_apply", type = "button", caption = "Apply"}
 	}
@@ -261,6 +265,15 @@ local function reset_disabled_research(team)
 		global.special_games_variables["disabled_research"]["south"] = {}
 		game.print("All disabled research has been enabled again for both teams", Color.warning)
   end
+end
+
+local function add_to_trust(playerName)
+	if global.special_games_variables["captain_mode"]["autoTrust"] then
+		local trusted = session.get_trusted_table()
+		if not trusted[playerName] then
+			trusted[playerName] = true
+		end
+	end
 end
 
 local function clear_gui_captain_mode()
@@ -529,8 +542,24 @@ local function generateGenericRenderingCaptain()
 	y = y + 2
 end
 
-local function generate_captain_mode(refereeName)
-	global.special_games_variables["captain_mode"] = {["captainList"] = {}, ["refereeName"] = refereeName, ["listPlayers"] = {}, ["listSpectators"] = {}, ["listOfPlayersWhoDidntVoteForRoleYet"]={},["listTeamReadyToPlay"] = {}, ["lateJoiners"] = false, ["prepaPhase"] = true, ["blacklistLateJoin"]={}, ["listPlayersWhoAreNotNewToCurrentMatch"]={}}
+local function generate_captain_mode(refereeName,autoTrust,captainKick,pickingMode)
+	if captainKick == "left" then
+		captainKick = true
+	else
+		captainKick = false
+	end
+	if autoTrust == "left" then
+		autoTrust = true
+	else
+		autoTrust = false
+	end
+	if pickingMode == "left" then
+		pickingMode = true
+	else
+		pickingMode = false
+	end
+	
+	global.special_games_variables["captain_mode"] = {["captainList"] = {}, ["refereeName"] = refereeName, ["listPlayers"] = {}, ["listSpectators"] = {}, ["listOfPlayersWhoDidntVoteForRoleYet"]={},["listTeamReadyToPlay"] = {}, ["lateJoiners"] = false, ["prepaPhase"] = true,["autoTrust"] = autoTrust,["captainKick"] = captainKick,["pickingModeAlternateBasic"] = pickingMode,["pickNumber"] = 2, ["blacklistLateJoin"]={}, ["listPlayersWhoAreNotNewToCurrentMatch"]={}}
 	global.active_special_games["captain_mode"] = true
 	if game.get_player(global.special_games_variables["captain_mode"]["refereeName"]) == nil then
 		game.print("Event captain aborted, referee is not a player connected.. Referee name of player was : ".. global.special_games_variables["captain_mode"]["refereeName"])
@@ -548,8 +577,21 @@ local function generate_captain_mode(refereeName)
 	global.chosen_team = {}
 	clear_character_corpses()
 	game.print('Captain mode started !! Have fun ! Referee will be '.. global.special_games_variables["captain_mode"]["refereeName"])
+	if global.special_games_variables["captain_mode"]["autoTrust"] then
+		game.print('Option was enabled : All players will be trusted once they join a team', Color.cyan)
+	end
+	if global.special_games_variables["captain_mode"]["captainKick"] then
+		game.print('Option was enabled : Captain can eject players of their team when they do not listen/grief : Command is /leavemyteam <playerName>', Color.cyan)
+	end
+	if global.special_games_variables["captain_mode"]["pickingModeAlternateBasic"] then 
+		game.print('Picking system chosen at start of event : Captain will pick one player each at a time (alternate picking)', Color.cyan)
+	else
+		game.print('Picking system chosen at start of event : One captain picks 1 player, other captain picks 2 players, then each captain will pick one player each at a time (alternate picking)', Color.cyan)
+	end
+	game.get_player(global.special_games_variables["captain_mode"]["refereeName"]).print("Command only allowed for referee to change a captain : /replaceCaptainNorth <playerName> or /replaceCaptainSouth <playerName>", Color.cyan)
+	game.print("Command only allowed for referee or admins to change the current referee : /replaceReferee <playerName>", Color.cyan)
 	global.tournament_mode = true
-	if global.freeze_players == false then
+	if global.freeze_players == false or global.freeze_players == nil then
 		global.freeze_players = true
 		Team_manager.freeze_players()
 		game.print(">>> Players have been frozen!", {r = 111, g = 111, b = 255})
@@ -840,7 +882,10 @@ local function on_gui_click(event)
 	
 	elseif element.name == "captain_mode_confirm" then
 		local refereeName = config["refereeName"].text
-		generate_captain_mode(refereeName)
+		local autoTrustSystem = config["autoTrust"].switch_state
+		local captainCanKick = config["captainKickPower"].switch_state
+		local pickingMode = config["pickingMode"].switch_state
+		generate_captain_mode(refereeName,autoTrustSystem,captainCanKick,pickingMode)
 	elseif element.name == "disabled_research_confirm" then
 		local team = config["team"].switch_state
 		local eq = {
@@ -929,7 +974,9 @@ local function on_gui_click(event)
 		elseif #global.special_games_variables["captain_mode"]["captainList"] == 2 then
 			game.print('[font=default-large-bold]Switching to picking phase for captains ![/font]', Color.cyan)
 			Team_manager.switch_force(global.special_games_variables["captain_mode"]["captainList"][1],"north")
+			add_to_trust(global.special_games_variables["captain_mode"]["captainList"][1])
 			Team_manager.switch_force(global.special_games_variables["captain_mode"]["captainList"][2],"south")
+			add_to_trust(global.special_games_variables["captain_mode"]["captainList"][2])
 			poll_captain_picking_first(player)
 		else
 			game.print('As there are too many players wanting to be captain, referee will pick who will be the 2 captains', Color.cyan)
@@ -952,7 +999,9 @@ local function on_gui_click(event)
 		elseif #global.special_games_variables["captain_mode"]["captainList"] == 2 then
 			game.print('[font=default-large-bold]Only 2 volunteers for captain, no vote needed to elect 2 captains, switching to picking phase ![/font]', Color.cyan)
 			Team_manager.switch_force(global.special_games_variables["captain_mode"]["captainList"][1],"north")
+			add_to_trust(global.special_games_variables["captain_mode"]["captainList"][1])
 			Team_manager.switch_force(global.special_games_variables["captain_mode"]["captainList"][2],"south")
+			add_to_trust(global.special_games_variables["captain_mode"]["captainList"][2])
 			poll_captain_picking_first(player)
 		else
 			game.print('[font=default-large-bold]Not enough captains case, event canceled..This case should never happen though, report it to bug[/font]', Color.cyan)
@@ -972,6 +1021,7 @@ local function on_gui_click(event)
 				local captainForceName = game.get_player(global.special_games_variables["captain_mode"]["captainList"][1]).force.name
 				game.print(lastPlayerToSend.name .. " was automatically picked")
 				Team_manager.switch_force(lastPlayerToSend.name,captainForceName)
+				add_to_trust(lastPlayerToSend.name)
 				lastPlayerToSend.print("Remember to join your team channel voice on discord of free biterbattles (discord link can be found on biterbattles.org website) if possible (even if no mic, it's fine, to just listen, it's not required though but better if you do !)", Color.cyan)
 				local index={}
 				for k,v in pairs(global.special_games_variables["captain_mode"]["listPlayers"]) do
@@ -997,6 +1047,7 @@ local function on_gui_click(event)
 				local captainForceName = game.get_player(global.special_games_variables["captain_mode"]["captainList"][2]).force.name
 				game.print(lastPlayerToSend.name .. " was automatically picked")
 				Team_manager.switch_force(lastPlayerToSend.name,captainForceName)
+				add_to_trust(lastPlayerToSend.name)
 				lastPlayerToSend.print("Remember to join your team channel voice on discord of free biterbattles (discord link can be found on biterbattles.org website) if possible (even if no mic, it's fine, to just listen, it's not required though but better if you do !)", Color.cyan)
 				local index={}
 				for k,v in pairs(global.special_games_variables["captain_mode"]["listPlayers"]) do
@@ -1023,6 +1074,7 @@ local function on_gui_click(event)
 				local captainForceName = game.get_player(global.special_games_variables["captain_mode"]["captainList"][captainChosen]).force.name
 				game.print(lastPlayerToSend.name .. " was automatically picked")
 				Team_manager.switch_force(lastPlayerToSend.name,captainForceName)
+				add_to_trust(lastPlayerToSend.name)
 				lastPlayerToSend.print("Remember to join your team channel voice on discord of free biterbattles (discord link can be found on biterbattles.org website) if possible (even if no mic, it's fine, to just listen, it's not required though but better if you do !)", Color.cyan)
 				local index={}
 				for k,v in pairs(global.special_games_variables["captain_mode"]["listPlayers"]) do
@@ -1040,6 +1092,7 @@ local function on_gui_click(event)
 		if player.gui.center["captain_poll_alternate_pick_choice_frame"] then player.gui.center["captain_poll_alternate_pick_choice_frame"].destroy() end
 		game.print(playerPicked .. " was picked by Captain " .. player.name)
 		Team_manager.switch_force(playerPicked,player.force.name)
+		add_to_trust(playerPicked)
 		game.get_player(playerPicked).print("Remember to join your team channel voice on discord of free biterbattles (discord link can be found on biterbattles.org website) if possible (even if no mic, it's fine, to just listen, it's not required though but better if you do !)", Color.cyan)
 		
 		local index={}
@@ -1058,6 +1111,7 @@ local function on_gui_click(event)
 				end
 				game.print(lastPlayerToSend.name .. " was automatically picked")
 				Team_manager.switch_force(lastPlayerToSend.name,oppositeForce)
+				add_to_trust(lastPlayerToSend.name)
 				lastPlayerToSend.print("Remember to join your team channel voice on discord of free biterbattles (discord link can be found on biterbattles.org website) if possible (even if no mic, it's fine, to just listen, it's not required though but better if you do !)", Color.cyan)
 				local index={}
 				for k,v in pairs(global.special_games_variables["captain_mode"]["listPlayers"]) do
@@ -1086,10 +1140,19 @@ local function on_gui_click(event)
 			end
 		else
 			if player.name == game.get_player(global.special_games_variables["captain_mode"]["captainList"][1]).name then
-				poll_alternate_picking(game.get_player(global.special_games_variables["captain_mode"]["captainList"][2]))
+			    if global.special_games_variables["captain_mode"]["pickNumber"] == 3 and not global.special_games_variables["captain_mode"]["pickingModeAlternateBasic"] then
+					poll_alternate_picking(game.get_player(global.special_games_variables["captain_mode"]["captainList"][1]))
+				else
+					poll_alternate_picking(game.get_player(global.special_games_variables["captain_mode"]["captainList"][2]))
+				end
 			else
-				poll_alternate_picking(game.get_player(global.special_games_variables["captain_mode"]["captainList"][1]))
+			    if global.special_games_variables["captain_mode"]["pickNumber"] == 3 and not global.special_games_variables["captain_mode"]["pickingModeAlternateBasic"] then
+					poll_alternate_picking(game.get_player(global.special_games_variables["captain_mode"]["captainList"][2]))
+				else
+					poll_alternate_picking(game.get_player(global.special_games_variables["captain_mode"]["captainList"][1]))
+				end
 			end
+			global.special_games_variables["captain_mode"]["pickNumber"] = global.special_games_variables["captain_mode"]["pickNumber"] + 1
 		end
 	elseif string.find(element.name, "ready_captain_") then
 		if game.tick < global.difficulty_votes_timeout then 
@@ -1228,6 +1291,158 @@ local function on_player_joined_game(event)
 		nil,nil)
 	end
 end
+
+local function is_captain(playerName)
+	if global.special_games_variables["captain_mode"]["captainList"][1] == playerName or global.special_games_variables["captain_mode"]["captainList"][2] == playerName then
+		return true
+	else
+		return false
+	end
+end
+
+commands.add_command('leavemyteam', 'Captain can make a player leave his team',
+                     function(cmd)	
+	if not cmd.player_index then return end
+	local playerOfCommand = game.get_player(cmd.player_index)
+	if not playerOfCommand then return end
+	if not global.active_special_games["captain_mode"] then
+		return playerOfCommand.print('This command is only allowed in captain event, what are you doing ?!',Color.red)
+	end
+	if global.special_games_variables["captain_mode"]["prepaPhase"] then
+		return playerOfCommand.print('This command is only allowed when prepa phase of event is over, wait for it to start',Color.red)
+	end
+	if not is_captain(playerOfCommand.name) then
+		return playerOfCommand.print("Only captains have licence to use that command",Color.red)
+	end
+	if not global.special_games_variables["captain_mode"]["captainKick"] then
+		return playerOfCommand.print("Comman disabled by admin, you are not allowed to use it",Color.red)
+	end
+	
+	if cmd.parameter then 			 
+		local victim = game.get_player(cmd.parameter)
+		if victim and victim.valid then
+				if victim.name == playerOfCommand.name then
+					return playerOfCommand.print("You can't select yourself!", {r = 1, g = 0.5, b = 0.1})
+				end
+				if victim.force.name == "spectator" then
+					return playerOfCommand.print('You cant use this command on a spectator.',Color.red)
+				end
+				if victim.force.name ~=  playerOfCommand.force.name then
+					return playerOfCommand.print('You cant use this command on a player of enemy team.',Color.red)
+				end
+				if not victim.connected then
+					return playerOfCommand.print('You can only use this command on a connected player.',Color.red)
+				end
+					
+				game.print("Captain ".. playerOfCommand.name .. " has decided that " .. victim.name .. " must not be in the team anymore.")
+				if victim.character then
+					victim.character.die('player')
+				end
+				Team_manager.switch_force(victim.name,"spectator")
+		else 
+			playerOfCommand.print("Invalid name", Color.warning)
+		end
+	else
+		playerOfCommand.print("Usage: /leavemyteam <playerName>", Color.warning)
+	end
+end)
+
+
+local function changeCaptain(cmd,isItForNorth)
+	if not cmd.player_index then return end
+		local playerOfCommand = game.get_player(cmd.player_index)
+		if not playerOfCommand then return end
+		if not global.active_special_games["captain_mode"] then
+			return playerOfCommand.print('This command is only allowed in captain event, what are you doing ?!',Color.red)
+		end
+		if global.special_games_variables["captain_mode"]["prepaPhase"] then
+			return playerOfCommand.print('This command is only allowed when prepa phase of event is over, wait for it to start',Color.red)
+		end
+		if global.special_games_variables["captain_mode"]["refereeName"] ~= playerOfCommand.name then
+			return playerOfCommand.print("Only referee have licence to use that command",Color.red)
+		end
+		
+		if global.special_games_variables["captain_mode"]["captainList"][1] == nil or global.special_games_variables["captain_mode"]["captainList"][2] == nil then
+			return playerOfCommand.print("Something broke, no captain in the captain variable..",Color.red)
+		end
+		if cmd.parameter then 			 
+			local victim = game.get_player(cmd.parameter)
+			if victim and victim.valid then
+					if not victim.connected then
+						return playerOfCommand.print('You can only use this command on a connected player.',Color.red)
+					end
+					if isItForNorth then
+						if victim.force.name ~= 'north' then
+							return playerOfCommand.print("You cant elect a player as a captain if he is not in the team of the captain ! What are you even doing !",Color.red)
+						end
+						game.print(playerOfCommand.name .. " has decided that " .. victim.name .. " will be the new captain instead of " .. global.special_games_variables["captain_mode"]["captainList"][1],Color.cyan)
+						global.special_games_variables["captain_mode"]["captainList"][1] = victim.name
+					else
+						if victim.force.name ~= 'south' then
+							return playerOfCommand.print("You cant elect a player as a captain if he is not in the team of the captain ! What are you even doing !",Color.red)
+						end
+						game.print(playerOfCommand.name .. " has decided that " .. victim.name .. " will be the new captain instead of " .. global.special_games_variables["captain_mode"]["captainList"][2],Color.cyan)
+						global.special_games_variables["captain_mode"]["captainList"][2] = victim.name
+					end
+			else 
+				playerOfCommand.print("Invalid name", Color.warning)
+			end
+		else
+			playerOfCommand.print("Usage: /replaceCaptainNorth <playerName>", Color.warning)
+		end
+end
+commands.add_command('replaceCaptainNorth', 'Referee can decide to change the captain of north team',
+                     function(cmd)	
+	changeCaptain(cmd,true)
+end)
+
+commands.add_command('replaceCaptainSouth', 'Referee can decide to change the captain of south team',
+                     function(cmd)	
+	changeCaptain(cmd,false)
+end)
+
+commands.add_command('replaceReferee', 'Admin or referee can decide to change the referee',
+                     function(cmd)	
+	if not cmd.player_index then return end
+		local playerOfCommand = game.get_player(cmd.player_index)
+		if not playerOfCommand then return end
+		if not global.active_special_games["captain_mode"] then
+			return playerOfCommand.print('This command is only allowed in captain event, what are you doing ?!',Color.red)
+		end
+		if global.special_games_variables["captain_mode"]["prepaPhase"] then
+			return playerOfCommand.print('This command is only allowed when prepa phase of event is over, wait for it to start',Color.red)
+		end
+		if global.special_games_variables["captain_mode"]["refereeName"] ~= playerOfCommand.name and not playerOfCommand.admin then
+			return playerOfCommand.print("Only referee or admin have licence to use that command",Color.red)
+		end
+		
+		if global.special_games_variables["captain_mode"]["refereeName"] == nil then
+			return playerOfCommand.print("Something broke, no refereeName in the refereeName variable..",Color.red)
+		end
+		if cmd.parameter then 			 
+			local victim = game.get_player(cmd.parameter)
+			if victim and victim.valid then
+			if not victim.connected then
+				return playerOfCommand.print('You can only use this command on a connected player.',Color.red)
+			end
+			
+			local refPlayer = game.get_player(global.special_games_variables["captain_mode"]["refereeName"])
+			if refPlayer.gui.top["captain_referee_enable_picking_late_joiners"] then refPlayer.gui.top["captain_referee_enable_picking_late_joiners"].destroy() end
+			if refPlayer.gui.center["captain_poll_end_latejoiners_referee_frame"] then refPlayer.gui.center["captain_poll_end_latejoiners_referee_frame"].destroy() end
+			
+			game.print(playerOfCommand.name .. " has decided that " .. victim.name .. " will be the new referee instead of " .. global.special_games_variables["captain_mode"]["refereeName"],Color.cyan)
+			global.special_games_variables["captain_mode"]["refereeName"] = victim.name
+			refPlayer = game.get_player(global.special_games_variables["captain_mode"]["refereeName"])
+			poll_pickLateJoiners(refPlayer)
+			else 
+				playerOfCommand.print("Invalid name", Color.warning)
+			end
+		else
+			playerOfCommand.print("Usage: /replaceReferee <playerName>", Color.warning)
+		end		 		 
+end)
+
+
 comfy_panel_tabs['Special games'] = {gui = create_special_games_panel, admin = true}
 
 Event.add(defines.events.on_gui_click, on_gui_click)
