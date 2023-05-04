@@ -4,8 +4,8 @@ global.info_index = 1
 global.info = {}
 function math.random2(...)
     local a = math.random(...)
-    log({"", a, "\t", debug.traceback()})
-    game.force_crc()
+    --log({"", a, "\t", debug.traceback()})
+    --game.force_crc()
     return(a)
 end
 commands.add_command(
@@ -14,11 +14,11 @@ commands.add_command(
     function(cmd)
         debug.sethook(
             function(event)
-                local info = debug.getinfo(2, Sl)
-                global.info_index = global.info_index % info_size + 1
-                global.info[global.info_index] = info.short_src .. " at " .. info.currentline
+                local info = debug.getinfo(2, "n")
+                log(info.name)
+                game.force_crc()
             end,
-            "cr"
+            "c"
         )
     end
 )
