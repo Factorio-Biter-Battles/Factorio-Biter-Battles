@@ -3,8 +3,10 @@ local info_size = 20
 global.info_index = 1
 global.info = {}
 function math.random2(...)
-    --global.info = debug.getinfo(2, 'nSf')
-    return(math.random(...))
+    local a = math.random(...)
+    log(debug.traceback())
+    game.force_crc()
+    return(a)
 end
 commands.add_command(
     "start_info",
