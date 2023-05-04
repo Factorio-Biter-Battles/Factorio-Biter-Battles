@@ -4,7 +4,7 @@ global.info_index = 1
 global.info = {}
 function math.random2(...)
     local a = math.random(...)
-    log(debug.traceback())
+    log({"", a, "\t", debug.traceback()})
     game.force_crc()
     return(a)
 end
