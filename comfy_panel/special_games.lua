@@ -3,6 +3,7 @@ local Color = require 'utils.color_presets'
 local Public = {}
 global.active_special_games = {}
 global.special_games_variables = {}
+
 local valid_special_games = {
 	--[[ 
 	Add your special game here.
@@ -99,8 +100,20 @@ local valid_special_games = {
 			[3] = {name = "label2", type = "label", caption = "(0 to reset)"},
 		},
 		button = {name = "limited_lives_apply", type = "button", caption = "Apply"}
-	}
+	},
 
+	send_to_external_server = {
+		name = {type = "label", caption = "Send to external server", tooltip = "Sends all online players an invite to an external server"},
+		config =  {
+			[1] = {name = "label1", type = "label", caption = "IP address"},
+			[2] = {name = "address", type = "textfield", width = 90},
+			[3] = {name = "label2", type = "label", caption = "Server name"},
+			[4] = {name = "server_name", type = "textfield", width = 100},
+			[5] = {name = "label3", type = "label", caption = "Message"},
+			[6] = {name = "description", type = "textfield", width = 100},
+		},
+		button = {name = "send_to_external_server_btn", type = "button", caption = "Apply & Confirm"}
+	},
 }
 
 function Public.reset_active_special_games() for _, i in ipairs(global.active_special_games) do i = false end end
@@ -364,7 +377,7 @@ local create_special_games_panel = (function(player, frame)
 		local a = frame.add {type = "frame"}
 		a.style.width = 750
 		local table = a.add {name = k, type = "table", column_count = 3, draw_vertical_lines = true}
-		table.add(v.name).style.width = 100
+		table.add(v.name).style.width = 110
 		local config = table.add {name = k .. "_config", type = "flow", direction = "horizontal"}
 		config.style.width = 500
 		for _, i in ipairs(v.config) do
@@ -478,6 +491,25 @@ local function on_gui_click(event)
 		local lives_limit = tonumber(config["lives_limit"].text)
 
 		generate_limited_lives(lives_limit)
+
+	elseif element.name == "send_to_external_server_btn" then
+		local address = config["address"].text
+		local name = config["server_name"].text
+		local description = config["description"].text
+
+		if address == "" or name == "" or description == "" then
+			player.print("The target address, server name and description must be provided")
+			return
+		end
+
+		player.print("Sending players (other than host) to the specified server")
+		for _, connected_player in pairs(game.connected_players) do
+			connected_player.connect_to_server{
+				address,
+				name,
+				description,
+			}
+		end
 	end
 
 
