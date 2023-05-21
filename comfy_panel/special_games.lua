@@ -503,6 +503,7 @@ local function on_gui_click(event)
 		end
 
 		player.print("Sending players (other than host) to the specified server")
+		player.print("To stop redirecting new players, run /stop-send-to-external-server")
 		for _, connected_player in pairs(game.connected_players) do
 			connected_player.connect_to_server{
 				address,
@@ -510,6 +511,15 @@ local function on_gui_click(event)
 				description,
 			}
 		end
+
+		global.send_to_external_server_player_joined_game_handler = function(event)
+			game.get_player(event.player_index).connect_to_server{
+				address,
+				name,
+				description,
+			}
+		end
+		Event.add_removable_function(defines.events.on_player_joined_game, global.send_to_external_server_player_joined_game_handler)
 	end
 
 
@@ -539,6 +549,17 @@ local function on_player_died(event)
 		Color.warning
 	)
 end
+
+commands.add_command("stop-send-to-external-server", nil, function(command)
+	local command_player = game.get_player(command.player_index)
+	if not command_player.admin then
+		command_player("Only admins can stop sending players to external server")
+		return
+	end
+
+	command_player.print("Stopped sending players to external server")
+	Event.remove_removable_function(defines.events.on_player_joined_game, global.send_to_external_server_player_joined_game_handler)
+  end)
 
 comfy_panel_tabs['Special games'] = {gui = create_special_games_panel, admin = true}
 
