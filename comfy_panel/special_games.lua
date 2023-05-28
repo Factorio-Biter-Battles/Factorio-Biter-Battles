@@ -506,17 +506,17 @@ local function on_gui_click(event)
 		player.print("To stop redirecting new players, run /stop-send-to-external-server")
 		for _, connected_player in pairs(game.connected_players) do
 			connected_player.connect_to_server{
-				address,
-				name,
-				description,
+				address = address,
+				name = name,
+				description = description
 			}
 		end
 
 		global.send_to_external_server_player_joined_game_handler = function(event)
 			game.get_player(event.player_index).connect_to_server{
-				address,
-				name,
-				description,
+				address = address,
+				name = name,
+				description = description
 			}
 		end
 		Event.add_removable_function(defines.events.on_player_joined_game, global.send_to_external_server_player_joined_game_handler)
