@@ -137,7 +137,7 @@ local function close_other_gui(event)
         ["bb_toggle_button"] = true,
         ["114"] = true
     } 
-    if not gui_buttons[event.element.name] the return end
+    if not gui_buttons[event.element.name] then return end
     local gui_panels = {
         ["comfy_panel"] = true,
         ["bb_main_gui"] = true,
