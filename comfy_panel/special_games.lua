@@ -86,6 +86,13 @@ local valid_special_games = {
 		button = {name = "disabled_entities_apply", type = "button", caption = "Apply"}
 	},
 
+	shared_science_throw = {
+		name = {type = "label", caption = "Shared throws of science", tooltip = "Science throws are shared between both teams"},
+		config = {
+		},
+		button = {name = "shared_science_throw_apply", type = "button", caption = "Apply"}
+	},
+
 	limited_lives = {
 		name = {type = "label", caption = "Limited lives", tooltip = "Limits the number of player lives per game"},
 		config = {
@@ -285,6 +292,40 @@ local function generate_disabled_entities(team, eq)
 	global.active_special_games["disabled_entities"] = true
 end
 
+local function generate_shared_science_throw()
+		game.print("[SPECIAL GAMES] All science throws are shared (if you send, both team gets +threat and +evo !)", Color.cyan)
+		game.print("[SPECIAL GAMES] Evo and threat and threat income were reset to same value for both teams !", Color.cyan)
+		global.active_special_games["shared_science_throw"] = true
+		if not global.special_games_variables["shared_science_throw"] then
+			global.special_games_variables["shared_science_throw"] = {}
+		end
+		if global.special_games_variables["shared_science_throw"]["text_id"] then
+			rendering.destroy(global.special_games_variables["shared_science_throw"]["text_id"])
+		end
+		local special_game_description = "All science throws are shared (if you send, both teams gets +threat and +evo)"
+		global.special_games_variables["shared_science_throw"]["text_id"] = rendering.draw_text{
+			text = special_game_description,
+			surface = game.surfaces[global.bb_surface_name],
+			target = {-0,12},
+			color = Color.warning,
+			scale = 3,
+			alignment = "center",
+			scale_with_zoom = false
+		}
+		local maxEvoFactor = math.max(game.forces["north_biters"].evolution_factor,game.forces["south_biters"].evolution_factor)
+		game.forces["north_biters"].evolution_factor = maxEvoFactor
+		game.forces["south_biters"].evolution_factor = maxEvoFactor
+		local maxBbEvo = math.max(global.bb_evolution["north_biters"],global.bb_evolution["south_biters"])
+		global.bb_evolution["north_biters"] = maxBbEvo
+		global.bb_evolution["south_biters"] = maxBbEvo
+		local maxThreatIncome = math.max(global.bb_threat_income["north_biters"],global.bb_threat_income["south_biters"])
+		global.bb_threat_income["north_biters"] = maxThreatIncome
+		global.bb_threat_income["south_biters"] = maxThreatIncome
+		local maxThreat = math.max(global.bb_threat["north_biters"],global.bb_threat["south_biters"])
+		global.bb_threat["north_biters"] = maxThreat
+		global.bb_threat["south_biters"] = maxThreat
+end
+
 local function generate_limited_lives(lives_limit)
 	if global.special_games_variables["limited_lives"] then
 		rendering.destroy(global.special_games_variables["limited_lives"]["text_id"])
@@ -473,6 +514,8 @@ local function on_gui_click(event)
 			config["eq7"].elem_value
 		}
 		generate_disabled_entities(team, eq)
+	elseif element.name == "shared_science_throw_confirm" then
+		generate_shared_science_throw()
 
 	elseif element.name == "limited_lives_confirm" then
 		local lives_limit = tonumber(config["lives_limit"].text)
