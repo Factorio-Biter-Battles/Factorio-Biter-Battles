@@ -1,5 +1,6 @@
 local Event = require 'utils.event'
 local Color = require 'utils.color_presets'
+local Tables = require "maps.biter_battles_v2.tables"
 local Public = {}
 global.active_special_games = {}
 global.special_games_variables = {}
@@ -317,37 +318,31 @@ local function generate_limited_lives(lives_limit)
 end
 
 function generate_disable_sciences(packs)
-	local Epacks = {}
-	local Dpacks = {}
-	local food = {
-		"automation-science-pack",
-		"logistic-science-pack",
-		"military-science-pack",
-		"chemical-science-pack",
-		"production-science-pack",
-		"utility-science-pack",
-		"space-science-pack"
-	}
 
-	for k, v in ipairs(packs)do
-		if not v then Epacks[#Epacks+1]=food[k] 		
-		end
-		if v then Dpacks[#Dpacks+1]=food[k] 
+	local disabled_food = {
+		["automation-science-pack"] = packs[1],
+		["logistic-science-pack"] = packs[2],
+		["military-science-pack"] = packs[3],
+		["chemical-science-pack"] = packs[4],
+		["production-science-pack"] = packs[5],
+		["utility-science-pack"] = packs[6],
+		["space-science-pack"] = packs[7]
+	}
+	local message = {"Special game generated. Disabled science:"}
+	for k, v in pairs(disabled_food) do
+		if v then
+			table.insert(message, Tables.food_long_to_short[k].short_name)
 		end
 	end
-
-	if packs[1] or packs[2] or packs[3] or packs[4] or packs[5] or packs[6] or packs[7] then
+	if table_size(message)>1 then
 		global.active_special_games["disable_sciences"] = true
-		game.print("Special game generated. DISABLE SCIENCES from sending. Now you are not able to send those sciences below")
-		for k, v in ipairs(Dpacks)do			
-			game.print(v)			
-		end
+		global.special_games_variables["disabled_food"] = disabled_food
+		game.print(table.concat(message, " "))
 	else
 		global.active_special_games["disable_sciences"] = false
-		game.print("all sciences enabled")
+		global.special_games_variables["disabled_food"] = nil
+		game.print("Special game ended. All science enabled")
 	end
-
-	global.special_games_variables["enabled_sciences"] = Epacks
 end
 
 function Public.has_life(player_name)
