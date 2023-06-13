@@ -1,4 +1,5 @@
 local Event = require 'utils.event'
+local Token = require 'utils.token'
 local Color = require 'utils.color_presets'
 local Public = {}
 global.active_special_games = {}
@@ -369,6 +370,16 @@ local function on_built_entity(event)
 	end
 end
 
+local send_to_external_server_handler = Token.register(
+	function(event)
+		game.get_player(event.player_index).connect_to_server{
+			address = global.special_games_variables.send_to_external_server.address,
+			name = global.special_games_variables.send_to_external_server.name,
+			description = global.special_games_variables.send_to_external_server.description
+		}
+	end
+)
+
 local create_special_games_panel = (function(player, frame)
 	frame.clear()
 	frame.add{type = "label", caption = "Configure and apply special games here"}.style.single_line = false
@@ -511,15 +522,8 @@ local function on_gui_click(event)
 				description = description
 			}
 		end
-
-		global.send_to_external_server_player_joined_game_handler = function(event)
-			game.get_player(event.player_index).connect_to_server{
-				address = address,
-				name = name,
-				description = description
-			}
-		end
-		Event.add_removable_function(defines.events.on_player_joined_game, global.send_to_external_server_player_joined_game_handler)
+		global.special_games_variables.send_to_external_server = {address = address, name = name, description = description}
+		Event.add_removable(defines.events.on_player_joined_game, send_to_external_server_handler)
 	end
 
 
@@ -553,12 +557,12 @@ end
 commands.add_command("stop-send-to-external-server", nil, function(command)
 	local command_player = game.get_player(command.player_index)
 	if not command_player.admin then
-		command_player("Only admins can stop sending players to external server")
+		command_player.print("Only admins can stop sending players to external server")
 		return
 	end
 
 	command_player.print("Stopped sending players to external server")
-	Event.remove_removable_function(defines.events.on_player_joined_game, global.send_to_external_server_player_joined_game_handler)
+	Event.remove_removable(defines.events.on_player_joined_game, send_to_external_server_handler)
   end)
 
 comfy_panel_tabs['Special games'] = {gui = create_special_games_panel, admin = true}
