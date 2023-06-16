@@ -96,7 +96,7 @@ local function validate_player(player)
     if not player.connected then
         return false
     end
-    if not game.players[player.index] then
+    if not game.get_player(player.index) then
         return false
     end
     return true
@@ -277,7 +277,7 @@ local function open_inventory(source, target)
 end
 
 local function on_gui_click(event)
-    local player = game.players[event.player_index]
+    local player = game.get_player(event.player_index)
 
     local element = event.element
 
@@ -334,7 +334,7 @@ local function on_gui_click(event)
     end
 end
 local function gui_closed(event)
-    local player = game.players[event.player_index]
+    local player = game.get_player(event.player_index)
 
     local type = event.gui_type
 
@@ -348,7 +348,7 @@ local function gui_closed(event)
 end
 
 local function on_pre_player_left_game(event)
-    local player = game.players[event.player_index]
+    local player = game.get_player(event.player_index)
     close_player_inventory(player)
 end
 
@@ -360,7 +360,7 @@ local function close_watchers(player)
     end
 
     for _, watcher_idx in ipairs(watchers) do
-        local watcher = game.players[watcher_idx]
+        local watcher = game.get_player(watcher_idx)
 
         if not validate_object(watcher) then goto continue end
 
@@ -376,7 +376,7 @@ end
 --     this.data[player.index].player_opened
 local function update_gui(event)
     local watchers = this.tracking[event.player_index]
-    local target = game.players[event.player_index]
+    local target = game.get_player(event.player_index)
 
     -- can we skip updating GUIs for this change (are there no players watching?)
     if watchers == nil or #watchers <= 0 then
@@ -424,7 +424,7 @@ local function update_gui(event)
     end
 
     for _, watcher_idx in ipairs(watchers) do
-        local watcher = game.players[watcher_idx]
+        local watcher = game.get_player(watcher_idx)
 
         -- should we discard / close watchers if they are invalid / disconnected?
         if not validate_object(watcher) then goto continue end
@@ -453,7 +453,7 @@ commands.add_command(
             if not cmd.parameter then
                 return
             end
-            local target_player = game.players[cmd.parameter]
+            local target_player = game.get_player(cmd.parameter)
 
             -- why is this not allowed?
             -- if target_player == player then
