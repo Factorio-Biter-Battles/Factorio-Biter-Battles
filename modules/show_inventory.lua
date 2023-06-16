@@ -393,7 +393,6 @@ local function update_gui(event)
         ['Main'] = function()
             return target.get_main_inventory().get_contents()
         end,
-        -- update_gui does not trigger on these events. they only update as a side effect.
         ['Armor'] = function()
             return target.get_inventory(defines.inventory.character_armor).get_contents()
         end,
