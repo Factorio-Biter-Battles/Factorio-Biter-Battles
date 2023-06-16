@@ -496,6 +496,10 @@ function Public.get(key)
 end
 
 Event.add(defines.events.on_player_main_inventory_changed, update_gui)
+Event.add(defines.events.on_player_gun_inventory_changed, update_gui)
+Event.add(defines.events.on_player_ammo_inventory_changed, update_gui)
+Event.add(defines.events.on_player_armor_inventory_changed, update_gui)
+Event.add(defines.events.on_player_trash_inventory_changed, update_gui)
 Event.add(defines.events.on_gui_closed, gui_closed)
 Event.add(defines.events.on_gui_click, on_gui_click)
 Event.add(defines.events.on_pre_player_left_game, on_pre_player_left_game)
