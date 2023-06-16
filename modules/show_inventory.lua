@@ -276,7 +276,6 @@ local function open_inventory(source, target)
     end
 end
 
--- TODO: Refactor this, similar to update_gui
 local function on_gui_click(event)
     local player = game.players[event.player_index]
 
@@ -308,22 +307,28 @@ local function on_gui_click(event)
     data.last_tab = name
 
     local valid, target = player_opened(player)
-    if valid then
-        local main = target.get_main_inventory().get_contents()
-        local armor = target.get_inventory(defines.inventory.character_armor).get_contents()
-        local guns = target.get_inventory(defines.inventory.character_guns).get_contents()
-        local ammo = target.get_inventory(defines.inventory.character_ammo).get_contents()
-        local trash = target.get_inventory(defines.inventory.character_trash).get_contents()
 
-        local target_types = {
-            ['Main'] = main,
-            ['Armor'] = armor,
-            ['Guns'] = guns,
-            ['Ammo'] = ammo,
-            ['Trash'] = trash
+    if valid then
+        local target_inventories = {
+            ['Main'] = function()
+                return target.get_main_inventory().get_contents()
+            end,
+            ['Armor'] = function()
+                return target.get_inventory(defines.inventory.character_armor).get_contents()
+            end,
+            ['Guns'] = function()
+                return target.get_inventory(defines.inventory.character_guns).get_contents()
+            end,
+            ['Ammo'] = function()
+                return target.get_inventory(defines.inventory.character_ammo).get_contents()
+            end,
+            ['Trash'] = function()
+                return target.get_inventory(defines.inventory.character_trash).get_contents()
+            end
         }
+
         local frame = Public.get_active_frame(player)
-        local panel_type = target_types[name]
+        local panel_type = target_inventories[name]()
 
         redraw_inventory(frame, player, target, name, panel_type)
     end
