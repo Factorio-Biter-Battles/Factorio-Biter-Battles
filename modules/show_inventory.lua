@@ -3,7 +3,8 @@ local Color = require 'utils.color_presets'
 local Event = require 'utils.event'
 
 local this = {
-    data = {}
+    data = {},
+    tracking = {},
 }
 local Public = {}
 
@@ -248,6 +249,9 @@ local function open_inventory(source, target)
 
     local data = get_player_data(source)
 
+    this.tracking[target.index] = this.tracking[target.index] or {}
+    table.insert(this.tracking[target.index], source.index)
+
     data.player_opened = target
     data.last_tab = 'Main'
 
@@ -272,6 +276,7 @@ local function open_inventory(source, target)
     end
 end
 
+-- TODO: Refactor this, similar to update_gui
 local function on_gui_click(event)
     local player = game.players[event.player_index]
 
@@ -342,38 +347,94 @@ local function on_pre_player_left_game(event)
     close_player_inventory(player)
 end
 
-local function update_gui()
-    for _, player in pairs(game.connected_players) do
-        local valid, target = player_opened(player)
-        local success, tab = last_tab(player)
+local function close_watchers(player)
+    local watchers = this.tracking[player.index]
 
-        if valid then
-            if success then
-                local main = target.get_main_inventory().get_contents()
-                local armor = target.get_inventory(defines.inventory.character_armor).get_contents()
-                local guns = target.get_inventory(defines.inventory.character_guns).get_contents()
-                local ammo = target.get_inventory(defines.inventory.character_ammo).get_contents()
-                local trash = target.get_inventory(defines.inventory.character_trash).get_contents()
+    if watchers == nil then
+        return
+    end
 
-                local types = {
-                    ['Main'] = main,
-                    ['Armor'] = armor,
-                    ['Guns'] = guns,
-                    ['Ammo'] = ammo,
-                    ['Trash'] = trash
-                }
+    for _, watcher_idx in ipairs(watchers) do
+        local watcher = game.players[watcher_idx]
 
-                local frame = Public.get_active_frame(player)
-                local panel_type = types[tab]
-                if frame then
-                    if frame.name == tab .. 'tab' then
-                        redraw_inventory(frame, player, target, tab, panel_type)
-                    end
-                end
-            end
-        else
-            close_player_inventory(player)
+        if not validate_object(watcher) then goto continue end
+
+        close_player_inventory(watcher)
+
+        ::continue::
+    end
+end
+
+-- TODO[discuss]: there is probably some redundant data in the `this` table
+-- We are storing the watched player in multiple places:
+--     this.tracking
+--     this.data[player.index].player_opened
+local function update_gui(event)
+    local watchers = this.tracking[event.player_index]
+    local target = game.players[event.player_index]
+
+    -- can we skip updating GUIs for this change (are there no players watching?)
+    if watchers == nil or #watchers <= 0 then
+        return
+    end
+
+    if not validate_object(target) then
+        close_watchers(player)
+    end
+
+    -- lazy evaluation of target inventories, avoid performance overhead
+    -- of getting all inventories if only some are watched
+    local target_inventories = {
+        ['Main'] = function()
+            return target.get_main_inventory().get_contents()
+        end,
+        -- update_gui does not trigger on these events. they only update as a side effect.
+        ['Armor'] = function()
+            return target.get_inventory(defines.inventory.character_armor).get_contents()
+        end,
+        ['Guns'] = function()
+            return target.get_inventory(defines.inventory.character_guns).get_contents()
+        end,
+        ['Ammo'] = function()
+            return target.get_inventory(defines.inventory.character_ammo).get_contents()
+        end,
+        ['Trash'] = function()
+            return target.get_inventory(defines.inventory.character_trash).get_contents()
         end
+    }
+
+    local cache = {
+        ['Main'] = nil,
+        ['Armor'] = nil,
+        ['Guns'] = nil,
+        ['Ammo'] = nil,
+        ['Trash'] = nil
+    }
+
+    local function cache_get(key)
+        if cache[key] == nil then
+            cache[key] = target_inventories[key]()
+        end
+        return cache[key]
+    end
+
+    for _, watcher_idx in ipairs(watchers) do
+        local watcher = game.players[watcher_idx]
+
+        -- should we discard / close watchers if they are invalid / disconnected?
+        if not validate_object(watcher) then goto continue end
+        if not watcher.connected then goto continue end
+
+        local success, tab = last_tab(watcher)
+        if success then
+
+            local frame = Public.get_active_frame(watcher)
+            local panel_type = cache_get(tab)
+            if frame and frame.name == tab .. 'tab' then
+                redraw_inventory(frame, watcher, target, tab, panel_type)
+            end
+        end
+        ::continue::
     end
 end
 
@@ -389,9 +450,10 @@ commands.add_command(
             end
             local target_player = game.players[cmd.parameter]
 
-            if target_player == player then
-                return player.print('Cannot open self.', Color.warning)
-            end
+            -- why is this not allowed?
+            -- if target_player == player then
+            --     return player.print('Cannot open self.', Color.warning)
+            -- end
 
             local valid, opened = player_opened(player)
             if valid then
