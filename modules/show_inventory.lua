@@ -109,6 +109,12 @@ local function stop_watching_all(player_index)
     end
 end
 
+local function stop_watching(player_index, target_index)
+    if not this.tracking[target_index] then
+        return
+    end
+    this.tracking[target_index][player_index] = nil
+end
 
 local function close_player_inventory(player)
     local data = get_player_data(player)
@@ -117,7 +123,7 @@ local function close_player_inventory(player)
         return
     end
 
-    stop_watching_all(player.index)
+    stop_watching(player.index, data.player_opened.index)
 
     local gui = player.gui.screen
 
@@ -430,7 +436,10 @@ local function update_gui(event)
         local watcher = game.get_player(watcher_idx)
 
         -- should we discard / close watchers if they are invalid / disconnected?
-        if not validate_object(watcher) then goto continue end
+        if not validate_object(watcher) then
+            stop_watching_all(watcher_idx)
+            goto continue
+        end
         if not watcher.connected then
             stop_watching_all(watcher_idx)
             goto continue
