@@ -1,6 +1,6 @@
 local Public = {}
 
-local AiTargets = require "maps.biter_battles_v2.ai_targets"
+local Functions = require "maps.biter_battles_v2.functions"
 local terrain = require "maps.biter_battles_v2.terrain"
 local table_remove = table.remove
 local table_insert = table.insert
@@ -83,9 +83,9 @@ function Public.invert_entity(event)
 
 	if destination.name == "rocket-silo" and math.abs(destination.position.y) < 150 and math.abs(destination.position.x) < 100 then
 		global.rocket_silo[destination.force.name] = destination
-		AiTargets.start_tracking(destination)
+		Functions.add_target_entity(destination)
 	elseif destination.name == "gun-turret" then
-		AiTargets.start_tracking(destination)
+		Functions.add_target_entity(destination)
 	elseif destination.name == "spitter-spawner" or destination.name == 'biter-spawner' then
 		table_insert(global.unit_spawners[destination.force.name], destination)
 	end
@@ -116,13 +116,14 @@ function Public.remove_hidden_tiles(event)
 	local to_remove = surface.find_tiles_filtered {
 		area = bb,
 		has_hidden_tile = true,
-		name = "refined-concrete"
+		name = "stone-path",
 	}
 
+	local tiles = {}
 	for i, tile in pairs(to_remove) do
 		if not tile.valid then goto remove_hidden_cont end
-		local pos_opposite_tile = surface.get_tile(tile.position.x,-tile.position.y-1).position
-		surface.set_hidden_tile(tile.position, surface.get_hidden_tile(pos_opposite_tile))
+		surface.set_hidden_tile(tile.position, nil)
+
 		::remove_hidden_cont::
 	end
 end
