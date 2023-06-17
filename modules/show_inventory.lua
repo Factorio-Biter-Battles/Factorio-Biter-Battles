@@ -102,12 +102,22 @@ local function validate_player(player)
     return true
 end
 
+
+local function stop_watching_all(player_index)
+    for _, watchers in pairs(this.tracking) do
+        watchers[player_index] = nil
+    end
+end
+
+
 local function close_player_inventory(player)
     local data = get_player_data(player)
 
     if not data then
         return
     end
+
+    stop_watching_all(player.index)
 
     local gui = player.gui.screen
 
@@ -250,7 +260,7 @@ local function open_inventory(source, target)
     local data = get_player_data(source)
 
     if not this.tracking[target.index] then this.tracking[target.index] = {} end
-    table.insert(this.tracking[target.index], source.index)
+    this.tracking[target.index][source.index] = true
 
     data.player_opened = target
     data.last_tab = 'Main'
@@ -359,7 +369,7 @@ local function close_watchers(player)
         return
     end
 
-    for _, watcher_idx in ipairs(watchers) do
+    for watcher_idx, _ in pairs(watchers) do
         local watcher = game.get_player(watcher_idx)
 
         if not validate_object(watcher) then goto continue end
@@ -416,12 +426,15 @@ local function update_gui(event)
         return cache[key]
     end
 
-    for _, watcher_idx in ipairs(watchers) do
+    for watcher_idx, _ in pairs(watchers) do
         local watcher = game.get_player(watcher_idx)
 
         -- should we discard / close watchers if they are invalid / disconnected?
         if not validate_object(watcher) then goto continue end
-        if not watcher.connected then goto continue end
+        if not watcher.connected then
+            stop_watching_all(watcher_idx)
+            goto continue
+        end
 
         local success, tab = last_tab(watcher)
         if success then
