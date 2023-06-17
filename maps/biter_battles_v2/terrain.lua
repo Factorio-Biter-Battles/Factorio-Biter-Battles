@@ -3,6 +3,7 @@ local LootRaffle = require "functions.loot_raffle"
 local BiterRaffle = require "maps.biter_battles_v2.biter_raffle"
 local bb_config = require "maps.biter_battles_v2.config"
 local Functions = require "maps.biter_battles_v2.functions"
+local AiTargets = require "maps.biter_battles_v2.ai_targets"
 local tables = require "maps.biter_battles_v2.tables"
 local session = require 'utils.datastore.session_data'
 
@@ -104,7 +105,7 @@ local function get_replacement_tile(surface, position)
 		for _, v in pairs(vectors) do
 			local tile = surface.get_tile(position.x + v[1], position.y + v[2])
 			if not tile.collides_with("resource-layer") then
-				if tile.name ~= "stone-path" then
+				if tile.name ~= "refined-concrete" then
 					return tile.name
 				end
 			end
@@ -207,10 +208,8 @@ local function generate_starting_area(pos, surface)
 	end
 
 	if distance_from_spawn_wall < -10 then
-		local tile_name = surface.get_tile(pos).name
-		if tile_name == "water" or tile_name == "deepwater" then
-			surface.set_tiles({{name = get_replacement_tile(surface, pos), position = pos}}, true)
-		end
+		surface.set_tiles({{name = "refined-concrete", position = pos}}, true)
+		surface.set_hidden_tile(pos,get_replacement_tile(surface, pos))
 		return
 	end
 
@@ -238,7 +237,7 @@ local function generate_starting_area(pos, surface)
 						if surface.can_place_entity({name = "gun-turret", position = pos}) then
 							local e = surface.create_entity({name = "gun-turret", position = pos, force = "north"})
 							e.insert({name = "firearm-magazine", count = math_random(2,16)})
-							Functions.add_target_entity(e)
+							AiTargets.start_tracking(e)
 						end
 					else
 						if math_random(1, 24) == 1 then
@@ -580,10 +579,10 @@ function Public.generate_silo(surface)
 	})
 	silo.minable = false
 	global.rocket_silo[silo.force.name] = silo
-	Functions.add_target_entity(global.rocket_silo[silo.force.name])
+	AiTargets.start_tracking(silo)
 
 	for _ = 1, 32, 1 do
-		create_mirrored_tile_chain(surface, {name = "stone-path", position = silo.position}, 32, 10)
+		create_mirrored_tile_chain(surface, {name = "refined-concrete", position = silo.position}, 32, 10)
 	end
 	
 	for _, entity in pairs(surface.find_entities({{pos.x - 4, pos.y - 6}, {pos.x + 5, pos.y + 5}})) do
@@ -594,8 +593,11 @@ function Public.generate_silo(surface)
 	
 	local turret1 = surface.create_entity({name = "gun-turret", position = {x=pos.x, y=pos.y - 5}, force = "north"})
 	turret1.insert({name = "firearm-magazine", count = 10})
-	local turret2 = surface.create_entity({name = "gun-turret", position = {x=pos.x + 2, y=pos.y - 5}, force = "north"})
+
+	local turret2 = surface.create_entity({name = "gun-turret", position = {x=pos.x+2, y=pos.y-5}, force = "north"})
+
 	turret2.insert({name = "firearm-magazine", count = 10})
+	AiTargets.start_tracking(turret2)
 end
 --[[
 function Public.generate_spawn_goodies(surface)
