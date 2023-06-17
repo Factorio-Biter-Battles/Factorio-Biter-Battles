@@ -249,7 +249,7 @@ local function open_inventory(source, target)
 
     local data = get_player_data(source)
 
-    this.tracking[target.index] = this.tracking[target.index] or {}
+    if not this.tracking[target.index] then this.tracking[target.index] = {} end
     table.insert(this.tracking[target.index], source.index)
 
     data.player_opened = target
@@ -407,16 +407,10 @@ local function update_gui(event)
         end
     }
 
-    local cache = {
-        ['Main'] = nil,
-        ['Armor'] = nil,
-        ['Guns'] = nil,
-        ['Ammo'] = nil,
-        ['Trash'] = nil
-    }
+    local cache = {}
 
     local function cache_get(key)
-        if cache[key] == nil then
+        if not cache[key] then
             cache[key] = target_inventories[key]()
         end
         return cache[key]
