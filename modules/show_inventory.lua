@@ -395,7 +395,17 @@ local function update_gui(event)
     local target = game.get_player(event.player_index)
 
     -- can we skip updating GUIs for this change (are there no players watching?)
-    if watchers == nil or #watchers <= 0 then
+    if watchers == nil then
+        return
+    end
+    
+    local invisible = true
+    for _, _ in pairs(watchers) do
+        invisible = false
+        break
+    end
+    if invisible then
+        this.tracking[event.player_index] = nil
         return
     end
 
