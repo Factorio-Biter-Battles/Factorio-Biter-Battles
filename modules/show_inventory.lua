@@ -475,11 +475,6 @@ commands.add_command(
             end
             local target_player = game.get_player(cmd.parameter)
 
-            -- why is this not allowed?
-            -- if target_player == player then
-            --     return player.print('Cannot open self.', Color.warning)
-            -- end
-
             local valid, opened = player_opened(player)
             if valid then
                 if target_player == opened then
