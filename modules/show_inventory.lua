@@ -293,7 +293,6 @@ local function open_inventory(source, target)
 end
 
 local function on_gui_click(event)
-    local player = game.get_player(event.player_index)
 
     local element = event.element
 
@@ -314,6 +313,7 @@ local function on_gui_click(event)
     if not types[name] then
         return
     end
+    local player = game.get_player(event.player_index)
 
     local data = get_player_data(player)
     if not data then
@@ -350,11 +350,11 @@ local function on_gui_click(event)
     end
 end
 local function gui_closed(event)
-    local player = game.get_player(event.player_index)
 
     local type = event.gui_type
 
     if type == defines.gui_type.custom then
+        local player = game.get_player(event.player_index)
         local data = get_player_data(player)
         if not data then
             return
@@ -406,7 +406,7 @@ local function update_gui(event)
     end
 
     if not validate_object(target) then
-        close_watchers(player)
+        close_watchers(target)
     end
 
     -- lazy evaluation of target inventories, avoid performance overhead
