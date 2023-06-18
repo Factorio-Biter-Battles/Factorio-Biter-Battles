@@ -386,10 +386,6 @@ local function close_watchers(player)
     end
 end
 
--- TODO[discuss]: there is probably some redundant data in the `this` table
--- We are storing the watched player in multiple places:
---     this.tracking
---     this.data[player.index].player_opened
 local function update_gui(event)
     local watchers = this.tracking[event.player_index]
     local target = game.get_player(event.player_index)
@@ -445,7 +441,6 @@ local function update_gui(event)
     for watcher_idx, _ in pairs(watchers) do
         local watcher = game.get_player(watcher_idx)
 
-        -- should we discard / close watchers if they are invalid / disconnected?
         if not validate_object(watcher) then
             stop_watching_all(watcher_idx)
             goto continue
