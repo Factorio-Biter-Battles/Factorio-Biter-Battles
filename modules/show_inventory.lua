@@ -395,12 +395,7 @@ local function update_gui(event)
         return
     end
     
-    local invisible = true
-    for _, _ in pairs(watchers) do
-        invisible = false
-        break
-    end
-    if invisible then
+    if table_size(watchers) <= 0 then
         this.tracking[event.player_index] = nil
         return
     end
