@@ -2,6 +2,7 @@
 
 local Tabs = require 'comfy_panel.main'
 local Global = require 'utils.global'
+local Color = require 'utils.color_presets'
 
 local this = {
     player_group = {},
@@ -142,6 +143,10 @@ local build_group_gui = (function(player, frame)
     b.style.minimal_width = 150
     b.style.font = 'default-bold'
 end)
+
+local function startswith(text, prefix)
+    return text:find(prefix, 1, true) == 1
+end
 
 local function refresh_gui()
     for _, p in pairs(game.connected_players) do
@@ -286,43 +291,59 @@ local function on_gui_click(event)
     if p then
         if p.name == 'groups_table' then
             if event.element.type == 'button' and event.element.caption == 'Join' then
-                this.player_group[player.name] = event.element.parent.name
-                local str = '[' .. event.element.parent.name
-                str = str .. ']'
-                player.tag = str
-                if game.tick - this.join_spam_protection[player.name] > 600 then
-                    local color = {
-                        r = player.color.r * 0.7 + 0.3,
-                        g = player.color.g * 0.7 + 0.3,
-                        b = player.color.b * 0.7 + 0.3,
-                        a = 1
-                    }
-                    game.print(player.name .. ' has joined group "' .. event.element.parent.name .. '"', color)
-                    this.join_spam_protection[player.name] = game.tick
-                end
-                refresh_gui()
-                return
+				local str = '[' .. event.element.parent.name
+				str = str .. ']'
+				if (global.active_special_games["captain_mode"] and global.special_games_variables["captain_mode"]["pickingPhase"] and startswith(str, "[cpt"))
+					or
+					(global.active_special_games["captain_mode"] and global.special_games_variables["captain_mode"]["pickingPhase"] and startswith(player.tag, "[cpt") )
+				then 
+					player.print('You cant join or leave a picking group during picking phase..', Color.red)
+				else
+					this.player_group[player.name] = event.element.parent.name
+					player.tag = str
+					if game.tick - this.join_spam_protection[player.name] > 600 then
+						local color = {
+							r = player.color.r * 0.7 + 0.3,
+							g = player.color.g * 0.7 + 0.3,
+							b = player.color.b * 0.7 + 0.3,
+							a = 1
+						}
+						game.print(player.name .. ' has joined group "' .. event.element.parent.name .. '"', color)
+						this.join_spam_protection[player.name] = game.tick
+					end
+					refresh_gui()
+				end
+				return
             end
 
             if event.element.type == 'button' and event.element.caption == 'Delete' then
-                for _, p in pairs(game.players) do
-                    if this.player_group[p.name] then
-                        if this.player_group[p.name] == event.element.parent.name then
-                            this.player_group[p.name] = '[Group]'
-                            p.tag = ''
-                        end
-                    end
-                end
-                game.print(player.name .. ' deleted group "' .. event.element.parent.name .. '"')
-                this.tag_groups[event.element.parent.name] = nil
-                refresh_gui()
+				if (global.active_special_games["captain_mode"] and global.special_games_variables["captain_mode"]["pickingPhase"] and startswith(event.element.parent.name, "cpt"))
+				then 
+					player.print('You cant delete a picking group during picking phase..', Color.red)
+				else
+					for _, p in pairs(game.players) do
+						if this.player_group[p.name] then
+							if this.player_group[p.name] == event.element.parent.name then
+								this.player_group[p.name] = '[Group]'
+								p.tag = ''
+							end
+						end
+					end
+					game.print(player.name .. ' deleted group "' .. event.element.parent.name .. '"')
+					this.tag_groups[event.element.parent.name] = nil
+					refresh_gui()
+				end
                 return
             end
 
             if event.element.type == 'button' and event.element.caption == 'Leave' then
-                this.player_group[player.name] = '[Group]'
-                player.tag = ''
-                refresh_gui()
+				if global.active_special_games["captain_mode"] and global.special_games_variables["captain_mode"]["pickingPhase"] and startswith(player.tag, "[cpt")then 
+					player.print('You cant leave a picking group during picking phase..', Color.red)
+				else
+					this.player_group[player.name] = '[Group]'
+					player.tag = ''
+					refresh_gui()
+				end
                 return
             end
         end
