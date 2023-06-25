@@ -104,7 +104,7 @@ local valid_special_games = {
 	},
 
 	send_to_external_server = {
-		name = {type = "label", caption = "Send to external server", tooltip = "Sends all online players an invite to an external server"},
+		name = {type = "label", caption = "Send to external server", tooltip = "Sends all online players an invite to an external server.\nLeave empty to disable"},
 		config =  {
 			[1] = {name = "label1", type = "label", caption = "IP address"},
 			[2] = {name = "address", type = "textfield", width = 90},
@@ -372,11 +372,7 @@ end
 
 local send_to_external_server_handler = Token.register(
 	function(event)
-		game.get_player(event.player_index).connect_to_server{
-			address = global.special_games_variables.send_to_external_server.address,
-			name = global.special_games_variables.send_to_external_server.name,
-			description = global.special_games_variables.send_to_external_server.description
-		}
+		game.get_player(event.player_index).connect_to_server(global.special_games_variables.send_to_external_server)
 	end
 )
 
@@ -509,12 +505,12 @@ local function on_gui_click(event)
 		local description = config["description"].text
 
 		if address == "" or name == "" or description == "" then
-			player.print("The target address, server name and description must be provided")
+			Event.remove_removable(defines.events.on_player_joined_game, send_to_external_server_handler)
+			player.print("Stopped sending players to external server")
 			return
 		end
 
 		player.print("Sending players (other than host) to the specified server")
-		player.print("To stop redirecting new players, run /stop-send-to-external-server")
 		for _, connected_player in pairs(game.connected_players) do
 			connected_player.connect_to_server{
 				address = address,
@@ -553,17 +549,6 @@ local function on_player_died(event)
 		Color.warning
 	)
 end
-
-commands.add_command("stop-send-to-external-server", nil, function(command)
-	local command_player = game.get_player(command.player_index)
-	if not command_player.admin then
-		command_player.print("Only admins can stop sending players to external server")
-		return
-	end
-
-	command_player.print("Stopped sending players to external server")
-	Event.remove_removable(defines.events.on_player_joined_game, send_to_external_server_handler)
-  end)
 
 comfy_panel_tabs['Special games'] = {gui = create_special_games_panel, admin = true}
 
