@@ -388,7 +388,6 @@ end
 
 local function update_gui(event)
     local watchers = this.tracking[event.player_index]
-    local target = game.get_player(event.player_index)
 
     -- can we skip updating GUIs for this change (are there no players watching?)
     if watchers == nil then
@@ -400,6 +399,7 @@ local function update_gui(event)
         return
     end
 
+    local target = game.get_player(event.player_index)
     if not validate_object(target) then
         close_watchers(target)
     end
