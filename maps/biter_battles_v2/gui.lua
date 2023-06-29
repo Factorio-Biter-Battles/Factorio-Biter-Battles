@@ -44,7 +44,7 @@ local function create_reroll_button(player)
 		player.gui.top["reroll_yes"].destroy()
 		player.gui.top["reroll_no"].destroy()
 	end
-	if not global.bb_settings.map_reroll_admin_disable then
+	if global.bb_settings.map_reroll then
 		if game.ticks_played < global.reroll_time_limit then
 			local b_reroll_yes = player.gui.top.add { type = "sprite-button", caption = "New map", name = "reroll_yes" }
 			gui_style(b_reroll_yes, {width = 150, height = 38 , font = "heading-2", font_color = {r = 0.1, g = 0.9, b = 0.0}} )	
@@ -585,14 +585,14 @@ local function on_gui_click(event)
 	if name == "reroll_yes" then 
 		if global.reroll_map_voting[player.name] ~= 1 then 
 			global.reroll_map_voting[player.name] = 1 
-			game.print(player.name .. " want to reroll map ",{r = 0.1, g = 0.9, b = 0.0})	
+			game.print(player.name .. " wants to reroll map ",{r = 0.1, g = 0.9, b = 0.0})	
 			set_reroll_map_voting_status()
 		end
 	end
 	if name == "reroll_no" then 
 		if global.reroll_map_voting[player.name] ~= 0 then 
 			global.reroll_map_voting[player.name] = 0
-			game.print(player.name .. " want to keep this map", {r = 0.9, g = 0.1, b = 0.1})
+			game.print(player.name .. " wants to keep this map", {r = 0.9, g = 0.1, b = 0.1})
 			set_reroll_map_voting_status()
 		end		
 	end

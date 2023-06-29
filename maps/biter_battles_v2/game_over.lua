@@ -318,7 +318,7 @@ function Public.server_restart()
         local message = 'Map is restarting! '
         Server.to_discord_bold(table.concat {'*** ', message, ' ***'})
 
-	Public.generate_new_map()
+        Public.generate_new_map()
         return
     end
     if global.server_restart_timer % 30 == 0 then
