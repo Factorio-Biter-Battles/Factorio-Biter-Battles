@@ -6,8 +6,8 @@ local Server = require 'utils.server'
 local Special_games = require 'comfy_panel.special_games'
 local Event = require 'utils.event'
 local Tables = require 'maps.biter_battles_v2.tables'
-local Token = require 'utils.token.lua'
-local Task = require 'utils.task.lua'
+local Token = require 'utils.token'
+local Task = require 'utils.task'
 local math_random = math.random
 
 local Public = {}
@@ -480,8 +480,9 @@ local reroll_token = Token.register(
     function()
         if global.reroll_map_voting_status then
             game.print("Map is being rerolled!", {r = 0.22, g = 0.88, b = 0.22})
-			Game_over.generate_new_map()	
-		end
+            Public.generate_new_map()
+        end
+    end
 )
 function Public.generate_new_map()
     game.speed = 1
