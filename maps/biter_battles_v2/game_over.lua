@@ -6,7 +6,8 @@ local Server = require 'utils.server'
 local Special_games = require 'comfy_panel.special_games'
 local Event = require 'utils.event'
 local Tables = require 'maps.biter_battles_v2.tables'
-
+local Token = require 'utils.token.lua'
+local Task = require 'utils.task.lua'
 local math_random = math.random
 
 local Public = {}
@@ -475,6 +476,13 @@ local function chat_with_everyone(event)
     game.forces[enemy].print(message, player.chat_color)
 end
 
+local reroll_token = Token.register(
+    function()
+        if global.reroll_map_voting_status then
+            game.print("Map is being rerolled!", {r = 0.22, g = 0.88, b = 0.22})
+			Game_over.generate_new_map()	
+		end
+)
 function Public.generate_new_map()
     game.speed = 1
     local prev_surface = global.bb_surface_name
@@ -496,6 +504,7 @@ function Public.generate_new_map()
     game.reset_time_played()
     global.server_restart_timer = nil    
     game.delete_surface(prev_surface)
+    Task.set_timeout_in_ticks(global.reroll_time_limit, reroll_token)
 end
 
 Event.add(defines.events.on_console_chat, chat_with_everyone)
