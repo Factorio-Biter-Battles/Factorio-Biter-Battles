@@ -489,26 +489,6 @@ function Public.spy_fish()
 	end
 end
 
-local function set_reroll_map_voting_status()
-	local yes = 0
-	local no = 0
-	for _, vote in pairs(global.reroll_map_voting) do
-		if vote == 1 then 
-			yes = yes + 1
-		else 
-			no = no + 1
-		end
-	end
-	local result = math.floor( yes / ( yes + no ) * 100 )
-	if result >= 75 then
-		global.reroll_map_voting_status = true
-	else
-		global.reroll_map_voting_status = false
-	end
-	local reroll_time_left = math.floor((global.reroll_time_limit - game.ticks_played)/60)
-	game.print(result .. "% votes to reroll. Need 75% to reroll map. Time left " .. reroll_time_left .. "s" )
-end
-
 local function on_gui_click(event)
 	if not event.element then return end
 	if not event.element.valid then return end
@@ -585,15 +565,13 @@ local function on_gui_click(event)
 	if name == "reroll_yes" then 
 		if global.reroll_map_voting[player.name] ~= 1 then 
 			global.reroll_map_voting[player.name] = 1 
-			game.print(player.name .. " wants to reroll map ",{r = 0.1, g = 0.9, b = 0.0})	
-			--set_reroll_map_voting_status()
+			game.print(player.name .. " wants to reroll map ",{r = 0.1, g = 0.9, b = 0.0})
 		end
 	end
 	if name == "reroll_no" then 
 		if global.reroll_map_voting[player.name] ~= 0 then 
 			global.reroll_map_voting[player.name] = 0
 			game.print(player.name .. " wants to keep this map", {r = 0.9, g = 0.1, b = 0.1})
-			--set_reroll_map_voting_status()
 		end		
 	end
 end

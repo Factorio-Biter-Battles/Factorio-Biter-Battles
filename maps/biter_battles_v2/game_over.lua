@@ -541,15 +541,16 @@ function Public.generate_new_map()
     game.reset_time_played()
     global.server_restart_timer = nil    
     game.delete_surface(prev_surface)
+    if global.bb_settings.map_reroll then
+        Task.set_timeout_in_ticks(global.reroll_time_limit, reroll_token)
+        Event.add_removable(defines.events.on_player_joined_game, reroll_buttons_token)
+        for _, player in pairs(game.connected_players) do
+            local b_reroll_yes = player.gui.top.add { type = "sprite-button", caption = "New map", name = "reroll_yes" }
+            gui_style(b_reroll_yes, {width = 150, height = 38 , font = "heading-2", font_color = {r = 0.1, g = 0.9, b = 0.0}} )
 
-    Task.set_timeout_in_ticks(global.reroll_time_limit, reroll_token)
-    Event.add_removable(defines.events.on_player_joined_game, reroll_buttons_token)
-    for _, player in pairs(game.connected_players) do
-        local b_reroll_yes = player.gui.top.add { type = "sprite-button", caption = "New map", name = "reroll_yes" }
-        gui_style(b_reroll_yes, {width = 150, height = 38 , font = "heading-2", font_color = {r = 0.1, g = 0.9, b = 0.0}} )
-
-        local b_reroll_no = player.gui.top.add { type = "sprite-button", caption = "Keep this", name = "reroll_no" }
-        gui_style(b_reroll_no, {width = 150, height = 38 , font = "heading-2", font_color = {r = 0.9, g = 0.1, b = 0.1}} )
+            local b_reroll_no = player.gui.top.add { type = "sprite-button", caption = "Keep this", name = "reroll_no" }
+            gui_style(b_reroll_no, {width = 150, height = 38 , font = "heading-2", font_color = {r = 0.9, g = 0.1, b = 0.1}} )
+        end
     end
 end
 
