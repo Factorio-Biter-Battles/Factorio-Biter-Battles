@@ -304,7 +304,7 @@ end
 
 function Public.refresh()
 	for _, player in pairs(game.connected_players) do
-		create_reroll_button(player)
+		--create_reroll_button(player)
 		if player.gui.left["bb_main_gui"] then
 			Public.create_main_gui(player)
 		end
@@ -586,14 +586,14 @@ local function on_gui_click(event)
 		if global.reroll_map_voting[player.name] ~= 1 then 
 			global.reroll_map_voting[player.name] = 1 
 			game.print(player.name .. " wants to reroll map ",{r = 0.1, g = 0.9, b = 0.0})	
-			set_reroll_map_voting_status()
+			--set_reroll_map_voting_status()
 		end
 	end
 	if name == "reroll_no" then 
 		if global.reroll_map_voting[player.name] ~= 0 then 
 			global.reroll_map_voting[player.name] = 0
 			game.print(player.name .. " wants to keep this map", {r = 0.9, g = 0.1, b = 0.1})
-			set_reroll_map_voting_status()
+			--set_reroll_map_voting_status()
 		end		
 	end
 end
