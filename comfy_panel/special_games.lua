@@ -1,4 +1,5 @@
 local Event = require 'utils.event'
+local Token = require 'utils.token'
 local Color = require 'utils.color_presets'
 local Team_manager = require "maps.biter_battles_v2.team_manager"
 local session = require 'utils.datastore.session_data'
@@ -6,6 +7,7 @@ local math_random = math.random
 local Public = {}
 global.active_special_games = {}
 global.special_games_variables = {}
+
 local valid_special_games = {
 	--[[ 
 	Add your special game here.
@@ -103,7 +105,7 @@ local valid_special_games = {
 		},
 		button = {name = "limited_lives_apply", type = "button", caption = "Apply"}
 	},
-
+  
 	captain_mode = {
 		name = {type = "label", caption = "Captain mode", tooltip = "Captain mode"},
 		config = {
@@ -116,6 +118,19 @@ local valid_special_games = {
 			[7] = {name = "groupLimit", type = "textfield", text = "0", numeric = true, width = 40, type = "textfield", text = "3", numeric = true, width = 40, tooltip = "Amount of players max in a group (0 for infinite)"}
 		},
 		button = {name = "captain_mode_apply", type = "button", caption = "Apply"}
+	},
+  
+	send_to_external_server = {
+		name = {type = "label", caption = "Send to external server", tooltip = "Sends all online players an invite to an external server.\nLeave empty to disable"},
+		config =  {
+			[1] = {name = "label1", type = "label", caption = "IP address"},
+			[2] = {name = "address", type = "textfield", width = 90},
+			[3] = {name = "label2", type = "label", caption = "Server name"},
+			[4] = {name = "server_name", type = "textfield", width = 100},
+			[5] = {name = "label3", type = "label", caption = "Message"},
+			[6] = {name = "description", type = "textfield", width = 100},
+		},
+		button = {name = "send_to_external_server_btn", type = "button", caption = "Apply & Confirm"}
 	}
 }
 
@@ -886,6 +901,12 @@ local function on_built_entity(event)
 	end
 end
 
+local send_to_external_server_handler = Token.register(
+	function(event)
+		game.get_player(event.player_index).connect_to_server(global.special_games_variables.send_to_external_server)
+	end
+)
+
 local create_special_games_panel = (function(player, frame)
 	frame.clear()
 	frame.add{type = "label", caption = "Configure and apply special games here"}.style.single_line = false
@@ -894,7 +915,7 @@ local create_special_games_panel = (function(player, frame)
 		local a = frame.add {type = "frame"}
 		a.style.width = 750
 		local table = a.add {name = k, type = "table", column_count = 3, draw_vertical_lines = true}
-		table.add(v.name).style.width = 100
+		table.add(v.name).style.width = 110
 		local config = table.add {name = k .. "_config", type = "flow", direction = "horizontal"}
 		config.style.width = 500
 		for _, i in ipairs(v.config) do
@@ -1427,6 +1448,28 @@ local function on_gui_click(event)
 	elseif element.name == "limited_lives_confirm" then
 		local lives_limit = tonumber(config["lives_limit"].text)
 		generate_limited_lives(lives_limit)
+
+	elseif element.name == "send_to_external_server_btn" then
+		local address = config["address"].text
+		local name = config["server_name"].text
+		local description = config["description"].text
+
+		if address == "" or name == "" or description == "" then
+			Event.remove_removable(defines.events.on_player_joined_game, send_to_external_server_handler)
+			player.print("Stopped sending players to external server")
+			return
+		end
+
+		player.print("Sending players (other than host) to the specified server")
+		for _, connected_player in pairs(game.connected_players) do
+			connected_player.connect_to_server{
+				address = address,
+				name = name,
+				description = description
+			}
+		end
+		global.special_games_variables.send_to_external_server = {address = address, name = name, description = description}
+		Event.add_removable(defines.events.on_player_joined_game, send_to_external_server_handler)
 	end
 
 	if element.valid then
