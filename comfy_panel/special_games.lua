@@ -571,8 +571,8 @@ local function poll_captain_late_joiners(player)
 	"captain_poll_latejoiner_question","Do you want to play?","Yes","captain_late_joiner_yes","No","captain_late_joiner_no","No and please dont ask me again for the event (you will be blacklisted from any other late joiners poll for the current captain match only)","captain_late_joiner_no_blacklist")
 end
 
-local function generateRendering(textChosen, xPos, yPos, rColor,gColor,bColor,aColor, scaleChosen,fontChosen)
-	rendering.draw_text{
+local function generateRendering(nameRendering,textChosen, xPos, yPos, rColor,gColor,bColor,aColor, scaleChosen,fontChosen)
+	global.special_games_variables["rendering"][nameRendering] = rendering.draw_text{
 		text = textChosen,
 		surface = game.surfaces[global.bb_surface_name],
 		target = {xPos,yPos},
@@ -591,23 +591,23 @@ end
 
 local function generateGenericRenderingCaptain()
 	local y = -14
-	generateRendering("Special event rule only : ",-65,y,1,1,1,1,3,"heading-1")
+	generateRendering("captainLineOne","Special event rule only : ",-65,y,1,1,1,1,3,"heading-1")
 	y = y + 2
-	generateRendering("-Use of /nth /sth /north-chat /south-chat /s /shout by spectator can be punished (warn-tempban event)",-65,y,0.87,0.13,0.5,1,3,"heading-1")
+	generateRendering("captainLineTwo","-Use of /nth /sth /north-chat /south-chat /s /shout by spectator can be punished (warn-tempban event)",-65,y,0.87,0.13,0.5,1,3,"heading-1")
 	y = y + 4
-	generateRendering("Notes : ",-65,y,1,1,1,1,2.5,"heading-1")
+	generateRendering("captainLineThree","Notes : ",-65,y,1,1,1,1,2.5,"heading-1")
 	y = y + 2
-	generateRendering("-Chat of spectator can only be seen by spectators for players",-65,y,1,1,1,1,2.5,"heading-1")
+	generateRendering("captainLineFour","-Chat of spectator can only be seen by spectators for players",-65,y,1,1,1,1,2.5,"heading-1")
 	y = y + 2
-	generateRendering("-For admins, as spectator, use ping to talk only to spectators",-65,y,1,1,1,1,2.5,"heading-1")
+	generateRendering("captainLineFive","-For admins, as spectator, use ping to talk only to spectators",-65,y,1,1,1,1,2.5,"heading-1")
 	y = y + 2
-	generateRendering("-Teams are locked, if you want to play, ask to be moved to a team",-65,y,1,1,1,1,2.5,"heading-1")
+	generateRendering("captainLineSix","-Teams are locked, if you want to play, ask to be moved to a team",-65,y,1,1,1,1,2.5,"heading-1")
 	y = y + 2
-	generateRendering("-We are using discord bb for coms (not required), feel free to join to listen ,even if no mic",-65,y,1,1,1,1,2.5,"heading-1")
+	generateRendering("captainLineSeven","-We are using discord bb for coms (not required), feel free to join to listen ,even if no mic",-65,y,1,1,1,1,2.5,"heading-1")
 	y = y + 2
-	generateRendering("-If you are not playing, you can listen to any team, but your mic must be off",-65,y,1,1,1,1,2.5,"heading-1")
+	generateRendering("captainLineEight","-If you are not playing, you can listen to any team, but your mic must be off",-65,y,1,1,1,1,2.5,"heading-1")
 	y = y + 2
-	generateRendering("-No sign up required, anyone can play the event !",-65,y,1,1,1,1,2.5,"heading-1")
+	generateRendering("captainLineNine","-No sign up required, anyone can play the event !",-65,y,1,1,1,1,2.5,"heading-1")
 	y = y + 2
 end
 
@@ -759,9 +759,10 @@ local function generate_captain_mode(refereeName,autoTrust,captainKick,pickingMo
 	show_captain_question()
 		
 	local y = 0
+	if global.special_games_variables["rendering"] == nil then global.special_games_variables["rendering"] = {} end
 	rendering.clear()
-	generateRendering("Special Captain's tournament mode enabled",0,-16,1,0,0,1,5,"heading-1")
-	generateRendering("team xx vs team yy. Referee: " .. refereeName .. ". Teams on VC",0,10,0.87,0.13,0.5,1,1.5,"heading-1")
+	generateRendering("captainLineTen","Special Captain's tournament mode enabled",0,-16,1,0,0,1,5,"heading-1")
+	generateRendering("captainLineEleven","team xx vs team yy. Referee: " .. refereeName .. ". Teams on VC",0,10,0.87,0.13,0.5,1,1.5,"heading-1")
 	generateGenericRenderingCaptain()
 	rendering.draw_line{surface = game.surfaces[global.bb_surface_name], from = {-9, -2}, to = {-9,3}, color = {r = 1},draw_on_ground = true, width = 3, gap_length = 0, dash_length = 1} 
 	rendering.draw_line{surface = game.surfaces[global.bb_surface_name], from = {0, 9}, to = {0,4}, color = {r = 1},draw_on_ground = true, width = 3, gap_length = 0, dash_length = 1} 
@@ -770,11 +771,11 @@ local function generate_captain_mode(refereeName,autoTrust,captainKick,pickingMo
 	rendering.draw_line{surface = game.surfaces[global.bb_surface_name], from = {4, 0}, to = {9,0}, color = {r = 1},draw_on_ground = true, width = 3, gap_length = 0, dash_length = 1} 
 	rendering.draw_circle{surface = game.surfaces[global.bb_surface_name], target = {0, 0}, radius = 4, filled= false,draw_on_ground = true, color = {r = 1}, width = 3} 
 
-	generateRendering("Speedrunners",6,-5,1,1,1,1,2,"heading-1")
-	generateRendering("BB veteran players",-6,-5,1,1,1,1,2,"heading-1")
-	generateRendering("New players",6,5,1,1,1,1,2,"heading-1")
-	generateRendering("Not veteran but not new players",-6,5,1,1,1,1,2,"heading-1")
-	generateRendering("Spectators",-12,0,1,1,1,1,2,"heading-1")
+	generateRendering("captainLineTwelve","Speedrunners",6,-5,1,1,1,1,2,"heading-1")
+	generateRendering("captainLineThirteen","BB veteran players",-6,-5,1,1,1,1,2,"heading-1")
+	generateRendering("captainLineFourteen","New players",6,5,1,1,1,1,2,"heading-1")
+	generateRendering("captainLineFifteen","Not veteran but not new players",-6,5,1,1,1,1,2,"heading-1")
+	generateRendering("captainLineSixteen","Spectators",-12,0,1,1,1,1,2,"heading-1")
 
 	for i=-9,-16,-1 do
 		for k=2,-2,-1 do
@@ -969,6 +970,10 @@ local function poll_pickLateJoiners(player)
 	"captain_referee_enable_picking_late_joiners","Enable picking phase for late joiners ?","Yes","captain_enabled_late_picking_by_ref"..player.name,nil,nil,nil,nil)
 end
 
+local function generate_vs_text_rendering()
+	if global.active_special_games and global.special_games_variables["rendering"] and global.special_games_variables["rendering"]["captainLineVersus"] then rendering.destroy(global.special_games_variables["rendering"]["captainLineVersus"]) end
+	generateRendering("captainLineVersus","team " .. global.special_games_variables["captain_mode"]["captainList"][1] .. " vs team " .. global.special_games_variables["captain_mode"]["captainList"][2] .. ". Referee: " .. global.special_games_variables["captain_mode"]["refereeName"]  .. ". Teams on VC",0,10,0.87,0.13,0.5,1,1.5,"heading-1")
+end
 local function start_captain_event()
 	game.print('[font=default-large-bold]Time to start the game!! Good luck and have fun everyone ![/font]', Color.cyan)
 	if global.freeze_players == true then
@@ -986,10 +991,10 @@ local function start_captain_event()
 	if playerToClear.gui.top["captain_poll_team_ready_frame"] then playerToClear.gui.top["captain_poll_team_ready_frame"].destroy() end
 	local y = 0
 	rendering.clear()
-	generateRendering("Special Captain's tournament mode enabled",0,-16,1,0,0,1,5,"heading-1")
-	generateRendering("team " .. global.special_games_variables["captain_mode"]["captainList"][1] .. " vs team " .. global.special_games_variables["captain_mode"]["captainList"][2] .. ". Referee: " .. global.special_games_variables["captain_mode"]["refereeName"]  .. ". Teams on VC",0,10,0.87,0.13,0.5,1,1.5,"heading-1")
+	generateRendering("captainLineSeventeen","Special Captain's tournament mode enabled",0,-16,1,0,0,1,5,"heading-1")
+	generate_vs_text_rendering()
 	generateGenericRenderingCaptain()
-	generateRendering("Want to play ? Ask to join a team!",0,-9,1,1,1,1,3,"heading-1")
+	generateRendering("captainLineEighteen","Want to play ? Ask to join a team!",0,-9,1,1,1,1,3,"heading-1")
 end
 
 local function allow_vote()
@@ -1599,12 +1604,14 @@ local function changeCaptain(cmd,isItForNorth)
 						end
 						game.print(playerOfCommand.name .. " has decided that " .. victim.name .. " will be the new captain instead of " .. global.special_games_variables["captain_mode"]["captainList"][1],Color.cyan)
 						global.special_games_variables["captain_mode"]["captainList"][1] = victim.name
+						generate_vs_text_rendering()
 					else
 						if victim.force.name ~= 'south' then
 							return playerOfCommand.print("You cant elect a player as a captain if he is not in the team of the captain ! What are you even doing !",Color.red)
 						end
 						game.print(playerOfCommand.name .. " has decided that " .. victim.name .. " will be the new captain instead of " .. global.special_games_variables["captain_mode"]["captainList"][2],Color.cyan)
 						global.special_games_variables["captain_mode"]["captainList"][2] = victim.name
+						generate_vs_text_rendering()
 					end
 			else 
 				playerOfCommand.print("Invalid name", Color.warning)
@@ -1655,6 +1662,7 @@ commands.add_command('replaceReferee', 'Admin or referee can decide to change th
 			game.print(playerOfCommand.name .. " has decided that " .. victim.name .. " will be the new referee instead of " .. global.special_games_variables["captain_mode"]["refereeName"],Color.cyan)
 			global.special_games_variables["captain_mode"]["refereeName"] = victim.name
 			refPlayer = game.get_player(global.special_games_variables["captain_mode"]["refereeName"])
+			generate_vs_text_rendering()
 			poll_pickLateJoiners(refPlayer)
 			else 
 				playerOfCommand.print("Invalid name", Color.warning)
