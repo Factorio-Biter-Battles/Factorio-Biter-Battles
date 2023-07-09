@@ -1359,7 +1359,7 @@ local function on_gui_click(event)
 			end
 		end
 	elseif string.find(element.name, "ready_captain_") then
-		if game.tick < global.difficulty_votes_timeout then 
+		if game.ticks_played < global.difficulty_votes_timeout then 
 			player.print('[font=default-large-bold]Wait for end of difficulty vote poll before telling your team is ready (meanwhile, your team should strategize!)[/font]', Color.red)
 			return
 		end
