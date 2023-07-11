@@ -477,10 +477,22 @@ local function chat_with_everyone(event)
     game.forces[enemy].print(message, player.chat_color)
 end
 
+local reroll_buttons_token = Token.register(
+    -- create buttons for joining players
+    function(event)
+        local player = game.get_player(event.player_index)
+        local b_reroll_yes = player.gui.top.add { type = "sprite-button", caption = "New map", name = "reroll_yes" }
+        gui_style(b_reroll_yes, {width = 150, height = 38 , font = "heading-2", font_color = {r = 0.1, g = 0.9, b = 0.0}} )
+
+        local b_reroll_no = player.gui.top.add { type = "sprite-button", caption = "Keep this", name = "reroll_no" }
+        gui_style(b_reroll_no, {width = 150, height = 38 , font = "heading-2", font_color = {r = 0.9, g = 0.1, b = 0.1}} )
+    end
+)
+
 local reroll_token = Token.register(
     function()
         -- disable reroll buttons creation for joining players
-        Event.remove_removable(defines.on_player_joined_game, reroll_buttons_token)
+        Event.remove_removable(defines.events.on_player_joined_game, reroll_buttons_token)
         -- remove existing buttons
         for _, player in pairs(game.players) do
             if player.gui.top["reroll_yes"] then 
@@ -505,18 +517,6 @@ local reroll_token = Token.register(
         end
         game.print("Vote to reload the map has failed (" .. result .. "%)")
 
-    end
-)
-
-local reroll_buttons_token = Token.register(
-    -- create buttons for joining players
-    function(event)
-        local player = game.get_player(event.player_index)
-        local b_reroll_yes = player.gui.top.add { type = "sprite-button", caption = "New map", name = "reroll_yes" }
-        gui_style(b_reroll_yes, {width = 150, height = 38 , font = "heading-2", font_color = {r = 0.1, g = 0.9, b = 0.0}} )
-
-        local b_reroll_no = player.gui.top.add { type = "sprite-button", caption = "Keep this", name = "reroll_no" }
-        gui_style(b_reroll_no, {width = 150, height = 38 , font = "heading-2", font_color = {r = 0.9, g = 0.1, b = 0.1}} )
     end
 )
 
