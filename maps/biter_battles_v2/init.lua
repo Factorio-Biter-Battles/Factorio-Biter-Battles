@@ -191,7 +191,6 @@ function Public.tables()
 		global.bb_surface_name = "bb0"
 	end
 
-	global.reroll_map_voting_status=false
 	global.reroll_map_voting = {}
 	global.bb_evolution = {}
 	global.bb_game_won_by_team = nil

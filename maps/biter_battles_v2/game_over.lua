@@ -482,8 +482,8 @@ local function draw_reroll_gui(player)
     gui_style(f, {height = 38, padding = 0})
     
     local t = f.add{type = "table", name = "reroll_table", column_count = 3, vertical_centering = true}
-    local l = t.add{type = "label", caption = "Reroll map?"}
-    gui_style(l, {font = "heading-2", font_color = {r = 0.88, g = 0.55, b = 0.11}})
+    local l = t.add{type = "label", caption = "Reroll map?\t" .. global.reroll_time_left .. "s"}
+    gui_style(l, {font = "heading-2", font_color = {r = 0.88, g = 0.55, b = 0.11}, width = 105})
 
     local b = t.add { type = "sprite-button", caption = "Yes", name = "reroll_yes" }
     gui_style(b, {width = 50, height = 28 , font = "heading-2", font_color = {r = 0.1, g = 0.9, b = 0.0}} )
@@ -530,6 +530,20 @@ local reroll_token = Token.register(
     end
 )
 
+local decrement_timer_token = Token.get_counter() + 1 -- predict what the token will look like
+decrement_timer_token = Token.register(
+    function()
+        local reroll_time_left = global.reroll_time_left - 1
+        for _, player in pairs(game.connected_players) do
+            player.gui.top.reroll_frame.reroll_table.children[1].caption = "Reroll map?\t" .. reroll_time_left .. "s"
+        end
+        if reroll_time_left > 0 then
+            Task.set_timeout_in_ticks(60, decrement_timer_token)
+            global.reroll_time_left = reroll_time_left
+        end
+    end
+)
+
 function Public.generate_new_map()
     game.speed = 1
     local prev_surface = global.bb_surface_name
@@ -554,9 +568,11 @@ function Public.generate_new_map()
     if global.bb_settings.map_reroll then
         Task.set_timeout_in_ticks(global.reroll_time_limit, reroll_token)
         Event.add_removable(defines.events.on_player_joined_game, reroll_buttons_token)
+        global.reroll_time_left = global.reroll_time_limit / 60
         for _, player in pairs(game.connected_players) do
             draw_reroll_gui(player)
         end
+        Task.set_timeout_in_ticks(60, decrement_timer_token)
     end
 end
 
