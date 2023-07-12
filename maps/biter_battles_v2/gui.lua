@@ -39,24 +39,6 @@ function Public.clear_copy_history(player)
 	end
 end
 
-local function create_reroll_button(player)
-	if player.gui.top["reroll_yes"] then 
-		player.gui.top["reroll_yes"].destroy()
-		player.gui.top["reroll_no"].destroy()
-	end
-	if global.bb_settings.map_reroll then
-		if game.ticks_played < global.reroll_time_limit then
-			local b_reroll_yes = player.gui.top.add { type = "sprite-button", caption = "New map", name = "reroll_yes" }
-			gui_style(b_reroll_yes, {width = 150, height = 38 , font = "heading-2", font_color = {r = 0.1, g = 0.9, b = 0.0}} )	
-	
-			local b_reroll_no = player.gui.top.add { type = "sprite-button", caption = "Keep this", name = "reroll_no" }
-			gui_style(b_reroll_no, {width = 150, height = 38 , font = "heading-2", font_color = {r = 0.9, g = 0.1, b = 0.1}} )	
-		end
-	else 
-		global.reroll_map_voting_status = false
-	end
-end
-
 function Public.reset_tables_gui()
 	global.player_data_afk = {}
 end
@@ -304,7 +286,6 @@ end
 
 function Public.refresh()
 	for _, player in pairs(game.connected_players) do
-		--create_reroll_button(player)
 		if player.gui.left["bb_main_gui"] then
 			Public.create_main_gui(player)
 		end

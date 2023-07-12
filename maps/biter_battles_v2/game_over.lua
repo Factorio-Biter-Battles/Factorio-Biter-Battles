@@ -477,15 +477,26 @@ local function chat_with_everyone(event)
     game.forces[enemy].print(message, player.chat_color)
 end
 
+local function draw_reroll_gui(player)
+    local f = player.gui.top.add{type = "frame", name = "reroll_frame"}
+    gui_style(f, {height = 38, padding = 0})
+    
+    local t = f.add{type = "table", name = "reroll_table", column_count = 3, vertical_centering = true}
+    local l = t.add{type = "label", caption = "Reroll map?"}
+    gui_style(l, {font = "heading-2", font_color = {r = 0.88, g = 0.55, b = 0.11}})
+
+    local b = t.add { type = "sprite-button", caption = "Yes", name = "reroll_yes" }
+    gui_style(b, {width = 50, height = 28 , font = "heading-2", font_color = {r = 0.1, g = 0.9, b = 0.0}} )
+
+    b = t.add { type = "sprite-button", caption = "No", name = "reroll_no" }
+    gui_style(b, {width = 50, height = 28 , font = "heading-2", font_color = {r = 0.9, g = 0.1, b = 0.1}} )
+end
+
 local reroll_buttons_token = Token.register(
     -- create buttons for joining players
     function(event)
         local player = game.get_player(event.player_index)
-        local b_reroll_yes = player.gui.top.add { type = "sprite-button", caption = "New map", name = "reroll_yes" }
-        gui_style(b_reroll_yes, {width = 150, height = 38 , font = "heading-2", font_color = {r = 0.1, g = 0.9, b = 0.0}} )
-
-        local b_reroll_no = player.gui.top.add { type = "sprite-button", caption = "Keep this", name = "reroll_no" }
-        gui_style(b_reroll_no, {width = 150, height = 38 , font = "heading-2", font_color = {r = 0.9, g = 0.1, b = 0.1}} )
+        draw_reroll_gui(player)
     end
 )
 
@@ -495,9 +506,8 @@ local reroll_token = Token.register(
         Event.remove_removable(defines.events.on_player_joined_game, reroll_buttons_token)
         -- remove existing buttons
         for _, player in pairs(game.players) do
-            if player.gui.top["reroll_yes"] then 
-                player.gui.top["reroll_yes"].destroy()
-                player.gui.top["reroll_no"].destroy()
+            if player.gui.top["reroll_frame"] then 
+                player.gui.top["reroll_frame"].destroy()
             end
         end
         -- count votes
@@ -545,11 +555,7 @@ function Public.generate_new_map()
         Task.set_timeout_in_ticks(global.reroll_time_limit, reroll_token)
         Event.add_removable(defines.events.on_player_joined_game, reroll_buttons_token)
         for _, player in pairs(game.connected_players) do
-            local b_reroll_yes = player.gui.top.add { type = "sprite-button", caption = "New map", name = "reroll_yes" }
-            gui_style(b_reroll_yes, {width = 150, height = 38 , font = "heading-2", font_color = {r = 0.1, g = 0.9, b = 0.0}} )
-
-            local b_reroll_no = player.gui.top.add { type = "sprite-button", caption = "Keep this", name = "reroll_no" }
-            gui_style(b_reroll_no, {width = 150, height = 38 , font = "heading-2", font_color = {r = 0.9, g = 0.1, b = 0.1}} )
+            draw_reroll_gui(player)
         end
     end
 end
