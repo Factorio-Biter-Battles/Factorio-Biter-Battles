@@ -478,6 +478,7 @@ local function chat_with_everyone(event)
 end
 
 local function draw_reroll_gui(player)
+    if player.gui.top.reroll_frame then return end
     local f = player.gui.top.add{type = "frame", name = "reroll_frame"}
     gui_style(f, {height = 38, padding = 0})
     
