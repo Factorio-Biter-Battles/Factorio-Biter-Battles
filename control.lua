@@ -34,74 +34,10 @@ require 'comfy_panel.score'
 require 'comfy_panel.config'
 require 'comfy_panel.special_games'
 
---require 'modules.autostash'
-
----------------- !ENABLE MODULES HERE ----------------
---require 'modules.admins_operate_biters'
---require 'modules.the_floor_is_lava'
---require 'modules.biters_landfill_on_death'
---require 'modules.autodecon_when_depleted'
---require 'modules.biter_noms_you'
---require 'modules.biters_avoid_damage'
---require 'modules.biters_double_damage'
---require 'modules.burden'
---require 'modules.comfylatron'
---require 'modules.dangerous_goods'
---require 'modules.explosive_biters'
---require 'modules.explosive_player_respawn'
---require 'modules.explosives_are_explosive'
---require 'modules.fish_respawner'
---require 'modules.fluids_are_explosive'
---require 'modules.hunger'
---require 'modules.hunger_games'
---require 'modules.pistol_buffs'
---require 'modules.players_trample_paths'
---require 'modules.railgun_enhancer'
---require 'modules.restrictive_fluid_mining'
---require 'modules.satellite_score'
---require 'modules.show_health'
---require 'modules.splice_double'
---require 'modules.ores_are_mixed'
---require 'modules.team_teleport'
---require 'modules.surrounded_by_worms'
---require 'modules.no_blueprint_library'
---require 'modules.explosives'
---require 'modules.biter_pets'
---require 'modules.no_solar'
---require 'modules.biter_reanimator'
---require 'modules.force_health_booster'
---require 'modules.immersive_cargo_wagons.main'
---require 'modules.wave_defense.main'
---require 'modules.fjei.main'
---require 'modules.charging_station'
---require 'modules.nuclear_landmines'
---require 'modules.crawl_into_pipes'
---require 'modules.no_acid_puddles'
---require 'modules.simple_tags'
----------------------------------------------------------------
-
 ---------------- ENABLE MAPS HERE ----------------
 --![[North VS South Survival PVP, feed the opposing team's biters with science flasks. Disable Autostash, Group and Poll modules.]]--
 require 'maps.biter_battles_v2.main'
 
----------------------------------------------------------------
-
----------------- MORE MODULES HERE ----------------
---require 'modules.hidden_dimension.main'
---require 'modules.towny.main'
---require 'modules.rpg.main'
---require 'modules.rpg'
---require 'modules.trees_grow'
---require 'modules.trees_randomly_die'
----------------------------------------------------------------
-
----------------- MOSTLY TERRAIN LAYOUTS HERE ----------------
---require 'terrain_layouts.caves'
---require 'terrain_layouts.cone_to_east'
---require 'terrain_layouts.biters_and_resources_east'
---require 'terrain_layouts.scrap_01'
---require 'terrain_layouts.watery_world'
---require 'terrain_layouts.tree_01'
 ---------------------------------------------------------------
 
 if _DUMP_ENV then
