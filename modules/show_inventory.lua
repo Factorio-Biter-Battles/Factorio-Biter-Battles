@@ -123,6 +123,10 @@ local function close_player_inventory(player)
         return
     end
 
+    if not data.player_opened then
+        return
+    end
+
     stop_watching(player.index, data.player_opened.index)
 
     local gui = player.gui.screen
