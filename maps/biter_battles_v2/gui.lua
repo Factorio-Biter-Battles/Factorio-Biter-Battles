@@ -172,12 +172,16 @@ function Public.create_main_gui(player)
 		for food_name, tooltip in pairs(food_names) do
 			local s = t.add { type = "sprite-button", name = food_name, sprite = "item/" .. food_name, tooltip = tooltip}
 			gui_style(s, {minimal_height = 41, minimal_width = 41, padding = 0})
-			if global.active_special_games["disable_sciences"] then
-				s.enabled = not global.special_games_variables.disabled_food[food_name] 
+			if global.active_special_games["disable_sciences"] and global.special_games_variables.disabled_food[food_name] then
+				s.enabled = false
 				s.tooltip = "Disabled by special game"
 			end
 		end
 		local s = t.add { type = "sprite-button", name = "send_all", caption = "All", tooltip = "LMB - low to high, RMB - high to low"}
+		if global.active_special_games["disable_sciences"] then
+			s.enabled = false
+			s.tooltip = "Disabled by special game"
+		end
 		gui_style(s, {minimal_height = 41, minimal_width = 41, padding = 0, font_color = {r = 0.9, g = 0.9, b = 0.9}})
 		frame.add{type="line"}
 	end

@@ -87,6 +87,7 @@ function Public.initial_setup()
 		defines.input_action.change_active_quick_bar,
 		defines.input_action.clear_cursor,
 		defines.input_action.edit_permission_group,
+		defines.input_action.gui_checked_state_changed,
 		defines.input_action.gui_click,
 		defines.input_action.gui_confirmed,
 		defines.input_action.gui_elem_changed,

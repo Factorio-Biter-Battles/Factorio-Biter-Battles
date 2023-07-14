@@ -98,20 +98,20 @@ local valid_special_games = {
 		disable_sciences = {
 		name = {type = "label", caption = "Disable sciences", tooltip = "disable sciences that players wont be able to send."},
 		config = {
-			[1] = {name = "red", type = "checkbox", state = false},
-			[2] = {name = "1", type = "sprite", sprite = "item/automation-science-pack"},
-			[3] = {name = "green", type = "checkbox", state = false},
-			[4] = {name = "2", type = "sprite", sprite = "item/logistic-science-pack"},
-			[5] = {name = "gray", type = "checkbox", state = false},
-			[6] = {name = "3", type = "sprite", sprite = "item/military-science-pack"},
-			[7] = {name = "blue", type = "checkbox", state = false},
-			[8] = {name = "4", type = "sprite", sprite = "item/chemical-science-pack"},
-			[9] = {name = "purple", type = "checkbox",  state = false},
-			[10] = {name = "5", type = "sprite", sprite = "item/production-science-pack"},
-			[11] = {name = "yellow", type = "checkbox", state = false},
-			[12] = {name = "6", type = "sprite", sprite = "item/utility-science-pack"},
-			[13] = {name = "white", type = "checkbox", state = false},
-			[14] = {name = "7", type = "sprite", sprite = "item/space-science-pack"}
+			[1] = {name = "1", type = "sprite", sprite = "item/automation-science-pack"},
+			[2] = {name = "red", type = "checkbox", state = false},
+			[3] = {name = "2", type = "sprite", sprite = "item/logistic-science-pack"},
+			[4] = {name = "green", type = "checkbox", state = false},
+			[5] = {name = "3", type = "sprite", sprite = "item/military-science-pack"},
+			[6] = {name = "gray", type = "checkbox", state = false},
+			[7] = {name = "4", type = "sprite", sprite = "item/chemical-science-pack"},
+			[8] = {name = "blue", type = "checkbox", state = false},
+			[9] = {name = "5", type = "sprite", sprite = "item/production-science-pack"},
+			[10] = {name = "purple", type = "checkbox",  state = false},
+			[11] = {name = "6", type = "sprite", sprite = "item/utility-science-pack"},
+			[12] = {name = "yellow", type = "checkbox", state = false},
+			[13] = {name = "7", type = "sprite", sprite = "item/space-science-pack"},
+			[14] = {name = "white", type = "checkbox", state = false},
 		},
 		button = {name = "disable_sciences_apply", type = "button", caption = "Apply"}
 	}
@@ -317,7 +317,7 @@ local function generate_limited_lives(lives_limit)
 	game.print("Special game Limited lives: " .. special_game_description)
 end
 
-function generate_disable_sciences(packs)
+local function generate_disable_sciences(packs)
 
 	local disabled_food = {
 		["automation-science-pack"] = packs[1],
