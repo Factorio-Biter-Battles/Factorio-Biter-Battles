@@ -368,9 +368,9 @@ end
 local create_special_games_panel = (function(player, frame)
 	frame.clear()
 	frame.add{type = "label", caption = "Configure and apply special games here"}.style.single_line = false
-
+	local sp = frame.add{type = "scroll-pane", horizontal_scroll_policy = "never"}
 	for k, v in pairs(valid_special_games) do
-		local a = frame.add {type = "frame"}
+		local a = sp.add {type = "frame"}
 		a.style.width = 750
 		local table = a.add {name = k, type = "table", column_count = 3, draw_vertical_lines = true}
 		table.add(v.name).style.width = 100
