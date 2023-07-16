@@ -4,6 +4,8 @@ local Color = require 'utils.color_presets'
 local Public = {}
 global.active_special_games = {}
 global.special_games_variables = {}
+global.next_special_games = {}
+global.next_special_games_variables = {}
 
 local valid_special_games = {
 	--[[ 
@@ -103,6 +105,20 @@ local valid_special_games = {
 		button = {name = "limited_lives_apply", type = "button", caption = "Apply"}
 	},
 
+	mixed_ore_map = {
+		name = {type = "label", caption = "Mixed ore map", tooltip = "Covers the entire map with mixed ore. Takes effect after map restart"},
+		config = {
+			[1] = {name = "label1", type = "label", caption = "Type"},
+			[2] = {name = "type1", type = "drop-down", items = {"Mixed ore", "Checkerboard", "Vertical lines"}},
+			[3] = {name = "label2", type = "label", caption = "Size"},
+			[4] = {name = "size", type = "textfield", text = "", numeric = true, width = 40, tooltip = "Live empty for default"
+				.. "\nFor a Mixed ore, a higher value means lower features. Value range from 1 to 10, Default 9."
+				.. "\nFor Checkerboard its the size of the cell. Default 5"
+			},
+		},
+		button = {name = "mixed_ore_map_apply", type = "button", caption = "Apply"}
+	},
+
 	send_to_external_server = {
 		name = {type = "label", caption = "Send to external server", tooltip = "Sends all online players an invite to an external server.\nLeave empty to disable"},
 		config =  {
@@ -117,8 +133,12 @@ local valid_special_games = {
 	},
 }
 
-function Public.reset_active_special_games() for _, i in ipairs(global.active_special_games) do i = false end end
-function Public.reset_special_games_variables() global.special_games_variables = {} end
+function Public.reset_special_games()
+	global.active_special_games = global.next_special_games
+	global.special_games_variables = global.next_special_games_variables
+	global.next_special_games = {}
+	global.next_special_games_variables = {}
+end
 
 local function generate_turtle(moat_width, entrance_width, size_x, size_y)
 	game.print("Special game turtle is being generated!", Color.warning)
@@ -359,6 +379,29 @@ function Public.has_life(player_name)
 	return player_lives == nil or player_lives > 0
 end
 
+local function generate_mixed_ore_map(type, size)
+	if type then
+		if not size then
+			-- size not specified, set default falues
+			if type == 1 then
+				size = 9
+			elseif type == 2 then
+				size = 5
+			end
+		end
+		if type == 1 and size > 10 then
+			size = 10
+		end
+		global.next_special_games["mixed_ore_map"] = true
+		global.next_special_games_variables["mixed_ore_map"] = {
+			type = type,
+			size = size
+		}
+
+		game.print("Special game Mixed ore map is being scheluded. The special game will start after restarting the map!", Color.warning)
+	end
+end
+
 local function on_built_entity(event)
 	if not global.active_special_games["disabled_entities"] then return end
 	local entity = event.created_entity
@@ -508,6 +551,12 @@ local function on_gui_click(event)
 		local lives_limit = tonumber(config["lives_limit"].text)
 
 		generate_limited_lives(lives_limit)
+
+	elseif element.name == "mixed_ore_map_confirm" then
+		local type = tonumber(config["type1"].selected_index)
+		local size = tonumber(config["size"].text)
+
+		generate_mixed_ore_map(type, size)
 
 	elseif element.name == "send_to_external_server_btn" then
 		local address = config["address"].text

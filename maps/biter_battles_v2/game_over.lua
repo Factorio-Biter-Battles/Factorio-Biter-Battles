@@ -320,6 +320,7 @@ function Public.server_restart()
         local message = 'Map is restarting! '
         Server.to_discord_bold(table.concat {'*** ', message, ' ***'})
 
+
         Public.generate_new_map()
         return
     end
@@ -548,8 +549,7 @@ decrement_timer_token = Token.register(
 function Public.generate_new_map()
     game.speed = 1
     local prev_surface = global.bb_surface_name
-    Special_games.reset_active_special_games()
-    Special_games.reset_special_games_variables()
+    Special_games.reset_special_games()
     Init.tables()
     Init.playground_surface()
     Init.forces()
