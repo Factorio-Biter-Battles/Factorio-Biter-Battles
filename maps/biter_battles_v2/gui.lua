@@ -541,6 +541,19 @@ local function on_gui_click(event)
 	if name == "bb_view_players" then
 		global.bb_view_players[player.name] = true
 		Public.create_main_gui(player)
+	end	
+
+	if name == "reroll_yes" then 
+		if global.reroll_map_voting[player.name] ~= 1 then 
+			global.reroll_map_voting[player.name] = 1 
+			game.print(player.name .. " wants to reroll map ",{r = 0.1, g = 0.9, b = 0.0})
+		end
+	end
+	if name == "reroll_no" then 
+		if global.reroll_map_voting[player.name] ~= 0 then 
+			global.reroll_map_voting[player.name] = 0
+			game.print(player.name .. " wants to keep this map", {r = 0.9, g = 0.1, b = 0.1})
+		end		
 	end
 end
 

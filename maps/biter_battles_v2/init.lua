@@ -112,6 +112,7 @@ function Public.initial_setup()
 	}
 	for _, d in pairs(defs) do p.set_allows_action(d, true) end
 
+	global.reroll_time_limit = 1800
 	global.gui_refresh_delay = 0
 	global.game_lobby_active = true
 	global.bb_debug = false
@@ -121,6 +122,7 @@ function Public.initial_setup()
 		["only_admins_vote"] = false,		--Are only admins able to vote on the global difficulty?
 		--MAP SETTINGS--
 		["new_year_island"] = false,
+		["map_reroll_admin_disable"] = true,
 	}
 
 	--Disable Nauvis
@@ -189,6 +191,7 @@ function Public.tables()
 		global.bb_surface_name = "bb0"
 	end
 
+	global.reroll_map_voting = {}
 	global.bb_evolution = {}
 	global.bb_game_won_by_team = nil
 	global.bb_threat = {}
