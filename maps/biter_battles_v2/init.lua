@@ -85,6 +85,7 @@ function Public.initial_setup()
 		defines.input_action.activate_cut,
 		defines.input_action.activate_paste,
 		defines.input_action.change_active_quick_bar,
+		defines.input_action.change_active_item_group_for_filters,
 		defines.input_action.clear_cursor,
 		defines.input_action.edit_permission_group,
 		defines.input_action.gui_click,
