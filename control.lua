@@ -1,3 +1,12 @@
+
+function math.random_seeded(...)
+	if not global.random_generator_ then
+		global.random_generator_ = game.create_random_generator()
+	end
+    local a = global.random_generator_(...)
+    return(a)
+end
+
 require 'utils.data_stages'
 _LIFECYCLE = _STAGE.control -- Control stage
 _DEBUG = false

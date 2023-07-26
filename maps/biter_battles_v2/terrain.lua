@@ -10,7 +10,7 @@ local session = require 'utils.datastore.session_data'
 local spawn_ore = tables.spawn_ore
 local table_insert = table.insert
 local math_floor = math.floor
-local math_random = math.random
+local math_random = math.random_seeded
 local math_abs = math.abs
 local math_sqrt = math.sqrt
 
@@ -375,7 +375,7 @@ local function mixed_ore(surface, left_top_x, left_top_y)
 		for y = 0, 31, 1 do
 			local pos = {x = left_top_x + x, y = left_top_y + y}
 			if surface.can_place_entity({name = "iron-ore", position = pos}) then
-				local noise = GetNoise("bb_ore", pos, seed)
+				noise = GetNoise("bb_ore", pos, seed)
 				if noise > 0.72 then
 					local i = math_floor(noise * 25 + math_abs(pos.x) * 0.05) % 4 + 1
 					local amount = (math_random(800, 1000) + math_sqrt(pos.x ^ 2 + pos.y ^ 2) * 3) * mixed_ore_multiplier[i]
@@ -467,7 +467,7 @@ local function draw_grid_ore_patch(count, grid, name, surface, size, density)
 	-- ore patch on top of it. Grid is held by reference, so this function
 	-- is reentrant.
 	for i = 1, count, 1 do
-		local idx = math.random(1, #grid)
+		local idx = math_random(1, #grid)
 		local pos = grid[idx]
 		table.remove(grid, idx)
 
@@ -536,8 +536,8 @@ function Public.generate_spawn_ore(surface)
 	-- Calculate left_top position of a chunk. It will be used as origin
 	-- for ore drawing. Reassigns new coordinates to the grid.
 	for i, _ in ipairs(grid) do
-		grid[i][1] = grid[i][1] * 32 + math.random(-12, 12)
-		grid[i][2] = grid[i][2] * 32 + math.random(-24, -1)
+		grid[i][1] = grid[i][1] * 32 + math_random(-12, 12)
+		grid[i][2] = grid[i][2] * 32 + math_random(-24, -1)
 	end
 
 	for name, props in pairs(spawn_ore) do
