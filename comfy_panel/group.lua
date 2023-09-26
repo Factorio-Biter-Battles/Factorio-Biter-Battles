@@ -202,7 +202,7 @@ local function on_gui_text_changed(event)
 end
 
 local function alphanumeric(str)
-    return (string.match(str, '[^%w]') ~= nil)
+    return (string.match(str, '[^%w%s%p]') ~= nil)
 end
 
 local function on_gui_click(event)
@@ -249,6 +249,11 @@ local function on_gui_click(event)
 
             if string.len(new_group_description) > 128 then
                 player.print('Description is too long. 128 characters maximum.', {r = 0.90, g = 0.0, b = 0.0})
+                return
+            end
+
+            if this.tag_groups[new_group_name] ~= nil then
+                player.print('Group name is taken.', {r = 0.90, g = 0.0, b = 0.0})
                 return
             end
 

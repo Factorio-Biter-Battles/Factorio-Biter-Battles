@@ -1,6 +1,8 @@
 -- Biter Battles v2 -- by MewMew
 
 local Ai = require "maps.biter_battles_v2.ai"
+local AiStrikes = require "maps.biter_battles_v2.ai_strikes"
+local AiTargets = require "maps.biter_battles_v2.ai_targets"
 local Functions = require "maps.biter_battles_v2.functions"
 local Game_over = require "maps.biter_battles_v2.game_over"
 local Gui = require "maps.biter_battles_v2.gui"
@@ -44,12 +46,17 @@ end
 
 local function on_research_finished(event)
 	Functions.combat_balance(event)
-    if event.research.name == 'uranium-processing' then
-		event.research.force.technologies["uranium-ammo"].researched = true
-		event.research.force.technologies["kovarex-enrichment-process"].researched = true
-    elseif event.research.name == 'stone-wall' then
-		event.research.force.technologies["gate"].researched = true
-    end
+	
+	local name = event.research.name
+	local force = event.research.force
+	if name == 'uranium-processing' then
+		force.technologies["uranium-ammo"].researched = true
+		force.technologies["kovarex-enrichment-process"].researched = true
+	elseif name == 'stone-wall' then
+		force.technologies["gate"].researched = true
+	elseif name == 'rocket-silo' then
+		force.technologies['space-science-pack'].researched = true
+	end
 end
 
 local function on_console_chat(event)
@@ -60,13 +67,13 @@ local function on_built_entity(event)
 	Functions.no_landfill_by_untrusted_user(event)
 	Functions.no_turret_creep(event)
 	Terrain.deny_enemy_side_ghosts(event)
-	Functions.add_target_entity(event.created_entity)
+	AiTargets.start_tracking(event.created_entity)
 end
 
 local function on_robot_built_entity(event)
 	Functions.no_turret_creep(event)
 	Terrain.deny_construction_bots(event)
-	Functions.add_target_entity(event.created_entity)
+	AiTargets.start_tracking(event.created_entity)
 end
 
 local function on_robot_built_tile(event)
@@ -77,8 +84,13 @@ local function on_entity_died(event)
 	local entity = event.entity
 	if not entity.valid then return end
 	if Ai.subtract_threat(entity) then Gui.refresh_threat() end
+	AiTargets.stop_tracking(entity)
 	if Functions.biters_landfill(entity) then return end
 	Game_over.silo_death(event)
+end
+
+local function on_ai_command_completed(event)
+	if not event.was_distracted then AiStrikes.step(event.unit_number, event.result) end
 end
 
 local function getTagOutpostName(pos)
@@ -186,10 +198,11 @@ end
 
 local function on_marked_for_deconstruction(event)
 	if not event.entity.valid then return end
-	if event.entity.name == "fish" then event.entity.cancel_deconstruction(game.players[event.player_index].force.name) end
-	
-	if (game.players[event.player_index].force == game.forces.north and event.entity.position.y > 0) or (game.players[event.player_index].force == game.forces.south and event.entity.position.y < 0) then
-		event.entity.cancel_deconstruction(game.players[event.player_index].force.name)
+	if not event.player_index then return end
+	local force_name = game.get_player(event.player_index).force.name
+	if event.entity.name == "fish" then event.entity.cancel_deconstruction(force_name) return end
+	if (force_name == "north" and event.entity.position.y > 0) or (force_name == "south" and event.entity.position.y < 0) then
+		event.entity.cancel_deconstruction(force_name)
 	end
 end
 
@@ -202,6 +215,11 @@ end
 
 local function on_player_mined_entity(event)
 	Terrain.minable_wrecks(event)
+	AiTargets.stop_tracking(event.entity)
+end
+
+local function on_robot_mined_entity(event)
+	AiTargets.stop_tracking(event.entity)
 end
 
 local function on_chunk_generated(event)
@@ -282,12 +300,12 @@ local function on_area_cloned(event)
 	Mirror_terrain.invert_tiles(event)
 	Mirror_terrain.invert_decoratives(event)
 
-	-- Check chunks around southen silo to remove water tiles under stone-path.
+	-- Check chunks around southen silo to remove water tiles under refined-concrete.
 	-- Silo can be removed by picking bricks from under it in a situation where
-	-- stone-path tiles were placed directly onto water tiles. This scenario does
+	-- refined-concrete tiles were placed directly onto water tiles. This scenario does
 	-- not appear for north as water is removed during silo generation.
 	local position = event.destination_area.left_top
-	if position.y == 64 and math.abs(position.x) <= 64 then
+	if position.y >= 0 and position.y <= 192 and math.abs(position.x) <= 192 then
 		Mirror_terrain.remove_hidden_tiles(event)
 	end
 end
@@ -361,17 +379,10 @@ local function on_init()
 	Init.load_spawn()
 end
 
---By Maksiu1000 skip the last tech
-local unlock_satellite = function(event)
-    if event.research.name == 'rocket-silo' then
-		event.research.force.technologies['space-science-pack'].researched = true
-    end
-end
 
 local Event = require 'utils.event'
 Event.add(defines.events.on_rocket_launch_ordered, on_rocket_launch_ordered)
 Event.add(defines.events.on_area_cloned, on_area_cloned)
-Event.add(defines.events.on_research_finished, unlock_satellite)			--free silo space tech
 Event.add(defines.events.on_post_entity_died, Ai.schedule_reanimate)
 Event.add_event_filter(defines.events.on_post_entity_died, {
 	filter = "type",
@@ -382,11 +393,13 @@ Event.add(defines.events.on_built_entity, on_built_entity)
 Event.add(defines.events.on_chunk_generated, on_chunk_generated)
 Event.add(defines.events.on_console_chat, on_console_chat)
 Event.add(defines.events.on_entity_died, on_entity_died)
+Event.add(defines.events.on_ai_command_completed, on_ai_command_completed)
 Event.add(defines.events.on_gui_click, on_gui_click)
 Event.add(defines.events.on_marked_for_deconstruction, on_marked_for_deconstruction)
 Event.add(defines.events.on_player_built_tile, on_player_built_tile)
 Event.add(defines.events.on_player_joined_game, on_player_joined_game)
 Event.add(defines.events.on_player_mined_entity, on_player_mined_entity)
+Event.add(defines.events.on_robot_mined_entity, on_robot_mined_entity)
 Event.add(defines.events.on_research_finished, on_research_finished)
 Event.add(defines.events.on_robot_built_entity, on_robot_built_entity)
 Event.add(defines.events.on_robot_built_tile, on_robot_built_tile)
