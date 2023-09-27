@@ -419,6 +419,10 @@ local function respawn_silo(event)
 	global.rocket_silo[force_name] = entity
 end
 
+function log_to_db(message,appendBool)
+	game.write_file('logToDBgameResult',message,appendBool,0)
+	
+end
 function Public.silo_death(event)
     local entity = event.entity
     if not entity.valid then return end
@@ -481,6 +485,22 @@ function Public.silo_death(event)
         silo_kaboom(entity)
 
         freeze_all_biters(entity.surface)
+		if global.active_special_games["captain_mode"] then 
+			Server.send_special_game_state('[CAPTAIN-SPECIAL]')
+			game.print("should only log if game really started!")
+			log_to_db('>Game has ended\n',false)
+			log_to_db('[RefereeName]'..global.special_games_variables["captain_mode"]["refereeName"]..'\n',true)
+			log_to_db('[CaptainNorth]'..global.special_games_variables["captain_mode"]["captainList"][1]..'\n',true)
+			log_to_db('[CaptainSouth]'..global.special_games_variables["captain_mode"]["captainList"][2]..'\n',true)
+			local listPicks = table.concat(global.special_games_variables["captain_mode"]["stats"]["northPicks"],";")
+			log_to_db('[NorthTeam]'..listPicks..'\n',true)
+			listPicks = table.concat(global.special_games_variables["captain_mode"]["stats"]["southPicks"],";")
+			log_to_db('[SouthTeam]'..listPicks..'\n',true)
+			log_to_db('[Gamelength]'..game.ticks_played..'\n',true)
+			log_to_db('[StartTick]'..global.special_games_variables["captain_mode"]["stats"]["tickGameStarting"]..'\n',true)
+			log_to_db('[WinnerTeam]'..global.bb_game_won_by_team..'\n',true)
+			log_to_db('>End of log',true)
+		end
     end
 end
 
