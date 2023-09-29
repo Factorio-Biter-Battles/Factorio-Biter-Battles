@@ -3,6 +3,9 @@ local Score = require "comfy_panel.score"
 local Tables = require "maps.biter_battles_v2.tables"
 local fifo = require "maps.biter_battles_v2.fifo"
 local Blueprint = require 'maps.biter_battles_v2.blueprints'
+local Token = require 'utils.token'
+local Task = require 'utils.task'
+local Event = require 'utils.event'
 
 local Public = {}
 
@@ -122,6 +125,7 @@ function Public.initial_setup()
 		["only_admins_vote"] = false,		--Are only admins able to vote on the global difficulty?
 		--MAP SETTINGS--
 		["new_year_island"] = false,
+		["bb_map_reveal_toggle"] = true,
 	}
 
 	--Disable Nauvis
@@ -174,6 +178,38 @@ function Public.draw_structures()
 	Terrain.generate_silo(surface)
 	Terrain.draw_spawn_island(surface)
 	--Terrain.generate_spawn_goodies(surface)
+end
+
+local reveal_token = Token.register(
+    function()
+		local surface = game.surfaces[global.bb_surface_name]
+		local radius = 2000
+		game.forces["north"].chart(surface, {{0-radius, 500}, {0+radius, -500}}) 
+		game.forces["south"].chart(surface, {{0-radius, 500}, {0+radius, -500}}) 
+    end
+)
+
+local decrement_timer_token = Token.get_counter() + 1 -- predict what the token will look like
+decrement_timer_token = Token.register(
+    function()
+        local reveal_time_left = global.reveal_time_left - 1
+        if reveal_time_left > 0 then
+            Task.set_timeout_in_ticks(180, decrement_timer_token)
+            global.reveal_time_left = reveal_time_left
+        end
+    end
+)
+
+function Public.reveal_map()
+	if global.bb_settings["bb_map_reveal_toggle"] then
+		local surface = game.surfaces[global.bb_surface_name]
+		local radius = 2000
+		game.forces["north"].chart(surface, {{0-radius, 500}, {0+radius, -500}}) 
+		game.forces["south"].chart(surface, {{0-radius, 500}, {0+radius, -500}}) 
+		Task.set_timeout_in_ticks(10800, reveal_token)
+		global.reveal_time_left = 180
+		Task.set_timeout_in_ticks(180, decrement_timer_token)
+	end
 end
 
 function Public.tables()
