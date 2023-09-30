@@ -485,13 +485,13 @@ function Public.silo_death(event)
         silo_kaboom(entity)
 
         freeze_all_biters(entity.surface)
-		if global.active_special_games["captain_mode"] then 
+		if global.active_special_games["captain_mode"] and not global.special_games_variables["captain_mode"]["prepaPhase"] then 
+			game.print("Updating logs for the game")
 			Server.send_special_game_state('[CAPTAIN-SPECIAL]')
-			game.print("should only log if game really started!")
 			log_to_db('>Game has ended\n',false)
-			log_to_db('[RefereeName]'..global.special_games_variables["captain_mode"]["refereeName"]..'\n',true)
-			log_to_db('[CaptainNorth]'..global.special_games_variables["captain_mode"]["captainList"][1]..'\n',true)
-			log_to_db('[CaptainSouth]'..global.special_games_variables["captain_mode"]["captainList"][2]..'\n',true)
+			log_to_db('[RefereeName]'..global.special_games_variables["captain_mode"]["stats"]["InitialReferee"]..'\n',true)
+			log_to_db('[CaptainNorth]'..global.special_games_variables["captain_mode"]["stats"]["NorthInitialCaptain"]..'\n',true)
+			log_to_db('[CaptainSouth]'..global.special_games_variables["captain_mode"]["stats"]["SouthInitialCaptain"]..'\n',true)
 			local listPicks = table.concat(global.special_games_variables["captain_mode"]["stats"]["northPicks"],";")
 			log_to_db('[NorthTeam]'..listPicks..'\n',true)
 			listPicks = table.concat(global.special_games_variables["captain_mode"]["stats"]["southPicks"],";")

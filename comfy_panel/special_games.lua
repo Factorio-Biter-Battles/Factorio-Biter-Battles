@@ -1003,6 +1003,9 @@ local function start_captain_event()
 	end
 	global.special_games_variables["captain_mode"]["prepaPhase"] = false
 	global.special_games_variables["captain_mode"]["stats"]["tickGameStarting"] = game.ticks_played
+	global.special_games_variables["captain_mode"]["stats"]["NorthInitialCaptain"] = global.special_games_variables["captain_mode"]["captainList"][1]
+	global.special_games_variables["captain_mode"]["stats"]["SouthInitialCaptain"] = global.special_games_variables["captain_mode"]["captainList"][2]
+	global.special_games_variables["captain_mode"]["stats"]["InitialReferee"] = global.special_games_variables["captain_mode"]["refereeName"]
 	
 	local playerToClear = game.get_player(global.special_games_variables["captain_mode"]["captainList"][1])
 	if playerToClear.gui.top["captain_poll_team_ready_frame"] then playerToClear.gui.top["captain_poll_team_ready_frame"].destroy() end
