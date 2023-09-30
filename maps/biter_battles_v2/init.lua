@@ -113,6 +113,7 @@ function Public.initial_setup()
 	}
 	for _, d in pairs(defs) do p.set_allows_action(d, true) end
 
+	global.suspend_time_limit = 3600
 	global.gui_refresh_delay = 0
 	global.game_lobby_active = true
 	global.bb_debug = false
@@ -190,6 +191,10 @@ function Public.tables()
 		global.bb_surface_name = "bb0"
 	end
 
+	global.suspended_time = 36000
+	global.suspend_target = nil
+	global.suspend_voting = {}
+	global.suspended_players = {}
 	global.bb_evolution = {}
 	global.bb_game_won_by_team = nil
 	global.bb_threat = {}
