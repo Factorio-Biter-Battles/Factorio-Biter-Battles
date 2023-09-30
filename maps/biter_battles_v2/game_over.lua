@@ -334,6 +334,7 @@ function Public.server_restart()
                     e.destroy()
                 end
                 Gui.create_main_gui(player)
+				if player.gui.top.suspend_frame then player.gui.top.suspend_frame.destroy() end
             end
             game.reset_time_played()
             global.server_restart_timer = nil

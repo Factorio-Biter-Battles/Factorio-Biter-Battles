@@ -61,7 +61,12 @@ local function leave_corpse(player)
 end
 
 local function punish_player(playerSuspended)
-	leave_corpse(playerSuspended)
+	if playerSuspended.controller_type ~= defines.controllers.character then
+		playerSuspended.set_controller{type=defines.controllers.character,character=playerSuspended.surface.create_entity{name='character',force=playerSuspended.force,position=playerSuspended.position}}	
+	end
+	if playerSuspended.controller_type == defines.controllers.character then
+		leave_corpse(playerSuspended)
+	end
 	spectate(playerSuspended, false, false)
 end
 
@@ -87,11 +92,11 @@ local suspend_token = Token.register(
                 game.print(global.suspend_target .." suspended... (" .. result .. "%)")
 				global.suspended_players[global.suspend_target] = game.ticks_played
 				local playerSuspended = game.get_player(global.suspend_target)
-				if playerSuspended and playerSuspended.valid then
-					punish_player(playerSuspended)
-				end
 				global.suspend_target = nil
 				global.suspend_voting = {}
+				if playerSuspended and playerSuspended.valid and playerSuspended.surface.name ~= "gulag" then
+					punish_player(playerSuspended)
+				end
                 return
             end
         end
@@ -106,7 +111,9 @@ decrement_timer_token = Token.register(
     function()
         local suspend_time_left = global.suspend_time_left - 1
         for _, player in pairs(game.connected_players) do
-            player.gui.top.suspend_frame.suspend_table.children[1].caption = "Suspend ".. global.suspend_target .." ?\t" .. suspend_time_left .. "s"
+			if player.gui.top.suspend_frame then
+				player.gui.top.suspend_frame.suspend_table.children[1].caption = "Suspend ".. global.suspend_target .." ?\t" .. suspend_time_left .. "s"
+			end
         end
         if suspend_time_left > 0 then
             Task.set_timeout_in_ticks(60, decrement_timer_token)
@@ -128,6 +135,10 @@ local function suspend_player(cmd)
 		if victim and victim.valid then
 			if victim.force.name == "spectator" then
 				killer.print("You cant suspend a spectator", Color.warning)
+				return
+			end
+			if victim.surface.name == "gulag" then
+				killer.print("You cant suspend a player in jail", Color.warning)
 				return
 			end
 			global.suspend_target = victim.name
