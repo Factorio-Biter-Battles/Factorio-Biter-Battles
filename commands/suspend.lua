@@ -154,7 +154,7 @@ commands.add_command('suspend',
 local function on_player_joined_game(event)
 	local player = game.players[event.player_index]
 	if global.suspended_players[player.name] and (game.ticks_played - global.suspended_players[player.name]) < global.suspended_time then
-		punish_player(playerSuspended)		
+		punish_player(player)
 	end
 end
 
