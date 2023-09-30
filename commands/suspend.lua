@@ -141,6 +141,10 @@ local function suspend_player(cmd)
 				killer.print("You cant suspend a player in jail", Color.warning)
 				return
 			end
+			if killer.surface.name == "gulag" then
+				killer.print("You cant suspend a player while you are in jail", Color.warning)
+				return
+			end
 			global.suspend_target = victim.name
 			game.print(killer.name .. 	" has started a vote to suspend " .. global.suspend_target .. " , vote in top of screen")
 			Task.set_timeout_in_ticks(global.suspend_time_limit, suspend_token)
