@@ -710,7 +710,7 @@ local function generate_captain_mode(refereeName,autoTrust,captainKick,pickingMo
 		captainGroupAllowed = false
 	end
 	
-	global.special_games_variables["captain_mode"] = {["captainList"] = {}, ["refereeName"] = refereeName, ["listPlayers"] = {}, ["listSpectators"] = {}, ["listOfPlayersWhoDidntVoteForRoleYet"]={},["listTeamReadyToPlay"] = {}, ["lateJoiners"] = false, ["prepaPhase"] = true, ["pickingPhase"] = false, ["autoTrust"] = autoTrust,["captainKick"] = captainKick,["pickingModeAlternateBasic"] = pickingMode,["firstPick"] = true, ["blacklistLateJoin"]={}, ["listPlayersWhoAreNotNewToCurrentMatch"]={},["captainGroupAllowed"]=captainGroupAllowed,["groupLimit"]=tonumber(groupLimit),["bonusPickCptOne"]=0,["bonusPickCptTwo"]=0,["stats"]={["northPicks"]={},["southPicks"]={},["tickGameStarting"]=0}}
+	global.special_games_variables["captain_mode"] = {["captainList"] = {}, ["refereeName"] = refereeName, ["listPlayers"] = {}, ["listSpectators"] = {}, ["listOfPlayersWhoDidntVoteForRoleYet"]={},["listTeamReadyToPlay"] = {}, ["lateJoiners"] = false, ["prepaPhase"] = true, ["pickingPhase"] = false, ["autoTrust"] = autoTrust,["captainKick"] = captainKick,["pickingModeAlternateBasic"] = pickingMode,["firstPick"] = true, ["blacklistLateJoin"]={}, ["listPlayersWhoAreNotNewToCurrentMatch"]={},["captainGroupAllowed"]=captainGroupAllowed,["groupLimit"]=tonumber(groupLimit),["bonusPickCptOne"]=0,["bonusPickCptTwo"]=0,["stats"]={["northPicks"]={},["southPicks"]={},["tickGameStarting"]=0,["playerPlaytimes"]={},["playerSessionStartTimes"]={}}}
 	global.active_special_games["captain_mode"] = true
 	if game.get_player(global.special_games_variables["captain_mode"]["refereeName"]) == nil then
 		game.print("Event captain aborted, referee is not a player connected.. Referee name of player was : ".. global.special_games_variables["captain_mode"]["refereeName"])
@@ -1019,6 +1019,12 @@ local function start_captain_event()
 	generate_vs_text_rendering()
 	generateGenericRenderingCaptain()
 	generateRendering("captainLineEighteen","Want to play ? Ask to join a team!",0,-9,1,1,1,1,3,"heading-1")
+	
+	for _, player in pairs(game.connected_players) do
+		if player.force.name == "north" or player.force.name == "south" then
+			global.special_games_variables["captain_mode"]["stats"]["playerSessionStartTimes"][player.name] = game.ticks_played;
+		end
+	end
 end
 
 local function allow_vote()
@@ -1027,7 +1033,6 @@ local function allow_vote()
             global.difficulty_player_votes = {}
 			game.print('[font=default-large-bold]Difficulty voting is opened for 3 minutes![/font]', Color.cyan)
 end
-
 
 local function group_system_pick(player,playerPicked,captainChosen)
 	if is_player_in_group_system(playerPicked) then
@@ -1525,6 +1530,28 @@ local function on_player_died(event)
 	)
 end
 
+local function captain_log_start_time_player(player)
+	if global.special_games_variables["captain_mode"] ~=nil and (player.force.name == "south" or player.force.name == "north") and not global.special_games_variables["captain_mode"]["prepaPhase"] then
+		if not global.special_games_variables["captain_mode"]["stats"]["playerSessionStartTimes"][player.name] then
+			global.special_games_variables["captain_mode"]["stats"]["playerSessionStartTimes"][player.name] = game.ticks_played
+		end
+	end
+end
+
+function Public.captain_log_end_time_player(player)
+	if global.special_games_variables["captain_mode"] ~=nil and not global.special_games_variables["captain_mode"]["prepaPhase"] then
+		if global.special_games_variables["captain_mode"]["stats"]["playerSessionStartTimes"][player.name] then
+			local sessionTime = game.ticks_played - global.special_games_variables["captain_mode"]["stats"]["playerSessionStartTimes"][player.name]
+			if global.special_games_variables["captain_mode"]["stats"]["playerPlaytimes"][player.name] then
+				global.special_games_variables["captain_mode"]["stats"]["playerPlaytimes"][player.name] = global.special_games_variables["captain_mode"]["stats"]["playerPlaytimes"][player.name] + sessionTime
+			else
+				global.special_games_variables["captain_mode"]["stats"]["playerPlaytimes"][player.name] = sessionTime
+			end
+			global.special_games_variables["captain_mode"]["stats"]["playerSessionStartTimes"][player.name] = nil
+		end
+	end
+end
+
 local function on_player_joined_game(event)
     local player = game.players[event.player_index]
 	if global.special_games_variables["captain_mode"] ~=nil and not global.special_games_variables["captain_mode"]["listPlayersWhoAreNotNewToCurrentMatch"][player.name] then
@@ -1535,6 +1562,22 @@ local function on_player_joined_game(event)
 		"Yes", "captain_yes_wanna_play_new_to_current_match",
 		"No", "captain_no_wanna_play_new_to_current_match",
 		nil,nil)
+	end
+	
+	captain_log_start_time_player(player)
+end
+
+local function on_player_left_game(event)
+    local player = game.players[event.player_index]
+	Public.captain_log_end_time_player(player)
+end
+
+local function on_player_changed_force(event)
+    local player = game.players[event.player_index]
+	if player.force.name == "spectator" then
+		Public.captain_log_end_time_player(player)
+	else
+		captain_log_start_time_player(player)
 	end
 end
 
@@ -1757,5 +1800,7 @@ Event.add(defines.events.on_marked_for_upgrade, on_marked_for_upgrade)
 Event.add(defines.events.on_pre_ghost_upgraded, on_pre_ghost_upgraded)
 Event.add(defines.events.on_player_died, on_player_died)
 Event.add(defines.events.on_player_joined_game, on_player_joined_game)
+Event.add(defines.events.on_player_left_game,on_player_left_game)
+Event.add(defines.events.on_player_changed_force,on_player_changed_force)
 return Public
 
