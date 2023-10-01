@@ -1257,6 +1257,7 @@ local function on_gui_click(event)
 				local indexPlayer = index[lastPlayerToSend.name]
 				table.remove(global.special_games_variables["captain_mode"]["listPlayers"],indexPlayer)
 				game.print('[font=default-large-bold]All late joiners were picked by captains[/font]', Color.cyan)
+				global.special_games_variables["captain_mode"]["pickingPhase"] = false
 			else
 				poll_alternate_picking(game.get_player(global.special_games_variables["captain_mode"]["captainList"][1]))
 			end
@@ -1283,6 +1284,7 @@ local function on_gui_click(event)
 				local indexPlayer = index[lastPlayerToSend.name]
 				table.remove(global.special_games_variables["captain_mode"]["listPlayers"],indexPlayer)
 				game.print('[font=default-large-bold]All late joiners were picked by captains[/font]', Color.cyan)
+				global.special_games_variables["captain_mode"]["pickingPhase"] = false
 			else
 				poll_alternate_picking(game.get_player(global.special_games_variables["captain_mode"]["captainList"][2]))
 			end
@@ -1310,6 +1312,7 @@ local function on_gui_click(event)
 				local indexPlayer = index[lastPlayerToSend.name]
 				table.remove(global.special_games_variables["captain_mode"]["listPlayers"],indexPlayer)
 				game.print('[font=default-large-bold]All late joiners were picked by captains[/font]', Color.cyan)
+				global.special_games_variables["captain_mode"]["pickingPhase"] = false
 			else
 				poll_alternate_picking(game.get_player(global.special_games_variables["captain_mode"]["captainList"][captainChosen]))
 			end
@@ -1366,6 +1369,7 @@ local function on_gui_click(event)
 				poll_pickLateJoiners(refPlayer)
 			else
 				game.print('[font=default-large-bold]All late joiners were picked by captains[/font]', Color.cyan)
+				global.special_games_variables["captain_mode"]["pickingPhase"] = false
 			end
 		else
 			if player.name == game.get_player(global.special_games_variables["captain_mode"]["captainList"][1]).name then
