@@ -83,25 +83,27 @@ local suspend_token = Token.register(
         -- count votes
         local total_votes = table.size(global.suspend_voting)
         local result = 0
-        if total_votes > 0 then
-            for _, vote in pairs(global.suspend_voting) do
-                result = result + vote
-            end
-            result = math.floor( 100*result / total_votes )
-            if result >= 75 and global.suspend_target ~= nil then
-                game.print(global.suspend_target .." suspended... (" .. result .. "%)")
-				global.suspended_players[global.suspend_target] = game.ticks_played
-				local playerSuspended = game.get_player(global.suspend_target)
-				global.suspend_target = nil
-				global.suspend_voting = {}
-				if playerSuspended and playerSuspended.valid and playerSuspended.surface.name ~= "gulag" then
-					punish_player(playerSuspended)
+		if global.suspend_target ~= nil then
+			if total_votes > 0 then
+				for _, vote in pairs(global.suspend_voting) do
+					result = result + vote
 				end
-                return
-            end
-        end
-        game.print("Vote to suspend "..global.suspend_target.." has failed (" .. result .. "%)")
-		global.suspend_target = nil
+				result = math.floor( 100*result / total_votes )
+				if result >= 75 then
+					game.print(global.suspend_target .." suspended... (" .. result .. "%)")
+					global.suspended_players[global.suspend_target] = game.ticks_played
+					local playerSuspended = game.get_player(global.suspend_target)
+					global.suspend_target = nil
+					global.suspend_voting = {}
+					if playerSuspended and playerSuspended.valid and playerSuspended.surface.name ~= "gulag" then
+						punish_player(playerSuspended)
+					end
+					return
+				end
+			end
+			game.print("Vote to suspend "..global.suspend_target.." has failed (" .. result .. "%)")
+			global.suspend_target = nil
+		end
 		global.suspend_voting = {}
     end
 )
