@@ -6,27 +6,28 @@ local Event = require 'utils.event'
 local gui_style = require 'utils.utils'.gui_style
 
 local function draw_suspend_gui(player)
-    if player.gui.top.suspend_frame then return end
-    local f = player.gui.top.add{type = "frame", name = "suspend_frame"}
-    gui_style(f, {height = 38, padding = 0})
+	player.gui.top.suspend_frame then return end
+	if global.suspend_target == nil then return end
+	local f = player.gui.top.add{type = "frame", name = "suspend_frame"}
+	gui_style(f, {height = 38, padding = 0})
 
-    local t = f.add{type = "table", name = "suspend_table", column_count = 3, vertical_centering = true}
-    local l = t.add{type = "label", caption = "Suspend "..global.suspend_target.." ?\t" .. global.suspend_time_left .. "s"}
-    gui_style(l, {font = "heading-2", font_color = {r = 0.88, g = 0.55, b = 0.11}, width = 210})
+	local t = f.add{type = "table", name = "suspend_table", column_count = 3, vertical_centering = true}
+	local l = t.add{type = "label", caption = "Suspend "..global.suspend_target.." ?\t" .. global.suspend_time_left .. "s"}
+	gui_style(l, {font = "heading-2", font_color = {r = 0.88, g = 0.55, b = 0.11}, width = 210})
 
-    local b = t.add { type = "sprite-button", caption = "Yes", name = "suspend_yes" }
-    gui_style(b, {width = 50, height = 28 , font = "heading-2", font_color = {r = 0.1, g = 0.9, b = 0.0}} )
+	local b = t.add { type = "sprite-button", caption = "Yes", name = "suspend_yes" }
+	gui_style(b, {width = 50, height = 28 , font = "heading-2", font_color = {r = 0.1, g = 0.9, b = 0.0}} )
 
-    b = t.add { type = "sprite-button", caption = "No", name = "suspend_no" }
-    gui_style(b, {width = 50, height = 28 , font = "heading-2", font_color = {r = 0.9, g = 0.1, b = 0.1}} )
+	b = t.add { type = "sprite-button", caption = "No", name = "suspend_no" }
+	gui_style(b, {width = 50, height = 28 , font = "heading-2", font_color = {r = 0.9, g = 0.1, b = 0.1}} )
 end
 
 local suspend_buttons_token = Token.register(
-    -- create buttons for joining players
-    function(event)
-        local player = game.get_player(event.player_index)
-        draw_suspend_gui(player)
-    end
+	-- create buttons for joining players
+	function(event)
+		local player = game.get_player(event.player_index)
+		draw_suspend_gui(player)
+	end
 )
 
 local function leave_corpse(player)
