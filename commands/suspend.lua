@@ -88,7 +88,7 @@ local suspend_token = Token.register(
                 result = result + vote
             end
             result = math.floor( 100*result / total_votes )
-            if result >= 75 then
+            if result >= 75 and global.suspend_target ~= nil then
                 game.print(global.suspend_target .." suspended... (" .. result .. "%)")
 				global.suspended_players[global.suspend_target] = game.ticks_played
 				local playerSuspended = game.get_player(global.suspend_target)
@@ -111,11 +111,11 @@ decrement_timer_token = Token.register(
     function()
         local suspend_time_left = global.suspend_time_left - 1
         for _, player in pairs(game.connected_players) do
-			if player.gui.top.suspend_frame then
+			if player.gui.top.suspend_frame and global.suspend_target ~= nil then
 				player.gui.top.suspend_frame.suspend_table.children[1].caption = "Suspend ".. global.suspend_target .." ?\t" .. suspend_time_left .. "s"
 			end
         end
-        if suspend_time_left > 0 then
+        if suspend_time_left > 0 and global.suspend_target ~= nil then
             Task.set_timeout_in_ticks(60, decrement_timer_token)
             global.suspend_time_left = suspend_time_left
         end
