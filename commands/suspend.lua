@@ -150,7 +150,7 @@ local function suspend_player(cmd)
 				return
 			end
 			if global.suspend_token_running then
-					killer.print("A suspend was just starting before restart, please wait 60s maximum to avoid bugs", Color.warning)
+					killer.print("A suspend was just started before restart, please wait 60s maximum to avoid bugs", Color.warning)
 				return
 			end
 			global.suspend_target = victim.name
