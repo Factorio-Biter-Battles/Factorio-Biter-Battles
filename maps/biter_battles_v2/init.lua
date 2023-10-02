@@ -182,21 +182,12 @@ end
 
 local reveal_token = Token.register(
     function()
-		local surface = game.surfaces[global.bb_surface_name]
-		local radius = 2000
-		game.forces["north"].chart(surface, {{0-radius, 500}, {0+radius, -500}}) 
-		game.forces["south"].chart(surface, {{0-radius, 500}, {0+radius, -500}}) 
-    end
-)
-
-local decrement_timer_token = Token.get_counter() + 1 -- predict what the token will look like
-decrement_timer_token = Token.register(
-    function()
-        local reveal_time_left = global.reveal_time_left - 1
-        if reveal_time_left > 0 then
-            Task.set_timeout_in_ticks(180, decrement_timer_token)
-            global.reveal_time_left = reveal_time_left
-        end
+		if global.bb_settings["bb_map_reveal_toggle"] then
+			local surface = game.surfaces[global.bb_surface_name]
+			local radius = 2000
+			game.forces["north"].chart(surface, {{0-radius, 500}, {0+radius, -500}})
+			game.forces["south"].chart(surface, {{0-radius, 500}, {0+radius, -500}})
+		end
     end
 )
 
@@ -207,8 +198,6 @@ function Public.reveal_map()
 		game.forces["north"].chart(surface, {{0-radius, 500}, {0+radius, -500}}) 
 		game.forces["south"].chart(surface, {{0-radius, 500}, {0+radius, -500}}) 
 		Task.set_timeout_in_ticks(10800, reveal_token)
-		global.reveal_time_left = 180
-		Task.set_timeout_in_ticks(180, decrement_timer_token)
 	end
 end
 

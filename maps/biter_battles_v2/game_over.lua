@@ -326,8 +326,8 @@ function Public.server_restart()
         Init.forces()
         Init.draw_structures()
         Gui.reset_tables_gui()
-		Init.load_spawn()
-		Init.reveal_map()
+        Init.load_spawn()
+        Init.reveal_map()
 
             for _, player in pairs(game.players) do
                 Functions.init_player(player)
