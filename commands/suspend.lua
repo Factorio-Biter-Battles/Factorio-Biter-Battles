@@ -6,7 +6,7 @@ local Event = require 'utils.event'
 local gui_style = require 'utils.utils'.gui_style
 
 local function draw_suspend_gui(player)
-	player.gui.top.suspend_frame then return end
+	if player.gui.top.suspend_frame then return end
 	if global.suspend_target == nil then return end
 	local f = player.gui.top.add{type = "frame", name = "suspend_frame"}
 	gui_style(f, {height = 38, padding = 0})
