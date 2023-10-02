@@ -91,7 +91,7 @@ local suspend_token = Token.register(
 					result = result + vote
 				end
 				result = math.floor( 100*result / total_votes )
-				if result >= 75 then
+				if result >= 75 and total_votes > 1 then
 					game.print(global.suspend_target .." suspended... (" .. result .. "%)")
 					global.suspended_players[global.suspend_target] = game.ticks_played
 					local playerSuspended = game.get_player(global.suspend_target)
@@ -103,7 +103,11 @@ local suspend_token = Token.register(
 					return
 				end
 			end
-			game.print("Vote to suspend "..global.suspend_target.." has failed (" .. result .. "%)")
+			if total_votes == 1 and result == 100 then
+				game.print("Vote to suspend "..global.suspend_target.." has failed because only 1 player voted, need at least 2 votes")
+			else
+				game.print("Vote to suspend "..global.suspend_target.." has failed (" .. result .. "%)")
+			end
 			global.suspend_target = nil
 		end
 		global.suspend_voting = {}
