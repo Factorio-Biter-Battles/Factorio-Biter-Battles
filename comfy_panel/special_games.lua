@@ -580,7 +580,6 @@ local function on_gui_click(event)
 		end
 		global.special_games_variables.send_to_external_server = {address = address, name = name, description = description}
 		Event.add_removable(defines.events.on_player_joined_game, send_to_external_server_handler)
-	end
 
 	elseif element.name == "disable_sciences_confirm" then
 		local packs = {
