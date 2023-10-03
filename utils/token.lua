@@ -21,6 +21,11 @@ function Token.register(var)
 
     return counter
 end
+--- Returns current counter
+-- Helpful for recurrent functions
+function Token.get_counter()
+    return counter
+end
 
 function Token.get(token_id)
     return tokens[token_id]
