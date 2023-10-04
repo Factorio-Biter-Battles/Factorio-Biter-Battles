@@ -162,6 +162,7 @@ local functions = {
 			get_actor(event, '{New Year Island}', "New Year island has been disabled!", true)
 		end
 	end,
+  
 	["bb_map_reveal_toggle"] = function(event)
 		if event.element.switch_state == "left" then
 			global.bb_settings['bb_map_reveal_toggle'] = true
@@ -169,6 +170,16 @@ local functions = {
 		else
 			global.bb_settings['bb_map_reveal_toggle'] = false
 			game.print("Reveal map at start has been disabled!")
+		end
+	end,
+  
+	["bb_map_reroll_toggle"] = function(event)
+		if event.element.switch_state == "left" then
+			global.bb_settings.map_reroll = true
+			game.print("Map Reroll is enabled!")
+		else
+			global.bb_settings.map_reroll = false
+			game.print("Map Reroll is disabled!")
 		end
 	end,
 }
@@ -503,6 +514,13 @@ local build_config_gui = (function(player, frame)
 			local switch_state = "right"
 			if global.bb_settings.only_admins_vote then switch_state = "left" end
 			local switch = add_switch(scroll_pane, switch_state, "bb_only_admins_vote", "Admin Vote", "Only admins can vote for map difficulty. Clears all currently existing votes.")
+			if not admin then switch.ignored_by_interaction = true end
+			
+			scroll_pane.add({type = 'line'})
+				
+			local switch_state = "right"	
+            if global.bb_settings.map_reroll then switch_state = "left" end
+			local switch = add_switch(scroll_pane, switch_state, "bb_map_reroll_toggle", "Map Reroll", "Enables map reroll feature.")
 			if not admin then switch.ignored_by_interaction = true end
 			
 			scroll_pane.add({type = 'line'})
