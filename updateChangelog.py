@@ -60,12 +60,12 @@ for line in lines:
         for lineNew in linesnewLogs:
             formatedLine = lineNew.split(";")
             if "[HIDDEN]" not in formatedLine[1]:
-                f.write("table.insert(changelog_change,\"" + formatedLine[0].rstrip("\n").replace('"', "'") + "\")\n")
-                f.write("table.insert(changelog_change,\"" + formatedLine[1].rstrip("\n").replace('"', "'") + "\")\n")
+                f.write("	table.insert(changelog_change,\"" + formatedLine[0].rstrip("\n").replace('"', "'") + "\")\n")
+                f.write("	table.insert(changelog_change,\"" + formatedLine[1].rstrip("\n").replace('"', "'") + "\")\n")
                 cleanedName = formatedLine[2].rstrip("\n").replace('"', "'")
                 if cleanedName in gitNameToFactorioUsername:
                     cleanedName = gitNameToFactorioUsername[cleanedName]
-                f.write("table.insert(changelog_change,\"" + cleanedName + "\")\n")
+                f.write("	table.insert(changelog_change,\"" + cleanedName + "\")\n")
     if "table.insert(changelog_change" not in line:
         f.write(line)
 f.close()
