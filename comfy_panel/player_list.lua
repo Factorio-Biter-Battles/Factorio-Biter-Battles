@@ -15,7 +15,7 @@ Minor changes by ~~~Gerkiz~~~
 local Event = require 'utils.event'
 local Where = require 'commands.where'
 local Session = require 'utils.datastore.session_data'
-local Jailed = require 'utils.datastore.jail_data'
+local Jail = require 'maps.biter_battles_v2.jail'
 local Tabs = require 'comfy_panel.main'
 local Global = require 'utils.global'
 
@@ -391,7 +391,7 @@ local function player_list_show(player, frame, sort_by)
     frame.clear()
     frame.style.padding = 8
     local play_table = Session.get_trusted_table()
-    local jailed = Jailed.get_jailed_table()
+    local jailed = Jail.get_jailed_table()
 
     -- Header management
     local t = frame.add {type = 'table', name = 'player_list_panel_header_table', column_count = 5}

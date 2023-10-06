@@ -8,7 +8,6 @@ local Global = require 'utils.global'
 local Utils = require 'utils.core'
 local Color = require 'utils.color_presets'
 local Server = require 'utils.server'
-local Jail = require 'utils.datastore.jail_data'
 local pool = require 'maps.biter_battles_v2.pool'
 
 local Public = {}
@@ -47,7 +46,6 @@ local this = {
     do_not_check_trusted = true,
     enable_autokick = false,
     enable_autoban = false,
-    enable_jail = false,
     enable_capsule_warning = false,
     enable_capsule_cursor_warning = false,
     required_playtime = 2592000,
@@ -162,31 +160,6 @@ local function damage_player(player, kill, print_to_all)
             game.print(player.name .. msg, Color.yellow)
             return
         end
-    end
-end
-
-local function do_action(player, prefix, msg, ban_msg, kill)
-    if not prefix or not msg or not ban_msg then
-        return
-    end
-    kill = kill or false
-
-    damage_player(player, kill)
-    Utils.action_warning(prefix, msg)
-
-    if this.players_warned[player.index] == 2 then
-        if this.enable_autoban then
-            Server.ban_sync(player.name, ban_msg, '<script>')
-        end
-    elseif this.players_warned[player.index] == 1 then
-        this.players_warned[player.index] = 2
-        if this.enable_jail then
-            Jail.try_ul_data(player, true, 'script')
-        elseif this.enable_autokick then
-            game.kick_player(player, msg)
-        end
-    else
-        this.players_warned[player.index] = 1
     end
 end
 
@@ -769,17 +742,6 @@ function Public.enable_capsule_cursor_warning(value)
     return this.enable_capsule_cursor_warning
 end
 
---- If the script should jail a person instead of kicking them
----@param value <string>
-function Public.enable_jail(value)
-    if value then
-        this.enable_jail = value
-    else
-        this.enable_jail = false
-    end
-
-    return this.enable_jail
-end
 
 --- Defines what the threshold for amount of explosives in chest should be - logged or not.
 ---@param value <string>

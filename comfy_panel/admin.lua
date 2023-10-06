@@ -1,7 +1,7 @@
 --antigrief things made by mewmew
 
 local Event = require 'utils.event'
-local Jailed = require 'utils.datastore.jail_data'
+local Jail = require 'maps.biter_battles_v2.jail'
 local Tabs = require 'comfy_panel.main'
 local Server = require 'utils.server'
 local Color = require 'utils.color_presets'
@@ -13,20 +13,6 @@ local function admin_only_message(str)
             player.print('Admins-only-message: ' .. str, {r = 0.88, g = 0.88, b = 0.88})
         end
     end
-end
-
-local function jail(player, source_player)
-    if player.name == source_player.name then
-        return player.print("You can't select yourself!", {r = 1, g = 0.5, b = 0.1})
-    end
-    Jailed.try_ul_data(player.name, true, source_player.name)
-end
-
-local function free(player, source_player)
-    if player.name == source_player.name then
-        return player.print("You can't select yourself!", {r = 1, g = 0.5, b = 0.1})
-    end
-    Jailed.try_ul_data(player.name, false, source_player.name)
 end
 
 local bring_player_messages = {
@@ -373,8 +359,8 @@ local create_admin_panel = (function(player, frame)
 end)
 
 local admin_functions = {
-    ['jail'] = jail,
-    ['free'] = free,
+    ['jail'] = Jail.jail,
+    ['free'] = Jail.free,
     ['bring_player'] = bring_player,
     ['spank'] = spank,
     ['damage'] = damage,
@@ -567,36 +553,6 @@ commands.add_command("kill", "Kill a player. Usage: /kill <name>", function(cmd)
 		killer.print("Usage: /kill <name>", Color.warning)
 	end
 end)
-
-commands.add_command("punish", "Kill and ban a player. Usage: /punish <name> <reason>", function(cmd)
-	if not cmd.player_index then return end
-	local punisher = game.get_player(cmd.player_index)
-	if not punisher then return end
-	local t = {}
-	local message
-	if punisher.admin and cmd.parameter then
-		for i in string.gmatch(cmd.parameter, '%S+') do t[#t + 1] = i end
-		local offender = game.get_player(t[1])
-		table.remove(t, 1)
-		message = table.concat(t, ' ')
-		if offender.valid and string.len(message) > 5 then
-			Server.to_discord_embed(offender.name .. " was banned by " .. punisher.name .. ". " .. "Reason: " .. message)
-			message = message .. " Appeal on discord. Link on biterbattles.org", Color.warning
-			if offender.force.name == "spectator" then join_team(offender, global.chosen_team[offender.name], true) end -- switches offender to their team if he's spectating
-			kill(offender, punisher)
-			game.ban_player(offender, message)
-		elseif not offender.valid then
-			punisher.print("Invalid name", Color.warning)
-		else
-			punisher.print("No valid reason given, or reason is too short", Color.warning)
-		end
-	elseif not punisher.admin then
-		punisher.print("This is admin only command", Color.warning)
-	else
-		punisher.print("Usage: /punish <name> <reason>", Color.warning)
-	end
-end)
-        
 
 Event.add(defines.events.on_gui_click, on_gui_click)
 Event.add(defines.events.on_gui_selection_state_changed, on_gui_selection_state_changed)

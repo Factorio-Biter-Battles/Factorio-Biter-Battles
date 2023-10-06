@@ -119,12 +119,6 @@ function Public.initial_setup()
 	end
 	p.set_allows_action(defines.input_action.write_to_console, true)
 
-	p = game.permissions.create_group("jailed")
-	for k, v in pairs(defs) do
-		p.set_allows_action(v, false)
-	end
-	p.set_allows_action(defines.input_action.write_to_console, true)
-
 	global.gui_refresh_delay = 0
 	global.game_lobby_active = true
 	global.bb_debug = false
