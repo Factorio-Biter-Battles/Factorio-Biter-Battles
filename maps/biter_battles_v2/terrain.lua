@@ -214,7 +214,9 @@ local function generate_starting_area(pos, surface)
 		return
 	end
 
-	if surface.can_place_entity({name = "wooden-chest", position = pos}) and surface.can_place_entity({name = "coal", position = pos}) then
+	if surface.can_place_entity({name = "wooden-chest", position = pos}) 
+		and (surface.can_place_entity({name = "coal", position = pos}) or global.active_special_games['mixed_ore_map'])
+	then
 		local noise_2 = Functions.get_noise(3, pos)
 		if noise_2 < 0.40 then
 			if noise_2 > -0.40 then
