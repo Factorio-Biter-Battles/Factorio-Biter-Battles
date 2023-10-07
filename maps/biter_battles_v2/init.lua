@@ -220,7 +220,6 @@ function Public.tables()
 	global.unit_spawners.south_biters = {}
 	global.ai_strikes = {}
 	global.ai_targets = {}
-
 	global.player_data_afk = {}
 	global.max_group_size_initial = 300							--Maximum unit group size for all biters at start, just used as a reference, doesnt change initial group size.
 	global.max_group_size = {}
