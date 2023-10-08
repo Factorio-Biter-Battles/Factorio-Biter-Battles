@@ -575,6 +575,7 @@ function Public.generate_new_map()
         end
         Task.set_timeout_in_ticks(60, decrement_timer_token)
     end
+    Init.starter_items()
 end
 
 Event.add(defines.events.on_console_chat, chat_with_everyone)

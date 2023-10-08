@@ -422,4 +422,70 @@ function Public.forces()
 
 end
 
+
+function Public.starter_items()
+	local surface = game.surfaces[global.bb_surface_name]
+	local item_table = {
+		[1] = {
+			["boiler"]=5,
+			["steam-engine"]=10,
+			["offshore-pump"]=1,
+			["pipe"]=10,
+			["pipe-to-ground"]=10,
+			["burner-inserter"]=5,
+		},
+		[2] = {
+			["lab"]=2,
+			["automation-science-pack"]=10,
+		},
+		[3] = {
+			["grenade"]=15,
+			["firearm-magazine"]=25,
+			["gun-turret"]=5,
+			["raw-fish"]=50,
+		},
+		[4] = {
+			["burner-mining-drill"]=20,
+			["stone-furnace"]=50,
+			["coal"]=200,
+		},
+		[5] = {
+			["electric-mining-drill"]=30,
+			["transport-belt"]=200,
+			["inserter"]=50,
+			["assembling-machine-1"]=10,
+		},
+		[6] = {
+			["iron-plate"]=100,
+			["copper-plate"]=100,
+			["wood"]=100,
+			["electronic-circuit"]=100,
+		},
+	}
+	local x = -6
+	
+	for _, boxes in pairs(item_table) do
+		game.print(boxes)
+		for i=-1,1,2 do 
+			local chest = surface.create_entity {
+				name = "wooden-chest",
+				position = {x, 44 *i },
+				force = "neutral",
+				fast_replace = true
+			}
+			-- chest.minable = false
+			chest.operable = true
+			chest.destructible = false
+			local inventory = chest.get_inventory(defines.inventory.chest)
+			x = x+1
+			for item_name, item_count in pairs(boxes) do
+				inventory.insert({name =item_name, count=item_count })
+			end
+		end
+
+		
+	end
+
+end
+
 return Public
