@@ -81,7 +81,6 @@ local data_set_handlers = {}
 Public.events = {on_server_started = Event.generate_event_name('on_server_started')}
 
 function Public.send_special_game_state(message)
-	game.print("Sending it!")
 	raw_print(special_game_end_tag .. message)
 end
 
