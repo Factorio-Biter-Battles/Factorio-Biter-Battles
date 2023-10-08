@@ -1,17 +1,35 @@
 -- A pool memory allocator.
 local mod = {}
 
-function mod.malloc(size)
+local function integer_alloc()
+        return 0
+end
+
+local function array_alloc()
+	return {}
+end
+
+local function _malloc(size, fn)
 	-- Force allocates an array with hard size limit, then
 	-- returns reference to it. The 'memory' here is just a representation
 	-- layer that emulates cells within RAM.
 	local memory = {}
 
 	for i = 1, size, 1 do
-		memory[i] = 0
+		memory[i] = fn()
 	end
 
 	return memory
+end
+
+-- malloc - Malloc with array allocator
+function mod.malloc_array(size)
+	return _malloc(size, array_alloc)
+end
+
+-- malloc - Default malloc with integer allocator
+function mod.malloc(size)
+	return _malloc(size, integer_alloc)
 end
 
 function mod.enlarge(memory, offset, bytes)
