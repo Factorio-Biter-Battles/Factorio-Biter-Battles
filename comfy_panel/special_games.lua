@@ -3,6 +3,7 @@ local Token = require 'utils.token'
 local Color = require 'utils.color_presets'
 local Team_manager = require "maps.biter_battles_v2.team_manager"
 local session = require 'utils.datastore.session_data'
+local Tables = require "maps.biter_battles_v2.tables"
 local math_random = math.random
 local Public = {}
 global.active_special_games = {}
@@ -1006,6 +1007,11 @@ local function start_captain_event()
 	global.special_games_variables["captain_mode"]["stats"]["NorthInitialCaptain"] = global.special_games_variables["captain_mode"]["captainList"][1]
 	global.special_games_variables["captain_mode"]["stats"]["SouthInitialCaptain"] = global.special_games_variables["captain_mode"]["captainList"][2]
 	global.special_games_variables["captain_mode"]["stats"]["InitialReferee"] = global.special_games_variables["captain_mode"]["refereeName"]
+	local difficulty = Tables.difficulties[global.difficulty_vote_index].name;
+	if "difficulty" == "I'm Too Young to Die" then difficulty = "ITYTD"
+	elseif "difficulty" == "Fun and Fast" then difficulty = "FNF"
+	elseif "difficulty" == "Piece of Cake" then difficulty = "POC" end
+	global.special_games_variables["captain_mode"]["stats"]["extrainfo"] = difficulty
 	
 	local playerToClear = game.get_player(global.special_games_variables["captain_mode"]["captainList"][1])
 	if playerToClear.gui.top["captain_poll_team_ready_frame"] then playerToClear.gui.top["captain_poll_team_ready_frame"].destroy() end
