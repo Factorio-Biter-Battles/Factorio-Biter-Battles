@@ -3,9 +3,6 @@ local Score = require "comfy_panel.score"
 local Tables = require "maps.biter_battles_v2.tables"
 local fifo = require "maps.biter_battles_v2.fifo"
 local Blueprint = require 'maps.biter_battles_v2.blueprints'
-local Token = require 'utils.token'
-local Task = require 'utils.task'
-local Event = require 'utils.event'
 
 local Public = {}
 
@@ -183,24 +180,19 @@ function Public.draw_structures()
 	--Terrain.generate_spawn_goodies(surface)
 end
 
-local reveal_token = Token.register(
-    function()
-		if global.bb_settings["bb_map_reveal_toggle"] then
-			local surface = game.surfaces[global.bb_surface_name]
-			local radius = 2000
-			game.forces["north"].chart(surface, {{0-radius, 500}, {0+radius, -500}})
-			game.forces["south"].chart(surface, {{0-radius, 500}, {0+radius, -500}})
-		end
-    end
-)
-
 function Public.reveal_map()
 	if global.bb_settings["bb_map_reveal_toggle"] then
 		local surface = game.surfaces[global.bb_surface_name]
-		local radius = 2000
-		game.forces["north"].chart(surface, {{0-radius, 500}, {0+radius, -500}}) 
-		game.forces["south"].chart(surface, {{0-radius, 500}, {0+radius, -500}}) 
-		Task.set_timeout_in_ticks(10800, reveal_token)
+		local width = 2000 -- for one side
+		local height = 500 -- for one side
+		for x = 16, width, 32 do
+			for y = 16, height, 32 do
+				game.forces["spectator"].chart(surface, {{-x, -y}, {-x, -y}})
+				game.forces["spectator"].chart(surface, {{x, -y}, {x, -y}})
+				game.forces["spectator"].chart(surface, {{-x, y}, {-x, y}})
+				game.forces["spectator"].chart(surface, {{x, y}, {x, y}})
+			end
+		end
 	end
 end
 
