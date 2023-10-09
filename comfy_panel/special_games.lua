@@ -432,7 +432,7 @@ end
 local function generate_mixed_ore_map(type, size)
 	if type then
 		if not size then
-			-- size not specified, set default falues
+			-- size not specified, set default values
 			if type == 1 then
 				size = 9
 			elseif type == 2 then
