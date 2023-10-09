@@ -1,23 +1,17 @@
+---@alias PlayerName string The player's username
+
 local Global = require 'utils.global'
-local Session = require 'utils.datastore.session_data'
-local Token = require 'utils.token'
-local Task = require 'utils.task'
 local Event = require 'utils.event'
 local Server = require 'utils.server'
 
-local vote_duration = 30 ---@type uint in seconds
 
---- @type { LuaPlayer.name: {admin: boolean, action: "jail"|"free", initiator: string, reason: string, voters?: {yes: string[], no: string[]} } }
-local history = {}
-
-local vote_frame_size = {x = 250, y = 50}
 local Public = {}
 
---- @type {[PlayerName]: {permission_group_id: uint, fallback_position: MapPosition}}
+--- @type {[PlayerName]: {permission_group_id: uint, fallback_position: MapPosition, initiator: PlayerName, reason: string}}
 Public.player_data = {}
 
 ---Get jailed players by translating permission group members into table
----@return {string : true}
+---@return {[PlayerName] : true}
 function Public.get_jailed_table()
     local players = game.permissions.get_group("gulag").players
     local t = {}
@@ -27,63 +21,34 @@ function Public.get_jailed_table()
     return t
 end
 
-
----@param griefer LuaPlayer whose history to print
----@param player? LuaPlayer to whom print
-local function print_history(griefer, player)
-    local data = history[griefer.name]
-	local message
-    if data then
-        message = {
-            griefer.name, " has been ", data.action, " by ", data.initiator, "(", (data.admin and "admin") or ("vote"),
-            ")\n",
-            "Reason:\n",
-            data.reason or "-"
-        }
-        if not data.admin then
-            table.insert(message, {
-                "For:\n",
-                table.concat(data.voters.yes, ", "),
-                "\nAgainst:\n",
-                table.concat(data.voters.no, ", ")
-            })
-        end
-    else
-        message = { griefer.name, " has clear in-game record. Check discord for " }
-    end
-	message = table.concat(message)
-	if player then
-		player.print(message)
-	else
-    	game.print(message)
-		Server.to_discord_embed(message)
-	end
-end
-
 ---@param player LuaPlayer player to be jailed
 ---@param initiator LuaPlayer player initiating the action
 ---@param reason string reason for jail
----@param voters? {yes:table<string>, no:table<string>} players who voted for and against
-function Public.jail(player, initiator, reason, voters)
+function Public.jail(player, initiator, reason)
+	Public.player_data[player.name] = {
+		fallback_position = player.position,
+		permission_group_id = player.permission_group.group_id,
+		initiator = initiator.name,
+		reason = reason
+	}
     local gulag = game.get_surface("gulag")
     player.teleport(gulag.find_non_colliding_position("character", {0, 0}, 128, 1), gulag)
     game.permissions.get_group("gulag").add_player(player)
-	history[player.name] = { admin = initiator.admin, action = "jail", initiator = initiator.name, reason = reason, voters = voters }
-	print_history(player)
+	game.print({"", player.name, " has been jailed by ", initiator.name, ". Reason: ", reason})
 end
 
 ---@param player LuaPlayer player to be freed
 ---@param initiator LuaPlayer player initiating the action
 ---@param reason string reason for free
----@param voters? {yes:table<string>, no:table<string>} players who voted for and against
- function Public.free(player, initiator, reason, voters)
+ function Public.free(player, initiator, reason)
     local data = Public.player_data[player.name]
     local surface = game.get_surface(global.bb_surface_name)
     player.teleport(surface.find_non_colliding_position("character", data.fallback_position, 128, 1), surface)
     game.permissions.get_group(data.permission_group_id).add_player(player)
-    history[player.name] = { admin = initiator.admin, action = "free", initiator = initiator.name, reason = reason, voters = voters }
-	print_history(player)
+	game.print({"", player.name, " has been freed by ", initiator.name, ". Reason: ", reason})
+	Public.player_data[player.name] = nil
 end
+
 local valid_commands = { jail = Public.jail, free = Public.free }
 
 local function on_console_command(event)
@@ -92,21 +57,7 @@ local function on_console_command(event)
 	local player = game.get_player(event.player_index)
 	if not player or not player.valid then return end
 
-    if not player.admin then
-		if not Session.get_trusted_table()[player.name] then
-            player.print("Only trusted players can run this command.")
-            return
-        end
-
-        if vote.active then
-            player.print("Wait for the current vote to finish.")
-            return
-        end
-
-		if global.server_restart_timer and global.server_restart_timer <= vote_duration then
-			player.print("Wait for map restart.")
-		end
-    end
+    if not player.admin then return end -- non-admin votes to be processed in player_vote.lua
 
 	if #event.parameters <= 0 then
 		player.print("Invalid parameters.")
@@ -134,17 +85,14 @@ local function on_console_command(event)
 		return
 	end
 
-	if player.admin then
-		valid_commands[event.command](suspect, player, reason)
-	else
-		start_vote(event.command, player, suspect, reason)
-	end
+	valid_commands[event.command](suspect, player, reason)
 end
 
 local function info(event)
     local player = game.get_player(event.player_index)
     if not player or not player.valid then return end
-    if not event.parameters then
+    
+	if not event.parameters then
         player.print("Invalid parameters.")
         return
     end
@@ -153,7 +101,14 @@ local function info(event)
         player.print("Invalid name.")
         return
     end
-	print_history(griefer, player)
+	local message = {}
+	local data = Public.player_data[griefer.name]
+	if data then
+		message = {"", "---JAIL DATA---\n", griefer.name, " is jailed by ", data.initiator " for ", data.reason, "\n---JAIL DATA---"}
+	else
+		message = {"", "---JAIL DATA---\n", griefer.name, " isn't jailed", "\n---JAIL DATA---"}
+	end
+	player.print(message)
 end
 
 --- Create surface and permission group
