@@ -77,8 +77,13 @@ local function get_random_spawner(biter_force_name)
 		if size_of_spawners == 0 then return end
 		local index = math_random(1, size_of_spawners)
 		local spawner = spawners[index]
-		if spawner and spawner.valid then
-			return spawner
+		if spawner then
+			if spawner.valid then
+				return spawner
+			else
+				table.remove(spawners, index)
+				size_of_spawners = size_of_spawners - 1
+			end
 		else
 			table.remove(spawners, index)
 			size_of_spawners = size_of_spawners - 1
