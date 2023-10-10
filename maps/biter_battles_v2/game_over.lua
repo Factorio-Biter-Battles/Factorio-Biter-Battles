@@ -118,6 +118,10 @@ local function get_mvps(force)
             if score.players[p.name].killscore then
                 killscore = score.players[p.name].killscore
             end
+            local boss_kills = 0
+            if score.players[p.name].boss_kills then
+                boss_kills = score.players[p.name].boss_kills
+            end
             local deaths = 0
             if score.players[p.name].deaths then
                 deaths = score.players[p.name].deaths
@@ -133,6 +137,7 @@ local function get_mvps(force)
             table.insert(score_list, {
                 name = p.name,
                 killscore = killscore,
+                boss_kills = boss_kills,
                 deaths = deaths,
                 built_entities = built_entities,
                 mined_entities = mined_entities
@@ -142,13 +147,12 @@ local function get_mvps(force)
     local mvp = {}
     score_list = get_sorted_list("killscore", score_list)
     mvp.killscore = {name = score_list[1].name, score = score_list[1].killscore}
+    score_list = get_sorted_list("boss_kills", score_list)
+    mvp.boss_kills = {name = score_list[1].name, score = score_list[1].boss_kills}
     score_list = get_sorted_list("deaths", score_list)
     mvp.deaths = {name = score_list[1].name, score = score_list[1].deaths}
     score_list = get_sorted_list("built_entities", score_list)
-    mvp.built_entities = {
-        name = score_list[1].name,
-        score = score_list[1].built_entities
-    }
+    mvp.built_entities = {name = score_list[1].name, score = score_list[1].built_entities}
     return mvp
 end
 
@@ -176,6 +180,17 @@ local function show_mvps(player)
             type = "label",
             caption = mvp.killscore.name .. " with a score of " ..
                 mvp.killscore.score
+        })
+        l.style.font = "default-bold"
+        l.style.font_color = {r = 0.33, g = 0.66, b = 0.9}
+
+        local l = t.add({type = "label", caption = "Boss Slayer >> "})
+        l.style.font = "default-listbox"
+        l.style.font_color = {r = 0.22, g = 0.77, b = 0.44}
+        local l = t.add({
+            type = "label",
+            caption = mvp.boss_kills.name .. " with a score of " ..
+                mvp.boss_kills.score
         })
         l.style.font = "default-bold"
         l.style.font_color = {r = 0.33, g = 0.66, b = 0.9}
@@ -208,6 +223,10 @@ local function show_mvps(player)
             table.insert(result, 'MVP Defender: \\n')
             table.insert(result, mvp.killscore.name .. " with a score of " ..
                              mvp.killscore.score .. "\\n")
+            table.insert(result, '\\n')
+            table.insert(result, 'MVP Boss Slayer: \\n')
+            table.insert(result, mvp.boss_kills.name .. " with " ..
+                             mvp.boss_kills.score .. " boss kills\\n")
             table.insert(result, '\\n')
             table.insert(result, 'MVP Builder: \\n')
             table.insert(result,
@@ -242,6 +261,17 @@ local function show_mvps(player)
         l.style.font = "default-bold"
         l.style.font_color = {r = 0.33, g = 0.66, b = 0.9}
 
+        local l = t.add({type = "label", caption = "Boss Slayer >> "})
+        l.style.font = "default-listbox"
+        l.style.font_color = {r = 0.22, g = 0.77, b = 0.44}
+        local l = t.add({
+            type = "label",
+            caption = mvp.boss_kills.name .. " with a score of " ..
+                mvp.boss_kills.score
+        })
+        l.style.font = "default-bold"
+        l.style.font_color = {r = 0.33, g = 0.66, b = 0.9}
+
         local l = t.add({type = "label", caption = "Builder >> "})
         l.style.font = "default-listbox"
         l.style.font_color = {r = 0.22, g = 0.77, b = 0.44}
@@ -270,6 +300,10 @@ local function show_mvps(player)
             table.insert(result, 'MVP Defender: \\n')
             table.insert(result, mvp.killscore.name .. " with a score of " ..
                              mvp.killscore.score .. "\\n")
+            table.insert(result, '\\n')
+            table.insert(result, 'MVP Boss Slayer: \\n')
+            table.insert(result, mvp.boss_kills.name .. " with " ..
+                             mvp.boss_kills.score .. " boss kills\\n")
             table.insert(result, '\\n')
             table.insert(result, 'MVP Builder: \\n')
             table.insert(result,

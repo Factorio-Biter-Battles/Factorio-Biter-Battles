@@ -43,7 +43,8 @@ function Public.init_player_table(player)
             built_entities = 0,
             deaths = 0,
             killscore = 0,
-            mined_entities = 0
+            mined_entities = 0,
+            boss_kills = 0
         }
     end
 end
@@ -61,7 +62,8 @@ local function get_score_list(force)
                     killscore = score.killscore or 0,
                     deaths = score.deaths or 0,
                     built_entities = score.built_entities or 0,
-                    mined_entities = score.mined_entities or 0
+                    mined_entities = score.mined_entities or 0,
+                    boss_kills = score.boss_kills or 0
                 }
             )
         end
@@ -148,12 +150,13 @@ local show_score = (function(player, frame)
     line.style.bottom_margin = 8
 
     -- Score per player
-    local t = frame.add {type = 'table', column_count = 5}
+    local t = frame.add {type = 'table', column_count = 6}
 
     -- Score headers
     local headers = {
         {name = 'score_player', caption = 'Player'},
         {column = 'killscore', name = 'score_killscore', caption = 'Killscore'},
+        {column = 'boss_kills', name = 'score_boss_kills', caption = 'Boss kills'},
         {column = 'deaths', name = 'score_deaths', caption = 'Deaths'},
         {column = 'built_entities', name = 'score_built_entities', caption = 'Built structures'},
         {column = 'mined_entities', name = 'score_mined_entities', caption = 'Mined entities'}
@@ -215,6 +218,7 @@ local show_score = (function(player, frame)
         local line = {
             {caption = entry.name, color = special_color},
             {caption = tostring(entry.killscore)},
+            {caption = tostring(entry.boss_kills)},
             {caption = tostring(entry.deaths)},
             {caption = tostring(entry.built_entities)},
             {caption = tostring(entry.mined_entities)}
@@ -292,6 +296,7 @@ local function on_gui_click(event)
     -- Handles click on a score header
     local element_to_column = {
         ['score_killscore'] = 'killscore',
+        ['score_boss_kills'] = 'boss_kills',
         ['score_deaths'] = 'deaths',
         ['score_built_entities'] = 'built_entities',
         ['score_mined_entities'] = 'mined_entities'
@@ -379,6 +384,22 @@ local kill_causes = {
         end
         return players
     end,
+    [spider-vehicle] = function(event)
+        local players = {}
+        local driver = event.cause.get_driver()
+        if driver then
+            if driver.player then
+                players[#players + 1] = driver.player
+            end
+        end
+        local passenger = event.cause.get_passenger()
+        if passenger then
+            if passenger.player then
+                players[#players + 1] = passenger.player
+            end
+        end
+        return players
+    end,
     ['locomotive'] = train_type_cause,
     ['cargo-wagon'] = train_type_cause,
     ['artillery-wagon'] = train_type_cause,
@@ -386,35 +407,30 @@ local kill_causes = {
 }
 
 local function on_entity_died(event)
-    if not event.entity.valid then
-        return
-    end
-    if not event.cause then
-        return
-    end
-    if not event.cause.valid then
-        return
-    end
-    if event.entity.force.index == event.cause.force.index then
-        return
-    end
-    if not entity_score_values[event.entity.name] then
-        return
-    end
-    if not kill_causes[event.cause.type] then
-        return
-    end
+    if not event.entity.valid then return end
+    if not event.cause then return end
+    if not event.cause.valid then return end
+    if event.entity.force.index == event.cause.force.index then return end
+    if not entity_score_values[event.entity.name] then return end
+    if not kill_causes[event.cause.type] then return end
     local players_to_reward = kill_causes[event.cause.type](event)
-    if not players_to_reward then
-        return
-    end
-    if #players_to_reward == 0 then
-        return
-    end
+    if not players_to_reward then return end
+    if #players_to_reward == 0 then return end
+
     for _, player in pairs(players_to_reward) do
         Public.init_player_table(player)
         local score = this.score_table[player.force.name].players[player.name]
-        score.killscore = score.killscore + entity_score_values[event.entity.name]
+        if global.boss_units then
+            if global.boss_units[event.entity.unit_number] then
+                score.killscore = score.killscore + entity_score_values[event.entity.name] * global.boss_units[event.entity.unit_number].max_health / event.entity.prototype.max_health
+                score.boss_kills = score.boss_kills + 1
+            else
+                score.killscore = score.killscore + entity_score_values[event.entity.name]
+            end
+        else
+            score.killscore = score.killscore + entity_score_values[event.entity.name]
+        end
+        
         if global.show_floating_killscore[player.name] then
             event.entity.surface.create_entity(
                 {
