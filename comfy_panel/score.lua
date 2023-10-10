@@ -422,7 +422,7 @@ local function on_entity_died(event)
         local score = this.score_table[player.force.name].players[player.name]
         if global.boss_units then
             if global.boss_units[event.entity.unit_number] then
-                score.killscore = score.killscore + entity_score_values[event.entity.name] * global.boss_units[event.entity.unit_number].max_health / event.entity.prototype.max_health
+                score.killscore = score.killscore + math.floor(entity_score_values[event.entity.name] * global.boss_units[event.entity.unit_number].max_health / event.entity.prototype.max_health)
                 score.boss_kills = score.boss_kills + 1
             else
                 score.killscore = score.killscore + entity_score_values[event.entity.name]
