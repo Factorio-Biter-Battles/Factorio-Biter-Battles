@@ -359,10 +359,10 @@ commands.add_command(
     'instant-map-reset',
     'Force the map reset immediately and optionally set the seed.',
     function(cmd)
-        local new_rng_seed = cmd.parameter and tonumber(cmd.parameter) and tonumber(cmd.parameter) >= 0 and tonumber(cmd.parameter) < 4294967295 or nil
+        local new_rng_seed = cmd.parameter and tonumber(cmd.parameter) or nil
 		-- Make sure global.random_generator_ is set
 		math.random_seeded()
-		if new_rng_seed then
+		if new_rng_seed and tonumber(cmd.parameter) >= 0 and tonumber(cmd.parameter) < 4294967295 then
 			global.random_generator_.re_seed(new_rng_seed)
 		end
 		global.server_restart_timer = 0
