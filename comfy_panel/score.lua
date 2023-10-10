@@ -384,7 +384,7 @@ local kill_causes = {
         end
         return players
     end,
-    [spider-vehicle] = function(event)
+    ['spider-vehicle'] = function(event)
         local players = {}
         local driver = event.cause.get_driver()
         if driver then
