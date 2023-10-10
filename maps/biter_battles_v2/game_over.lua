@@ -189,8 +189,8 @@ local function show_mvps(player)
         l.style.font_color = {r = 0.22, g = 0.77, b = 0.44}
         local l = t.add({
             type = "label",
-            caption = mvp.boss_kills.name .. " with a score of " ..
-                mvp.boss_kills.score
+            caption = mvp.boss_kills.name .. " with " ..
+                mvp.boss_kills.score .. " boss kills"
         })
         l.style.font = "default-bold"
         l.style.font_color = {r = 0.33, g = 0.66, b = 0.9}
@@ -266,8 +266,8 @@ local function show_mvps(player)
         l.style.font_color = {r = 0.22, g = 0.77, b = 0.44}
         local l = t.add({
             type = "label",
-            caption = mvp.boss_kills.name .. " with a score of " ..
-                mvp.boss_kills.score
+            caption = mvp.boss_kills.name .. " with " ..
+                mvp.boss_kills.score .. " boss kills"
         })
         l.style.font = "default-bold"
         l.style.font_color = {r = 0.33, g = 0.66, b = 0.9}
