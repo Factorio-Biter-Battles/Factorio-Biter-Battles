@@ -356,8 +356,8 @@ commands.add_command(
 )
 
 commands.add_command(
-    'server-restart-immediately',
-    'Restart the server immediately and optionally set the seed.',
+    'instant-map-reset',
+    'Force the map reset immediately and optionally set the seed.',
     function(cmd)
         local new_rng_seed = cmd.parameter and tonumber(cmd.parameter) or nil
 		-- Make sure global.random_generator_ is set
