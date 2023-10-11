@@ -5,8 +5,9 @@ local Task = require 'utils.task'
 local Event = require 'utils.event'
 local Server = require 'utils.server'
 local Jail = require 'maps.biter_battles_v2.jail'
+local gui_style = require 'utils.utils'.gui_style
 
-local vote_frame_size = {x = 250, y = 50}
+local frame_size = {x = 400, y = 200}
 local vote_duration = 30 ---@type uint in seconds
 
 local Public = {}
@@ -71,33 +72,40 @@ valid_votes["free"] = {
 --- Create vote gui for the player
 ---@param player LuaPlayer
 local function draw_vote_gui(player)
+	local scale = player.display_scale
 	local resolution = player.display_resolution
 	local frame = player.gui.screen.add{
         type = "frame",
 		name = "vote_frame",
 		direction = "vertical"
 	}
-	frame.location = {resolution.width - vote_frame_size.x, resolution.height - vote_frame_size.y}
-	frame.add{
+	gui_style(frame, {width = frame_size.x,
+		height = frame_size.y,
+		horizontal_align = "center",
+		padding = 0
+	})
+	frame.location = {resolution.width - frame_size.x*scale, resolution.height - frame_size.y*scale}
+
+	local flow = frame.add{type = "flow", name = "flow", direction = "vertical"}
+	gui_style(flow, {horizontal_align = "center", width = frame_size.x, height = frame_size.y, padding = 0})
+	
+	local l = flow.add{
 		type = "label",
-		caption = {"", "Vote ", vote.action, " (", vote.timer, ")"}
+		caption = {"", "Vote to ", vote.action, " ", vote.target, " (", vote.timer, ")"}
 	}
-	local t = frame.add{
-		type = "table",
-		column_count = 2
-	}
-	t.style.column_alignments[1] = "left"
-	t.style.column_alignments[2] = "right"
-    t.add { type = "label", caption = "Initiator:" }
-	t.add{type = "label", caption = vote.initiator}
-	t.add{type = "label", caption = "Target:"}
-	t.add{type = "label", caption = vote.target}
+	gui_style(l, {font = "heading-1"})
+	
+	flow.add{type = "line"}
+	l = flow.add{type = "label", caption = vote.reason}
+	gui_style(l, {height = frame_size.y/3, single_line = false, font = "default-game"})
+	flow.add{type = "label", caption = "Initiated by " .. vote.initiator}
 
-	frame.add{type = "label", caption = vote.reason}
-
-	t = frame.add{type = "table", column_count = 2}
-	t.add{type = "sprite-button", caption = "Yes (0)", name = "vote_yes"}
-	t.add{type = "sprite-button", caption = "No (0)", name = "vote_no"}
+	flow.add{type = "line"}
+	local t = flow.add{type = "table", column_count = 2}
+	local b = t.add{type = "sprite-button", caption = "Yes (0)", name = "vote_yes"}
+	gui_style(b, {width = frame_size.x/2, font_color = {0, 1,0}})
+	b = t.add{type = "sprite-button", caption = "No (0)", name = "vote_no"}
+	gui_style(b, {width = frame_size.x/2, font_color = {1, 0,0}})
 end
 
 --- Updates counters on the vote buttons
@@ -106,8 +114,8 @@ local function update_buttons()
     local no_caption = { "", "No (", table.size(vote.no), ")" }
     for _, p in pairs(game.connected_players) do
         if p.gui.screen.vote_frame then
-            p.gui.screen.vote_frame.children[3].vote_yes.caption = yes_caption
-            p.gui.screen.vote_frame.children[3].vote_no.caption = no_caption
+            p.gui.screen.vote_frame.flow.children[6].vote_yes.caption = yes_caption
+            p.gui.screen.vote_frame.flow.children[6].vote_no.caption = no_caption
         end
     end
 end
@@ -169,10 +177,10 @@ decrement_timer_token = Token.register(
 	function()
 		if vote.timer > 0 then
 			vote.timer = vote.timer - 1
-			local caption = {"", "Vote ", vote.action, " (", vote.timer, ")"}
+			local caption = {"", "Vote to ", vote.action, " ", vote.target, " (", vote.timer, ")"}
 			for _, p in pairs(game.connected_players) do
 				if p.gui.screen.vote_frame then
-					p.gui.screen.vote_frame.children[1].caption = caption
+					p.gui.screen.vote_frame.flow.children[1].caption = caption
 				end
 			end
 			Task.set_timeout_in_ticks(60, decrement_timer_token)
@@ -240,7 +248,7 @@ local function proceess_command(event)
         return
     end
 
-    local reason = table.concat(parameters)
+    local reason = table.concat(parameters, " ")
     if #reason <= 10 then
         player.print("Reason is too short.")
         return
@@ -272,6 +280,7 @@ local function on_console_command(event)
 		if not valid_votes[event.command] then return end
 		-- skip direct admin functions
 		local player = game.get_player(event.player_index)
+		if not player or not player.valid then return end
 		if player.admin then return end
 	end
 	proceess_command(event)
