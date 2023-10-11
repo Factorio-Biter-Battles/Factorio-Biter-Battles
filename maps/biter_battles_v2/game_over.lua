@@ -293,7 +293,7 @@ function Public.server_restart()
     if not global.server_restart_timer then return end
     global.server_restart_timer = global.server_restart_timer - 5
 
-    if global.server_restart_timer == 0 then
+    if global.server_restart_timer <= 0 then
         if global.restart then
             if not global.announced_message then
                 local message =
