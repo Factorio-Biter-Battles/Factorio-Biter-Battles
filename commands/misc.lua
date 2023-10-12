@@ -359,6 +359,12 @@ commands.add_command(
     'instant-map-reset',
     'Force the map reset immediately and optionally set the seed.',
     function(cmd)
+		if global.reroll_time_left ~= nil and global.reroll_time_left > 1 then 
+			local player = game.player
+			player.print('The map is during the reroll period, please wait for it to finish first', Color.fail)
+			return
+		end
+		
         local new_rng_seed = cmd.parameter and tonumber(cmd.parameter) or nil
 		-- Make sure global.random_generator_ is set
 		math.random_seeded()
