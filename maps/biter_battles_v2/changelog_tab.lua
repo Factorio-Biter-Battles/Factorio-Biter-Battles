@@ -6,6 +6,18 @@ local function add_changelog(player, element)
 	changelog_scrollpanel.style.maximal_height = 530
 	
 	local changelog_change = {}
+	table.insert(changelog_change,"2023-10-12")
+	table.insert(changelog_change,"Fix: NaN propagation in strike code")
+	table.insert(changelog_change,"amannm")
+	table.insert(changelog_change,"2023-10-12")
+	table.insert(changelog_change,"Special game Mixed ore map")
+	table.insert(changelog_change,"developer-8")
+	table.insert(changelog_change,"2023-10-12")
+	table.insert(changelog_change,"Add instant map reset command")
+	table.insert(changelog_change," XVhc6A")
+	table.insert(changelog_change,"2023-10-12")
+	table.insert(changelog_change,"Reveal map at start")
+	table.insert(changelog_change,"Ragnarok77")
 	table.insert(changelog_change,"2023-10-03")
 	table.insert(changelog_change,"Introduce map reroll")
 	table.insert(changelog_change,"PlayerNoon")
