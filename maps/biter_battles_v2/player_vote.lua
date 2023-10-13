@@ -8,35 +8,38 @@ local Jail = require 'maps.biter_battles_v2.jail'
 local gui_style = require 'utils.utils'.gui_style
 
 local frame_size = {x = 400, y = 200}
-local vote_duration = 30 ---@type uint in seconds
 
 local Public = {}
 
----@type {active: boolean, action: string, initiator: string, target: string, reason: string, yes: {string: true}, no: {string: true}, timer: uint, succeded: boolean }
+---@type {active: boolean, action: string, initiator: PlayerName, target: PlayerName, reason: string, yes: {[PlayerName]: true}, no: {[PlayerName]: true}, timer: uint, succeded: boolean }
 local vote = {}
 
 
----@type {[string]: {pre_function: function, post_function: function, pass_cond: function, duration: uint}}
+---@type {[string]: {pre_function: (fun(initiator: LuaPlayer, target: LuaPlayer, reason: string): boolean), post_function: function, pass_cond: (fun():boolean), duration: uint}}
 local valid_votes = {}
 
 
 valid_votes["jail"] = {
 	---Freeze potential griefer for the duration of jail vote
-	pre_function = function()
-		local player = game.get_player(vote.target)
-		Jail.player_data[vote.target] = {
-			permission_group_id = player.permission_group.group_id
+	pre_function = function(initiator, target, reason)
+		if Jail.get_jailed_table()[target.name] then
+			initiator.print(target.name .. " is already jailed.")
+			return false
+		end
+		Jail.player_data[target.name] = {
+			permission_group_id = target.permission_group.group_id
 		}
-		game.permissions.get_group("frozen").add_player(player)
+		game.permissions.get_group("frozen").add_player(target)
 		rendering.draw_text{
 			text = "Please wait while players decide your fate.",
-			surface = player.surface,
-			target = player.position,
-			players = {player},
+			surface = target.surface,
+			target = target.position,
+			players = {target},
 			scale_with_zoom = true,
 			time_to_live = vote.timer * 60,
 			color = {1, 0, 0}
 		}
+		return true
     end,
 	post_function = function()
 		-- unfreeze player 
@@ -53,9 +56,14 @@ valid_votes["jail"] = {
 		return #vote.yes > #vote.no
 	end
 }
-
 valid_votes["free"] = {
-	pre_function = function()
+	pre_function = function(initiator, target, reason)
+		-- no need to free player that isn't jailed
+		if not Jail.get_jailed_table()[target.name] then 
+			initiator.print(target.name .. " isn't  jailed.")
+			return false
+		end
+		return true
 	end,
 	post_function = function()
 		if vote.succeded then
@@ -63,6 +71,39 @@ valid_votes["free"] = {
 			local initiator = game.get_player(vote.initiator)
 			Jail.free(target, initiator, vote.reason)
 		end
+	end,
+	duration = 30,
+	pass_cond = function()
+		return #vote.yes > #vote.no
+	end
+}
+valid_votes["trust"] = {
+	pre_function = function(initiator, target, reason)
+		if Session.get_trusted_table()[target.name] then
+			initiator.print(target.name .. " is already trusted.")
+			return false
+		end
+		return true
+	end,
+	post_function = function()
+		Session.get_tracker_table()[vote.target] = true
+		game.print(vote.target .. ' is now a trusted player.', {r = 0.22, g = 0.99, b = 0.99})
+	end,
+	duration = 30,
+	pass_cond = function()
+		return #vote.yes > #vote.no
+	end
+}
+valid_votes["untrust"] = {
+	pre_function = function(initiator, target, reason)
+		if not Session.get_trusted_table()[target.name] then
+			initiator.print(target.name .. " isn't trusted.")
+			return false
+		end
+		return true
+	end,
+	post_function = function()
+		Session.get_trusted_table()[vote.target] = false
 	end,
 	duration = 30,
 	pass_cond = function()
@@ -206,7 +247,6 @@ local function start_vote(action, initiator, target, reason)
         no = {},
         timer = valid_votes[action].duration
     }
-	valid_votes[action].pre_function()
 	for _, p in pairs(game.connected_players) do
 		draw_vote_gui(p)
 	end
@@ -263,7 +303,10 @@ local function proceess_command(event)
         player.print("Wait for map restart.")
 		return
 	end
-	start_vote(command, player, target, reason)
+	local ready_to_start = valid_votes[command].pre_function(player, target, reason)
+	if ready_to_start then
+		start_vote(command, player, target, reason)
+	end
 end
 
 --- Translate `/vote jail ...` to `/jail ...` and call `process_command()`
