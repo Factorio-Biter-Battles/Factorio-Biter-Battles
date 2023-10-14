@@ -499,6 +499,7 @@ function Public.silo_death(event)
 			log_to_db('[Gamelength]'..game.ticks_played..'\n',true)
 			log_to_db('[StartTick]'..global.special_games_variables["captain_mode"]["stats"]["tickGameStarting"]..'\n',true)
 			log_to_db('[WinnerTeam]'..global.bb_game_won_by_team..'\n',true)
+			log_to_db('[ExtraInfo]'..global.special_games_variables["captain_mode"]["stats"]["extrainfo"]..'\n',true)
 			for _, player in pairs(game.players) do
 				if player.connected and (player.force.name == "north" or player.force.name == "south") then
 					Special_games.captain_log_end_time_player(player)
