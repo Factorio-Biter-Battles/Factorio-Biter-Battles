@@ -111,12 +111,13 @@ local valid_special_games = {
 		name = {type = "label", caption = "Captain mode", tooltip = "Captain mode"},
 		config = {
 			[1] = {name = "label4", type = "label", caption = "Referee"},
-			[2] = {name = 'refereeName', type = "textfield", text = "ReplaceMe", numeric = false, width = 200},
+			[2] = {name = 'refereeName', type = "textfield", text = "ReplaceMe", numeric = false, width = 140},
 			[3] = {name = "autoTrust", type = "switch", switch_state = "left", allow_none_state = false, tooltip = "Trust all players automatically : Yes / No"},
 			[4] = {name = "captainKickPower", type = "switch", switch_state = "left", allow_none_state = false, tooltip = "Captain can eject players from his team : Yes / No"},
 			[5] = {name = "pickingMode", type = "switch", switch_state = "left", allow_none_state = false, tooltip = "Picking order at start of event : 1 1 1 1 1 1 1 / 1 2 1 1 1 1 1"},
 			[6] = {name = "captainGroupAllowed", type = "switch", switch_state = "left", allow_none_state = false, tooltip = "Groups of players are allowed for picking phase : Yes / No"},
-			[7] = {name = "groupLimit", type = "textfield", text = "0", numeric = true, width = 40, type = "textfield", text = "3", numeric = true, width = 40, tooltip = "Amount of players max in a group (0 for infinite)"}
+			[7] = {name = "groupLimit", type = "textfield", text = "0", numeric = true, width = 40, type = "textfield", text = "3", numeric = true, width = 40, tooltip = "Amount of players max in a group (0 for infinite)"},
+			[8] = {name = "specialEnabled", type = "switch", switch_state = "right", allow_none_state = false, tooltip = "A special will be added to the event : Yes / No"}
 		},
 		button = {name = "captain_mode_apply", type = "button", caption = "Apply"}
 	},
@@ -688,7 +689,7 @@ local function is_player_in_group_system(playerName)
 	end
 end
 
-local function generate_captain_mode(refereeName,autoTrust,captainKick,pickingMode,captainGroupAllowed,groupLimit)
+local function generate_captain_mode(refereeName,autoTrust,captainKick,pickingMode,captainGroupAllowed,groupLimit,specialEnabled)
 	if captainKick == "left" then
 		captainKick = true
 	else
@@ -756,6 +757,11 @@ local function generate_captain_mode(refereeName,autoTrust,captainKick,pickingMo
 		game.print('Groups of players are disabled, you cant form a group to be picked together', Color.cyan)
 	end
 	
+	if specialEnabled == "left" then
+		global.special_games_variables["captain_mode"]["stats"]["specialEnabled"] = 1
+	else
+		global.special_games_variables["captain_mode"]["stats"]["specialEnabled"] = 0
+	end
 	
 	global.tournament_mode = true
 	if global.freeze_players == false or global.freeze_players == nil then
@@ -1119,7 +1125,8 @@ local function on_gui_click(event)
 		local pickingMode = config["pickingMode"].switch_state
 		local captainGroupAllowed = config["captainGroupAllowed"].switch_state
 		local groupLimit = config["groupLimit"].text
-		generate_captain_mode(refereeName,autoTrustSystem,captainCanKick,pickingMode,captainGroupAllowed,groupLimit)
+		local specialEnabled = config["specialEnabled"].switch_state
+		generate_captain_mode(refereeName,autoTrustSystem,captainCanKick,pickingMode,captainGroupAllowed,groupLimit,specialEnabled)
 	elseif element.name == "disabled_research_confirm" then
 		local team = config["team"].switch_state
 		local eq = {
