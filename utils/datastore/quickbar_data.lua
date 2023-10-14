@@ -209,10 +209,6 @@ commands.add_command(
             return
         end
 
-        local secs = Server.get_current_time()
-        if not secs then
-            return
-        end
         save_quickbar(player)
     end
 )
