@@ -6,6 +6,7 @@ local Functions = require "maps.biter_battles_v2.functions"
 local AiTargets = require "maps.biter_battles_v2.ai_targets"
 local tables = require "maps.biter_battles_v2.tables"
 local session = require 'utils.datastore.session_data'
+local biter_texture = require "maps.biter_battles_v2.biter_texture"
 
 local spawn_ore = tables.spawn_ore
 local table_insert = table.insert
@@ -312,25 +313,31 @@ end
 
 local function draw_biter_area(surface, left_top_x, left_top_y)
 	if not Functions.is_biter_area({x = left_top_x, y = left_top_y - 96},true) then return end
-	
 	local seed = game.surfaces[global.bb_surface_name].map_gen_settings.seed
-		
+
 	local out_of_map = {}
 	local tiles = {}
 	local i = 1
-	
+
+	-- Iterates over each position within chunk, maps the relative x/y position into
+	-- biter_texture with pre-computed 2D grid. The value from the grid is then mapped
+	-- into tile name and is applied into game state.
 	for x = 0, 31, 1 do
 		for y = 0, 31, 1 do
-			local position = {x = left_top_x + x, y = left_top_y + y}
+			local position = { x = left_top_x + x, y = left_top_y + y }
+			-- + 1, because lua has 1-based indices
+			local grid_p_x = ((position.x + seed) % biter_texture.width) + 1
+			local grid_p_y = ((position.y + seed) % biter_texture.height) + 1
+			local id = biter_texture.grid[grid_p_x][grid_p_y]
+			local name = biter_texture.map[id]
 			if Functions.is_biter_area(position,true) then
-				local index = math_floor(GetNoise("bb_biterland", position, seed) * 48) % 7 + 1
 				out_of_map[i] = {name = "out-of-map", position = position}
-				tiles[i] = {name = "dirt-" .. index, position = position}
-				i = i + 1			
+				tiles[i] = {name = name, position = position}
+				i = i + 1
 			end
 		end
 	end
-	
+
 	surface.set_tiles(out_of_map, false)
 	surface.set_tiles(tiles, true)
 	
