@@ -142,7 +142,7 @@ function Public.save_quickbar(player)
             slots[i] = slot.name
         end
     end
-	slots[101]="IGNOREME"
+	slots[102]="IGNOREME"
     if next(slots) then
         set_data(dataset, player.name, slots)
         player.print('Your quickbar has been saved.', Color.success)
