@@ -220,6 +220,7 @@ local function process_results()
 		table.concat(no, ", ")
 	})
 	game.print(message)
+	Server.to_discord_embed(message)
     valid_votes[vote.action].post_function()
 end
 

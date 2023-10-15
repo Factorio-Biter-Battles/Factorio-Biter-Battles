@@ -59,18 +59,22 @@ function Public.jail(player, initiator, reason)
     local gulag = game.get_surface("gulag")
     player.teleport(gulag.find_non_colliding_position("character", {0, 0}, 128, 1), gulag)
     game.permissions.get_group("gulag").add_player(player)
-	game.print({"", player.name, " has been jailed by ", initiator.name, ". Reason: ", reason})
+	local message = table.concat({player.name, " has been jailed by ", initiator.name, ". Reason: ", reason})
+	game.print(message)
+	Server.to_discord_embed(message)
 end
 
 ---@param player LuaPlayer player to be freed
 ---@param initiator LuaPlayer player initiating the action
 ---@param reason string reason for free
- function Public.free(player, initiator, reason)
+function Public.free(player, initiator, reason)
     local data = player_data[player.name]
     local surface = game.get_surface(global.bb_surface_name)
     player.teleport(surface.find_non_colliding_position("character", data.fallback_position, 128, 1), surface)
     game.permissions.get_group(data.permission_group_id).add_player(player)
-	game.print({"", player.name, " has been freed by ", initiator.name, ". Reason: ", reason})
+	local message = table.concat({"", player.name, " has been freed by ", initiator.name, ". Reason: ", reason})
+	game.print(message)
+	Server.to_discord_embed(message)
 	player_data[player.name] = nil
 end
 
