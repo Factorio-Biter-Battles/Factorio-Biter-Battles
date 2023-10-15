@@ -1,4 +1,3 @@
-local Global = require 'utils.global'
 local Session = require 'utils.datastore.session_data'
 local Token = require 'utils.token'
 local Task = require 'utils.task'
@@ -6,6 +5,7 @@ local Event = require 'utils.event'
 local Server = require 'utils.server'
 local Jail = require 'maps.biter_battles_v2.jail'
 local gui_style = require 'utils.utils'.gui_style
+local Global = require 'utils.global'
 
 local frame_size = {x = 400, y = 200}
 
@@ -14,7 +14,12 @@ local Public = {}
 ---@type {active: boolean, action: string, initiator: PlayerName, target: PlayerName, reason: string, yes: {[PlayerName]: true}, no: {[PlayerName]: true}, timer: uint, succeded: boolean }
 local vote = {}
 
-
+Global.register(
+    vote,
+    function(t)
+        vote = t
+    end
+)
 ---@type {[string]: {pre_function: (fun(initiator: LuaPlayer, target: LuaPlayer, reason: string): boolean), post_function: function, pass_cond: (fun():boolean), duration: uint}}
 local valid_votes = {}
 
@@ -26,9 +31,7 @@ valid_votes["jail"] = {
 			initiator.print(target.name .. " is already jailed.")
 			return false
 		end
-		Jail.player_data[target.name] = {
-			permission_group_id = target.permission_group.group_id
-		}
+		Jail.store_player_data(target.name, {permission_group_id = target.permission_group.group_id})
 		game.permissions.get_group("frozen").add_player(target)
 		rendering.draw_text{
 			text = "Please wait while players decide your fate.",
@@ -42,8 +45,7 @@ valid_votes["jail"] = {
 		return true
     end,
 	post_function = function()
-		-- unfreeze player 
-		local p_group_id = Jail.player_data[vote.target].permission_group_id
+		local p_group_id = Jail.get_player_data(vote.target).permission_group_id
 		game.permissions.get_group(p_group_id).add_player(vote.target)
 		if vote.succeded then
 			local target = game.get_player(vote.target)
@@ -86,8 +88,10 @@ valid_votes["trust"] = {
 		return true
 	end,
 	post_function = function()
-		Session.get_tracker_table()[vote.target] = true
-		game.print(vote.target .. ' is now a trusted player.', {r = 0.22, g = 0.99, b = 0.99})
+		if vote.succeded then
+			Session.get_tracker_table()[vote.target] = true
+			game.print(vote.target .. ' is now a trusted player.', {r = 0.22, g = 0.99, b = 0.99})
+		end
 	end,
 	duration = 30,
 	pass_cond = function()
@@ -103,7 +107,10 @@ valid_votes["untrust"] = {
 		return true
 	end,
 	post_function = function()
-		Session.get_trusted_table()[vote.target] = false
+		if vote.succeded then
+			Session.get_trusted_table()[vote.target] = false
+			game.print(vote.target .. ' is now untrusted.', {r = 0.22, g = 0.99, b = 0.99})
+		end
 	end,
 	duration = 30,
 	pass_cond = function()
@@ -169,13 +176,13 @@ local on_gui_click_token = Token.register(
 		if element.name == "vote_yes" then
 			vote.yes[player.name] = true
 			vote.no[player.name] = nil
-			player.gui.screen.vote_frame.children[3].vote_yes.enabled = false
-			player.gui.screen.vote_frame.children[3].vote_no.enabled = true
+			player.gui.screen.vote_frame.flow.children[6].vote_yes.enabled = false
+			player.gui.screen.vote_frame.flow.children[6].vote_no.enabled = true
 		elseif element.name == "vote_no" then
 			vote.yes[player.name] = nil
 			vote.no[player.name] = true
-			player.gui.screen.vote_frame.children[3].vote_yes.enabled = true
-			player.gui.screen.vote_frame.children[3].vote_no.enabled = false
+			player.gui.screen.vote_frame.flow.children[6].vote_yes.enabled = true
+			player.gui.screen.vote_frame.flow.children[6].vote_no.enabled = false
 		else
 			return
 		end
@@ -200,9 +207,13 @@ local function process_results()
     for p, _ in pairs(vote.no) do
         no[#no + 1] = p
     end
+	vote.yes = yes
+	vote.no = no
+	local result
 	vote.succeded = valid_votes[vote.action].pass_cond()
+	if vote.succeded then result = "succeded!\n" else result = "failed!\n" end
 	local message = table.concat({
-		"Vote to ", vote.action, " ", vote.target, " has ", ("succeded!\n" and vote.succeded) or "failed!\n",
+		"Vote to ", vote.action, " ", vote.target, " has ", result,
 		"For (", #yes, "):\n",
 		table.concat(yes, ", "),
 		"\nAgainst (", #no, "):\n",

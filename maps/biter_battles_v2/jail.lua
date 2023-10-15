@@ -7,9 +7,34 @@ local Server = require 'utils.server'
 
 local Public = {}
 
---- @type {[PlayerName]: {permission_group_id: uint, fallback_position: MapPosition, initiator: PlayerName, reason: string}}
-Public.player_data = {}
+--- @class PlayerData
+--- @field permission_group_id? uint
+--- @field fallback_position? MapPosition
+--- @field initiator? PlayerName
+--- @field reason? string
 
+--- @type {[PlayerName]: PlayerData}
+local player_data = {}
+
+Global.register(
+	{player_data = player_data},
+	function(t)
+		player_data = t.player_data
+	end
+)
+
+
+---@param player PlayerName
+---@param parameters PlayerData
+function Public.store_player_data(player, parameters)
+	player_data[player] = parameters
+end
+
+---@param player PlayerName
+---@return PlayerData
+function Public.get_player_data(player)
+	return player_data[player]
+end
 ---Get jailed players by translating permission group members into table
 ---@return {[PlayerName] : true}
 function Public.get_jailed_table()
@@ -25,7 +50,7 @@ end
 ---@param initiator LuaPlayer player initiating the action
 ---@param reason string reason for jail
 function Public.jail(player, initiator, reason)
-	Public.player_data[player.name] = {
+	player_data[player.name] = {
 		fallback_position = player.position,
 		permission_group_id = player.permission_group.group_id,
 		initiator = initiator.name,
@@ -41,12 +66,12 @@ end
 ---@param initiator LuaPlayer player initiating the action
 ---@param reason string reason for free
  function Public.free(player, initiator, reason)
-    local data = Public.player_data[player.name]
+    local data = player_data[player.name]
     local surface = game.get_surface(global.bb_surface_name)
     player.teleport(surface.find_non_colliding_position("character", data.fallback_position, 128, 1), surface)
     game.permissions.get_group(data.permission_group_id).add_player(player)
 	game.print({"", player.name, " has been freed by ", initiator.name, ". Reason: ", reason})
-	Public.player_data[player.name] = nil
+	player_data[player.name] = nil
 end
 
 local valid_commands = { jail = Public.jail, free = Public.free }
@@ -102,7 +127,7 @@ local function info(event)
         return
     end
 	local message = {}
-	local data = Public.player_data[griefer.name]
+	local data = player_data[griefer.name]
 	if data then
 		message = {"", "---JAIL DATA---\n", griefer.name, " is jailed by ", data.initiator " for ", data.reason, "\n---JAIL DATA---"}
 	else
