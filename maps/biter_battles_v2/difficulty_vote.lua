@@ -3,6 +3,7 @@ local ai = require "maps.biter_battles_v2.ai"
 local event = require 'utils.event'
 local Server = require 'utils.server'
 local Tables = require "maps.biter_battles_v2.tables"
+local Init = require "maps.biter_battles_v2.init"
 local gui_style = require 'utils.utils'.gui_style
 
 local difficulties = Tables.difficulties
@@ -91,6 +92,7 @@ local function on_player_joined_game(event)
 	if not global.difficulty_vote_value then global.difficulty_vote_value = 1 end
 	if not global.difficulty_vote_index then global.difficulty_vote_index = 4 end
 	if not global.difficulty_player_votes then global.difficulty_player_votes = {} end
+	if not global.difficulty_votes_timeout then Init.tables() end
 	
 	local player = game.players[event.player_index]
 	if game.ticks_played < global.difficulty_votes_timeout then

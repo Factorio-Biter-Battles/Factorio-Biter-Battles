@@ -357,15 +357,33 @@ commands.add_command(
 
 commands.add_command(
     'instant-map-reset',
-    'Force the map reset immediately and optionally set the seed.',
+    'Force the map reset immediately and optionally set the seed (a number).  Should be between 341 - 4294967294 (inclusive).',
     function(cmd)
-        local new_rng_seed = cmd.parameter and tonumber(cmd.parameter) or nil
-		-- Make sure global.random_generator_ is set
-		math.random_seeded()
-		if new_rng_seed and tonumber(cmd.parameter) >= 0 and tonumber(cmd.parameter) < 4294967295 then
-			global.random_generator_.re_seed(new_rng_seed)
+		-- Safely convert cmd.parameter to a number if given
+		local param = cmd.parameter
+		if param then
+		    local new_rng_seed = tonumber(param)
+
+		    -- Check if conversion was successful and the number is in the correct range
+		    if new_rng_seed then
+		        if new_rng_seed < 341 or new_rng_seed > 4294967294 then
+		            game.print("Error: Seed must be between 341 and 4294967294 (inclusive).", Color.warning)
+		            return
+		        else
+		            global.next_map_seed = new_rng_seed
+					game.print("Restarting with map seed: " .. new_rng_seed, Color.warning)
+		            global.server_restart_timer = 0
+		            require "maps.biter_battles_v2.game_over".server_restart()
+		        end
+		    else
+		        game.print("Error: The parameter should be a number.", Color.warning)
+		        return
+		    end
+		else
+			global.next_map_seed = global.random_generator(341, 4294967294)
+			game.print("Restarting with autopicked map seed: " .. global.next_map_seed, Color.warning)
+			global.server_restart_timer = 0
+			require "maps.biter_battles_v2.game_over".server_restart()
 		end
-		global.server_restart_timer = 0
-		require "maps.biter_battles_v2.game_over".server_restart()
 	end
 )
