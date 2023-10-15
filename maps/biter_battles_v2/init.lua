@@ -88,6 +88,7 @@ function Public.initial_setup()
 		defines.input_action.change_active_item_group_for_filters,
 		defines.input_action.clear_cursor,
 		defines.input_action.edit_permission_group,
+		defines.input_action.gui_checked_state_changed,
 		defines.input_action.gui_click,
 		defines.input_action.gui_confirmed,
 		defines.input_action.gui_elem_changed,
@@ -113,6 +114,7 @@ function Public.initial_setup()
 	}
 	for _, d in pairs(defs) do p.set_allows_action(d, true) end
 
+	global.reroll_time_limit = 1800
 	global.gui_refresh_delay = 0
 	global.game_lobby_active = true
 	global.bb_debug = false
@@ -122,6 +124,7 @@ function Public.initial_setup()
 		["only_admins_vote"] = false,		--Are only admins able to vote on the global difficulty?
 		--MAP SETTINGS--
 		["new_year_island"] = false,
+		["map_reroll_admin_disable"] = true,
 	}
 
 	--Disable Nauvis
@@ -201,6 +204,7 @@ function Public.tables()
 	end
 	-- Our terrain gen seed IS the map seed
 	global.random_generator.re_seed(global.next_map_seed)
+	global.reroll_map_voting = {}
 	global.bb_evolution = {}
 	global.bb_game_won_by_team = nil
 	global.bb_threat = {}
