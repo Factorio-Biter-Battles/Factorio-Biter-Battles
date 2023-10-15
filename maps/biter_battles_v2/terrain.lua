@@ -169,7 +169,7 @@ end
 
 local function generate_starting_area(pos, surface)
 	local spawn_wall_radius = 116
-	local noise_multiplier = 15 
+	local noise_multiplier = 15
 	local min_noise = -noise_multiplier * 1.25
 
 	if is_horizontal_border_river(pos) then
@@ -227,7 +227,7 @@ local function generate_starting_area(pos, surface)
 						local name = "wooden-chest"
 						local r_max = math_floor(math.abs(distance_from_spawn_wall)) + 2
 						if global.random_generator(1,3) == 1 then name = name .. "-remnants" end
-						if global.random_generator(1,r_max) == 1 then 
+						if global.random_generator(1,r_max) == 1 then
 							local e = surface.create_entity({name = name, position = pos, force = "north"})
 						end
 
@@ -258,7 +258,7 @@ local function generate_river(surface, left_top_x, left_top_y)
 			local pos = {x = left_top_x + x, y = left_top_y + y}
 			if is_horizontal_border_river(pos) and not is_within_spawn_island(pos) then
 				surface.set_tiles({{name = "deepwater", position = pos}})
-				if global.random_generator(1, 64) == 1 then 
+				if global.random_generator(1, 64) == 1 then
 					local e = surface.create_entity({name = "fish", position = pos})
 				end
 			end
@@ -284,7 +284,7 @@ local function generate_extra_worm_turrets(surface, left_top)
 	if amount < 0 then return end
 	local floor_amount = math_floor(amount)
 	local r = math.round(amount - floor_amount, 3) * 1000
-	if global.random_generator(0, 999) <= r then floor_amount = floor_amount + 1 end 
+	if global.random_generator(0, 999) <= r then floor_amount = floor_amount + 1 end
 	
 	if floor_amount > 64 then floor_amount = 64 end
 	
@@ -325,7 +325,7 @@ local function draw_biter_area(surface, left_top_x, left_top_y)
 				local index = math_floor(GetNoise("bb_biterland", position, seed) * 48) % 7 + 1
 				out_of_map[i] = {name = "out-of-map", position = position}
 				tiles[i] = {name = "dirt-" .. index, position = position}
-				i = i + 1			
+				i = i + 1
 			end
 		end
 	end
@@ -347,7 +347,7 @@ local function draw_biter_area(surface, left_top_x, left_top_y)
 		end
 	end
 
-	local e = (math_abs(left_top_y) - bb_config.bitera_area_distance) * 0.0015	
+	local e = (math_abs(left_top_y) - bb_config.bitera_area_distance) * 0.0015
 	for _ = 1, global.random_generator(5, 10), 1 do
 		local v = chunk_tile_vectors[global.random_generator(1, size_of_chunk_tile_vectors)]
 		local position = {x = left_top_x + v[1], y = left_top_y + v[2]}
@@ -440,7 +440,7 @@ end
 
 function Public.draw_spawn_area(surface)
 	local chunk_r = 4
-	local r = chunk_r * 32	
+	local r = chunk_r * 32
 	
 	for x = r * -1, r, 1 do
 		for y = r * -1, -4, 1 do
@@ -583,7 +583,7 @@ function Public.generate_silo(surface)
 	for _ = 1, 32, 1 do
 		create_mirrored_tile_chain(surface, {name = "refined-concrete", position = silo.position}, 32, 10)
 	end
-	
+
 	for _, entity in pairs(surface.find_entities({{pos.x - 4, pos.y - 6}, {pos.x + 5, pos.y + 5}})) do
 		if entity.type == "simple-entity" or entity.type == "tree" then
 			entity.destroy()
@@ -634,31 +634,31 @@ function Public.minable_wrecks(event)
 	if not entity then return end
 	if not entity.valid then return end
 	if not valid_wrecks[entity.name] then return end
-	
+
 	local surface = entity.surface
 	local player = game.players[event.player_index]
-	
-	local loot_worth = math_floor(math_abs(entity.position.x * 0.02)) + global.random_generator(16, 32)	
+
+	local loot_worth = math_floor(math_abs(entity.position.x * 0.02)) + global.random_generator(16, 32)
 	local blacklist = LootRaffle.get_tech_blacklist(math_abs(entity.position.x * 0.0001) + 0.10)
 	for k, _ in pairs(loot_blacklist) do blacklist[k] = true end
 	local item_stacks = LootRaffle.roll(loot_worth, global.random_generator(1, 3), blacklist)
-		
-	for k, stack in pairs(item_stacks) do	
+
+	for k, stack in pairs(item_stacks) do
 		local amount = stack.count
 		local name = stack.name
-		
-		local inserted_count = player.insert({name = name, count = amount})	
+
+		local inserted_count = player.insert({name = name, count = amount})
 		if inserted_count ~= amount then
-			local amount_to_spill = amount - inserted_count			
+			local amount_to_spill = amount - inserted_count
 			surface.spill_item_stack(entity.position, {name = name, count = amount_to_spill}, true)
 		end
-		
+
 		surface.create_entity({
 			name = "flying-text",
 			position = {entity.position.x, entity.position.y - 0.5 * k},
 			text = "+" .. amount .. " [img=item/" .. name .. "]",
 			color = {r=0.98, g=0.66, b=0.22}
-		})	
+		})
 	end
 end
 
