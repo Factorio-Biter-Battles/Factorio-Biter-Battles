@@ -8,33 +8,15 @@ local Server = require 'utils.server'
 local Public = {}
 
 --- @class PlayerData
+--- @field jailed boolean
 --- @field permission_group_id? uint
 --- @field fallback_position? MapPosition
 --- @field initiator? PlayerName
 --- @field reason? string
 
 --- @type {[PlayerName]: PlayerData}
-local player_data = {}
+local jail_data = {}
 
-Global.register(
-	{player_data = player_data},
-	function(t)
-		player_data = t.player_data
-	end
-)
-
-
----@param player PlayerName
----@param parameters PlayerData
-function Public.store_player_data(player, parameters)
-	player_data[player] = parameters
-end
-
----@param player PlayerName
----@return PlayerData
-function Public.get_player_data(player)
-	return player_data[player]
-end
 ---Get jailed players by translating permission group members into table
 ---@return {[PlayerName] : true}
 function Public.get_jailed_table()
@@ -50,7 +32,16 @@ end
 ---@param initiator LuaPlayer player initiating the action
 ---@param reason string reason for jail
 function Public.jail(player, initiator, reason)
-	player_data[player.name] = {
+	if jail_data[player.name] and jail_data[player.name].jailed then
+		initiator.print(player.name .. " is already jailed.")
+		return
+	end
+	if global.player_vote.active and global.player_vote.target == player.name and global.player_vote.action == "jail" then
+		initiator.print("Please wait for the vote to finish.")
+		return
+	end
+	jail_data[player.name] = {
+		jailed = true,
 		fallback_position = player.position,
 		permission_group_id = player.permission_group.group_id,
 		initiator = initiator.name,
@@ -68,14 +59,22 @@ end
 ---@param initiator LuaPlayer player initiating the action
 ---@param reason string reason for free
 function Public.free(player, initiator, reason)
-    local data = player_data[player.name]
+    local data = jail_data[player.name]
+	if not data or not data.jailed then
+		initiator.print(player.name .. " isn't jailed.")
+		return
+	end
+	if global.player_vote.active and global.player_vote.target == player.name and global.player_vote.action == "free" then
+		initiator.print("Please wait for the vote to finish.")
+		return
+	end
     local surface = game.get_surface(global.bb_surface_name)
     player.teleport(surface.find_non_colliding_position("character", data.fallback_position, 128, 1), surface)
     game.permissions.get_group(data.permission_group_id).add_player(player)
 	local message = table.concat({"", player.name, " has been freed by ", initiator.name, ". Reason: ", reason})
 	game.print(message)
 	Server.to_discord_embed(message)
-	player_data[player.name] = nil
+	jail_data[player.name] = nil
 end
 
 local valid_commands = { jail = Public.jail, free = Public.free }
@@ -131,7 +130,7 @@ local function info(event)
         return
     end
 	local message = {}
-	local data = player_data[griefer.name]
+	local data = jail_data[griefer.name]
 	if data then
 		message = {"", "---JAIL DATA---\n", griefer.name, " is jailed by ", data.initiator " for ", data.reason, "\n---JAIL DATA---"}
 	else
@@ -237,4 +236,5 @@ commands.add_command(
 Event.add(defines.events.on_console_command, on_console_command)
 Event.on_init(on_init)
 
+global.jail_data = jail_data 
 return Public

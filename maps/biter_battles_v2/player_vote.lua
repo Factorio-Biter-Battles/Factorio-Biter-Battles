@@ -5,7 +5,6 @@ local Event = require 'utils.event'
 local Server = require 'utils.server'
 local Jail = require 'maps.biter_battles_v2.jail'
 local gui_style = require 'utils.utils'.gui_style
-local Global = require 'utils.global'
 
 local frame_size = {x = 400, y = 200}
 
@@ -14,12 +13,6 @@ local Public = {}
 ---@type {active: boolean, action: string, initiator: PlayerName, target: PlayerName, reason: string, yes: {[PlayerName]: true}, no: {[PlayerName]: true}, timer: uint, succeded: boolean }
 local vote = {}
 
-Global.register(
-    vote,
-    function(t)
-        vote = t
-    end
-)
 ---@type {[string]: {pre_function: (fun(initiator: LuaPlayer, target: LuaPlayer, reason: string): boolean), post_function: function, pass_cond: (fun():boolean), duration: uint}}
 local valid_votes = {}
 
@@ -27,11 +20,11 @@ local valid_votes = {}
 valid_votes["jail"] = {
 	---Freeze potential griefer for the duration of jail vote
 	pre_function = function(initiator, target, reason)
-		if Jail.get_jailed_table()[target.name] then
+		if global.jail_data[target.name] and global.jail_data[target.name].jailed then
 			initiator.print(target.name .. " is already jailed.")
 			return false
 		end
-		Jail.store_player_data(target.name, {permission_group_id = target.permission_group.group_id})
+		global.jail_data[target.name] = {jailed = false, permission_group_id = target.permission_group.group_id}
 		game.permissions.get_group("frozen").add_player(target)
 		rendering.draw_text{
 			text = "Please wait while players decide your fate.",
@@ -39,13 +32,13 @@ valid_votes["jail"] = {
 			target = target.position,
 			players = {target},
 			scale_with_zoom = true,
-			time_to_live = vote.timer * 60,
+			time_to_live = valid_votes.jail.duration * 60,	--ugly :/
 			color = {1, 0, 0}
 		}
 		return true
     end,
 	post_function = function()
-		local p_group_id = Jail.get_player_data(vote.target).permission_group_id
+		local p_group_id = global.jail_data[vote.target].permission_group_id
 		game.permissions.get_group(p_group_id).add_player(vote.target)
 		if vote.succeded then
 			local target = game.get_player(vote.target)
@@ -350,4 +343,5 @@ commands.add_command(
     end
 )
 
+global.player_vote = vote
 return Public

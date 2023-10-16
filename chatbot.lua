@@ -94,6 +94,11 @@ commands.add_command(
                     game.print(target_player.name .. ' is already trusted!')
                     return
                 end
+                local player_vote = global.player_vote
+                if player_vote.active and player_vote.target == target_player.name and player_vote.action == "trust" then
+                    player.print("Please wait for the vote to finish.")
+                    return
+                end 
                 trusted[target_player.name] = true
                 game.print(target_player.name .. ' is now a trusted player.', {r = 0.22, g = 0.99, b = 0.99})
                 for _, a in pairs(game.connected_players) do
@@ -147,6 +152,11 @@ commands.add_command(
                     game.print(target_player.name .. ' is already untrusted!')
                     return
                 end
+                local player_vote = global.player_vote
+                if player_vote.active and player_vote.target == target_player.name and player_vote.action == "untrust" then
+                    player.print("Please wait for the vote to finish.")
+                    return
+                end 
                 trusted[target_player.name] = false
                 game.print(target_player.name .. ' is now untrusted.', {r = 0.22, g = 0.99, b = 0.99})
                 for _, a in pairs(game.connected_players) do
