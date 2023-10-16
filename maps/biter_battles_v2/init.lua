@@ -200,7 +200,7 @@ function Public.tables()
 	if global.next_map_seed == nil or global.next_map_seed < 341 then
 		-- Seeds 1-341 inclusive are the same
 		-- https://lua-api.factorio.com/latest/classes/LuaRandomGenerator.html#re_seed
-		global.next_map_seed = global.random_generator(341, 2 ^ 31)
+		global.next_map_seed = global.random_generator(341, 4294967294)
 	end
 	-- Our terrain gen seed IS the map seed
 	global.random_generator.re_seed(global.next_map_seed)
