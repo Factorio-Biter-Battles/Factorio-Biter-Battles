@@ -379,7 +379,8 @@ commands.add_command(
                     return
                 else
                     global.next_map_seed = new_rng_seed
-                    player.print("Restarting with map seed: " .. new_rng_seed, Color.warning)
+                    game.print("Restarting with map seed: " .. new_rng_seed, Color.warning)
+                    Server.to_discord_bold(table.concat {"[Map Reset] " .. player.name .. " has reset the map! seed: " .. new_rng_seed})
                     global.server_restart_timer = 0
                     require "maps.biter_battles_v2.game_over".server_restart()
                 end
@@ -391,6 +392,7 @@ commands.add_command(
         else
             global.next_map_seed = global.random_generator(341, 4294967294)
             player.print("Restarting with autopicked map seed: " .. global.next_map_seed, Color.warning)
+			Server.to_discord_bold(table.concat {"[Map Reset] " .. player.name .. " has reset the map! seed: " .. global.next_map_seed})
             global.server_restart_timer = 0
             require "maps.biter_battles_v2.game_over".server_restart()
         end
