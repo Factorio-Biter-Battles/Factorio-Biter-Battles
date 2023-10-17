@@ -130,25 +130,38 @@ local function on_player_joined_game(event)
     top_button(game.players[event.player_index])
 end
 
-local function close_other_gui(event)
-    local player = game.get_player(event.player_index)
-    local gui_buttons = {
-        ["comfy_panel_top_button"] = true,
-        ["bb_toggle_button"] = true,
-        ["114"] = true
-    } 
-    if not gui_buttons[event.element.name] then return end
+local function close_other_gui(event)  
+    if not event.element then
+        return
+    end
+    if not event.element.valid then
+        return
+    end
+    local player = game.players[event.player_index]  
     local gui_panels = {
-        ["comfy_panel"] = true,
-        ["bb_main_gui"] = true,
-        ["115"] = true
-    }
+        "comfy_panel",
+        "bb_main_gui",
+        "115",
+	}
+    local gui_buttons = {
+        "comfy_panel_top_button",
+        "bb_toggle_button",
+        "114",
+	}
+    local is_on_list = false
+    for _, value in pairs(gui_buttons) do
+	if value == event.element.name then 
+		 is_on_list = true		
+	end
+    end
     for k, v in pairs(gui_buttons) do 
-        if not (player.gui.top[v].name == event.element.name) then
-            if player.gui.left[gui_panels[k]] then
-                player.gui.left[gui_panels[k]].destroy()
+	if is_on_list then
+            if not (player.gui.top[v].name == event.element.name) then  
+                if player.gui.left[gui_panels[k]] then            
+                   player.gui.left[gui_panels[k]].destroy()               
+                end	
             end
-        end
+	end	        
     end
 end
 
