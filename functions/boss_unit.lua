@@ -30,8 +30,6 @@ end
 
 local function on_entity_damaged(event)
 	local entity = event.entity
-	if not entity.valid then return end
-	if entity.type ~= "unit" then return end
 	local boss = global.boss_units[entity.unit_number]
 	if not boss then return end
 	entity.health = entity.health + event.final_damage_amount
@@ -54,4 +52,9 @@ end
 local event = require 'utils.event'
 event.on_init(on_init)
 event.add(defines.events.on_entity_damaged, on_entity_damaged)
+event.add_event_filter(defines.events.on_entity_damaged, {
+	filter = "type",
+	type = "unit",
+})
+
 return Public
