@@ -115,7 +115,6 @@ function Public.initial_setup()
 	for _, d in pairs(defs) do p.set_allows_action(d, true) end
 
 	global.reroll_time_limit = 1800
-	global.gui_refresh_delay = 0
 	global.game_lobby_active = true
 	global.bb_debug = false
 	global.bb_settings = {

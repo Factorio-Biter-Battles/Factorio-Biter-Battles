@@ -83,7 +83,6 @@ end
 local function on_entity_died(event)
 	local entity = event.entity
 	if not entity.valid then return end
-	if Ai.subtract_threat(entity) then Gui.refresh_threat() end
 	AiTargets.stop_tracking(entity)
 	if Functions.biters_landfill(entity) then return end
 	Game_over.silo_death(event)
