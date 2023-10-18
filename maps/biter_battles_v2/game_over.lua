@@ -6,6 +6,7 @@ local Server = require 'utils.server'
 local Special_games = require 'comfy_panel.special_games'
 local Event = require 'utils.event'
 local Tables = require 'maps.biter_battles_v2.tables'
+local Jail = require 'maps.biter_battles_v2.jail'
 
 local math_random = math.random
 
@@ -321,6 +322,7 @@ function Public.server_restart()
         local prev_surface = global.bb_surface_name
         Special_games.reset_active_special_games()
         Special_games.reset_special_games_variables()
+        Jail.reset_fallback_data()
         Init.tables()
         Init.playground_surface()
         Init.forces()
@@ -329,13 +331,13 @@ function Public.server_restart()
         Init.load_spawn()
 
         for _, player in pairs(game.players) do
-            if not player.permission_group.name == "gulag" then --prevent jail breaking on map restart
+            if player.force.name ~= "jailed" then
                 Functions.init_player(player)
-                for _, e in pairs(player.gui.left.children) do
-                    e.destroy()
-                end
-                Gui.create_main_gui(player)
             end
+            for _, e in pairs(player.gui.left.children) do
+                e.destroy()
+            end
+            Gui.create_main_gui(player)
         end
         game.reset_time_played()
         global.server_restart_timer = nil

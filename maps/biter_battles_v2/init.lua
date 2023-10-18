@@ -2,42 +2,9 @@ local Terrain = require "maps.biter_battles_v2.terrain"
 local Score = require "comfy_panel.score"
 local Tables = require "maps.biter_battles_v2.tables"
 local fifo = require "maps.biter_battles_v2.fifo"
-local Blueprint = require 'maps.biter_battles_v2.blueprints'
 
 local Public = {}
 
-local function createTrollSong(forceName,offset)
-	local bp_string = Blueprint.get_blueprint("jail_song")
-	local jailSurface = game.surfaces['gulag']
-	local bp_entity = jailSurface.create_entity{name = 'item-on-ground', position= offset, stack = 'blueprint'}
-	bp_entity.stack.import_stack(bp_string)
-	local bp_entities = bp_entity.stack.get_blueprint_entities()
-	local bpInfo = {surface = jailSurface, force = forceName, position = offset, force_build = 'true'}
-	local bpResult = bp_entity.stack.build_blueprint(bpInfo)
-	bp_entity.destroy()
-	for k, v in pairs(bpResult) do
-		if k == 27 then
-			v.get_control_behavior().enabled = false
-		end
-		if k == 28 then
-			v.get_control_behavior().enabled = true
-		end
-		v.revive()
-	end
-	local songBuildings = jailSurface.find_entities_filtered{area={{-11+offset.x, -23+offset.y}, {12+offset.x, 25+offset.y}}, name = {
-		"constant-combinator",
-		"decider-combinator", 
-		"substation",
-		"programmable-speaker",
-		"arithmetic-combinator",
-		"electric-energy-interface"
-	}}
-	for k, v in pairs(songBuildings) do
-		v.minable = false
-		v.destructible = false
-		v.operable = false
-	end
-end
 
 function Public.initial_setup()
 	game.map_settings.enemy_evolution.time_factor = 0
@@ -139,9 +106,6 @@ function Public.initial_setup()
 	for chunk in surface.get_chunks() do
 		surface.delete_chunk({chunk.x, chunk.y})
 	end
-	createTrollSong(game.forces.south.name,{x=6,y=0})
-	createTrollSong(game.forces.north.name,{x=-40,y=0})
-	createTrollSong(game.forces.spectator.name,{x=-80,y=0})
 end
 
 

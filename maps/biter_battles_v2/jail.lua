@@ -3,7 +3,8 @@
 local Global = require 'utils.global'
 local Event = require 'utils.event'
 local Server = require 'utils.server'
-
+local Functions = require 'maps.biter_battles_v2.functions'
+local Blueprint = require 'maps.biter_battles_v2.blueprints'
 
 local Public = {}
 
@@ -11,16 +12,27 @@ local Public = {}
 --- @field jailed boolean
 --- @field permission_group_id? uint
 --- @field fallback_position? MapPosition
+--- @field force? string
 --- @field initiator? PlayerName
 --- @field reason? string
 
 --- @type {[PlayerName]: PlayerData}
 local jail_data = {}
 
----Get jailed players by translating permission group members into table
+--- Reset fallback data of jailed players,
+--- so that they fall into spectator when freed after map restart
+Public.reset_fallback_data = function()
+	for _, v in pairs(jail_data) do
+		v.permission_group_id = nil
+		v.fallback_position = nil
+		v.force = nil
+	end
+end
+
+---Get jailed players by translating force members into table
 ---@return {[PlayerName] : true}
 function Public.get_jailed_table()
-    local players = game.permissions.get_group("gulag").players
+    local players = game.forces["jailed"]
     local t = {}
     for _, p in pairs(players) do
         t[p.name] = true
@@ -32,7 +44,7 @@ end
 ---@param initiator LuaPlayer player initiating the action
 ---@param reason string reason for jail
 function Public.jail(player, initiator, reason)
-	if jail_data[player.name] and jail_data[player.name].jailed then
+	if player.force == "jailed" then
 		initiator.print(player.name .. " is already jailed.")
 		return
 	end
@@ -44,12 +56,14 @@ function Public.jail(player, initiator, reason)
 		jailed = true,
 		fallback_position = player.position,
 		permission_group_id = player.permission_group.group_id,
+		force = player.force.name,
 		initiator = initiator.name,
 		reason = reason
 	}
     local gulag = game.get_surface("gulag")
     player.teleport(gulag.find_non_colliding_position("character", {0, 0}, 128, 1), gulag)
     game.permissions.get_group("gulag").add_player(player)
+	player.force = "jailed"
 	local message = table.concat({player.name, " has been jailed by ", initiator.name, ". Reason: ", reason})
 	game.print(message)
 	Server.to_discord_embed(message)
@@ -59,18 +73,23 @@ end
 ---@param initiator LuaPlayer player initiating the action
 ---@param reason string reason for free
 function Public.free(player, initiator, reason)
-    local data = jail_data[player.name]
-	if not data or not data.jailed then
+	if not player.force == "jailed" then
 		initiator.print(player.name .. " isn't jailed.")
 		return
 	end
+	local data = jail_data[player.name]
 	if global.player_vote.active and global.player_vote.target == player.name and global.player_vote.action == "free" then
 		initiator.print("Please wait for the vote to finish.")
 		return
 	end
     local surface = game.get_surface(global.bb_surface_name)
-    player.teleport(surface.find_non_colliding_position("character", data.fallback_position, 128, 1), surface)
-    game.permissions.get_group(data.permission_group_id).add_player(player)
+	if data.fallback_position then
+		player.teleport(surface.find_non_colliding_position("character", data.fallback_position, 128, 1), surface)
+		game.permissions.get_group(data.permission_group_id).add_player(player)
+		player.force = data.force
+	else
+		Functions.init_player(player)
+	end
 	local message = table.concat({"", player.name, " has been freed by ", initiator.name, ". Reason: ", reason})
 	game.print(message)
 	Server.to_discord_embed(message)
@@ -139,7 +158,39 @@ local function info(event)
 	player.print(message)
 end
 
---- Create surface and permission group
+---@param surface LuaSurface
+local function createTrollSong(surface)
+	local position = {x=6, y=0}
+	local bp_entity = surface.create_entity{name = 'item-on-ground', position= position, stack = 'blueprint'}
+	bp_entity.stack.import_stack(Blueprint.get_blueprint("jail_song"))
+	local bpInfo = {surface = surface, force = "jailed", position = position, force_build = 'true'}
+	local bpResult = bp_entity.stack.build_blueprint(bpInfo)
+	bp_entity.destroy()
+	for k, v in pairs(bpResult) do
+		if k == 27 then
+			v.get_control_behavior().enabled = false
+		end
+		if k == 28 then
+			v.get_control_behavior().enabled = true
+		end
+		v.revive()
+	end
+	local songBuildings = surface.find_entities_filtered{area={{position.x-11, position.y-23}, {position.x+12, position.y+25}}, name = {
+		"constant-combinator",
+		"decider-combinator", 
+		"substation",
+		"programmable-speaker",
+		"arithmetic-combinator",
+		"electric-energy-interface"
+	}}
+	for _, v in pairs(songBuildings) do
+		v.minable = false
+		v.destructible = false
+		v.operable = false
+	end
+end
+
+--- Create surface, permission group, force, and song
 local function on_init()
 	local walls = {}
     local tiles = {}
@@ -208,6 +259,10 @@ local function on_init()
 		p.set_allows_action(v, false)
 	end
 	p.set_allows_action(defines.input_action.write_to_console, true)
+
+	game.create_force("jailed")
+
+	createTrollSong(surface)
 end
 
 commands.add_command(
