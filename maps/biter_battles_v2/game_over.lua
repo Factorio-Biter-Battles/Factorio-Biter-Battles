@@ -7,8 +7,10 @@ local Special_games = require 'comfy_panel.special_games'
 local Event = require 'utils.event'
 local Tables = require 'maps.biter_battles_v2.tables'
 local Jail = require 'maps.biter_battles_v2.jail'
-
+local Token = require 'utils.token'
+local Task = require 'utils.task'
 local math_random = math.random
+local gui_style = require 'utils.utils'.gui_style
 
 local Public = {}
 
@@ -319,30 +321,7 @@ function Public.server_restart()
         local message = 'Map is restarting! '
         Server.to_discord_bold(table.concat {'*** ', message, ' ***'})
 
-        local prev_surface = global.bb_surface_name
-        Special_games.reset_active_special_games()
-        Special_games.reset_special_games_variables()
-        Jail.reset_fallback_data()
-        Init.tables()
-        Init.playground_surface()
-        Init.forces()
-        Init.draw_structures()
-        Gui.reset_tables_gui()
-        Init.load_spawn()
-
-        for _, player in pairs(game.players) do
-            if player.force.name ~= "jailed" then
-                Functions.init_player(player)
-            end
-            for _, e in pairs(player.gui.left.children) do
-                e.destroy()
-            end
-            Gui.create_main_gui(player)
-        end
-        game.reset_time_played()
-        global.server_restart_timer = nil
-        game.speed = 1
-        game.delete_surface(prev_surface)
+        Public.generate_new_map()
         return
     end
     if global.server_restart_timer % 30 == 0 then
@@ -497,6 +476,107 @@ local function chat_with_everyone(event)
     if not enemy then return end
     local message = player.name .."[auto-shout]: " .. event.message
     game.forces[enemy].print(message, player.chat_color)
+end
+
+local function draw_reroll_gui(player)
+    if player.gui.top.reroll_frame then return end
+    local f = player.gui.top.add{type = "frame", name = "reroll_frame"}
+    gui_style(f, {height = 38, padding = 0})
+    
+    local t = f.add{type = "table", name = "reroll_table", column_count = 3, vertical_centering = true}
+    local l = t.add{type = "label", caption = "Reroll map?\t" .. global.reroll_time_left .. "s"}
+    gui_style(l, {font = "heading-2", font_color = {r = 0.88, g = 0.55, b = 0.11}, width = 105})
+
+    local b = t.add { type = "sprite-button", caption = "Yes", name = "reroll_yes" }
+    gui_style(b, {width = 50, height = 28 , font = "heading-2", font_color = {r = 0.1, g = 0.9, b = 0.0}} )
+
+    b = t.add { type = "sprite-button", caption = "No", name = "reroll_no" }
+    gui_style(b, {width = 50, height = 28 , font = "heading-2", font_color = {r = 0.9, g = 0.1, b = 0.1}} )
+end
+
+local reroll_buttons_token = Token.register(
+    -- create buttons for joining players
+    function(event)
+        local player = game.get_player(event.player_index)
+        draw_reroll_gui(player)
+    end
+)
+
+local reroll_token = Token.register(
+    function()
+        -- disable reroll buttons creation for joining players
+        Event.remove_removable(defines.events.on_player_joined_game, reroll_buttons_token)
+        -- remove existing buttons
+        for _, player in pairs(game.players) do
+            if player.gui.top["reroll_frame"] then 
+                player.gui.top["reroll_frame"].destroy()
+            end
+        end
+        -- count votes
+        local total_votes = table.size(global.reroll_map_voting)
+        local result = 0
+        if total_votes > 0 then
+            for _, vote in pairs(global.reroll_map_voting) do
+                result = result + vote
+            end
+            result = math.floor( 100*result / total_votes )
+            if result >= 75 then
+                game.print("Vote to reload the map has succeeded (" .. result .. "%)")
+                game.print("Map is being rerolled!", {r = 0.22, g = 0.88, b = 0.22})
+                Public.generate_new_map()
+                return
+            end
+        end
+        game.print("Vote to reload the map has failed (" .. result .. "%)")
+
+    end
+)
+
+local decrement_timer_token = Token.get_counter() + 1 -- predict what the token will look like
+decrement_timer_token = Token.register(
+    function()
+        local reroll_time_left = global.reroll_time_left - 1
+        for _, player in pairs(game.connected_players) do
+            player.gui.top.reroll_frame.reroll_table.children[1].caption = "Reroll map?\t" .. reroll_time_left .. "s"
+        end
+        if reroll_time_left > 0 then
+            Task.set_timeout_in_ticks(60, decrement_timer_token)
+            global.reroll_time_left = reroll_time_left
+        end
+    end
+)
+
+function Public.generate_new_map()
+    game.speed = 1
+    local prev_surface = global.bb_surface_name
+    Special_games.reset_special_games()
+    Init.tables()
+    Init.playground_surface()
+    Init.forces()
+    Init.draw_structures()
+    Gui.reset_tables_gui()
+    Init.load_spawn()
+    for _, player in pairs(game.players) do
+        if player.force.name ~= "jailed" then
+            Functions.init_player(player)
+        end
+        for _, e in pairs(player.gui.left.children) do
+            e.destroy()
+        end
+        Gui.create_main_gui(player)
+    end
+    game.reset_time_played()
+    global.server_restart_timer = nil    
+    game.delete_surface(prev_surface)
+    if global.bb_settings.map_reroll then
+        Task.set_timeout_in_ticks(global.reroll_time_limit, reroll_token)
+        Event.add_removable(defines.events.on_player_joined_game, reroll_buttons_token)
+        global.reroll_time_left = global.reroll_time_limit / 60
+        for _, player in pairs(game.connected_players) do
+            draw_reroll_gui(player)
+        end
+        Task.set_timeout_in_ticks(60, decrement_timer_token)
+    end
 end
 
 Event.add(defines.events.on_console_chat, chat_with_everyone)
