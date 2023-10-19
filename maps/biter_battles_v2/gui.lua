@@ -14,6 +14,7 @@ local food_names = Tables.gui_foods
 
 local math_random = math.random
 local math_abs = math.abs
+local math_ceil = math.ceil
 require "maps.biter_battles_v2.spec_spy"
 local gui_style = require 'utils.utils'.gui_style
 local has_life = require 'comfy_panel.special_games'.has_life
@@ -96,7 +97,7 @@ local function create_first_join_gui(player)
 		if global.game_lobby_active then
 			font_color = {r=0.7, g=0.7, b=0.7}
 			c = c .. " (waiting for players...  "
-			c = c .. math.ceil((global.game_lobby_timeout - game.tick)/60)
+			c = c .. math_ceil((global.game_lobby_timeout - game.tick)/60)
 			c = c .. ")"
 		end
 		local t = frame.add  { type = "table", column_count = 4 }
@@ -355,6 +356,13 @@ function join_team(player, force_name, forced_join, auto_join)
 				)
 				return
 			end
+			if global.suspended_players[player.name] and (game.ticks_played - global.suspended_players[player.name]) < global.suspended_time then
+					player.print(
+						"Not ready to return to your team yet as you are still suspended. Please wait " .. math_ceil((global.suspended_time-(math.floor((game.ticks_played - global.suspended_players[player.name]))))/60) .. " seconds.",
+						{r = 0.98, g = 0.66, b = 0.22}
+					)
+					return
+			end
 			if game.tick - global.spectator_rejoin_delay[player.name] < 3600 then
 				player.print(
 					"Not ready to return to your team yet. Please wait " .. 60-(math.floor((game.tick - global.spectator_rejoin_delay[player.name])/60)) .. " seconds.",
@@ -542,6 +550,18 @@ local function on_gui_click(event)
 		return
 	end
 
+	if name == "suspend_yes" then 
+		if global.suspend_voting[player.name] ~= 1 then 
+			global.suspend_voting[player.name] = 1 
+			game.print(player.name .. " wants to suspend ".. global.suspend_target,{r = 0.1, g = 0.9, b = 0.0})
+		end
+	end
+	if name == "suspend_no" then 
+		if global.suspend_voting[player.name] ~= 0 then 
+			global.suspend_voting[player.name] = 0
+			game.print(player.name .. " doesn't want to suspend " .. global.suspend_target, {r = 0.9, g = 0.1, b = 0.1})
+		end
+	end
 	if name == "bb_hide_players" then
 		global.bb_view_players[player.name] = false
 		Public.create_main_gui(player)
@@ -577,7 +597,7 @@ local function on_player_joined_game(event)
 	global.bb_view_players[player.name] = false
 
 	if #game.connected_players > 1 then
-		global.game_lobby_timeout = math.ceil(36000 / #game.connected_players)
+		global.game_lobby_timeout = math_ceil(36000 / #game.connected_players)
 	else
 		global.game_lobby_timeout = 599940
 	end
