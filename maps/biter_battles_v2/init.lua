@@ -125,6 +125,7 @@ function Public.initial_setup()
 		["only_admins_vote"] = false,		--Are only admins able to vote on the global difficulty?
 		--MAP SETTINGS--
 		["new_year_island"] = false,
+		["bb_map_reveal_toggle"] = true,
 		["map_reroll_admin_disable"] = true,
 	}
 
@@ -183,6 +184,22 @@ function Public.draw_structures()
 	Terrain.generate_silo(surface)
 	Terrain.draw_spawn_island(surface)
 	--Terrain.generate_spawn_goodies(surface)
+end
+
+function Public.reveal_map()
+	if global.bb_settings["bb_map_reveal_toggle"] then
+		local surface = game.surfaces[global.bb_surface_name]
+		local width = 2000 -- for one side
+		local height = 500 -- for one side
+		for x = 16, width, 32 do
+			for y = 16, height, 32 do
+				game.forces["spectator"].chart(surface, {{-x, -y}, {-x, -y}})
+				game.forces["spectator"].chart(surface, {{x, -y}, {x, -y}})
+				game.forces["spectator"].chart(surface, {{-x, y}, {-x, y}})
+				game.forces["spectator"].chart(surface, {{x, y}, {x, y}})
+			end
+		end
+	end
 end
 
 function Public.tables()
