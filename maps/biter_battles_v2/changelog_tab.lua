@@ -6,6 +6,15 @@ local function add_changelog(player, element)
 	changelog_scrollpanel.style.maximal_height = 530
 	
 	local changelog_change = {}
+	table.insert(changelog_change,"2023-10-19")
+	table.insert(changelog_change,"Special game Mixed ore map")
+	table.insert(changelog_change,"developer-8")
+	table.insert(changelog_change,"2023-10-19")
+	table.insert(changelog_change,"bugfix : NaN propagation in strike code generating desynch")
+	table.insert(changelog_change,"amannm")
+	table.insert(changelog_change,"2023-10-07")
+	table.insert(changelog_change,"Update changelog script to have it ordered")
+	table.insert(changelog_change,"Ragnarok77")
 	table.insert(changelog_change,"2023-10-03")
 	table.insert(changelog_change,"Introduce map reroll")
 	table.insert(changelog_change,"PlayerNoon")
