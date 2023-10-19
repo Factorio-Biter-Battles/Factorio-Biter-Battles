@@ -7,6 +7,9 @@ local function add_changelog(player, element)
 	
 	local changelog_change = {}
         table.insert(changelog_change,"2023-10-19")
+        table.insert(changelog_change,"perf : Ignore damage events for non-biters and increase refresh delay for healthbar of bosses")
+        table.insert(changelog_change,"cogito123")
+        table.insert(changelog_change,"2023-10-19")
         table.insert(changelog_change,"perf : Increase refresh threat min delay and optim on code")
         table.insert(changelog_change,"XVhc6A")
         table.insert(changelog_change,"2023-10-19")
