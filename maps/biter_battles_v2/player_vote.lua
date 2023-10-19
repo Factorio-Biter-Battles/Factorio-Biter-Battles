@@ -13,12 +13,17 @@ local Public = {}
 ---@type {active: boolean, action: string, initiator: PlayerName, target: PlayerName, reason: string, yes: {[PlayerName]: true}, no: {[PlayerName]: true}, timer: uint, succeded: boolean }
 local vote = {}
 
----@type {[string]: {pre_function: (fun(initiator: LuaPlayer, target: LuaPlayer, reason: string): boolean), post_function: function, pass_cond: (fun():boolean), duration: uint}}
+---@class ValidVote
+---@field pre_function fun(initiator: LuaPlayer, target: LuaPlayer, reason: string): boolean #Function ran before starting the vote. E.g. check if the player is jailed before starting jailvote
+---@field post_function fun() #Function ran after vote completion
+---@field pass_cond fun(): boolean #Function determinig wheter the vote has passed or failed
+---@field duration uint Vote duration in seconds 
+
+---@type {[string]: ValidVote}
 local valid_votes = {}
 
 
 valid_votes["jail"] = {
-	---Freeze potential griefer for the duration of jail vote
 	pre_function = function(initiator, target, reason)
 		if global.jail_data[target.name] and global.jail_data[target.name].jailed then
 			initiator.print(target.name .. " is already jailed.")
@@ -314,8 +319,7 @@ local function proceess_command(event)
 	end
 end
 
---- Translate `/vote jail ...` to `/jail ...` and call `process_command()`
---- Call `process_command()` for non-admin direct commands (etc. `/jail`) 
+--- Redirect both `/vote ValidVote` and `/ValidVote` (non-admin) to `process_command()`
 local function on_console_command(event)
 	if event.command == "vote" then
 		local parameters = {}
