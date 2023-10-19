@@ -1,9 +1,12 @@
 local Event = require 'utils.event'
 local Token = require 'utils.token'
 local Color = require 'utils.color_presets'
+local Tables = require "maps.biter_battles_v2.tables"
 local Public = {}
 global.active_special_games = {}
 global.special_games_variables = {}
+global.next_special_games = {}
+global.next_special_games_variables = {}
 
 local valid_special_games = {
 	--[[ 
@@ -103,6 +106,41 @@ local valid_special_games = {
 		button = {name = "limited_lives_apply", type = "button", caption = "Apply"}
 	},
 
+	mixed_ore_map = {
+		name = {type = "label", caption = "Mixed ore map", tooltip = "Covers the entire map with mixed ore. Takes effect after map restart"},
+		config = {
+			[1] = {name = "label1", type = "label", caption = "Type"},
+			[2] = {name = "type1", type = "drop-down", items = {"Mixed ore", "Checkerboard", "Vertical lines"}},
+			[3] = {name = "label2", type = "label", caption = "Size"},
+			[4] = {name = "size", type = "textfield", text = "", numeric = true, width = 40, tooltip = "Live empty for default"
+				.. "\nFor a Mixed ore, a higher value means lower features. Value range from 1 to 10, Default 9."
+				.. "\nFor Checkerboard its the size of the cell. Default 5"
+			},
+		},
+		button = {name = "mixed_ore_map_apply", type = "button", caption = "Apply"}
+	},
+  
+	disable_sciences = {
+		name = {type = "label", caption = "Disable sciences", tooltip = "disable sciences that players wont be able to send."},
+		config = {
+			[1] = {name = "1", type = "sprite", sprite = "item/automation-science-pack"},
+			[2] = {name = "red", type = "checkbox", state = false},
+			[3] = {name = "2", type = "sprite", sprite = "item/logistic-science-pack"},
+			[4] = {name = "green", type = "checkbox", state = false},
+			[5] = {name = "3", type = "sprite", sprite = "item/military-science-pack"},
+			[6] = {name = "gray", type = "checkbox", state = false},
+			[7] = {name = "4", type = "sprite", sprite = "item/chemical-science-pack"},
+			[8] = {name = "blue", type = "checkbox", state = false},
+			[9] = {name = "5", type = "sprite", sprite = "item/production-science-pack"},
+			[10] = {name = "purple", type = "checkbox",  state = false},
+			[11] = {name = "6", type = "sprite", sprite = "item/utility-science-pack"},
+			[12] = {name = "yellow", type = "checkbox", state = false},
+			[13] = {name = "7", type = "sprite", sprite = "item/space-science-pack"},
+			[14] = {name = "white", type = "checkbox", state = false},
+		},
+		button = {name = "disable_sciences_apply", type = "button", caption = "Apply"}
+	},
+  
 	send_to_external_server = {
 		name = {type = "label", caption = "Send to external server", tooltip = "Sends all online players an invite to an external server.\nLeave empty to disable"},
 		config =  {
@@ -117,8 +155,12 @@ local valid_special_games = {
 	},
 }
 
-function Public.reset_active_special_games() for _, i in ipairs(global.active_special_games) do i = false end end
-function Public.reset_special_games_variables() global.special_games_variables = {} end
+function Public.reset_special_games()
+	global.active_special_games = global.next_special_games
+	global.special_games_variables = global.next_special_games_variables
+	global.next_special_games = {}
+	global.next_special_games_variables = {}
+end
 
 local function generate_turtle(moat_width, entrance_width, size_x, size_y)
 	game.print("Special game turtle is being generated!", Color.warning)
@@ -354,9 +396,60 @@ local function generate_limited_lives(lives_limit)
 	game.print("Special game Limited lives: " .. special_game_description)
 end
 
+local function generate_disable_sciences(packs)
+
+	local disabled_food = {
+		["automation-science-pack"] = packs[1],
+		["logistic-science-pack"] = packs[2],
+		["military-science-pack"] = packs[3],
+		["chemical-science-pack"] = packs[4],
+		["production-science-pack"] = packs[5],
+		["utility-science-pack"] = packs[6],
+		["space-science-pack"] = packs[7]
+	}
+	local message = {"Special game generated. Disabled science:"}
+	for k, v in pairs(disabled_food) do
+		if v then
+			table.insert(message, Tables.food_long_to_short[k].short_name)
+		end
+	end
+	if table_size(message)>1 then
+		global.active_special_games["disable_sciences"] = true
+		global.special_games_variables["disabled_food"] = disabled_food
+		game.print(table.concat(message, " "))
+	else
+		global.active_special_games["disable_sciences"] = false
+		global.special_games_variables["disabled_food"] = nil
+		game.print("Special game ended. All science enabled")
+	end
+end
+
 function Public.has_life(player_name)
 	local player_lives = global.special_games_variables["limited_lives"]["player_lives"][player_name]
 	return player_lives == nil or player_lives > 0
+end
+
+local function generate_mixed_ore_map(type, size)
+	if type then
+		if not size then
+			-- size not specified, set default values
+			if type == 1 then
+				size = 9
+			elseif type == 2 then
+				size = 5
+			end
+		end
+		if type == 1 and size > 10 then
+			size = 10
+		end
+		global.next_special_games["mixed_ore_map"] = true
+		global.next_special_games_variables["mixed_ore_map"] = {
+			type = type,
+			size = size
+		}
+
+		game.print("Special game Mixed ore map is being scheduled. The special game will start after restarting the map!", Color.warning)
+	end
 end
 
 local function on_built_entity(event)
@@ -389,9 +482,9 @@ local send_to_external_server_handler = Token.register(
 local create_special_games_panel = (function(player, frame)
 	frame.clear()
 	frame.add{type = "label", caption = "Configure and apply special games here"}.style.single_line = false
-
+	local sp = frame.add{type = "scroll-pane", horizontal_scroll_policy = "never"}
 	for k, v in pairs(valid_special_games) do
-		local a = frame.add {type = "frame"}
+		local a = sp.add {type = "frame"}
 		a.style.width = 750
 		local table = a.add {name = k, type = "table", column_count = 3, draw_vertical_lines = true}
 		table.add(v.name).style.width = 110
@@ -509,6 +602,12 @@ local function on_gui_click(event)
 
 		generate_limited_lives(lives_limit)
 
+	elseif element.name == "mixed_ore_map_confirm" then
+		local type = tonumber(config["type1"].selected_index)
+		local size = tonumber(config["size"].text)
+
+		generate_mixed_ore_map(type, size)
+
 	elseif element.name == "send_to_external_server_btn" then
 		local address = config["address"].text
 		local name = config["server_name"].text
@@ -530,8 +629,20 @@ local function on_gui_click(event)
 		end
 		global.special_games_variables.send_to_external_server = {address = address, name = name, description = description}
 		Event.add_removable(defines.events.on_player_joined_game, send_to_external_server_handler)
-	end
 
+	elseif element.name == "disable_sciences_confirm" then
+		local packs = {
+			config["red"].state,
+			config["green"].state,
+			config["gray"].state,
+			config["blue"].state,
+			config["purple"].state,
+			config["yellow"].state,
+			config["white"].state
+		}
+
+		generate_disable_sciences(packs)
+	end
 
 	if string.find(element.name, "_confirm") or element.name == "cancel" then
 		element.parent.parent.children[3].visible = true -- shows back Apply button
