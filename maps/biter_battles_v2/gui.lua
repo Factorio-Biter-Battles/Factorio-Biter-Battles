@@ -172,8 +172,16 @@ function Public.create_main_gui(player)
 		for food_name, tooltip in pairs(food_names) do
 			local s = t.add { type = "sprite-button", name = food_name, sprite = "item/" .. food_name, tooltip = tooltip}
 			gui_style(s, {minimal_height = 41, minimal_width = 41, padding = 0})
+			if global.active_special_games["disable_sciences"] and global.special_games_variables.disabled_food[food_name] then
+				s.enabled = false
+				s.tooltip = "Disabled by special game"
+			end
 		end
 		local s = t.add { type = "sprite-button", name = "send_all", caption = "All", tooltip = "LMB - low to high, RMB - high to low"}
+		if global.active_special_games["disable_sciences"] then
+			s.enabled = false
+			s.tooltip = "Disabled by special game"
+		end
 		gui_style(s, {minimal_height = 41, minimal_width = 41, padding = 0, font_color = {r = 0.9, g = 0.9, b = 0.9}})
 		frame.add{type="line"}
 	end
@@ -545,6 +553,19 @@ local function on_gui_click(event)
 	if name == "bb_view_players" then
 		global.bb_view_players[player.name] = true
 		Public.create_main_gui(player)
+	end	
+
+	if name == "reroll_yes" then 
+		if global.reroll_map_voting[player.name] ~= 1 then 
+			global.reroll_map_voting[player.name] = 1 
+			game.print(player.name .. " wants to reroll map ",{r = 0.1, g = 0.9, b = 0.0})
+		end
+	end
+	if name == "reroll_no" then 
+		if global.reroll_map_voting[player.name] ~= 0 then 
+			global.reroll_map_voting[player.name] = 0
+			game.print(player.name .. " wants to keep this map", {r = 0.9, g = 0.1, b = 0.1})
+		end		
 	end
 end
 

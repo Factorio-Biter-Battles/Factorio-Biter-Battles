@@ -88,6 +88,7 @@ function Public.initial_setup()
 		defines.input_action.change_active_item_group_for_filters,
 		defines.input_action.clear_cursor,
 		defines.input_action.edit_permission_group,
+		defines.input_action.gui_checked_state_changed,
 		defines.input_action.gui_click,
 		defines.input_action.gui_confirmed,
 		defines.input_action.gui_elem_changed,
@@ -113,6 +114,7 @@ function Public.initial_setup()
 	}
 	for _, d in pairs(defs) do p.set_allows_action(d, true) end
 
+	global.reroll_time_limit = 1800
 	global.gui_refresh_delay = 0
 	global.game_lobby_active = true
 	global.bb_debug = false
@@ -122,6 +124,7 @@ function Public.initial_setup()
 		["only_admins_vote"] = false,		--Are only admins able to vote on the global difficulty?
 		--MAP SETTINGS--
 		["new_year_island"] = false,
+		["map_reroll_admin_disable"] = true,
 	}
 
 	--Disable Nauvis
@@ -168,8 +171,12 @@ end
 function Public.draw_structures()
 	local surface = game.surfaces[global.bb_surface_name]
 	Terrain.draw_spawn_area(surface)
-	Terrain.clear_ore_in_main(surface)
-	Terrain.generate_spawn_ore(surface)
+	if global.active_special_games['mixed_ore_map'] then
+		Terrain.draw_mixed_ore_spawn_area(surface)
+	else
+		Terrain.clear_ore_in_main(surface)
+		Terrain.generate_spawn_ore(surface)
+	end
 	Terrain.generate_additional_rocks(surface)
 	Terrain.generate_silo(surface)
 	Terrain.draw_spawn_island(surface)
@@ -190,6 +197,7 @@ function Public.tables()
 		global.bb_surface_name = "bb0"
 	end
 
+	global.reroll_map_voting = {}
 	global.bb_evolution = {}
 	global.bb_game_won_by_team = nil
 	global.bb_threat = {}
@@ -212,8 +220,6 @@ function Public.tables()
 	global.unit_spawners.south_biters = {}
 	global.ai_strikes = {}
 	global.ai_targets = {}
-	global.active_special_games = {}
-	global.special_games_variables = {}
 	global.player_data_afk = {}
 	global.max_group_size_initial = 300							--Maximum unit group size for all biters at start, just used as a reference, doesnt change initial group size.
 	global.max_group_size = {}
