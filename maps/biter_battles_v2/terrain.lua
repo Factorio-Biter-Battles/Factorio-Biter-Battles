@@ -9,6 +9,7 @@ local tables = require "maps.biter_battles_v2.tables"
 local session = require 'utils.datastore.session_data'
 local biter_texture = require "maps.biter_battles_v2.biter_texture"
 local river = require "maps.biter_battles_v2.precomputed.river"
+local chunk = require "maps.biter_battles_v2.precomputed.chunk_container"
 
 local spawn_ore = tables.spawn_ore
 local table_insert = table.insert
@@ -261,17 +262,26 @@ end
 local function generate_river(surface, left_top_x, left_top_y)
 	if not (left_top_y == -32 or (left_top_y == -64 and (left_top_x == -32 or left_top_x == 0))) then return end
 	local seed = game.surfaces[global.bb_surface_name].map_gen_settings.seed
+	-- Stack allocated buffer with a capacity of 1024.
+	local tiles = chunk.buffer
+	local i = 1
 	for x = 0, 31, 1 do
 		for y = 0, 31, 1 do
 			local pos = {x = left_top_x + x, y = left_top_y + y}
 			if is_horizontal_border_river(pos, seed) and not is_within_spawn_island(pos) then
 				surface.set_tiles({{name = "deepwater", position = pos}})
 				if global.random_generator(1, 64) == 1 then
-					local e = surface.create_entity({name = "fish", position = pos})
+					surface.create_entity({name = "fish", position = pos})
 				end
+			else
+				tiles[i] = nil
 			end
+
+			i = i + 1
 		end
-	end	
+	end
+
+	surface.set_tiles(tiles)
 end
 
 local scrap_vectors = {}
