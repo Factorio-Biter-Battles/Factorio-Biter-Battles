@@ -264,12 +264,17 @@ local function generate_river(surface, left_top_x, left_top_y)
 	local seed = game.surfaces[global.bb_surface_name].map_gen_settings.seed
 	-- Stack allocated buffer with a capacity of 1024.
 	local tiles = chunk.buffer
+	local pos = { x = left_top_x }
 	local i = 1
-	for x = 0, 31, 1 do
-		for y = 0, 31, 1 do
-			local pos = {x = left_top_x + x, y = left_top_y + y}
+	for _ = 0, 31, 1 do
+		pos.y = left_top_y
+		for _ = 0, 31, 1 do
+			pos.y = pos.y + 1
 			if is_horizontal_border_river(pos, seed) and not is_within_spawn_island(pos) then
-				surface.set_tiles({{name = "deepwater", position = pos}})
+				-- Need to create brand new object to avoid passing 'pos' as
+				-- reference. API calls don't require 'x' and 'y' keys.
+				local unref_pos = { pos.x, pos.y }
+				tiles[i] = {name = "deepwater", position = unref_pos}
 				if global.random_generator(1, 64) == 1 then
 					surface.create_entity({name = "fish", position = pos})
 				end
@@ -279,6 +284,7 @@ local function generate_river(surface, left_top_x, left_top_y)
 
 			i = i + 1
 		end
+		pos.x = pos.x + 1
 	end
 
 	surface.set_tiles(tiles)
