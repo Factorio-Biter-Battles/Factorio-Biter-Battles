@@ -118,6 +118,7 @@ function Public.initial_setup()
 	global.gui_refresh_delay = 0
 	global.game_lobby_active = true
 	global.bb_debug = false
+	global.ignore_lists = {}
 	global.bb_settings = {
 		--TEAM SETTINGS--
 		["team_balancing"] = true,			--Should players only be able to join a team that has less or equal members than the opposing team?
