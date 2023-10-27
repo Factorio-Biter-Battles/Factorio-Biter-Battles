@@ -54,4 +54,8 @@ end
 local event = require 'utils.event'
 event.on_init(on_init)
 event.add(defines.events.on_entity_damaged, on_entity_damaged)
+event.add_event_filter(defines.events.on_entity_damaged, {
+	filter = "type",
+	type = "unit",
+})
 return Public
