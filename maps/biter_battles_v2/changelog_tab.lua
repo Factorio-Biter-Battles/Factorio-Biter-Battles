@@ -7,6 +7,9 @@ local function add_changelog(player, element)
 	
 	local changelog_change = {}
 	table.insert(changelog_change,"2023-10-27")
+	table.insert(changelog_change,"Fix server crash on debug_getinfo with nil handler")
+	table.insert(changelog_change,"developer-8")
+	table.insert(changelog_change,"2023-10-27")
 	table.insert(changelog_change,"Bugfix : ignore works now even if different forces or /sth , /nth or /s used")
 	table.insert(changelog_change,"Ragnarok77")
 	table.insert(changelog_change,"2023-10-27")
