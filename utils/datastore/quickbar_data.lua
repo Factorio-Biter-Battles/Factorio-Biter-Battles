@@ -9,6 +9,7 @@ local quickbar_dataset_modded = 'quickbar_modded'
 local logistics_dataset = 'logistics'
 local logistics_dataset_modded = 'logistics_modded'
 local set_data = Server.set_data
+local get_data_hotkey = Server.get_data_hotkey
 local try_get_data = Server.try_get_data
 
 local this = {
@@ -117,6 +118,12 @@ function Public.fetch_logistics(player)
     try_get_data(dataset, player.name, fetch_logistics)
 end
 
+--- order to update the quickbar for the player.
+-- @param LuaPlayer
+function Public.load_quickbar(player)
+	get_data_hotkey(player.name)
+end
+
 --- Saves the players quickbar table to the webpanel.
 -- @param LuaPlayer
 function Public.save_quickbar(player)
@@ -135,6 +142,7 @@ function Public.save_quickbar(player)
             slots[i] = slot.name
         end
     end
+	slots[212]="IGNOREME"
     if next(slots) then
         set_data(dataset, player.name, slots)
         player.print('Your quickbar has been saved.', Color.success)
@@ -195,6 +203,7 @@ end
 
 local fetch_quickbar_on_join = Public.fetch_quickbar
 local fetch_logistics_on_join = Public.fetch_logistics
+local load_quickbar = Public.load_quickbar
 local save_quickbar = Public.save_quickbar
 local save_logistics = Public.save_logistics
 local remove_quickbar = Public.remove_quickbar
@@ -209,11 +218,19 @@ commands.add_command(
             return
         end
 
-        local secs = Server.get_current_time()
-        if not secs then
+        save_quickbar(player)
+    end
+)
+
+commands.add_command(
+    'load-quickbar',
+    'Load your personal quickbar preset',
+    function()
+        local player = game.player
+        if not player or not player.valid then
             return
         end
-        save_quickbar(player)
+        load_quickbar(player)
     end
 )
 
