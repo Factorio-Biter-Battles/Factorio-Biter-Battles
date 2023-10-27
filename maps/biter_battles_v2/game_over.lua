@@ -555,6 +555,7 @@ function Public.generate_new_map()
     Init.draw_structures()
     Gui.reset_tables_gui()
     Init.load_spawn()
+    Init.reveal_map()
     for _, player in pairs(game.players) do
         Functions.init_player(player)
         for _, e in pairs(player.gui.left.children) do
