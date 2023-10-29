@@ -271,6 +271,7 @@ local function team_manager_gui_click(event)
 	
 	if name == "team_manager_activate_tournament" then
 		if not player.admin then player.print("Only admins can switch tournament mode.", {r = 175, g = 0, b = 0}) return end
+		if global.active_special_games["captain_mode"] == true and global.special_games_variables["captain_mode"]["prepaPhase"] == true then player.print("You cant disable tournament mode during prepa phase of captain event !", {r = 175, g = 0, b = 0}) return end
 		if global.tournament_mode then
 			global.tournament_mode = false
 			draw_manager_gui(player)
@@ -286,6 +287,7 @@ local function team_manager_gui_click(event)
 	if name == "team_manager_freeze_players" then
 		if global.freeze_players then
 			if not player.admin then player.print("Only admins can unfreeze players.", {r = 175, g = 0, b = 0}) return end
+			if global.active_special_games["captain_mode"] == true and global.special_games_variables["captain_mode"]["prepaPhase"] == true then player.print("You cant unfreeze during prepa phase of captain event !", {r = 175, g = 0, b = 0}) return end
 			global.freeze_players = false
 			draw_manager_gui(player)
 			game.print(">>> Players have been unfrozen!", {r = 255, g = 77, b = 77})
