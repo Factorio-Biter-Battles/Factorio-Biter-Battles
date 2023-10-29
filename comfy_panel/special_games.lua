@@ -1353,7 +1353,7 @@ local function on_gui_click(event)
 			
 			if #global.special_games_variables["captain_mode"]["listPlayers"] == 1 and global.special_games_variables["captain_mode"]["lateJoiners"] == true then
 				local lastPlayerToSend = game.get_player(global.special_games_variables["captain_mode"]["listPlayers"][1])
-				local captainForceName = game.get_player(global.special_games_variables["captain_mode"]["captainList"][1]).force.name
+				local captainForceName = "north"
 				game.print(lastPlayerToSend.name .. " was automatically picked")
 				switchTeamOfPlayer(lastPlayerToSend.name,captainForceName)
 				lastPlayerToSend.print("Remember to join your team channel voice on discord of free biterbattles (discord link can be found on biterbattles.org website) if possible (even if no mic, it's fine, to just listen, it's not required though but better if you do !)", Color.cyan)
@@ -1380,7 +1380,7 @@ local function on_gui_click(event)
 			game.get_player(global.special_games_variables["captain_mode"]["refereeName"]).gui.center["captain_poll_firstpicker_choice_frame"].destroy()
 			if #global.special_games_variables["captain_mode"]["listPlayers"] == 1 and global.special_games_variables["captain_mode"]["lateJoiners"] == true then
 				local lastPlayerToSend = game.get_player(global.special_games_variables["captain_mode"]["listPlayers"][1])
-				local captainForceName = game.get_player(global.special_games_variables["captain_mode"]["captainList"][2]).force.name
+				local captainForceName = "south"
 				game.print(lastPlayerToSend.name .. " was automatically picked")
 				switchTeamOfPlayer(lastPlayerToSend.name,captainForceName)
 				lastPlayerToSend.print("Remember to join your team channel voice on discord of free biterbattles (discord link can be found on biterbattles.org website) if possible (even if no mic, it's fine, to just listen, it's not required though but better if you do !)", Color.cyan)
@@ -1408,7 +1408,8 @@ local function on_gui_click(event)
 			game.get_player(global.special_games_variables["captain_mode"]["refereeName"]).gui.center["captain_poll_firstpicker_choice_frame"].destroy()
 			if #global.special_games_variables["captain_mode"]["listPlayers"] == 1 and global.special_games_variables["captain_mode"]["lateJoiners"] == true then
 				local lastPlayerToSend = game.get_player(global.special_games_variables["captain_mode"]["listPlayers"][1])
-				local captainForceName = game.get_player(global.special_games_variables["captain_mode"]["captainList"][captainChosen]).force.name
+				local captainForceName = "north"
+				if captainChosen == 2 then captainForceName = "south" end
 				game.print(lastPlayerToSend.name .. " was automatically picked")
 				switchTeamOfPlayer(lastPlayerToSend.name,captainForceName)
 				lastPlayerToSend.print("Remember to join your team channel voice on discord of free biterbattles (discord link can be found on biterbattles.org website) if possible (even if no mic, it's fine, to just listen, it's not required though but better if you do !)", Color.cyan)
@@ -1428,7 +1429,9 @@ local function on_gui_click(event)
 		local playerPicked = element.name:gsub("^captain_player_picked_", "")
 		if player.gui.center["captain_poll_alternate_pick_choice_frame"] then player.gui.center["captain_poll_alternate_pick_choice_frame"].destroy() end
 		game.print(playerPicked .. " was picked by Captain " .. player.name)
-		switchTeamOfPlayer(playerPicked,player.force.name)
+		local forceToGo = "north"
+		if player.name == global.special_games_variables["captain_mode"]["captainList"][2] then forceToGo = "south" end
+		switchTeamOfPlayer(playerPicked,forceToGo)
 		game.get_player(playerPicked).print("Remember to join your team channel voice on discord of free biterbattles (discord link can be found on biterbattles.org website) if possible (even if no mic, it's fine, to just listen, it's not required though but better if you do !)", Color.cyan)
 		local index={}
 		for k,v in pairs(global.special_games_variables["captain_mode"]["listPlayers"]) do
@@ -1442,10 +1445,12 @@ local function on_gui_click(event)
 			if #global.special_games_variables["captain_mode"]["listPlayers"] == 1 then
 				local lastPlayerToSend = game.get_player(global.special_games_variables["captain_mode"]["listPlayers"][1])
 				local oppositeForce = "north"
+				local realForceNameOfCaptain = "north"
+				if player.name == global.special_games_variables["captain_mode"]["captainList"][2] then realForceNameOfCaptain = "south" end
 				if get_bonus_picks_amount(player.name) > 0 then
-					oppositeForce = player.force.name
+					oppositeForce = realForceNameOfCaptain
 				else
-					if player.force.name == "north" then
+					if realForceNameOfCaptain == "north" then
 							oppositeForce = "south"
 					end
 				end
