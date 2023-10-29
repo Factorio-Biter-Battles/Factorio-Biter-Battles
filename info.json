@@ -1,1 +1,9 @@
-null
+{
+  "name": "Free Biter Battles",
+  "version": "5.0.0",
+  "title": "Free Biter Battles",
+  "factorio_version": "1.1",
+  "dependencies": ["base >= 1.1"],
+  "description": "Free Biter Battles is a community managed version of Comfy's BiterBattles scenario."
+}
+
