@@ -753,6 +753,8 @@ local function generate_captain_mode(refereeName,autoTrust,captainKick,pickingMo
 	
 	global.special_games_variables["captain_mode"] = {["captainList"] = {}, ["refereeName"] = refereeName, ["listPlayers"] = {}, ["listSpectators"] = {}, ["listOfPlayersWhoDidntVoteForRoleYet"]={},["listTeamReadyToPlay"] = {}, ["lateJoiners"] = false, ["prepaPhase"] = true, ["pickingPhase"] = false, ["autoTrust"] = autoTrust,["captainKick"] = captainKick,["pickingModeAlternateBasic"] = pickingMode,["firstPick"] = true, ["blacklistLateJoin"]={}, ["listPlayersWhoAreNotNewToCurrentMatch"]={},["captainGroupAllowed"]=captainGroupAllowed,["groupLimit"]=tonumber(groupLimit),["bonusPickCptOne"]=0,["bonusPickCptTwo"]=0,["stats"]={["northPicks"]={},["southPicks"]={},["tickGameStarting"]=0,["playerPlaytimes"]={},["playerSessionStartTimes"]={}}}
 	global.active_special_games["captain_mode"] = true
+	global.bb_threat["north_biters"] = -99999999999
+	global.bb_threat["south_biters"] = -99999999999
 	if game.get_player(global.special_games_variables["captain_mode"]["refereeName"]) == nil then
 		game.print("Event captain aborted, referee is not a player connected.. Referee name of player was : ".. global.special_games_variables["captain_mode"]["refereeName"])
 		global.special_games_variables["captain_mode"] = nil
@@ -1108,6 +1110,8 @@ local function start_captain_event()
 	elseif "difficulty" == "Fun and Fast" then difficulty = "FNF"
 	elseif "difficulty" == "Piece of Cake" then difficulty = "POC" end
 	global.special_games_variables["captain_mode"]["stats"]["extrainfo"] = difficulty
+	global.bb_threat["north_biters"] = 0
+	global.bb_threat["south_biters"] = 0
 	
 	local playerToClear = game.get_player(global.special_games_variables["captain_mode"]["captainList"][1])
 	if playerToClear.gui.top["captain_poll_team_ready_frame"] then playerToClear.gui.top["captain_poll_team_ready_frame"].destroy() end
