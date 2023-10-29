@@ -459,6 +459,8 @@ local function force_end_captain_event()
 		game.print(">>> Players have been unfrozen!", {r = 255, g = 77, b = 77})
 	end
 	global.active_special_games["captain_mode"] = false
+	global.bb_threat["north_biters"] = 0
+	global.bb_threat["south_biters"] = 0
 	rendering.clear()
 	Public.clear_gui_special_events()
 	for _, pl in pairs(game.connected_players) do
@@ -753,14 +755,14 @@ local function generate_captain_mode(refereeName,autoTrust,captainKick,pickingMo
 	
 	global.special_games_variables["captain_mode"] = {["captainList"] = {}, ["refereeName"] = refereeName, ["listPlayers"] = {}, ["listSpectators"] = {}, ["listOfPlayersWhoDidntVoteForRoleYet"]={},["listTeamReadyToPlay"] = {}, ["lateJoiners"] = false, ["prepaPhase"] = true, ["pickingPhase"] = false, ["autoTrust"] = autoTrust,["captainKick"] = captainKick,["pickingModeAlternateBasic"] = pickingMode,["firstPick"] = true, ["blacklistLateJoin"]={}, ["listPlayersWhoAreNotNewToCurrentMatch"]={},["captainGroupAllowed"]=captainGroupAllowed,["groupLimit"]=tonumber(groupLimit),["bonusPickCptOne"]=0,["bonusPickCptTwo"]=0,["stats"]={["northPicks"]={},["southPicks"]={},["tickGameStarting"]=0,["playerPlaytimes"]={},["playerSessionStartTimes"]={}}}
 	global.active_special_games["captain_mode"] = true
-	global.bb_threat["north_biters"] = -99999999999
-	global.bb_threat["south_biters"] = -99999999999
 	if game.get_player(global.special_games_variables["captain_mode"]["refereeName"]) == nil then
 		game.print("Event captain aborted, referee is not a player connected.. Referee name of player was : ".. global.special_games_variables["captain_mode"]["refereeName"])
 		global.special_games_variables["captain_mode"] = nil
 		global.active_special_games["captain_mode"] = false
 		return
 	end
+	global.bb_threat["north_biters"] = -99999999999
+	global.bb_threat["south_biters"] = -99999999999
 	Public.clear_gui_special_events()
 	for _, pl in pairs(game.connected_players) do
 		if pl.force.name ~= "spectator" then
