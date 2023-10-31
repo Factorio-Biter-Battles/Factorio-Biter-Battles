@@ -60,6 +60,8 @@ local query_players_tag = '[QUERY-PLAYERS]'
 local player_join_tag = '[PLAYER-JOIN]'
 local player_chat_tag = '[PLAYER-CHAT]'
 local player_leave_tag = '[PLAYER-LEAVE]'
+local data_add_onlinetime_tag = '[DATA-ADD-TOTAL-ONLINE-TIME]'
+local data_set_total_onlinetime_tag = '[DATA-SET-TOTAL-ONLINE-TIME]'
 
 Public.raw_print = raw_print
 
@@ -731,9 +733,16 @@ function Public.get_current_time()
     if secs == nil then
         return nil
     end
+	if not global.total_time_online_players[player.name] then global.total_time_online_players[player.name] = 0 end
+	local time_to_add = player.online_time - global.already_logged_current_session_time_online_players[player.name]
+	
+	raw_print(data_add_onlinetime_tag .. '['..player.name..']'..time_to_add)
+	global.already_logged_current_session_time_online_players[player.name] = global.already_logged_current_session_time_online_players[player.name] + time_to_add
+	global.total_time_online_players[player.name] = global.total_time_online_players[player.name] + time_to_add
+end
 
-    local diff = game.tick - server_time.tick
-    return math.floor(secs + diff / game.speed / 60)
+function Public.set_total_time_played(player)
+	raw_print(data_set_total_onlinetime_tag .. "[".. player.name .. "]")
 end
 
 --- Called be the web server to re sync which players are online.
