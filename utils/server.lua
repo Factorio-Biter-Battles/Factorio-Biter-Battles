@@ -733,6 +733,10 @@ function Public.get_current_time()
     if secs == nil then
         return nil
     end
+end
+
+function Public.upload_time_played(player)
+	if not global.already_logged_current_session_time_online_players[player.name] then global.already_logged_current_session_time_online_players[player.name] = 0 end
 	if not global.total_time_online_players[player.name] then global.total_time_online_players[player.name] = 0 end
 	local time_to_add = player.online_time - global.already_logged_current_session_time_online_players[player.name]
 	
