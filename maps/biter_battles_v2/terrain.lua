@@ -3,9 +3,11 @@ local LootRaffle = require "functions.loot_raffle"
 local BiterRaffle = require "maps.biter_battles_v2.biter_raffle"
 local bb_config = require "maps.biter_battles_v2.config"
 local Functions = require "maps.biter_battles_v2.functions"
+local mixed_ore_map = require "maps.biter_battles_v2.mixed_ore_map"
 local AiTargets = require "maps.biter_battles_v2.ai_targets"
 local tables = require "maps.biter_battles_v2.tables"
 local session = require 'utils.datastore.session_data'
+local biter_texture = require "maps.biter_battles_v2.biter_texture"
 
 local spawn_ore = tables.spawn_ore
 local table_insert = table.insert
@@ -212,7 +214,9 @@ local function generate_starting_area(pos, surface)
 		return
 	end
 
-	if surface.can_place_entity({name = "wooden-chest", position = pos}) and surface.can_place_entity({name = "coal", position = pos}) then
+	if surface.can_place_entity({name = "wooden-chest", position = pos}) 
+		and (surface.can_place_entity({name = "coal", position = pos}) or global.active_special_games['mixed_ore_map'])
+	then
 		local noise_2 = Functions.get_noise(3, pos)
 		if noise_2 < 0.40 then
 			if noise_2 > -0.40 then
@@ -311,25 +315,35 @@ end
 
 local function draw_biter_area(surface, left_top_x, left_top_y)
 	if not Functions.is_biter_area({x = left_top_x, y = left_top_y - 96},true) then return end
-	
 	local seed = game.surfaces[global.bb_surface_name].map_gen_settings.seed
-		
+
 	local out_of_map = {}
 	local tiles = {}
 	local i = 1
-	
+
+	-- Iterates over each position within chunk, maps the relative x/y position into
+	-- biter_texture with pre-computed 2D grid. The value from the grid is then mapped
+	-- into tile name and is applied into game state.
 	for x = 0, 31, 1 do
 		for y = 0, 31, 1 do
-			local position = {x = left_top_x + x, y = left_top_y + y}
-			if Functions.is_biter_area(position,true) then
-				local index = math_floor(GetNoise("bb_biterland", position, seed) * 48) % 7 + 1
-				out_of_map[i] = {name = "out-of-map", position = position}
-				tiles[i] = {name = "dirt-" .. index, position = position}
-				i = i + 1
+			local position = { x = left_top_x + x, y = left_top_y + y }
+			if not Functions.is_biter_area(position, true) then
+				goto d_b_a
 			end
+
+			-- + 1, because lua has 1-based indices
+			local grid_p_x = ((position.x + seed) % biter_texture.width) + 1
+			local grid_p_y = ((position.y + seed) % biter_texture.height) + 1
+			local id = biter_texture.grid[grid_p_x][grid_p_y]
+			local name = biter_texture.map[id]
+			out_of_map[i] = {name = "out-of-map", position = position}
+			tiles[i] = {name = name, position = position}
+			i = i + 1
+
+			::d_b_a::
 		end
 	end
-	
+
 	surface.set_tiles(out_of_map, false)
 	surface.set_tiles(tiles, true)
 	
@@ -395,7 +409,11 @@ function Public.generate(event)
 	local left_top_x = left_top.x
 	local left_top_y = left_top.y
 
-	mixed_ore(surface, left_top_x, left_top_y)
+	if global.active_special_games['mixed_ore_map'] then
+		mixed_ore_map(surface, left_top_x, left_top_y)
+	else
+		mixed_ore(surface, left_top_x, left_top_y)
+	end
 	generate_river(surface, left_top_x, left_top_y)
 	draw_biter_area(surface, left_top_x, left_top_y)		
 	generate_extra_worm_turrets(surface, left_top)
@@ -450,6 +468,16 @@ function Public.draw_spawn_area(surface)
 	
 	surface.destroy_decoratives({})
 	surface.regenerate_decorative()
+end
+
+function Public.draw_mixed_ore_spawn_area(surface)
+	-- Redraw mixed ore map in spawn area because some tiles may change in Init.draw_structures()
+	local chunk_r = 4
+	for x = chunk_r * -1, chunk_r, 1 do
+		for y = chunk_r * -1, -1, 1 do
+			mixed_ore_map(surface, x * 32, y * 32)
+		end
+	end
 end
 
 function Public.draw_water_for_river_ends(surface, chunk_pos)

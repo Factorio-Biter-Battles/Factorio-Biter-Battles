@@ -59,12 +59,9 @@ local function normalize_angle(angle)
     return angle
 end
 
-local function calculate_strike_range(source_position, target_position, inner_radius, outer_radius)
-    local dx = source_position.x - target_position.x
-    local dy = source_position.y - target_position.y
-    local r = math_sqrt(dx * dx + dy * dy)
-    local theta = math_atan2(dy, dx)
-    local t = calculate_tangent_line(inner_radius, r);
+local function calculate_strike_range(source_target_dx, source_target_dy, source_target_distance, inner_radius, outer_radius)
+    local theta = math_atan2(source_target_dy, source_target_dx)
+    local t = calculate_tangent_line(inner_radius, source_target_distance)
     local intersections = calculate_secant_intersections(outer_radius, t.a, t.b, t.c)
     local phi = math_atan2(intersections.b.y, intersections.b.x)
     local start = normalize_angle(theta - phi)
@@ -92,16 +89,18 @@ local function calculate_boundary_range(boundary_offset, target_position, strike
     }
 end
 
-local function select_strike_distance(source_position, target_position)
-    local dx = source_position.x - target_position.x
-    local dy = source_position.y - target_position.y
-    local distance = math_sqrt(dx * dx + dy * dy)
-    return math_random(min_strike_distance, math_max(min_strike_distance, math_min(distance, max_strike_distance)))
-end
-
 local function select_strike_position(source_position, target_position, boundary_offset)
-    local strike_distance = select_strike_distance(source_position, target_position)
-    local strike_angle_range = calculate_strike_range(source_position, target_position, strike_target_clearance, strike_distance)
+    local source_target_dx = source_position.x - target_position.x
+    local source_target_dy = source_position.y - target_position.y
+    local source_target_distance = math_sqrt(source_target_dx * source_target_dx + source_target_dy * source_target_dy)
+    if source_target_distance < min_strike_distance then
+        return {
+            x = source_position.x,
+            y = source_position.y,
+        }
+    end
+    local strike_distance = math_random(min_strike_distance, math_min(source_target_distance, max_strike_distance))
+    local strike_angle_range = calculate_strike_range(source_target_dx, source_target_dy, source_target_distance, strike_target_clearance, strike_distance)
     if boundary_offset > target_position.y - strike_distance then
         local boundary_angle_range = calculate_boundary_range(boundary_offset, target_position, strike_distance)
         strike_angle_range.start = math_max(strike_angle_range.start, boundary_angle_range.start)

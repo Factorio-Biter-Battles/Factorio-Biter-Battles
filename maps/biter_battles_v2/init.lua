@@ -124,6 +124,7 @@ function Public.initial_setup()
 		["only_admins_vote"] = false,		--Are only admins able to vote on the global difficulty?
 		--MAP SETTINGS--
 		["new_year_island"] = false,
+		["bb_map_reveal_toggle"] = true,
 		["map_reroll_admin_disable"] = true,
 	}
 
@@ -172,12 +173,32 @@ end
 function Public.draw_structures()
 	local surface = game.surfaces[global.bb_surface_name]
 	Terrain.draw_spawn_area(surface)
-	Terrain.clear_ore_in_main(surface)
-	Terrain.generate_spawn_ore(surface)
+	if global.active_special_games['mixed_ore_map'] then
+		Terrain.draw_mixed_ore_spawn_area(surface)
+	else
+		Terrain.clear_ore_in_main(surface)
+		Terrain.generate_spawn_ore(surface)
+	end
 	Terrain.generate_additional_rocks(surface)
 	Terrain.generate_silo(surface)
 	Terrain.draw_spawn_island(surface)
 	--Terrain.generate_spawn_goodies(surface)
+end
+
+function Public.reveal_map()
+	if global.bb_settings["bb_map_reveal_toggle"] then
+		local surface = game.surfaces[global.bb_surface_name]
+		local width = 2000 -- for one side
+		local height = 500 -- for one side
+		for x = 16, width, 32 do
+			for y = 16, height, 32 do
+				game.forces["spectator"].chart(surface, {{-x, -y}, {-x, -y}})
+				game.forces["spectator"].chart(surface, {{x, -y}, {x, -y}})
+				game.forces["spectator"].chart(surface, {{-x, y}, {-x, y}})
+				game.forces["spectator"].chart(surface, {{x, y}, {x, y}})
+			end
+		end
+	end
 end
 
 function Public.tables()
@@ -227,8 +248,6 @@ function Public.tables()
 	global.unit_spawners.south_biters = {}
 	global.ai_strikes = {}
 	global.ai_targets = {}
-	global.active_special_games = {}
-	global.special_games_variables = {}
 	global.player_data_afk = {}
 	global.max_group_size_initial = 300							--Maximum unit group size for all biters at start, just used as a reference, doesnt change initial group size.
 	global.max_group_size = {}
