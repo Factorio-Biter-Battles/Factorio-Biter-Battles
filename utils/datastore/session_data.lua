@@ -14,7 +14,7 @@ local trusted = {}
 local settings = {
     -- local trusted_value = 2592000 -- 12h
     trusted_value = 5184000, -- 24h
-    nth_tick = 54000
+    nth_tick = 54000 --15min
 }
 local set_data = Server.set_data
 local try_get_data = Server.try_get_data
