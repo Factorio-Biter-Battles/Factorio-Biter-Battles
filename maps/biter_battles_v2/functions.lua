@@ -318,7 +318,7 @@ function Public.no_landfill_by_untrusted_user(event)
 	end
 end
 
-function Public.print_message_to_players(forcePlayerList,playerNameSendingMessage,msgToPrint,colorChosen)
+function Public.print_message_to_players(forcePlayerList, playerNameSendingMessage, msgToPrint, colorChosen)
 	for _, playerOfForce in pairs(forcePlayerList) do
 		if playerOfForce.connected then
 			if global.ignore_lists[playerOfForce.name] == nil or (global.ignore_lists[playerOfForce.name] and not global.ignore_lists[playerOfForce.name][playerNameSendingMessage]) then
