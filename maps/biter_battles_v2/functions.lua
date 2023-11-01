@@ -350,7 +350,7 @@ function Public.share_chat(event)
 
 	local msg = player_name .. tag .. " (" .. player_force_name .. "): ".. event.message
 	if not muted and (player_force_name == "north" or player_force_name == "south") then
-		Public.print_message_to_players(game.forces.spectator.players,player_name,msg,nil)
+		Public.print_message_to_players(game.forces.spectator.players,player_name,msg,color)
 	end
 
 	if global.tournament_mode and not player.admin then return end
@@ -365,8 +365,8 @@ function Public.share_chat(event)
 		Muted.print_muted_message(player)
 	end 
 	if not muted and player_force_name == "spectator" then
-		Public.print_message_to_players(game.forces.north.players,player_name,msg,color)
-		Public.print_message_to_players(game.forces.south.players,player_name,msg,color)
+		Public.print_message_to_players(game.forces.north.players,player_name,msg,nil)
+		Public.print_message_to_players(game.forces.south.players,player_name,msg,nil)
 	end
 	
 	discord_msg = discord_msg .. player_name .. " (" .. player_force_name .. "): ".. event.message
