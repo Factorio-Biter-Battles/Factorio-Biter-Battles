@@ -322,7 +322,11 @@ function Public.print_message_to_players(forcePlayerList,playerNameSendingMessag
 	for _, playerOfForce in pairs(forcePlayerList) do
 		if playerOfForce.connected then
 			if global.ignore_lists[playerOfForce.name] == nil or (global.ignore_lists[playerOfForce.name] and not global.ignore_lists[playerOfForce.name][playerNameSendingMessage]) then
-				playerOfForce.print(msgToPrint, colorChosen)
+				if color == nil then
+					playerOfForce.print(msgToPrint)
+				else
+					playerOfForce.print(msgToPrint, colorChosen)
+				end
 			end
 		end
 	end
@@ -346,7 +350,7 @@ function Public.share_chat(event)
 
 	local msg = player_name .. tag .. " (" .. player_force_name .. "): ".. event.message
 	if not muted and (player_force_name == "north" or player_force_name == "south") then
-		Public.print_message_to_players(game.forces.spectator.players,player_name,msg,color)
+		Public.print_message_to_players(game.forces.spectator.players,player_name,msg,nil)
 	end
 
 	if global.tournament_mode and not player.admin then return end
