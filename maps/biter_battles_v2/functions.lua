@@ -322,7 +322,7 @@ function Public.print_message_to_players(forcePlayerList, playerNameSendingMessa
 	for _, playerOfForce in pairs(forcePlayerList) do
 		if playerOfForce.connected then
 			if global.ignore_lists[playerOfForce.name] == nil or (global.ignore_lists[playerOfForce.name] and not global.ignore_lists[playerOfForce.name][playerNameSendingMessage]) then
-				if color == nil then
+				if colorChosen == nil then
 					playerOfForce.print(msgToPrint)
 				else
 					playerOfForce.print(msgToPrint, colorChosen)
