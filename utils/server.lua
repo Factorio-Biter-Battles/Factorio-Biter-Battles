@@ -52,6 +52,7 @@ local stop_scenario_tag = '[STOP-SCENARIO]'
 local ping_tag = '[PING]'
 local data_set_tag = '[DATA-SET]'
 local data_get_tag = '[DATA-GET]'
+local data_get_hotkey_tag = '[DATA-GET-HOTKEY]'
 local data_get_all_tag = '[DATA-GET-ALL]'
 local data_tracked_tag = '[DATA-TRACKED]'
 local ban_sync_tag = '[BAN-SYNC]'
@@ -90,6 +91,10 @@ end
 
 function Public.to_discord_player_chat(message)
     raw_print(player_chat_tag .. message)
+end
+
+function Public.get_data_hotkey(message)
+    raw_print(data_get_hotkey_tag .. message)
 end
 
 --- Sends a message to the linked discord channel. The message is not sanitized of markdown.
