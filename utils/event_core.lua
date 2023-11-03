@@ -42,13 +42,22 @@ else
         if not handlers then
             return log('Handlers was nil!')
         end
+        local handlers_copy = table.deepcopy(handlers)
         for i = 1, #handlers do
             local handler = handlers[i]
-            local success, error = pcall(handler, event)
-            if not success then
-                local info = debug_getinfo(handler, 'S')
-                --log(string.format('%s in %s:%d' , error, info.short_src, info.linedefined))
-                log({'', '[ERROR] ', error, ' in ', info.short_src, ":", info.linedefined})
+            if handler == nil and handlers_copy[i] ~= nil then
+                if table.contains(handlers, handlers_copy[i]) then
+                    handler = handlers_copy[i]
+                end
+            end
+            if handler ~= nil then
+                local success, error = pcall(handler, event)
+                if not success then
+                    local info = debug_getinfo(handler, 'S')
+                    log({'', '[ERROR] ', error, ' in ', info.short_src, ":", info.linedefined})
+                end
+            else
+                log('nil handler')
             end
         end
     end
