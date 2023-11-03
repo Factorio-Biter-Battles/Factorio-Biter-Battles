@@ -6,6 +6,22 @@ local function add_changelog(player, element)
 	changelog_scrollpanel.style.maximal_height = 530
 	
 	local changelog_change = {}
+	
+	table.insert(changelog_change,"2023-11-03")
+	table.insert(changelog_change,"bugfix total playtime is now logged")
+	table.insert(changelog_change,"Ragnarok77")
+	table.insert(changelog_change,"2023-11-03")
+	table.insert(changelog_change,"perf : optimize river generation")
+	table.insert(changelog_change,"cogito123")
+	table.insert(changelog_change,"2023-11-03")
+	table.insert(changelog_change,"new feature : suspend")
+	table.insert(changelog_change,"Ragnarok77")
+	table.insert(changelog_change,"2023-11-03")
+	table.insert(changelog_change,"new feature : add save and load quickbar cmd")
+	table.insert(changelog_change,"Ragnarok77")
+	table.insert(changelog_change,"2023-11-03")
+	table.insert(changelog_change,"bugfix : ignore works now even if different forces or /sth , /nth or /s used")
+	table.insert(changelog_change,"Ragnarok77")
 	table.insert(changelog_change,"2023-11-03")
 	table.insert(changelog_change,"Add instant map reset command with optional seed argument")
 	table.insert(changelog_change,"DrButtons")
