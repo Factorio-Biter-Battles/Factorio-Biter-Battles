@@ -6,6 +6,15 @@ local function add_changelog(player, element)
 	changelog_scrollpanel.style.maximal_height = 530
 	
 	local changelog_change = {}
+	table.insert(changelog_change,"2023-11-03")
+	table.insert(changelog_change,"Add instant map reset command with optional seed argument")
+	table.insert(changelog_change,"DrButtons")
+	table.insert(changelog_change,"2023-11-03")
+	table.insert(changelog_change,"Fix server crash on debug_getinfo with nil handler")
+	table.insert(changelog_change,"developer-8")
+	table.insert(changelog_change,"2023-11-03")
+	table.insert(changelog_change,"Remove more unused modules")
+	table.insert(changelog_change,"TheBigZet")
 	table.insert(changelog_change,"2023-10-27")
 	table.insert(changelog_change,"perf : optim dmg event, refresh delay for healthbar of bosses increased")
 	table.insert(changelog_change,"cogito123")
