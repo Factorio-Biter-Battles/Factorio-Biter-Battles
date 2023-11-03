@@ -114,6 +114,7 @@ function Public.initial_setup()
 	}
 	for _, d in pairs(defs) do p.set_allows_action(d, true) end
 
+	global.suspend_time_limit = 3600
 	global.reroll_time_limit = 1800
 	global.gui_refresh_delay = 0
 	global.game_lobby_active = true
@@ -226,6 +227,10 @@ function Public.tables()
 	end
 	-- Our terrain gen seed IS the map seed
 	global.random_generator.re_seed(global.next_map_seed)
+	global.suspended_time = 36000
+	global.suspend_target = nil
+	global.suspend_voting = {}
+	global.suspended_players = {}
 	global.reroll_map_voting = {}
 	global.bb_evolution = {}
 	global.bb_game_won_by_team = nil
