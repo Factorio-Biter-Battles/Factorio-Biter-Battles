@@ -130,6 +130,8 @@ function Public.initial_setup()
 		["map_reroll_admin_disable"] = true,
 	}
 
+	global.total_time_online_players = {}
+	global.already_logged_current_session_time_online_players = {}
 	--Disable Nauvis
 	local surface = game.surfaces[1]
 	local map_gen_settings = surface.map_gen_settings
