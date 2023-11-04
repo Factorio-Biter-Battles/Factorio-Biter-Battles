@@ -293,7 +293,7 @@ function Public.server_restart()
     if not global.server_restart_timer then return end
     global.server_restart_timer = global.server_restart_timer - 5
 
-    if global.server_restart_timer == 0 then
+    if global.server_restart_timer <= 0 then
         if global.restart then
             if not global.announced_message then
                 local message =
@@ -566,7 +566,9 @@ decrement_timer_token = Token.register(
     function()
         local reroll_time_left = global.reroll_time_left - 1
         for _, player in pairs(game.connected_players) do
-            player.gui.top.reroll_frame.reroll_table.children[1].caption = "Reroll map?\t" .. reroll_time_left .. "s"
+            if player.gui.top.reroll_frame ~= nil then 
+                player.gui.top.reroll_frame.reroll_table.children[1].caption = "Reroll map?\t" .. reroll_time_left .. "s"
+            end
         end
         if reroll_time_left > 0 then
             Task.set_timeout_in_ticks(60, decrement_timer_token)
