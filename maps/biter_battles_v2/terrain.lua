@@ -7,7 +7,7 @@ local mixed_ore_map = require "maps.biter_battles_v2.mixed_ore_map"
 local AiTargets = require "maps.biter_battles_v2.ai_targets"
 local tables = require "maps.biter_battles_v2.tables"
 local session = require 'utils.datastore.session_data'
-local biter_texture = require "maps.biter_battles_v2.biter_texture"
+local biter_texture = require "maps.biter_battles_v2.precomputed.biter_texture"
 local river = require "maps.biter_battles_v2.precomputed.river"
 local chunk = require "maps.biter_battles_v2.precomputed.chunk_container"
 
