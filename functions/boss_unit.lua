@@ -58,4 +58,5 @@ event.add_event_filter(defines.events.on_entity_damaged, {
 	filter = "type",
 	type = "unit",
 })
+
 return Public
