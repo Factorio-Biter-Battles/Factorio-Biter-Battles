@@ -1,3 +1,6 @@
+
+Public = {}
+
 local function draw_map_tag(surface, force, position)
 	force.add_chart_tag(surface, {icon = {type = 'item', name = 'heavy-armor'}, position = position, text = "   "})
 end
@@ -53,13 +56,13 @@ local function on_player_died(event)
 	draw_map_tag(player.surface, player.force, player.position)
 end
 
-local function on_character_corpse_expired(event)
+function Public.on_character_corpse_expired(event)
 	if find_and_destroy_tag(event.corpse) then return end
 	destroy_all_tags()
 	redraw_all_tags()
 end
 
-local function on_pre_player_mined_item(event)
+function Public.on_pre_player_mined_item(event)
 	if event.entity.name ~= "character-corpse" then return end	
 	if find_and_destroy_tag(event.entity) then return end
 	destroy_all_tags()
@@ -68,5 +71,5 @@ end
 
 local event = require 'utils.event'
 event.add(defines.events.on_player_died, on_player_died)
-event.add(defines.events.on_character_corpse_expired, on_character_corpse_expired)
-event.add(defines.events.on_pre_player_mined_item, on_pre_player_mined_item)
+
+return Public

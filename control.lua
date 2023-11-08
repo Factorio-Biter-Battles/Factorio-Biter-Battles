@@ -68,6 +68,8 @@ local Antigrief = require 'antigrief'
 local Functions = require "maps.biter_battles_v2.functions"
 local Terrain = require "maps.biter_battles_v2.terrain"
 local AiTargets = require "maps.biter_battles_v2.ai_targets"
+local BossUnit = require "functions.boss_unit"
+local CorpseMarkers = require "modules/corpse_markers.lua"
 
 -- ENTITY
 
@@ -118,5 +120,37 @@ script.on_event(
 	defines.events.on_robot_built_tile,
 	function(event)
 		Terrain.deny_bot_landfill(event)
+	end
+)
+
+script.on_event(
+	defines.events.on_entity_damaged,
+	function(event)
+		BossUnit.handle_boss_damage(event)
+	end
+)
+script.set_event_filter(
+	defines.events.on_entity_damaged,
+	{
+		{
+			filter = "type",
+			type = "unit",
+		}
+	}
+)
+
+-- PLAYER DEATH
+
+script.on_event(
+	defines.events.on_character_corpse_expired,
+	function(event)
+		CorpseMarkers.on_character_corpse_expired(event)
+	end
+)
+
+script.on_event(
+	defines.events.on_pre_player_mined_item,
+	function(event)
+		CorpseMarkers.on_pre_player_mined_item(event)
 	end
 )
