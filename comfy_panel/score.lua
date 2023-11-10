@@ -181,7 +181,8 @@ local show_score = (function(player, frame)
         }
         label.style.font = 'default-listbox'
         label.style.font_color = {r = 0.98, g = 0.66, b = 0.22} -- yellow
-        label.style.minimal_width = 150
+        label.style.minimal_width = 120
+		label.style.maximal_width = 120
         label.style.horizontal_align = 'right'
     end
 
@@ -204,7 +205,7 @@ local show_score = (function(player, frame)
         }
     )
     scroll_pane.style.maximal_height = 400
-    local t = scroll_pane.add {type = 'table', column_count = 5}
+    local t = scroll_pane.add {type = 'table', column_count = 6}
 
     -- Score entries
     for _, entry in pairs(score_list) do
@@ -233,8 +234,8 @@ local show_score = (function(player, frame)
                 color = column.color or default_color
             }
             label.style.font = 'default'
-            label.style.minimal_width = 150
-            label.style.maximal_width = 150
+            label.style.minimal_width = 120
+            label.style.maximal_width = 120
             label.style.horizontal_align = 'right'
         end -- foreach column
     end -- foreach entry
