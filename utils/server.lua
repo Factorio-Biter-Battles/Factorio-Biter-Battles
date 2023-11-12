@@ -36,6 +36,7 @@ local discord_tag = '[DISCORD]'
 local discord_raw_tag = '[DISCORD-RAW]'
 local discord_bold_tag = '[DISCORD-BOLD]'
 local discord_admin_tag = '[DISCORD-ADMIN]'
+local discord_suspend_tag = '[DISCORD-EMBED]'
 -- temporarily send bans to game-announcements
 -- TODO: revert this quick workaround to a more perm solution
 -- local discord_banned_tag = '[DISCORD-BANNED]'
@@ -108,6 +109,12 @@ end
 -- @param  message<string> message to send.
 function Public.to_admin(message)
     raw_print(discord_admin_tag .. message)
+end
+
+--- Sends a message to the linked suspend discord channel. The message is sanitized of markdown server side.
+-- @param  message<string> message to send.
+function Public.to_suspend(message)
+    raw_print(discord_suspend_tag .. message)
 end
 
 --- Sends a message to the linked banned discord channel. The message is sanitized of markdown server side.

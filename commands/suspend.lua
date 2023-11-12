@@ -93,9 +93,11 @@ local suspend_token = Token.register(
 				result = math.floor( 100*result / total_votes )
 				if result >= 75 and total_votes > 1 then
 					game.print(global.suspend_target .." suspended... (" .. result .. "%)")
+					Server.to_banned_embed(table.concat {global.suspend_target .. ' was suspended ( ' .. result .. ' %)' .. ', vote started by ' .. global.suspend_playerName_who_started_vote})
 					global.suspended_players[global.suspend_target] = game.ticks_played
 					local playerSuspended = game.get_player(global.suspend_target)
 					global.suspend_target = nil
+					global.suspend_playerName_who_started_vote = nil
 					global.suspend_voting = {}
 					if playerSuspended and playerSuspended.valid and playerSuspended.surface.name ~= "gulag" then
 						punish_player(playerSuspended)
@@ -105,12 +107,15 @@ local suspend_token = Token.register(
 			end
 			if total_votes == 1 and result == 100 then
 				game.print("Vote to suspend "..global.suspend_target.." has failed because only 1 player voted, need at least 2 votes")
+				Server.to_banned_embed(table.concat {global.suspend_target .. ' was not suspended and vote failed, only 1 player voted, need at least 2 votes, vote started by ' .. global.suspend_playerName_who_started_vote})
 			else
 				game.print("Vote to suspend "..global.suspend_target.." has failed (" .. result .. "%)")
+				Server.to_banned_embed(table.concat {global.suspend_target .. ' was not suspended and vote failed ( ' .. result .. ' %)' .. ', vote started by ' .. global.suspend_playerName_who_started_vote})
 			end
 			global.suspend_target = nil
 		end
 		global.suspend_voting = {}
+		global.suspend_playerName_who_started_vote = nil
 	end
 )
 
@@ -160,6 +165,7 @@ local function suspend_player(cmd)
 			global.suspend_target = victim.name
 			game.print(killer.name .. 	" has started a vote to suspend " .. global.suspend_target .. " , vote in top of screen")
 			global.suspend_token_running = true
+			global.suspend_playerName_who_started_vote = killer.name
 			Task.set_timeout_in_ticks(global.suspend_time_limit, suspend_token)
 			Event.add_removable(defines.events.on_player_joined_game, suspend_buttons_token)
 			global.suspend_time_left = global.suspend_time_limit / 60
