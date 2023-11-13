@@ -1,6 +1,5 @@
 require 'utils.data_stages'
 _LIFECYCLE = _STAGE.control -- Control stage
-_DEBUG = false
 _DUMP_ENV = false
 
 require 'utils.server'
@@ -22,7 +21,6 @@ require 'antigrief'
 require 'modules.corpse_markers'
 require 'modules.floaty_chat'
 require 'modules.show_inventory'
-require 'utils.debug.command'
 
 require 'comfy_panel.main'
 require 'comfy_panel.player_list'
@@ -39,25 +37,6 @@ require 'comfy_panel.special_games'
 require 'maps.biter_battles_v2.main'
 
 ---------------------------------------------------------------
-
-if _DUMP_ENV then
-    require 'utils.dump_env'
-end
-
-local function on_player_created(event)
-    local player = game.players[event.player_index]
-    player.gui.top.style = 'slot_table_spacing_horizontal_flow'
-    player.gui.left.style = 'slot_table_spacing_vertical_flow'
-end
-
-local loaded = _G.package.loaded
-function require(path)
-    return loaded[path] or error('Can only require files at runtime that have been required in the control stage.', 2)
-end
-
-local Event = require 'utils.event'
-Event.add(defines.events.on_player_created, on_player_created)
-
 
 --- Follow Krastorio 2 format
 -- See: https://github.com/raiguard/Krastorio2/blob/master/control.lua
@@ -154,3 +133,21 @@ script.on_event(
 		CorpseMarkers.on_pre_player_mined_item(event)
 	end
 )
+
+
+---- END Event refactor.  Must have this at end until all Event is gone.
+
+local function on_player_created(event)
+    local player = game.players[event.player_index]
+    player.gui.top.style = 'slot_table_spacing_horizontal_flow'
+    player.gui.left.style = 'slot_table_spacing_vertical_flow'
+end
+
+local loaded = _G.package.loaded
+function require(path)
+    return loaded[path] or error('Can only require files at runtime that have been required in the control stage.', 2)
+end
+
+local Event = require 'utils.event'
+Event.add(defines.events.on_player_created, on_player_created)
+
