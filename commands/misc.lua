@@ -365,11 +365,6 @@ commands.add_command(
                 player.print("[ERROR] You're not admin!", Color.fail)
                 return
             end
-			
-            if global.reroll_time_left ~= nil and global.reroll_time_left > 1 then 
-                player.print('The map is during the reroll period, please wait for it to finish first', Color.fail)
-                return
-            end
         end
 
         -- Safely convert cmd.parameter to a number if given
