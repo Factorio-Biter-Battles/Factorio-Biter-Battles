@@ -142,7 +142,7 @@ function Public.save_quickbar(player)
             slots[i] = slot.name
         end
     end
-	slots[212]="IGNOREME"
+	slots[212]="IGNOREME" -- Dirty workaround : Needed, otherwise the list format displayed is different depending on how quickbar was set
     if next(slots) then
         set_data(dataset, player.name, slots)
         player.print('Your quickbar has been saved.', Color.success)
