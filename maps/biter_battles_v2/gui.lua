@@ -299,20 +299,22 @@ function Public.refresh()
 			Public.create_main_gui(player)
 		end
 	end
-	global.gui_refresh_delay = game.tick + 5
+	global.gui_refresh_delay = game.tick + 30
 end
 
 function Public.refresh_threat()
 	if global.gui_refresh_delay > game.tick then return end
+	local north_threat_text = show_pretty_threat("north_biters")
+	local south_threat_text = show_pretty_threat("south_biters")
 	for _, player in pairs(game.connected_players) do
 		if player.gui.left["bb_main_gui"] then
 			if player.gui.left["bb_main_gui"].stats_north then
-				player.gui.left["bb_main_gui"].stats_north.threat_north.caption = show_pretty_threat("north_biters")
-				player.gui.left["bb_main_gui"].stats_south.threat_south.caption = show_pretty_threat("south_biters")
+				player.gui.left["bb_main_gui"].stats_north.threat_north.caption = north_threat_text
+				player.gui.left["bb_main_gui"].stats_south.threat_south.caption = south_threat_text
 			end
 		end
 	end
-	global.gui_refresh_delay = game.tick + 5
+	global.gui_refresh_delay = game.tick + 30
 end
 
 local get_player_data = function(player, remove)
