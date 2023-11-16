@@ -318,6 +318,20 @@ function Public.no_landfill_by_untrusted_user(event)
 	end
 end
 
+function Public.print_message_to_players(forcePlayerList, playerNameSendingMessage, msgToPrint, colorChosen)
+	for _, playerOfForce in pairs(forcePlayerList) do
+		if playerOfForce.connected then
+			if global.ignore_lists[playerOfForce.name] == nil or (global.ignore_lists[playerOfForce.name] and not global.ignore_lists[playerOfForce.name][playerNameSendingMessage]) then
+				if colorChosen == nil then
+					playerOfForce.print(msgToPrint)
+				else
+					playerOfForce.print(msgToPrint, colorChosen)
+				end
+			end
+		end
+	end
+end
+
 --Share chat with spectator force
 function Public.share_chat(event)
 	if not event.message or not event.player_index then return end
@@ -336,7 +350,7 @@ function Public.share_chat(event)
 
 	local msg = player_name .. tag .. " (" .. player_force_name .. "): ".. event.message
 	if not muted and (player_force_name == "north" or player_force_name == "south") then
-		game.forces.spectator.print(msg, color)
+		Public.print_message_to_players(game.forces.spectator.players,player_name,msg,color)
 	end
 
 	if global.tournament_mode and not player.admin then return end
@@ -351,8 +365,8 @@ function Public.share_chat(event)
 		Muted.print_muted_message(player)
 	end 
 	if not muted and player_force_name == "spectator" then
-		game.forces.north.print(msg)
-		game.forces.south.print(msg)
+		Public.print_message_to_players(game.forces.north.players,player_name,msg,nil)
+		Public.print_message_to_players(game.forces.south.players,player_name,msg,nil)
 	end
 	
 	discord_msg = discord_msg .. player_name .. " (" .. player_force_name .. "): ".. event.message
