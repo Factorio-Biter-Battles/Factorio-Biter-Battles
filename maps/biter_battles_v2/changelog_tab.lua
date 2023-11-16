@@ -6,6 +6,15 @@ local function add_changelog(player, element)
 	changelog_scrollpanel.style.maximal_height = 530
 	
 	local changelog_change = {}
+	table.insert(changelog_change,"2023-11-16")
+	table.insert(changelog_change,"Bugfix : ignore works now even if different forces or /sth , /nth or /s used")
+	table.insert(changelog_change,"Ragnarok77")
+	table.insert(changelog_change,"2023-11-16")
+	table.insert(changelog_change,"Bugfix : total playtime is now logged")
+	table.insert(changelog_change,"Ragnarok77")
+	table.insert(changelog_change,"2023-11-16")
+	table.insert(changelog_change,"New feature : Add /save-quickbar and /load-quickbar commands")
+	table.insert(changelog_change,"Ragnarok77")
 	table.insert(changelog_change,"2023-11-03")
 	table.insert(changelog_change,"Add instant map reset command with optional seed argument")
 	table.insert(changelog_change,"DrButtons")
