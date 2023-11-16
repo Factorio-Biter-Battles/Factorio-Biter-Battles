@@ -1,5 +1,6 @@
 local Event = require 'utils.event'
 local Token = require 'utils.token'
+local Task = require 'utils.task'
 local Color = require 'utils.color_presets'
 local Team_manager = require "maps.biter_battles_v2.team_manager"
 local session = require 'utils.datastore.session_data'
@@ -353,6 +354,7 @@ local function clear_gui_captain_mode()
 		if player.gui.center["captain_poll_latejoiner_question"] then player.gui.center["captain_poll_latejoiner_question"].destroy() end
 		if player.gui.center["captain_poll_end_latejoiners_referee_frame"] then player.gui.center["captain_poll_end_latejoiners_referee_frame"].destroy() end
 		if player.gui.top["captain_poll_new_joiner_to_current_match"] then player.gui.top["captain_poll_new_joiner_to_current_match"].destroy() end
+		if player.gui.center["bb_captain_countdown"] then player.gui.center["bb_captain_countdown"].destroy() end
 	end
 end
 
@@ -753,7 +755,7 @@ local function generate_captain_mode(refereeName,autoTrust,captainKick,pickingMo
 		captainGroupAllowed = false
 	end
 	
-	global.special_games_variables["captain_mode"] = {["captainList"] = {}, ["refereeName"] = refereeName, ["listPlayers"] = {}, ["listSpectators"] = {}, ["listOfPlayersWhoDidntVoteForRoleYet"]={},["listTeamReadyToPlay"] = {}, ["lateJoiners"] = false, ["prepaPhase"] = true, ["pickingPhase"] = false, ["autoTrust"] = autoTrust,["captainKick"] = captainKick,["pickingModeAlternateBasic"] = pickingMode,["firstPick"] = true, ["blacklistLateJoin"]={}, ["listPlayersWhoAreNotNewToCurrentMatch"]={},["captainGroupAllowed"]=captainGroupAllowed,["groupLimit"]=tonumber(groupLimit),["bonusPickCptOne"]=0,["bonusPickCptTwo"]=0,["stats"]={["northPicks"]={},["southPicks"]={},["tickGameStarting"]=0,["playerPlaytimes"]={},["playerSessionStartTimes"]={}}}
+	global.special_games_variables["captain_mode"] = {["captainList"] = {}, ["refereeName"] = refereeName, ["listPlayers"] = {}, ["listSpectators"] = {}, ["listOfPlayersWhoDidntVoteForRoleYet"]={},["listTeamReadyToPlay"] = {}, ["lateJoiners"] = false, ["prepaPhase"] = true, ["countdown"] = 9, ["pickingPhase"] = false, ["autoTrust"] = autoTrust,["captainKick"] = captainKick,["pickingModeAlternateBasic"] = pickingMode,["firstPick"] = true, ["blacklistLateJoin"]={}, ["listPlayersWhoAreNotNewToCurrentMatch"]={},["captainGroupAllowed"]=captainGroupAllowed,["groupLimit"]=tonumber(groupLimit),["bonusPickCptOne"]=0,["bonusPickCptTwo"]=0,["stats"]={["northPicks"]={},["southPicks"]={},["tickGameStarting"]=0,["playerPlaytimes"]={},["playerSessionStartTimes"]={}}}
 	global.active_special_games["captain_mode"] = true
 	if game.get_player(global.special_games_variables["captain_mode"]["refereeName"]) == nil then
 		game.print("Event captain aborted, referee is not a player connected.. Referee name of player was : ".. global.special_games_variables["captain_mode"]["refereeName"])
@@ -1095,6 +1097,7 @@ local function generate_vs_text_rendering()
 	if global.active_special_games and global.special_games_variables["rendering"] and global.special_games_variables["rendering"]["captainLineVersus"] then rendering.destroy(global.special_games_variables["rendering"]["captainLineVersus"]) end
 	generateRendering("captainLineVersus","team " .. global.special_games_variables["captain_mode"]["captainList"][1] .. " vs team " .. global.special_games_variables["captain_mode"]["captainList"][2] .. ". Referee: " .. global.special_games_variables["captain_mode"]["refereeName"]  .. ". Teams on VC",0,10,0.87,0.13,0.5,1,1.5,"heading-1")
 end
+
 local function start_captain_event()
 	game.print('[font=default-large-bold]Time to start the game!! Good luck and have fun everyone ![/font]', Color.cyan)
 	if global.freeze_players == true then
@@ -1133,6 +1136,37 @@ local function start_captain_event()
 			global.special_games_variables["captain_mode"]["stats"]["playerSessionStartTimes"][player.name] = game.ticks_played;
 		end
 	end
+end
+
+local countdown_captain_start_token = Token.register(
+    function()
+		if global.special_games_variables["captain_mode"]["countdown"] > 0 then
+			for _, player in pairs(game.connected_players) do
+				local _sprite="file/png/"..global.special_games_variables["captain_mode"]["countdown"]..".png" 
+				if player.gui.center["bb_captain_countdown"] then player.gui.center["bb_captain_countdown"].destroy() end
+				player.gui.center.add{name = "bb_captain_countdown", type = "sprite", sprite = _sprite}
+			end	
+			global.special_games_variables["captain_mode"]["countdown"] = global.special_games_variables["captain_mode"]["countdown"] - 1
+		else
+			for _, player in pairs(game.connected_players) do
+				if player.gui.center["bb_captain_countdown"] then player.gui.center["bb_captain_countdown"].destroy() end
+			end	
+			start_captain_event()
+		end
+    end
+)
+
+local function prepare_start_captain_event()
+	Task.set_timeout_in_ticks(60, countdown_captain_start_token)
+	Task.set_timeout_in_ticks(120, countdown_captain_start_token)
+	Task.set_timeout_in_ticks(180, countdown_captain_start_token)
+	Task.set_timeout_in_ticks(240, countdown_captain_start_token)
+	Task.set_timeout_in_ticks(300, countdown_captain_start_token)
+	Task.set_timeout_in_ticks(360, countdown_captain_start_token)
+	Task.set_timeout_in_ticks(420, countdown_captain_start_token)
+	Task.set_timeout_in_ticks(480, countdown_captain_start_token)
+	Task.set_timeout_in_ticks(540, countdown_captain_start_token)
+	Task.set_timeout_in_ticks(600, countdown_captain_start_token)
 end
 
 local function allow_vote()
@@ -1510,13 +1544,13 @@ local function on_gui_click(event)
 		local refereeName = global.special_games_variables["captain_mode"]["refereeName"]
 		if player.name == refereeName and not isRefereeACaptain() then
 			game.print('[font=default-large-bold]Referee ' .. refereeName .. ' force started the game ![/font]', Color.cyan)
-			start_captain_event()
+			prepare_start_captain_event()
 		else 
 			game.print('[font=default-large-bold]Team of captain ' .. player.name .. ' is ready ![/font]', Color.cyan)
 			table.insert(global.special_games_variables["captain_mode"]["listTeamReadyToPlay"],player.force.name)
 			if #global.special_games_variables["captain_mode"]["listTeamReadyToPlay"] >= 2 then
 				if game.get_player(refereeName).gui.top["captain_poll_team_ready_frame"] then game.get_player(refereeName).gui.top["captain_poll_team_ready_frame"].destroy() end
-				start_captain_event()
+				prepare_start_captain_event()
 			elseif isRefereeACaptain() and not game.get_player(refereeName).gui.top["captain_poll_team_ready_frame"] then
 				poll_captain_team_ready(game.get_player(global.special_games_variables["captain_mode"]["refereeName"]),true)
 			end
@@ -1698,7 +1732,7 @@ local function on_player_joined_game(event)
 		"No", "captain_no_wanna_play_new_to_current_match",
 		nil,nil)
 	end
-	
+	if global.special_games_variables["captain_mode"] ~=nil and player.gui.center["bb_captain_countdown"] then player.gui.center["bb_captain_countdown"].destroy() end
 	captain_log_start_time_player(player)
 end
 
