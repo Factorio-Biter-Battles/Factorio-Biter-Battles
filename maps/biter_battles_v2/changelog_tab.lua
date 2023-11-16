@@ -7,7 +7,7 @@ local function add_changelog(player, element)
 	
 	local changelog_change = {}
 	table.insert(changelog_change,"2023-11-16")
-	table.insert(changelog_change,"Bugfix : ix boss units not traveling with the pack")
+	table.insert(changelog_change,"Bugfix : fix boss units not traveling with the pack")
 	table.insert(changelog_change,"amannm")
 	table.insert(changelog_change,"2023-11-16")
 	table.insert(changelog_change,"Add a spectator-force log message about which team completed a research")
