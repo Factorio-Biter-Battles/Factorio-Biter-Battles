@@ -144,29 +144,30 @@ local function assassinate(unit_group, target)
     })
 end
 
-function Public.initiate(unit_group, target_force_name, target_position)
+function Public.calculateStrikePosition(unit_group, target_position)
+    local source_position = unit_group.position
+    local normalized_source_position = { x = source_position.x, y = math_abs(source_position.y) }
+    local normalized_target_position = { x = target_position.x, y = math_abs(target_position.y) }
+    local boundary_offset = bb_config.border_river_width / 2
+    local nominal_strike_position = select_strike_position(normalized_source_position, normalized_target_position, boundary_offset)
+    if source_position.y < 0 then
+        nominal_strike_position.y = -nominal_strike_position.y
+    end
+    return unit_group.surface.find_non_colliding_position("stone-furnace", nominal_strike_position, 96, 1);
+end
+
+function Public.initiate(unit_group, target_force_name, strike_position, target_position)
     local strike_info = {
         unit_group = unit_group,
         target_force_name = target_force_name,
-        source_position = { x = unit_group.position.x, y = unit_group.position.y },
         target_position = target_position,
     }
-    local normalized_source_position = { x = strike_info.source_position.x, y = math_abs(strike_info.source_position.y) }
-    local normalized_target_position = { x = strike_info.target_position.x, y = math_abs(strike_info.target_position.y) }
-    local boundary_offset = bb_config.border_river_width / 2
-    local nominal_strike_position = select_strike_position(normalized_source_position, normalized_target_position, boundary_offset)
-    if strike_info.source_position.y < 0 then
-        nominal_strike_position.y = -nominal_strike_position.y
-    end
-    local strike_position = unit_group.surface.find_non_colliding_position("stone-furnace", nominal_strike_position, 96, 1);
     if strike_position ~= nil then
-        strike_info.strike_position = strike_position
         strike_info.phase = 1
         move(unit_group, strike_position)
     else
-        strike_info.strike_position = strike_info.current_position
         strike_info.phase = 2
-        attack(unit_group, strike_info.target_position)
+        attack(unit_group, target_position)
     end
     global.ai_strikes[unit_group.group_number] = strike_info
 end
