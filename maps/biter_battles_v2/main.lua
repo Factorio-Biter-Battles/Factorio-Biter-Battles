@@ -69,7 +69,8 @@ local function on_console_command(event)
     local player = game.players[event.player_index]
     local param = event.parameters
     if cmd == "ignore" then 
-		if param and not string.match(param, "[ '\";`]") and not param:match("^%s*$") then
+		-- verify in argument of command that there is no space, quote, semicolon, backtick, and that it's not just whitespace
+		if param and not string.match(param, "[ '\";`]") and not param:match("^%s*$") then 
 			if not global.ignore_lists[player.name] then
 				global.ignore_lists[player.name] = {}
 			end
@@ -83,6 +84,7 @@ local function on_console_command(event)
 			player.print("Invalid input. Make sure the name contains no spaces, quotes, semicolons, backticks, or any spaces.", {r = 1, g = 0, b = 0})
 		end
     elseif cmd == "unignore" then 
+		-- verify in argument of command that there is no space, quote, semicolon, backtick, and that it's not just whitespace, and that the player was someone ignored
 		if param and not string.match(param, "[ '\";`]") and not param:match("^%s*$") and global.ignore_lists[player.name] then
 			if global.ignore_lists[player.name][param] then
                 global.ignore_lists[player.name][param] = nil
