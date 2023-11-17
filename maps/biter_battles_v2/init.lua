@@ -118,6 +118,7 @@ function Public.initial_setup()
 	global.gui_refresh_delay = 0
 	global.game_lobby_active = true
 	global.bb_debug = false
+	global.ignore_lists = {}
 	global.bb_settings = {
 		--TEAM SETTINGS--
 		["team_balancing"] = true,			--Should players only be able to join a team that has less or equal members than the opposing team?
@@ -128,6 +129,8 @@ function Public.initial_setup()
 		["map_reroll_admin_disable"] = true,
 	}
 
+	global.total_time_online_players = {}
+	global.already_logged_current_session_time_online_players = {}
 	--Disable Nauvis
 	local surface = game.surfaces[1]
 	local map_gen_settings = surface.map_gen_settings

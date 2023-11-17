@@ -52,6 +52,7 @@ local stop_scenario_tag = '[STOP-SCENARIO]'
 local ping_tag = '[PING]'
 local data_set_tag = '[DATA-SET]'
 local data_get_tag = '[DATA-GET]'
+local data_get_hotkey_tag = '[DATA-GET-HOTKEY]'
 local data_get_all_tag = '[DATA-GET-ALL]'
 local data_tracked_tag = '[DATA-TRACKED]'
 local ban_sync_tag = '[BAN-SYNC]'
@@ -61,6 +62,8 @@ local player_join_tag = '[PLAYER-JOIN]'
 local player_chat_tag = '[PLAYER-CHAT]'
 local player_leave_tag = '[PLAYER-LEAVE]'
 local special_game_end_tag = '[SPECIAL-GAME-END]'
+local data_add_onlinetime_tag = '[DATA-ADD-TOTAL-ONLINE-TIME]'
+local data_set_total_onlinetime_tag = '[DATA-SET-TOTAL-ONLINE-TIME]'
 
 Public.raw_print = raw_print
 
@@ -95,6 +98,10 @@ end
 
 function Public.to_discord_player_chat(message)
     raw_print(player_chat_tag .. message)
+end
+
+function Public.get_data_hotkey(message)
+    raw_print(data_get_hotkey_tag .. message)
 end
 
 --- Sends a message to the linked discord channel. The message is not sanitized of markdown.
@@ -736,9 +743,20 @@ function Public.get_current_time()
     if secs == nil then
         return nil
     end
+end
 
-    local diff = game.tick - server_time.tick
-    return math.floor(secs + diff / game.speed / 60)
+function Public.upload_time_played(player)
+	if not global.already_logged_current_session_time_online_players[player.name] then global.already_logged_current_session_time_online_players[player.name] = 0 end
+	if not global.total_time_online_players[player.name] then global.total_time_online_players[player.name] = 0 end
+	local time_to_add = player.online_time - global.already_logged_current_session_time_online_players[player.name]
+	
+	raw_print(data_add_onlinetime_tag .. '['..player.name..']'..time_to_add)
+	global.already_logged_current_session_time_online_players[player.name] = global.already_logged_current_session_time_online_players[player.name] + time_to_add
+	global.total_time_online_players[player.name] = global.total_time_online_players[player.name] + time_to_add
+end
+
+function Public.set_total_time_played(player)
+	raw_print(data_set_total_onlinetime_tag .. "[".. player.name .. "]")
 end
 
 --- Called be the web server to re sync which players are online.
