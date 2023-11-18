@@ -66,6 +66,18 @@ local function is_element_child_of(element, parent_name)
 	return false
 end
 
+local function get_sepecial_game_table(element)
+	if element.parent then
+		if element.parent.type == "table" and valid_special_games[element.parent.name] then
+			return element.parent
+		end
+
+		return get_sepecial_game_table(element.parent)
+	end
+
+	return nil
+end
+
 local function on_gui_click(event)
 	local element = event.element
 	if not element then return end
@@ -73,7 +85,9 @@ local function on_gui_click(event)
 	if not (element.type == "button") then return end
 	if not is_element_child_of(element, 'Special games') then return end
 
-    local special_game_gui = element.parent.parent
+    local special_game_gui = get_sepecial_game_table(element)
+	if not special_game_gui then return end
+
 	local config = special_game_gui.children[2]
 	local player = game.get_player(event.player_index)
 

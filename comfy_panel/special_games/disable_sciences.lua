@@ -1,3 +1,4 @@
+local Color = require 'utils.color_presets'
 local Tables = require "maps.biter_battles_v2.tables"
 
 local function generate_disable_sciences(packs)
