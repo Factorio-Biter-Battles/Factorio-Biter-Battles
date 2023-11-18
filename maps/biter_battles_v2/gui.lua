@@ -54,7 +54,7 @@ local function clock(frame)
 	local total_hours = math.floor(total_minutes / 60)
 	local minutes = total_minutes - (total_hours * 60)
 
-	local clock = frame.add {type = "label", caption = "Game time: " .. string.format("%02d", total_hours) .. ":" .. string.format("%02d", minutes)}
+	local clock = frame.add {type = "label", caption = string.format("Time: %02d:%02d   Speed: %.2f", total_hours, minutes, game.speed)}
 	clock.style.font = "default-bold"
 	clock.style.font_color = {r = 0.98, g = 0.66, b = 0.22}
 	frame.add {type = "line"}
@@ -172,8 +172,16 @@ function Public.create_main_gui(player)
 		for food_name, tooltip in pairs(food_names) do
 			local s = t.add { type = "sprite-button", name = food_name, sprite = "item/" .. food_name, tooltip = tooltip}
 			gui_style(s, {minimal_height = 41, minimal_width = 41, padding = 0})
+			if global.active_special_games["disable_sciences"] and global.special_games_variables.disabled_food[food_name] then
+				s.enabled = false
+				s.tooltip = "Disabled by special game"
+			end
 		end
 		local s = t.add { type = "sprite-button", name = "send_all", caption = "All", tooltip = "LMB - low to high, RMB - high to low"}
+		if global.active_special_games["disable_sciences"] then
+			s.enabled = false
+			s.tooltip = "Disabled by special game"
+		end
 		gui_style(s, {minimal_height = 41, minimal_width = 41, padding = 0, font_color = {r = 0.9, g = 0.9, b = 0.9}})
 		frame.add{type="line"}
 	end
@@ -290,20 +298,22 @@ function Public.refresh()
 			Public.create_main_gui(player)
 		end
 	end
-	global.gui_refresh_delay = game.tick + 5
+	global.gui_refresh_delay = game.tick + 30
 end
 
 function Public.refresh_threat()
 	if global.gui_refresh_delay > game.tick then return end
+	local north_threat_text = show_pretty_threat("north_biters")
+	local south_threat_text = show_pretty_threat("south_biters")
 	for _, player in pairs(game.connected_players) do
 		if player.gui.left["bb_main_gui"] then
 			if player.gui.left["bb_main_gui"].stats_north then
-				player.gui.left["bb_main_gui"].stats_north.threat_north.caption = show_pretty_threat("north_biters")
-				player.gui.left["bb_main_gui"].stats_south.threat_south.caption = show_pretty_threat("south_biters")
+				player.gui.left["bb_main_gui"].stats_north.threat_north.caption = north_threat_text
+				player.gui.left["bb_main_gui"].stats_south.threat_south.caption = south_threat_text
 			end
 		end
 	end
-	global.gui_refresh_delay = game.tick + 5
+	global.gui_refresh_delay = game.tick + 30
 end
 
 local get_player_data = function(player, remove)
@@ -541,6 +551,19 @@ local function on_gui_click(event)
 	if name == "bb_view_players" then
 		global.bb_view_players[player.name] = true
 		Public.create_main_gui(player)
+	end	
+
+	if name == "reroll_yes" then 
+		if global.reroll_map_voting[player.name] ~= 1 then 
+			global.reroll_map_voting[player.name] = 1 
+			game.print(player.name .. " wants to reroll map ",{r = 0.1, g = 0.9, b = 0.0})
+		end
+	end
+	if name == "reroll_no" then 
+		if global.reroll_map_voting[player.name] ~= 0 then 
+			global.reroll_map_voting[player.name] = 0
+			game.print(player.name .. " wants to keep this map", {r = 0.9, g = 0.1, b = 0.1})
+		end		
 	end
 end
 

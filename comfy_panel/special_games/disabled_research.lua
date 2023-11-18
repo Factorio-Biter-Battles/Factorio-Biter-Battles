@@ -54,7 +54,7 @@ local function reset_disabled_research(team)
 end
 
 local Public = {
-    name = {type = "label", caption = "Disabled research", tooltip = "Disables choosen technologies from being researched"},
+    name = {type = "label", caption = "Disabled research", tooltip = "Disables chosen technologies from being researched"},
     config = {
         [1] = {name = "eq1", type = "choose-elem-button", elem_type = "technology"},
         [2] = {name = "eq2", type = "choose-elem-button", elem_type = "technology"},

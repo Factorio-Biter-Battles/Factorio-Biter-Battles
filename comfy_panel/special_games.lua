@@ -3,12 +3,19 @@ local Color = require 'utils.color_presets'
 local Public = {}
 global.active_special_games = {}
 global.special_games_variables = {}
+global.next_special_games = {}
+global.next_special_games_variables = {}
+
 local valid_special_games = {
 	turtle = require 'comfy_panel.special_games.turtle',
 	infinity_chest = require 'comfy_panel.special_games.infinity_chest',
 	disabled_research = require 'comfy_panel.special_games.disabled_research',
 	disabled_entities = require 'comfy_panel.special_games.disabled_entities',
+	shared_science_throw = require 'comfy_panel.special_games.shared_science_throw',
 	limited_lives = require 'comfy_panel.special_games.limited_lives',
+	mixed_ore_map = require 'comfy_panel.special_games.mixed_ore_map',
+	disable_sciences = require 'comfy_panel.special_games.disable_sciences',
+	send_to_external_server = require 'comfy_panel.special_games.send_to_external_server',
 	--[[
 	Add your special game here.
 	Syntax:
@@ -19,19 +26,23 @@ local valid_special_games = {
 	]]
 }
 
-function Public.reset_active_special_games() for _, i in ipairs(global.active_special_games) do i = false end end
-function Public.reset_special_games_variables() global.special_games_variables = {} end
+function Public.reset_special_games()
+	global.active_special_games = global.next_special_games
+	global.special_games_variables = global.next_special_games_variables
+	global.next_special_games = {}
+	global.next_special_games_variables = {}
+end
 
 
 local create_special_games_panel = (function(player, frame)
 	frame.clear()
 	frame.add{type = "label", caption = "Configure and apply special games here"}.style.single_line = false
-
+	local sp = frame.add{type = "scroll-pane", horizontal_scroll_policy = "never"}
 	for k, v in pairs(valid_special_games) do
-		local a = frame.add {type = "frame"}
+		local a = sp.add {type = "frame"}
 		a.style.width = 750
 		local table = a.add {name = k, type = "table", column_count = 3, draw_vertical_lines = true}
-		table.add(v.name).style.width = 100
+		table.add(v.name).style.width = 110
 		local config = table.add {name = k .. "_config", type = "flow", direction = "horizontal"}
 		config.style.width = 500
 		for _, i in ipairs(v.config) do
@@ -89,7 +100,9 @@ local function on_gui_click(event)
 		valid_special_games[special_game_gui.name].gui_click(element, config, player)
 	end
 end
+
 comfy_panel_tabs['Special games'] = {gui = create_special_games_panel, admin = true}
 
 Event.add(defines.events.on_gui_click, on_gui_click)
+
 return Public

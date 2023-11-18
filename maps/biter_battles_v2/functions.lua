@@ -10,8 +10,6 @@ local math_round = math.round
 local math_abs = math.abs
 local math_min = math.min
 local math_floor = math.floor
-local table_insert = table.insert
-local table_remove = table.remove
 local string_find = string.find
 local gui_style = require 'utils.utils'.gui_style
 
@@ -143,24 +141,6 @@ local landfill_biters = {
 	["behemoth-spitter"] = true,
 }
 
-local target_entity_types = {
-	["assembling-machine"] = true,
-	["boiler"] = true,
-	["furnace"] = true,
-	["generator"] = true,
-	["lab"] = true,
-	["mining-drill"] = true,
-	["radar"] = true,
-	["reactor"] = true,
-	["roboport"] = true,
-	["rocket-silo"] = true,
-	["ammo-turret"] = true,
-	["artillery-turret"] = true,
-	["beacon"] = true,
-	["electric-turret"] = true,
-	["fluid-turret"] = true,
-}
-
 local spawn_positions = {}
 local spawn_r = 7
 local spawn_r_square = spawn_r ^ 2
@@ -174,30 +154,6 @@ end
 local size_of_spawn_positions = #spawn_positions
 
 local Public = {}
-
-function Public.add_target_entity(entity)
-	if not entity then return end
-	if not entity.valid then return end
-	if not target_entity_types[entity.type] then return end
-	table_insert(global.target_entities[entity.force.index], entity)
-end
-
-function Public.get_random_target_entity(force_index)
-	local target_entities = global.target_entities[force_index]
-	local size_of_target_entities = #target_entities
-	if size_of_target_entities == 0 then return end
-	for _ = 1, size_of_target_entities, 1 do
-		local i = math_random(1, size_of_target_entities)
-		local entity = target_entities[i]
-		if entity and entity.valid then
-			return entity
-		else
-			table_remove(target_entities, i)
-			size_of_target_entities = size_of_target_entities - 1
-			if size_of_target_entities == 0 then return end
-		end
-	end
-end
 
 function Public.biters_landfill(entity)
 	if not landfill_biters[entity.name] then return end	
@@ -362,6 +318,20 @@ function Public.no_landfill_by_untrusted_user(event)
 	end
 end
 
+function Public.print_message_to_players(forcePlayerList, playerNameSendingMessage, msgToPrint, colorChosen)
+	for _, playerOfForce in pairs(forcePlayerList) do
+		if playerOfForce.connected then
+			if global.ignore_lists[playerOfForce.name] == nil or (global.ignore_lists[playerOfForce.name] and not global.ignore_lists[playerOfForce.name][playerNameSendingMessage]) then
+				if colorChosen == nil then
+					playerOfForce.print(msgToPrint)
+				else
+					playerOfForce.print(msgToPrint, colorChosen)
+				end
+			end
+		end
+	end
+end
+
 --Share chat with spectator force
 function Public.share_chat(event)
 	if not event.message or not event.player_index then return end
@@ -380,7 +350,7 @@ function Public.share_chat(event)
 
 	local msg = player_name .. tag .. " (" .. player_force_name .. "): ".. event.message
 	if not muted and (player_force_name == "north" or player_force_name == "south") then
-		game.forces.spectator.print(msg, color)
+		Public.print_message_to_players(game.forces.spectator.players,player_name,msg,color)
 	end
 
 	if global.tournament_mode and not player.admin then return end
@@ -395,8 +365,8 @@ function Public.share_chat(event)
 		Muted.print_muted_message(player)
 	end 
 	if not muted and player_force_name == "spectator" then
-		game.forces.north.print(msg)
-		game.forces.south.print(msg)
+		Public.print_message_to_players(game.forces.north.players,player_name,msg,nil)
+		Public.print_message_to_players(game.forces.south.players,player_name,msg,nil)
 	end
 	
 	discord_msg = discord_msg .. player_name .. " (" .. player_force_name .. "): ".. event.message
