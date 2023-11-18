@@ -1,26 +1,26 @@
 local Color = require 'utils.color_presets'
 
 local function generate_mixed_ore_map(type, size)
-	if type then
-		if not size then
-			-- size not specified, set default values
-			if type == 1 then
-				size = 9
-			elseif type == 2 then
-				size = 5
-			end
-		end
-		if type == 1 and size > 10 then
-			size = 10
-		end
-		global.next_special_games["mixed_ore_map"] = true
-		global.next_special_games_variables["mixed_ore_map"] = {
-			type = type,
-			size = size
-		}
+    if type then
+        if not size then
+            -- size not specified, set default values
+            if type == 1 then
+                size = 9
+            elseif type == 2 then
+                size = 5
+            end
+        end
+        if type == 1 and size > 10 then
+            size = 10
+        end
+        global.next_special_games["mixed_ore_map"] = true
+        global.next_special_games_variables["mixed_ore_map"] = {
+            type = type,
+            size = size
+        }
 
-		game.print("Special game Mixed ore map is being scheduled. The special game will start after restarting the map!", Color.warning)
-	end
+        game.print("Special game Mixed ore map is being scheduled. The special game will start after restarting the map!", Color.warning)
+    end
 end
 
 local Public = {
@@ -36,10 +36,10 @@ local Public = {
     },
     button = {name = "apply", type = "button", caption = "Apply"},
     generate = function (config, player)
-		local type = tonumber(config["type1"].selected_index)
-		local size = tonumber(config["size"].text)
+        local type = tonumber(config["type1"].selected_index)
+        local size = tonumber(config["size"].text)
 
-		generate_mixed_ore_map(type, size)
+        generate_mixed_ore_map(type, size)
     end,
 }
 

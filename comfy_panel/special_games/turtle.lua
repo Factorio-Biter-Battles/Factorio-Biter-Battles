@@ -1,42 +1,42 @@
 local Color = require 'utils.color_presets'
 
 local function generate_turtle(moat_width, entrance_width, size_x, size_y)
-	game.print("Special game turtle is being generated!", Color.warning)
-	local surface = game.surfaces[global.bb_surface_name]
-	local water_positions = {}
-	local concrete_positions = {}
-	local landfill_positions = {}
+    game.print("Special game turtle is being generated!", Color.warning)
+    local surface = game.surfaces[global.bb_surface_name]
+    local water_positions = {}
+    local concrete_positions = {}
+    local landfill_positions = {}
 
-	for i = 0, size_y + moat_width do -- vertical canals
-		for a = 1, moat_width do
-			table.insert(water_positions, {name = "deepwater", position = {x = (size_x / 2) + a, y = i}})
-			table.insert(water_positions, {name = "deepwater", position = {x = (size_x / 2) - size_x - a, y = i}})
-			table.insert(water_positions, {name = "deepwater", position = {x = (size_x / 2) + a, y = -i - 1}})
-			table.insert(water_positions, {name = "deepwater", position = {x = (size_x / 2) - size_x - a, y = -i - 1}})
-		end
-	end
-	for i = 0, size_x do -- horizontal canals
-		for a = 1, moat_width do
-			table.insert(water_positions, {name = "deepwater", position = {x = i - (size_x / 2), y = size_y + a}})
-			table.insert(water_positions, {name = "deepwater", position = {x = i - (size_x / 2), y = -size_y - 1 - a}})
-		end
-	end
+    for i = 0, size_y + moat_width do -- vertical canals
+        for a = 1, moat_width do
+            table.insert(water_positions, {name = "deepwater", position = {x = (size_x / 2) + a, y = i}})
+            table.insert(water_positions, {name = "deepwater", position = {x = (size_x / 2) - size_x - a, y = i}})
+            table.insert(water_positions, {name = "deepwater", position = {x = (size_x / 2) + a, y = -i - 1}})
+            table.insert(water_positions, {name = "deepwater", position = {x = (size_x / 2) - size_x - a, y = -i - 1}})
+        end
+    end
+    for i = 0, size_x do -- horizontal canals
+        for a = 1, moat_width do
+            table.insert(water_positions, {name = "deepwater", position = {x = i - (size_x / 2), y = size_y + a}})
+            table.insert(water_positions, {name = "deepwater", position = {x = i - (size_x / 2), y = -size_y - 1 - a}})
+        end
+    end
 
-	for i = 0, entrance_width - 1 do
-		for a = 1, moat_width + 6 do
-			table.insert(concrete_positions,
-			             {name = "refined-concrete", position = {x = -entrance_width / 2 + i, y = size_y - 3 + a}})
-			table.insert(concrete_positions,
-			             {name = "refined-concrete", position = {x = -entrance_width / 2 + i, y = -size_y + 2 - a}})
-			table.insert(landfill_positions, {name = "landfill", position = {x = -entrance_width / 2 + i, y = size_y - 3 + a}})
-			table.insert(landfill_positions, {name = "landfill", position = {x = -entrance_width / 2 + i, y = -size_y + 2 - a}})
-		end
-	end
+    for i = 0, entrance_width - 1 do
+        for a = 1, moat_width + 6 do
+            table.insert(concrete_positions,
+                         {name = "refined-concrete", position = {x = -entrance_width / 2 + i, y = size_y - 3 + a}})
+            table.insert(concrete_positions,
+                         {name = "refined-concrete", position = {x = -entrance_width / 2 + i, y = -size_y + 2 - a}})
+            table.insert(landfill_positions, {name = "landfill", position = {x = -entrance_width / 2 + i, y = size_y - 3 + a}})
+            table.insert(landfill_positions, {name = "landfill", position = {x = -entrance_width / 2 + i, y = -size_y + 2 - a}})
+        end
+    end
 
-	surface.set_tiles(water_positions)
-	surface.set_tiles(landfill_positions)
-	surface.set_tiles(concrete_positions)
-	global.active_special_games["turtle"] = true
+    surface.set_tiles(water_positions)
+    surface.set_tiles(landfill_positions)
+    surface.set_tiles(concrete_positions)
+    global.active_special_games["turtle"] = true
 end
 
 local Public = {
@@ -54,12 +54,12 @@ local Public = {
     },
     button = {name = "apply", type = "button", caption = "Apply"},
     generate = function (config, player)
-		local moat_width = config["moat_width"].text
-		local entrance_width = config["entrance_width"].text
-		local size_x = config["size_x"].text
-		local size_y = config["size_y"].text
+        local moat_width = config["moat_width"].text
+        local entrance_width = config["entrance_width"].text
+        local size_x = config["size_x"].text
+        local size_y = config["size_y"].text
 
-		generate_turtle(moat_width, entrance_width, size_x, size_y)
+        generate_turtle(moat_width, entrance_width, size_x, size_y)
     end,
     gui_click = function (element, config, player)
         if element.name == "chart_turtle" then

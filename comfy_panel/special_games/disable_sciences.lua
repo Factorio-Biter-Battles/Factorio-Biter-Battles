@@ -2,31 +2,30 @@ local Color = require 'utils.color_presets'
 local Tables = require "maps.biter_battles_v2.tables"
 
 local function generate_disable_sciences(packs)
-
-	local disabled_food = {
-		["automation-science-pack"] = packs[1],
-		["logistic-science-pack"] = packs[2],
-		["military-science-pack"] = packs[3],
-		["chemical-science-pack"] = packs[4],
-		["production-science-pack"] = packs[5],
-		["utility-science-pack"] = packs[6],
-		["space-science-pack"] = packs[7]
-	}
-	local message = {"Special game generated. Disabled science:"}
-	for k, v in pairs(disabled_food) do
-		if v then
-			table.insert(message, Tables.food_long_to_short[k].short_name)
-		end
-	end
-	if table_size(message)>1 then
-		global.active_special_games["disable_sciences"] = true
-		global.special_games_variables["disabled_food"] = disabled_food
-		game.print(table.concat(message, " "), Color.warning)
-	else
-		global.active_special_games["disable_sciences"] = false
-		global.special_games_variables["disabled_food"] = nil
-		game.print("Special game ended. All science enabled", Color.warning)
-	end
+    local disabled_food = {
+        ["automation-science-pack"] = packs[1],
+        ["logistic-science-pack"] = packs[2],
+        ["military-science-pack"] = packs[3],
+        ["chemical-science-pack"] = packs[4],
+        ["production-science-pack"] = packs[5],
+        ["utility-science-pack"] = packs[6],
+        ["space-science-pack"] = packs[7]
+    }
+    local message = {"Special game generated. Disabled science:"}
+    for k, v in pairs(disabled_food) do
+        if v then
+            table.insert(message, Tables.food_long_to_short[k].short_name)
+        end
+    end
+    if table_size(message)>1 then
+        global.active_special_games["disable_sciences"] = true
+        global.special_games_variables["disabled_food"] = disabled_food
+        game.print(table.concat(message, " "), Color.warning)
+    else
+        global.active_special_games["disable_sciences"] = false
+        global.special_games_variables["disabled_food"] = nil
+        game.print("Special game ended. All science enabled", Color.warning)
+    end
 end
 
 
@@ -50,17 +49,17 @@ local Public = {
     },
     button = {name = "apply", type = "button", caption = "Apply"},
     generate = function (config, player)
-		local packs = {
-			config["red"].state,
-			config["green"].state,
-			config["gray"].state,
-			config["blue"].state,
-			config["purple"].state,
-			config["yellow"].state,
-			config["white"].state
-		}
+        local packs = {
+            config["red"].state,
+            config["green"].state,
+            config["gray"].state,
+            config["blue"].state,
+            config["purple"].state,
+            config["yellow"].state,
+            config["white"].state
+        }
 
-		generate_disable_sciences(packs)
+        generate_disable_sciences(packs)
     end,
 }
 

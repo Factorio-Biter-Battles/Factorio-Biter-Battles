@@ -3,28 +3,28 @@ local Event = require 'utils.event'
 local Token = require 'utils.token'
 
 local send_to_external_server_handler = Token.register(
-	function(event)
-		game.get_player(event.player_index).connect_to_server(global.special_games_variables.send_to_external_server)
-	end
+    function(event)
+        game.get_player(event.player_index).connect_to_server(global.special_games_variables.send_to_external_server)
+    end
 )
 
 local function generate_send_to_external_server(player, address, name, description)
-	if address == "" or name == "" or description == "" then
-		Event.remove_removable(defines.events.on_player_joined_game, send_to_external_server_handler)
-		player.print("Stopped sending players to external server", Color.warning)
-		return
-	end
+    if address == "" or name == "" or description == "" then
+        Event.remove_removable(defines.events.on_player_joined_game, send_to_external_server_handler)
+        player.print("Stopped sending players to external server", Color.warning)
+        return
+    end
 
-	player.print("Sending players (other than host) to the specified server", Color.warning)
-	for _, connected_player in pairs(game.connected_players) do
-		connected_player.connect_to_server{
-			address = address,
-			name = name,
-			description = description
-		}
-	end
-	global.special_games_variables.send_to_external_server = {address = address, name = name, description = description}
-	Event.add_removable(defines.events.on_player_joined_game, send_to_external_server_handler)
+    player.print("Sending players (other than host) to the specified server", Color.warning)
+    for _, connected_player in pairs(game.connected_players) do
+        connected_player.connect_to_server{
+            address = address,
+            name = name,
+            description = description
+        }
+    end
+    global.special_games_variables.send_to_external_server = {address = address, name = name, description = description}
+    Event.add_removable(defines.events.on_player_joined_game, send_to_external_server_handler)
 end
 
 local Public = {
@@ -41,11 +41,11 @@ local Public = {
     gui_click = function (element, config, player)
         if element.name ~= "apply_and_confirm" then return end
 
-		local address = config["address"].text
-		local name = config["server_name"].text
-		local description = config["description"].text
+        local address = config["address"].text
+        local name = config["server_name"].text
+        local description = config["description"].text
 
-		generate_send_to_external_server(player, address, name, description)
+        generate_send_to_external_server(player, address, name, description)
     end,
 }
 

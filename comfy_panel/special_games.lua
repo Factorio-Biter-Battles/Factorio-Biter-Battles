@@ -7,112 +7,112 @@ global.next_special_games = {}
 global.next_special_games_variables = {}
 
 local valid_special_games = {
-	turtle = require 'comfy_panel.special_games.turtle',
-	infinity_chest = require 'comfy_panel.special_games.infinity_chest',
-	disabled_research = require 'comfy_panel.special_games.disabled_research',
-	disabled_entities = require 'comfy_panel.special_games.disabled_entities',
-	shared_science_throw = require 'comfy_panel.special_games.shared_science_throw',
-	limited_lives = require 'comfy_panel.special_games.limited_lives',
-	mixed_ore_map = require 'comfy_panel.special_games.mixed_ore_map',
-	disable_sciences = require 'comfy_panel.special_games.disable_sciences',
-	send_to_external_server = require 'comfy_panel.special_games.send_to_external_server',
-	--[[
-	Add your special game here.
-	Syntax:
-	<game_name> = require 'comfy_panel.special_games.<game_name>',
+    turtle = require 'comfy_panel.special_games.turtle',
+    infinity_chest = require 'comfy_panel.special_games.infinity_chest',
+    disabled_research = require 'comfy_panel.special_games.disabled_research',
+    disabled_entities = require 'comfy_panel.special_games.disabled_entities',
+    shared_science_throw = require 'comfy_panel.special_games.shared_science_throw',
+    limited_lives = require 'comfy_panel.special_games.limited_lives',
+    mixed_ore_map = require 'comfy_panel.special_games.mixed_ore_map',
+    disable_sciences = require 'comfy_panel.special_games.disable_sciences',
+    send_to_external_server = require 'comfy_panel.special_games.send_to_external_server',
+    --[[
+    Add your special game here.
+    Syntax:
+    <game_name> = require 'comfy_panel.special_games.<game_name>',
 
-	Create file special_games/<game_name>.lua
-	See file special_games/example.lua for an example
-	]]
+    Create file special_games/<game_name>.lua
+    See file special_games/example.lua for an example
+    ]]
 }
 
 function Public.reset_special_games()
-	global.active_special_games = global.next_special_games
-	global.special_games_variables = global.next_special_games_variables
-	global.next_special_games = {}
-	global.next_special_games_variables = {}
+    global.active_special_games = global.next_special_games
+    global.special_games_variables = global.next_special_games_variables
+    global.next_special_games = {}
+    global.next_special_games_variables = {}
 end
 
 
 local create_special_games_panel = (function(player, frame)
-	frame.clear()
-	frame.add{type = "label", caption = "Configure and apply special games here"}.style.single_line = false
-	local sp = frame.add{type = "scroll-pane", horizontal_scroll_policy = "never"}
-	for k, v in pairs(valid_special_games) do
-		local a = sp.add {type = "frame"}
-		a.style.width = 750
-		local table = a.add {name = k, type = "table", column_count = 3, draw_vertical_lines = true}
-		table.add(v.name).style.width = 110
-		local config = table.add {name = k .. "_config", type = "flow", direction = "horizontal"}
-		config.style.width = 500
-		for _, i in ipairs(v.config) do
-			config.add(i)
-			config[i.name].style.width = i.width
-		end
-		table.add {name = v.button.name, type = v.button.type, caption = v.button.caption}
-		table[k .. "_config"].style.vertical_align = "center"
-	end
+    frame.clear()
+    frame.add{type = "label", caption = "Configure and apply special games here"}.style.single_line = false
+    local sp = frame.add{type = "scroll-pane", horizontal_scroll_policy = "never"}
+    for k, v in pairs(valid_special_games) do
+        local a = sp.add {type = "frame"}
+        a.style.width = 750
+        local table = a.add {name = k, type = "table", column_count = 3, draw_vertical_lines = true}
+        table.add(v.name).style.width = 110
+        local config = table.add {name = k .. "_config", type = "flow", direction = "horizontal"}
+        config.style.width = 500
+        for _, i in ipairs(v.config) do
+            config.add(i)
+            config[i.name].style.width = i.width
+        end
+        table.add {name = v.button.name, type = v.button.type, caption = v.button.caption}
+        table[k .. "_config"].style.vertical_align = "center"
+    end
 end)
 
 local function is_element_child_of(element, parent_name)
-	if element.parent then
-		if element.parent.name == parent_name then
-			return true
-		end
+    if element.parent then
+        if element.parent.name == parent_name then
+            return true
+        end
 
-		return is_element_child_of(element.parent, parent_name)
-	end
+        return is_element_child_of(element.parent, parent_name)
+    end
 
-	return false
+    return false
 end
 
 local function get_sepecial_game_table(element)
-	if element.parent then
-		if element.parent.type == "table" and valid_special_games[element.parent.name] then
-			return element.parent
-		end
+    if element.parent then
+        if element.parent.type == "table" and valid_special_games[element.parent.name] then
+            return element.parent
+        end
 
-		return get_sepecial_game_table(element.parent)
-	end
+        return get_sepecial_game_table(element.parent)
+    end
 
-	return nil
+    return nil
 end
 
 local function on_gui_click(event)
-	local element = event.element
-	if not element then return end
-	if not element.valid then return end
-	if not (element.type == "button") then return end
-	if not is_element_child_of(element, 'Special games') then return end
+    local element = event.element
+    if not element then return end
+    if not element.valid then return end
+    if not (element.type == "button") then return end
+    if not is_element_child_of(element, 'Special games') then return end
 
     local special_game_gui = get_sepecial_game_table(element)
-	if not special_game_gui then return end
+    if not special_game_gui then return end
 
-	local config = special_game_gui.children[2]
-	local player = game.get_player(event.player_index)
+    local config = special_game_gui.children[2]
+    local player = game.get_player(event.player_index)
 
-	if element.name == "apply" then
-		local flow = element.parent.add {type = "flow", direction = "vertical"}
-		flow.add {type = "button", name = "confirm", caption = "Confirm"}
-		flow.add {type = "button", name = "cancel", caption = "Cancel"}
-		element.visible = false -- hides Apply button	
-		player.print("[SPECIAL GAMES] Are you sure? This change will be reversed only on map restart!", Color.cyan)
+    if element.name == "apply" then
+        local flow = element.parent.add {type = "flow", direction = "vertical"}
+        flow.add {type = "button", name = "confirm", caption = "Confirm"}
+        flow.add {type = "button", name = "cancel", caption = "Cancel"}
+        element.visible = false -- hides Apply button    
+        player.print("[SPECIAL GAMES] Are you sure? This change will be reversed only on map restart!", Color.cyan)
 
-		return
-	elseif element.name == "confirm" then
-		valid_special_games[special_game_gui.name].generate(config, player)
-	end
+        return
+    elseif element.name == "confirm" then
+        valid_special_games[special_game_gui.name].generate(config, player)
+    end
 
     if element.name == "confirm" or element.name == "cancel" then
-		special_game_gui.children[3].visible = true -- shows back Apply button
-		element.parent.destroy() -- removes confirm/Cancel buttons
+        special_game_gui.children[3].visible = true -- shows back Apply button
+        element.parent.destroy() -- removes confirm/Cancel buttons
 
-		return
-	end
+        return
+    end
 
-	if valid_special_games[special_game_gui.name]["gui_click"] then
-		valid_special_games[special_game_gui.name].gui_click(element, config, player)
-	end
+    if valid_special_games[special_game_gui.name]["gui_click"] then
+        valid_special_games[special_game_gui.name].gui_click(element, config, player)
+    end
 end
 
 comfy_panel_tabs['Special games'] = {gui = create_special_games_panel, admin = true}
