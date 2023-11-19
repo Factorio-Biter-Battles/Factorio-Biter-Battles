@@ -712,11 +712,12 @@ end
 
 --Landfill Restriction
 function Public.restrict_landfill(surface, user, tiles)
+	local seed = game.surfaces[global.bb_surface_name].map_gen_settings.seed
 	for _, t in pairs(tiles) do
 		local check_position = t.position
 		if check_position.y > 0 then check_position = {x = check_position.x, y = (check_position.y * -1) - 1} end
 		local trusted = session.get_trusted_table()
-		if is_horizontal_border_river(check_position) then
+		if is_horizontal_border_river(check_position, seed) then
 			surface.set_tiles({{name = t.old_tile.name, position = t.position}}, true)
 			if user ~= nil then
 				user.print('You can not landfill the river', {r = 0.22, g = 0.99, b = 0.99})
