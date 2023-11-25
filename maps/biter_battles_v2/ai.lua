@@ -228,7 +228,7 @@ local function create_attack_group(surface, force_name, biter_force_name)
 			unit_group.add_member(unit)
 		end
 	end
-	local strike_position = AiStrikes.calculateStrikePosition(unit_group, target_position)
+	local strike_position = AiStrikes.calculate_strike_position(unit_group, target_position)
 	AiStrikes.initiate(unit_group, force_name, strike_position, target_position)
 	AiStrikes.initiate(unit_group_boss, force_name, strike_position, target_position)
 end

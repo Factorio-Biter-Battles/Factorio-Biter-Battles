@@ -144,7 +144,7 @@ local function assassinate(unit_group, target)
     })
 end
 
-function Public.calculateStrikePosition(unit_group, target_position)
+function Public.calculate_strike_position(unit_group, target_position)
     local source_position = unit_group.position
     local normalized_source_position = { x = source_position.x, y = math_abs(source_position.y) }
     local normalized_target_position = { x = target_position.x, y = math_abs(target_position.y) }
