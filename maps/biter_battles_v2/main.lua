@@ -13,6 +13,7 @@ local Team_manager = require "maps.biter_battles_v2.team_manager"
 local Terrain = require "maps.biter_battles_v2.terrain"
 local Session = require 'utils.datastore.session_data'
 local Color = require 'utils.color_presets'
+local boss_unit = require "functions.boss_unit"
 local autoTagWestOutpost = "[West]"
 local autoTagEastOutpost = "[East]"
 local autoTagDistance = 600
@@ -120,13 +121,17 @@ local function on_entity_died(event)
 	local entity = event.entity
 	if not entity.valid then return end
 	if Ai.subtract_threat(entity) then Gui.refresh_threat() end
+	boss_unit.on_entity_died(event)
 	AiTargets.stop_tracking(entity)
 	if Functions.biters_landfill(entity) then return end
 	Game_over.silo_death(event)
 end
 
 local function on_ai_command_completed(event)
-	if not event.was_distracted then AiStrikes.step(event.unit_number, event.result) end
+	if not event.was_distracted then
+	  AiStrikes.step(event.unit_number, event.result)
+	  Ai.manage_group(event)
+	end
 end
 
 local function getTagOutpostName(pos)
@@ -204,6 +209,8 @@ local function on_tick()
 	if tick % 60 == 0 then 
 		global.bb_threat["north_biters"] = global.bb_threat["north_biters"] + global.bb_threat_income["north_biters"]
 		global.bb_threat["south_biters"] = global.bb_threat["south_biters"] + global.bb_threat_income["south_biters"]
+		global.bb_threat_realized["north_biters"] = global.bb_threat_realized["north_biters"] + global.bb_threat_income["north_biters"]
+		global.bb_threat_realized["south_biters"] = global.bb_threat_realized["south_biters"] + global.bb_threat_income["south_biters"]
 	end
 
 	if (tick+11) % 300 == 0 then
@@ -229,6 +236,7 @@ local function on_tick()
 		return
 	end
 
+	Ai.form_groups()
 	Ai.reanimate_units()
 end
 
@@ -406,6 +414,11 @@ local function clear_corpses(cmd)
         player.print('Cleared biter-corpses.', Color.success)
 end
 
+
+local function on_unit_added_to_group(event)
+        Ai.on_unit_added_to_group(event)
+end
+
 local function on_init()
 	Init.tables()
 	Init.initial_setup()
@@ -441,6 +454,7 @@ Event.add(defines.events.on_robot_mined_entity, on_robot_mined_entity)
 Event.add(defines.events.on_research_finished, on_research_finished)
 Event.add(defines.events.on_robot_built_entity, on_robot_built_entity)
 Event.add(defines.events.on_robot_built_tile, on_robot_built_tile)
+Event.add(defines.events.on_unit_added_to_group, on_unit_added_to_group)
 Event.add(defines.events.on_tick, on_tick)
 Event.on_init(on_init)
 
