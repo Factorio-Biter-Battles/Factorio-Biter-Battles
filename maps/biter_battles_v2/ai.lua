@@ -475,6 +475,9 @@ Public.manage_group = function(event)
 	if result ~= defines.behavior_result.in_progress then
 		request_group_lower_count(id)
 	end
+	local strike_position = AiStrikes.calculate_strike_position(unit_group, target_position)
+	AiStrikes.initiate(unit_group, force_name, strike_position, target_position)
+	AiStrikes.initiate(unit_group_boss, force_name, strike_position, target_position)
 end
 
 Public.pre_main_attack = function()
