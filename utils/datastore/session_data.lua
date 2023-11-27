@@ -14,7 +14,7 @@ local trusted = {}
 local settings = {
     -- local trusted_value = 2592000 -- 12h
     trusted_value = 5184000, -- 24h
-    nth_tick = 18000 -- nearest prime to 5 minutes in ticks
+    nth_tick = 54000 --15min
 }
 local set_data = Server.set_data
 local try_get_data = Server.try_get_data
@@ -87,7 +87,7 @@ local nth_tick_token =
     function(data)
         local player = data.player
         if player and player.valid then
-            Public.try_ul_data(player.name)
+			Server.upload_time_played(player)
         end
     end
 )
@@ -119,61 +119,10 @@ function Public.format_time(ticks, h, m)
         return string.format('%02dm', minutes, min)
     end
 end
-
---- Tries to get data from the webpanel and updates the local table with values.
--- @param data_set player token
-function Public.try_dl_data(key)
-    key = tostring(key)
-    local secs = Server.get_current_time()
-    if secs == nil then
-        session[key] = game.players[key].online_time
-        return
-    else
-        try_get_data(session_data_set, key, try_download_data)
-    end
-end
-
---- Tries to get data from the webpanel and updates the local table with values.
--- @param data_set player token
-function Public.try_ul_data(key)
-    key = tostring(key)
-    local secs = Server.get_current_time()
-    if secs == nil then
-        return
-    else
-        try_get_data(session_data_set, key, try_upload_data)
-    end
-end
-
---- Checks if a player exists within the table
--- @param player_name <string>
--- @return <boolean>
-function Public.exists(player_name)
-    return session[player_name] ~= nil
-end
-
---- Prints a list of all players in the player_session table.
-function Public.print_sessions()
-    local result = {}
-
-    for k, _ in pairs(session) do
-        result[#result + 1] = k
-    end
-
-    result = concat(result, ', ')
-    Game.player_print(result)
-end
-
 --- Returns the table of session
 -- @return <table>
 function Public.get_session_table()
     return session
-end
-
---- Returns the table of online_track
--- @return <table>
-function Public.get_tracker_table()
-    return online_track
 end
 
 --- Returns the table of trusted
@@ -182,26 +131,6 @@ function Public.get_trusted_table()
     return trusted
 end
 
---- Returns the table of settings
--- @return <table>
-function Public.get_settings_table()
-    return settings
-end
-
---- Clears a given player from the session tables.
--- @param LuaPlayer
-function Public.clear_player(player)
-    local name = player.name
-    if session[name] then
-        session[name] = nil
-    end
-    if online_track[name] then
-        online_track[name] = nil
-    end
-    if trusted[name] then
-        trusted[name] = nil
-    end
-end
 
 Event.add(
     defines.events.on_player_joined_game,
@@ -210,8 +139,7 @@ Event.add(
         if not player or not player.valid then
             return
         end
-
-        Public.try_dl_data(player.name)
+		Server.set_total_time_played(player)
     end
 )
 
@@ -222,25 +150,10 @@ Event.add(
         if not player or not player.valid then
             return
         end
-
-        Public.try_ul_data(player.name)
+		Server.upload_time_played(player)
     end
 )
 
 Event.on_nth_tick(settings.nth_tick, upload_data)
-
-Server.on_data_set_changed(
-    session_data_set,
-    function(data)
-        session[data.key] = data.value
-        if data.value > settings.trusted_value then
-            trusted[data.key] = true
-        else
-            if trusted[data.key] then
-                trusted[data.key] = false
-            end
-        end
-    end
-)
 
 return Public

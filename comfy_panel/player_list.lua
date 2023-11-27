@@ -366,8 +366,8 @@ local function get_sorted_list(sort_by)
         player_list[i].name = player.name
 
         local t = 0
-        if play_table[player.name] then
-            t = play_table[player.name]
+        if global.total_time_online_players[player.name] then
+            t = global.total_time_online_players[player.name]
         end
 
         player_list[i].total_played_time = get_formatted_playtime(t)

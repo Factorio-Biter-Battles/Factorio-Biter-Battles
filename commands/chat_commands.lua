@@ -1,5 +1,6 @@
 local Server = require 'utils.server'
 local Muted = require 'utils.muted'
+local Functions = require "maps.biter_battles_v2.functions"
 local string_find = string.find
 
 local function chat_with_team(message, team)
@@ -18,12 +19,12 @@ local function chat_with_team(message, team)
                         player.force.name .. "): " .. message
 
         if not Muted.is_muted(player_name) then
-            game.forces.spectator.print(msg, color)
+			Functions.print_message_to_players(game.forces.spectator.players,player_name,msg,color)
             if (team == "north" or player.force.name == "north") then
-                game.forces.north.print(msg, color)
+				Functions.print_message_to_players(game.forces.north.players,player_name,msg,color)
             end
             if (team == "south" or player.force.name == "south") then
-                game.forces.south.print(msg, color)
+				Functions.print_message_to_players(game.forces.south.players,player_name,msg,color)
             end
         else
             msg = "[muted] " .. msg

@@ -7,6 +7,8 @@ f = open("changelog.txt", "w")
 gitNameToFactorioUsername = {
     "Ragnarok77-factorio": "Ragnarok77",
     "XVhc6A": "DrButtons",
+    "amannm": "BigFatDuck",
+    "clifffrey": "cliff_build",
 }
 
 print("Usage of script with usage of GitHub token for more API requests: python scriptName username token")
