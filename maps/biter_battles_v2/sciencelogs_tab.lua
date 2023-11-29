@@ -2,6 +2,7 @@
 
 local Tabs = require 'comfy_panel.main'
 local tables = require "maps.biter_battles_v2.tables"
+local Functions = require "maps.biter_battles_v2.functions"
 local event = require 'utils.event'
 local bb_config = require "maps.biter_battles_v2.config"
 local food_values = tables.food_values
@@ -135,19 +136,11 @@ local function add_science_logs(player, element)
 		label.style.horizontal_align = "center"
 		end
 	end
-	
-	local n = bb_config.north_side_team_name
-	local s = bb_config.south_side_team_name
-	if global.tm_custom_name["north"] then n = global.tm_custom_name["north"] end
-	if global.tm_custom_name["south"] then s = global.tm_custom_name["south"] end	
-	local team_strings = {
-		["north"] = table.concat({"[color=120, 120, 255]", n, "[/color]"}),
-		["south"] = table.concat({"[color=255, 65, 65]", s, "[/color]"})
-	}
+
 	if global.science_logs_date then
 		for i = 1, #global.science_logs_date, 1 do
 			local real_force_name = global.science_logs_fed_team[i]
-			local custom_force_name = team_strings[real_force_name];
+			local custom_force_name = Functions.team_name_with_color(real_force_name);
 			local easy_food_name = food_long_to_short[global.science_logs_food_name[i]].short_name
 			
 			if dropdown_force.selected_index == 1 or real_force_name:match(dropdown_force.get_item(dropdown_force.selected_index)) then

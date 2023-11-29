@@ -15,8 +15,8 @@ local gui_style = require 'utils.utils'.gui_style
 local Public = {}
 
 local gui_values = {
-    ["north"] = {c1 = "Team North", color1 = {r = 0.55, g = 0.55, b = 0.99}},
-    ["south"] = {c1 = "Team South", color1 = {r = 0.99, g = 0.33, b = 0.33}}
+    ["north"] = {color1 = {r = 0.55, g = 0.55, b = 0.99}},
+    ["south"] = {color1 = {r = 0.99, g = 0.33, b = 0.33}}
 }
 
 local function shuffle(tbl)
@@ -38,15 +38,11 @@ end
 
 local function create_victory_gui(player)
     local values = gui_values[global.bb_game_won_by_team]
-    local c = values.c1
-    if global.tm_custom_name[global.bb_game_won_by_team] then
-        c = global.tm_custom_name[global.bb_game_won_by_team]
-    end
     local frame = player.gui.left.add {
         type = "frame",
         name = "bb_victory_gui",
         direction = "vertical",
-        caption = c .. " won!"
+        caption = Functions.team_name(global.bb_game_won_by_team) .. " won!"
     }
     frame.style.font = "heading-1"
     frame.style.font_color = values.color1
@@ -443,11 +439,6 @@ function Public.silo_death(event)
         global.server_restart_timer = 150
 
         game.speed = 1
-
-        local c = gui_values[global.bb_game_won_by_team].c1
-        if global.tm_custom_name[global.bb_game_won_by_team] then
-            c = global.tm_custom_name[global.bb_game_won_by_team]
-		end
 		
         north_evo = math.floor(1000 * global.bb_evolution["north_biters"]) * 0.1
         north_threat = math.floor(global.bb_threat["north_biters"])
