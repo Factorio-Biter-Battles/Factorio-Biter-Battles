@@ -59,3 +59,9 @@ commands.add_command('north-chat', 'Chat with north. You can also use /nth',
     local message = tostring(cmd.parameter)
     chat_with_team(message, 'north')
 end)
+
+commands.add_command('spectator-chat', 'Chat with spectators.',
+                     function(cmd)
+    local message = tostring(cmd.parameter)
+    chat_with_team(message, 'spectator')
+end)
