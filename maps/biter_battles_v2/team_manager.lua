@@ -1,4 +1,5 @@
 local Public = {}
+local Functions = require "maps.biter_battles_v2.functions"
 local Server = require 'utils.server'
 local gui_style = require 'utils.utils'.gui_style
 local forces = {
@@ -82,7 +83,7 @@ function Public.switch_force(player_name, force_name)
 	local player = game.players[player_name]
 	player.force = game.forces[force_name]
 				
-	game.print(player_name .. " has been switched into team " .. force_name .. ".", {r=0.98, g=0.66, b=0.22})
+	game.print(player_name .. " has been switched into " .. Functions.team_name_with_color(force_name) .. ".", {r=0.98, g=0.66, b=0.22})
     Server.to_discord_bold(player_name .. " has joined team " .. force_name .. "!")
 	
 	leave_corpse(player)
@@ -223,8 +224,7 @@ end
 function Public.custom_team_name_gui(player, force_name)
 	if player.gui.center["custom_team_name_gui"] then player.gui.center["custom_team_name_gui"].destroy() return end	
 	local frame = player.gui.center.add({type = "frame", name = "custom_team_name_gui", caption = "Set custom team name:", direction = "vertical"})
-	local text = force_name
-	if global.tm_custom_name[force_name] then text = global.tm_custom_name[force_name] end
+	local text = Functions.team_name(force_name)
 	
 	local textfield = frame.add({ type = "textfield", name = force_name, text = text })	
 	local t = frame.add({type = "table", column_count = 2})	

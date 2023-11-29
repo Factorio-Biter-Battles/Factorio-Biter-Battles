@@ -67,24 +67,15 @@ local function get_enemy_team_of(team)
 end
 
 local function print_feeding_msg(player, food, flask_amount)
-	if not get_enemy_team_of(player.force.name) then return end
-	
-	local n = bb_config.north_side_team_name
-	local s = bb_config.south_side_team_name
-	if global.tm_custom_name["north"] then n = global.tm_custom_name["north"] end
-	if global.tm_custom_name["south"] then s = global.tm_custom_name["south"] end	
-	local team_strings = {
-		["north"] = table.concat({"[color=120, 120, 255]", n, "'s[/color]"}),
-		["south"] = table.concat({"[color=255, 65, 65]", s, "'s[/color]"})
-	}
-	
+	local enemy = get_enemy_team_of(player.force.name)
+	if not enemy then return end
+
 	local colored_player_name = table.concat({"[color=", player.color.r * 0.6 + 0.35, ",", player.color.g * 0.6 + 0.35, ",", player.color.b * 0.6 + 0.35, "]", player.name, "[/color]"})
 	local formatted_food = table.concat({"[color=", food_values[food].color, "]", food_values[food].name, " juice[/color]", "[img=item/", food, "]"})
 	local formatted_amount = table.concat({"[font=heading-1][color=255,255,255]" .. flask_amount .. "[/color][/font]"})
 	
 	if flask_amount >= 20 then
-		local enemy = get_enemy_team_of(player.force.name)
-		game.print(table.concat({colored_player_name, " fed ", formatted_amount, " flasks of ", formatted_food, " to team ", team_strings[enemy], " biters!"}), {r = 0.9, g = 0.9, b = 0.9})
+		game.print(table.concat({colored_player_name, " fed ", formatted_amount, " flasks of ", formatted_food, " to ", Functions.team_name_with_color(enemy), "'s biters!"}), {r = 0.9, g = 0.9, b = 0.9})
 		Server.to_discord_bold(table.concat({player.name, " fed ", flask_amount, " flasks of ", food_values[food].name, " to team ", enemy, " biters!"}))
 	else
 		local target_team_text = "the enemy"
@@ -103,14 +94,6 @@ local function add_stats(player, food, flask_amount,biter_force_name,evo_before_
 	local colored_player_name = table.concat({"[color=", player.color.r * 0.6 + 0.35, ",", player.color.g * 0.6 + 0.35, ",", player.color.b * 0.6 + 0.35, "]", player.name, "[/color]"})
 	local formatted_food = table.concat({"[color=", food_values[food].color, "][/color]", "[img=item/", food, "]"})
 	local formatted_amount = table.concat({"[font=heading-1][color=255,255,255]" .. flask_amount .. "[/color][/font]"})	
-	local n = bb_config.north_side_team_name
-	local s = bb_config.south_side_team_name
-	if global.tm_custom_name["north"] then n = global.tm_custom_name["north"] end
-	if global.tm_custom_name["south"] then s = global.tm_custom_name["south"] end
-	local team_strings = {
-		["north"] = table.concat({"[color=120, 120, 255]", n, "[/color]"}),
-		["south"] = table.concat({"[color=255, 65, 65]", s, "[/color]"})
-	}
 	if flask_amount > 0 then
 		local tick = game.ticks_played
 		local feed_time_mins = math_round(tick / (60*60), 0)
@@ -327,15 +310,7 @@ function Public.feed_biters_mixed(player, button)
 		player.print("You have no flasks in your inventory", {r = 0.98, g = 0.66, b = 0.22})
 		return
 	end
-	local n = bb_config.north_side_team_name
-	local s = bb_config.south_side_team_name
-	if global.tm_custom_name["north"] then n = global.tm_custom_name["north"] end
-	if global.tm_custom_name["south"] then s = global.tm_custom_name["south"] end	
-	local team_strings = {
-		["north"] = table.concat({"[color=120, 120, 255]", n, "'s[/color]"}),
-		["south"] = table.concat({"[color=255, 65, 65]", s, "'s[/color]"})
-	}
-	table.insert(message, "to team " .. team_strings[enemy_force_name] .. " biters!")
+	table.insert(message, "to " .. Functions.team_name_with_color(enemy_force_name) .. "'s biters!")
 	game.print(table.concat(message), {r = 0.9, g = 0.9, b = 0.9})
 end
 
