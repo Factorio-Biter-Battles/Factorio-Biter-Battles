@@ -4,6 +4,7 @@ local Init = require "maps.biter_battles_v2.init"
 local Score = require "comfy_panel.score"
 local Server = require 'utils.server'
 local Special_games = require 'comfy_panel.special_games'
+local Captain_special = require 'comfy_panel.special_games.captain'
 local Event = require 'utils.event'
 local Tables = require 'maps.biter_battles_v2.tables'
 local Token = require 'utils.token'
@@ -484,7 +485,7 @@ function Public.silo_death(event)
 			log_to_db('[SpecialEnabled]'..global.special_games_variables["captain_mode"]["stats"]["specialEnabled"]..'\n',true)
 			for _, player in pairs(game.players) do
 				if player.connected and (player.force.name == "north" or player.force.name == "south") then
-					Special_games.captain_log_end_time_player(player)
+					Captain_special.captain_log_end_time_player(player)
 				end
 				if global.special_games_variables["captain_mode"]["stats"]["playerPlaytimes"][player.name] ~= nil then
 					log_to_db('[Playtime]['..player.name..']'..global.special_games_variables["captain_mode"]["stats"]["playerPlaytimes"][player.name]..'\n',true)
