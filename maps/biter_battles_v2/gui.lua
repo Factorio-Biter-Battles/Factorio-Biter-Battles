@@ -16,7 +16,7 @@ local math_random = math.random
 local math_abs = math.abs
 require "maps.biter_battles_v2.spec_spy"
 local gui_style = require 'utils.utils'.gui_style
-local has_life = require 'comfy_panel.special_games'.has_life
+local has_life = require 'comfy_panel.special_games.limited_lives'.has_life
 local gui_values = {
 		["north"] = {force = "north", biter_force = "north_biters", c1 = bb_config.north_side_team_name, c2 = "JOIN ", n1 = "join_north_button",
 		t1 = "Evolution of north side biters.",
