@@ -55,7 +55,7 @@ fchangelogTab.close()
 f = open("maps/biter_battles_v2/changelog_tab_temp.lua", "w")
 foundFirstLine = 0
 for line in lines:
-    if "table.insert(changelog_change" in line and foundFirstLine == 0:
+    if "\tadd_entry(" in line and foundFirstLine == 0:
         foundFirstLine = 1
         fnewlogs = open("changelog.txt", "r")
         linesnewLogs = fnewlogs.readlines()
@@ -63,13 +63,12 @@ for line in lines:
         for lineNew in linesnewLogs:
             formatedLine = lineNew.split(";")
             if "[HIDDEN]" not in formatedLine[1]:
-                f.write("	table.insert(changelog_change,\"" + formatedLine[0].rstrip("\n").replace('"', "'") + "\")\n")
-                f.write("	table.insert(changelog_change,\"" + formatedLine[1].rstrip("\n").replace('"', "'") + "\")\n")
                 cleanedName = formatedLine[2].rstrip("\n").replace('"', "'")
                 if cleanedName in gitNameToFactorioUsername:
                     cleanedName = gitNameToFactorioUsername[cleanedName]
-                f.write("	table.insert(changelog_change,\"" + cleanedName + "\")\n")
-    if "table.insert(changelog_change" not in line:
+                f.write("\tadd_entry(\"" + formatedLine[0].rstrip("\n").replace('"', "'") + "\", \"" +
+                        cleanedName + "\", \"" + formatedLine[1].rstrip("\n").replace('"', "'") + "\")\n")
+    if "\tadd_entry(" not in line:
         f.write(line)
 f.close()
 
