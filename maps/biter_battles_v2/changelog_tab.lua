@@ -12,6 +12,8 @@ local function add_changelog(player, element)
 		table.insert(changelog_change, who)
 	end
 
+	add_entry("2023-12-03", "cliff_build", "Small code simplification in changelog code")
+	add_entry("2023-12-03", "developer-8", "Separate special games into individual files")
 	add_entry("2023-11-29", "cliff_build", "Add /spectator-chat command")
 	add_entry("2023-11-29", "cliff_build", "Add a spectator-force log message about which team completed a research")
 	add_entry("2023-11-27", "Ragnarok77", "Decreased red /green and increased mil/blue science values")
