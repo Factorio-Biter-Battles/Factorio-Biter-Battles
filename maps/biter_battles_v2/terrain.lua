@@ -21,9 +21,9 @@ local GetNoise = require "utils.get_noise"
 local simplex_noise = require 'utils.simplex_noise'.d2
 local river_circle_size = 39
 local spawn_island_size = 9
-local ores = {"iron-ore",  "coal", "copper-ore", "iron-ore", "stone", "copper-ore", "iron-ore", "copper-ore", "iron-ore", "coal", "iron-ore", "copper-ore",  "iron-ore", "stone", "copper-ore", "coal"}
+local ores = {"iron-ore",  "copper-ore", "iron-ore", "stone", "copper-ore", "iron-ore", "copper-ore", "iron-ore", "coal", "iron-ore", "copper-ore",  "iron-ore", "stone", "copper-ore", "coal"}
 -- mixed_ore_multiplier order is based on the ores variable
-local mixed_ore_multiplier = {1, 0.5, 1, 1, 1, 1, 1, 1, 1, 0.5, 1, 1, 1, 1, 1}
+local mixed_ore_multiplier = {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}
 local rocks = {"rock-huge", "rock-big", "rock-big", "rock-big", "sand-rock-big"}
 
 local chunk_tile_vectors = {}
@@ -400,10 +400,6 @@ local function mixed_ore(surface, left_top_x, left_top_y)
 	--Draw noise text values to determine which chunks are valid for mixed ore.
 	-- rendering.draw_text{text = noise, surface = surface, target = {left_top_x + 16, left_top_y + 16}, color = {255, 128, 0}, scale = 2, font = "default-game"}
 
-
-	--Skip chunks that are too far off the ore noise value.
-	-- if noise < 0.42 then return end
-
 	--Draw the mixed ore patches.
 	for x = 0, 31, 1 do
 		for y = 0, 31, 1 do
@@ -411,7 +407,7 @@ local function mixed_ore(surface, left_top_x, left_top_y)
 			if surface.can_place_entity({name = "iron-ore", position = pos}) then
 				local noise = GetNoise("bb_ore", pos, seed)
 				if noise > 0.6 then
-					local i = math_floor(noise * 25 + math_abs(pos.x) * 0.05) % 12 + 1
+					local i = math_floor(noise * 25 + math_abs(pos.x) * 0.05) % 15 + 1
 					local amount = (global.random_generator(800, 1000) + math_sqrt(pos.x ^ 2 + pos.y ^ 2) * 3) * mixed_ore_multiplier[i]
 					surface.create_entity({name = ores[i], position = pos, amount = amount})
 				end
