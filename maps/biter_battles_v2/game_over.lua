@@ -437,7 +437,7 @@ function Public.silo_death(event)
         global.spy_fish_timeout["south"] = game.tick + 999999
         global.server_restart_timer = 150
 
-	game.speed = 1
+        game.speed = 1
 
         local c = gui_values[global.bb_game_won_by_team].c1
         if global.tm_custom_name[global.bb_game_won_by_team] then
