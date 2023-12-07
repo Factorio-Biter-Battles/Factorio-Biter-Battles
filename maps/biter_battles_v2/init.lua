@@ -126,7 +126,7 @@ function Public.initial_setup()
 		--MAP SETTINGS--
 		["new_year_island"] = false,
 		["bb_map_reveal_toggle"] = true,
-		["map_reroll_admin_disable"] = true,
+		["map_reroll"] = true,
 	}
 
 	global.total_time_online_players = {}
