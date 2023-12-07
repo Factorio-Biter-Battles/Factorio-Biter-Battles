@@ -12,6 +12,12 @@ local function add_changelog(player, element)
 		table.insert(changelog_change, who)
 	end
 
+	add_entry("2023-12-07", "gsquaredxc", "Reset game speed to 1 after silo death")
+	add_entry("2023-12-07", "cliff_build", "Add comment documentating advantage of sending large batch of sci")
+	add_entry("2023-12-07", "developer-8", "Improve map reroll")
+	add_entry("2023-12-07", "cogito123", "Optimize river generation")
+	add_entry("2023-12-07", "cogito123", "Rework creation of biter groups")
+	add_entry("2023-12-07", "Ragnarok77", "New feature suspend player")
 	add_entry("2023-12-03", "cliff_build", "Small code simplification in changelog code")
 	add_entry("2023-12-03", "developer-8", "Separate special games into individual files")
 	add_entry("2023-11-29", "cliff_build", "Add /spectator-chat command")
