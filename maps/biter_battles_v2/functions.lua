@@ -440,6 +440,30 @@ function Public.show_intro(player)
 	l.style.font_color = {r=255, g=255, b=255}
 end
 
+-- biters_to_team - Maps biter force to team force. i.e. north_biters -> north
+function Public.biters_to_team(name)
+	if string.find(name, "north_biters") then
+		return "north"
+	elseif string.find(name, "south_biters") then
+		return "south"
+	end
+
+	print("functions::biters_to_team: supplied invalid group (" .. name .. ")")
+	return nil
+end
+
+-- biters_to_team - Maps biter force to team force. i.e. north_biters -> north
+function Public.drop_boss_appendix(name)
+	if name == "north_biters_boss" then
+		return "north_biters"
+	elseif name == "south_biters_boss" then
+		return "south_biters"
+	end
+
+	print("functions::drop_boss_appendix: supplied invalid group (" .. name .. ")")
+	return nil
+end
+
 function Public.map_intro_click(player, element)
 	if element.name == "close_map_intro_frame" then player.gui.center["map_intro_frame"].destroy() return true end	
 	if element.name == "biter_battles_map_intro" then player.gui.center["map_intro_frame"].destroy() return true end	
