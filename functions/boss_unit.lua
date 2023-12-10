@@ -1,6 +1,6 @@
 --adds a health bar and health increase to a unit
 local Public = {}
-
+local boss_units = global.boss_units
 local function create_healthbar(entity, size)
 	return rendering.draw_sprite({
 		sprite="virtual-signal/signal-white",
@@ -30,7 +30,7 @@ end
 
 local function on_entity_damaged(event)
 	local entity = event.entity
-	local boss = global.boss_units[entity.unit_number]
+	local boss = boss_units[entity.unit_number]
 	if not boss then return end
 	entity.health = entity.health + event.final_damage_amount
 	boss.health = boss.health - event.final_damage_amount
@@ -47,6 +47,7 @@ end
 
 local function on_init()
 	global.boss_units = {}
+	boss_units = global.boss_units
 end
 
 local event = require 'utils.event'
