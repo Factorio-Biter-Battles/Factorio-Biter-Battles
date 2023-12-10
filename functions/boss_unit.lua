@@ -25,7 +25,7 @@ function Public.add_boss_unit(entity, health_factor, size)
 	if health == 0 then return end
 	local s = 0.5
 	if size then s = size end
-	global.boss_units[entity.unit_number] = {entity = entity, max_health = health, health = health, healthbar_id = create_healthbar(entity, s), last_update = game.tick}
+	boss_units[entity.unit_number] = {entity = entity, max_health = health, health = health, healthbar_id = create_healthbar(entity, s), last_update = game.tick}
 end
 
 local function on_entity_damaged(event)
