@@ -28,6 +28,14 @@ function Public.add_boss_unit(entity, health_factor, size)
 	boss_units[entity.unit_number] = {entity = entity, max_health = health, health = health, healthbar_id = create_healthbar(entity, s), last_update = game.tick}
 end
 
+function Public.force_resync(type_of_resync)
+	if type_of_resync == "to_global" then
+		global.boss_units = boss_units
+	elseif type_of_resync == "from_global" then
+		boss_units = global.boss_units
+	end
+end
+
 local function on_entity_damaged(event)
 	local entity = event.entity
 	local boss = boss_units[entity.unit_number]

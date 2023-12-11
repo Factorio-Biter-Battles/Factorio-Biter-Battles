@@ -3,6 +3,7 @@ local Score = require "comfy_panel.score"
 local Tables = require "maps.biter_battles_v2.tables"
 local fifo = require "maps.biter_battles_v2.fifo"
 local Blueprint = require 'maps.biter_battles_v2.blueprints'
+local BossUnits = require 'functions.boss_unit'
 
 local Public = {}
 
@@ -306,6 +307,8 @@ function Public.tables()
 	-- Container for storing chance of reanimation. The stored value
 	-- is a range between [0, 100], accessed by key with force's index.
 	global.reanim_chance = {}
+
+	boss_unit.force_resync 'from_global'
 
 	fifo.init()
 
