@@ -3,6 +3,7 @@
 local Ai = require "maps.biter_battles_v2.ai"
 local AiStrikes = require "maps.biter_battles_v2.ai_strikes"
 local AiTargets = require "maps.biter_battles_v2.ai_targets"
+local bb_config = require "maps.biter_battles_v2.config"
 local Functions = require "maps.biter_battles_v2.functions"
 local Game_over = require "maps.biter_battles_v2.game_over"
 local Gui = require "maps.biter_battles_v2.gui"
@@ -237,7 +238,8 @@ local function on_marked_for_deconstruction(event)
 	if not event.player_index then return end
 	local force_name = game.get_player(event.player_index).force.name
 	if event.entity.name == "fish" then event.entity.cancel_deconstruction(force_name) return end
-	if (force_name == "north" and event.entity.position.y > 0) or (force_name == "south" and event.entity.position.y < 0) then
+	local half_river_width = bb_config.border_river_width / 2
+	if (force_name == "north" and event.entity.position.y > half_river_width) or (force_name == "south" and event.entity.position.y < -half_river_width) then
 		event.entity.cancel_deconstruction(force_name)
 	end
 end
