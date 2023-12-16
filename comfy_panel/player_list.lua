@@ -526,7 +526,7 @@ local function player_list_show(player, frame, sort_by)
         local name_label =
             player_list_panel_table.add {
             type = 'label',
-            name = p.index,
+            name = 'where_player_' .. p.index,
             caption = caption,
             tooltip = tooltip
         }
@@ -643,15 +643,19 @@ local function on_gui_click(event)
     if not event.element.valid then
         return
     end
+
     --Locate other players
-    local index = tonumber(event.element.name)
-    if index and game.players[index] and index == game.players[index].index then
-        local target = game.players[index]
-        if not target or not target.valid then
-            return
+    if string.sub(name, 1, 13) == 'where_player_' then
+        local index = tonumber(string.sub(name, 14, string.len(name)))
+        if index and game.players[index] and index == game.players[index].index then
+            local target = game.players[index]
+            if not target or not target.valid then
+                return
+            end
+            Where.create_mini_camera_gui(player, target.name, target.position, target.surface.index)
         end
-        Where.create_mini_camera_gui(player, target.name, target.position, target.surface.index)
     end
+
     --Poke other players
     if string.sub(event.element.name, 1, 11) == 'poke_player' then
         local poked_player = string.sub(event.element.name, 13, string.len(event.element.name))
