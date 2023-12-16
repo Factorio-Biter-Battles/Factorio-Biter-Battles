@@ -14,6 +14,7 @@ local chunk = require "maps.biter_battles_v2.precomputed.chunk_container"
 local spawn_ore = tables.spawn_ore
 local table_insert = table.insert
 local math_floor = math.floor
+local math_random = math.random
 local math_abs = math.abs
 local math_sqrt = math.sqrt
 
