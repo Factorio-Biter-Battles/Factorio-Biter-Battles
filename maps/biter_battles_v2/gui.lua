@@ -8,6 +8,7 @@ local event = require 'utils.event'
 local Functions = require "maps.biter_battles_v2.functions"
 local Feeding = require "maps.biter_battles_v2.feeding"
 local Tables = require "maps.biter_battles_v2.tables"
+local Captain_event = require 'comfy_panel.special_games.captain'
 
 local wait_messages = Tables.wait_messages
 local food_names = Tables.gui_foods
@@ -176,11 +177,19 @@ function Public.create_main_gui(player)
 				s.enabled = false
 				s.tooltip = "Disabled by special game"
 			end
+			if Captain_event.captain_is_player_prohibited_to_throw(player) and food_name ~= "raw-fish" then
+				s.enabled = false
+				s.tooltip = "Disabled by special captain game"
+			end
 		end
 		local s = t.add { type = "sprite-button", name = "send_all", caption = "All", tooltip = "LMB - low to high, RMB - high to low"}
 		if global.active_special_games["disable_sciences"] then
 			s.enabled = false
 			s.tooltip = "Disabled by special game"
+		end
+		if Captain_event.captain_is_player_prohibited_to_throw(player) and food_name ~= "raw-fish" then
+			s.enabled = false
+			s.tooltip = "Disabled by special captain game"
 		end
 		gui_style(s, {minimal_height = 41, minimal_width = 41, padding = 0, font_color = {r = 0.9, g = 0.9, b = 0.9}})
 		frame.add{type="line"}
