@@ -226,7 +226,12 @@ function set_evo_and_threat(flask_amount, food, biter_force_name)
 		global.max_group_size[biter_force_name] = 200
 	end
 	
-	-- Adjust threat for revive
+	-- Adjust threat for revive.
+	-- Note that the fact that this is done at the end, after set_biter_endgame_modifiers
+	-- (which updated reanim_chance), is what gives a bonus to large single throws of
+	-- science rather than many smaller throws (in the case where final evolution is above
+	-- 100%). Specifically, all of the science thrown gets the threat increase that would
+	-- be used for the final evolution value.
 	local force_index = game.forces[biter_force_name].index
 	local reanim_chance = global.reanim_chance[force_index]
 	if reanim_chance ~= nil and reanim_chance > 0 then
