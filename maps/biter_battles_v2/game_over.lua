@@ -4,6 +4,7 @@ local Init = require "maps.biter_battles_v2.init"
 local Score = require "comfy_panel.score"
 local Server = require 'utils.server'
 local Special_games = require 'comfy_panel.special_games'
+local Captain_special = require 'comfy_panel.special_games.captain'
 local Event = require 'utils.event'
 local Tables = require 'maps.biter_battles_v2.tables'
 local Token = require 'utils.token'
@@ -400,6 +401,10 @@ local function respawn_silo(event)
 	global.rocket_silo[force_name] = entity
 end
 
+function log_to_db(message,appendBool)
+	game.write_file('logToDBgameResult',message,appendBool,0)
+	
+end
 function Public.silo_death(event)
     local entity = event.entity
     if not entity.valid then return end
@@ -464,6 +469,32 @@ function Public.silo_death(event)
         silo_kaboom(entity)
 
         freeze_all_biters(entity.surface)
+		if global.active_special_games["captain_mode"] and not global.special_games_variables["captain_mode"]["prepaPhase"] then 
+			game.print("Updating logs for the game")
+			Server.send_special_game_state('[CAPTAIN-SPECIAL]')
+			log_to_db('>Game has ended\n',false)
+			log_to_db('[RefereeName]'..global.special_games_variables["captain_mode"]["stats"]["InitialReferee"]..'\n',true)
+			log_to_db('[CaptainNorth]'..global.special_games_variables["captain_mode"]["stats"]["NorthInitialCaptain"]..'\n',true)
+			log_to_db('[CaptainSouth]'..global.special_games_variables["captain_mode"]["stats"]["SouthInitialCaptain"]..'\n',true)
+			local listPicks = table.concat(global.special_games_variables["captain_mode"]["stats"]["northPicks"],";")
+			log_to_db('[NorthTeam]'..listPicks..'\n',true)
+			listPicks = table.concat(global.special_games_variables["captain_mode"]["stats"]["southPicks"],";")
+			log_to_db('[SouthTeam]'..listPicks..'\n',true)
+			log_to_db('[Gamelength]'..game.ticks_played..'\n',true)
+			log_to_db('[StartTick]'..global.special_games_variables["captain_mode"]["stats"]["tickGameStarting"]..'\n',true)
+			log_to_db('[WinnerTeam]'..global.bb_game_won_by_team..'\n',true)
+			log_to_db('[ExtraInfo]'..global.special_games_variables["captain_mode"]["stats"]["extrainfo"]..'\n',true)
+			log_to_db('[SpecialEnabled]'..global.special_games_variables["captain_mode"]["stats"]["specialEnabled"]..'\n',true)
+			for _, player in pairs(game.players) do
+				if player.connected and (player.force.name == "north" or player.force.name == "south") then
+					Captain_special.captain_log_end_time_player(player)
+				end
+				if global.special_games_variables["captain_mode"]["stats"]["playerPlaytimes"][player.name] ~= nil then
+					log_to_db('[Playtime]['..player.name..']'..global.special_games_variables["captain_mode"]["stats"]["playerPlaytimes"][player.name]..'\n',true)
+				end
+			end
+			log_to_db('>End of log',true)
+		end
     end
 end
 
