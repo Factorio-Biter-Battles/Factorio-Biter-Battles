@@ -11,7 +11,10 @@ local function add_changelog(player, element)
 		table.insert(changelog_change, what)
 		table.insert(changelog_change, who)
 	end
-
+	add_entry("2023-12-29", "DrButtons", "Start moving away from Event calls and move to central dispatch event handling")
+	add_entry("2023-12-29", "bits-orio", "Increase the size and edit ratio of mixed patchs")
+	add_entry("2023-12-29", "Ragnarok77", "Suspend command")
+	add_entry("2023-12-29", "Ragnarok77", "New special : captain game")
 	add_entry("2023-12-27", "developer-8", "fix poll button opens random player camera")
 	add_entry("2023-12-20", "gsquaredxc", "Reset game speed to 1 after silo death")
 	add_entry("2023-12-20", "cogito123", "perf : Optimize river generation")
