@@ -54,8 +54,6 @@ local function simple_random_sample(population_list, sample_size)
 end
 
 function Public.start_tracking(entity)
-    if not entity then return end
-    if not entity.valid then return end
     if target_entity_type[entity.type] and entity.unit_number then
         local targets = global.ai_targets[entity.force.name]
         if targets ~= nil then

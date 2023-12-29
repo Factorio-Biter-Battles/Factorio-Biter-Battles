@@ -251,15 +251,6 @@ local function on_player_built_tile(event)
 	end
 end
 
-local function on_player_mined_entity(event)
-	Terrain.minable_wrecks(event)
-	AiTargets.stop_tracking(event.entity)
-end
-
-local function on_robot_mined_entity(event)
-	AiTargets.stop_tracking(event.entity)
-end
-
 local function on_chunk_generated(event)
 	local surface = event.surface
 
@@ -438,13 +429,12 @@ Event.add(defines.events.on_gui_click, on_gui_click)
 Event.add(defines.events.on_marked_for_deconstruction, on_marked_for_deconstruction)
 Event.add(defines.events.on_player_built_tile, on_player_built_tile)
 Event.add(defines.events.on_player_joined_game, on_player_joined_game)
-Event.add(defines.events.on_player_mined_entity, on_player_mined_entity)
-Event.add(defines.events.on_robot_mined_entity, on_robot_mined_entity)
 Event.add(defines.events.on_research_finished, on_research_finished)
 Event.add(defines.events.on_robot_built_entity, on_robot_built_entity)
 Event.add(defines.events.on_robot_built_tile, on_robot_built_tile)
 Event.add(defines.events.on_tick, on_tick)
 Event.on_init(on_init)
+
 
 commands.add_command('clear-corpses', 'Clears all the biter corpses..',
 		     clear_corpses)

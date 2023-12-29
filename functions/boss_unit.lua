@@ -28,7 +28,7 @@ function Public.add_boss_unit(entity, health_factor, size)
 	global.boss_units[entity.unit_number] = {entity = entity, max_health = health, health = health, healthbar_id = create_healthbar(entity, s), last_update = game.tick}
 end
 
-local function on_entity_damaged(event)
+function Public.handle_boss_damage(event)
 	local entity = event.entity
 	local boss = global.boss_units[entity.unit_number]
 	if not boss then return end
@@ -51,10 +51,5 @@ end
 
 local event = require 'utils.event'
 event.on_init(on_init)
-event.add(defines.events.on_entity_damaged, on_entity_damaged)
-event.add_event_filter(defines.events.on_entity_damaged, {
-	filter = "type",
-	type = "unit",
-})
 
 return Public

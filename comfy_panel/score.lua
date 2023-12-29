@@ -435,7 +435,7 @@ local function on_player_died(event)
     score.deaths = 1 + (score.deaths or 0)
 end
 
-local function on_player_mined_entity(event)
+function Public.on_player_mined_entity(event)
     if not event.entity.valid then
         return
     end
@@ -464,7 +464,6 @@ end
 
 comfy_panel_tabs['Scoreboard'] = {gui = show_score, admin = false}
 
-Event.add(defines.events.on_player_mined_entity, on_player_mined_entity)
 Event.add(defines.events.on_player_died, on_player_died)
 Event.add(defines.events.on_built_entity, on_built_entity)
 Event.add(defines.events.on_entity_died, on_entity_died)

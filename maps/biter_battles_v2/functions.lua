@@ -263,8 +263,6 @@ function Public.is_biter_area(position,noise_Enabled)
 end
 
 function Public.no_turret_creep(event)
-	local entity = event.created_entity
-	if not entity.valid then return end
 	if not no_turret_blacklist[event.created_entity.type] then return end
 	
 	local posEntity = entity.position
