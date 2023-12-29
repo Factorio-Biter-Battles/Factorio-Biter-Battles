@@ -16,6 +16,7 @@ local table_insert = table.insert
 local math_floor = math.floor
 local math_abs = math.abs
 local math_sqrt = math.sqrt
+local math_random = math.random
 
 local GetNoise = require "utils.get_noise"
 local simplex_noise = require 'utils.simplex_noise'.d2
