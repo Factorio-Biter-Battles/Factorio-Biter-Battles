@@ -114,6 +114,7 @@ function Public.initial_setup()
 	}
 	for _, d in pairs(defs) do p.set_allows_action(d, true) end
 
+	global.suspend_time_limit = 3600
 	global.reroll_time_limit = 1800
 	global.gui_refresh_delay = 0
 	global.game_lobby_active = true
@@ -218,6 +219,10 @@ function Public.tables()
 		global.bb_surface_name = "bb0"
 	end
 
+	global.suspended_time = 36000
+	global.suspend_target = nil
+	global.suspend_voting = {}
+	global.suspended_players = {}
 	if global.random_generator == nil then
 		global.random_generator = game.create_random_generator()
 	end

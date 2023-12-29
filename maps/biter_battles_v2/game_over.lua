@@ -614,6 +614,7 @@ function Public.generate_new_map()
         for _, e in pairs(player.gui.left.children) do
             e.destroy()
         end
+        if player.gui.top.suspend_frame then player.gui.top.suspend_frame.destroy() end
         Gui.create_main_gui(player)
     end
     game.reset_time_played()
