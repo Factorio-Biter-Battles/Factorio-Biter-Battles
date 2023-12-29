@@ -61,6 +61,7 @@ local query_players_tag = '[QUERY-PLAYERS]'
 local player_join_tag = '[PLAYER-JOIN]'
 local player_chat_tag = '[PLAYER-CHAT]'
 local player_leave_tag = '[PLAYER-LEAVE]'
+local special_game_end_tag = '[SPECIAL-GAME-END]'
 local data_add_onlinetime_tag = '[DATA-ADD-TOTAL-ONLINE-TIME]'
 local data_set_total_onlinetime_tag = '[DATA-SET-TOTAL-ONLINE-TIME]'
 
@@ -81,6 +82,10 @@ local data_set_handlers = {}
 --      Server.try_get_all_data('regulars', callback)
 -- end)
 Public.events = {on_server_started = Event.generate_event_name('on_server_started')}
+
+function Public.send_special_game_state(message)
+	raw_print(special_game_end_tag .. message)
+end
 
 --- Sends a message to the linked discord channel. The message is sanitized of markdown server side.
 -- @param  message<string> message to send.

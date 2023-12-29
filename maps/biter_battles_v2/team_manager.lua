@@ -13,7 +13,7 @@ local function get_player_array(force_name)
 	return a
 end
 
-local function freeze_players()
+function Public.freeze_players()
 	if not global.freeze_players then return end
 	global.team_manager_default_permissions = {}
 	local p = game.permissions.get_group("Default")	
@@ -35,7 +35,7 @@ local function freeze_players()
 	for _, d in pairs(defs) do p.set_allows_action(d, true) end
 end
 
-local function unfreeze_players()
+function Public.unfreeze_players()
 	local p = game.permissions.get_group("Default") 
 	for action_name, _ in pairs(defines.input_action) do
 		if global.team_manager_default_permissions[action_name] then
@@ -75,7 +75,7 @@ local function leave_corpse(player)
 	player.create_character()	
 end
 
-local function switch_force(player_name, force_name)
+function Public.switch_force(player_name, force_name)
 	if not game.players[player_name] then game.print("Team Manager >> Player " .. player_name .. " does not exist.", {r=0.98, g=0.66, b=0.22}) return end
 	if not game.forces[force_name] then game.print("Team Manager >> Force " .. force_name .. " does not exist.", {r=0.98, g=0.66, b=0.22}) return end
 	
@@ -220,7 +220,7 @@ local function set_custom_team_name(force_name, team_name)
 	global.tm_custom_name[force_name] = tostring(team_name)
 end
 
-local function custom_team_name_gui(player, force_name)
+function Public.custom_team_name_gui(player, force_name)
 	if player.gui.center["custom_team_name_gui"] then player.gui.center["custom_team_name_gui"].destroy() return end	
 	local frame = player.gui.center.add({type = "frame", name = "custom_team_name_gui", caption = "Set custom team name:", direction = "vertical"})
 	local text = force_name
@@ -245,13 +245,21 @@ local function custom_team_name_gui(player, force_name)
 	button.style.font = "heading-2"
 end
 
+local function isReferee(player)
+	if global.active_special_games["captain_mode"] and global.special_games_variables["captain_mode"]["refereeName"] == player.name then
+		return true
+	else
+		return false
+	end
+end
+
 local function team_manager_gui_click(event)
 	local player = game.players[event.player_index]
 	local name = event.element.name
 	
 	if game.forces[name] then
 		if not player.admin then player.print("Only admins can change team names.", {r = 175, g = 0, b = 0}) return end
-		custom_team_name_gui(player, name)
+		Public.custom_team_name_gui(player, name)
 		player.gui.center["team_manager_gui"].destroy()
 		return
 	end
@@ -263,6 +271,7 @@ local function team_manager_gui_click(event)
 	
 	if name == "team_manager_activate_tournament" then
 		if not player.admin then player.print("Only admins can switch tournament mode.", {r = 175, g = 0, b = 0}) return end
+		if global.active_special_games["captain_mode"] == true and global.special_games_variables["captain_mode"]["prepaPhase"] == true then player.print("You cant disable tournament mode during prepa phase of captain event !", {r = 175, g = 0, b = 0}) return end
 		if global.tournament_mode then
 			global.tournament_mode = false
 			draw_manager_gui(player)
@@ -278,17 +287,18 @@ local function team_manager_gui_click(event)
 	if name == "team_manager_freeze_players" then
 		if global.freeze_players then
 			if not player.admin then player.print("Only admins can unfreeze players.", {r = 175, g = 0, b = 0}) return end
+			if global.active_special_games["captain_mode"] == true and global.special_games_variables["captain_mode"]["prepaPhase"] == true then player.print("You cant unfreeze during prepa phase of captain event !", {r = 175, g = 0, b = 0}) return end
 			global.freeze_players = false
 			draw_manager_gui(player)
 			game.print(">>> Players have been unfrozen!", {r = 255, g = 77, b = 77})
-			unfreeze_players()
+			Public.unfreeze_players()
 			return
 		end
 		if not player.admin then player.print("Only admins can freeze players.", {r = 175, g = 0, b = 0}) return end
 		global.freeze_players = true
 		draw_manager_gui(player)
 		game.print(">>> Players have been frozen!", {r = 111, g = 111, b = 255})
-		freeze_players()
+		Public.freeze_players()
 		return
 	end
 	
@@ -313,7 +323,7 @@ local function team_manager_gui_click(event)
 	if not element.parent then return end
 	local element = element.parent
 	if element.name ~= "team_manager_root_table" then return end		
-	if not player.admin then player.print("Only admins can manage teams.", {r = 175, g = 0, b = 0}) return end
+	if not player.admin and not isReferee(player) then player.print("Only admins can manage teams.", {r = 175, g = 0, b = 0}) return end
 	
 	local listbox = player.gui.center["team_manager_gui"]["team_manager_root_table"]["team_manager_list_box_" .. tonumber(name)]
 	local selected_index = listbox.selected_index
@@ -324,7 +334,7 @@ local function team_manager_gui_click(event)
 	if event.element.caption == "→" then m = 1 end
 	local force_name = forces[tonumber(name) + m].name
 	
-	switch_force(player_name, force_name)
+	Public.switch_force(player_name, force_name)
 	
 	draw_manager_gui(player)
 end

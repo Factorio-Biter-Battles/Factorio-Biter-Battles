@@ -16,6 +16,7 @@ local valid_special_games = {
     mixed_ore_map = require 'comfy_panel.special_games.mixed_ore_map',
     disable_sciences = require 'comfy_panel.special_games.disable_sciences',
     send_to_external_server = require 'comfy_panel.special_games.send_to_external_server',
+    captain = require 'comfy_panel.special_games.captain',
     --[[
     Add your special game here.
     Syntax:
@@ -26,13 +27,20 @@ local valid_special_games = {
     ]]
 }
 
+function clear_gui_specials()
+	local captain_event = require 'comfy_panel.special_games.captain'
+	captain_event.clear_gui_special()
+end
+
 function Public.reset_special_games()
     global.active_special_games = global.next_special_games
     global.special_games_variables = global.next_special_games_variables
     global.next_special_games = {}
     global.next_special_games_variables = {}
+	clear_gui_specials()
+	local captain_event = require 'comfy_panel.special_games.captain'
+	captain_event.reset_special_games()
 end
-
 
 local create_special_games_panel = (function(player, frame)
     frame.clear()
