@@ -14,6 +14,7 @@ local chunk = require "maps.biter_battles_v2.precomputed.chunk_container"
 local spawn_ore = tables.spawn_ore
 local table_insert = table.insert
 local math_floor = math.floor
+local math_random = math.random
 local math_abs = math.abs
 local math_sqrt = math.sqrt
 
@@ -21,9 +22,9 @@ local GetNoise = require "utils.get_noise"
 local simplex_noise = require 'utils.simplex_noise'.d2
 local river_circle_size = 39
 local spawn_island_size = 9
-local ores = {"copper-ore", "iron-ore", "stone", "coal"}
+local ores = {"iron-ore",  "copper-ore", "iron-ore", "stone", "copper-ore", "iron-ore", "copper-ore", "iron-ore", "coal", "iron-ore", "copper-ore",  "iron-ore", "stone", "copper-ore", "coal"}
 -- mixed_ore_multiplier order is based on the ores variable
-local mixed_ore_multiplier = {1, 1, 1, 1}
+local mixed_ore_multiplier = {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}
 local rocks = {"rock-huge", "rock-big", "rock-big", "rock-big", "sand-rock-big"}
 
 local chunk_tile_vectors = {}
@@ -398,20 +399,17 @@ local function mixed_ore(surface, left_top_x, left_top_y)
 	local noise = GetNoise("bb_ore", {x = left_top_x + 16, y = left_top_y + 16}, seed)
 
 	--Draw noise text values to determine which chunks are valid for mixed ore.
-	--rendering.draw_text{text = noise, surface = game.surfaces.biter_battles, target = {x = left_top_x + 16, y = left_top_y + 16}, color = {255, 255, 255}, scale = 2, font = "default-game"}
-
-	--Skip chunks that are too far off the ore noise value.
-	if noise < 0.42 then return end
+	-- rendering.draw_text{text = noise, surface = surface, target = {left_top_x + 16, left_top_y + 16}, color = {255, 128, 0}, scale = 2, font = "default-game"}
 
 	--Draw the mixed ore patches.
 	for x = 0, 31, 1 do
 		for y = 0, 31, 1 do
 			local pos = {x = left_top_x + x, y = left_top_y + y}
 			if surface.can_place_entity({name = "iron-ore", position = pos}) then
-				noise = GetNoise("bb_ore", pos, seed)
-				if noise > 0.72 then
-					local i = math_floor(noise * 25 + math_abs(pos.x) * 0.05) % 4 + 1
-					local amount = (global.random_generator(800, 1000) + math_sqrt(pos.x ^ 2 + pos.y ^ 2) * 3) * mixed_ore_multiplier[i]
+				local noise = GetNoise("bb_ore", pos, seed)
+				if noise > 0.6 then
+					local i = math_floor(noise * 25 + math_abs(pos.x) * 0.05) % 15 + 1
+					local amount = (math_random(800, 1000) + math_sqrt(pos.x ^ 2 + pos.y ^ 2) * 3) * mixed_ore_multiplier[i]
 					surface.create_entity({name = ores[i], position = pos, amount = amount})
 				end
 			end
@@ -428,11 +426,13 @@ function Public.generate(event)
 	local left_top = event.area.left_top
 	local left_top_x = left_top.x
 	local left_top_y = left_top.y
-
+	
 	if global.active_special_games['mixed_ore_map'] then
 		mixed_ore_map(surface, left_top_x, left_top_y)
 	else
-		mixed_ore(surface, left_top_x, left_top_y)
+		if left_top_x + 16 < -150 or left_top_x + 16 > 150 or left_top_y + 16 < -150 then
+			mixed_ore(surface, left_top_x, left_top_y)
+		end
 	end
 	generate_river(surface, left_top_x, left_top_y)
 	draw_biter_area(surface, left_top_x, left_top_y)		
