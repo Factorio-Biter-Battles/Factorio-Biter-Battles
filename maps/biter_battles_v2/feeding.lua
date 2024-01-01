@@ -9,18 +9,7 @@ local enemy_team_of = tables.enemy_team_of
 local math_floor = math.floor
 local math_round = math.round
 
-local minimum_modifier = 125
-local maximum_modifier = 250
-local player_amount_for_maximum_threat_gain = 20
 local Public = {}
-function get_instant_threat_player_count_modifier()
-	local current_player_count = #game.forces.north.connected_players + #game.forces.south.connected_players
-	local gain_per_player = (maximum_modifier - minimum_modifier) / player_amount_for_maximum_threat_gain
-	local m = minimum_modifier + gain_per_player * current_player_count
-	if m > maximum_modifier then m = maximum_modifier end
-	return m
-end
-
 
 local function update_boss_modifiers(force_name_biter,damage_mod_mult,speed_mod_mult)
 	local damage_mod = math_round((global.bb_evolution[force_name_biter]) * 1.0, 3) * damage_mod_mult
@@ -180,36 +169,22 @@ end
 function set_evo_and_threat(flask_amount, food, biter_force_name)
 	local decimals = 9
 	
-	local instant_threat_player_count_modifier = get_instant_threat_player_count_modifier()
-	
 	local food_value = food_values[food].value * global.difficulty_vote_value
 
 	local evo = global.bb_evolution[biter_force_name]
 	local biter_evo = game.forces[biter_force_name].evolution_factor
 	local threat = 0.0
 	
-	for _ = 1, flask_amount, 1 do
-		---SET EVOLUTION
-		local e2 = (biter_evo * 100) + 1
-		local diminishing_modifier = (1 / (10 ^ (e2 * 0.015))) / (e2 * 0.5)
-		local evo_gain = (food_value * diminishing_modifier)
-		evo = evo + evo_gain
-		if evo <= 1 then
-			biter_evo = evo
-		else
-			biter_evo = 1
-		end
-		
-		--ADD INSTANT THREAT
-		local diminishing_modifier = 1 / (0.2 + (e2 * 0.016))
-		threat = threat + (food_value * instant_threat_player_count_modifier * diminishing_modifier)
-	end
+	local current_player_count = #game.forces.north.connected_players + #game.forces.south.connected_players
+	local effects = Functions.calc_feed_effects(evo, food_value, flask_amount, current_player_count)
+	evo = evo + effects.evo_increase
+	threat = threat + effects.threat_increase
 	evo = math_round(evo, decimals)
 	
 	--SET THREAT INCOME
 	global.bb_threat_income[biter_force_name] = evo * 25
 	
-	game.forces[biter_force_name].evolution_factor = biter_evo
+	game.forces[biter_force_name].evolution_factor = math.min(evo, 1)
 	global.bb_evolution[biter_force_name] = evo
 	set_biter_endgame_modifiers(game.forces[biter_force_name])
 	
