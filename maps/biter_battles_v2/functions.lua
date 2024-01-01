@@ -1,7 +1,4 @@
-local Server = require 'utils.server'
-local Muted = require 'utils.muted'
 local Tables = require "maps.biter_battles_v2.tables"
-local Session = require 'utils.datastore.session_data'
 local bb_config = require "maps.biter_battles_v2.config"
 local simplex_noise = require 'utils.simplex_noise'.d2
 local string_sub = string.sub
@@ -12,6 +9,28 @@ local math_min = math.min
 local math_floor = math.floor
 local string_find = string.find
 local gui_style = require 'utils.utils'.gui_style
+
+local function get_ammo_modifier(ammo_category)
+	local result = 0
+	if Tables.base_ammo_modifiers[ammo_category] then
+        result = Tables.base_ammo_modifiers[ammo_category]
+	end
+    return result
+end
+local function get_turret_attack_modifier(turret_category)
+	local result = 0
+	if Tables.base_turret_attack_modifiers[turret_category] then
+        result = Tables.base_turret_attack_modifiers[turret_category]
+	end
+    return result
+end
+local function get_upgrade_modifier(ammo_category)
+    result = 0
+    if Tables.upgrade_modifiers[ammo_category] then
+        result = Tables.upgrade_modifiers[ammo_category]
+    end
+    return result
+end
 
 -- Only add upgrade research balancing logic in this section
 -- All values should be in tables.lua
@@ -306,12 +325,11 @@ function Public.no_turret_creep(event)
 	entity.destroy()
 end
 
-function Public.no_landfill_by_untrusted_user(event)
+function Public.no_landfill_by_untrusted_user(event, trusted_table)
 	local entity = event.created_entity
 	if not entity.valid or not event.player_index or entity.name ~= "tile-ghost" or entity.ghost_name ~= "landfill" then return end
 	local player = game.players[event.player_index]
-	local trusted = Session.get_trusted_table()
-	if not trusted[player.name] then
+	if not trusted_table[player.name] then
 		player.print('You have not grown accustomed to this technology yet.', {r = 0.22, g = 0.99, b = 0.99})
 		entity.destroy()
 		return
@@ -353,47 +371,6 @@ function Public.print_message_to_players(forcePlayerList, playerNameSendingMessa
 			end
 		end
 	end
-end
-
---Share chat with spectator force
-function Public.share_chat(event)
-	if not event.message or not event.player_index then return end
-	local player = game.players[event.player_index]
-	local player_name = player.name
-	local player_force_name = player.force.name
-	local tag = player.tag
-	if not tag then tag = "" end
-	local color = player.chat_color
-	
-	local muted = Muted.is_muted(player_name)
-	local mute_tag = ""
-	if muted then 
-		mute_tag = "[muted] "
-	end
-
-	local msg = player_name .. tag .. " (" .. player_force_name .. "): ".. event.message
-	if not muted and (player_force_name == "north" or player_force_name == "south") then
-		Public.print_message_to_players(game.forces.spectator.players,player_name,msg,color)
-	end
-
-	if global.tournament_mode and not player.admin then return end
-
-	--Skip messages that would spoil coordinates from spectators and don't send gps coord to discord
-	local a, b = string_find(event.message, "gps=", 1, false)
-	if a then return end
-
-	local discord_msg = ""
-	if muted then 
-		discord_msg = mute_tag
-		Muted.print_muted_message(player)
-	end 
-	if not muted and player_force_name == "spectator" then
-		Public.print_message_to_players(game.forces.north.players,player_name,msg,nil)
-		Public.print_message_to_players(game.forces.south.players,player_name,msg,nil)
-	end
-	
-	discord_msg = discord_msg .. player_name .. " (" .. player_force_name .. "): ".. event.message
-	Server.to_discord_player_chat(discord_msg)
 end
 
 function Public.spy_fish(player, event)
@@ -475,29 +452,6 @@ function Public.map_intro_click(player, element)
 			return true
 		end
 	end	
-end
-
-function get_ammo_modifier(ammo_category)
-	local result = 0
-	if Tables.base_ammo_modifiers[ammo_category] then
-        result = Tables.base_ammo_modifiers[ammo_category]
-	end
-    return result
-end
-function get_turret_attack_modifier(turret_category)
-	local result = 0
-	if Tables.base_turret_attack_modifiers[turret_category] then
-        result = Tables.base_turret_attack_modifiers[turret_category]
-	end
-    return result
-end
-
-function get_upgrade_modifier(ammo_category)
-    result = 0
-    if Tables.upgrade_modifiers[ammo_category] then
-        result = Tables.upgrade_modifiers[ammo_category]
-    end
-    return result
 end
 
 return Public
