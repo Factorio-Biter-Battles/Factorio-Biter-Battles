@@ -62,7 +62,44 @@ local function on_research_finished(event)
 end
 
 local function on_console_chat(event)
-	Functions.share_chat(event)
+	--Share chat with spectator force
+	if not event.message or not event.player_index then return end
+	local player = game.players[event.player_index]
+	local player_name = player.name
+	local player_force_name = player.force.name
+	local tag = player.tag
+	if not tag then tag = "" end
+	local color = player.chat_color
+
+	local muted = Muted.is_muted(player_name)
+	local mute_tag = ""
+	if muted then
+		mute_tag = "[muted] "
+	end
+
+	local msg = player_name .. tag .. " (" .. player_force_name .. "): ".. event.message
+	if not muted and (player_force_name == "north" or player_force_name == "south") then
+		Public.print_message_to_players(game.forces.spectator.players,player_name,msg,color)
+	end
+
+	if global.tournament_mode and not player.admin then return end
+
+	--Skip messages that would spoil coordinates from spectators and don't send gps coord to discord
+	local a, b = string_find(event.message, "gps=", 1, false)
+	if a then return end
+
+	local discord_msg = ""
+	if muted then
+		discord_msg = mute_tag
+		Muted.print_muted_message(player)
+	end
+	if not muted and player_force_name == "spectator" then
+		Public.print_message_to_players(game.forces.north.players,player_name,msg,nil)
+		Public.print_message_to_players(game.forces.south.players,player_name,msg,nil)
+	end
+
+	discord_msg = discord_msg .. player_name .. " (" .. player_force_name .. "): ".. event.message
+	Server.to_discord_player_chat(discord_msg)
 end
 
 local function on_console_command(event)
@@ -101,7 +138,7 @@ local function on_console_command(event)
 end
 
 local function on_built_entity(event)
-	Functions.no_landfill_by_untrusted_user(event)
+	Functions.no_landfill_by_untrusted_user(event, Session.get_trusted_table())
 	Functions.no_turret_creep(event)
 	Terrain.deny_enemy_side_ghosts(event)
 	AiTargets.start_tracking(event.created_entity)
