@@ -167,6 +167,7 @@ local function add_stats(player, food, flask_amount,biter_force_name,evo_before_
 end
 
 function set_evo_and_threat(flask_amount, food, biter_force_name)
+	local force_index = game.forces[biter_force_name].index
 	local decimals = 9
 	
 	local food_value = food_values[food].value * global.difficulty_vote_value
@@ -176,11 +177,12 @@ function set_evo_and_threat(flask_amount, food, biter_force_name)
 	local threat = 0.0
 	
 	local current_player_count = #game.forces.north.connected_players + #game.forces.south.connected_players
-	local effects = Functions.calc_feed_effects(evo, food_value, flask_amount, current_player_count)
+	local effects = Functions.calc_feed_effects(evo, food_value, flask_amount, current_player_count, global.max_reanim_thresh)
 	evo = evo + effects.evo_increase
 	threat = threat + effects.threat_increase
 	evo = math_round(evo, decimals)
-	
+	global.reanim_chance[force_index] = effects.reanim_chance
+
 	--SET THREAT INCOME
 	global.bb_threat_income[biter_force_name] = evo * 25
 	
@@ -201,17 +203,6 @@ function set_evo_and_threat(flask_amount, food, biter_force_name)
 		global.max_group_size[biter_force_name] = 200
 	end
 	
-	-- Adjust threat for revive.
-	-- Note that the fact that this is done at the end, after set_biter_endgame_modifiers
-	-- (which updated reanim_chance), is what gives a bonus to large single throws of
-	-- science rather than many smaller throws (in the case where final evolution is above
-	-- 100%). Specifically, all of the science thrown gets the threat increase that would
-	-- be used for the final evolution value.
-	local force_index = game.forces[biter_force_name].index
-	local reanim_chance = global.reanim_chance[force_index]
-	if reanim_chance ~= nil and reanim_chance > 0 then
-		threat = threat * (100 / (100.001 - reanim_chance))
-	end
 	global.bb_threat[biter_force_name] = math_round(global.bb_threat[biter_force_name] + threat, decimals)
 	
 	if global.active_special_games["shared_science_throw"] then

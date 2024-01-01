@@ -418,8 +418,8 @@ local function get_instant_threat_player_count_modifier(current_player_count)
 	return math.min(m, maximum_modifier)
 end
 
-function Public.calc_feed_effects(initial_evo, food_value, num_flasks, current_player_count)
-	local threat_increase = 0
+function Public.calc_feed_effects(initial_evo, food_value, num_flasks, current_player_count, max_reanim_thresh)
+	local threat = 0
 	local evo = initial_evo
 	for _ = 1, num_flasks, 1 do
 		local clamped_evo = math.min(evo, 1)
@@ -431,11 +431,32 @@ function Public.calc_feed_effects(initial_evo, food_value, num_flasks, current_p
 
 		--ADD INSTANT THREAT
 		local diminishing_modifier = 1 / (0.2 + (e2 * 0.016))
-		threat_increase = threat_increase + (food_value * diminishing_modifier)
+		threat = threat + (food_value * diminishing_modifier)
 	end
 
-	threat_increase = threat_increase * get_instant_threat_player_count_modifier(current_player_count)
-	return {evo_increase = evo - initial_evo, threat_increase = threat_increase}
+	-- Calculates reanimation chance. This value is normalized onto
+	-- maximum re-animation threshold. For example if real evolution is 150
+	-- and max is 350, then 150 / 350 = 42% chance.
+	local reanim_chance = math_floor(math.max(evo - 1.0, 0) * 100.0)
+	reanim_chance = reanim_chance / max_reanim_thresh * 100
+	reanim_chance = math.min(math_floor(reanim_chance), 90.0)
+
+	threat = threat * get_instant_threat_player_count_modifier(current_player_count)
+	-- Adjust threat for revive.
+	-- Note that the fact that this is done at the end, after reanim_chance is calculated
+	-- is what gives a bonus to large single throws of science rather than many smaller
+	-- throws (in the case where final evolution is above 100%). Specifically, all of the
+	-- science thrown gets the threat increase that would be used for the final evolution
+	-- value.
+	if reanim_chance > 0 then
+		threat = threat * (100 / (100.001 - reanim_chance))
+	end
+
+	return {
+		evo_increase = evo - initial_evo,
+		threat_increase = threat,
+		reanim_chance = reanim_chance
+	}
 end
 
 function get_ammo_modifier(ammo_category)
