@@ -14,19 +14,29 @@ end
 function Public.calc_feed_effects(initial_evo, food_value, num_flasks, current_player_count, max_reanim_thresh)
 	local threat = 0
 	local evo = initial_evo
-	for _ = 1, num_flasks, 1 do
+	local food = food_value * num_flasks
+	while food > 0 do
 		local clamped_evo = math.min(evo, 1)
 		---SET EVOLUTION
 		local e2 = (clamped_evo * 100) + 1
 		local diminishing_modifier = (1 / (10 ^ (e2 * 0.015))) / (e2 * 0.5)
-		local evo_gain = (food_value * diminishing_modifier)
+		local amount_of_food_this_iteration
+		if evo >= 1 then
+			-- Everything is linear after evo=1.0, so we can just feed everything at once.
+			amount_of_food_this_iteration = food
+		else
+			local max_evo_gain_per_iteration = 0.01
+			amount_of_food_this_iteration = math.min(food, max_evo_gain_per_iteration / diminishing_modifier)
+		end
+		local evo_gain = (amount_of_food_this_iteration * diminishing_modifier)
 		evo = evo + evo_gain
 
 		--ADD INSTANT THREAT
 		local diminishing_modifier = 1 / (0.2 + (e2 * 0.016))
-		threat = threat + (food_value * diminishing_modifier)
-	end
+		threat = threat + (amount_of_food_this_iteration * diminishing_modifier)
 
+		food = food - amount_of_food_this_iteration
+	end
 	-- Calculates reanimation chance. This value is normalized onto
 	-- maximum re-animation threshold. For example if real evolution is 150
 	-- and max is 350, then 150 / 350 = 42% chance.
