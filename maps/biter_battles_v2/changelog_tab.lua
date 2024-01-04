@@ -12,6 +12,8 @@ local function add_changelog(player, element)
 		table.insert(changelog_change, who)
 	end
 
+	add_entry("2024-01-04", "Ragnarok77", "New feature : suspend player")
+	add_entry("2024-01-04", "Ragnarok77", "Special game : captain event with stats")
 	add_entry("2023-12-27", "developer-8", "fix poll button opens random player camera")
 	add_entry("2023-12-20", "gsquaredxc", "Reset game speed to 1 after silo death")
 	add_entry("2023-12-20", "cogito123", "perf : Optimize river generation")
