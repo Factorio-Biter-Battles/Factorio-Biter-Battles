@@ -36,6 +36,7 @@ local discord_tag = '[DISCORD]'
 local discord_raw_tag = '[DISCORD-RAW]'
 local discord_bold_tag = '[DISCORD-BOLD]'
 local discord_admin_tag = '[DISCORD-ADMIN]'
+local discord_suspend_tag = '[DISCORD-EMBED]'
 -- temporarily send bans to game-announcements
 -- TODO: revert this quick workaround to a more perm solution
 -- local discord_banned_tag = '[DISCORD-BANNED]'
