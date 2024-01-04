@@ -8,6 +8,7 @@ local event = require 'utils.event'
 local Functions = require "maps.biter_battles_v2.functions"
 local Feeding = require "maps.biter_battles_v2.feeding"
 local Tables = require "maps.biter_battles_v2.tables"
+local Captain_event = require 'comfy_panel.special_games.captain'
 
 local wait_messages = Tables.wait_messages
 local food_names = Tables.gui_foods
@@ -176,11 +177,19 @@ function Public.create_main_gui(player)
 				s.enabled = false
 				s.tooltip = "Disabled by special game"
 			end
+			if Captain_event.captain_is_player_prohibited_to_throw(player) and food_name ~= "raw-fish" then
+				s.enabled = false
+				s.tooltip = "Disabled by special captain game"
+			end
 		end
 		local s = t.add { type = "sprite-button", name = "send_all", caption = "All", tooltip = "LMB - low to high, RMB - high to low"}
 		if global.active_special_games["disable_sciences"] then
 			s.enabled = false
 			s.tooltip = "Disabled by special game"
+		end
+		if Captain_event.captain_is_player_prohibited_to_throw(player) and food_name ~= "raw-fish" then
+			s.enabled = false
+			s.tooltip = "Disabled by special captain game"
 		end
 		gui_style(s, {minimal_height = 41, minimal_width = 41, padding = 0, font_color = {r = 0.9, g = 0.9, b = 0.9}})
 		frame.add{type="line"}
@@ -330,7 +339,7 @@ end
 function join_team(player, force_name, forced_join, auto_join)
 	if not player.character then return end
 	if not forced_join then
-		if global.tournament_mode then player.print("The game is set to tournament mode. Teams can only be changed via team manager.", {r = 0.98, g = 0.66, b = 0.22}) return end
+		if (global.tournament_mode and not global.active_special_games["captain_mode"]) or (global.active_special_games["captain_mode"] and not global.chosen_team[player.name]) then player.print("The game is set to tournament mode. Teams can only be changed via team manager.", {r = 0.98, g = 0.66, b = 0.22}) return end
 	end
 	if not force_name then return end
 	local surface = player.surface
@@ -422,7 +431,11 @@ end
 function spectate(player, forced_join, stored_position)
 	if not player.character then return end
 	if not forced_join then
-		if global.tournament_mode then player.print("The game is set to tournament mode. Teams can only be changed via team manager.", {r = 0.98, g = 0.66, b = 0.22}) return end
+		if global.tournament_mode and not global.active_special_games["captain_mode"] then player.print("The game is set to tournament mode. Teams can only be changed via team manager.", {r = 0.98, g = 0.66, b = 0.22}) return end
+		if global.active_special_games["captain_mode"] and global.special_games_variables["captain_mode"]["prepaPhase"] then 
+			player.print("The game is in prepa phase of captain event, no spectating allowed until the captain game started", {r = 0.98, g = 0.66, b = 0.22})
+			return
+		end
 	end
 	
 	while player.crafting_queue_size > 0 do
