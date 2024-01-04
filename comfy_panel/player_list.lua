@@ -239,12 +239,9 @@ local function get_formatted_playtime(x)
 end
 
 local function get_rank(player)
-    local play_table = Session.get_session_table()
     local t = 0
-    if play_table then
-        if play_table[player.name] then
-            t = play_table[player.name]
-        end
+    if global.total_time_online_players[player.name] then
+        t = global.total_time_online_players[player.name]
     end
 
     local m = t / 3600
