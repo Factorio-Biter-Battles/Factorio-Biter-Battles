@@ -28,14 +28,23 @@ function Public.add_boss_unit(entity, health_factor, size)
 	global.boss_units[entity.unit_number] = {entity = entity, max_health = health, health = health, healthbar_id = create_healthbar(entity, s), last_update = game.tick}
 end
 
+-- to_boss - Turns entity into 'boss info' structure, otherwise returns nil.
+local function to_boss(entity)
+	return global.boss_units[entity.unit_number]
+end
+
+-- is_boss - Checks if given entity is a boss.
+Public.is_boss = function(entity)
+	return (to_boss(entity) ~= nil)
+end
+
 local function on_entity_damaged(event)
 	local entity = event.entity
-	local boss = global.boss_units[entity.unit_number]
+	local boss = to_boss(entity)
 	if not boss then return end
 	entity.health = entity.health + event.final_damage_amount
 	boss.health = boss.health - event.final_damage_amount
 	if boss.health <= 0 then
-		global.boss_units[entity.unit_number] = nil
 		entity.die()
 	else
 		if boss.last_update + 30 < game.tick then
@@ -43,6 +52,16 @@ local function on_entity_damaged(event)
 			boss.last_update = game.tick
 		end
 	end
+end
+
+-- on_entity_died - Remove boss information.
+Public.on_entity_died = function(event)
+	local entity = event.entity
+	if not Public.is_boss(entity) then
+		return
+	end
+
+	global.boss_units[entity.unit_number] = nil
 end
 
 local function on_init()

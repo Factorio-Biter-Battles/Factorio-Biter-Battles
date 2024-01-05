@@ -2,6 +2,7 @@ local Terrain = require "maps.biter_battles_v2.terrain"
 local Score = require "comfy_panel.score"
 local Tables = require "maps.biter_battles_v2.tables"
 local fifo = require "maps.biter_battles_v2.fifo"
+local pool = require "maps.biter_battles_v2.pool"
 local Blueprint = require 'maps.biter_battles_v2.blueprints'
 
 local Public = {}
@@ -237,6 +238,10 @@ function Public.tables()
 	global.bb_evolution = {}
 	global.bb_game_won_by_team = nil
 	global.bb_threat = {}
+	-- The realized threat is spent instantly while creating new biter
+	-- groups. It helps with computations in ai.lua providing a temporal
+	-- state between group creation requests.
+	global.bb_threat_realized = {}
 	global.bb_threat_income = {}
 	global.chosen_team = {}
 	global.combat_balance = {}
@@ -262,23 +267,57 @@ function Public.tables()
 	global.max_group_size["north_biters"] = 300							--Maximum unit group size for north biters.
 	global.max_group_size["south_biters"] = 300							--Maximum unit group size for south biters.
 	global.biter_spawn_unseen = {
-		["north"] = {
-			["medium-spitter"] = true, ["medium-biter"] = true, ["big-spitter"] = true, ["big-biter"] = true, ["behemoth-spitter"] = true, ["behemoth-biter"] = true
-		},
-		["south"] = {
-			["medium-spitter"] = true, ["medium-biter"] = true, ["big-spitter"] = true, ["big-biter"] = true, ["behemoth-spitter"] = true, ["behemoth-biter"] = true
+		["north_biters"] = {
+			["medium-spitter"] = true,
+			["medium-biter"] = true,
+			["big-spitter"] = true,
+			["big-biter"] = true,
+			["behemoth-spitter"] = true,
+			["behemoth-biter"] = true,
 		},
 		["north_biters_boss"] = {
-			["medium-spitter"] = true, ["medium-biter"] = true, ["big-spitter"] = true, ["big-biter"] = true, ["behemoth-spitter"] = true, ["behemoth-biter"] = true
+			["medium-spitter"] = true,
+			["medium-biter"] = true,
+			["big-spitter"] = true,
+			["big-biter"] = true,
+			["behemoth-spitter"] = true,
+			["behemoth-biter"] = true,
+		},
+		["south_biters"] = {
+			["medium-spitter"] = true,
+			["medium-biter"] = true,
+			["big-spitter"] = true,
+			["big-biter"] = true,
+			["behemoth-spitter"] = true,
+			["behemoth-biter"] = true,
 		},
 		["south_biters_boss"] = {
-			["medium-spitter"] = true, ["medium-biter"] = true, ["big-spitter"] = true, ["big-biter"] = true, ["behemoth-spitter"] = true, ["behemoth-biter"] = true
-		}
+			["medium-spitter"] = true,
+			["medium-biter"] = true,
+			["big-spitter"] = true,
+			["big-biter"] = true,
+			["behemoth-spitter"] = true,
+			["behemoth-biter"] = true,
+		},
 	}
 	global.difficulty_vote_value = 1
 	global.difficulty_vote_index = 4
 
 	global.difficulty_votes_timeout = 36000
+
+        -- A maximum amount of groups which can be scheduled and manipulated at any
+        -- given moment.
+        global.request_max_groups = 25
+
+        -- A pre-allocated requests for group creation.
+        global.request_groups = {
+                ["north_biters"] = pool.malloc_array(global.request_max_groups),
+                ["south_biters"] = pool.malloc_array(global.request_max_groups)
+        }
+        global.request_groups_cnt = {
+                ["north_biters"] = 0,
+                ["south_biters"] = 0
+        }
 
 	-- A FIFO that holds dead unit positions. It is used by unit
 	-- reanimation logic. This container is to be accessed by force index.
@@ -442,6 +481,7 @@ function Public.forces()
 		global.bb_evolution[force.name] = 0
 		global.reanim_chance[force.index] = 0
 		global.bb_threat_income[force.name] = 0
+		global.bb_threat_realized[force.name] = 0
 		global.bb_threat[force.name] = 0
 	end
 	for _, force in pairs(Tables.ammo_modified_forces_list) do

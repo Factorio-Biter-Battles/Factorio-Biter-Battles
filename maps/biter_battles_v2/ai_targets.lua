@@ -99,7 +99,13 @@ end
 
 function Public.poll(force_name)
     local targets = global.ai_targets[force_name]
-    return table_remove(targets.selected)
+    local target = table_remove(targets.selected)
+    -- If you have no more side-targets to attack, then attack silo.
+    if not target then
+            target = global.rocket_silo[force_name].position
+    end
+
+    return target
 end
 
 return Public

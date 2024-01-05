@@ -238,13 +238,15 @@ function set_evo_and_threat(flask_amount, food, biter_force_name)
 		threat = threat * (100 / (100.001 - reanim_chance))
 	end
 	global.bb_threat[biter_force_name] = math_round(global.bb_threat[biter_force_name] + threat, decimals)
-	
+	global.bb_threat_realized[biter_force_name] = math_round(global.bb_threat_realized[biter_force_name] + threat, decimals)
+
 	if global.active_special_games["shared_science_throw"] then
 		local enemyBitersForceName = enemy_team_of[force_translation[biter_force_name]] .. "_biters"
 		game.forces[enemyBitersForceName].evolution_factor = game.forces[biter_force_name].evolution_factor
 		global.bb_evolution[enemyBitersForceName] = global.bb_evolution[biter_force_name]
 		global.bb_threat_income[enemyBitersForceName] = global.bb_threat_income[biter_force_name]
 		global.bb_threat[enemyBitersForceName] = math_round(global.bb_threat[enemyBitersForceName] + threat, decimals)
+		global.bb_threat_realized[biter_force_name] = math_round(global.bb_threat_realized[enemyBitersForceName] + threat, decimals)
 	end
 end
 
@@ -270,7 +272,7 @@ function Public.feed_biters(player, food)
 	
 	print_feeding_msg(player, food, flask_amount)	
 	local evolution_before_feed = global.bb_evolution[biter_force_name]
-	local threat_before_feed = global.bb_threat[biter_force_name]						
+	local threat_before_feed = global.bb_threat_realized[biter_force_name]						
 	
 	set_evo_and_threat(flask_amount, food, biter_force_name)
 	
@@ -313,7 +315,7 @@ function Public.feed_biters_mixed(player, button)
 	local message = {colored_player_name, " fed "}
 	for k, v in pairs(food) do
 		local evolution_before_feed = global.bb_evolution[biter_force_name]
-		local threat_before_feed = global.bb_threat[biter_force_name]	
+		local threat_before_feed = global.bb_threat_realized[biter_force_name]	
 		local flask_amount = i.get_item_count(v)
 		if flask_amount ~= 0 then
 			table.insert(message, "[font=heading-1][color=255,255,255]" .. flask_amount .. "[/color][/font]" .. "[img=item." .. v .. "], ")
