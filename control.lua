@@ -44,6 +44,7 @@ require 'maps.biter_battles_v2.main'
 
 local Antigrief = require("antigrief")
 local ComfyPanelScore = require("comfy_panel.score")
+local ComfyPanelConfig = require("comfy_panel.config")
 local Functions = require("maps.biter_battles_v2.functions")
 local Terrain = require("maps.biter_battles_v2.terrain")
 local AiTargets = require("maps.biter_battles_v2.ai_targets")
@@ -73,7 +74,7 @@ end)
 -- Maybe combine with defines.events.on_player_mined_entity ?
 script.on_event(defines.events.on_robot_mined_entity, function(event)
 	local entity = event.entity
-	if not entity or not entity.valid then
+	if not entity.valid then
 		return
 	end
 	AiTargets.stop_tracking(entity)
@@ -81,10 +82,21 @@ end)
 
 script.on_event(defines.events.on_robot_built_entity, function(event)
 	local created_entity = event.created_entity
-	if created_entity and created_entity.valid then
-		Functions.no_turret_creep(event)
-		Terrain.deny_construction_bots(event)
-		AiTargets.start_tracking(event.created_entity)
+
+    local tasks = {
+        Functions.no_turret_creep,
+        Terrain.deny_construction_bots,
+        ComfyPanelConfig.spaghett_deny_building,
+    }
+
+	if created_entity.valid then
+		for _, eval_task in ipairs(tasks) do
+			eval_task(event)
+			if not created_entity.valid then
+				return
+			end
+		end
+        AiTargets.start_tracking(created_entity)
 	end
 end)
 

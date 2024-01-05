@@ -53,6 +53,8 @@ local function simple_random_sample(population_list, sample_size)
     return sample
 end
 
+---start tracking an entity as a potential target
+---@param entity LuaEntity
 function Public.start_tracking(entity)
     if target_entity_type[entity.type] and entity.unit_number then
         local targets = global.ai_targets[entity.force.name]

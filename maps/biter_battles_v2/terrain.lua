@@ -658,6 +658,7 @@ end
 ]]
 
 function Public.minable_wrecks(entity, player)
+	if not valid_wrecks[entity.name] then return end
 	local surface = entity.surface
 
 	local loot_worth = math_floor(math_abs(entity.position.x * 0.02)) + global.random_generator(16, 32)

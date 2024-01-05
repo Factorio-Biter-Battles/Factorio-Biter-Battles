@@ -64,16 +64,25 @@ local function on_console_chat(event)
 end
 
 local function on_built_entity(event)
-	Functions.no_landfill_by_untrusted_user(event)
-	Functions.no_turret_creep(event)
-	Terrain.deny_enemy_side_ghosts(event)
 	AiTargets.start_tracking(event.created_entity)
-end
 
-local function on_robot_built_entity(event)
-	Functions.no_turret_creep(event)
-	Terrain.deny_construction_bots(event)
-	AiTargets.start_tracking(event.created_entity)
+	local created_entity = event.created_entity
+
+	local tasks = {
+		Functions.no_landfill_by_untrusted_user,
+		Functions.no_turret_creep,
+		Terrain.deny_enemy_side_ghosts,
+	}
+
+	if created_entity.valid then
+		for _, eval_task in ipairs(tasks) do
+			eval_task(event)
+			if not created_entity.valid then
+				return
+			end
+		end
+		AiTargets.start_tracking(created_entity)
+	end
 end
 
 local function on_robot_built_tile(event)
@@ -391,7 +400,6 @@ Event.add(defines.events.on_marked_for_deconstruction, on_marked_for_deconstruct
 Event.add(defines.events.on_player_built_tile, on_player_built_tile)
 Event.add(defines.events.on_player_joined_game, on_player_joined_game)
 Event.add(defines.events.on_research_finished, on_research_finished)
-Event.add(defines.events.on_robot_built_entity, on_robot_built_entity)
 Event.add(defines.events.on_robot_built_tile, on_robot_built_tile)
 Event.add(defines.events.on_tick, on_tick)
 Event.on_init(on_init)

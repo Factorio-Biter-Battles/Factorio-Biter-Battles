@@ -1,4 +1,5 @@
 -- config tab --
+local Public = {}
 
 local Antigrief = require 'antigrief'
 local Color = require 'utils.color_presets'
@@ -23,9 +24,10 @@ local function get_actor(event, prefix, msg, admins_only)
     end
 end
 
-local function spaghett_deny_building(event)
-    local spaghett = global.comfy_panel_config.spaghett
-    if not spaghett.enabled then
+-- not sure how much this is used?
+---@param event EventData.on_robot_built_entity|EventData.on_built_entity
+function Public.spaghett_deny_building(event)
+    if not global.comfy_panel_config.spaghett.enabled then
         return
     end
     local entity = event.created_entity
@@ -40,7 +42,9 @@ local function spaghett_deny_building(event)
         game.players[event.player_index].insert({name = entity.name, count = 1})
     else
         local inventory = event.robot.get_inventory(defines.inventory.robot_cargo)
-        inventory.insert({name = entity.name, count = 1})
+		if inventory then
+        	inventory.insert({name = entity.name, count = 1})
+		end
     end
 
     event.created_entity.surface.create_entity(
@@ -683,11 +687,7 @@ local function on_force_created()
 end
 
 local function on_built_entity(event)
-    spaghett_deny_building(event)
-end
-
-local function on_robot_built_entity(event)
-    spaghett_deny_building(event)
+    Public.spaghett_deny_building(event)
 end
 
 local function on_init()
@@ -704,5 +704,6 @@ local Event = require 'utils.event'
 Event.on_init(on_init)
 Event.add(defines.events.on_gui_switch_state_changed, on_gui_switch_state_changed)
 Event.add(defines.events.on_force_created, on_force_created)
-Event.add(defines.events.on_built_entity, on_built_entity)
-Event.add(defines.events.on_robot_built_entity, on_robot_built_entity)
+Event.add(defines.events.on_built_entity, spaghett_deny_building)
+
+return Public

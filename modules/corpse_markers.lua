@@ -1,5 +1,4 @@
-
-Public = {}
+local Public = {}
 
 local function draw_map_tag(surface, force, position)
 	force.add_chart_tag(surface, {icon = {type = 'item', name = 'heavy-armor'}, position = position, text = "   "})
