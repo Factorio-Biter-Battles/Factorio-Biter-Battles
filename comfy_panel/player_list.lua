@@ -178,65 +178,25 @@ local pokemessages = {
     'a genetic blueprint of a Japanese teen idol'
 }
 
-local function get_formatted_playtime(x)
-    if x < 5184000 then
-        local y = x / 216000
-        y = tostring(y)
-        local h = ''
-        for i = 1, 10, 1 do
-            local z = string.sub(y, i, i)
+local function get_formatted_playtime_from_ticks(ticks)
+	local math_floor = math.floor
+	local seconds = math_floor(ticks / 60)
+    local minutes = math_floor(seconds / 60)
+    local hours = math_floor(minutes / 60)
+    local days = math_floor(hours / 24)
 
-            if z == '.' then
-                break
-            else
-                h = h .. z
-            end
-        end
+    minutes = minutes % 60
+    hours = hours % 24
 
-        local m = x % 216000
-        m = m / 3600
-        m = math.floor(m)
-        m = tostring(m)
-
-        if h == '0' then
-            local str = m .. ' minutes'
-            return str
-        else
-            local str = h .. ' hours '
-            str = str .. m
-            str = str .. ' minutes'
-            return str
-        end
+    if days >= 1 then
+        return string.format("%d days %d hours", days, hours)
+    elseif hours >= 1 then
+        return string.format("%d hours %d minutes", hours, minutes)
     else
-        local y = x / 5184000
-        y = tostring(y)
-        local h = ''
-        for i = 1, 10, 1 do
-            local z = string.sub(y, i, i)
-
-            if z == '.' then
-                break
-            else
-                h = h .. z
-            end
-        end
-
-        local m = x % 5184000
-        m = m / 216000
-        m = math.floor(m)
-        m = tostring(m)
-
-        if h == '0' then
-            local str = m .. ' days'
-            return str
-        else
-            local str = h .. ' days '
-            str = str .. m
-            str = str .. ' hours'
-            return str
-        end
+        return string.format("%d minutes", minutes)
     end
 end
+
 
 local function get_rank(player)
     local play_table = Session.get_session_table()
@@ -370,10 +330,10 @@ local function get_sorted_list(sort_by)
             t = global.total_time_online_players[player.name]
         end
 
-        player_list[i].total_played_time = get_formatted_playtime(t)
+        player_list[i].total_played_time = get_formatted_playtime_from_ticks(t)
         player_list[i].total_played_ticks = t
 
-        player_list[i].played_time = get_formatted_playtime(player.online_time)
+        player_list[i].played_time = get_formatted_playtime_from_ticks(player.online_time)
         player_list[i].played_ticks = player.online_time
 
         player_list[i].pokes = this.player_list.pokes[player.index]
