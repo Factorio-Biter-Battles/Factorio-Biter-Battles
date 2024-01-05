@@ -374,6 +374,8 @@ end
 
 --Mining Thieves History
 -- Should be pre-checked for entity/player validity
+---@param entity LuaEntity
+---@param player LuaPlayer
 function Public.on_player_mined_entity(entity, player)
     if entity.type == 'offshore-pump' then
         Utils.print_admins(

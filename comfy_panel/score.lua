@@ -435,18 +435,16 @@ local function on_player_died(event)
     score.deaths = 1 + (score.deaths or 0)
 end
 
-function Public.on_player_mined_entity(event)
-    if not event.entity.valid then
-        return
-    end
-    if building_and_mining_blacklist[event.entity.type] then
-        return
-    end
+---@param entity LuaEntity
+---@param player LuaPlayer
+function Public.on_player_mined_entity(entity, player)
+	if building_and_mining_blacklist[entity.type] then
+		return
+	end
 
-    local player = game.players[event.player_index]
-    Public.init_player_table(player)
-    local score = this.score_table[player.force.name].players[player.name]
-    score.mined_entities = 1 + (score.mined_entities or 0)
+	Public.init_player_table(player)
+	local score = this.score_table[player.force.name].players[player.name]
+	score.mined_entities = 1 + (score.mined_entities or 0)
 end
 
 local function on_built_entity(event)

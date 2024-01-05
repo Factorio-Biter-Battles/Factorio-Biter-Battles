@@ -42,97 +42,75 @@ require 'maps.biter_battles_v2.main'
 -- See: https://github.com/raiguard/Krastorio2/blob/master/control.lua
 -- They use local's in control to aggregate and define script.on_events
 
-
-local Antigrief = require 'antigrief'
-local Functions = require "maps.biter_battles_v2.functions"
-local Terrain = require "maps.biter_battles_v2.terrain"
-local AiTargets = require "maps.biter_battles_v2.ai_targets"
-local BossUnit = require "functions.boss_unit"
-local CorpseMarkers = require "modules/corpse_markers.lua"
+local Antigrief = require("antigrief")
+local ComfyPanelScore = require("comfy_panel.score")
+local Functions = require("maps.biter_battles_v2.functions")
+local Terrain = require("maps.biter_battles_v2.terrain")
+local AiTargets = require("maps.biter_battles_v2.ai_targets")
+local BossUnit = require("functions.boss_unit")
+local CorpseMarkers = require("modules/corpse_markers.lua")
 
 -- ENTITY
 
-script.on_event(
-	defines.events.on_player_mined_entity,
-	function(event)
-		local entity = event.entity
-		if not entity or not entity.valid then
-			return nil
-		end
-		AiTargets.stop_tracking(entity)
-
-		local player = game.get_player(event.player_index)
-		if player and player.valid then
-			if Antigrief.enabled then
-				Antigrief.on_player_mined_entity(entity, player)
-			end
-			Terrain.minable_wrecks(entity, player)
-		end
+script.on_event(defines.events.on_player_mined_entity, function(event)
+	local entity = event.entity
+	if not entity or not entity.valid then
+		return
 	end
-)
+	AiTargets.stop_tracking(entity)
+
+	local player = game.get_player(event.player_index)
+	if player and player.valid then
+		if Antigrief.enabled then
+			Antigrief.on_player_mined_entity(entity, player)
+		end
+		ComfyPanelScore.on_player_mined_entity(entity, player)
+
+		Terrain.minable_wrecks(entity, player)
+	end
+end)
 
 -- Maybe combine with defines.events.on_player_mined_entity ?
-script.on_event(
-	defines.events.on_robot_mined_entity,
-	function(event)
-		local entity = event.entity
-		if not entity or not entity.valid then
-			return nil
-		end
-		AiTargets.stop_tracking(entity)
+script.on_event(defines.events.on_robot_mined_entity, function(event)
+	local entity = event.entity
+	if not entity or not entity.valid then
+		return
 	end
-)
+	AiTargets.stop_tracking(entity)
+end)
 
-script.on_event(
-	defines.events.on_robot_built_entity,
-	function(event)
-		local created_entity = event.created_entity
-		if created_entity and created_entity.valid then
-			Functions.no_turret_creep(event)
-			Terrain.deny_construction_bots(event)
-			AiTargets.start_tracking(event.created_entity)
-		end
+script.on_event(defines.events.on_robot_built_entity, function(event)
+	local created_entity = event.created_entity
+	if created_entity and created_entity.valid then
+		Functions.no_turret_creep(event)
+		Terrain.deny_construction_bots(event)
+		AiTargets.start_tracking(event.created_entity)
 	end
-)
+end)
 
-script.on_event(
-	defines.events.on_robot_built_tile,
-	function(event)
-		Terrain.deny_bot_landfill(event)
-	end
-)
+script.on_event(defines.events.on_robot_built_tile, function(event)
+	Terrain.deny_bot_landfill(event)
+end)
 
-script.on_event(
-	defines.events.on_entity_damaged,
-	function(event)
-		BossUnit.handle_boss_damage(event)
-	end
-)
-script.set_event_filter(
-	defines.events.on_entity_damaged,
+script.on_event(defines.events.on_entity_damaged, function(event)
+	BossUnit.handle_boss_damage(event)
+end)
+script.set_event_filter(defines.events.on_entity_damaged, {
 	{
-		{
-			filter = "type",
-			type = "unit",
-		}
-	}
-)
+		filter = "type",
+		type = "unit",
+	},
+})
 
 -- PLAYER DEATH
 
-script.on_event(
-	defines.events.on_character_corpse_expired,
-	function(event)
-		CorpseMarkers.on_character_corpse_expired(event)
-	end
-)
+script.on_event(defines.events.on_character_corpse_expired, function(event)
+	CorpseMarkers.on_character_corpse_expired(event)
+end)
 
-script.on_event(
-	defines.events.on_pre_player_mined_item,
-	function(event)
-		CorpseMarkers.on_pre_player_mined_item(event)
-	end
-)
+script.on_event(defines.events.on_pre_player_mined_item, function(event)
+	CorpseMarkers.on_pre_player_mined_item(event)
+end)
 
 
 ---- END Event refactor.  Must have this at end until all Event is gone.

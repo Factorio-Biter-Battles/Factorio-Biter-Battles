@@ -263,16 +263,17 @@ function Public.is_biter_area(position,noise_Enabled)
 end
 
 function Public.no_turret_creep(event)
-	if not no_turret_blacklist[event.created_entity.type] then return end
-	
+	local entity = event.created_entity
+	if not no_turret_blacklist[entity.type] then return end
+
 	local posEntity = entity.position
 	if posEntity.y > 0 then posEntity.y = (posEntity.y + 100) * -1 end
 	if posEntity.y < 0 then posEntity.y = posEntity.y - 100 end
 	if not Public.is_biter_area(posEntity,false) then
 		return
 	end
-	
-	local surface = event.created_entity.surface				
+
+	local surface = entity.surface
 	local spawners = surface.find_entities_filtered({type = "unit-spawner", area = {{entity.position.x - 70, entity.position.y - 70}, {entity.position.x + 70, entity.position.y + 70}}})
 	if #spawners == 0 then return end
 	
