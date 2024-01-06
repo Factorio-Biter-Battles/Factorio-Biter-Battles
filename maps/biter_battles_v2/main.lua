@@ -58,7 +58,7 @@ local function on_research_finished(event)
 	elseif name == 'rocket-silo' then
 		force.technologies['space-science-pack'].researched = true
 	end
-	game.forces.spectator.print("Team " .. force.name .. " completed research [technology=" .. event.research.name .. "]")
+	game.forces.spectator.print(Functions.team_name_with_color(force.name) .. " completed research [technology=" .. event.research.name .. "]")
 end
 
 local function on_console_chat(event)

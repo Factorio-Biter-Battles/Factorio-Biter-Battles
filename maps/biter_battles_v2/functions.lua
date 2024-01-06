@@ -318,6 +318,29 @@ function Public.no_landfill_by_untrusted_user(event)
 	end
 end
 
+function Public.team_name(force_name)
+	local name = global.tm_custom_name[force_name]
+	if name == nil then
+		if force_name == "north" then
+			name = bb_config.north_side_team_name
+		elseif force_name == "south" then
+			name = bb_config.south_side_team_name
+		end
+	end
+	return name or force_name
+end
+
+function Public.team_name_with_color(force_name)
+	local name = Public.team_name(force_name)
+	if force_name == "north" then
+		return "[color=120, 120, 255]" .. name .. "[/color]"
+	elseif force_name == "south" then
+		return "[color=255, 65, 65]" .. name .. "[/color]"
+	else
+		return name
+	end
+end
+
 function Public.print_message_to_players(forcePlayerList, playerNameSendingMessage, msgToPrint, colorChosen)
 	for _, playerOfForce in pairs(forcePlayerList) do
 		if playerOfForce.connected then

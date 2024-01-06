@@ -20,11 +20,11 @@ require "maps.biter_battles_v2.spec_spy"
 local gui_style = require 'utils.utils'.gui_style
 local has_life = require 'comfy_panel.special_games.limited_lives'.has_life
 local gui_values = {
-		["north"] = {force = "north", biter_force = "north_biters", c1 = bb_config.north_side_team_name, c2 = "JOIN ", n1 = "join_north_button",
+		["north"] = {force = "north", biter_force = "north_biters", n1 = "join_north_button",
 		t1 = "Evolution of north side biters.",
 		t2 = "Threat causes biters to attack. Reduces when biters are slain.", color1 = {r = 0.55, g = 0.55, b = 0.99}, color2 = {r = 0.66, g = 0.66, b = 0.99},
 		tech_spy = "spy-north-tech", prod_spy = "spy-north-prod"},
-		["south"] = {force = "south", biter_force = "south_biters", c1 = bb_config.south_side_team_name, c2 = "JOIN ", n1 = "join_south_button",
+		["south"] = {force = "south", biter_force = "south_biters", n1 = "join_south_button",
 		t1 = "Evolution of south side biters.",
 		t2 = "Threat causes biters to attack. Reduces when biters are slain.", color1 = {r = 0.99, g = 0.33, b = 0.33}, color2 = {r = 0.99, g = 0.44, b = 0.44},
 		tech_spy = "spy-south-tech", prod_spy = "spy-south-prod"}
@@ -82,8 +82,7 @@ local function create_first_join_gui(player)
 	
 	for _, gui_value in pairs(gui_values) do
 		local t = frame.add { type = "table", column_count = 3 }
-		local c = gui_value.c1
-		if global.tm_custom_name[gui_value.force] then c = global.tm_custom_name[gui_value.force] end
+		local c = Functions.team_name(gui_value.force)
 		local l = t.add  { type = "label", caption = c}
 		l.style.font = "heading-2"
 		l.style.font_color = gui_value.color1
@@ -93,7 +92,7 @@ local function create_first_join_gui(player)
 		local l = t.add  { type = "label", caption = #game.forces[gui_value.force].connected_players .. " Players "}
 		l.style.font_color = { r=0.22, g=0.88, b=0.22}
 
-		local c = gui_value.c2
+		local c = "JOIN "
 		local font_color =  gui_value.color1
 		if global.game_lobby_active then
 			font_color = {r=0.7, g=0.7, b=0.7}
@@ -209,9 +208,7 @@ function Public.create_main_gui(player)
 		local t = frame.add { type = "table", column_count = 4 }
 
 		-- Team name
-		local c = gui_value.c1
-		if global.tm_custom_name[gui_value.force] then c = global.tm_custom_name[gui_value.force] end
-		local l = t.add  { type = "label", caption = c}
+		local l = t.add  { type = "label", caption = Functions.team_name(gui_value.force)}
 		gui_style(l, {font = "default-bold", font_color = gui_value.color1, single_line = false, maximal_width = 102})
 		-- Number of players
 		local l = t.add  { type = "label", caption = " - "}
@@ -351,7 +348,7 @@ function join_team(player, force_name, forced_join, auto_join)
 		if not forced_join then
 			if #game.forces[force_name].connected_players > #game.forces[enemy_team].connected_players then
 				if not global.chosen_team[player.name] then
-					player.print("Team " .. force_name .. " has too many players currently.", {r = 0.98, g = 0.66, b = 0.22})
+					player.print(Functions.team_name_with_color(force_name) .. " has too many players currently.", {r = 0.98, g = 0.66, b = 0.22})
 					return
 				end
 			end
@@ -413,11 +410,11 @@ function join_team(player, force_name, forced_join, auto_join)
 	player.character.destructible = true
 	game.permissions.get_group("Default").add_player(player)
 	if not forced_join then
-		local c = player.force.name
-		if global.tm_custom_name[player.force.name] then c = global.tm_custom_name[player.force.name] end
-		local message = table.concat({player.name, " has joined team ", c, "! "})
-		Server.to_discord_bold(message)
-		if auto_join then message = table.concat({player.name, " was automatically assigned to team ", c, "!"}) end
+		-- In case bots are parsing discord messages, we always refer to teams as "north" or "south"
+		Server.to_discord_bold(table.concat({player.name, " has joined team ", player.force.name, "!"}))
+		local join_text = "has joined"
+		if auto_join then join_text = "was automatically assigned to" end
+		local message = table.concat({player.name, " ", join_text, " ", Functions.team_name_with_color(player.force.name), "!"})
 		game.print(message, {r = 0.98, g = 0.66, b = 0.22})
 	end
 	local i = player.get_inventory(defines.inventory.character_main)

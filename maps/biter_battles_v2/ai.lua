@@ -3,6 +3,7 @@ local BiterRaffle = require "maps.biter_battles_v2.biter_raffle"
 local bb_config = require "maps.biter_battles_v2.config"
 local BossUnit = require "functions.boss_unit"
 local fifo = require "maps.biter_battles_v2.fifo"
+local Functions = require "maps.biter_battles_v2.functions"
 local Tables = require "maps.biter_battles_v2.tables"
 local AiStrikes = require "maps.biter_battles_v2.ai_strikes"
 local AiTargets = require "maps.biter_battles_v2.ai_targets"
@@ -122,11 +123,11 @@ local function spawn_biters(isItnormalBiters, maxLoopIteration,spawner,biter_thr
 
 		--Announce New Spawn
 		if(isItnormalBiters and global.biter_spawn_unseen[force_name][unit_name]) then
-			game.print({"", "A ", unit_name:gsub("-", " "), " was spotted far away on team ", (global.tm_custom_name[force_name] or force_name), "..."})
+			game.print({"", "A ", unit_name:gsub("-", " "), " was spotted far away on ", Functions.team_name_with_color(force_name), "..."})
 			global.biter_spawn_unseen[force_name][unit_name] = false
 		end
 		if(not isItnormalBiters and global.biter_spawn_unseen[boss_biter_force_name][unit_name]) then
-			game.print({"", "A ", unit_name:gsub("-", " "), " boss was spotted far away on team ", (global.tm_custom_name[force_name] or force_name), "..."})
+			game.print({"", "A ", unit_name:gsub("-", " "), " boss was spotted far away on ", Functions.team_name_with_color(force_name), "..."})
 			global.biter_spawn_unseen[boss_biter_force_name][unit_name] = false
 		end
 	end
@@ -172,7 +173,7 @@ local function get_unit_group_position(spawner)
 	end
 	p = spawner.surface.find_non_colliding_position("electric-furnace", p, 256, 1)
 	if not p then
-		if global.bb_debug then game.print("No unit_group_position found for team " .. spawner.force.name) end
+		if global.bb_debug then game.print("No unit_group_position found for force " .. spawner.force.name) end
 		return
 	end
 	return p
