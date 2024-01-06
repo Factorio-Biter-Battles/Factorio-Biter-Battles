@@ -40,7 +40,7 @@ local function on_entity_damaged(event)
 		if event.cause then
 			entity.die(event.cause.force, event.cause)
 		else
-			entity.die(event.cause.force)
+			entity.die()
 		end
 		global.boss_units[unit_number] = nil
 	else
