@@ -11,7 +11,11 @@ local function add_changelog(player, element)
 		table.insert(changelog_change, what)
 		table.insert(changelog_change, who)
 	end
-
+	
+	add_entry("2024-01-06", "cogito123", "Rework of biter terrain texture to be factorio 2.0 compatible")
+	add_entry("2024-01-06", "cliff_build", "Refactor/standardize most code that prints out team names")
+	add_entry("2024-01-06", "Ragnarok77", "Fix playtime rank")
+	add_entry("2023-12-29", "bits-orio", "Increase the size and edit ratio of mixed patchs")
 	add_entry("2024-01-04", "Ragnarok77", "New feature : suspend player")
 	add_entry("2024-01-04", "Ragnarok77", "Special game : captain event with stats")
 	add_entry("2023-12-27", "developer-8", "fix poll button opens random player camera")
