@@ -181,20 +181,20 @@ local pokemessages = {
 local function get_formatted_playtime_from_ticks(ticks)
 	local math_floor = math.floor
 	local seconds = math_floor(ticks / 60)
-    local minutes = math_floor(seconds / 60)
-    local hours = math_floor(minutes / 60)
-    local days = math_floor(hours / 24)
+	local minutes = math_floor(seconds / 60)
+	local hours = math_floor(minutes / 60)
+	local days = math_floor(hours / 24)
 
-    minutes = minutes % 60
-    hours = hours % 24
+	minutes = minutes % 60
+	hours = hours % 24
 
-    if days >= 1 then
-        return string.format("%d days %d hours", days, hours)
-    elseif hours >= 1 then
-        return string.format("%d hours %d minutes", hours, minutes)
-    else
-        return string.format("%d minutes", minutes)
-    end
+	if days >= 1 then
+		return string.format("%d days %d hours", days, hours)
+	elseif hours >= 1 then
+		return string.format("%d hours %d minutes", hours, minutes)
+	else
+		return string.format("%d minutes", minutes)
+	end
 end
 
 
