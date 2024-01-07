@@ -36,13 +36,12 @@ local function on_entity_damaged(event)
 	entity.health = entity.health + event.final_damage_amount
 	boss.health = boss.health - event.final_damage_amount
 	if boss.health <= 0 then
-		local unit_number = entity.unit_number
+		global.boss_units[entity.unit_number] = nil
 		if event.cause then
 			entity.die(event.cause.force, event.cause)
 		else
 			entity.die()
 		end
-		global.boss_units[unit_number] = nil
 	else
 		if boss.last_update + 30 < game.tick then
 			set_healthbar(global.boss_units[entity.unit_number])
