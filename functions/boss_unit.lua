@@ -57,9 +57,13 @@ local function on_init()
 	global.boss_units = {}
 	boss_units = global.boss_units
 end
+local function on_load()
+	Public.force_resync("from_global")
+end
 
 local event = require 'utils.event'
 event.on_init(on_init)
+event.on_load(on_load)
 event.add(defines.events.on_entity_damaged, on_entity_damaged)
 event.add_event_filter(defines.events.on_entity_damaged, {
 	filter = "type",
