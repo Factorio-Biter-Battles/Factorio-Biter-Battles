@@ -84,7 +84,6 @@ function test_split_up_feed()
 	-- smaller total threat increase (this is a worst-case scenario)
 	local evo = 1.0
 	local difficulty = 30
-	local current_player_count = 40
 	local num_flasks = 25000
 	local flask_food_value = Tables.food_values["space-science-pack"].value * difficulty / 100
 
@@ -95,6 +94,22 @@ function test_split_up_feed()
 	-- bigger theat increase for big send
 	lunatest.assert_equal(3097157, big_send.threat, 1, "threat big")
 	lunatest.assert_equal(952984, many_send.threat, 1, "threat many")
+end
+
+function test_calc_send()
+	local player_count = 4
+	local player = nil
+	local max_reanim_thresh = 250
+	local training_mode = false
+	local difficulty_vote_value = 0.3
+	local bb_evolution = {["north_biters"] = 0.40, ["south_biters"] = 0.90}
+
+	lunatest.assert_match("Invalid parameter: \"foo\"", Functions.calc_send_command("foo", difficulty_vote_value, bb_evolution, max_reanim_thresh, training_mode, player_count, player))
+	lunatest.assert_equal(
+		"/calc-send evo=20.0 difficulty=30 players=4 color=logistic-science-pack count=1000\n" ..
+		"evo_increase: 2.9 new_evo: 22.9\n" ..
+		"threat_increase: 187",
+		Functions.calc_send_command("evo=20 color=green count=1000", difficulty_vote_value, bb_evolution, max_reanim_thresh, training_mode, player_count, player))
 end
 
 lunatest.run()
