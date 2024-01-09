@@ -1,7 +1,6 @@
 require 'utils.data_stages'
 _LIFECYCLE = _STAGE.control -- Control stage
 _DEBUG = false
-_DUMP_ENV = false
 
 require 'utils.server'
 require 'utils.server_commands'
@@ -22,7 +21,6 @@ require 'antigrief'
 require 'modules.corpse_markers'
 require 'modules.floaty_chat'
 require 'modules.show_inventory'
-require 'utils.debug.command'
 
 require 'comfy_panel.main'
 require 'comfy_panel.player_list'
@@ -39,10 +37,6 @@ require 'comfy_panel.special_games'
 require 'maps.biter_battles_v2.main'
 
 ---------------------------------------------------------------
-
-if _DUMP_ENV then
-    require 'utils.dump_env'
-end
 
 local function on_player_created(event)
     local player = game.players[event.player_index]
