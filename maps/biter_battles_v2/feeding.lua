@@ -305,4 +305,20 @@ function Public.feed_biters_mixed(player, button)
 	game.print(table.concat(message), {r = 0.9, g = 0.9, b = 0.9})
 end
 
+local function calc_send(cmd)
+	local player
+	if cmd.player_index then
+		player = game.players[cmd.player_index]
+	end
+	local player_count = #game.forces.north.connected_players + #game.forces.south.connected_players
+	local result = Functions.calc_send_command(cmd.parameter, global, player_count, player)
+	if player then
+		player.print(result)
+	else
+		game.print(result)
+	end
+end
+
+commands.add_command('calc-send', 'Calculate the impact of sending science', calc_send)
+
 return Public

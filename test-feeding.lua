@@ -97,4 +97,24 @@ function test_split_up_feed()
 	lunatest.assert_equal(952984, many_send.threat, 1, "threat many")
 end
 
+function test_calc_send()
+	local player_count = 4
+	local player = nil
+	local global_to_pass = {
+		max_reanim_thresh = 250,
+		difficulty_vote_value = 0.3,
+		bb_evolution = {
+			["north_biters"] = 0.40,
+			["south_biters"] = 0.90
+		},
+	}
+	print("test_calc_send")
+	lunatest.assert_match("Invalid parameter: \"foo\"", Functions.calc_send_command("foo", global_to_pass, player_count, player))
+	lunatest.assert_equal(
+		"/calc-send evo=20.0 difficulty=30 players=4 color=logistic-science-pack count=1000\n" ..
+		"evo_increase: 2.9 new_evo: 22.9\n" ..
+		"threat_increase: 187",
+		Functions.calc_send_command("evo=20 color=green count=1000", global_to_pass, player_count, player))
+end
+
 lunatest.run()
