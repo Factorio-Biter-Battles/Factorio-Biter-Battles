@@ -70,11 +70,7 @@ local function on_tick()
             -- result is error if not success else result is a boolean for if the task should stay in the queue.
             local success, result = pcall(Token_get(task.func_token), task.params)
             if not success then
-                if _DEBUG then
-                    error(result)
-                else
-                    log(result)
-                end
+                log(result)
                 Queue_pop(task_queue)
                 primitives.total_task_weight = primitives.total_task_weight - task.weight
             elseif not result then

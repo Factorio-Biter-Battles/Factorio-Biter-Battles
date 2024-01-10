@@ -502,22 +502,12 @@ local function data_set_changed(data)
         return
     end
 
-    if _DEBUG then
-        for _, handler in ipairs(handlers) do
-            local success, err = pcall(handler, data)
-            if not success then
-                log(err)
-                error(err, 2)
-            end
-        end
-    else
-        for _, handler in ipairs(handlers) do
-            local success, err = pcall(handler, data)
-            if not success then
-                log(err)
-            end
-        end
-    end
+	for _, handler in ipairs(handlers) do
+		local success, err = pcall(handler, data)
+		if not success then
+			log(err)
+		end
+	end
 end
 
 --- Register a handler to be called when the data_set changes.
