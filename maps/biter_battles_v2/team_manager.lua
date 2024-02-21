@@ -30,7 +30,9 @@ function Public.freeze_players()
 		defines.input_action.gui_text_changed,
 		defines.input_action.gui_value_changed,
 		defines.input_action.edit_permission_group,
-		defines.input_action.gui_selected_tab_changed
+		defines.input_action.gui_selected_tab_changed,
+		defines.input_action.delete_custom_tag,
+		defines.input_action.edit_custom_tag
 	}	
 	for _, d in pairs(defs) do p.set_allows_action(d, true) end
 end
