@@ -52,13 +52,18 @@ local function create_sprite_button(player)
 end
 
 local function clock(frame)
-	local total_minutes = math.floor(game.ticks_played / (60 * 60))
-	local total_hours = math.floor(total_minutes / 60)
-	local minutes = total_minutes - (total_hours * 60)
+	local time_caption = "Not started"
+	local total_ticks = Functions.get_ticks_since_game_start()
+	if total_ticks > 0 then
+		local total_minutes = math.floor(total_ticks / (60 * 60))
+		local total_hours = math.floor(total_minutes / 60)
+		local minutes = total_minutes - (total_hours * 60)
+		time_caption = string.format("Time: %02d:%02d", total_hours, minutes)
+	end
 
-	local clock = frame.add {type = "label", caption = string.format("Time: %02d:%02d   Speed: %.2f", total_hours, minutes, game.speed)}
-	clock.style.font = "default-bold"
-	clock.style.font_color = {r = 0.98, g = 0.66, b = 0.22}
+	local clock_ui = frame.add {type = "label", caption = string.format("%s   Speed: %.2f", time_caption, game.speed)}
+	clock_ui.style.font = "default-bold"
+	clock_ui.style.font_color = {r = 0.98, g = 0.66, b = 0.22}
 	frame.add {type = "line"}
 end
 
