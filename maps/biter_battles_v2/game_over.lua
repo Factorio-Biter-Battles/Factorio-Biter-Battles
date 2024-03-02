@@ -330,7 +330,7 @@ function Public.server_restart()
 end
 
 local function set_victory_time()
-    local tick = game.ticks_played
+    local tick = Functions.get_ticks_since_game_start()
     local minutes = tick % 216000
     local hours = tick - minutes
     minutes = math.floor(minutes / 3600)
@@ -471,7 +471,7 @@ function Public.silo_death(event)
 			log_to_db('[NorthTeam]'..listPicks..'\n',true)
 			listPicks = table.concat(global.special_games_variables["captain_mode"]["stats"]["southPicks"],";")
 			log_to_db('[SouthTeam]'..listPicks..'\n',true)
-			log_to_db('[Gamelength]'..game.ticks_played..'\n',true)
+			log_to_db('[Gamelength]'..Functions.get_ticks_since_game_start()..'\n',true)
 			log_to_db('[StartTick]'..global.special_games_variables["captain_mode"]["stats"]["tickGameStarting"]..'\n',true)
 			log_to_db('[WinnerTeam]'..global.bb_game_won_by_team..'\n',true)
 			log_to_db('[ExtraInfo]'..global.special_games_variables["captain_mode"]["stats"]["extrainfo"]..'\n',true)

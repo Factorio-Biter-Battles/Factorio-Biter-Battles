@@ -236,6 +236,7 @@ function Public.tables()
 	global.reroll_map_voting = {}
 	global.bb_evolution = {}
 	global.bb_game_won_by_team = nil
+	global.bb_game_start_tick = nil
 	global.bb_threat = {}
 	global.bb_threat_income = {}
 	global.chosen_team = {}

@@ -85,7 +85,7 @@ local function add_stats(player, food, flask_amount,biter_force_name,evo_before_
 	local formatted_food = table.concat({"[color=", food_values[food].color, "][/color]", "[img=item/", food, "]"})
 	local formatted_amount = table.concat({"[font=heading-1][color=255,255,255]" .. flask_amount .. "[/color][/font]"})	
 	if flask_amount > 0 then
-		local tick = game.ticks_played
+		local tick = Functions.get_ticks_since_game_start()
 		local feed_time_mins = math_round(tick / (60*60), 0)
 		local minute_unit = ""
 		if feed_time_mins <= 1 then

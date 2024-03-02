@@ -43,7 +43,7 @@ local function get_threat_ratio(biter_force_name)
 end
 
 Public.send_near_biters_to_silo = function()
-	if game.ticks_played < 108000 then return end
+	if Functions.get_ticks_since_game_start() < 108000 then return end
 	if not global.rocket_silo["north"] then return end
 	if not global.rocket_silo["south"] then return end
 
@@ -272,7 +272,7 @@ end
 Public.raise_evo = function()
 	if global.freeze_players then return end
 	if not global.training_mode and (#game.forces.north.connected_players == 0 or #game.forces.south.connected_players == 0) then return end
-	if game.ticks_played < 7200 then return end
+	if Functions.get_ticks_since_game_start() < 7200 then return end
 	if ( 1 <= global.difficulty_vote_index) and ( 3 >= global.difficulty_vote_index) then
 		local x = game.ticks_played/3600 -- current length of the match in minutes
 		global.difficulty_vote_value = ((x / 470) ^ 3.7) + Tables.difficulties[global.difficulty_vote_index].value

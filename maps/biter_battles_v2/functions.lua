@@ -336,6 +336,14 @@ function Public.no_landfill_by_untrusted_user(event, trusted_table)
 	end
 end
 
+--- Returns the number of ticks since the game started, or 0 if it has not started.
+--- @return integer
+function Public.get_ticks_since_game_start()
+	local start_tick = global.bb_game_start_tick
+	if not start_tick then return 0 end
+	return game.ticks_played - start_tick
+end
+
 function Public.team_name(force_name)
 	local name = global.tm_custom_name[force_name]
 	if name == nil then
