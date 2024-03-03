@@ -29,66 +29,61 @@ local function add_science_logs(player, element)
 	
 	if global.science_logs_category_potion == nil then
 		global.science_logs_category_potion = { }
-		for i = 1, 7 do
+		for i = 1, #food_long_and_short do
 			table.insert(global.science_logs_category_potion, get_science_text(food_long_and_short[i].long_name, food_long_and_short[i].short_name))
 		end
 	end
 	if global.science_logs_total_north == nil then
 		global.science_logs_total_north = { 0 }
 		global.science_logs_total_south = { 0 }
-		for _ = 1, 7 do
+		for _ = 1, #food_long_and_short do
 			table.insert(global.science_logs_total_north, 0)
 			table.insert(global.science_logs_total_south, 0)
 		end
 	end
 	
-	local t_summary = science_scrollpanel.add { type = "table", name = "science_logs_summary_header_table", column_count = 8 }
 	local width_summary_columns = tonumber(94)
 	local width_summary_first_column = tonumber(110)
-	local column_widths = {width_summary_first_column, width_summary_columns, width_summary_columns, width_summary_columns, width_summary_columns, width_summary_columns, width_summary_columns, width_summary_columns}
-	local headersSummary = {
-		[1] = "",
-		[2] = global.science_logs_category_potion[1],
-		[3] = global.science_logs_category_potion[2],
-		[4] = global.science_logs_category_potion[3],
-		[5] = global.science_logs_category_potion[4],
-		[6] = global.science_logs_category_potion[5],
-		[7] = global.science_logs_category_potion[6],
-		[8] = global.science_logs_category_potion[7]
-	}
+	local column_widths = {width_summary_first_column}
+	for i = 1, #food_long_and_short do
+		column_widths[#column_widths + 1] = width_summary_columns
+	end
+
+	local t_summary = science_scrollpanel.add { type = "table", name = "science_logs_summary_header_table", column_count = #column_widths }
+	local headersSummary = {"", table.unpack(global.science_logs_category_potion)}
 	for _, w in ipairs(column_widths) do
 		local label = t_summary.add { type = "label", caption = headersSummary[_] }
 		label.style.minimal_width = w
 		label.style.maximal_width = w
 	end
 	
-	summary_panel_table = science_scrollpanel.add { type = "table", column_count = 8 }
+	summary_panel_table = science_scrollpanel.add { type = "table", column_count = #column_widths }
 	local label = summary_panel_table.add { type = "label", name = "science_logs_total_north_header", caption = "Total sent by north" }
 	label.style.minimal_width = width_summary_first_column
 	label.style.maximal_width = width_summary_first_column
-	for i = 1, 7 do
+	for i = 1, #food_long_and_short do
 		local label = summary_panel_table.add { type = "label", name = "science_logs_total_north_" .. i, caption = global.science_logs_total_north[i] }
 		label.style.minimal_width = width_summary_columns
 		label.style.maximal_width = width_summary_columns
 	end
 	science_scrollpanel.add({type = "line"})
 	
-	summary_panel_table2 = science_scrollpanel.add { type = "table", column_count = 8 }
+	summary_panel_table2 = science_scrollpanel.add { type = "table", column_count = #column_widths }
 	local label = summary_panel_table2.add { type = "label", name = "science_logs_total_south_header", caption = "Total sent by south" }
 	label.style.minimal_width = width_summary_first_column
 	label.style.maximal_width = width_summary_first_column
-	for i = 1, 7 do
+	for i = 1, #food_long_and_short do
 	local label = summary_panel_table2.add { type = "label", name = "science_logs_total_south" .. i, caption = global.science_logs_total_south[i] }
 		label.style.minimal_width = width_summary_columns
 		label.style.maximal_width = width_summary_columns
 	end
 	science_scrollpanel.add({type = "line"})
 	
-	summary_panel_table3 = science_scrollpanel.add { type = "table", column_count = 8 }
+	summary_panel_table3 = science_scrollpanel.add { type = "table", column_count = #column_widths }
 	local label = summary_panel_table3.add { type = "label", name = "science_logs_total_passive_feed_header", caption = "Total passive feed" }
 	label.style.minimal_width = width_summary_first_column
 	label.style.maximal_width = width_summary_first_column
-	for i = 1, 7 do
+	for i = 1, #food_long_and_short do
 		local text_passive_feed = "0"
 		if global.total_passive_feed_redpotion ~= nil then
 			text_passive_feed = math.round(global.total_passive_feed_redpotion * food_value_table_version[1] / food_value_table_version[i],1)
