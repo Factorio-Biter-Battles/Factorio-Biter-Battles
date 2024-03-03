@@ -22,6 +22,7 @@ local autoTagDistance = 600
 local antiAfkTimeBeforeEnabled = 60 * 60 * 5 -- in tick : 5 minutes
 local antiAfkTimeBeforeWarning = 60 * 60 * 3 + 60*40 -- in tick : 3 minutes 40s
 require "maps.biter_battles_v2.sciencelogs_tab"
+require "maps.biter_battles_v2.feed_values_tab"
 require "maps.biter_battles_v2.changelog_tab"
 require 'maps.biter_battles_v2.commands'
 require "modules.spawners_contain_biters"
