@@ -11,6 +11,15 @@ local this = {
     alphanumeric = true
 }
 
+-- add __ to protect from overlapping with LuaGuiElement properties
+local function convert_to_safe_group_name(name_in)
+	return "__" .. name_in
+end
+
+local function convert_from_safe_group_name(name_in)
+	return name_in:sub(3)
+end
+
 Global.register(
     this,
     function(t)
@@ -108,7 +117,8 @@ local build_group_gui = (function(player, frame)
                 end
             end
 
-            local tt = t.add({type = 'table', name = group.name, column_count = 1})
+            local group_lua_id = convert_to_safe_group_name(group.name)
+            local tt = t.add({type = 'table', name = group_lua_id, column_count = 1})
             if group.name ~= this.player_group[player.name] then
                 local b = tt.add({type = 'button', caption = 'Join'})
                 b.style.font = 'default-bold'
@@ -299,7 +309,8 @@ local function on_gui_click(event)
 				then 
 					player.print('You cant join or leave a picking group during picking phase..', Color.red)
 				else
-					this.player_group[player.name] = event.element.parent.name
+					local group_lua_id = convert_from_safe_group_name(event.element.parent.name)
+					this.player_group[player.name] = group_lua_id
 					player.tag = str
 					if game.tick - this.join_spam_protection[player.name] > 600 then
 						local color = {
@@ -308,7 +319,7 @@ local function on_gui_click(event)
 							b = player.color.b * 0.7 + 0.3,
 							a = 1
 						}
-						game.print(player.name .. ' has joined group "' .. event.element.parent.name .. '"', color)
+						game.print(player.name .. ' has joined group "' .. group_lua_id .. '"', color)
 						this.join_spam_protection[player.name] = game.tick
 					end
 					refresh_gui()
@@ -321,16 +332,17 @@ local function on_gui_click(event)
 				then 
 					player.print('You cant delete a picking group during picking phase..', Color.red)
 				else
+					local group_lua_id = convert_from_safe_group_name(event.element.parent.name)
 					for _, p in pairs(game.players) do
 						if this.player_group[p.name] then
-							if this.player_group[p.name] == event.element.parent.name then
+							if this.player_group[p.name] == group_lua_id then
 								this.player_group[p.name] = '[Group]'
 								p.tag = ''
 							end
 						end
 					end
-					game.print(player.name .. ' deleted group "' .. event.element.parent.name .. '"')
-					this.tag_groups[event.element.parent.name] = nil
+					game.print(player.name .. ' deleted group "' .. group_lua_id .. '"')
+					this.tag_groups[group_lua_id] = nil
 					refresh_gui()
 				end
                 return
