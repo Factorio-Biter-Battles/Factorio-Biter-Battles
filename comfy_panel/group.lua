@@ -11,11 +11,15 @@ local this = {
     alphanumeric = true
 }
 
--- add __ to protect from overlapping with LuaGuiElement properties
+---add __ to protect from overlapping with LuaGuiElement properties
+---@param name_in string
+---@return string
 local function convert_to_safe_group_name(name_in)
 	return "__" .. name_in
 end
 
+---@param name_in string
+---@return string
 local function convert_from_safe_group_name(name_in)
 	return name_in:sub(3)
 end
@@ -29,6 +33,8 @@ Global.register(
 
 local Public = {}
 
+---@param player LuaPlayer
+---@param frame LuaGuiElement
 local build_group_gui = (function(player, frame)
     local group_name_width = 150
     local description_width = 240
@@ -154,6 +160,9 @@ local build_group_gui = (function(player, frame)
     b.style.font = 'default-bold'
 end)
 
+---@param text string
+---@param prefix string
+---@return boolean
 local function startswith(text, prefix)
     return text:find(prefix, 1, true) == 1
 end
@@ -183,6 +192,7 @@ local function refresh_gui()
     end
 end
 
+---@param event EventData.on_player_joined_game
 local function on_player_joined_game(event)
     local player = game.players[event.player_index]
 
@@ -195,6 +205,7 @@ local function on_player_joined_game(event)
     end
 end
 
+---@param event EventData.on_gui_text_changed
 local function on_gui_text_changed(event)
     local element = event.element
     if not element or not element.valid then
@@ -216,10 +227,13 @@ local function on_gui_text_changed(event)
     end
 end
 
+---@param str string
+---@return boolean
 local function alphanumeric(str)
     return (string.match(str, '[^%w%s%p]') ~= nil)
 end
 
+---@param event EventData.on_gui_click
 local function on_gui_click(event)
     if not event then
         return
