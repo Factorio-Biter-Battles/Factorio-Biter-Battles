@@ -1,0 +1,18 @@
+name: Run Tests
+on: [push]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@master
+      - uses: leafo/gh-actions-lua@v10
+        with:
+          luaVersion: "5.2"
+      - uses: leafo/gh-actions-luarocks@v4
+      - name: setup
+        run: |
+          luarocks install lunatest
+          luarocks install serpent
+      - name: test
+        run: |
+          lua tests/test-feeding.lua
