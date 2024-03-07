@@ -1,3 +1,5 @@
+local Tables = require "maps.biter_battles_v2.tables"
+
 local math_floor = math.floor
 
 local Public = {}
