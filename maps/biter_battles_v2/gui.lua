@@ -448,6 +448,7 @@ function spectate(player, forced_join, stored_position)
 	end
 	
 	player.driving = false
+	player.clear_cursor()
 
 	if stored_position then
         local p_data = get_player_data(player)
