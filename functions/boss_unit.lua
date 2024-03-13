@@ -28,6 +28,7 @@ function Public.add_boss_unit(entity, health_factor, size)
 	global.boss_units[entity.unit_number] = {entity = entity, max_health = health, health = health, healthbar_id = create_healthbar(entity, s), last_update = game.tick}
 end
 
+---@param event EventData.on_entity_damaged
 local function on_entity_damaged(event)
 	local entity = event.entity
 	local boss = global.boss_units[entity.unit_number]
@@ -36,7 +37,11 @@ local function on_entity_damaged(event)
 	boss.health = boss.health - event.final_damage_amount
 	if boss.health <= 0 then
 		global.boss_units[entity.unit_number] = nil
-		entity.die()
+		if event.cause then
+			entity.die(event.cause.force, event.cause)
+		else
+			entity.die()
+		end
 	else
 		if boss.last_update + 30 < game.tick then
 			set_healthbar(global.boss_units[entity.unit_number])
