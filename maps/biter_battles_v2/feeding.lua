@@ -1,5 +1,6 @@
 local bb_config = require "maps.biter_battles_v2.config"
 local FeedingCalculations = require "maps.biter_battles_v2.feeding_calculations"
+local Functions = require 'maps.biter_battles_v2.functions'
 local Server = require 'utils.server'
 
 local tables = require "maps.biter_battles_v2.tables"
