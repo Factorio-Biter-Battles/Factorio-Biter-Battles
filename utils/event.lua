@@ -98,7 +98,6 @@
 local EventCore = require 'utils.event_core'
 local Global = require 'utils.global'
 local Token = require 'utils.token'
-local Debug = require 'utils.debug'
 
 local table_remove = table.remove
 local core_add = EventCore.add
@@ -275,13 +274,6 @@ function Event.add_removable_function(event_name, func, name)
 
     if type(f) ~= 'function' then
         error('func must be a function', 2)
-    end
-
-    if Debug.is_closure(f) then
-        error(
-            'func cannot be a closure as that is a desync risk. Consider using Event.add_removable(event, token) instead.',
-            2
-        )
     end
 
     local funcs = function_handlers[name]
@@ -498,11 +490,6 @@ end
 -- @param <string> name of the event/variable that is exposed
 function Event.generate_event_name(name)
     local event_id = generate_event_name()
-
-    -- If we're in debug, add the event ID into defines.events for the debuggertron's event module
-    if _DEBUG then
-        defines.events[name] = event_id -- luacheck: ignore 122
-    end
 
     return event_id
 end
