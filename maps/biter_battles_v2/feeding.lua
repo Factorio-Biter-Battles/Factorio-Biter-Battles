@@ -226,7 +226,7 @@ function Public.feed_biters(player, food)
 	
 	add_stats(player, food, flask_amount ,biter_force_name, evolution_before_feed, threat_before_feed)
 	
-	if (food == "space-science-pack") then
+	if food == "space-science-pack" then
 		global.spy_fish_timeout[player.force.name] = game.tick + 99999999
 	end
 end
@@ -271,6 +271,9 @@ function Public.feed_biters_mixed(player, button)
 			set_evo_and_threat(flask_amount, v, biter_force_name)
 			add_stats(player, v, flask_amount ,biter_force_name, evolution_before_feed, threat_before_feed)
 			i.remove({name = v, count = flask_amount})
+			if v == "space-science-pack" then
+				global.spy_fish_timeout[player.force.name] = game.tick + 99999999
+			end
 		end
 	end
 	if #message == 2 then
