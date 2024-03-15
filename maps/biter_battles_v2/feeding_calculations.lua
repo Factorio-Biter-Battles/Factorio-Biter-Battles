@@ -124,18 +124,18 @@ function Public.calc_send_command(params, difficulty_vote_value, bb_evolution, m
 					error_msg = "Invalid difficulty"
 				end
 			elseif k == "players" then
-				player_count = math_floor(tonumber(v))
-				if player_count == nil or player_count < 0 or player_count > 10000 then
+				player_count = tonumber(v)
+				if player_count == nil or player_count < 0 or player_count > 10000 or player_count ~= math_floor(player_count) then
 					error_msg = "Invalid player count"
 				end
-			elseif k == "color" then
-				if v == "red" then v = "automation-science-pack" end
-				if v == "green" then v = "logistic-science-pack" end
-				if v == "gray" or v == "grey" then v = "military-science-pack" end
-				if v == "blue" then v = "chemical-science-pack" end
-				if v == "purple" then v = "production-science-pack" end
-				if v == "yellow" then v = "utility-science-pack" end
-				if v == "white" then v = "space-science-pack" end
+			elseif k == "color" or k == "colour" then
+				if v == "red" or v == "automation" then v = "automation-science-pack" end
+				if v == "green" or v == "logistic" then v = "logistic-science-pack" end
+				if v == "gray" or v == "grey" or v == "black" or v == "military" then v = "military-science-pack" end
+				if v == "blue" or v == "chemical" then v = "chemical-science-pack" end
+				if v == "purple" or v == "production" then v = "production-science-pack" end
+				if v == "yellow" or v == "utility" then v = "utility-science-pack" end
+				if v == "white" or v == "space" then v = "space-science-pack" end
 				local values = Tables.food_values[v]
 				if values == nil then
 					error_msg = "Invalid science pack color"
