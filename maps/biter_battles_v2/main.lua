@@ -9,10 +9,12 @@ local Game_over = require "maps.biter_battles_v2.game_over"
 local Gui = require "maps.biter_battles_v2.gui"
 local Init = require "maps.biter_battles_v2.init"
 local Mirror_terrain = require "maps.biter_battles_v2.mirror_terrain"
+local Muted = require "utils.muted"
 require 'modules.simple_tags'
 local Team_manager = require "maps.biter_battles_v2.team_manager"
 local Terrain = require "maps.biter_battles_v2.terrain"
 local Session = require 'utils.datastore.session_data'
+local Server = require 'utils.server'
 local Color = require 'utils.color_presets'
 local autoTagWestOutpost = "[West]"
 local autoTagEastOutpost = "[East]"
@@ -87,13 +89,13 @@ local function on_console_chat(event)
 
 	local msg = player_name .. tag .. " (" .. player_force_name .. "): ".. event.message
 	if not muted and (player_force_name == "north" or player_force_name == "south") then
-		Public.print_message_to_players(game.forces.spectator.players,player_name,msg,color)
+		Functions.print_message_to_players(game.forces.spectator.players,player_name,msg,color)
 	end
 
 	if global.tournament_mode and not player.admin then return end
 
 	--Skip messages that would spoil coordinates from spectators and don't send gps coord to discord
-	local a, b = string_find(event.message, "gps=", 1, false)
+	local a, b = string.find(event.message, "gps=", 1, false)
 	if a then return end
 
 	local discord_msg = ""
@@ -102,8 +104,8 @@ local function on_console_chat(event)
 		Muted.print_muted_message(player)
 	end
 	if not muted and player_force_name == "spectator" then
-		Public.print_message_to_players(game.forces.north.players,player_name,msg,nil)
-		Public.print_message_to_players(game.forces.south.players,player_name,msg,nil)
+		Functions.print_message_to_players(game.forces.north.players,player_name,msg,nil)
+		Functions.print_message_to_players(game.forces.south.players,player_name,msg,nil)
 	end
 
 	discord_msg = discord_msg .. player_name .. " (" .. player_force_name .. "): ".. event.message
