@@ -6,6 +6,7 @@ local Team_manager = require "maps.biter_battles_v2.team_manager"
 local session = require 'utils.datastore.session_data'
 local Tables = require "maps.biter_battles_v2.tables"
 local gui_style = require 'utils.utils'.gui_style
+local ComfyPanelGroup = require 'comfy_panel.group'
 local math_random = math.random
 
 local function add_to_trust(playerName)
@@ -258,7 +259,7 @@ local function pickPlayerGenerator(player,tableBeingLooped,frameName,questionTex
 				local groupCaptionText = ""
 				local groupName = ""
 				local playerIterated = game.get_player(pl)
-				if startswith(playerIterated.tag,"[cpt") then
+				if startswith(playerIterated.tag, ComfyPanelGroup.COMFY_PANEL_CAPTAINS_GROUP_PLAYER_TAG_PREFIX) then
 					if not listGroupAlreadyDone[playerIterated.tag] then
 						groupName = playerIterated.tag
 						listGroupAlreadyDone[playerIterated.tag] = true
@@ -400,16 +401,17 @@ local function auto_pick_all_of_group(cptPlayer,playerName)
 	end
 end
 
+---@param playerName string
+---@return boolean
 local function is_player_in_group_system(playerName)
 	--function used to balance team when a team is picked
 	if global.special_games_variables["captain_mode"]["captainGroupAllowed"] then
 		local playerChecked = game.get_player(playerName)
-		if playerChecked.tag == "" then return false end
-		if not startswith(playerChecked.tag,"[cpt") then return false end
-		return true
-	else
-		return false
+		if playerChecked and playerChecked.tag ~= "" and startswith(playerChecked.tag, ComfyPanelGroup.COMFY_PANEL_CAPTAINS_GROUP_PLAYER_TAG_PREFIX) then
+			return true
+		end
 	end
+	return false
 end
 
 local function generate_captain_mode(refereeName,autoTrust,captainKick,pickingMode,captainGroupAllowed,groupLimit,specialEnabled)
@@ -473,8 +475,8 @@ local function generate_captain_mode(refereeName,autoTrust,captainKick,pickingMo
 		end
 	end
 	
-	if global.special_games_variables["captain_mode"]["captainGroupAllowed"] then 
-		game.print('Groups of players : ENABLED, group name must start by cpt_', Color.cyan)
+	if global.special_games_variables["captain_mode"]["captainGroupAllowed"] then
+		game.print('Groups of players : ENABLED, group name must start by ' .. ComfyPanelGroup.COMFY_PANEL_CAPTAINS_GROUP_PREFIX, Color.cyan)
 		local amountOfPlayers = "no limit"
 		if global.special_games_variables["captain_mode"]["groupLimit"] == 0 then
 			amountOfPlayers = "no limit"
