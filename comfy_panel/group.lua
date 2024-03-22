@@ -11,18 +11,6 @@ local this = {
     alphanumeric = true
 }
 
----add __ to protect from overlapping with LuaGuiElement properties
----@param name_in string
----@return string
-local function convert_to_safe_group_name(name_in)
-	return "__" .. name_in
-end
-
----@param name_in string
----@return string
-local function convert_from_safe_group_name(name_in)
-	return name_in:sub(3)
-end
 
 Global.register(
     this,
@@ -32,6 +20,25 @@ Global.register(
 )
 
 local Public = {}
+
+---Add __ to protect from overlapping with LuaGuiElement properties
+---@param name_in string
+---@return string
+function Public.convert_to_safe_group_name(name_in)
+	return "__" .. name_in
+end
+
+---Remove __ to protect from overlapping with LuaGuiElement properties
+---@param name_in string
+---@return string
+function Public.convert_from_safe_group_name(name_in)
+	return name_in:sub(3)
+end
+
+Public.COMFY_PANEL_CAPTAINS_GROUP_PREFIX = "cpt_"
+---@comment safe == '__' prepended
+Public.COMFY_PANEL_CAPTAINS_SAFE_GROUP_PREFIX = Public.convert_to_safe_group_name(Public.COMFY_PANEL_CAPTAINS_GROUP_PREFIX)
+Public.COMFY_PANEL_CAPTAINS_GROUP_PLAYER_TAG_PREFIX = "[" .. Public.COMFY_PANEL_CAPTAINS_GROUP_PREFIX
 
 ---@param player LuaPlayer
 ---@param frame LuaGuiElement
@@ -123,7 +130,7 @@ local build_group_gui = (function(player, frame)
                 end
             end
 
-            local group_lua_id = convert_to_safe_group_name(group.name)
+            local group_lua_id = Public.convert_to_safe_group_name(group.name)
             local tt = t.add({type = 'table', name = group_lua_id, column_count = 1})
             if group.name ~= this.player_group[player.name] then
                 local b = tt.add({type = 'button', caption = 'Join'})
@@ -315,17 +322,23 @@ local function on_gui_click(event)
     if p then
         if p.name == 'groups_table' then
             if event.element.type == 'button' and event.element.caption == 'Join' then
-				local str = '[' .. event.element.parent.name
-				str = str .. ']'
-				if (global.active_special_games["captain_mode"] and global.special_games_variables["captain_mode"]["pickingPhase"] and startswith(str, "[cpt"))
+				local safe_group_name = event.element.parent.name
+				local group_name = Public.convert_from_safe_group_name(safe_group_name)
+				if (global.active_special_games["captain_mode"]
+						and global.special_games_variables["captain_mode"]["pickingPhase"]
+						and startswith(group_name, Public.COMFY_PANEL_CAPTAINS_GROUP_PREFIX)
+					)
 					or
-					(global.active_special_games["captain_mode"] and global.special_games_variables["captain_mode"]["pickingPhase"] and startswith(player.tag, "[cpt") )
-				then 
-					player.print('You cant join or leave a picking group during picking phase..', Color.red)
+					(global.active_special_games["captain_mode"]
+						and global.special_games_variables["captain_mode"]["pickingPhase"]
+						and startswith(player.tag, Public.COMFY_PANEL_CAPTAINS_GROUP_PLAYER_TAG_PREFIX)
+					)
+				then
+					player.print("You cant join or leave a picking group during picking phase..", Color.red)
 				else
-					local group_lua_id = convert_from_safe_group_name(event.element.parent.name)
-					this.player_group[player.name] = group_lua_id
-					player.tag = str
+					local player_group_tag = "[" .. group_name .. "]"
+					this.player_group[player.name] = group_name
+					player.tag = player_group_tag
 					if game.tick - this.join_spam_protection[player.name] > 600 then
 						local color = {
 							r = player.color.r * 0.7 + 0.3,
@@ -333,7 +346,7 @@ local function on_gui_click(event)
 							b = player.color.b * 0.7 + 0.3,
 							a = 1
 						}
-						game.print(player.name .. ' has joined group "' .. group_lua_id .. '"', color)
+						game.print(player.name .. ' has joined group "' .. group_name .. '"', color)
 						this.join_spam_protection[player.name] = game.tick
 					end
 					refresh_gui()
@@ -342,28 +355,32 @@ local function on_gui_click(event)
             end
 
             if event.element.type == 'button' and event.element.caption == 'Delete' then
-				if (global.active_special_games["captain_mode"] and global.special_games_variables["captain_mode"]["pickingPhase"] and startswith(event.element.parent.name, "cpt"))
-				then 
+				local safe_group_name = event.element.parent.name
+				local group_name = Public.convert_from_safe_group_name(safe_group_name)
+				if (global.active_special_games["captain_mode"]
+						and global.special_games_variables["captain_mode"]["pickingPhase"]
+						and startswith(group_name, Public.COMFY_PANEL_CAPTAINS_GROUP_PREFIX)) then
 					player.print('You cant delete a picking group during picking phase..', Color.red)
 				else
-					local group_lua_id = convert_from_safe_group_name(event.element.parent.name)
 					for _, p in pairs(game.players) do
 						if this.player_group[p.name] then
-							if this.player_group[p.name] == group_lua_id then
+							if this.player_group[p.name] == group_name then
 								this.player_group[p.name] = '[Group]'
 								p.tag = ''
 							end
 						end
 					end
-					game.print(player.name .. ' deleted group "' .. group_lua_id .. '"')
-					this.tag_groups[group_lua_id] = nil
+					game.print(player.name .. ' deleted group "' .. group_name .. '"')
+					this.tag_groups[group_name] = nil
 					refresh_gui()
 				end
                 return
             end
 
             if event.element.type == 'button' and event.element.caption == 'Leave' then
-				if global.active_special_games["captain_mode"] and global.special_games_variables["captain_mode"]["pickingPhase"] and startswith(player.tag, "[cpt")then 
+				if (global.active_special_games["captain_mode"]
+					and global.special_games_variables["captain_mode"]["pickingPhase"]
+					and startswith(player.tag, Public.COMFY_PANEL_CAPTAINS_GROUP_PLAYER_TAG_PREFIX) ) then
 					player.print('You cant leave a picking group during picking phase..', Color.red)
 				else
 					this.player_group[player.name] = '[Group]'
