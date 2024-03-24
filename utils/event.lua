@@ -410,13 +410,6 @@ function Event.add_removable_nth_tick_function(tick, func, name)
         error('func must be a function', 2)
     end
 
-    if Debug.is_closure(f) then
-        error(
-            'func cannot be a closure as that is a desync risk. Consider using Event.add_removable_nth_tick(tick, token) instead.',
-            2
-        )
-    end
-
     local funcs = function_nth_tick_handlers[name]
     if not funcs then
         function_nth_tick_handlers[name] = {}
