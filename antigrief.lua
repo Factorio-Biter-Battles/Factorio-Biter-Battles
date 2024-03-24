@@ -372,18 +372,11 @@ local function on_entity_died(event)
     end
 end
 
---Mining Thieves History
-local function on_player_mined_entity(event)
+-- Should be pre-checked for entity/player validity
+---@param entity LuaEntity
+---@param player LuaPlayer History
+function Public.on_player_mined_entity(entity, player)
     if not this.enabled then
-        return
-    end
-    local player = game.get_player(event.player_index)
-    if not player or not player.valid then
-        return
-    end
-
-    local entity = event.entity
-    if not entity or not entity.valid then
         return
     end
 
@@ -400,8 +393,8 @@ local function on_player_mined_entity(event)
     if entity.last_user.name == player.name then return end
     local data = {
         player_name = player.name,
-        event = event.entity.name,
-        position = {x = math.floor(event.entity.position.x), y = math.floor(event.entity.position.y)},
+        event = entity.name,
+        position = {x = math.floor(entity.position.x), y = math.floor(entity.position.y)},
         time = game.ticks_played,
         server_time = game.tick
     }
@@ -835,7 +828,6 @@ function Public.get(key)
 end
 
 Event.on_init(on_init)
-Event.add(de.on_player_mined_entity, on_player_mined_entity)
 Event.add(de.on_entity_died, on_entity_died)
 Event.add(de.on_built_entity, on_built_entity)
 Event.add(de.on_gui_opened, on_gui_opened)
