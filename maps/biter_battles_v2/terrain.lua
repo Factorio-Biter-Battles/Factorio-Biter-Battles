@@ -677,14 +677,12 @@ function Public.generate_spawn_goodies(surface)
 end
 ]]
 
-function Public.minable_wrecks(event)
-	local entity = event.entity
-	if not entity then return end
-	if not entity.valid then return end
+---@param entity LuaEntity
+---@param player LuaPlayer
+function Public.minable_wrecks(entity, player)
 	if not valid_wrecks[entity.name] then return end
 
 	local surface = entity.surface
-	local player = game.players[event.player_index]
 
 	local loot_worth = math_floor(math_abs(entity.position.x * 0.02)) + global.random_generator(16, 32)
 	local blacklist = LootRaffle.get_tech_blacklist(math_abs(entity.position.x * 0.0001) + 0.10)

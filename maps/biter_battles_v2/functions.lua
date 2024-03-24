@@ -174,6 +174,15 @@ local size_of_spawn_positions = #spawn_positions
 
 local Public = {}
 
+---@param event EventData.on_player_mined_entity|EventData.on_pre_player_crafted_item|EventData.on_player_mined_item
+function Public.maybe_set_game_start_tick(event)
+	if global.bb_game_start_tick then return end
+	if not event.player_index then return end
+	local player = game.players[event.player_index]
+	if player.force.name ~= "north" and player.force.name ~= "south" then return end
+	global.bb_game_start_tick = game.ticks_played
+end
+
 function Public.biters_landfill(entity)
 	if not landfill_biters[entity.name] then return end	
 	local position = entity.position

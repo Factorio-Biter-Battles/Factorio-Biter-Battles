@@ -37,16 +37,52 @@ require 'maps.biter_battles_v2.main'
 
 ---------------------------------------------------------------
 
-local function on_player_created(event)
-    local player = game.players[event.player_index]
-    player.gui.top.style = 'slot_table_spacing_horizontal_flow'
-    player.gui.left.style = 'slot_table_spacing_vertical_flow'
-end
 
 local loaded = _G.package.loaded
 function require(path)
     return loaded[path] or error('Can only require files at runtime that have been required in the control stage.', 2)
 end
 
-local Event = require 'utils.event'
-Event.add(defines.events.on_player_created, on_player_created)
+
+---------------- Central Dispatch of Events ----------------
+local Event = require "utils.event"
+
+-- Try to keep events and requires alphabetized
+
+local AiTargets = require "maps.biter_battles_v2.ai_targets"
+local Antigrief = require "antigrief"
+local ComfyPanelScore = require "comfy_panel.score"
+local Functions = require "maps.biter_battles_v2.functions"
+local Terrain = require "maps.biter_battles_v2.terrain"
+
+Event.add(defines.events.on_player_created, function (event)
+	local player = game.players[event.player_index]
+	player.gui.top.style = "slot_table_spacing_horizontal_flow"
+	player.gui.left.style = "slot_table_spacing_vertical_flow"
+end)
+
+Event.add(defines.events.on_player_mined_entity, function (event)
+	Functions.maybe_set_game_start_tick(event)
+	local entity = event.entity
+	if not entity.valid then
+		return
+	end
+	AiTargets.stop_tracking(entity)
+
+	local player = game.get_player(event.player_index)
+	if player and player.valid then
+		if Antigrief.enabled then
+			Antigrief.on_player_mined_entity(entity, player)
+		end
+		ComfyPanelScore.on_player_mined_entity(entity, player)
+		Terrain.minable_wrecks(entity, player)
+	end
+end)
+
+Event.add(defines.events.on_player_mined_item, function (event)
+	Functions.maybe_set_game_start_tick(event)
+end)
+
+Event.add(defines.events.on_pre_player_crafted_item, function (event)
+	Functions.maybe_set_game_start_tick(event)
+end)

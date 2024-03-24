@@ -27,14 +27,6 @@ require "maps.biter_battles_v2.changelog_tab"
 require 'maps.biter_battles_v2.commands'
 require "modules.spawners_contain_biters"
 
-local function maybe_set_game_start_tick(event)
-	if global.bb_game_start_tick then return end
-	if not event.player_index then return end
-	local player = game.players[event.player_index]
-	if player.force.name ~= "north" and player.force.name ~= "south" then return end
-	global.bb_game_start_tick = game.ticks_played
-end
-
 local function on_player_joined_game(event)
 	local surface = game.surfaces[global.bb_surface_name]
 	local player = game.players[event.player_index]
@@ -300,20 +292,6 @@ local function on_player_built_tile(event)
 	end
 end
 
-local function on_player_mined_entity(event)
-	maybe_set_game_start_tick(event)
-	Terrain.minable_wrecks(event)
-	AiTargets.stop_tracking(event.entity)
-end
-
-local function on_player_mined_item(event)
-	maybe_set_game_start_tick(event)
-end
-
-local function on_pre_player_crafted_item(event)
-	maybe_set_game_start_tick(event)
-end
-
 local function on_robot_mined_entity(event)
 	AiTargets.stop_tracking(event.entity)
 end
@@ -496,9 +474,6 @@ Event.add(defines.events.on_gui_click, on_gui_click)
 Event.add(defines.events.on_marked_for_deconstruction, on_marked_for_deconstruction)
 Event.add(defines.events.on_player_built_tile, on_player_built_tile)
 Event.add(defines.events.on_player_joined_game, on_player_joined_game)
-Event.add(defines.events.on_player_mined_entity, on_player_mined_entity)
-Event.add(defines.events.on_player_mined_item, on_player_mined_item)
-Event.add(defines.events.on_pre_player_crafted_item, on_pre_player_crafted_item)
 Event.add(defines.events.on_robot_mined_entity, on_robot_mined_entity)
 Event.add(defines.events.on_research_finished, on_research_finished)
 Event.add(defines.events.on_robot_built_entity, on_robot_built_entity)
