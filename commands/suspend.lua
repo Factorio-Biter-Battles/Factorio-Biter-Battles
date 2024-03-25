@@ -32,7 +32,7 @@ local suspend_buttons_token = Token.register(
 
 local function leave_corpse(player)
 	if not player.character then return end
-	
+
 	local inventories = {
 		player.get_inventory(defines.inventory.character_main),
 		player.get_inventory(defines.inventory.character_guns),
@@ -41,7 +41,7 @@ local function leave_corpse(player)
 		player.get_inventory(defines.inventory.character_vehicle),
 		player.get_inventory(defines.inventory.character_trash),
 	}
-	
+
 	local corpse = false
 	for _, i in pairs(inventories) do
 		for index = 1, #i, 1 do
@@ -54,11 +54,11 @@ local function leave_corpse(player)
 			break
 		end
 	end
-	
-	if player.character then player.character.destroy() end	
+
+	if player.character then player.character.destroy() end
 	player.character = nil
 	player.set_controller({type=defines.controllers.god})
-	player.create_character()	
+	player.create_character()
 end
 
 local function punish_player(playerSuspended)
@@ -78,7 +78,7 @@ local suspend_token = Token.register(
 		Event.remove_removable(defines.events.on_player_joined_game, suspend_buttons_token)
 		-- remove existing buttons
 		for _, player in pairs(game.players) do
-			if player.gui.top["suspend_frame"] then 
+			if player.gui.top["suspend_frame"] then
 				player.gui.top["suspend_frame"].destroy()
 			end
 		end
@@ -184,7 +184,7 @@ end
 commands.add_command('suspend',
                      'Force a player to stay in spectator for 10 minutes : /suspend playerName',
                      function(cmd) suspend_player(cmd); end)
-					
+
 local function on_player_joined_game(event)
 	local player = game.players[event.player_index]
 	if global.suspended_players[player.name] and (game.ticks_played - global.suspended_players[player.name]) < global.suspended_time then
@@ -192,4 +192,4 @@ local function on_player_joined_game(event)
 	end
 end
 
-Event.add(defines.events.on_player_joined_game, on_player_joined_game)		 
+Event.add(defines.events.on_player_joined_game, on_player_joined_game)
