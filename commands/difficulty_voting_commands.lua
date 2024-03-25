@@ -13,7 +13,7 @@ local function revote()
             local tick = game.ticks_played
             global.difficulty_votes_timeout = tick + 10800
             global.difficulty_player_votes = {}
-            msg = player.name .. " opened difficulty voting. Voting enabled for 3 mins"
+            local msg = player.name .. " opened difficulty voting. Voting enabled for 3 mins"
             game.print(msg)
             Server.to_discord_embed(msg)
         end
@@ -29,7 +29,7 @@ local function close_difficulty_votes()
             return
         else
             global.difficulty_votes_timeout = game.ticks_played
-            msg = player.name .. " closed difficulty voting"
+            local msg = player.name .. " closed difficulty voting"
             game.print(msg)
             Server.to_discord_embed(msg)
         end
