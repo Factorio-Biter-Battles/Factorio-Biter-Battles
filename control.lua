@@ -43,7 +43,6 @@ function require(path)
     return loaded[path] or error('Can only require files at runtime that have been required in the control stage.', 2)
 end
 
-
 ---------------- Central Dispatch of Events ----------------
 local Event = require "utils.event"
 
@@ -53,13 +52,30 @@ local AiTargets = require "maps.biter_battles_v2.ai_targets"
 local Antigrief = require "antigrief"
 local ComfyPanelScore = require "comfy_panel.score"
 local Functions = require "maps.biter_battles_v2.functions"
+local ModulesCorpseMarkers = require 'modules.corpse_markers'
 local Terrain = require "maps.biter_battles_v2.terrain"
+local UtilsServer = require 'utils.server'
 
 Event.add(defines.events.on_player_created, function (event)
 	local player = game.players[event.player_index]
 	player.gui.top.style = "slot_table_spacing_horizontal_flow"
 	player.gui.left.style = "slot_table_spacing_vertical_flow"
 end)
+
+Event.add(
+	defines.events.on_player_died,
+	---@param event EventData.on_player_died
+	function(event)
+		local player = game.players[event.player_index]
+		if player.valid then
+			ComfyPanelScore.on_player_died(player)
+			UtilsServer.on_player_died(player, event.cause)
+			-- Reading will always give a LuaForce
+			-- https://lua-api.factorio.com/latest/classes/LuaControl.html#force
+			ModulesCorpseMarkers.draw_map_tag(player.surface, player.force, player.position)
+		end
+	end
+)
 
 Event.add(defines.events.on_player_mined_entity, function (event)
 	Functions.maybe_set_game_start_tick(event)

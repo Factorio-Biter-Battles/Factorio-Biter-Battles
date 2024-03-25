@@ -428,8 +428,8 @@ local function on_entity_died(event)
     end
 end
 
-local function on_player_died(event)
-    local player = game.players[event.player_index]
+---@param player LuaPlayer
+function Public.on_player_died(player)
     Public.init_player_table(player)
     local score = this.score_table[player.force.name].players[player.name]
     score.deaths = 1 + (score.deaths or 0)
@@ -462,7 +462,6 @@ end
 
 comfy_panel_tabs['Scoreboard'] = {gui = show_score, admin = false}
 
-Event.add(defines.events.on_player_died, on_player_died)
 Event.add(defines.events.on_built_entity, on_built_entity)
 Event.add(defines.events.on_entity_died, on_entity_died)
 Event.add(defines.events.on_gui_click, on_gui_click)

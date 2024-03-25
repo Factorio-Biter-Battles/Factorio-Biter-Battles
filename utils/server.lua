@@ -873,35 +873,27 @@ Event.add(
     end
 )
 
-Event.add(
-    defines.events.on_player_died,
-    function(event)
-        local player = game.get_player(event.player_index)
 
-        if not player or not player.valid then
-            return
-        end
+---@param player LuaPlayer
+---@param cause LuaEntity
+function Public.on_player_died(player, cause)
+	local message = {discord_bold_tag, player.name}
+	if cause and cause.valid then
+		message[#message + 1] = ' was killed by '
 
-        local cause = event.cause
+		local name = cause.name
+		if name == 'character' and cause.player then
+			name = cause.player.name
+		end
 
-        local message = {discord_bold_tag, player.name}
-        if cause and cause.valid then
-            message[#message + 1] = ' was killed by '
+		message[#message + 1] = name
+		message[#message + 1] = '.'
+	else
+		message[#message + 1] = ' has died.'
+	end
 
-            local name = cause.name
-            if name == 'character' and cause.player then
-                name = cause.player.name
-            end
-
-            message[#message + 1] = name
-            message[#message + 1] = '.'
-        else
-            message[#message + 1] = ' has died.'
-        end
-
-        message = concat(message)
-        raw_print(message)
-    end
-)
+	local str_message = concat(message)
+	raw_print(str_message)
+end
 
 return Public
