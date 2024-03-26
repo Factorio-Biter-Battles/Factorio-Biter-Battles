@@ -25,27 +25,28 @@ local function get_actor(event, prefix, msg, admins_only)
     end
 end
 
-local function spaghett_deny_building(event)
+---@param entity LuaEntity
+---@param player LuaPlayer|nil
+---@param robot LuaEntity|nil
+function Public.spaghett_deny_building(entity, player, robot)
     local spaghett = global.comfy_panel_config.spaghett
     if not spaghett.enabled then
         return
     end
-    local entity = event.created_entity
-    if not entity.valid then
-        return
-    end
-    if not spaghett_entity_blacklist[event.created_entity.name] then
+    if not spaghett_entity_blacklist[entity.name] then
         return
     end
 
-    if event.player_index then
-        game.players[event.player_index].insert({name = entity.name, count = 1})
-    else
-        local inventory = event.robot.get_inventory(defines.inventory.robot_cargo)
-        inventory.insert({name = entity.name, count = 1})
+    if player then
+        player.insert({name = entity.name, count = 1})
+    elseif robot then
+		local inv = robot.get_inventory(defines.inventory.robot_cargo)
+		if inv then
+			inv.insert({name = entity.name, count = 1})
+		end
     end
 
-    event.created_entity.surface.create_entity(
+    entity.surface.create_entity(
         {
             name = 'flying-text',
             position = entity.position,
@@ -681,11 +682,7 @@ local function on_gui_switch_state_changed(event)
 end
 
 local function on_built_entity(event)
-    spaghett_deny_building(event)
-end
-
-local function on_robot_built_entity(event)
-    spaghett_deny_building(event)
+    Public.spaghett_deny_building(event)
 end
 
 local function on_init()
@@ -702,5 +699,4 @@ local Event = require 'utils.event'
 Event.on_init(on_init)
 Event.add(defines.events.on_gui_switch_state_changed, on_gui_switch_state_changed)
 Event.add(defines.events.on_built_entity, on_built_entity)
-Event.add(defines.events.on_robot_built_entity, on_robot_built_entity)
 return Public

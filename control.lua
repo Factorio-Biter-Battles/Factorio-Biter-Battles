@@ -151,6 +151,21 @@ Event.add(defines.events.on_pre_player_crafted_item, function (event)
 	Functions.maybe_set_game_start_tick(event)
 end)
 
+Event.add(
+	defines.events.on_robot_built_entity,
+	---@param event EventData.on_robot_built_entity
+	function (event)
+		local created_entity = event.created_entity
+		if created_entity.valid then
+			local robot = event.robot
+			ComfyPanelConfig.spaghett_deny_building(created_entity, nil, robot)
+			Functions.no_turret_creep(created_entity, robot.surface, nil, robot)
+			Terrain.deny_construction_bots(created_entity, robot)
+			AiTargets.start_tracking(created_entity)
+		end
+	end
+)
+
 Event.add(defines.events.on_tick,
 	---@param event EventData.on_tick
 	function (event)

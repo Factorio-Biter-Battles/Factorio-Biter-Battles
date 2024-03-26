@@ -150,12 +150,6 @@ local function on_built_entity(event)
 	AiTargets.start_tracking(event.created_entity)
 end
 
-local function on_robot_built_entity(event)
-	Functions.no_turret_creep(event)
-	Terrain.deny_construction_bots(event)
-	AiTargets.start_tracking(event.created_entity)
-end
-
 local function on_robot_built_tile(event)
 	Terrain.deny_bot_landfill(event)
 end
@@ -477,7 +471,6 @@ Event.add(defines.events.on_player_built_tile, on_player_built_tile)
 Event.add(defines.events.on_player_joined_game, on_player_joined_game)
 Event.add(defines.events.on_robot_mined_entity, on_robot_mined_entity)
 Event.add(defines.events.on_research_finished, on_research_finished)
-Event.add(defines.events.on_robot_built_entity, on_robot_built_entity)
 Event.add(defines.events.on_robot_built_tile, on_robot_built_tile)
 Event.on_init(on_init)
 

@@ -743,14 +743,18 @@ local robot_build_restriction = {
 	end
 }
 
-function Public.deny_construction_bots(event)
-	if not robot_build_restriction[event.robot.force.name] then return end
-	if not robot_build_restriction[event.robot.force.name](event.created_entity.position.y) then return end
-	local inventory = event.robot.get_inventory(defines.inventory.robot_cargo)
-	inventory.insert({name = event.created_entity.name, count = 1})
-	event.robot.surface.create_entity({name = "explosion", position = event.created_entity.position})
-	game.print("Team " .. event.robot.force.name .. "'s construction drone had an accident.", {r = 200, g = 50, b = 100})
-	event.created_entity.destroy()
+---@param entity LuaEntity
+---@param robot LuaEntity
+function Public.deny_construction_bots(entity, robot)
+	if not robot_build_restriction[robot.force.name] then return end
+	if not robot_build_restriction[robot.force.name](entity.position.y) then return end
+	local inventory = robot.get_inventory(defines.inventory.robot_cargo)
+	if inventory then
+		inventory.insert({name = entity.name, count = 1})
+	end
+	robot.surface.create_entity({name = "explosion", position = entity.position})
+	game.print("Team " .. robot.force.name .. "'s construction drone had an accident.", {r = 200, g = 50, b = 100})
+	entity.destroy()
 end
 
 function Public.deny_enemy_side_ghosts(event)
