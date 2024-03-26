@@ -52,12 +52,26 @@ local AiTargets = require "maps.biter_battles_v2.ai_targets"
 local Antigrief = require "antigrief"
 local ComfyPanelScore = require "comfy_panel.score"
 local Functions = require "maps.biter_battles_v2.functions"
+local FunctionsBossUnit = require "functions.boss_unit"
 local MapsBiterBattlesV2Main = require 'maps.biter_battles_v2.main'
 local ModulesCorpseMarkers = require 'modules.corpse_markers'
 local Terrain = require "maps.biter_battles_v2.terrain"
 local UtilsFreeplay = require 'utils.freeplay'
 local UtilsServer = require 'utils.server'
 local UtilsTask = require 'utils.task'
+
+Event.add(
+	defines.events.on_entity_damaged,
+	---@param event EventData.on_entity_damaged
+	function (event)
+		FunctionsBossUnit.on_entity_damaged(event)
+	end
+)
+
+Event.add_event_filter(
+	defines.events.on_entity_damaged,
+	{filter = "type", type = "unit"}
+)
 
 Event.add(defines.events.on_player_created, function (event)
 	local player = game.players[event.player_index]

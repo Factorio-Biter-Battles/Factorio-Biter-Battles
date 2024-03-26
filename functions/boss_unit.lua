@@ -29,7 +29,7 @@ function Public.add_boss_unit(entity, health_factor, size)
 end
 
 ---@param event EventData.on_entity_damaged
-local function on_entity_damaged(event)
+function Public.on_entity_damaged(event)
 	local entity = event.entity
 	local boss = global.boss_units[entity.unit_number]
 	if not boss then return end
@@ -56,10 +56,5 @@ end
 
 local event = require 'utils.event'
 event.on_init(on_init)
-event.add(defines.events.on_entity_damaged, on_entity_damaged)
-event.add_event_filter(defines.events.on_entity_damaged, {
-	filter = "type",
-	type = "unit",
-})
 
 return Public

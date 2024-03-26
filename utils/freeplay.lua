@@ -18,7 +18,7 @@ Global.register(
     end
 )
 
-Public = {}
+local Public = {}
 
 local function is_game_modded()
     local i = 0
