@@ -27,6 +27,8 @@ require "maps.biter_battles_v2.changelog_tab"
 require 'maps.biter_battles_v2.commands'
 require "modules.spawners_contain_biters"
 
+Public = {}
+
 local function on_player_joined_game(event)
 	local surface = game.surfaces[global.bb_surface_name]
 	local player = game.players[event.player_index]
@@ -240,9 +242,8 @@ local tick_minute_functions = {
 	[300 * 4 + 30 * 1] = anti_afk_system,
 }
 
-local function on_tick()
-	local tick = game.tick
-
+---@param tick int
+function Public.on_tick(tick)
 	if tick % 60 == 0 then 
 		global.bb_threat["north_biters"] = global.bb_threat["north_biters"] + global.bb_threat_income["north_biters"]
 		global.bb_threat["south_biters"] = global.bb_threat["south_biters"] + global.bb_threat_income["south_biters"]
@@ -478,10 +479,11 @@ Event.add(defines.events.on_robot_mined_entity, on_robot_mined_entity)
 Event.add(defines.events.on_research_finished, on_research_finished)
 Event.add(defines.events.on_robot_built_entity, on_robot_built_entity)
 Event.add(defines.events.on_robot_built_tile, on_robot_built_tile)
-Event.add(defines.events.on_tick, on_tick)
 Event.on_init(on_init)
 
 commands.add_command('clear-corpses', 'Clears all the biter corpses..',
 		     clear_corpses)
 
 require "maps.biter_battles_v2.spec_spy"
+
+return Public

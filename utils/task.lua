@@ -61,9 +61,8 @@ local function get_task_per_tick(tick)
     return primitives.task_per_tick
 end
 
-local function on_tick()
-    local tick = game.tick
-
+---@param tick int
+function Task.on_tick(tick)
     for i = 1, get_task_per_tick(tick) do
         local task = Queue_peek(task_queue)
         if task ~= nil then
@@ -84,11 +83,7 @@ local function on_tick()
     while callback ~= nil and tick >= callback.time do
         local success, result = pcall(Token_get(callback.func_token), callback.params)
         if not success then
-            if _DEBUG then
-                error(result)
-            else
-                log(result)
-            end
+            log(result)
         end
         PriorityQueue_pop(callbacks)
         callback = PriorityQueue_peek(callbacks)
@@ -156,7 +151,5 @@ end
 function Task.get_task_queue()
     return task_queue
 end
-
-Event.add(defines.events.on_tick, on_tick)
 
 return Task
