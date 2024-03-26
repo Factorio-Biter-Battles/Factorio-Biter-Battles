@@ -6,8 +6,8 @@ local this = {muted = {}}
 
 Global.register(this, function(t) this = t end)
 
-function Public.is_muted(player_name) 
-	return this.muted[player_name] == true 
+function Public.is_muted(player_name)
+	return this.muted[player_name] == true
 end
 
 function Public.print_muted_message(player)
@@ -17,28 +17,20 @@ function Public.print_muted_message(player)
         Color.warning)
 end
 
-local function on_player_muted(event)
-    if event.player_index then
-        local player = game.get_player(event.player_index)
-        this.muted[player.name] = true
-        local message = "[MUTED] " .. player.name .. " has been muted" 
-        game.print(message, Color.white)
-        Server.to_discord_embed(message)
-    end
+---@param player LuaPlayer
+function Public.on_player_muted(player)
+	this.muted[player.name] = true
+	local message = "[MUTED] " .. player.name .. " has been muted"
+	game.print(message, Color.white)
+	Server.to_discord_embed(message)
 end
 
-local function on_player_unmuted(event)
-    if event.player_index then
-        local player = game.get_player(event.player_index)
-        this.muted[player.name] = nil
-        local message = "[UNMUTED] " .. player.name .. " has been unmuted" 
-        game.print(message, Color.white)
-        Server.to_discord_embed(message)
-    end
-
+---@param player LuaPlayer
+function Public.on_player_unmuted(player)
+	this.muted[player.name] = nil
+	local message = "[UNMUTED] " .. player.name .. " has been unmuted"
+	game.print(message, Color.white)
+	Server.to_discord_embed(message)
 end
-local Event = require 'utils.event'
-Event.add(defines.events.on_player_muted, on_player_muted)
-Event.add(defines.events.on_player_unmuted, on_player_unmuted)
 
 return Public

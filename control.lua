@@ -60,6 +60,7 @@ local MapsBiterBattlesV2DifficultyVote = require 'maps.biter_battles_v2.difficul
 local ModulesCorpseMarkers = require 'modules.corpse_markers'
 local Terrain = require "maps.biter_battles_v2.terrain"
 local UtilsFreeplay = require 'utils.freeplay'
+local UtilsMuted = require 'utils.muted'
 local UtilsServer = require 'utils.server'
 local UtilsTask = require 'utils.task'
 
@@ -140,10 +141,32 @@ Event.add(defines.events.on_player_mined_item, function (event)
 	Functions.maybe_set_game_start_tick(event)
 end)
 
+Event.add(
+	defines.events.on_player_muted,
+	---@param event EventData.on_player_muted
+	function (event)
+		local player = game.get_player(event.player_index)
+		if player then
+			UtilsMuted.on_player_muted(player)
+		end
+	end
+)
+
 Event.add(defines.events.on_player_respawned,
 	---@param event EventData.on_player_respawned
 	function (event)
 		UtilsFreeplay.on_player_respawned(event)
+	end
+)
+
+Event.add(
+	defines.events.on_player_unmuted,
+	---@param event EventData.on_player_unmuted
+	function (event)
+		local player = game.get_player(event.player_index)
+		if player then
+			UtilsMuted.on_player_unmuted(player)
+		end
 	end
 )
 
