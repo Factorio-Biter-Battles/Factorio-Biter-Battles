@@ -5,6 +5,8 @@ local Color = require 'utils.color_presets'
 local SessionData = require 'utils.datastore.session_data'
 local Utils = require 'utils.core'
 
+local Public = {}
+
 local spaghett_entity_blacklist = {
     ['logistic-chest-requester'] = true,
     ['logistic-chest-buffer'] = true,
@@ -55,12 +57,12 @@ local function spaghett_deny_building(event)
     entity.destroy()
 end
 
-local function spaghett()
-    local spaghett = global.comfy_panel_config.spaghett
-    if spaghett.enabled then
+function Public.spaghett()
+    local g_spaghett = global.comfy_panel_config.spaghett
+    if g_spaghett.enabled then
         for _, f in pairs(game.forces) do
             if f.technologies['logistic-system'].researched then
-                spaghett.undo[f.index] = true
+                g_spaghett.undo[f.index] = true
             end
             f.technologies['logistic-system'].enabled = false
             f.technologies['logistic-system'].researched = false
@@ -68,9 +70,9 @@ local function spaghett()
     else
         for _, f in pairs(game.forces) do
             f.technologies['logistic-system'].enabled = true
-            if spaghett.undo[f.index] then
+            if g_spaghett.undo[f.index] then
                 f.technologies['logistic-system'].researched = true
-                spaghett.undo[f.index] = nil
+                g_spaghett.undo[f.index] = nil
             end
         end
     end
@@ -678,10 +680,6 @@ local function on_gui_switch_state_changed(event)
     end
 end
 
-local function on_force_created()
-    spaghett()
-end
-
 local function on_built_entity(event)
     spaghett_deny_building(event)
 end
@@ -703,6 +701,6 @@ comfy_panel_tabs['Config'] = {gui = build_config_gui, admin = false}
 local Event = require 'utils.event'
 Event.on_init(on_init)
 Event.add(defines.events.on_gui_switch_state_changed, on_gui_switch_state_changed)
-Event.add(defines.events.on_force_created, on_force_created)
 Event.add(defines.events.on_built_entity, on_built_entity)
 Event.add(defines.events.on_robot_built_entity, on_robot_built_entity)
+return Public

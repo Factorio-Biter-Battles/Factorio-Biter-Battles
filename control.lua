@@ -50,6 +50,7 @@ local Event = require "utils.event"
 
 local AiTargets = require "maps.biter_battles_v2.ai_targets"
 local Antigrief = require "antigrief"
+local ComfyPanelConfig = require "comfy_panel.config"
 local ComfyPanelScore = require "comfy_panel.score"
 local Functions = require "maps.biter_battles_v2.functions"
 local FunctionsBossUnit = require "functions.boss_unit"
@@ -71,6 +72,14 @@ Event.add(
 Event.add_event_filter(
 	defines.events.on_entity_damaged,
 	{filter = "type", type = "unit"}
+)
+
+Event.add(
+	defines.events.on_force_created,
+	---@param event EventData.on_force_created
+	function (event)
+		ComfyPanelConfig.spaghett()
+	end
 )
 
 Event.add(defines.events.on_player_created, function (event)
