@@ -57,6 +57,7 @@ local Functions = require "maps.biter_battles_v2.functions"
 local FunctionsBossUnit = require "functions.boss_unit"
 local MapsBiterBattlesV2AiStrikes = require "maps.biter_battles_v2.ai_strikes"
 local MapsBiterBattlesV2Main = require 'maps.biter_battles_v2.main'
+local MapsBiterBattlesV2MirrorTerrain = require "maps.biter_battles_v2.mirror_terrain"
 local MapsBiterBattlesV2DifficultyVote = require 'maps.biter_battles_v2.difficulty_vote'
 local ModulesCorpseMarkers = require 'modules.corpse_markers'
 local Terrain = require "maps.biter_battles_v2.terrain"
@@ -71,6 +72,30 @@ Event.add(
 	function (event)
 		if not event.was_distracted then
 			MapsBiterBattlesV2AiStrikes.step(event.unit_number, event.result)
+		end
+	end
+)
+
+Event.add(
+	defines.events.on_area_cloned,
+	---@param event EventData.on_area_cloned
+	function (event)
+		local surface = event.destination_surface
+
+		-- Check if we're out of init and not between surface hot-swap.
+		if not surface or not surface.valid then return end
+
+		-- Event is fired only for south side.
+		MapsBiterBattlesV2MirrorTerrain.invert_tiles(event)
+		MapsBiterBattlesV2MirrorTerrain.invert_decoratives(event)
+
+		-- Check chunks around southern silo to remove water tiles under refined-concrete.
+		-- Silo can be removed by picking bricks from under it in a situation where
+		-- refined-concrete tiles were placed directly onto water tiles. This scenario does
+		-- not appear for north as water is removed during silo generation.
+		local position = event.destination_area.left_top
+		if position.y >= 0 and position.y <= 192 and math.abs(position.x) <= 192 then
+			MapsBiterBattlesV2MirrorTerrain.remove_hidden_tiles(event)
 		end
 	end
 )

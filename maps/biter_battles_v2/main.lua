@@ -354,26 +354,6 @@ local function on_entity_cloned(event)
 	Mirror_terrain.invert_entity(event)
 end
 
-local function on_area_cloned(event)
-	local surface = event.destination_surface
-
-	-- Check if we're out of init and not between surface hot-swap.
-	if not surface or not surface.valid then return end
-
-	-- Event is fired only for south side.
-	Mirror_terrain.invert_tiles(event)
-	Mirror_terrain.invert_decoratives(event)
-
-	-- Check chunks around southen silo to remove water tiles under refined-concrete.
-	-- Silo can be removed by picking bricks from under it in a situation where
-	-- refined-concrete tiles were placed directly onto water tiles. This scenario does
-	-- not appear for north as water is removed during silo generation.
-	local position = event.destination_area.left_top
-	if position.y >= 0 and position.y <= 192 and math.abs(position.x) <= 192 then
-		Mirror_terrain.remove_hidden_tiles(event)
-	end
-end
-
 local function on_rocket_launch_ordered(event)
 	local vehicles = {
 		["car"] = true,
@@ -447,7 +427,6 @@ end
 
 local Event = require 'utils.event'
 Event.add(defines.events.on_rocket_launch_ordered, on_rocket_launch_ordered)
-Event.add(defines.events.on_area_cloned, on_area_cloned)
 Event.add(defines.events.on_post_entity_died, Ai.schedule_reanimate)
 Event.add_event_filter(defines.events.on_post_entity_died, {
 	filter = "type",
