@@ -52,9 +52,12 @@ local AiTargets = require "maps.biter_battles_v2.ai_targets"
 local Antigrief = require "antigrief"
 local ComfyPanelScore = require "comfy_panel.score"
 local Functions = require "maps.biter_battles_v2.functions"
+local MapsBiterBattlesV2Main = require 'main.biter_battles_v2.main'
 local ModulesCorpseMarkers = require 'modules.corpse_markers'
 local Terrain = require "maps.biter_battles_v2.terrain"
+local UtilsProfiler = require 'utils.profiler'
 local UtilsServer = require 'utils.server'
+local UtilsTask = require 'utils.task'
 
 Event.add(defines.events.on_player_created, function (event)
 	local player = game.players[event.player_index]
@@ -102,3 +105,13 @@ end)
 Event.add(defines.events.on_pre_player_crafted_item, function (event)
 	Functions.maybe_set_game_start_tick(event)
 end)
+
+Event.add(defines.events.on_tick,
+	---@param event EventData.on_tick
+	function (event)
+		local tick = event.tick
+		UtilsProfiler.on_tick(tick)
+		UtilsTask.on_tick(tick)
+		MapsBiterBattlesV2Main.on_tick(tick)
+	end
+)
