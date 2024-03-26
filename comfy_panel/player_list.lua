@@ -636,7 +636,7 @@ local function on_gui_click(event)
     end
 end
 
-local function refresh()
+function Public.refresh()
     for _, player in pairs(game.connected_players) do
         local frame = Tabs.comfy_panel_get_active_frame(player)
         if frame then
@@ -674,7 +674,6 @@ end
 comfy_panel_tabs['Players'] = {gui = player_list_show, admin = false}
 
 Event.add(defines.events.on_player_joined_game, on_player_joined_game)
-Event.add(defines.events.on_player_left_game, on_player_left_game)
 Event.add(defines.events.on_gui_click, on_gui_click)
 
 return Public

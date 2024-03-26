@@ -826,17 +826,11 @@ Event.add(
     end
 )
 
-Event.add(
-    defines.events.on_player_left_game,
-    function(event)
-        local player = Game.get_player_by_index(event.player_index)
-        if not player or not player.valid then
-            return
-        end
-
-        raw_print(player_leave_tag .. player.name)
-    end
-)
+---@param player LuaPlayer
+function Public.on_player_left_game(player)
+	raw_print(player_leave_tag .. player.name)
+	Public.upload_time_played(player)
+end
 
 Event.add(
     defines.events.on_console_command,

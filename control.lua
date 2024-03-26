@@ -51,10 +51,12 @@ local Event = require "utils.event"
 local AiTargets = require "maps.biter_battles_v2.ai_targets"
 local Antigrief = require "antigrief"
 local ComfyPanelConfig = require "comfy_panel.config"
+local ComfyPanelPlayerList = require "comfy_panel.player_list"
 local ComfyPanelScore = require "comfy_panel.score"
 local Functions = require "maps.biter_battles_v2.functions"
 local FunctionsBossUnit = require "functions.boss_unit"
 local MapsBiterBattlesV2Main = require 'maps.biter_battles_v2.main'
+local MapsBiterBattlesV2DifficultyVote = require 'maps.biter_battles_v2.difficulty_vote'
 local ModulesCorpseMarkers = require 'modules.corpse_markers'
 local Terrain = require "maps.biter_battles_v2.terrain"
 local UtilsFreeplay = require 'utils.freeplay'
@@ -99,6 +101,19 @@ Event.add(
 			-- Reading will always give a LuaForce
 			-- https://lua-api.factorio.com/latest/classes/LuaControl.html#force
 			ModulesCorpseMarkers.draw_map_tag(player.surface, player.force, player.position)
+		end
+	end
+)
+
+Event.add(
+	defines.events.on_player_left_game,
+	---@param event EventData.on_player_left_game
+	function (event)
+		ComfyPanelPlayerList.refresh()
+		local player = game.get_player(event.player_index)
+		if player and player.valid then
+			UtilsServer.on_player_left_game(player)
+			MapsBiterBattlesV2DifficultyVote.on_player_left_game(player)
 		end
 	end
 )

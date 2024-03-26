@@ -5,6 +5,8 @@ local Server = require 'utils.server'
 local Tables = require "maps.biter_battles_v2.tables"
 local gui_style = require 'utils.utils'.gui_style
 
+local Public = {}
+
 local difficulties = Tables.difficulties
 
 local function difficulty_gui(player)
@@ -118,9 +120,9 @@ local function on_player_joined_game(event)
 	difficulty_gui_all()
 end
 
-local function on_player_left_game(event)
+---@param player LuaPlayer
+function Public.on_player_left_game(player)
 	if game.ticks_played > global.difficulty_votes_timeout then return end
-	local player = game.players[event.player_index]
 	if not global.difficulty_player_votes[player.name] then return end
 	global.difficulty_player_votes[player.name] = nil
 	set_difficulty()
@@ -201,10 +203,8 @@ local function on_gui_click(event)
 end
 	
 event.add(defines.events.on_gui_click, on_gui_click)
-event.add(defines.events.on_player_left_game, on_player_left_game)
 event.add(defines.events.on_player_joined_game, on_player_joined_game)
 
-local Public = {}
 Public.difficulties = difficulties
 Public.difficulty_gui = difficulty_gui
 Public.difficulty_gui_all = difficulty_gui_all
