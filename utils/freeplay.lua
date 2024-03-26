@@ -18,6 +18,8 @@ Global.register(
     end
 )
 
+Public = {}
+
 local function is_game_modded()
     local i = 0
     for k, _ in pairs(game.active_mods) do
@@ -104,7 +106,7 @@ local on_player_created = function(event)
     end
 end
 
-local on_player_respawned = function(event)
+function Public.on_player_respawned(event)
     if not this.modded then
         return
     end
@@ -226,7 +228,6 @@ Event.on_configuration_changed = function()
 end
 
 Event.add(defines.events.on_player_created, on_player_created)
-Event.add(defines.events.on_player_respawned, on_player_respawned)
 Event.add(defines.events.on_cutscene_waypoint_reached, on_cutscene_waypoint_reached)
 Event.add('crash-site-skip-cutscene', skip_crash_site_cutscene)
 Event.add(defines.events.on_cutscene_cancelled, on_cutscene_cancelled)
