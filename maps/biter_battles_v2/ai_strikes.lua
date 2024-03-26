@@ -172,6 +172,8 @@ function Public.initiate(unit_group, target_force_name, strike_position, target_
     global.ai_strikes[unit_group.group_number] = strike_info
 end
 
+---@param group_number int
+---@param result defines.behavior_result
 function Public.step(group_number, result)
     local strike = global.ai_strikes[group_number]
     if strike ~= nil then

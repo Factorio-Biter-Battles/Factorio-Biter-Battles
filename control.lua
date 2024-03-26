@@ -55,6 +55,7 @@ local ComfyPanelPlayerList = require "comfy_panel.player_list"
 local ComfyPanelScore = require "comfy_panel.score"
 local Functions = require "maps.biter_battles_v2.functions"
 local FunctionsBossUnit = require "functions.boss_unit"
+local MapsBiterBattlesV2AiStrikes = require "maps.biter_battles_v2.ai_strikes"
 local MapsBiterBattlesV2Main = require 'maps.biter_battles_v2.main'
 local MapsBiterBattlesV2DifficultyVote = require 'maps.biter_battles_v2.difficulty_vote'
 local ModulesCorpseMarkers = require 'modules.corpse_markers'
@@ -63,6 +64,16 @@ local UtilsFreeplay = require 'utils.freeplay'
 local UtilsMuted = require 'utils.muted'
 local UtilsServer = require 'utils.server'
 local UtilsTask = require 'utils.task'
+
+Event.add(
+	defines.events.on_ai_command_completed,
+	---@param event EventData.on_ai_command_completed
+	function (event)
+		if not event.was_distracted then
+			MapsBiterBattlesV2AiStrikes.step(event.unit_number, event.result)
+		end
+	end
+)
 
 Event.add(
 	defines.events.on_entity_damaged,
