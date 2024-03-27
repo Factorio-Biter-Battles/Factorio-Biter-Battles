@@ -186,6 +186,14 @@ Event.add(
 )
 
 Event.add(
+	defines.events.on_cutscene_waypoint_reached,
+	---@param event EventData.on_cutscene_waypoint_reached
+	function (event)
+		UtilsFreeplay.on_cutscene_waypoint_reached(event)
+	end
+)
+
+Event.add(
 	defines.events.on_entity_damaged,
 	---@param event EventData.on_entity_damaged
 	function (event)
