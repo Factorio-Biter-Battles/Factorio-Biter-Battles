@@ -178,6 +178,14 @@ Event.add(
 )
 
 Event.add(
+	defines.events.on_cutscene_cancelled,
+	---@param event EventData.on_cutscene_cancelled
+	function (event)
+		UtilsFreeplay.on_cutscene_cancelled(event)
+	end
+)
+
+Event.add(
 	defines.events.on_entity_damaged,
 	---@param event EventData.on_entity_damaged
 	function (event)

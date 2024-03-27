@@ -10,7 +10,6 @@ local this = {
     crashed_ship_items = {},
     crashed_debris_items = {}
 }
-
 Global.register(
     this,
     function(t)
@@ -145,7 +144,7 @@ local skip_crash_site_cutscene = function(event)
     end
 end
 
-local on_cutscene_cancelled = function(event)
+function Public.on_cutscene_cancelled(event)
     if not this.modded then
         return
     end
@@ -230,4 +229,4 @@ end
 Event.add(defines.events.on_player_created, on_player_created)
 Event.add(defines.events.on_cutscene_waypoint_reached, on_cutscene_waypoint_reached)
 Event.add('crash-site-skip-cutscene', skip_crash_site_cutscene)
-Event.add(defines.events.on_cutscene_cancelled, on_cutscene_cancelled)
+return Public
