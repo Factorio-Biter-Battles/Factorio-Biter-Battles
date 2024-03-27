@@ -530,7 +530,8 @@ function Public.on_gui_click(event)
     create_mini_camera_gui(player, event.element.caption, position, surface)
 end
 
-local function on_gui_selection_state_changed(event)
+---@param event EventData.on_gui_selection_state_changed
+function Public.on_gui_selection_state_changed(event)
     local player = game.players[event.player_index]
     local name = event.element.name
     if name == 'admin_player_select' then
@@ -600,6 +601,4 @@ commands.add_command("punish", "Kill and ban a player. Usage: /punish <name> <re
 	end
 end)
 
-
-Event.add(defines.events.on_gui_selection_state_changed, on_gui_selection_state_changed)
 return Public

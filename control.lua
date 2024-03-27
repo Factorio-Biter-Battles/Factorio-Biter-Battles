@@ -61,26 +61,27 @@ local ComfyPanelSpecialGames = require "comfy_panel.special_games"
 local Functions = require "maps.biter_battles_v2.functions"
 local FunctionsBossUnit = require "functions.boss_unit"
 local MapsBiterBattlesV2AiStrikes = require "maps.biter_battles_v2.ai_strikes"
-local MapsBiterBattlesV2GameOver = require 'maps.biter_battles_v2.game_over'
-local MapsBiterBattlesV2Gui = require 'maps.biter_battles_v2.gui'
-local MapsBiterBattlesV2SpecSpy = require 'maps.biter_battles_v2.spec_spy'
-local MapsBiterBattlesV2Main = require 'maps.biter_battles_v2.main'
+local MapsBiterBattlesV2DifficultyVote = require "maps.biter_battles_v2.difficulty_vote"
+local MapsBiterBattlesV2GameOver = require "maps.biter_battles_v2.game_over"
+local MapsBiterBattlesV2Gui = require "maps.biter_battles_v2.gui"
+local MapsBiterBattlesV2Main = require "maps.biter_battles_v2.main"
 local MapsBiterBattlesV2MirrorTerrain = require "maps.biter_battles_v2.mirror_terrain"
-local MapsBiterBattlesV2DifficultyVote = require 'maps.biter_battles_v2.difficulty_vote'
-local ModulesCorpseMarkers = require 'modules.corpse_markers'
-local ModulesFloatyChat = require 'modules.floaty_chat'
-local ModulesMapInfo = require 'modules.map_info'
-local ModulesShowInventory = require 'modules.show_inventory'
-local ModulesSimpleTags = require 'modules.simple_tags'
-local ModulesSpawnersContainBiters = require 'modules.spawners_contain_biters'
+local MapsBiterBattlesV2SciencelogsTab = require "maps.biter_battles_v2.sciencelogs_tab"
+local MapsBiterBattlesV2SpecSpy = require "maps.biter_battles_v2.spec_spy"
+local ModulesCorpseMarkers = require "modules.corpse_markers"
+local ModulesFloatyChat = require "modules.floaty_chat"
+local ModulesMapInfo = require "modules.map_info"
+local ModulesShowInventory = require "modules.show_inventory"
+local ModulesSimpleTags = require "modules.simple_tags"
+local ModulesSpawnersContainBiters = require "modules.spawners_contain_biters"
 local Terrain = require "maps.biter_battles_v2.terrain"
-local UtilsDatastoreColorData = require 'utils.datastore.color_data'
-local UtilsDatastoreJailData = require 'utils.datastore.jail_data'
-local UtilsDatastoreSessionData = require 'utils.datastore.session_data'
-local UtilsFreeplay = require 'utils.freeplay'
-local UtilsMuted = require 'utils.muted'
-local UtilsServer = require 'utils.server'
-local UtilsTask = require 'utils.task'
+local UtilsDatastoreColorData = require "utils.datastore.color_data"
+local UtilsDatastoreJailData = require "utils.datastore.jail_data"
+local UtilsDatastoreSessionData = require "utils.datastore.session_data"
+local UtilsFreeplay = require "utils.freeplay"
+local UtilsMuted = require "utils.muted"
+local UtilsServer = require "utils.server"
+local UtilsTask = require "utils.task"
 
 Event.add(
 	defines.events.on_ai_command_completed,
@@ -306,6 +307,16 @@ Event.add(
 	---@param event EventData.on_gui_opened
 	function (event)
 		Antigrief.on_gui_opened(event)
+	end
+)
+
+Event.add(
+	defines.events.on_gui_selection_state_changed,
+	---@param event EventData.on_gui_selection_state_changed
+	function (event)
+		ComfyPanelAdmin.on_gui_selection_state_changed(event)
+		ComfyPanelHistories.on_gui_selection_state_changed(event)
+		MapsBiterBattlesV2SciencelogsTab.on_gui_selection_state_changed(event)
 	end
 )
 

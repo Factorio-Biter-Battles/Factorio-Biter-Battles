@@ -1,10 +1,7 @@
 -- science logs tab -- 
 
-local Tabs = require 'comfy_panel.main'
 local tables = require "maps.biter_battles_v2.tables"
 local Functions = require "maps.biter_battles_v2.functions"
-local event = require 'utils.event'
-local bb_config = require "maps.biter_battles_v2.config"
 local food_values = tables.food_values
 local food_long_and_short = tables.food_long_and_short
 local food_long_to_short = tables.food_long_to_short
@@ -12,6 +9,8 @@ local forces_list = tables.forces_list
 local science_list = tables.science_list
 local evofilter_list = tables.evofilter_list
 local food_value_table_version = tables.food_value_table_version
+
+local Public = {}
 
 local function initialize_dropdown_users_choice()
 		global.dropdown_users_choice_force = {}
@@ -192,12 +191,17 @@ local build_config_gui = (function (player, frame)
 end)
 
 
-local function on_gui_selection_state_changed(event)
-	local player = game.players[event.player_index]	
+---@param event EventData.on_gui_selection_state_changed
+function Public.on_gui_selection_state_changed(event)
+	local player = game.players[event.player_index]
 	if not event.element.valid then return end
 	local name = event.element.name
 	if global.dropdown_users_choice_force == nil then
 		initialize_dropdown_users_choice()
+	end
+	local frame_sciencelogs = comfy_panel_get_active_frame(player)
+	if not frame_sciencelogs then
+		return
 	end
 	if name == "dropdown-force" then
 		global.dropdown_users_choice_force[player.name] = event.element.selected_index
@@ -213,6 +217,5 @@ local function on_gui_selection_state_changed(event)
 	end
 end
 
-event.add(defines.events.on_gui_selection_state_changed, on_gui_selection_state_changed)
-
 comfy_panel_tabs["MutagenLog"] = {gui = build_config_gui, admin = false}
+return Public
