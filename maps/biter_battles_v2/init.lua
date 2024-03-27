@@ -276,8 +276,8 @@ function Public.tables()
 			["medium-spitter"] = true, ["medium-biter"] = true, ["big-spitter"] = true, ["big-biter"] = true, ["behemoth-spitter"] = true, ["behemoth-biter"] = true
 		}
 	}
-	global.difficulty_vote_value = 1
-	global.difficulty_vote_index = 4
+	global.difficulty_vote_value = 0.75
+	global.difficulty_vote_index = 3
 
 	global.difficulty_votes_timeout = 36000
 
