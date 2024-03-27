@@ -489,16 +489,14 @@ function Public.silo_death(event)
     end
 end
 
-local function chat_with_everyone(event)
+---@param player LuaPlayer
+---@param message string
+function Public.chat_with_everyone(player, message)
     if not global.server_restart_timer then return end
-    if not event.message then return end
-    if not event.player_index then return end
-    local player = game.get_player(event.player_index)
-    if not player or not player.valid then return end
     local enemy = Tables.enemy_team_of[player.force.name]
     if not enemy then return end
-    local message = player.name .."[auto-shout]: " .. event.message
-    game.forces[enemy].print(message, player.chat_color)
+    local out_message = player.name .."[auto-shout]: " .. message
+    game.forces[enemy].print(out_message, player.chat_color)
 end
 
 local function draw_reroll_gui(player)
@@ -614,5 +612,4 @@ function Public.generate_new_map()
     start_map_reroll()
 end
 
-Event.add(defines.events.on_console_chat, chat_with_everyone)
 return Public

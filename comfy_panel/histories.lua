@@ -13,6 +13,7 @@ local this = {
     sort_by = {},
 	selected_history_index = {}
 }
+local Public = {}
 
 Global.register(
     this,
@@ -269,13 +270,13 @@ local function on_gui_click(event)
 end
 
 
-local function on_console_chat(event)
-	if not event.player_index then return end
-	local player = game.get_player(event.player_index)
+---@param player LuaPlayer
+---@param message string
+function Public.on_console_chat(player, message)
 	if this.waiting_for_gps[player.name] then
 		local frame = get_active_frame(player)
 		if frame and frame.name == "Histories" then
-			this.filter_by_gps[player.name] = pos_from_gps(event.message)
+			this.filter_by_gps[player.name] = pos_from_gps(message)
 			frame.filter_table.gps.filter_by_gps.caption = "Filter by GPS"
 			draw_events(player, frame)
 		end
@@ -288,4 +289,5 @@ comfy_panel_tabs["Histories"] = {gui = create_histories_panel, admin = true}
 Event.add(defines.events.on_gui_selection_state_changed, on_gui_selection_state_changed)
 Event.add(defines.events.on_gui_text_changed, on_gui_text_changed)
 Event.add(defines.events.on_gui_click, on_gui_click)
-Event.add(defines.events.on_console_chat, on_console_chat)
+
+return Public

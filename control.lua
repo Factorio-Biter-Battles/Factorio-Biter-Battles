@@ -50,16 +50,20 @@ local Event = require "utils.event"
 
 local AiTargets = require "maps.biter_battles_v2.ai_targets"
 local Antigrief = require "antigrief"
+local Chatbot = require "chatbot"
 local ComfyPanelConfig = require "comfy_panel.config"
+local ComfyPanelHistories = require "comfy_panel.histories"
 local ComfyPanelPlayerList = require "comfy_panel.player_list"
 local ComfyPanelScore = require "comfy_panel.score"
 local Functions = require "maps.biter_battles_v2.functions"
 local FunctionsBossUnit = require "functions.boss_unit"
 local MapsBiterBattlesV2AiStrikes = require "maps.biter_battles_v2.ai_strikes"
+local MapsBiterBattlesV2GameOver = require 'maps.biter_battles_v2.game_over'
 local MapsBiterBattlesV2Main = require 'maps.biter_battles_v2.main'
 local MapsBiterBattlesV2MirrorTerrain = require "maps.biter_battles_v2.mirror_terrain"
 local MapsBiterBattlesV2DifficultyVote = require 'maps.biter_battles_v2.difficulty_vote'
 local ModulesCorpseMarkers = require 'modules.corpse_markers'
+local ModulesFloatyChat = require 'modules.floaty_chat'
 local Terrain = require "maps.biter_battles_v2.terrain"
 local UtilsDatastoreSessionData = require 'utils.datastore.session_data'
 local UtilsFreeplay = require 'utils.freeplay'
@@ -141,6 +145,21 @@ Event.add(
 	---@param event EventData.on_chunk_generated
 	function (event)
 		MapsBiterBattlesV2Main.on_chunk_generated(event)
+	end
+)
+Event.add(
+	defines.events.on_console_chat,
+	---@param event EventData.on_console_chat
+	function (event)
+		local player = game.players[event.player_index]
+		local message = event.message
+		if message and player and player.valid then
+			Chatbot.on_console_chat(player, message)
+			ComfyPanelHistories.on_console_chat(player, message)
+			MapsBiterBattlesV2GameOver.chat_with_everyone(player, message)
+			MapsBiterBattlesV2Main.on_console_chat(player, message)
+			ModulesFloatyChat.on_console_chat(player, message)
+		end
 	end
 )
 

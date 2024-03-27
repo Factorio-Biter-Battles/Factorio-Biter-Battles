@@ -65,10 +65,10 @@ local function on_research_finished(event)
 	game.forces.spectator.print(Functions.team_name_with_color(force.name) .. " completed research [technology=" .. event.research.name .. "]")
 end
 
-local function on_console_chat(event)
+---@param player LuaPlayer
+---@param message string
+function Public.on_console_chat(player, message)
 	--Share chat with spectator force
-	if not event.message or not event.player_index then return end
-	local player = game.players[event.player_index]
 	local player_name = player.name
 	local player_force_name = player.force.name
 	local tag = player.tag
@@ -81,7 +81,7 @@ local function on_console_chat(event)
 		mute_tag = "[muted] "
 	end
 
-	local msg = player_name .. tag .. " (" .. player_force_name .. "): ".. event.message
+	local msg = player_name .. tag .. " (" .. player_force_name .. "): ".. message
 	if not muted and (player_force_name == "north" or player_force_name == "south") then
 		Functions.print_message_to_players(game.forces.spectator.players,player_name,msg,color)
 	end
@@ -89,7 +89,7 @@ local function on_console_chat(event)
 	if global.tournament_mode and not player.admin then return end
 
 	--Skip messages that would spoil coordinates from spectators and don't send gps coord to discord
-	local a, b = string.find(event.message, "gps=", 1, false)
+	local a, b = string.find(message, "gps=", 1, false)
 	if a then return end
 
 	local discord_msg = ""
@@ -102,7 +102,7 @@ local function on_console_chat(event)
 		Functions.print_message_to_players(game.forces.south.players,player_name,msg,nil)
 	end
 
-	discord_msg = discord_msg .. player_name .. " (" .. player_force_name .. "): ".. event.message
+	discord_msg = discord_msg .. player_name .. " (" .. player_force_name .. "): ".. message
 	Server.to_discord_player_chat(discord_msg)
 end
 
@@ -425,7 +425,6 @@ Event.add_event_filter(defines.events.on_post_entity_died, {
 	type = "unit",
 })
 Event.add(defines.events.on_entity_cloned, on_entity_cloned)
-Event.add(defines.events.on_console_chat, on_console_chat)
 Event.add(defines.events.on_console_command, on_console_command)
 Event.add(defines.events.on_entity_died, on_entity_died)
 Event.add(defines.events.on_gui_click, on_gui_click)

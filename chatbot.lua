@@ -3,11 +3,12 @@ local session = require 'utils.datastore.session_data'
 local Timestamp = require 'utils.timestamp'
 local Server = require 'utils.server'
 local Color = require 'utils.color_presets'
-local Muted = require 'utils.muted'
 
 local font_color = Color.warning
 local font = 'default-game'
 local format = string.format
+
+local Public = {}
 
 local brain = {
     [1] = {'Our Discord server is at: https://discord.com/invite/hAYW3K7J2A'},
@@ -172,9 +173,9 @@ commands.add_command(
     end
 )
 
-local function process_bot_answers(event)
-    local player = game.players[event.player_index]
-    local message = event.message
+---@param player LuaPlayer
+---@param message string
+function Public.process_bot_answers(player, message)
     message = string.lower(message)
     for word in string.gmatch(message, '%g+') do
         if links[word] then
@@ -184,13 +185,6 @@ local function process_bot_answers(event)
             return
         end
     end
-end
-
-local function on_console_chat(event)
-    if not event.player_index then
-        return
-    end
-    process_bot_answers(event)
 end
 
 --share vision of silent-commands with other admins
@@ -257,5 +251,5 @@ local function on_console_command(event)
 end
 
 Event.add(defines.events.on_player_created, on_player_created)
-Event.add(defines.events.on_console_chat, on_console_chat)
 Event.add(defines.events.on_console_command, on_console_command)
+return Public
