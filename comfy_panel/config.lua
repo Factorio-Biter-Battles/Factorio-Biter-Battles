@@ -681,10 +681,6 @@ local function on_gui_switch_state_changed(event)
     end
 end
 
-local function on_built_entity(event)
-    Public.spaghett_deny_building(event)
-end
-
 local function on_init()
     global.comfy_panel_config = {}
     global.comfy_panel_config.spaghett = {}
@@ -698,5 +694,4 @@ comfy_panel_tabs['Config'] = {gui = build_config_gui, admin = false}
 local Event = require 'utils.event'
 Event.on_init(on_init)
 Event.add(defines.events.on_gui_switch_state_changed, on_gui_switch_state_changed)
-Event.add(defines.events.on_built_entity, on_built_entity)
 return Public

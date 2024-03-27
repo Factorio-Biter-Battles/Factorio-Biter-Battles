@@ -447,14 +447,12 @@ function Public.on_player_mined_entity(entity, player)
 	score.mined_entities = 1 + (score.mined_entities or 0)
 end
 
-local function on_built_entity(event)
-    if not event.created_entity.valid then
+---@param entity LuaEntity
+---@param player LuaPlayer
+function Public.on_built_entity(entity, player)
+    if building_and_mining_blacklist[entity.type] then
         return
     end
-    if building_and_mining_blacklist[event.created_entity.type] then
-        return
-    end
-    local player = game.players[event.player_index]
     Public.init_player_table(player)
     local score = this.score_table[player.force.name].players[player.name]
     score.built_entities = 1 + (score.built_entities or 0)
@@ -462,7 +460,6 @@ end
 
 comfy_panel_tabs['Scoreboard'] = {gui = show_score, admin = false}
 
-Event.add(defines.events.on_built_entity, on_built_entity)
 Event.add(defines.events.on_entity_died, on_entity_died)
 Event.add(defines.events.on_gui_click, on_gui_click)
 Event.add(defines.events.on_player_joined_game, on_player_joined_game)

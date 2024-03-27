@@ -61,6 +61,7 @@ local MapsBiterBattlesV2MirrorTerrain = require "maps.biter_battles_v2.mirror_te
 local MapsBiterBattlesV2DifficultyVote = require 'maps.biter_battles_v2.difficulty_vote'
 local ModulesCorpseMarkers = require 'modules.corpse_markers'
 local Terrain = require "maps.biter_battles_v2.terrain"
+local UtilsDatastoreSessionData = require 'utils.datastore.session_data'
 local UtilsFreeplay = require 'utils.freeplay'
 local UtilsMuted = require 'utils.muted'
 local UtilsServer = require 'utils.server'
@@ -97,6 +98,33 @@ Event.add(
 		if position.y >= 0 and position.y <= 192 and math.abs(position.x) <= 192 then
 			MapsBiterBattlesV2MirrorTerrain.remove_hidden_tiles(event)
 		end
+	end
+)
+
+Event.add(
+	defines.events.on_built_entity,
+	---@param event EventData.on_built_entity
+	function (event)
+		local created_entity = event.created_entity
+		local player = game.players[event.player_index]
+		if not player then return end
+		if not created_entity.valid then return end
+		Antigrief.on_built_entity(created_entity, player)
+		if not created_entity.valid then return end
+		ComfyPanelScore.on_built_entity(created_entity, player)
+		if not created_entity.valid then return end
+		ComfyPanelConfig.spaghett_deny_building(created_entity, player, nil)
+		if not created_entity.valid then return end
+		Functions.maybe_set_game_start_tick(event)
+		if not created_entity.valid then return end
+		Functions.no_landfill_by_untrusted_user(event, UtilsDatastoreSessionData.get_trusted_table())
+		if not created_entity.valid then return end
+		Functions.no_turret_creep(created_entity, player.surface, player, nil)
+		if not created_entity.valid then return end
+		Terrain.deny_enemy_side_ghosts(event)
+		if not created_entity.valid then return end
+		-- Must be last
+		AiTargets.start_tracking(event.created_entity)
 	end
 )
 
@@ -220,6 +248,8 @@ Event.add(
 			ComfyPanelConfig.spaghett_deny_building(created_entity, nil, robot)
 			Functions.no_turret_creep(created_entity, robot.surface, nil, robot)
 			Terrain.deny_construction_bots(created_entity, robot)
+		end
+		if created_entity.valid then
 			AiTargets.start_tracking(created_entity)
 		end
 	end

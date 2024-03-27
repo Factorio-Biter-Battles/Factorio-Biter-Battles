@@ -174,7 +174,7 @@ local size_of_spawn_positions = #spawn_positions
 
 local Public = {}
 
----@param event EventData.on_player_mined_entity|EventData.on_pre_player_crafted_item|EventData.on_player_mined_item
+---@param event EventData.on_player_mined_entity|EventData.on_pre_player_crafted_item|EventData.on_player_mined_item|EventData.on_built_entity
 function Public.maybe_set_game_start_tick(event)
 	if global.bb_game_start_tick then return end
 	if not event.player_index then return end

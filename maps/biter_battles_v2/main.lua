@@ -141,14 +141,6 @@ local function on_console_command(event)
 	end
 end
 
-local function on_built_entity(event)
-	maybe_set_game_start_tick(event)
-	Functions.no_landfill_by_untrusted_user(event, Session.get_trusted_table())
-	Functions.no_turret_creep(event)
-	Terrain.deny_enemy_side_ghosts(event)
-	AiTargets.start_tracking(event.created_entity)
-end
-
 local function on_robot_built_tile(event)
 	Terrain.deny_bot_landfill(event)
 end
@@ -433,7 +425,6 @@ Event.add_event_filter(defines.events.on_post_entity_died, {
 	type = "unit",
 })
 Event.add(defines.events.on_entity_cloned, on_entity_cloned)
-Event.add(defines.events.on_built_entity, on_built_entity)
 Event.add(defines.events.on_chunk_generated, on_chunk_generated)
 Event.add(defines.events.on_console_chat, on_console_chat)
 Event.add(defines.events.on_console_command, on_console_command)

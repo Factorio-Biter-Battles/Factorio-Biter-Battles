@@ -289,15 +289,15 @@ local function on_player_built_tile(event)
     this.histories.landfill[this.histories_idx.landfill] = data
 end
 
-local function on_built_entity(event)
+---@param entity LuaEntity
+---@param player LuaPlayer
+function Public.on_built_entity(entity, player)
     if not this.enabled then
         return
     end
     local tracker = session.get_session_table()
     local trusted = session.get_trusted_table()
-    if event.created_entity.type == 'entity-ghost' then
-        local player = game.get_player(event.player_index)
-
+    if entity.type == 'entity-ghost' then
         if player.admin then
             return
         end
@@ -311,7 +311,7 @@ local function on_built_entity(event)
         end
 
         if playtime < this.required_playtime then
-            event.created_entity.destroy()
+            entity.destroy()
             player.print('You have not grown accustomed to this technology yet.', {r = 0.22, g = 0.99, b = 0.99})
         end
     end
@@ -829,7 +829,6 @@ end
 
 Event.on_init(on_init)
 Event.add(de.on_entity_died, on_entity_died)
-Event.add(de.on_built_entity, on_built_entity)
 Event.add(de.on_gui_opened, on_gui_opened)
 Event.add(de.on_marked_for_deconstruction, on_marked_for_deconstruction)
 Event.add(de.on_player_ammo_inventory_changed, on_player_ammo_inventory_changed)
