@@ -146,7 +146,8 @@ local function on_robot_built_tile(event)
 	Terrain.deny_bot_landfill(event)
 end
 
-local function on_entity_died(event)
+---@param event EventData.on_entity_died
+function Public.on_entity_died(event)
 	local entity = event.entity
 	if not entity.valid then return end
 	if Ai.subtract_threat(entity) then Gui.refresh_threat() end
@@ -426,7 +427,6 @@ Event.add_event_filter(defines.events.on_post_entity_died, {
 	filter = "type",
 	type = "unit",
 })
-Event.add(defines.events.on_entity_died, on_entity_died)
 Event.add(defines.events.on_gui_click, on_gui_click)
 Event.add(defines.events.on_marked_for_deconstruction, on_marked_for_deconstruction)
 Event.add(defines.events.on_player_built_tile, on_player_built_tile)

@@ -64,6 +64,7 @@ local MapsBiterBattlesV2MirrorTerrain = require "maps.biter_battles_v2.mirror_te
 local MapsBiterBattlesV2DifficultyVote = require 'maps.biter_battles_v2.difficulty_vote'
 local ModulesCorpseMarkers = require 'modules.corpse_markers'
 local ModulesFloatyChat = require 'modules.floaty_chat'
+local ModulesSpawnersContainBiters = require 'modules.spawners_contain_biters'
 local Terrain = require "maps.biter_battles_v2.terrain"
 local UtilsDatastoreColorData = require 'utils.datastore.color_data'
 local UtilsDatastoreJailData = require 'utils.datastore.jail_data'
@@ -212,6 +213,17 @@ Event.add(
 Event.add_event_filter(
 	defines.events.on_entity_damaged,
 	{filter = "type", type = "unit"}
+)
+
+Event.add(
+	defines.events.on_entity_died,
+	---@param event EventData.on_entity_died
+	function (event)
+		Antigrief.on_entity_died(event)
+		MapsBiterBattlesV2Main.on_entity_died(event)
+		ModulesSpawnersContainBiters.on_entity_died(event)
+		ComfyPanelScore.on_entity_died(event)
+	end
 )
 
 Event.add(

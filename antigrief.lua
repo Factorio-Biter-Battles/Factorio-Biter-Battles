@@ -343,8 +343,8 @@ local function on_player_used_capsule(event)
     end
 end
 
---Friendly Fire History
-local function on_entity_died(event)
+---@param event EventData.on_entity_died
+function Public.on_entity_died(event)
     if not this.enabled then
         return
     end
@@ -358,7 +358,7 @@ local function on_entity_died(event)
         local data = {
             player_name = player.name,
             event = "destroyed " .. event.entity.name,
-            position = {x = math.floor(event.entity.position.x), y = math.floor(event.entity.position.y)},            
+            position = {x = math.floor(event.entity.position.x), y = math.floor(event.entity.position.y)},
             time = game.ticks_played,
             server_time = game.tick
         }
@@ -828,7 +828,6 @@ function Public.get(key)
 end
 
 Event.on_init(on_init)
-Event.add(de.on_entity_died, on_entity_died)
 Event.add(de.on_gui_opened, on_gui_opened)
 Event.add(de.on_marked_for_deconstruction, on_marked_for_deconstruction)
 Event.add(de.on_player_ammo_inventory_changed, on_player_ammo_inventory_changed)

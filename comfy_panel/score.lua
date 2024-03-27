@@ -385,7 +385,8 @@ local kill_causes = {
     ['fluid-wagon'] = train_type_cause
 }
 
-local function on_entity_died(event)
+---@param event EventData.on_entity_died
+function Public.on_entity_died(event)
     if not event.entity.valid then
         return
     end
@@ -460,7 +461,6 @@ end
 
 comfy_panel_tabs['Scoreboard'] = {gui = show_score, admin = false}
 
-Event.add(defines.events.on_entity_died, on_entity_died)
 Event.add(defines.events.on_gui_click, on_gui_click)
 Event.add(defines.events.on_player_joined_game, on_player_joined_game)
 Event.add(defines.events.on_rocket_launched, on_rocket_launched)
