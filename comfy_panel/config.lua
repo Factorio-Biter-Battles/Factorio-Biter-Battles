@@ -657,7 +657,8 @@ local build_config_gui = (function(player, frame)
     end
 end)
 
-local function on_gui_switch_state_changed(event)
+---@param event EventData.on_gui_switch_state_changed
+function Public.on_gui_switch_state_changed(event)
     if not event.element then
         return
     end
@@ -693,5 +694,4 @@ comfy_panel_tabs['Config'] = {gui = build_config_gui, admin = false}
 
 local Event = require 'utils.event'
 Event.on_init(on_init)
-Event.add(defines.events.on_gui_switch_state_changed, on_gui_switch_state_changed)
 return Public

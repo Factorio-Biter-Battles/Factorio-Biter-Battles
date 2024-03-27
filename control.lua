@@ -320,6 +320,14 @@ Event.add(
 	end
 )
 
+Event.add(
+	defines.events.on_gui_switch_state_changed,
+	---@param event EventData.on_gui_switch_state_changed
+	function (event)
+		ComfyPanelConfig.on_gui_selection_state_changed(event)
+	end
+)
+
 Event.add(defines.events.on_player_created, function (event)
 	local player = game.players[event.player_index]
 	player.gui.top.style = "slot_table_spacing_horizontal_flow"
