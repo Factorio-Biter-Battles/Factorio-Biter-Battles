@@ -6,6 +6,7 @@ local this = {
 }
 
 Global.register(this, function (t) this = t end)
+local Public = {}
 
 local function is_spying(player)
 	return this.initialForce[player.index] ~= nil
@@ -41,7 +42,8 @@ local function restore_force(player)
 end
 
 -- When a player clicks on a spying prod LuaGuiElement
-local function spy_prod_handler(event)
+---@param event EventData.on_gui_click
+function Public.spy_prod_handler(event)
 	if not event.element.valid then
 		return
 	end
@@ -57,7 +59,8 @@ local function spy_prod_handler(event)
 end
 
 -- When a player clicks on a spying tech LuaGuiElement
-local function spy_tech_handler(event)
+---@param event EventData.on_gui_click
+function Public.spy_tech_handler(event)
 	if not event.element.valid then
 		return
 	end
@@ -97,7 +100,6 @@ local function close_tech_handler(event)
 end
 
 local Event = require 'utils.event'
-Event.add(defines.events.on_gui_click, spy_prod_handler)
-Event.add(defines.events.on_gui_click, spy_tech_handler)
 Event.add(defines.events.on_gui_closed, close_prod_handler)
 Event.add(defines.events.on_gui_closed, close_tech_handler)
+return Public

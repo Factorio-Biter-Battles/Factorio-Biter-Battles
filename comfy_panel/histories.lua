@@ -232,7 +232,8 @@ local function on_gui_text_changed(event)
 	end
 end
 
-local function on_gui_click(event)
+---@param event EventData.on_gui_click
+function Public.on_gui_click(event)
 	local player = game.get_player(event.player_index)
 	local element = event.element
 	if element and element.valid then
@@ -288,6 +289,5 @@ comfy_panel_tabs["Histories"] = {gui = create_histories_panel, admin = true}
 
 Event.add(defines.events.on_gui_selection_state_changed, on_gui_selection_state_changed)
 Event.add(defines.events.on_gui_text_changed, on_gui_text_changed)
-Event.add(defines.events.on_gui_click, on_gui_click)
 
 return Public

@@ -3,7 +3,9 @@
 local Color = require 'utils.color_presets'
 local Event = require 'utils.event'
 
-local Public = {}
+local Public = {
+	WHERE_CAMERA_ELEMENT_NAME = 'where_camera'
+}
 
 local function validate_player(player)
     if not player then
@@ -25,16 +27,16 @@ local function validate_player(player)
 end
 
 local function create_mini_camera_gui(player, caption, position, surface)
-    if player.gui.center['where_camera'] then
-        player.gui.center['where_camera'].destroy()
+    if player.gui.center[Public.WHERE_CAMERA_ELEMENT_NAME] then
+        player.gui.center[Public.WHERE_CAMERA_ELEMENT_NAME].destroy()
     end
-    local frame = player.gui.center.add({type = 'frame', name = 'where_camera', caption = caption})
+    local frame = player.gui.center.add({type = 'frame', name = Public.WHERE_CAMERA_ELEMENT_NAME, caption = caption})
     surface = tonumber(surface)
     local camera =
         frame.add(
         {
             type = 'camera',
-            name = 'where_camera',
+            name = Public.WHERE_CAMERA_ELEMENT_NAME,
             position = position,
             zoom = 0.4,
             surface_index = surface
@@ -67,23 +69,6 @@ commands.add_command(
     end
 )
 
-local function on_gui_click(event)
-    local player = game.players[event.player_index]
-
-    if not (event.element and event.element.valid) then
-        return
-    end
-
-    local name = event.element.name
-
-    if name == 'where_camera' then
-        player.gui.center['where_camera'].destroy()
-        return
-    end
-end
-
 Public.create_mini_camera_gui = create_mini_camera_gui
-
-Event.add(defines.events.on_gui_click, on_gui_click)
 
 return Public

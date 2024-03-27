@@ -10,7 +10,7 @@ draw_map_scores would be a function with the player and the frame as arguments
 
 ]]
 require "utils.profiler"
-local event = require 'utils.event'
+local Event = require 'utils.event'
 local gui_style = require 'utils.utils'.gui_style
 comfy_panel_tabs = {}
 
@@ -130,7 +130,8 @@ local function on_player_joined_game(event)
     top_button(game.players[event.player_index])
 end
 
-local function on_gui_click(event)
+---@param event EventData.on_gui_click
+function Public.on_gui_click(event)
     if not event.element then
         return
     end
@@ -166,7 +167,6 @@ local function on_gui_click(event)
     Public.comfy_panel_refresh_active_tab(player)
 end
 
-event.add(defines.events.on_player_joined_game, on_player_joined_game)
-event.add(defines.events.on_gui_click, on_gui_click)
+Event.add(defines.events.on_player_joined_game, on_player_joined_game)
 
 return Public

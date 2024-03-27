@@ -26,7 +26,7 @@ require "maps.biter_battles_v2.changelog_tab"
 require 'maps.biter_battles_v2.commands'
 require "modules.spawners_contain_biters"
 
-Public = {}
+local Public = {}
 
 local function on_player_joined_game(event)
 	local surface = game.surfaces[global.bb_surface_name]
@@ -39,7 +39,8 @@ local function on_player_joined_game(event)
 	Team_manager.draw_top_toggle_button(player)
 end
 
-local function on_gui_click(event)
+---@param event EventData.on_gui_click
+function Public.on_gui_click(event)
 	local player = game.players[event.player_index]
 	local element = event.element
 	if not element then return end
@@ -427,7 +428,6 @@ Event.add_event_filter(defines.events.on_post_entity_died, {
 	filter = "type",
 	type = "unit",
 })
-Event.add(defines.events.on_gui_click, on_gui_click)
 Event.add(defines.events.on_marked_for_deconstruction, on_marked_for_deconstruction)
 Event.add(defines.events.on_player_built_tile, on_player_built_tile)
 Event.add(defines.events.on_player_joined_game, on_player_joined_game)

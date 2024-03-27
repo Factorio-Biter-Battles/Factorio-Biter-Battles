@@ -51,19 +51,27 @@ local Event = require "utils.event"
 local AiTargets = require "maps.biter_battles_v2.ai_targets"
 local Antigrief = require "antigrief"
 local Chatbot = require "chatbot"
+local ComfyPanelAdmin = require "comfy_panel.admin"
 local ComfyPanelConfig = require "comfy_panel.config"
+local ComfyPanelGroup = require "comfy_panel.group"
 local ComfyPanelHistories = require "comfy_panel.histories"
 local ComfyPanelPlayerList = require "comfy_panel.player_list"
 local ComfyPanelScore = require "comfy_panel.score"
+local ComfyPanelSpecialGames = require "comfy_panel.special_games"
 local Functions = require "maps.biter_battles_v2.functions"
 local FunctionsBossUnit = require "functions.boss_unit"
 local MapsBiterBattlesV2AiStrikes = require "maps.biter_battles_v2.ai_strikes"
 local MapsBiterBattlesV2GameOver = require 'maps.biter_battles_v2.game_over'
+local MapsBiterBattlesV2Gui = require 'maps.biter_battles_v2.gui'
+local MapsBiterBattlesV2SpecSpy = require 'maps.biter_battles_v2.spec_spy'
 local MapsBiterBattlesV2Main = require 'maps.biter_battles_v2.main'
 local MapsBiterBattlesV2MirrorTerrain = require "maps.biter_battles_v2.mirror_terrain"
 local MapsBiterBattlesV2DifficultyVote = require 'maps.biter_battles_v2.difficulty_vote'
 local ModulesCorpseMarkers = require 'modules.corpse_markers'
 local ModulesFloatyChat = require 'modules.floaty_chat'
+local ModulesMapInfo = require 'modules.map_info'
+local ModulesShowInventory = require 'modules.show_inventory'
+local ModulesSimpleTags = require 'modules.simple_tags'
 local ModulesSpawnersContainBiters = require 'modules.spawners_contain_biters'
 local Terrain = require "maps.biter_battles_v2.terrain"
 local UtilsDatastoreColorData = require 'utils.datastore.color_data'
@@ -231,6 +239,55 @@ Event.add(
 	---@param event EventData.on_force_created
 	function (event)
 		ComfyPanelConfig.spaghett()
+	end
+)
+
+Event.add(
+	defines.events.on_gui_click,
+	---TODO: Should be dictionary deployment for speed, slow now just as v1
+	---@param event EventData.on_gui_click
+	function (event)
+		local player = game.get_player(event.player_index)
+		local element = event.element
+		if element.valid and player then
+			if event.element.name == ModulesMapInfo.CLOSE_MAP_INTRO_ELEMENT_NAME then
+				player.gui.left.comfy_panel.destroy()
+				return
+			end
+			if not element.valid then return end
+			ModulesShowInventory.on_gui_click(player, element)
+
+			if not element.valid then return end
+			ModulesSimpleTags.on_gui_click(player, element)
+
+
+			if not element.valid then return end
+			if element.name == Public.WHERE_CAMERA_ELEMENT_NAME then
+				player.gui.center[Public.WHERE_CAMERA_ELEMENT_NAME].destroy()
+				return
+			end
+			ComfyPanelAdmin.on_gui_click(event)
+			if not element.valid then return end
+			ComfyPanelHistories.on_gui_click(event)
+			if not element.valid then return end
+			ComfyPanelScore.on_gui_click(event)
+			if not element.valid then return end
+			ComfyPanelSpecialGames.on_gui_click(event)
+			if not element.valid then return end
+			ComfyPanelPlayerList.on_gui_click(event)
+			if not element.valid then return end
+			ComfyPanelGroup.on_gui_click(event)
+			if not element.valid then return end
+			MapsBiterBattlesV2Gui.on_gui_click(event)
+			if not element.valid then return end
+			MapsBiterBattlesV2SpecSpy.spy_prod_handler(event)
+			if not element.valid then return end
+			MapsBiterBattlesV2SpecSpy.spy_tech_handler(event)
+			if not element.valid then return end
+			MapsBiterBattlesV2DifficultyVote.on_gui_click(event)
+			if not element.valid then return end
+			MapsBiterBattlesV2Main.on_gui_click(event)
+		end
 	end
 )
 

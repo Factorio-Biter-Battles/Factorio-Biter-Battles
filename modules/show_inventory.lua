@@ -296,14 +296,9 @@ local function open_inventory(source, target)
     end
 end
 
-local function on_gui_click(event)
-
-    local element = event.element
-
-    if not element or not element.valid then
-        return
-    end
-
+---@param player LuaPlayer
+---@param element LuaGuiElement
+function Public.on_gui_click(player, element)
     local types = {
         ['Main'] = true,
         ['Armor'] = true,
@@ -317,7 +312,6 @@ local function on_gui_click(event)
     if not types[name] then
         return
     end
-    local player = game.get_player(event.player_index)
 
     local data = get_player_data(player)
     if not data then
@@ -515,7 +509,6 @@ Event.add(defines.events.on_player_ammo_inventory_changed, update_gui)
 Event.add(defines.events.on_player_armor_inventory_changed, update_gui)
 Event.add(defines.events.on_player_trash_inventory_changed, update_gui)
 Event.add(defines.events.on_gui_closed, gui_closed)
-Event.add(defines.events.on_gui_click, on_gui_click)
 Event.add(defines.events.on_pre_player_left_game, on_pre_player_left_game)
 
 return Public

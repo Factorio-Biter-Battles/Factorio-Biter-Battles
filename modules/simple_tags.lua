@@ -18,6 +18,7 @@ local icons = {
 local checks = {
 	"minimal_width", "left_margin", "right_margin"
 }
+local Public = {}
 
 local function get_x_offset(player)
 	local x = 0
@@ -76,31 +77,28 @@ local function on_player_joined_game(event)
 	draw_top_gui(player)
 end
 
-local function on_gui_click(event)
-	local element = event.element
-	if not element then return end
-	if not element.valid then return end
-	
+
+---@param player LuaPlayer
+---@param element LuaGuiElement
+function Public.on_gui_click(player, element)
 	local name = element.name
 	if name == "simple_tag" then
-		local player = game.players[event.player_index]
 		draw_screen_gui(player)
 		return
 	end
-	
+
 	local parent = element.parent
 	if not parent then return end
 	if not parent.valid then return end
 	if not parent.name then return end
-	if parent.name ~= "simple_tag_frame" then return end	
-	
-	local player = game.players[event.player_index]	
+	if parent.name ~= "simple_tag_frame" then return end
+
 	local selected_tag = element.name
-	
+
 	if player.tag == selected_tag then	selected_tag = "" end
 	player.tag = selected_tag
 	parent.destroy()
 end
 
-Event.add(defines.events.on_gui_click, on_gui_click)
 Event.add(defines.events.on_player_joined_game, on_player_joined_game)
+return Public

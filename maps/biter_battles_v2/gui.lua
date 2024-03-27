@@ -504,7 +504,8 @@ function Public.spy_fish()
 	end
 end
 
-local function on_gui_click(event)
+---@param event EventData.on_gui_click
+function Public.on_gui_click(event)
 	if not event.element then return end
 	if not event.element.valid then return end
 	local player = game.players[event.player_index]
@@ -633,7 +634,6 @@ local function on_player_joined_game(event)
 end
 
 
-event.add(defines.events.on_gui_click, on_gui_click)
 event.add(defines.events.on_player_joined_game, on_player_joined_game)
 
 return Public

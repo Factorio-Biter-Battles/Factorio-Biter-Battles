@@ -261,7 +261,8 @@ local function on_player_joined_game(event)
     end
 end
 
-local function on_gui_click(event)
+---@param event EventData.on_gui_click
+function Public.on_gui_click(event)
     if not event then
         return
     end
@@ -461,7 +462,6 @@ end
 
 comfy_panel_tabs['Scoreboard'] = {gui = show_score, admin = false}
 
-Event.add(defines.events.on_gui_click, on_gui_click)
 Event.add(defines.events.on_player_joined_game, on_player_joined_game)
 Event.add(defines.events.on_rocket_launched, on_rocket_launched)
 

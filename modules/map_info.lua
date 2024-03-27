@@ -18,6 +18,7 @@ Global.register(
 )
 
 local Public = {}
+Public.CLOSE_MAP_INTRO_ELEMENT_NAME = "close_map_intro"
 
 function Public.Pop_info()
     return map_info
@@ -80,7 +81,7 @@ local create_map_intro = (function(player, frame)
     l_3.style.horizontal_align = 'center'
     l_3.style.vertical_align = 'center'
 
-    local b = frame.add {type = 'button', caption = 'CLOSE', name = 'close_map_intro'}
+    local b = frame.add {type = 'button', caption = 'CLOSE', name = Public.CLOSE_MAP_INTRO_ELEMENT_NAME}
     b.style.font = 'heading-2'
     b.style.padding = 2
     b.style.top_margin = 3
@@ -96,26 +97,9 @@ local function on_player_joined_game(event)
     end
 end
 
-local function on_gui_click(event)
-    if not event then
-        return
-    end
-    if not event.element then
-        return
-    end
-    if not event.element.valid then
-        return
-    end
-    if event.element.name == 'close_map_intro' then
-        game.players[event.player_index].gui.left.comfy_panel.destroy()
-        return
-    end
-end
-
 comfy_panel_tabs['Map Info'] = {gui = create_map_intro, admin = false}
 
 local event = require 'utils.event'
 event.add(defines.events.on_player_joined_game, on_player_joined_game)
-event.add(defines.events.on_gui_click, on_gui_click)
 
 return Public

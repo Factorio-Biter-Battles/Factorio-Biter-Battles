@@ -537,7 +537,8 @@ local function player_list_show(player, frame, sort_by)
     end
 end
 
-local function on_gui_click(event)
+---@param event EventData.on_gui_click
+function Public.on_gui_click(event)
     if not event then
         return
     end
@@ -674,6 +675,5 @@ end
 comfy_panel_tabs['Players'] = {gui = player_list_show, admin = false}
 
 Event.add(defines.events.on_player_joined_game, on_player_joined_game)
-Event.add(defines.events.on_gui_click, on_gui_click)
 
 return Public

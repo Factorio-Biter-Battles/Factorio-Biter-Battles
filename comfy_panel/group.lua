@@ -241,7 +241,7 @@ local function alphanumeric(str)
 end
 
 ---@param event EventData.on_gui_click
-local function on_gui_click(event)
+function Public.on_gui_click(event)
     if not event then
         return
     end
@@ -410,7 +410,6 @@ end
 comfy_panel_tabs['Groups'] = {gui = build_group_gui, admin = false}
 
 local event = require 'utils.event'
-event.add(defines.events.on_gui_click, on_gui_click)
 event.add(defines.events.on_player_joined_game, on_player_joined_game)
 event.add(defines.events.on_gui_text_changed, on_gui_text_changed)
 

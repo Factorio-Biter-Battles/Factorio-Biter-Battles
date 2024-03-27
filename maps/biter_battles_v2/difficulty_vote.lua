@@ -1,6 +1,6 @@
 local bb_config = require "maps.biter_battles_v2.config"
 local ai = require "maps.biter_battles_v2.ai"
-local event = require 'utils.event'
+local Event = require 'utils.event'
 local Server = require 'utils.server'
 local Tables = require "maps.biter_battles_v2.tables"
 local gui_style = require 'utils.utils'.gui_style
@@ -128,7 +128,8 @@ function Public.on_player_left_game(player)
 	set_difficulty()
 end
 
-local function on_gui_click(event)
+---@param event EventData.on_gui_click
+function Public.on_gui_click(event)
 	if not event then return end
 	if not event.element then return end
 	if not event.element.valid then return end
@@ -201,9 +202,8 @@ local function on_gui_click(event)
 	end
 	event.element.parent.destroy()
 end
-	
-event.add(defines.events.on_gui_click, on_gui_click)
-event.add(defines.events.on_player_joined_game, on_player_joined_game)
+
+Event.add(defines.events.on_player_joined_game, on_player_joined_game)
 
 Public.difficulties = difficulties
 Public.difficulty_gui = difficulty_gui
