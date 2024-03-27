@@ -409,7 +409,8 @@ function Public.on_player_mined_entity(entity, player)
     end
 end
 
-local function on_gui_opened(event)
+---@param event EventData.on_gui_opened
+function Public.on_gui_opened(event)
     if not this.enabled then
         return
     end
@@ -828,7 +829,6 @@ function Public.get(key)
 end
 
 Event.on_init(on_init)
-Event.add(de.on_gui_opened, on_gui_opened)
 Event.add(de.on_marked_for_deconstruction, on_marked_for_deconstruction)
 Event.add(de.on_player_ammo_inventory_changed, on_player_ammo_inventory_changed)
 Event.add(de.on_player_built_tile, on_player_built_tile)

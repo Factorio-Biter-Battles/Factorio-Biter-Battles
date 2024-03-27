@@ -301,6 +301,14 @@ Event.add(
 	end
 )
 
+Event.add(
+	defines.events.on_gui_opened,
+	---@param event EventData.on_gui_opened
+	function (event)
+		Antigrief.on_gui_opened(event)
+	end
+)
+
 Event.add(defines.events.on_player_created, function (event)
 	local player = game.players[event.player_index]
 	player.gui.top.style = "slot_table_spacing_horizontal_flow"
