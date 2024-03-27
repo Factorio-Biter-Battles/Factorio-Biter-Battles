@@ -75,8 +75,9 @@ function Public.spy_tech_handler(event)
 	end
 end
 
--- When a player closes the prod view while spying
-local function close_prod_handler(event)
+---When a player closes the prod view while spying
+---@param event EventData.on_gui_closed
+function Public.close_prod_handler(event)
 	if event.gui_type ~= defines.gui_type.production then
 		return
 	end
@@ -87,8 +88,9 @@ local function close_prod_handler(event)
 	end
 end
 
--- When a player closes the tech view while spying
-local function close_tech_handler(event)
+---When a player closes the tech view while spying
+---@param event EventData.on_gui_closed
+function Public.close_tech_handler(event)
 	if event.gui_type ~= defines.gui_type.research then
 		return
 	end
@@ -98,8 +100,4 @@ local function close_tech_handler(event)
 		restore_force(player)
 	end
 end
-
-local Event = require 'utils.event'
-Event.add(defines.events.on_gui_closed, close_prod_handler)
-Event.add(defines.events.on_gui_closed, close_tech_handler)
 return Public

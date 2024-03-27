@@ -291,6 +291,16 @@ Event.add(
 	end
 )
 
+Event.add(
+	defines.events.on_gui_closed,
+	---@param event EventData.on_gui_closed
+	function (event)
+		ModulesShowInventory.on_gui_closed(event)
+		MapsBiterBattlesV2SpecSpy.close_prod_handler(event)
+		MapsBiterBattlesV2SpecSpy.close_tech_handler(event)
+	end
+)
+
 Event.add(defines.events.on_player_created, function (event)
 	local player = game.players[event.player_index]
 	player.gui.top.style = "slot_table_spacing_horizontal_flow"

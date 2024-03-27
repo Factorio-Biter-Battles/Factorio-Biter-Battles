@@ -347,10 +347,11 @@ function Public.on_gui_click(player, element)
         redraw_inventory(frame, player, target, name, panel_type)
     end
 end
-local function gui_closed(event)
 
+
+---@param event EventData.on_gui_closed
+function Public.on_gui_closed(event)
     local type = event.gui_type
-
     if type == defines.gui_type.custom then
         local player = game.get_player(event.player_index)
         local data = get_player_data(player)
@@ -508,7 +509,6 @@ Event.add(defines.events.on_player_gun_inventory_changed, update_gui)
 Event.add(defines.events.on_player_ammo_inventory_changed, update_gui)
 Event.add(defines.events.on_player_armor_inventory_changed, update_gui)
 Event.add(defines.events.on_player_trash_inventory_changed, update_gui)
-Event.add(defines.events.on_gui_closed, gui_closed)
 Event.add(defines.events.on_pre_player_left_game, on_pre_player_left_game)
 
 return Public

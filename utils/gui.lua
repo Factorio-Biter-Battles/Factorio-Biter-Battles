@@ -200,7 +200,7 @@ Gui.on_click = handler_factory(defines.events.on_gui_click)
 -- Can only have one handler per element name.
 -- Guarantees that the element and the player are valid when calling the handler.
 -- Adds a player field to the event table.
-Gui.on_custom_close = handler_factory(defines.events.on_gui_closed)
+-- Gui.on_custom_close = handler_factory(defines.events.on_gui_closed)
 
 -- Register a handler for the on_gui_elem_changed event for LuaGuiElements with element_name.
 -- Can only have one handler per element name.
