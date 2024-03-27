@@ -511,84 +511,82 @@ Event.add(
     end
 )
 
-Event.add(
-    defines.events.on_console_command,
-    function(event)
-        local cmd = event.command
-        if not valid_commands[cmd] then
-            return
-        end
+---@param event EventData.on_console_command
+function Public.on_console_command(event)
+	local cmd = event.command
+	if not valid_commands[cmd] then
+		return
+	end
 
-        local param = event.parameters
+	local param = event.parameters
 
-        if event.player_index then
-            local player = game.players[event.player_index]
-            local playtime = validate_playtime(player)
-            local trusted = validate_trusted(player)
+	if event.player_index then
+		local player = game.players[event.player_index]
+		local playtime = validate_playtime(player)
+		local trusted = validate_trusted(player)
 
-            if not param then
-                return Utils.print_to(player, 'No valid reason given.')
-            end
+		if not param then
+			return Utils.print_to(player, 'No valid reason given.')
+		end
 
-            local message
-            local t = {}
+		local message
+		local t = {}
 
-            for i in string.gmatch(param, '%S+') do
-                t[#t + 1] = i
-            end
+		for i in string.gmatch(param, '%S+') do
+			t[#t + 1] = i
+		end
 
-            local griefer = t[1]
-            table.remove(t, 1)
+		local griefer = t[1]
+		table.remove(t, 1)
 
-            message = concat(t, ' ')
+		message = concat(t, ' ')
 
-            local data = {
-                player = player,
-                griefer = griefer,
-                trusted = trusted,
-                playtime = playtime,
-                message = message,
-                cmd = cmd
-            }
+		local data = {
+			player = player,
+			griefer = griefer,
+			trusted = trusted,
+			playtime = playtime,
+			message = message,
+			cmd = cmd
+		}
 
-            local success = validate_args(data)
+		local success = validate_args(data)
 
-            if not success then
-                return
-            end
+		if not success then
+			return
+		end
 
-            if game.players[griefer] then
-                griefer = game.players[griefer].name
-            end
+		if game.players[griefer] then
+			griefer = game.players[griefer].name
+		end
 
-            if trusted and playtime >= settings.playtime_for_vote and playtime < settings.playtime_for_instant_jail and not player.admin then
-                if cmd == 'jail' then
-                    vote_to_jail(player, griefer, message)
-                    return
-                elseif cmd == 'free' then
-                    vote_to_free(player, griefer)
-                    return
-                end
-            end
+		if trusted and playtime >= settings.playtime_for_vote and playtime < settings.playtime_for_instant_jail and not player.admin then
+			if cmd == 'jail' then
+				vote_to_jail(player, griefer, message)
+				return
+			elseif cmd == 'free' then
+				vote_to_free(player, griefer)
+				return
+			end
+		end
 
-            if player.admin or playtime >= settings.playtime_for_instant_jail then
-                if cmd == 'jail' then
-                    if player.admin then
-                        Utils.warning(
-                            player,
-                            'Abusing the jail command will lead to revoked permissions. Jailing someone in case of disagreement is not OK!'
-                        )
-                    end
-                    Public.try_ul_data(griefer, true, player.name, message)
-                    return
-                elseif cmd == 'free' then
-                    Public.try_ul_data(griefer, false, player.name)
-                    return
-                end
-            end
-        end
-    end
-)
+		if player.admin or playtime >= settings.playtime_for_instant_jail then
+			if cmd == 'jail' then
+				if player.admin then
+					Utils.warning(
+						player,
+						'Abusing the jail command will lead to revoked permissions. Jailing someone in case of disagreement is not OK!'
+					)
+				end
+				Public.try_ul_data(griefer, true, player.name, message)
+				return
+			elseif cmd == 'free' then
+				Public.try_ul_data(griefer, false, player.name)
+				return
+			end
+		end
+	end
+end
 
 Event.add(defines.events.on_player_changed_surface, on_player_changed_surface)
 Event.on_init(create_gulag_surface)

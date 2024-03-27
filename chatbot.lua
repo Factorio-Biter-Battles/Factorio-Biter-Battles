@@ -188,7 +188,7 @@ function Public.process_bot_answers(player, message)
 end
 
 --share vision of silent-commands with other admins
-local function on_console_command(event)
+function Public.on_console_command(event)
     local cmd = event.command
     if not event.player_index then
         return
@@ -251,5 +251,4 @@ local function on_console_command(event)
 end
 
 Event.add(defines.events.on_player_created, on_player_created)
-Event.add(defines.events.on_console_command, on_console_command)
 return Public

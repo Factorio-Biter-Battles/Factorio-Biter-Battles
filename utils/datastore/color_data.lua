@@ -67,38 +67,36 @@ Event.add(
     end
 )
 
-Event.add(
-    defines.events.on_console_command,
-    function(event)
-        local player_index = event.player_index
-        if not player_index or event.command ~= 'color' then
-            return
-        end
+---@param event EventData.on_console_command
+function Public.on_console_command(event)
+	local player_index = event.player_index
+	if not player_index or event.command ~= 'color' then
+		return
+	end
 
-        local player = game.get_player(player_index)
-        if not player or not player.valid then
-            return
-        end
+	local player = game.get_player(player_index)
+	if not player or not player.valid then
+		return
+	end
 
-        local secs = Server.get_current_time()
-        if not secs then
-            return
-        end
+	local secs = Server.get_current_time()
+	if not secs then
+		return
+	end
 
-        local param = event.parameters
-        local color = player.color
-        local chat = player.chat_color
-        param = string.lower(param)
-        if param then
-            for word in param:gmatch('%S+') do
-                if color_table[word] then
-                    set_data(color_data_set, player.name, {color = {color}, chat = {chat}})
-                    player.print('Your color has been saved.', Color.success)
-                    return true
-                end
-            end
-        end
-    end
-)
+	local param = event.parameters
+	local color = player.color
+	local chat = player.chat_color
+	param = string.lower(param)
+	if param then
+		for word in param:gmatch('%S+') do
+			if color_table[word] then
+				set_data(color_data_set, player.name, {color = {color}, chat = {chat}})
+				player.print('Your color has been saved.', Color.success)
+				return true
+			end
+		end
+	end
+end
 
 return Public

@@ -65,6 +65,8 @@ local MapsBiterBattlesV2DifficultyVote = require 'maps.biter_battles_v2.difficul
 local ModulesCorpseMarkers = require 'modules.corpse_markers'
 local ModulesFloatyChat = require 'modules.floaty_chat'
 local Terrain = require "maps.biter_battles_v2.terrain"
+local UtilsDatastoreColorData = require 'utils.datastore.color_data'
+local UtilsDatastoreJailData = require 'utils.datastore.jail_data'
 local UtilsDatastoreSessionData = require 'utils.datastore.session_data'
 local UtilsFreeplay = require 'utils.freeplay'
 local UtilsMuted = require 'utils.muted'
@@ -160,6 +162,18 @@ Event.add(
 			MapsBiterBattlesV2Main.on_console_chat(player, message)
 			ModulesFloatyChat.on_console_chat(player, message)
 		end
+	end
+)
+
+Event.add(
+	defines.events.on_console_command,
+	---@param event EventData.on_console_command
+	function (event)
+		Chatbot.on_console_command(event)
+		MapsBiterBattlesV2Main.on_console_command(event)
+		UtilsDatastoreJailData.on_console_command(event)
+		UtilsDatastoreColorData.on_console_command(event)
+		UtilsServer.on_console_command(event)
 	end
 )
 

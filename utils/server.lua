@@ -832,40 +832,38 @@ function Public.on_player_left_game(player)
 	Public.upload_time_played(player)
 end
 
-Event.add(
-    defines.events.on_console_command,
-    function(event)
-        local cmd = event.command
-        if not event.player_index then
-            return
-        end
-        local player = game.players[event.player_index]
-        local reason = event.parameters
-        if not reason then
-            return
-        end
-        if not player.admin then
-            return
-        end
-        if cmd == 'ban' then
-            if player then
-                Public.to_banned_embed(table.concat {player.name .. ' banned ' .. reason})
-                return
-            else
-                Public.to_banned_embed(table.concat {'Server banned ' .. reason})
-                return
-            end
-        elseif cmd == 'unban' then
-            if player then
-                Public.to_banned_embed(table.concat {player.name .. ' unbanned ' .. reason})
-                return
-            else
-                Public.to_banned_embed(table.concat {'Server unbanned ' .. reason})
-                return
-            end
-        end
-    end
-)
+---@param event EventData.on_console_command
+function Public.on_console_command(event)
+	local cmd = event.command
+	if not event.player_index then
+		return
+	end
+	local player = game.players[event.player_index]
+	local reason = event.parameters
+	if not reason then
+		return
+	end
+	if not player.admin then
+		return
+	end
+	if cmd == 'ban' then
+		if player then
+			Public.to_banned_embed(table.concat {player.name .. ' banned ' .. reason})
+			return
+		else
+			Public.to_banned_embed(table.concat {'Server banned ' .. reason})
+			return
+		end
+	elseif cmd == 'unban' then
+		if player then
+			Public.to_banned_embed(table.concat {player.name .. ' unbanned ' .. reason})
+			return
+		else
+			Public.to_banned_embed(table.concat {'Server unbanned ' .. reason})
+			return
+		end
+	end
+end
 
 
 ---@param player LuaPlayer
