@@ -137,6 +137,14 @@ Event.add(
 )
 
 Event.add(
+	defines.events.on_chunk_generated,
+	---@param event EventData.on_chunk_generated
+	function (event)
+		MapsBiterBattlesV2Main.on_chunk_generated(event)
+	end
+)
+
+Event.add(
 	defines.events.on_entity_damaged,
 	---@param event EventData.on_entity_damaged
 	function (event)

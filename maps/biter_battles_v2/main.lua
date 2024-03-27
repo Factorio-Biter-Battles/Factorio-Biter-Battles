@@ -278,7 +278,7 @@ local function on_robot_mined_entity(event)
 	AiTargets.stop_tracking(event.entity)
 end
 
-local function on_chunk_generated(event)
+function Public.on_chunk_generated(event)
 	local surface = event.surface
 
 	-- Check if we're out of init.
@@ -302,8 +302,8 @@ local function on_chunk_generated(event)
 	surface.request_to_generate_chunks(req_pos, 0)
 
 	-- Clone from north and south. NOTE: This WILL fire 2 times
-	-- for each chunk due to asynchronus nature of this event.
-	-- Both sides contain arbitary amount of chunks, some positions
+	-- for each chunk due to asynchronous nature of this event.
+	-- Both sides contain arbitrary amount of chunks, some positions
 	-- when inverted will be still in process of generation or not
 	-- generated at all. It is important to perform 2 passes to make
 	-- sure everything is cloned properly. Normally we would use mutex
@@ -425,7 +425,6 @@ Event.add_event_filter(defines.events.on_post_entity_died, {
 	type = "unit",
 })
 Event.add(defines.events.on_entity_cloned, on_entity_cloned)
-Event.add(defines.events.on_chunk_generated, on_chunk_generated)
 Event.add(defines.events.on_console_chat, on_console_chat)
 Event.add(defines.events.on_console_command, on_console_command)
 Event.add(defines.events.on_entity_died, on_entity_died)
