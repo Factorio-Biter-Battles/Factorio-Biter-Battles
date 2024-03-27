@@ -330,7 +330,8 @@ function Public.on_chunk_generated(event)
 	end
 end
 
-local function on_entity_cloned(event)
+---@param event EventData.on_entity_cloned
+function Public.on_entity_cloned(event)
 	local source = event.source
 	local destination = event.destination
 
@@ -425,7 +426,6 @@ Event.add_event_filter(defines.events.on_post_entity_died, {
 	filter = "type",
 	type = "unit",
 })
-Event.add(defines.events.on_entity_cloned, on_entity_cloned)
 Event.add(defines.events.on_entity_died, on_entity_died)
 Event.add(defines.events.on_gui_click, on_gui_click)
 Event.add(defines.events.on_marked_for_deconstruction, on_marked_for_deconstruction)
