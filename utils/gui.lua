@@ -206,13 +206,13 @@ Gui.on_click = handler_factory(defines.events.on_gui_click)
 -- Can only have one handler per element name.
 -- Guarantees that the element and the player are valid when calling the handler.
 -- Adds a player field to the event table.
-Gui.on_elem_changed = handler_factory(defines.events.on_gui_elem_changed)
+-- Gui.on_elem_changed = handler_factory(defines.events.on_gui_elem_changed)
 
 -- Register a handler for the on_gui_selection_state_changed event for LuaGuiElements with element_name.
 -- Can only have one handler per element name.
 -- Guarantees that the element and the player are valid when calling the handler.
 -- Adds a player field to the event table.
-Gui.on_selection_state_changed = handler_factory(defines.events.on_gui_selection_state_changed)
+-- Gui.on_selection_state_changed = handler_factory(defines.events.on_gui_selection_state_changed)
 
 -- Register a handler for the on_gui_text_changed event for LuaGuiElements with element_name.
 -- Can only have one handler per element name.
@@ -231,13 +231,13 @@ Gui.on_value_changed = handler_factory(defines.events.on_gui_value_changed)
 -- Can only have one handler per element name.
 -- Guarantees that the element and the player are valid when calling the handler.
 -- Adds a player field to the event table.
-Gui.on_player_show_top = custom_handler_factory(on_visible_handlers)
+-- Gui.on_player_show_top = custom_handler_factory(on_visible_handlers)
 
 -- Register a handler for when the player hides the top LuaGuiElements with element_name.
 -- Assuming the element_name has been added with Gui.allow_player_to_toggle_top_element_visibility.
 -- Can only have one handler per element name.
 -- Guarantees that the element and the player are valid when calling the handler.
 -- Adds a player field to the event table.
-Gui.on_pre_player_hide_top = custom_handler_factory(on_pre_hidden_handlers)
+-- Gui.on_pre_player_hide_top = custom_handler_factory(on_pre_hidden_handlers)
 
 return Gui
