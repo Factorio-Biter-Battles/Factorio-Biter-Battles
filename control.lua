@@ -129,6 +129,14 @@ Event.add(
 )
 
 Event.add(
+	defines.events.on_character_corpse_expired,
+	---@param event EventData.on_character_corpse_expired
+	function (event)
+		ModulesCorpseMarkers.on_character_corpse_expired(event)
+	end
+)
+
+Event.add(
 	defines.events.on_entity_damaged,
 	---@param event EventData.on_entity_damaged
 	function (event)

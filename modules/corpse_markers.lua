@@ -53,7 +53,7 @@ local function find_and_destroy_tag(corpse)
 	return false
 end
 
-local function on_character_corpse_expired(event)
+function Public.on_character_corpse_expired(event)
 	if find_and_destroy_tag(event.corpse) then return end
 	destroy_all_tags()
 	redraw_all_tags()
@@ -67,7 +67,6 @@ local function on_pre_player_mined_item(event)
 end
 
 local event = require 'utils.event'
-event.add(defines.events.on_character_corpse_expired, on_character_corpse_expired)
 event.add(defines.events.on_pre_player_mined_item, on_pre_player_mined_item)
 
 return Public
