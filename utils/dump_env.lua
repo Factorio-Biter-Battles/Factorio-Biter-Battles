@@ -31,4 +31,4 @@ local function player_joined(event)
     game.print('Game is paused. Use /c game.tick_paused = false to resume play')
 end
 
-Event.add(defines.events.on_player_joined_game, player_joined)
+-- Event.add(defines.events.on_player_joined_game, player_joined)

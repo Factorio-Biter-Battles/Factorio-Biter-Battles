@@ -34,7 +34,8 @@ local function get_x_offset(player)
 	return x
 end
 
-local function draw_top_gui(player)
+---@param player LuaPlayer
+function Public.draw_top_gui(player)
 	if player.gui.top.simple_tag then return end
 	local button = player.gui.top.add({type = "sprite-button", name = "simple_tag", caption = "Tag"})
 	button.style.font = "heading-2"
@@ -72,12 +73,6 @@ local function draw_screen_gui(player)
 	clear_tag_element.tooltip = "Clear Tag"	
 end
 
-local function on_player_joined_game(event)
-	local player = game.players[event.player_index]
-	draw_top_gui(player)
-end
-
-
 ---@param player LuaPlayer
 ---@param element LuaGuiElement
 function Public.on_gui_click(player, element)
@@ -100,5 +95,4 @@ function Public.on_gui_click(player, element)
 	parent.destroy()
 end
 
-Event.add(defines.events.on_player_joined_game, on_player_joined_game)
 return Public

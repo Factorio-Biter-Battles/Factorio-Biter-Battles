@@ -1,6 +1,5 @@
 local bb_config = require "maps.biter_battles_v2.config"
 local ai = require "maps.biter_battles_v2.ai"
-local Event = require 'utils.event'
 local Server = require 'utils.server'
 local Tables = require "maps.biter_battles_v2.tables"
 local gui_style = require 'utils.utils'.gui_style
@@ -93,12 +92,11 @@ local function set_difficulty()
 	 ai.reset_evo()
 end
 
-local function on_player_joined_game(event)
+---@param player LuaPlayer
+function Public.on_player_joined_game(player)
 	if not global.difficulty_vote_value then global.difficulty_vote_value = 1 end
 	if not global.difficulty_vote_index then global.difficulty_vote_index = 4 end
 	if not global.difficulty_player_votes then global.difficulty_player_votes = {} end
-	
-	local player = game.players[event.player_index]
 	if game.ticks_played < global.difficulty_votes_timeout then
 		if not global.difficulty_player_votes[player.name] then
 			if global.bb_settings.only_admins_vote or global.tournament_mode then
@@ -116,7 +114,6 @@ local function on_player_joined_game(event)
 	else
 		if player.gui.center["difficulty_poll"] then player.gui.center["difficulty_poll"].destroy() end
 	end
-	
 	difficulty_gui_all()
 end
 
@@ -202,8 +199,6 @@ function Public.on_gui_click(event)
 	end
 	event.element.parent.destroy()
 end
-
-Event.add(defines.events.on_player_joined_game, on_player_joined_game)
 
 Public.difficulties = difficulties
 Public.difficulty_gui = difficulty_gui

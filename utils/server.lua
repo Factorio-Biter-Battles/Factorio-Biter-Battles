@@ -9,7 +9,6 @@ local serialize = serpent.serialize
 local concat = table.concat
 local remove = table.remove
 local tostring = tostring
-local raw_print = Print.raw_print
 
 local serialize_options = {sparse = true, compact = true}
 
@@ -66,8 +65,6 @@ local special_game_end_tag = '[SPECIAL-GAME-END]'
 local data_add_onlinetime_tag = '[DATA-ADD-TOTAL-ONLINE-TIME]'
 local data_set_total_onlinetime_tag = '[DATA-SET-TOTAL-ONLINE-TIME]'
 
-Public.raw_print = raw_print
-
 local data_set_handlers = {}
 
 --- The event id for the on_server_started event.
@@ -85,7 +82,7 @@ local data_set_handlers = {}
 Public.events = {on_server_started = Event.generate_event_name('on_server_started')}
 
 function Public.send_special_game_state(message)
-	raw_print(special_game_end_tag .. message)
+	Print.raw_print(special_game_end_tag .. message)
 end
 
 --- Sends a message to the linked discord channel. The message is sanitized of markdown server side.
@@ -94,75 +91,75 @@ end
 -- local Server = require 'utils.server'
 -- Server.to_discord('Hello from scenario script!')
 function Public.to_discord(message)
-    raw_print(discord_tag .. message)
+    Print.raw_print(discord_tag .. message)
 end
 
 function Public.to_discord_player_chat(message)
-    raw_print(player_chat_tag .. message)
+    Print.raw_print(player_chat_tag .. message)
 end
 
 function Public.get_data_hotkey(message)
-    raw_print(data_get_hotkey_tag .. message)
+    Print.raw_print(data_get_hotkey_tag .. message)
 end
 
 --- Sends a message to the linked discord channel. The message is not sanitized of markdown.
 -- @param  message<string> message to send.
 function Public.to_discord_raw(message)
-    raw_print(discord_raw_tag .. message)
+    Print.raw_print(discord_raw_tag .. message)
 end
 
 --- Sends a message to the linked discord channel. The message is sanitized of markdown server side, then made bold.
 -- @param  message<string> message to send.
 function Public.to_discord_bold(message)
-    raw_print(discord_bold_tag .. message)
+    Print.raw_print(discord_bold_tag .. message)
 end
 
 --- Sends a message to the linked admin discord channel. The message is sanitized of markdown server side.
 -- @param  message<string> message to send.
 function Public.to_admin(message)
-    raw_print(discord_admin_tag .. message)
+    Print.raw_print(discord_admin_tag .. message)
 end
 
 --- Sends a message to the linked banned discord channel. The message is sanitized of markdown server side.
 -- @param  message<string> message to send.
 function Public.to_banned(message)
-    raw_print(discord_banned_tag .. message)
+    Print.raw_print(discord_banned_tag .. message)
 end
 
 --- Sends a message to the linked admin discord channel. The message is not sanitized of markdown.
 -- @param  message<string> message to send.
 function Public.to_admin_raw(message)
-    raw_print(discord_admin_raw_tag .. message)
+    Print.raw_print(discord_admin_raw_tag .. message)
 end
 
 --- Sends a embed message to the linked discord channel. The message is sanitized of markdown server side.
 -- @param  message<string> the content of the embed.
 function Public.to_discord_embed(message)
-    raw_print(discord_embed_tag .. message)
+    Print.raw_print(discord_embed_tag .. message)
 end
 
 --- Sends a embed message to the linked discord channel. The message is not sanitized of markdown.
 -- @param  message<string> the content of the embed.
 function Public.to_discord_embed_raw(message)
-    raw_print(discord_embed_raw_tag .. message)
+    Print.raw_print(discord_embed_raw_tag .. message)
 end
 
 --- Sends a embed message to the linked admin discord channel. The message is sanitized of markdown server side.
 -- @param  message<string> the content of the embed.
 function Public.to_admin_embed(message)
-    raw_print(discord_admin_embed_tag .. message)
+    Print.raw_print(discord_admin_embed_tag .. message)
 end
 
 --- Sends a embed message to the linked banned discord channel. The message is sanitized of markdown server side.
 -- @param  message<string> the content of the embed.
 function Public.to_banned_embed(message)
-    raw_print(discord_banned_embed_tag .. message)
+    Print.raw_print(discord_banned_embed_tag .. message)
 end
 
 --- Sends a embed message to the linked admin discord channel. The message is not sanitized of markdown.
 -- @param  message<string> the content of the embed.
 function Public.to_admin_embed_raw(message)
-    raw_print(discord_admin_embed_raw_tag .. message)
+    Print.raw_print(discord_admin_embed_raw_tag .. message)
 end
 
 --- Stops and saves the factorio server and starts the named scenario.
@@ -178,7 +175,7 @@ function Public.start_scenario(scenario_name)
 
     local message = start_scenario_tag .. scenario_name
 
-    raw_print(message)
+    Print.raw_print(message)
 end
 
 --- Stops and saves the factorio server.
@@ -188,7 +185,7 @@ end
 function Public.stop_scenario()
     local message = stop_scenario_tag
 
-    raw_print(message)
+    Print.raw_print(message)
 end
 
 local default_ping_token =
@@ -207,7 +204,7 @@ local default_ping_token =
 -- The function is passed the tick that the ping was sent.
 function Public.ping(func_token)
     local message = concat({ping_tag, func_token or default_ping_token, ' ', game.tick})
-    raw_print(message)
+    Print.raw_print(message)
 end
 
 local function double_escape(str)
@@ -264,7 +261,7 @@ function Public.set_data(data_set, key, value)
         message = concat({data_set_tag, '{data_set:"', data_set, '",key:"', key, "\",value:'", value, "'}"})
     end
 
-    raw_print(message)
+    Print.raw_print(message)
 end
 
 local function validate_arguments(data_set, key, callback_token)
@@ -284,7 +281,7 @@ local function send_try_get_data(data_set, key, callback_token)
     key = double_escape(key)
 
     local message = concat {data_get_tag, callback_token, ' {', 'data_set:"', data_set, '",key:"', key, '"}'}
-    raw_print(message)
+    Print.raw_print(message)
 end
 
 local cancelable_callback_token =
@@ -493,7 +490,7 @@ function Public.try_get_all_data(data_set, callback_token)
     data_set = double_escape(data_set)
 
     local message = concat {data_get_all_tag, callback_token, ' {', 'data_set:"', data_set, '"}'}
-    raw_print(message)
+    Print.raw_print(message)
 end
 
 local function data_set_changed(data)
@@ -570,7 +567,7 @@ function Public.get_tracked_data_sets()
     message[#message + 1] = ']'
 
     message = concat(message)
-    raw_print(message)
+    Print.raw_print(message)
 end
 
 local function escape(str)
@@ -647,7 +644,7 @@ function Public.ban_sync(username, reason, admin)
     admin = escape(admin)
 
     local message = concat({ban_sync_tag, '{username:"', username, '",reason:"', reason, '",admin:"', admin, '"}'})
-    raw_print(message)
+    Print.raw_print(message)
 end
 
 --- If the player exists bans the player else throws error.
@@ -685,7 +682,7 @@ function Public.unban_sync(username, admin)
     admin = escape(admin)
 
     local message = concat({unbanned_sync_tag, '{username:"', username, '",admin:"', admin, '"}'})
-    raw_print(message)
+    Print.raw_print(message)
 end
 
 --- If the player exists unbans the player else throws error.
@@ -741,13 +738,14 @@ function Public.upload_time_played(player)
 	if not global.total_time_online_players[player.name] then global.total_time_online_players[player.name] = 0 end
 	local time_to_add = player.online_time - global.already_logged_current_session_time_online_players[player.name]
 	
-	raw_print(data_add_onlinetime_tag .. '['..player.name..']'..time_to_add)
+	Print.raw_print(data_add_onlinetime_tag .. '['..player.name..']'..time_to_add)
 	global.already_logged_current_session_time_online_players[player.name] = global.already_logged_current_session_time_online_players[player.name] + time_to_add
 	global.total_time_online_players[player.name] = global.total_time_online_players[player.name] + time_to_add
 end
 
+---@param player LuaPlayer
 function Public.set_total_time_played(player)
-	raw_print(data_set_total_onlinetime_tag .. "[".. player.name .. "]")
+	Print.raw_print(data_set_total_onlinetime_tag .. "[".. player.name .. "]")
 end
 
 --- Called be the web server to re sync which players are online.
@@ -768,7 +766,7 @@ function Public.query_online_players()
     message[#message + 1] = ']'
 
     message = concat(message)
-    raw_print(message)
+    Print.raw_print(message)
 end
 
 local function command_handler(callback, ...)
@@ -807,28 +805,22 @@ commands.add_command(
             end
         end
         if err or err == false then
-            raw_print(err)
+            Print.raw_print(err)
         end
     end
 )
 
---- The [JOIN] and [LEAVE] messages Factorio sends to stdout aren't sent in all cases of
---  players joining or leaving. So we send our own [PLAYER-JOIN] and [PLAYER-LEAVE] tags.
-Event.add(
-    defines.events.on_player_joined_game,
-    function(event)
-        local player = Game.get_player_by_index(event.player_index)
-        if not player or not player.valid then
-            return
-        end
-
-        raw_print(player_join_tag .. player.name)
-    end
-)
+---The [JOIN] and [LEAVE] messages Factorio sends to stdout aren't sent 
+---in all cases of players joining or leaving. So we send our own
+---[PLAYER-JOIN] and [PLAYER-LEAVE] tags.
+---@param player LuaPlayer
+function Public.on_player_joined_game(player)
+	Print.raw_print(player_join_tag .. player.name)
+end
 
 ---@param player LuaPlayer
 function Public.on_player_left_game(player)
-	raw_print(player_leave_tag .. player.name)
+	Print.raw_print(player_leave_tag .. player.name)
 	Public.upload_time_played(player)
 end
 
@@ -885,7 +877,7 @@ function Public.on_player_died(player, cause)
 	end
 
 	local str_message = concat(message)
-	raw_print(str_message)
+	Print.raw_print(str_message)
 end
 
 return Public

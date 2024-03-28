@@ -248,8 +248,8 @@ function Public.on_player_ammo_inventory_changed(event)
     end
 end
 
-local function on_player_joined_game(event)
-    local player = game.get_player(event.player_index)
+---@param player LuaPlayer
+function Public.on_player_joined_game(player)
     local trusted = session.get_trusted_table()
     if not this.enabled then
         if not trusted[player.name] then
@@ -838,6 +838,5 @@ end
 Event.on_init(on_init)
 Event.add(de.on_pre_player_mined_item, on_pre_player_mined_item)
 Event.add(de.on_player_used_capsule, on_player_used_capsule)
-Event.add(de.on_player_joined_game, on_player_joined_game)
 
 return Public

@@ -199,10 +199,8 @@ local function refresh_gui()
     end
 end
 
----@param event EventData.on_player_joined_game
-local function on_player_joined_game(event)
-    local player = game.players[event.player_index]
-
+---@param player LuaPlayer
+function Public.on_player_joined_game(player)
     if not this.player_group[player.name] then
         this.player_group[player.name] = '[Group]'
     end
@@ -408,8 +406,5 @@ function Public.reset_groups()
 end
 
 comfy_panel_tabs['Groups'] = {gui = build_group_gui, admin = false}
-
-local event = require 'utils.event'
-event.add(defines.events.on_player_joined_game, on_player_joined_game)
 
 return Public

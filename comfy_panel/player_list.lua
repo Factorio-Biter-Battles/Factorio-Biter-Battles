@@ -649,17 +649,14 @@ function Public.refresh()
     end
 end
 
-local function on_player_joined_game(event)
+---@param event EventData.on_player_joined_game
+function Public.on_player_joined_game(event)
     if not this.player_list.last_poke_tick[event.player_index] then
         this.player_list.pokes[event.player_index] = 0
         this.player_list.last_poke_tick[event.player_index] = 0
         this.player_list.sorting_method[event.player_index] = 'total_time_played_desc'
     end
-    refresh()
-end
-
-local function on_player_left_game()
-    refresh()
+    Public.refresh()
 end
 
 --- If the different roles should be shown in the player_list.
@@ -673,7 +670,5 @@ function Public.show_roles_in_list(value)
 end
 
 comfy_panel_tabs['Players'] = {gui = player_list_show, admin = false}
-
-Event.add(defines.events.on_player_joined_game, on_player_joined_game)
 
 return Public

@@ -1,7 +1,6 @@
 local Token = require 'utils.token'
 local Color = require 'utils.color_presets'
 local Server = require 'utils.server'
-local Event = require 'utils.event'
 
 local tag_dataset = 'tags'
 local set_data = Server.set_data
@@ -91,18 +90,6 @@ commands.add_command(
 
         set_data(tag_dataset, player.name, nil)
         player.print('Your tag has been removed.', Color.success)
-    end
-)
-
-Event.add(
-    defines.events.on_player_joined_game,
-    function(event)
-        local player = game.get_player(event.player_index)
-        if not player or not player.valid then
-            return
-        end
-
-        Public.fetch(player.name)
     end
 )
 

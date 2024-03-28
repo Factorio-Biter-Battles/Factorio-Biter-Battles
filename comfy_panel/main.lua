@@ -62,7 +62,8 @@ function Public.comfy_panel_refresh_active_tab(player)
     comfy_panel_tabs[frame.name].gui(player, frame)
 end
 
-local function top_button(player)
+---@param player LuaPlayer
+function Public.top_button(player)
     if player.gui.top['comfy_panel_top_button'] then
         return
     end
@@ -126,10 +127,6 @@ function Public.comfy_panel_call_tab(player, name)
     end
 end
 
-local function on_player_joined_game(event)
-    top_button(game.players[event.player_index])
-end
-
 ---@param event EventData.on_gui_click
 function Public.on_gui_click(event)
     if not event.element then
@@ -166,7 +163,5 @@ function Public.on_gui_click(event)
     end
     Public.comfy_panel_refresh_active_tab(player)
 end
-
-Event.add(defines.events.on_player_joined_game, on_player_joined_game)
 
 return Public

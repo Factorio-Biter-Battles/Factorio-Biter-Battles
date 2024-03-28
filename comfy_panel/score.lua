@@ -247,8 +247,8 @@ local function refresh_score_full()
     end
 end
 
-local function on_player_joined_game(event)
-    local player = game.players[event.player_index]
+---@param player LuaPlayer
+function Public.on_player_joined_game(player)
     Public.init_player_table(player)
     if not this.sort_by[player.name] then
         this.sort_by[player.name] = {method = 'descending', column = 'killscore'}
@@ -462,7 +462,6 @@ end
 
 comfy_panel_tabs['Scoreboard'] = {gui = show_score, admin = false}
 
-Event.add(defines.events.on_player_joined_game, on_player_joined_game)
 Event.add(defines.events.on_rocket_launched, on_rocket_launched)
 
 return Public

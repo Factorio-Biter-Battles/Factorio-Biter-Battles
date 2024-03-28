@@ -2,9 +2,7 @@ local Public = {}
 global.player_data_afk = {}
 local Server = require 'utils.server'
 
-local bb_config = require "maps.biter_battles_v2.config"
 local bb_diff = require "maps.biter_battles_v2.difficulty_vote"
-local event = require 'utils.event'
 local Functions = require "maps.biter_battles_v2.functions"
 local Feeding = require "maps.biter_battles_v2.feeding"
 local Tables = require "maps.biter_battles_v2.tables"
@@ -605,8 +603,8 @@ function Public.on_gui_click(event)
 end
 
 
-local function on_player_joined_game(event)
-	local player = game.players[event.player_index]
+---@param player LuaPlayer
+function Public.on_player_joined_game(player)
 	if player.online_time == 0 then
 		Functions.show_intro(player)
 	end
@@ -632,8 +630,5 @@ local function on_player_joined_game(event)
 	create_sprite_button(player)
 	Public.create_main_gui(player)
 end
-
-
-event.add(defines.events.on_player_joined_game, on_player_joined_game)
 
 return Public

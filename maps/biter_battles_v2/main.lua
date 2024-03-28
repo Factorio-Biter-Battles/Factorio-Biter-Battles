@@ -28,9 +28,8 @@ require "modules.spawners_contain_biters"
 
 local Public = {}
 
-local function on_player_joined_game(event)
-	local surface = game.surfaces[global.bb_surface_name]
-	local player = game.players[event.player_index]
+---@param player LuaPlayer
+function Public.on_player_joined_game(player)
 	if player.online_time == 0 or player.force.name == "player" then
 		Functions.init_player(player)
 	end
@@ -422,7 +421,6 @@ Event.add_event_filter(defines.events.on_post_entity_died, {
 	filter = "type",
 	type = "unit",
 })
-Event.add(defines.events.on_player_joined_game, on_player_joined_game)
 Event.add(defines.events.on_robot_mined_entity, on_robot_mined_entity)
 Event.add(defines.events.on_research_finished, on_research_finished)
 Event.add(defines.events.on_robot_built_tile, on_robot_built_tile)

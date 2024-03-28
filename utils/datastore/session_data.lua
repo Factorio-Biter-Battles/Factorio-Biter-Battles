@@ -131,18 +131,6 @@ function Public.get_trusted_table()
     return trusted
 end
 
-
-Event.add(
-    defines.events.on_player_joined_game,
-    function(event)
-        local player = game.get_player(event.player_index)
-        if not player or not player.valid then
-            return
-        end
-		Server.set_total_time_played(player)
-    end
-)
-
 Event.on_nth_tick(settings.nth_tick, upload_data)
 
 return Public

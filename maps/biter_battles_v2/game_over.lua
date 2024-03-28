@@ -9,7 +9,6 @@ local Event = require 'utils.event'
 local Tables = require 'maps.biter_battles_v2.tables'
 local Token = require 'utils.token'
 local Task = require 'utils.task'
-local math_random = math.random
 local gui_style = require 'utils.utils'.gui_style
 
 local Public = {}

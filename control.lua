@@ -54,8 +54,11 @@ local ComfyPanelAdmin = require "comfy_panel.admin"
 local ComfyPanelConfig = require "comfy_panel.config"
 local ComfyPanelGroup = require "comfy_panel.group"
 local ComfyPanelHistories = require "comfy_panel.histories"
+local ComfyPanelMain = require "comfy_panel.main"
 local ComfyPanelPlayerList = require "comfy_panel.player_list"
+local ComfyPanelPoll = require "comfy_panel.poll"
 local ComfyPanelScore = require "comfy_panel.score"
+local CommandsSuspend = require "commands.suspend"
 local ComfyPanelSpecialGames = require "comfy_panel.special_games"
 local Functions = require "maps.biter_battles_v2.functions"
 local FunctionsBossUnit = require "functions.boss_unit"
@@ -73,10 +76,14 @@ local ModulesMapInfo = require "modules.map_info"
 local ModulesShowInventory = require "modules.show_inventory"
 local ModulesSimpleTags = require "modules.simple_tags"
 local ModulesSpawnersContainBiters = require "modules.spawners_contain_biters"
+local PlayerModifiers = require "player_modifiers"
 local Terrain = require "maps.biter_battles_v2.terrain"
 local UtilsDatastoreColorData = require "utils.datastore.color_data"
 local UtilsDatastoreJailData = require "utils.datastore.jail_data"
+local UtilsDatastoreMessageOnJoinData = require "utils.datastore.message_on_join_data"
+local UtilsDatastorePlayerTagData = require "utils.datastore.player_tag_data"
 local UtilsDatastoreSessionData = require "utils.datastore.session_data"
+local UtilsDatastoreQuickbarData = require "utils.datastore.quickbar_data"
 local UtilsFreeplay = require "utils.freeplay"
 local UtilsMuted = require "utils.muted"
 local UtilsServer = require "utils.server"
@@ -467,6 +474,42 @@ Event.add(
 	---@param event EventData.on_player_gun_inventory_changed
 	function (event)
 		ModulesShowInventory.update_gui(event)
+	end
+)
+
+Event.add(
+	defines.events.on_player_joined_game,
+	---@param event EventData.on_player_joined_game
+	function (event)
+		local player = game.players[event.player_index]
+		if player.valid then
+			if player.online_time == 0 then
+				ComfyPanelMain.comfy_panel_call_tab(player, 'Map Info')
+			end
+			ComfyPanelMain.top_button(player)
+			ModulesSimpleTags.draw_top_gui(player)
+			CommandsSuspend.on_player_joined_game(player)
+			ComfyPanelPoll.on_player_joined_game(player)
+			ComfyPanelGroup.on_player_joined_game(player)
+			Antigrief.on_player_joined_game(player)
+			PlayerModifiers.on_player_joined_game(player)
+			UtilsServer.on_player_joined_game(player)
+			MapsBiterBattlesV2Gui.on_player_joined_game(player)
+			MapsBiterBattlesV2Main.on_player_joined_game(player)
+			MapsBiterBattlesV2DifficultyVote.on_player_joined_game(player)
+			UtilsServer.set_total_time_played(player)
+
+			local secs = UtilsServer.get_current_time()
+			if secs then
+				UtilsDatastoreColorData.fetch(player.name)
+				UtilsDatastoreJailData.try_dl_data(player.name)
+				UtilsDatastoreMessageOnJoinData.fetch(player.name)
+				UtilsDatastorePlayerTagData.fetch(player.name)
+				UtilsDatastoreQuickbarData.fetch_quickbar(player)
+				UtilsDatastoreQuickbarData.fetch_logistics(player)
+			end
+		end
+		ComfyPanelPlayerList.on_player_joined_game(event)
 	end
 )
 

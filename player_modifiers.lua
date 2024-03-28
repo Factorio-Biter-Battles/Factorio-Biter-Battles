@@ -51,14 +51,15 @@ function Public.update_player_modifiers(player)
     end
 end
 
-local function on_player_joined_game(event)
-    if this[event.player_index] then
-        Public.update_player_modifiers(game.players[event.player_index])
+---@param player LuaPlayer
+function Public.on_player_joined_game(player)
+    if this[player.index] then
+        Public.update_player_modifiers(player)
         return
     end
-    this[event.player_index] = {}
+    this[player.index] = {}
     for _, modifier in pairs(modifiers) do
-        this[event.player_index][modifier] = {}
+        this[player.index][modifier] = {}
     end
 end
 
@@ -67,7 +68,6 @@ local function on_player_respawned(event)
 end
 
 local Event = require 'utils.event'
-Event.add(defines.events.on_player_joined_game, on_player_joined_game)
 Event.add(defines.events.on_player_respawned, on_player_respawned)
 
 return Public

@@ -1,7 +1,6 @@
 local Token = require 'utils.token'
 local Color = require 'utils.color_presets'
 local Server = require 'utils.server'
-local Event = require 'utils.event'
 
 local color_data_set = 'colors'
 local set_data = Server.set_data
@@ -52,20 +51,6 @@ function Public.fetch(key)
         try_get_data(color_data_set, key, fetch)
     end
 end
-
-local fetcher = Public.fetch
-
-Event.add(
-    defines.events.on_player_joined_game,
-    function(event)
-        local player = game.get_player(event.player_index)
-        if not player then
-            return
-        end
-
-        fetcher(player.name)
-    end
-)
 
 ---@param event EventData.on_console_command
 function Public.on_console_command(event)

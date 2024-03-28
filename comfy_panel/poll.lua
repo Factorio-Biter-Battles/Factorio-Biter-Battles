@@ -805,12 +805,8 @@ local function vote(event)
     end
 end
 
-local function player_joined(event)
-    local player = Game.get_player_by_index(event.player_index)
-    if not player or not player.valid then
-        return
-    end
-
+---@param player LuaPlayer
+function Class.on_player_joined_game(player)
     if player.gui.top[main_button_name] ~= nil then
         local frame = player.gui.top[main_frame_name]
         if frame and frame.valid then
@@ -850,7 +846,6 @@ local function tick()
     end
 end
 
-Event.add(defines.events.on_player_joined_game, player_joined)
 Event.on_nth_tick(60, tick)
 
 Gui.on_click(main_button_name, toggle)
