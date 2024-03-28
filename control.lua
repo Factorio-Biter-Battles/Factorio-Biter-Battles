@@ -448,6 +448,14 @@ Event.add(
 )
 
 Event.add(
+	defines.events.on_player_gun_inventory_changed,
+	---@param event EventData.on_player_gun_inventory_changed
+	function (event)
+		ModulesShowInventory.update_gui(event)
+	end
+)
+
+Event.add(
 	defines.events.on_player_died,
 	---@param event EventData.on_player_died
 	function(event)
