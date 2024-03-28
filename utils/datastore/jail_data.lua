@@ -217,7 +217,8 @@ local teleport_player_to_gulag = function(player, action)
     end
 end
 
-local on_player_changed_surface = function(event)
+---@param event EventData.on_player_changed_surface
+function Public.on_player_changed_surface(event)
     local player = game.players[event.player_index]
     if not player or not player.valid then
         return
@@ -588,7 +589,6 @@ function Public.on_console_command(event)
 	end
 end
 
-Event.add(defines.events.on_player_changed_surface, on_player_changed_surface)
 Event.on_init(create_gulag_surface)
 
 Server.on_data_set_changed(
