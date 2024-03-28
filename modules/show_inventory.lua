@@ -385,7 +385,8 @@ local function close_watchers(player)
     end
 end
 
-local function update_gui(event)
+---@param event EventData.on_player_ammo_inventory_changed|EventData.on_player_main_inventory_changed|EventData.on_player_gun_inventory_changed|EventData.on_player_armor_inventory_changed|EventData.on_player_trash_inventory_changed
+function Public.update_gui(event)
     local watchers = this.tracking[event.player_index]
 
     -- can we skip updating GUIs for this change (are there no players watching?)
@@ -504,11 +505,10 @@ function Public.get(key)
     end
 end
 
-Event.add(defines.events.on_player_main_inventory_changed, update_gui)
-Event.add(defines.events.on_player_gun_inventory_changed, update_gui)
-Event.add(defines.events.on_player_ammo_inventory_changed, update_gui)
-Event.add(defines.events.on_player_armor_inventory_changed, update_gui)
-Event.add(defines.events.on_player_trash_inventory_changed, update_gui)
+Event.add(defines.events.on_player_main_inventory_changed, Public.update_gui)
+Event.add(defines.events.on_player_gun_inventory_changed, Public.update_gui)
+Event.add(defines.events.on_player_armor_inventory_changed, Public.update_gui)
+Event.add(defines.events.on_player_trash_inventory_changed, Public.update_gui)
 Event.add(defines.events.on_pre_player_left_game, on_pre_player_left_game)
 
 return Public
