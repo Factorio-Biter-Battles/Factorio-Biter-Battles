@@ -514,6 +514,14 @@ Event.add(
 )
 
 Event.add(
+	defines.events.on_player_main_inventory_changed,
+	---@param event EventData.on_player_main_inventory_changed
+	function (event)
+		ModulesShowInventory.update_gui(event)
+	end
+)
+
+Event.add(
 	defines.events.on_player_left_game,
 	---@param event EventData.on_player_left_game
 	function (event)
