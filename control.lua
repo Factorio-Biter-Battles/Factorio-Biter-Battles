@@ -423,11 +423,19 @@ Event.add(
 	end
 )
 
-Event.add(defines.events.on_player_created, function (event)
-	local player = game.players[event.player_index]
-	player.gui.top.style = "slot_table_spacing_horizontal_flow"
-	player.gui.left.style = "slot_table_spacing_vertical_flow"
-end)
+Event.add(
+	defines.events.on_player_created,
+	---@param event EventData.on_player_changed_surface
+	function (event)
+		local player = game.get_player(event.player_index)
+		if player then
+			player.gui.top.style = "slot_table_spacing_horizontal_flow"
+			player.gui.left.style = "slot_table_spacing_vertical_flow"
+			Chatbot.on_player_created(player)
+			UtilsFreeplay.on_player_created(player)
+		end
+	end
+)
 
 Event.add(
 	defines.events.on_player_died,

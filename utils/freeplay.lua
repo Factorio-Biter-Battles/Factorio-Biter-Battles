@@ -71,15 +71,17 @@ local chart_starting_area = function()
     force.chart(surface, {{origin.x - r, origin.y - r}, {origin.x + r, origin.y + r}})
 end
 
-local on_player_created = function(event)
+---This is so that other mods and scripts have a chance to do remote calls 
+---before we do things like charting the starting area, creating the crash
+---site, etc.
+---@param player LuaPlayer
+function Public.on_player_created(player)
     if not this.modded then
         return
     end
-    local player = game.get_player(event.player_index)
     util.insert_safe(player, this.created_items)
 
     if not this.init_ran then
-        --This is so that other mods and scripts have a chance to do remote calls before we do things like charting the starting area, creating the crash site, etc.
         this.init_ran = true
 
         chart_starting_area()
@@ -226,6 +228,5 @@ Event.on_configuration_changed = function()
     end
 end
 
-Event.add(defines.events.on_player_created, on_player_created)
 Event.add('crash-site-skip-cutscene', skip_crash_site_cutscene)
 return Public

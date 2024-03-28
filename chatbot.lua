@@ -68,8 +68,8 @@ local links = {
     ['stfu'] = brain[6],
 }
 
-local function on_player_created(event)
-    local player = game.players[event.player_index]
+---@param player LuaPlayer
+function Public.on_player_created(player)
     player.print('[font=' .. font .. ']' .. 'Welcome! Join us on discord >> https://discord.com/invite/hAYW3K7J2A' .. '[/font]', font_color)
 end
 
@@ -250,5 +250,4 @@ function Public.on_console_command(event)
     end
 end
 
-Event.add(defines.events.on_player_created, on_player_created)
 return Public
