@@ -263,7 +263,7 @@ local function on_player_joined_game(event)
     end
 end
 
-local function on_player_built_tile(event)
+function Public.on_player_built_tile(event)
     if not this.enabled then
         return
     end
@@ -835,7 +835,6 @@ function Public.get(key)
 end
 
 Event.on_init(on_init)
-Event.add(de.on_player_built_tile, on_player_built_tile)
 Event.add(de.on_pre_player_mined_item, on_pre_player_mined_item)
 Event.add(de.on_player_used_capsule, on_player_used_capsule)
 Event.add(de.on_player_cursor_stack_changed, on_player_cursor_stack_changed)

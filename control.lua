@@ -395,6 +395,18 @@ Event.add(
 	end
 )
 
+Event.add(
+	defines.events.on_player_built_tile,
+	---@param event EventData.on_player_built_tile
+	function (event)
+		Antigrief.on_player_built_tile(event)
+		local player = game.get_player(event.player_index)
+		if player and event.item and event.item.name == "landfill" then
+			Terrain.restrict_landfill(player.surface, player, event.tiles)
+		end
+	end
+)
+
 Event.add(defines.events.on_player_created, function (event)
 	local player = game.players[event.player_index]
 	player.gui.top.style = "slot_table_spacing_horizontal_flow"

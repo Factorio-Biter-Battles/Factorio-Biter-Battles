@@ -271,13 +271,6 @@ function Public.on_marked_for_deconstruction(event)
 	end
 end
 
-local function on_player_built_tile(event)
-	local player = game.players[event.player_index]
-	if event.item ~= nil and event.item.name == "landfill" then
-		Terrain.restrict_landfill(player.surface, player, event.tiles)
-	end
-end
-
 local function on_robot_mined_entity(event)
 	AiTargets.stop_tracking(event.entity)
 end
@@ -429,7 +422,6 @@ Event.add_event_filter(defines.events.on_post_entity_died, {
 	filter = "type",
 	type = "unit",
 })
-Event.add(defines.events.on_player_built_tile, on_player_built_tile)
 Event.add(defines.events.on_player_joined_game, on_player_joined_game)
 Event.add(defines.events.on_robot_mined_entity, on_robot_mined_entity)
 Event.add(defines.events.on_research_finished, on_research_finished)
