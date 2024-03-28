@@ -540,7 +540,8 @@ local function on_player_cursor_stack_changed(event)
     end
 end
 
-local function on_player_cancelled_crafting(event)
+---@param event EventData.on_player_cancelled_crafting
+function Public.on_player_cancelled_crafting(event)
     if not this.enabled then
         return
     end
@@ -838,7 +839,6 @@ Event.on_init(on_init)
 Event.add(de.on_pre_player_mined_item, on_pre_player_mined_item)
 Event.add(de.on_player_used_capsule, on_player_used_capsule)
 Event.add(de.on_player_cursor_stack_changed, on_player_cursor_stack_changed)
-Event.add(de.on_player_cancelled_crafting, on_player_cancelled_crafting)
 Event.add(de.on_player_joined_game, on_player_joined_game)
 
 return Public
