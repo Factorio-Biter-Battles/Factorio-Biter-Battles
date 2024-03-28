@@ -259,7 +259,8 @@ function Public.on_tick(tick)
 	Ai.reanimate_units()
 end
 
-local function on_marked_for_deconstruction(event)
+---@param event EventData.on_marked_for_deconstruction
+function Public.on_marked_for_deconstruction(event)
 	if not event.entity.valid then return end
 	if not event.player_index then return end
 	local force_name = game.get_player(event.player_index).force.name
@@ -428,7 +429,6 @@ Event.add_event_filter(defines.events.on_post_entity_died, {
 	filter = "type",
 	type = "unit",
 })
-Event.add(defines.events.on_marked_for_deconstruction, on_marked_for_deconstruction)
 Event.add(defines.events.on_player_built_tile, on_player_built_tile)
 Event.add(defines.events.on_player_joined_game, on_player_joined_game)
 Event.add(defines.events.on_robot_mined_entity, on_robot_mined_entity)

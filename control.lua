@@ -337,6 +337,15 @@ Event.add(
 	end
 )
 
+Event.add(
+	defines.events.on_marked_for_deconstruction,
+	---@param event EventData.on_marked_for_deconstruction
+	function (event)
+		Antigrief.on_marked_for_deconstruction(event)
+		MapsBiterBattlesV2Main.on_marked_for_deconstruction(event)
+	end
+)
+
 Event.add(defines.events.on_player_created, function (event)
 	local player = game.players[event.player_index]
 	player.gui.top.style = "slot_table_spacing_horizontal_flow"

@@ -190,7 +190,8 @@ local function do_action(player, prefix, msg, ban_msg, kill)
     end
 end
 
-local function on_marked_for_deconstruction(event)
+---@param event EventData.on_marked_for_deconstruction
+function Public.on_marked_for_deconstruction(event)
     if not this.enabled then
         return
     end
@@ -829,7 +830,6 @@ function Public.get(key)
 end
 
 Event.on_init(on_init)
-Event.add(de.on_marked_for_deconstruction, on_marked_for_deconstruction)
 Event.add(de.on_player_ammo_inventory_changed, on_player_ammo_inventory_changed)
 Event.add(de.on_player_built_tile, on_player_built_tile)
 Event.add(de.on_pre_player_mined_item, on_pre_player_mined_item)
