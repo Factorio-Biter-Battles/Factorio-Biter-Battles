@@ -634,7 +634,8 @@ function Public.on_permission_group_deleted(event)
     end
 end
 
-local function on_permission_group_edited(event)
+---@param event EventData.on_permission_group_edited
+function Public.on_permission_group_edited(event)
     if not this.enabled then
         return
     end
@@ -839,7 +840,6 @@ Event.add(de.on_player_used_capsule, on_player_used_capsule)
 Event.add(de.on_player_cursor_stack_changed, on_player_cursor_stack_changed)
 Event.add(de.on_player_cancelled_crafting, on_player_cancelled_crafting)
 Event.add(de.on_player_joined_game, on_player_joined_game)
-Event.add(de.on_permission_group_edited, on_permission_group_edited)
 Event.add(de.on_permission_string_imported, on_permission_string_imported)
 
 return Public
