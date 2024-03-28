@@ -190,7 +190,8 @@ local function do_action(player, prefix, msg, ban_msg, kill)
     end
 end
 
-local function on_marked_for_deconstruction(event)
+---@param event EventData.on_marked_for_deconstruction
+function Public.on_marked_for_deconstruction(event)
     if not this.enabled then
         return
     end
@@ -217,7 +218,8 @@ local function on_marked_for_deconstruction(event)
     end
 end
 
-local function on_player_ammo_inventory_changed(event)
+---@param event EventData.on_player_ammo_inventory_changed
+function Public.on_player_ammo_inventory_changed(event)
     if not this.enabled then
         return
     end
@@ -246,8 +248,8 @@ local function on_player_ammo_inventory_changed(event)
     end
 end
 
-local function on_player_joined_game(event)
-    local player = game.get_player(event.player_index)
+---@param player LuaPlayer
+function Public.on_player_joined_game(player)
     local trusted = session.get_trusted_table()
     if not this.enabled then
         if not trusted[player.name] then
@@ -261,7 +263,7 @@ local function on_player_joined_game(event)
     end
 end
 
-local function on_player_built_tile(event)
+function Public.on_player_built_tile(event)
     if not this.enabled then
         return
     end
@@ -289,15 +291,15 @@ local function on_player_built_tile(event)
     this.histories.landfill[this.histories_idx.landfill] = data
 end
 
-local function on_built_entity(event)
+---@param entity LuaEntity
+---@param player LuaPlayer
+function Public.on_built_entity(entity, player)
     if not this.enabled then
         return
     end
     local tracker = session.get_session_table()
     local trusted = session.get_trusted_table()
-    if event.created_entity.type == 'entity-ghost' then
-        local player = game.get_player(event.player_index)
-
+    if entity.type == 'entity-ghost' then
         if player.admin then
             return
         end
@@ -311,7 +313,7 @@ local function on_built_entity(event)
         end
 
         if playtime < this.required_playtime then
-            event.created_entity.destroy()
+            entity.destroy()
             player.print('You have not grown accustomed to this technology yet.', {r = 0.22, g = 0.99, b = 0.99})
         end
     end
@@ -343,8 +345,8 @@ local function on_player_used_capsule(event)
     end
 end
 
---Friendly Fire History
-local function on_entity_died(event)
+---@param event EventData.on_entity_died
+function Public.on_entity_died(event)
     if not this.enabled then
         return
     end
@@ -358,7 +360,7 @@ local function on_entity_died(event)
         local data = {
             player_name = player.name,
             event = "destroyed " .. event.entity.name,
-            position = {x = math.floor(event.entity.position.x), y = math.floor(event.entity.position.y)},            
+            position = {x = math.floor(event.entity.position.x), y = math.floor(event.entity.position.y)},
             time = game.ticks_played,
             server_time = game.tick
         }
@@ -409,7 +411,8 @@ function Public.on_player_mined_entity(entity, player)
     end
 end
 
-local function on_gui_opened(event)
+---@param event EventData.on_gui_opened
+function Public.on_gui_opened(event)
     if not this.enabled then
         return
     end
@@ -493,13 +496,13 @@ local function on_pre_player_mined_item(event)
     end
 end
 
-local function on_player_cursor_stack_changed(event)
+---@param player LuaPlayer
+function Public.on_player_cursor_stack_changed(player)
     if not this.enabled then
         return
     end
     local tracker = session.get_session_table()
     local trusted = session.get_trusted_table()
-    local player = game.get_player(event.player_index)
     if player.admin then
         return
     end
@@ -537,7 +540,8 @@ local function on_player_cursor_stack_changed(event)
     end
 end
 
-local function on_player_cancelled_crafting(event)
+---@param event EventData.on_player_cancelled_crafting
+function Public.on_player_cancelled_crafting(event)
     if not this.enabled then
         return
     end
@@ -598,7 +602,8 @@ local function on_init()
     end
 end
 
-local function on_permission_group_added(event)
+---@param event EventData.on_permission_group_added
+function Public.on_permission_group_added(event)
     if not this.enabled then
         return
     end
@@ -614,7 +619,8 @@ local function on_permission_group_added(event)
     end
 end
 
-local function on_permission_group_deleted(event)
+---@param event EventData.on_permission_group_deleted
+function Public.on_permission_group_deleted(event)
     if not this.enabled then
         return
     end
@@ -630,7 +636,8 @@ local function on_permission_group_deleted(event)
     end
 end
 
-local function on_permission_group_edited(event)
+---@param event EventData.on_permission_group_edited
+function Public.on_permission_group_edited(event)
     if not this.enabled then
         return
     end
@@ -671,7 +678,8 @@ local function on_permission_group_edited(event)
     end
 end
 
-local function on_permission_string_imported(event)
+---@param event EventData.on_permission_string_imported
+function Public.on_permission_string_imported(event)
     if not this.enabled then
         return
     end
@@ -828,20 +836,7 @@ function Public.get(key)
 end
 
 Event.on_init(on_init)
-Event.add(de.on_entity_died, on_entity_died)
-Event.add(de.on_built_entity, on_built_entity)
-Event.add(de.on_gui_opened, on_gui_opened)
-Event.add(de.on_marked_for_deconstruction, on_marked_for_deconstruction)
-Event.add(de.on_player_ammo_inventory_changed, on_player_ammo_inventory_changed)
-Event.add(de.on_player_built_tile, on_player_built_tile)
 Event.add(de.on_pre_player_mined_item, on_pre_player_mined_item)
 Event.add(de.on_player_used_capsule, on_player_used_capsule)
-Event.add(de.on_player_cursor_stack_changed, on_player_cursor_stack_changed)
-Event.add(de.on_player_cancelled_crafting, on_player_cancelled_crafting)
-Event.add(de.on_player_joined_game, on_player_joined_game)
-Event.add(de.on_permission_group_added, on_permission_group_added)
-Event.add(de.on_permission_group_deleted, on_permission_group_deleted)
-Event.add(de.on_permission_group_edited, on_permission_group_edited)
-Event.add(de.on_permission_string_imported, on_permission_string_imported)
 
 return Public

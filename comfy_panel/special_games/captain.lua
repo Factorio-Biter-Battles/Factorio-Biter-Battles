@@ -838,6 +838,7 @@ function Public.clear_gui_special()
 	clear_gui_captain_mode()
 end
 
+---@param event EventData.on_gui_click
 local function on_gui_click(event)
     local element = event.element
     if not element then return end

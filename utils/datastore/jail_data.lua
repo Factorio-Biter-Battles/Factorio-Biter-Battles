@@ -217,7 +217,8 @@ local teleport_player_to_gulag = function(player, action)
     end
 end
 
-local on_player_changed_surface = function(event)
+---@param event EventData.on_player_changed_surface
+function Public.on_player_changed_surface(event)
     local player = game.players[event.player_index]
     if not player or not player.valid then
         return
@@ -499,98 +500,83 @@ function Public.get_jailed_table()
     return jailed
 end
 
-Event.add(
-    defines.events.on_player_joined_game,
-    function(event)
-        local player = game.get_player(event.player_index)
-        if not player or not player.valid then
-            return
-        end
+---@param event EventData.on_console_command
+function Public.on_console_command(event)
+	local cmd = event.command
+	if not valid_commands[cmd] then
+		return
+	end
 
-        Public.try_dl_data(player.name)
-    end
-)
+	local param = event.parameters
 
-Event.add(
-    defines.events.on_console_command,
-    function(event)
-        local cmd = event.command
-        if not valid_commands[cmd] then
-            return
-        end
+	if event.player_index then
+		local player = game.players[event.player_index]
+		local playtime = validate_playtime(player)
+		local trusted = validate_trusted(player)
 
-        local param = event.parameters
+		if not param then
+			return Utils.print_to(player, 'No valid reason given.')
+		end
 
-        if event.player_index then
-            local player = game.players[event.player_index]
-            local playtime = validate_playtime(player)
-            local trusted = validate_trusted(player)
+		local message
+		local t = {}
 
-            if not param then
-                return Utils.print_to(player, 'No valid reason given.')
-            end
+		for i in string.gmatch(param, '%S+') do
+			t[#t + 1] = i
+		end
 
-            local message
-            local t = {}
+		local griefer = t[1]
+		table.remove(t, 1)
 
-            for i in string.gmatch(param, '%S+') do
-                t[#t + 1] = i
-            end
+		message = concat(t, ' ')
 
-            local griefer = t[1]
-            table.remove(t, 1)
+		local data = {
+			player = player,
+			griefer = griefer,
+			trusted = trusted,
+			playtime = playtime,
+			message = message,
+			cmd = cmd
+		}
 
-            message = concat(t, ' ')
+		local success = validate_args(data)
 
-            local data = {
-                player = player,
-                griefer = griefer,
-                trusted = trusted,
-                playtime = playtime,
-                message = message,
-                cmd = cmd
-            }
+		if not success then
+			return
+		end
 
-            local success = validate_args(data)
+		if game.players[griefer] then
+			griefer = game.players[griefer].name
+		end
 
-            if not success then
-                return
-            end
+		if trusted and playtime >= settings.playtime_for_vote and playtime < settings.playtime_for_instant_jail and not player.admin then
+			if cmd == 'jail' then
+				vote_to_jail(player, griefer, message)
+				return
+			elseif cmd == 'free' then
+				vote_to_free(player, griefer)
+				return
+			end
+		end
 
-            if game.players[griefer] then
-                griefer = game.players[griefer].name
-            end
+		if player.admin or playtime >= settings.playtime_for_instant_jail then
+			if cmd == 'jail' then
+				if player.admin then
+					Utils.warning(
+						player,
+						'Abusing the jail command will lead to revoked permissions. Jailing someone in case of disagreement is not OK!'
+					)
+				end
+				Public.try_ul_data(griefer, true, player.name, message)
+				return
+			elseif cmd == 'free' then
+				Public.try_ul_data(griefer, false, player.name)
+				return
+			end
+		end
+	end
+end
 
-            if trusted and playtime >= settings.playtime_for_vote and playtime < settings.playtime_for_instant_jail and not player.admin then
-                if cmd == 'jail' then
-                    vote_to_jail(player, griefer, message)
-                    return
-                elseif cmd == 'free' then
-                    vote_to_free(player, griefer)
-                    return
-                end
-            end
-
-            if player.admin or playtime >= settings.playtime_for_instant_jail then
-                if cmd == 'jail' then
-                    if player.admin then
-                        Utils.warning(
-                            player,
-                            'Abusing the jail command will lead to revoked permissions. Jailing someone in case of disagreement is not OK!'
-                        )
-                    end
-                    Public.try_ul_data(griefer, true, player.name, message)
-                    return
-                elseif cmd == 'free' then
-                    Public.try_ul_data(griefer, false, player.name)
-                    return
-                end
-            end
-        end
-    end
-)
-
-Event.add(defines.events.on_player_changed_surface, on_player_changed_surface)
 Event.on_init(create_gulag_surface)
 
 Server.on_data_set_changed(

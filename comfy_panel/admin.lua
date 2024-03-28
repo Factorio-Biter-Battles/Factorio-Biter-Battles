@@ -7,6 +7,8 @@ local Server = require 'utils.server'
 local Color = require 'utils.color_presets'
 local lower = string.lower
 
+local Public = {}
+
 local function admin_only_message(str)
     for _, player in pairs(game.connected_players) do
         if player.admin == true then
@@ -458,7 +460,8 @@ local function get_position_from_string(str)
     return position
 end
 
-local function on_gui_click(event)
+---@param event EventData.on_gui_click
+function Public.on_gui_click(event)
     local player = game.players[event.player_index]
     local frame = Tabs.comfy_panel_get_active_frame(player)
     if not frame then
@@ -527,7 +530,8 @@ local function on_gui_click(event)
     create_mini_camera_gui(player, event.element.caption, position, surface)
 end
 
-local function on_gui_selection_state_changed(event)
+---@param event EventData.on_gui_selection_state_changed
+function Public.on_gui_selection_state_changed(event)
     local player = game.players[event.player_index]
     local name = event.element.name
     if name == 'admin_player_select' then
@@ -596,7 +600,5 @@ commands.add_command("punish", "Kill and ban a player. Usage: /punish <name> <re
 		punisher.print("Usage: /punish <name> <reason>", Color.warning)
 	end
 end)
-        
 
-Event.add(defines.events.on_gui_click, on_gui_click)
-Event.add(defines.events.on_gui_selection_state_changed, on_gui_selection_state_changed)
+return Public

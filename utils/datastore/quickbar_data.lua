@@ -290,24 +290,6 @@ commands.add_command(
 )
 
 Event.add(
-    defines.events.on_player_joined_game,
-    function(event)
-        local player = game.get_player(event.player_index)
-        if not player or not player.valid then
-            return
-        end
-
-        local secs = Server.get_current_time()
-        if not secs then
-            return
-        end
-
-        fetch_quickbar_on_join(player)
-        fetch_logistics_on_join(player)
-    end
-)
-
-Event.add(
     defines.events.on_research_finished,
     function(event)
         local research = event.research

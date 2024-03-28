@@ -86,7 +86,8 @@ local function get_sepecial_game_table(element)
     return nil
 end
 
-local function on_gui_click(event)
+---@param event EventData.on_gui_click
+function Public.on_gui_click(event)
     local element = event.element
     if not element then return end
     if not element.valid then return end
@@ -124,7 +125,5 @@ local function on_gui_click(event)
 end
 
 comfy_panel_tabs['Special games'] = {gui = create_special_games_panel, admin = true}
-
-Event.add(defines.events.on_gui_click, on_gui_click)
 
 return Public

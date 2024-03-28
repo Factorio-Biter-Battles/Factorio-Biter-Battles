@@ -10,13 +10,14 @@ local this = {
     crashed_ship_items = {},
     crashed_debris_items = {}
 }
-
 Global.register(
     this,
     function(t)
         this = t
     end
 )
+
+local Public = {}
 
 local function is_game_modded()
     local i = 0
@@ -70,15 +71,17 @@ local chart_starting_area = function()
     force.chart(surface, {{origin.x - r, origin.y - r}, {origin.x + r, origin.y + r}})
 end
 
-local on_player_created = function(event)
+---This is so that other mods and scripts have a chance to do remote calls 
+---before we do things like charting the starting area, creating the crash
+---site, etc.
+---@param player LuaPlayer
+function Public.on_player_created(player)
     if not this.modded then
         return
     end
-    local player = game.get_player(event.player_index)
     util.insert_safe(player, this.created_items)
 
     if not this.init_ran then
-        --This is so that other mods and scripts have a chance to do remote calls before we do things like charting the starting area, creating the crash site, etc.
         this.init_ran = true
 
         chart_starting_area()
@@ -104,7 +107,7 @@ local on_player_created = function(event)
     end
 end
 
-local on_player_respawned = function(event)
+function Public.on_player_respawned(event)
     if not this.modded then
         return
     end
@@ -112,7 +115,7 @@ local on_player_respawned = function(event)
     util.insert_safe(player, this.respawn_items)
 end
 
-local on_cutscene_waypoint_reached = function(event)
+function Public.on_cutscene_waypoint_reached(event)
     if not this.modded then
         return
     end
@@ -143,7 +146,7 @@ local skip_crash_site_cutscene = function(event)
     end
 end
 
-local on_cutscene_cancelled = function(event)
+function Public.on_cutscene_cancelled(event)
     if not this.modded then
         return
     end
@@ -225,8 +228,5 @@ Event.on_configuration_changed = function()
     end
 end
 
-Event.add(defines.events.on_player_created, on_player_created)
-Event.add(defines.events.on_player_respawned, on_player_respawned)
-Event.add(defines.events.on_cutscene_waypoint_reached, on_cutscene_waypoint_reached)
 Event.add('crash-site-skip-cutscene', skip_crash_site_cutscene)
-Event.add(defines.events.on_cutscene_cancelled, on_cutscene_cancelled)
+return Public

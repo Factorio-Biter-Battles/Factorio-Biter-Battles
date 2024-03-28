@@ -1,22 +1,23 @@
-local event = require 'utils.event'
+local Event = require 'utils.event'
 local Muted = require 'utils.muted'
 
+local Public = {}
 
-local function on_console_chat(event)
-	if not event.message or not event.player_index then return end		
-	local player = game.players[event.player_index]
+---@param player LuaPlayer
+---@param message string
+function Public.on_console_chat(player, message)
 	if not player.character then return end
 
 	if Muted and Muted.is_muted(player.name) then return end
 
 	local y_offset = -4
 	if package.loaded['modules.rpg'] then y_offset = -4.5 end
-	
+
 	if global.player_floaty_chat[player.index] then
 		rendering.destroy(global.player_floaty_chat[player.index])
 		global.player_floaty_chat[player.index] = nil
 	end
-	
+
 	local players = {}
 	for _, p in pairs(game.connected_players) do
 		if player.force.index == p.force.index then
@@ -24,9 +25,9 @@ local function on_console_chat(event)
 		end
 	end
 	if #players == 0 then return end
-	
+
 	global.player_floaty_chat[player.index] = rendering.draw_text{
-		text = event.message,
+		text = message,
 		surface = player.surface,
 		target = player.character,
 		target_offset = {-0.05, y_offset},
@@ -49,5 +50,5 @@ local function on_init(event)
 	global.player_floaty_chat = {}
 end
 
-event.on_init(on_init)
-event.add(defines.events.on_console_chat, on_console_chat)
+Event.on_init(on_init)
+return Public

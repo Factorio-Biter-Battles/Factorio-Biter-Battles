@@ -199,10 +199,8 @@ local function refresh_gui()
     end
 end
 
----@param event EventData.on_player_joined_game
-local function on_player_joined_game(event)
-    local player = game.players[event.player_index]
-
+---@param player LuaPlayer
+function Public.on_player_joined_game(player)
     if not this.player_group[player.name] then
         this.player_group[player.name] = '[Group]'
     end
@@ -213,7 +211,7 @@ local function on_player_joined_game(event)
 end
 
 ---@param event EventData.on_gui_text_changed
-local function on_gui_text_changed(event)
+function Public.on_gui_text_changed(event)
     local element = event.element
     if not element or not element.valid then
         return
@@ -241,7 +239,7 @@ local function alphanumeric(str)
 end
 
 ---@param event EventData.on_gui_click
-local function on_gui_click(event)
+function Public.on_gui_click(event)
     if not event then
         return
     end
@@ -408,10 +406,5 @@ function Public.reset_groups()
 end
 
 comfy_panel_tabs['Groups'] = {gui = build_group_gui, admin = false}
-
-local event = require 'utils.event'
-event.add(defines.events.on_gui_click, on_gui_click)
-event.add(defines.events.on_player_joined_game, on_player_joined_game)
-event.add(defines.events.on_gui_text_changed, on_gui_text_changed)
 
 return Public

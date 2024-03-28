@@ -2,9 +2,7 @@ local Public = {}
 global.player_data_afk = {}
 local Server = require 'utils.server'
 
-local bb_config = require "maps.biter_battles_v2.config"
 local bb_diff = require "maps.biter_battles_v2.difficulty_vote"
-local event = require 'utils.event'
 local Functions = require "maps.biter_battles_v2.functions"
 local Feeding = require "maps.biter_battles_v2.feeding"
 local Tables = require "maps.biter_battles_v2.tables"
@@ -504,7 +502,8 @@ function Public.spy_fish()
 	end
 end
 
-local function on_gui_click(event)
+---@param event EventData.on_gui_click
+function Public.on_gui_click(event)
 	if not event.element then return end
 	if not event.element.valid then return end
 	local player = game.players[event.player_index]
@@ -604,8 +603,8 @@ local function on_gui_click(event)
 end
 
 
-local function on_player_joined_game(event)
-	local player = game.players[event.player_index]
+---@param player LuaPlayer
+function Public.on_player_joined_game(player)
 	if player.online_time == 0 then
 		Functions.show_intro(player)
 	end
@@ -631,9 +630,5 @@ local function on_player_joined_game(event)
 	create_sprite_button(player)
 	Public.create_main_gui(player)
 end
-
-
-event.add(defines.events.on_gui_click, on_gui_click)
-event.add(defines.events.on_player_joined_game, on_player_joined_game)
 
 return Public
