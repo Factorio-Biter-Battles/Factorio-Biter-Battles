@@ -496,13 +496,13 @@ local function on_pre_player_mined_item(event)
     end
 end
 
-local function on_player_cursor_stack_changed(event)
+---@param player LuaPlayer
+function Public.on_player_cursor_stack_changed(player)
     if not this.enabled then
         return
     end
     local tracker = session.get_session_table()
     local trusted = session.get_trusted_table()
-    local player = game.get_player(event.player_index)
     if player.admin then
         return
     end
@@ -838,7 +838,6 @@ end
 Event.on_init(on_init)
 Event.add(de.on_pre_player_mined_item, on_pre_player_mined_item)
 Event.add(de.on_player_used_capsule, on_player_used_capsule)
-Event.add(de.on_player_cursor_stack_changed, on_player_cursor_stack_changed)
 Event.add(de.on_player_joined_game, on_player_joined_game)
 
 return Public

@@ -438,6 +438,17 @@ Event.add(
 )
 
 Event.add(
+	defines.events.on_player_cursor_stack_changed,
+	---@param event EventData.on_player_cursor_stack_changed
+	function (event)
+		local player = game.get_player(event.player_index)
+		if player then
+			Antigrief.on_player_cursor_stack_changed(player)
+		end
+	end
+)
+
+Event.add(
 	defines.events.on_player_died,
 	---@param event EventData.on_player_died
 	function(event)
