@@ -448,14 +448,6 @@ Event.add(
 )
 
 Event.add(
-	defines.events.on_player_gun_inventory_changed,
-	---@param event EventData.on_player_gun_inventory_changed
-	function (event)
-		ModulesShowInventory.update_gui(event)
-	end
-)
-
-Event.add(
 	defines.events.on_player_died,
 	---@param event EventData.on_player_died
 	function(event)
@@ -467,6 +459,14 @@ Event.add(
 			-- https://lua-api.factorio.com/latest/classes/LuaControl.html#force
 			ModulesCorpseMarkers.draw_map_tag(player.surface, player.force, player.position)
 		end
+	end
+)
+
+Event.add(
+	defines.events.on_player_gun_inventory_changed,
+	---@param event EventData.on_player_gun_inventory_changed
+	function (event)
+		ModulesShowInventory.update_gui(event)
 	end
 )
 
