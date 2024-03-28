@@ -328,6 +328,15 @@ Event.add(
 	end
 )
 
+Event.add(
+	defines.events.on_gui_text_changed,
+	---@param event EventData.on_gui_text_changed
+	function (event)
+		ComfyPanelHistories.on_gui_text_changed(event)
+		ComfyPanelGroup.on_gui_text_changed(event)
+	end
+)
+
 Event.add(defines.events.on_player_created, function (event)
 	local player = game.players[event.player_index]
 	player.gui.top.style = "slot_table_spacing_horizontal_flow"

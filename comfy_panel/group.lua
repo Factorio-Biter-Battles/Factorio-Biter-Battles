@@ -213,7 +213,7 @@ local function on_player_joined_game(event)
 end
 
 ---@param event EventData.on_gui_text_changed
-local function on_gui_text_changed(event)
+function Public.on_gui_text_changed(event)
     local element = event.element
     if not element or not element.valid then
         return
@@ -411,6 +411,5 @@ comfy_panel_tabs['Groups'] = {gui = build_group_gui, admin = false}
 
 local event = require 'utils.event'
 event.add(defines.events.on_player_joined_game, on_player_joined_game)
-event.add(defines.events.on_gui_text_changed, on_gui_text_changed)
 
 return Public

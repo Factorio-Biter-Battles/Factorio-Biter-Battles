@@ -1,7 +1,6 @@
 local get_active_frame = require 'comfy_panel.main'.comfy_panel_get_active_frame
 local AntiGrief_get = require 'antigrief'.get
 local lower = string.lower
-local Event = require 'utils.event'
 local Global = require 'utils.global'
 local pos_from_gps = require 'utils.string'.position_from_gps_tag
 local distance =  require 'utils.core'.distance
@@ -215,7 +214,8 @@ function Public.on_gui_selection_state_changed(event)
 	end
 end
 
-local function on_gui_text_changed(event)
+---@param event EventData.on_gui_text_changed
+function Public.on_gui_text_changed(event)
 	local element = event.element
 	if element and element.valid then
 		local player = game.get_player(event.player_index)
@@ -286,7 +286,5 @@ function Public.on_console_chat(player, message)
 end
 
 comfy_panel_tabs["Histories"] = {gui = create_histories_panel, admin = true}
-
-Event.add(defines.events.on_gui_text_changed, on_gui_text_changed)
 
 return Public
