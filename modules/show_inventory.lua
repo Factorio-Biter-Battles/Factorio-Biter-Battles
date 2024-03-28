@@ -507,7 +507,6 @@ end
 
 Event.add(defines.events.on_player_main_inventory_changed, Public.update_gui)
 Event.add(defines.events.on_player_gun_inventory_changed, Public.update_gui)
-Event.add(defines.events.on_player_armor_inventory_changed, Public.update_gui)
 Event.add(defines.events.on_player_trash_inventory_changed, Public.update_gui)
 Event.add(defines.events.on_pre_player_left_game, on_pre_player_left_game)
 
