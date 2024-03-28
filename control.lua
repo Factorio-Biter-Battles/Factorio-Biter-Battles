@@ -346,6 +346,14 @@ Event.add(
 	end
 )
 
+Event.add(
+	defines.events.on_permission_group_added,
+	---@param event EventData.on_permission_group_added
+	function (event)
+		Antigrief.on_permission_group_added(event)
+	end
+)
+
 Event.add(defines.events.on_player_created, function (event)
 	local player = game.players[event.player_index]
 	player.gui.top.style = "slot_table_spacing_horizontal_flow"

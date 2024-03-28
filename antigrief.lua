@@ -600,7 +600,8 @@ local function on_init()
     end
 end
 
-local function on_permission_group_added(event)
+---@param event EventData.on_permission_group_added
+function Public.on_permission_group_added(event)
     if not this.enabled then
         return
     end
@@ -837,7 +838,6 @@ Event.add(de.on_player_used_capsule, on_player_used_capsule)
 Event.add(de.on_player_cursor_stack_changed, on_player_cursor_stack_changed)
 Event.add(de.on_player_cancelled_crafting, on_player_cancelled_crafting)
 Event.add(de.on_player_joined_game, on_player_joined_game)
-Event.add(de.on_permission_group_added, on_permission_group_added)
 Event.add(de.on_permission_group_deleted, on_permission_group_deleted)
 Event.add(de.on_permission_group_edited, on_permission_group_edited)
 Event.add(de.on_permission_string_imported, on_permission_string_imported)
