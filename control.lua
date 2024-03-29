@@ -577,7 +577,7 @@ Event.add(defines.events.on_player_respawned,
 Event.add(defines.events.on_player_trash_inventory_changed,
 	---@param event EventData.on_player_trash_inventory_changed
 	function (event)
-		ModulesShowInventory.on_player_trash_inventory_changed(event)
+		ModulesShowInventory.update_gui(event)
 	end
 )
 
