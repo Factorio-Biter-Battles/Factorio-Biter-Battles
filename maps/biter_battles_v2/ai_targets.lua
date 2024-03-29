@@ -63,6 +63,8 @@ function Public.start_tracking(entity)
     end
 end
 
+---Should be pre-checked for validity
+---@param entity LuaEntity
 function Public.stop_tracking(entity)
     if target_entity_type[entity.type] and entity.unit_number then
         local targets = global.ai_targets[entity.force.name]

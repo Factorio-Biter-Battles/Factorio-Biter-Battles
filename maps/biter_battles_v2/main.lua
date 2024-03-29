@@ -267,10 +267,6 @@ function Public.on_marked_for_deconstruction(event)
 	end
 end
 
-local function on_robot_mined_entity(event)
-	AiTargets.stop_tracking(event.entity)
-end
-
 function Public.on_chunk_generated(event)
 	local surface = event.surface
 
@@ -413,7 +409,6 @@ end
 
 local Event = require 'utils.event'
 Event.add(defines.events.on_rocket_launch_ordered, on_rocket_launch_ordered)
-Event.add(defines.events.on_robot_mined_entity, on_robot_mined_entity)
 Event.on_init(on_init)
 
 commands.add_command('clear-corpses', 'Clears all the biter corpses..',

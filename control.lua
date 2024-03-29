@@ -675,6 +675,17 @@ Event.add(
 	end
 )
 
+Event.add(
+	defines.events.on_robot_mined_entity,
+	---@param event EventData.on_robot_mined_entity
+	function (event)
+		local entity = event.entity
+		if entity.valid then
+			AiTargets.stop_tracking(entity)
+		end
+	end
+)
+
 Event.add(defines.events.on_tick,
 	---@param event EventData.on_tick
 	function (event)
