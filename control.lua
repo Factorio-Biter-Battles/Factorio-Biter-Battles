@@ -76,7 +76,6 @@ local ModulesFloatyChat = require "modules.floaty_chat"
 local ModulesShowInventory = require "modules.show_inventory"
 local ModulesSimpleTags = require "modules.simple_tags"
 local ModulesSpawnersContainBiters = require "modules.spawners_contain_biters"
-local PlayerModifiers = require "player_modifiers"
 local Terrain = require "maps.biter_battles_v2.terrain"
 local UtilsDatastoreColorData = require "utils.datastore.color_data"
 local UtilsDatastoreJailData = require "utils.datastore.jail_data"
@@ -488,7 +487,6 @@ Event.add(
 			ComfyPanelPoll.on_player_joined_game(player)
 			ComfyPanelGroup.on_player_joined_game(player)
 			Antigrief.on_player_joined_game(player)
-			PlayerModifiers.on_player_joined_game(player)
 			UtilsServer.on_player_joined_game(player)
 			MapsBiterBattlesV2Gui.on_player_joined_game(player)
 			MapsBiterBattlesV2Main.on_player_joined_game(player)
