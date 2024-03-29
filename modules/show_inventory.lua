@@ -116,7 +116,8 @@ local function stop_watching(player_index, target_index)
     this.tracking[target_index][player_index] = nil
 end
 
-local function close_player_inventory(player)
+---@param player LuaPlayer
+function Public.close_player_inventory(player)
     local data = get_player_data(player)
 
     if not data then
@@ -362,11 +363,6 @@ function Public.on_gui_closed(event)
     end
 end
 
-local function on_pre_player_left_game(event)
-    local player = game.get_player(event.player_index)
-    close_player_inventory(player)
-end
-
 local function close_watchers(player)
     local watchers = this.tracking[player.index]
 
@@ -504,7 +500,5 @@ function Public.get(key)
         return this
     end
 end
-
-Event.add(defines.events.on_pre_player_left_game, on_pre_player_left_game)
 
 return Public

@@ -622,6 +622,17 @@ Event.add(defines.events.on_pre_player_crafted_item, function (event)
 end)
 
 Event.add(
+	defines.events.on_pre_player_left_game,
+	---@param event EventData.on_pre_player_left_game
+	function (event)
+		local player = game.get_player(event.player_index)
+		if player then
+			ModulesShowInventory.close_player_inventory(player)
+		end
+	end
+)
+
+Event.add(
 	defines.events.on_robot_built_entity,
 	---@param event EventData.on_robot_built_entity
 	function (event)
