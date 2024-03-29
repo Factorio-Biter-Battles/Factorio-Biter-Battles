@@ -651,6 +651,14 @@ Event.add(
 )
 
 Event.add(
+	defines.events.on_robot_built_tile,
+	---@param event EventData.on_robot_built_tile
+	function (event)
+		Terrain.deny_bot_landfill(event)
+	end
+)
+
+Event.add(
 	defines.events.on_robot_built_entity,
 	---@param event EventData.on_robot_built_entity
 	function (event)

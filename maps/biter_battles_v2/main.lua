@@ -143,10 +143,6 @@ function Public.on_console_command(event)
 	end
 end
 
-local function on_robot_built_tile(event)
-	Terrain.deny_bot_landfill(event)
-end
-
 ---@param event EventData.on_entity_died
 function Public.on_entity_died(event)
 	local entity = event.entity
@@ -418,7 +414,6 @@ end
 local Event = require 'utils.event'
 Event.add(defines.events.on_rocket_launch_ordered, on_rocket_launch_ordered)
 Event.add(defines.events.on_robot_mined_entity, on_robot_mined_entity)
-Event.add(defines.events.on_robot_built_tile, on_robot_built_tile)
 Event.on_init(on_init)
 
 commands.add_command('clear-corpses', 'Clears all the biter corpses..',
