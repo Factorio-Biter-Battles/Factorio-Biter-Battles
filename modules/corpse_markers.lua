@@ -59,14 +59,12 @@ function Public.on_character_corpse_expired(event)
 	redraw_all_tags()
 end
 
-local function on_pre_player_mined_item(event)
-	if event.entity.name ~= "character-corpse" then return end	
+---@param event EventData.on_pre_player_mined_item
+function Public.on_pre_player_mined_item(event)
+	if event.entity.name ~= "character-corpse" then return end
 	if find_and_destroy_tag(event.entity) then return end
 	destroy_all_tags()
 	redraw_all_tags()
 end
-
-local event = require 'utils.event'
-event.add(defines.events.on_pre_player_mined_item, on_pre_player_mined_item)
 
 return Public

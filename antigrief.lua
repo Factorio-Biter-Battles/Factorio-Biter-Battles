@@ -452,7 +452,8 @@ function Public.on_gui_opened(event)
     end
 end
 
-local function on_pre_player_mined_item(event)
+---@param event EventData.on_pre_player_mined_item
+function Public.on_pre_player_mined_item(event)
     if not this.enabled then
         return
     end
@@ -837,6 +838,5 @@ function Public.get(key)
 end
 
 Event.on_init(on_init)
-Event.add(de.on_pre_player_mined_item, on_pre_player_mined_item)
 
 return Public

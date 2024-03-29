@@ -633,6 +633,15 @@ Event.add(
 )
 
 Event.add(
+	defines.events.on_pre_player_mined_item,
+	---@param event EventData.on_pre_player_mined_item
+	function (event)
+		ModulesCorpseMarkers.on_pre_player_mined_item(event)
+		Antigrief.on_pre_player_mined_item(event)
+	end
+)
+
+Event.add(
 	defines.events.on_robot_built_entity,
 	---@param event EventData.on_robot_built_entity
 	function (event)
