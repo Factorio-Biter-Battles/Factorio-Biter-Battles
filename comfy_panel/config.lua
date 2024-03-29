@@ -682,7 +682,7 @@ function Public.on_gui_switch_state_changed(event)
     end
 end
 
-local function on_init()
+function Public.init_comfy_panel_config()
     global.comfy_panel_config = {}
     global.comfy_panel_config.spaghett = {}
     global.comfy_panel_config.spaghett.undo = {}
@@ -692,6 +692,4 @@ end
 
 comfy_panel_tabs['Config'] = {gui = build_config_gui, admin = false}
 
-local Event = require 'utils.event'
-Event.on_init(on_init)
 return Public

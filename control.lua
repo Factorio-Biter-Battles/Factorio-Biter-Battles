@@ -59,6 +59,7 @@ local ComfyPanelPlayerList = require "comfy_panel.player_list"
 local ComfyPanelPoll = require "comfy_panel.poll"
 local ComfyPanelScore = require "comfy_panel.score"
 local CommandsSuspend = require "commands.suspend"
+local CommandsWhere = require "commands.where"
 local ComfyPanelSpecialGames = require "comfy_panel.special_games"
 local Functions = require "maps.biter_battles_v2.functions"
 local FunctionsBossUnit = require "functions.boss_unit"
@@ -67,6 +68,7 @@ local MapsBiterBattlesV2AiStrikes = require "maps.biter_battles_v2.ai_strikes"
 local MapsBiterBattlesV2DifficultyVote = require "maps.biter_battles_v2.difficulty_vote"
 local MapsBiterBattlesV2GameOver = require "maps.biter_battles_v2.game_over"
 local MapsBiterBattlesV2Gui = require "maps.biter_battles_v2.gui"
+local MapsBiterBattlesV2Init = require "maps.biter_battles_v2.init"
 local MapsBiterBattlesV2Main = require "maps.biter_battles_v2.main"
 local MapsBiterBattlesV2MirrorTerrain = require "maps.biter_battles_v2.mirror_terrain"
 local MapsBiterBattlesV2SciencelogsTab = require "maps.biter_battles_v2.sciencelogs_tab"
@@ -264,8 +266,8 @@ Event.add(
 
 
 			if not element.valid then return end
-			if element.name == Public.WHERE_CAMERA_ELEMENT_NAME then
-				player.gui.center[Public.WHERE_CAMERA_ELEMENT_NAME].destroy()
+			if element.name == CommandsWhere.WHERE_CAMERA_ELEMENT_NAME then
+				player.gui.center[CommandsWhere.WHERE_CAMERA_ELEMENT_NAME].destroy()
 				return
 			end
 			ComfyPanelAdmin.on_gui_click(event)
@@ -703,3 +705,25 @@ Event.add(defines.events.on_tick,
 		MapsBiterBattlesV2Main.on_tick(tick)
 	end
 )
+
+Event.on_init(
+	function (event)
+		MapsBiterBattlesV2Init.tables()
+		MapsBiterBattlesV2Init.initial_setup()
+		MapsBiterBattlesV2Init.playground_surface()
+		MapsBiterBattlesV2Init.forces()
+		MapsBiterBattlesV2Init.draw_structures()
+		MapsBiterBattlesV2Init.load_spawn()
+		MapsBiterBattlesV2Init.reveal_map()
+		UtilsFreeplay.init()
+
+		UtilsDatastoreJailData.create_gulag_surface()
+		UtilsDatastoreJailData.get_gulag_permission_group()
+
+		ModulesFloatyChat.init_floaty_chat_module()
+		FunctionsBossUnit.init_boss_unit_module()
+		ComfyPanelConfig.init_comfy_panel_config()
+		Antigrief.init_antigrief()
+	end
+)
+

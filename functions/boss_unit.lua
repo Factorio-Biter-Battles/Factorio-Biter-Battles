@@ -50,11 +50,8 @@ function Public.on_entity_damaged(event)
 	end
 end
 
-local function on_init()
+function Public.init_boss_unit_module()
 	global.boss_units = {}
 end
-
-local event = require 'utils.event'
-event.on_init(on_init)
 
 return Public

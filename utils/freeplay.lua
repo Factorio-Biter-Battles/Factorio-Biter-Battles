@@ -202,20 +202,17 @@ if not remote.interfaces['freeplay'] then
     remote.add_interface('freeplay', freeplay_interface)
 end
 
-Event.on_init(
-    function()
-        local i = 0
-        local game_has_mods = is_game_modded()
-        if game_has_mods then
-            this.modded = true
-            this.disable_crashsite = false
-            this.created_items = created_items()
-            this.respawn_items = respawn_items()
-            this.crashed_ship_items = ship_items()
-            this.crashed_debris_items = debris_items()
-        end
-    end
-)
+function Public.init()
+	local game_has_mods = is_game_modded()
+	if game_has_mods then
+		this.modded = true
+		this.disable_crashsite = false
+		this.created_items = created_items()
+		this.respawn_items = respawn_items()
+		this.crashed_ship_items = ship_items()
+		this.crashed_debris_items = debris_items()
+	end
+end
 
 Event.on_configuration_changed = function()
     this.created_items = this.created_items or created_items()

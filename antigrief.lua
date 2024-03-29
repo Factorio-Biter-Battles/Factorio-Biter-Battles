@@ -584,7 +584,7 @@ function Public.on_player_cancelled_crafting(event)
     end
 end
 
-local function on_init()
+function Public.init_antigrief()
     if not this.enabled then
         return
     end
@@ -836,7 +836,5 @@ function Public.get(key)
         return this
     end
 end
-
-Event.on_init(on_init)
 
 return Public

@@ -46,9 +46,8 @@ function Public.on_console_chat(player, message)
 	}
 end
 
-local function on_init(event)
+function Public.init_floaty_chat_module()
 	global.player_floaty_chat = {}
 end
 
-Event.on_init(on_init)
 return Public

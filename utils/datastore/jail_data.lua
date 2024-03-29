@@ -95,7 +95,7 @@ local get_player_data = function(player, remove)
     return player_data[player.name]
 end
 
-local get_gulag_permission_group = function()
+function Public.get_gulag_permission_group()
     local gulag = game.permissions.get_group('gulag')
     if not gulag then
         gulag = game.permissions.create_group('gulag')
@@ -108,7 +108,7 @@ local get_gulag_permission_group = function()
     return gulag
 end
 
-local create_gulag_surface = function()
+function Public.create_gulag_surface()
     local surface = game.surfaces['gulag']
     if not surface then
         local walls = {}
@@ -577,8 +577,6 @@ function Public.on_console_command(event)
 	end
 end
 
-Event.on_init(create_gulag_surface)
-
 Server.on_data_set_changed(
     jailed_data_set,
     function(data)
@@ -621,7 +619,5 @@ function Public.required_playtime_for_vote(value)
     end
     return settings.playtime_for_vote
 end
-
-Event.on_init(get_gulag_permission_group)
 
 return Public

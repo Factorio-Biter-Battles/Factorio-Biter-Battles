@@ -402,23 +402,7 @@ local function clear_corpses(cmd)
         player.print('Cleared biter-corpses.', Color.success)
 end
 
-local function on_init()
-	Init.tables()
-	Init.initial_setup()
-	Init.playground_surface()
-	Init.forces()
-	Init.draw_structures()
-	Init.load_spawn()
-	Init.reveal_map()
-end
-
-
-local Event = require 'utils.event'
-Event.on_init(on_init)
-
 commands.add_command('clear-corpses', 'Clears all the biter corpses..',
 		     clear_corpses)
-
-require "maps.biter_battles_v2.spec_spy"
 
 return Public
