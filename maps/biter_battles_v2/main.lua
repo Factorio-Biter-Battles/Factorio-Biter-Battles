@@ -416,11 +416,6 @@ end
 
 local Event = require 'utils.event'
 Event.add(defines.events.on_rocket_launch_ordered, on_rocket_launch_ordered)
-Event.add(defines.events.on_post_entity_died, Ai.schedule_reanimate)
-Event.add_event_filter(defines.events.on_post_entity_died, {
-	filter = "type",
-	type = "unit",
-})
 Event.add(defines.events.on_robot_mined_entity, on_robot_mined_entity)
 Event.add(defines.events.on_research_finished, on_research_finished)
 Event.add(defines.events.on_robot_built_tile, on_robot_built_tile)

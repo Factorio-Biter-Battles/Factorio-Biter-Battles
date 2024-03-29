@@ -62,6 +62,7 @@ local CommandsSuspend = require "commands.suspend"
 local ComfyPanelSpecialGames = require "comfy_panel.special_games"
 local Functions = require "maps.biter_battles_v2.functions"
 local FunctionsBossUnit = require "functions.boss_unit"
+local MapsBiterBattlesV2Ai = require "maps.biter_battles_v2.ai"
 local MapsBiterBattlesV2AiStrikes = require "maps.biter_battles_v2.ai_strikes"
 local MapsBiterBattlesV2DifficultyVote = require "maps.biter_battles_v2.difficulty_vote"
 local MapsBiterBattlesV2GameOver = require "maps.biter_battles_v2.game_over"
@@ -599,6 +600,22 @@ Event.add(
 		Antigrief.on_player_used_capsule(event)
 	end
 )
+
+Event.add(
+	defines.events.on_post_entity_died,
+	---@param event EventData.on_post_entity_died
+	function (event)
+		MapsBiterBattlesV2Ai.schedule_reanimate(event)
+	end
+
+)
+
+Event.add_event_filter(
+	defines.events.on_post_entity_died, {
+	filter = "type",
+	type = "unit",
+})
+
 
 Event.add(defines.events.on_pre_player_crafted_item, function (event)
 	Functions.maybe_set_game_start_tick(event)
