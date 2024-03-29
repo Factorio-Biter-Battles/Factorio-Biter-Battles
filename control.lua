@@ -642,6 +642,15 @@ Event.add(
 )
 
 Event.add(
+	defines.events.on_research_finished,
+	---@param event EventData.on_research_finished
+	function (event)
+		UtilsDatastoreQuickbarData.on_research_finished(event)
+		MapsBiterBattlesV2Main.on_research_finished(event)
+	end
+)
+
+Event.add(
 	defines.events.on_robot_built_entity,
 	---@param event EventData.on_robot_built_entity
 	function (event)

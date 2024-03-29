@@ -49,9 +49,10 @@ function Public.on_gui_click(event)
 	Team_manager.gui_click(event)
 end
 
-local function on_research_finished(event)
+---@param event EventData.on_research_finished
+function Public.on_research_finished(event)
 	Functions.combat_balance(event)
-	
+
 	local name = event.research.name
 	local force = event.research.force
 	if name == 'uranium-processing' then
@@ -417,7 +418,6 @@ end
 local Event = require 'utils.event'
 Event.add(defines.events.on_rocket_launch_ordered, on_rocket_launch_ordered)
 Event.add(defines.events.on_robot_mined_entity, on_robot_mined_entity)
-Event.add(defines.events.on_research_finished, on_research_finished)
 Event.add(defines.events.on_robot_built_tile, on_robot_built_tile)
 Event.on_init(on_init)
 

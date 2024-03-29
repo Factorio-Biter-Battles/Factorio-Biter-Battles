@@ -289,18 +289,16 @@ commands.add_command(
     end
 )
 
-Event.add(
-    defines.events.on_research_finished,
-    function(event)
-        local research = event.research
-        if research.name == 'logistic-robotics' then
-            local players = game.connected_players
-            for i = 1, #players do
-                local player = players[i]
-                apply_stash(player)
-            end
-        end
-    end
-)
+---@param event EventData.on_research_finished
+function Public.on_research_finished(event)
+	local research = event.research
+	if research.name == 'logistic-robotics' then
+		local players = game.connected_players
+		for i = 1, #players do
+			local player = players[i]
+			apply_stash(player)
+		end
+	end
+end
 
 return Public
