@@ -694,6 +694,14 @@ Event.add(
 	end
 )
 
+Event.add(
+	defines.events.on_rocket_launched,
+	---@param event EventData.on_rocket_launched
+	function (event)
+		ComfyPanelScore.refresh_score_full()
+	end
+)
+
 Event.add(defines.events.on_tick,
 	---@param event EventData.on_tick
 	function (event)

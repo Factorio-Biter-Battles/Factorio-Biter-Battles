@@ -236,7 +236,7 @@ local show_score = (function(player, frame)
     end -- foreach entry
 end) -- show_score
 
-local function refresh_score_full()
+function Public.refresh_score_full()
     for _, player in pairs(game.connected_players) do
         local frame = Tabs.comfy_panel_get_active_frame(player)
         if frame then
@@ -311,10 +311,6 @@ function Public.on_gui_click(event)
     end
 
     -- No more to handle
-end
-
-local function on_rocket_launched(event)
-    refresh_score_full()
 end
 
 local entity_score_values = {
@@ -461,7 +457,5 @@ function Public.on_built_entity(entity, player)
 end
 
 comfy_panel_tabs['Scoreboard'] = {gui = show_score, admin = false}
-
-Event.add(defines.events.on_rocket_launched, on_rocket_launched)
 
 return Public
