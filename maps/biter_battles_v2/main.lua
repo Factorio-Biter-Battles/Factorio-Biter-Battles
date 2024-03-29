@@ -336,7 +336,11 @@ function Public.on_entity_cloned(event)
 	Mirror_terrain.invert_entity(event)
 end
 
-local function on_rocket_launch_ordered(event)
+---Factorio allows you to ride in the rocket if you send a vehicle up.
+---This in some cases may be exploited in this scenario, so we need too
+---dis-allow this.
+---@param event EventData.on_rocket_launch_ordered
+function Public.clear_rocket_inventory_if_contains_vehicle(event)
 	local vehicles = {
 		["car"] = true,
 		["tank"] = true,
@@ -346,10 +350,12 @@ local function on_rocket_launch_ordered(event)
 		["spidertron"] = true,
 	}
 	local inventory = event.rocket.get_inventory(defines.inventory.fuel)
-	local contents = inventory.get_contents()
-	for name, _ in pairs(contents) do
-		if vehicles[name] then
-			inventory.clear()
+	if inventory then
+		local contents = inventory.get_contents()
+		for name, _ in pairs(contents) do
+			if vehicles[name] then
+				inventory.clear()
+			end
 		end
 	end
 end
@@ -408,7 +414,6 @@ end
 
 
 local Event = require 'utils.event'
-Event.add(defines.events.on_rocket_launch_ordered, on_rocket_launch_ordered)
 Event.on_init(on_init)
 
 commands.add_command('clear-corpses', 'Clears all the biter corpses..',

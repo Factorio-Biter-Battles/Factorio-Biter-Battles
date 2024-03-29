@@ -686,6 +686,14 @@ Event.add(
 	end
 )
 
+Event.add(
+	defines.events.on_rocket_launch_ordered,
+	---@param event EventData.on_rocket_launch_ordered
+	function (event)
+		MapsBiterBattlesV2Main.clear_rocket_inventory_if_contains_vehicle(event)
+	end
+)
+
 Event.add(defines.events.on_tick,
 	---@param event EventData.on_tick
 	function (event)
