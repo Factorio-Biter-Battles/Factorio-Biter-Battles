@@ -320,7 +320,8 @@ function Public.on_built_entity(entity, player)
 end
 
 --Capsule History and Antigrief
-local function on_player_used_capsule(event)
+---@param event EventData.on_player_used_capsule
+function Public.on_player_used_capsule(event)
     if not this.enabled then
         return
     end
@@ -837,6 +838,5 @@ end
 
 Event.on_init(on_init)
 Event.add(de.on_pre_player_mined_item, on_pre_player_mined_item)
-Event.add(de.on_player_used_capsule, on_player_used_capsule)
 
 return Public

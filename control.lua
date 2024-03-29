@@ -592,6 +592,14 @@ Event.add(
 	end
 )
 
+Event.add(
+	defines.events.on_player_used_capsule,
+	---@param event EventData.on_player_used_capsule
+	function (event)
+		Antigrief.on_player_used_capsule(event)
+	end
+)
+
 Event.add(defines.events.on_pre_player_crafted_item, function (event)
 	Functions.maybe_set_game_start_tick(event)
 end)
