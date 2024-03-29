@@ -505,7 +505,6 @@ function Public.get(key)
     end
 end
 
-Event.add(defines.events.on_player_trash_inventory_changed, Public.update_gui)
 Event.add(defines.events.on_pre_player_left_game, on_pre_player_left_game)
 
 return Public

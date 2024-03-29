@@ -574,6 +574,13 @@ Event.add(defines.events.on_player_respawned,
 	end
 )
 
+Event.add(defines.events.on_player_trash_inventory_changed,
+	---@param event EventData.on_player_trash_inventory_changed
+	function (event)
+		ModulesShowInventory.on_player_trash_inventory_changed(event)
+	end
+)
+
 Event.add(
 	defines.events.on_player_unmuted,
 	---@param event EventData.on_player_unmuted
