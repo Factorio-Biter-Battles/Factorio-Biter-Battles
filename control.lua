@@ -73,7 +73,6 @@ local MapsBiterBattlesV2SciencelogsTab = require "maps.biter_battles_v2.sciencel
 local MapsBiterBattlesV2SpecSpy = require "maps.biter_battles_v2.spec_spy"
 local ModulesCorpseMarkers = require "modules.corpse_markers"
 local ModulesFloatyChat = require "modules.floaty_chat"
-local ModulesMapInfo = require "modules.map_info"
 local ModulesShowInventory = require "modules.show_inventory"
 local ModulesSimpleTags = require "modules.simple_tags"
 local ModulesSpawnersContainBiters = require "modules.spawners_contain_biters"
@@ -258,10 +257,6 @@ Event.add(
 		local player = game.get_player(event.player_index)
 		local element = event.element
 		if element.valid and player then
-			if event.element.name == ModulesMapInfo.CLOSE_MAP_INTRO_ELEMENT_NAME then
-				player.gui.left.comfy_panel.destroy()
-				return
-			end
 			if not element.valid then return end
 			ModulesShowInventory.on_gui_click(player, element)
 
