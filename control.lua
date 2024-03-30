@@ -270,6 +270,8 @@ Event.add(
 				player.gui.center[CommandsWhere.WHERE_CAMERA_ELEMENT_NAME].destroy()
 				return
 			end
+			ComfyPanelMain.on_gui_click(event)
+			if not element.valid then return end
 			ComfyPanelAdmin.on_gui_click(event)
 			if not element.valid then return end
 			ComfyPanelHistories.on_gui_click(event)
@@ -480,19 +482,25 @@ Event.add(
 	function (event)
 		local player = game.players[event.player_index]
 		if player.valid then
-			if player.online_time == 0 then
-				ComfyPanelMain.comfy_panel_call_tab(player, 'Map Info')
-			end
+			-- This detrmines the order of the buttons in the top bar
 			ComfyPanelMain.top_button(player)
-			ModulesSimpleTags.draw_top_gui(player)
-			CommandsSuspend.on_player_joined_game(player)
 			ComfyPanelPoll.on_player_joined_game(player)
-			ComfyPanelGroup.on_player_joined_game(player)
-			Antigrief.on_player_joined_game(player)
-			UtilsServer.on_player_joined_game(player)
-			MapsBiterBattlesV2Gui.on_player_joined_game(player)
-			MapsBiterBattlesV2Main.on_player_joined_game(player)
 			MapsBiterBattlesV2DifficultyVote.on_player_joined_game(player)
+			MapsBiterBattlesV2Gui.on_player_joined_game(player)
+			ModulesSimpleTags.draw_top_gui(player)
+			MapsBiterBattlesV2Main.on_player_joined_game(player)
+
+			-- No top bar settings below here
+			ComfyPanelPlayerList.on_player_joined_game(event)
+			ComfyPanelGroup.on_player_joined_game(player)
+			-- if player.online_time == 0 then
+			-- 	ComfyPanelMain.comfy_panel_call_tab(player, 'Map Info')
+			-- end
+
+			CommandsSuspend.on_player_joined_game(player)
+			Antigrief.on_player_joined_game(player)
+
+			UtilsServer.on_player_joined_game(player)
 			UtilsServer.set_total_time_played(player)
 
 			local secs = UtilsServer.get_current_time()
@@ -505,7 +513,6 @@ Event.add(
 				UtilsDatastoreQuickbarData.fetch_logistics(player)
 			end
 		end
-		ComfyPanelPlayerList.on_player_joined_game(event)
 	end
 )
 
@@ -708,6 +715,14 @@ Event.add(defines.events.on_tick,
 
 Event.on_init(
 	function (event)
+		Antigrief.init_antigrief()
+		ComfyPanelConfig.init_comfy_panel_config()
+		FunctionsBossUnit.init_boss_unit_module()
+		ModulesFloatyChat.init_floaty_chat_module()
+		UtilsDatastoreJailData.create_gulag_surface()
+		UtilsDatastoreJailData.get_gulag_permission_group()
+		UtilsFreeplay.init()
+
 		MapsBiterBattlesV2Init.tables()
 		MapsBiterBattlesV2Init.initial_setup()
 		MapsBiterBattlesV2Init.playground_surface()
@@ -715,15 +730,6 @@ Event.on_init(
 		MapsBiterBattlesV2Init.draw_structures()
 		MapsBiterBattlesV2Init.load_spawn()
 		MapsBiterBattlesV2Init.reveal_map()
-		UtilsFreeplay.init()
-
-		UtilsDatastoreJailData.create_gulag_surface()
-		UtilsDatastoreJailData.get_gulag_permission_group()
-
-		ModulesFloatyChat.init_floaty_chat_module()
-		FunctionsBossUnit.init_boss_unit_module()
-		ComfyPanelConfig.init_comfy_panel_config()
-		Antigrief.init_antigrief()
 	end
 )
 

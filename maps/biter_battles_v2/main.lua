@@ -24,6 +24,7 @@ require "maps.biter_battles_v2.sciencelogs_tab"
 require "maps.biter_battles_v2.feed_values_tab"
 require "maps.biter_battles_v2.changelog_tab"
 require 'maps.biter_battles_v2.commands'
+require "maps.biter_battles_v2.spec_spy"
 require "modules.spawners_contain_biters"
 
 local Public = {}
