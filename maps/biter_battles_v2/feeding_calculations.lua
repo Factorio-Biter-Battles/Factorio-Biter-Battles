@@ -1,4 +1,5 @@
 local Tables = require "maps.biter_battles_v2.tables"
+local bb_config = require "maps.biter_battles_v2.config"
 
 local math_floor = math.floor
 
@@ -25,24 +26,32 @@ function Public.calc_feed_effects(initial_evo, food_value, num_flasks, current_p
 	local threat = 0
 	local evo = initial_evo
 	local food = food_value * num_flasks
+	local threat_scale_factor_past_evo100 = bb_config.threat_scale_factor_past_evo100
 	while food > 0 do
 		local clamped_evo = math.min(evo, 1)
 		---SET EVOLUTION
 		local e2 = (clamped_evo * 100) + 1
 		local diminishing_modifier = (1 / (10 ^ (e2 * 0.015))) / (e2 * 0.5)
 		local amount_of_food_this_iteration
-		if evo >= 1 then
-			-- Everything is linear after evo=1.0, so we can just feed everything at once.
-			amount_of_food_this_iteration = food
+		-- By growing by at least 1%, or exponentially by 10% of current evo, whichever is higher,
+		-- we ensure that this will run a bounded number of times, even if /calc-send is run with
+		-- very high numbers.
+		local max_evo_gain_per_iteration
+		if evo < 1 then
+			max_evo_gain_per_iteration = 0.01
 		else
-			local max_evo_gain_per_iteration = 0.01
-			amount_of_food_this_iteration = math.min(food, max_evo_gain_per_iteration / diminishing_modifier)
+			max_evo_gain_per_iteration = evo / 10
 		end
+		amount_of_food_this_iteration = math.min(food, max_evo_gain_per_iteration / diminishing_modifier)
 		local evo_gain = (amount_of_food_this_iteration * diminishing_modifier)
 		evo = evo + evo_gain
 
 		--ADD INSTANT THREAT
 		local diminishing_modifier = 1 / (0.2 + (e2 * 0.016))
+		if global.try_new_threat_logic and evo > 1 then
+			-- Give bonus threat for sending as evo grows
+			diminishing_modifier = diminishing_modifier * (1 + (evo - 1) * threat_scale_factor_past_evo100)
+		end
 		threat = threat + (amount_of_food_this_iteration * diminishing_modifier)
 
 		food = food - amount_of_food_this_iteration
@@ -55,14 +64,16 @@ function Public.calc_feed_effects(initial_evo, food_value, num_flasks, current_p
 	reanim_chance = math.min(math_floor(reanim_chance), 90.0)
 
 	threat = threat * get_instant_threat_player_count_modifier(current_player_count)
-	-- Adjust threat for revive.
-	-- Note that the fact that this is done at the end, after reanim_chance is calculated
-	-- is what gives a bonus to large single throws of science rather than many smaller
-	-- throws (in the case where final evolution is above 100%). Specifically, all of the
-	-- science thrown gets the threat increase that would be used for the final evolution
-	-- value.
-	if reanim_chance > 0 then
-		threat = threat * (100 / (100.001 - reanim_chance))
+	if not global.try_new_threat_logic then
+		-- Adjust threat for revive.
+		-- Note that the fact that this is done at the end, after reanim_chance is calculated
+		-- is what gives a bonus to large single throws of science rather than many smaller
+		-- throws (in the case where final evolution is above 100%). Specifically, all of the
+		-- science thrown gets the threat increase that would be used for the final evolution
+		-- value.
+		if reanim_chance > 0 then
+			threat = threat * (100 / (100.001 - reanim_chance))
+		end
 	end
 
 	return {

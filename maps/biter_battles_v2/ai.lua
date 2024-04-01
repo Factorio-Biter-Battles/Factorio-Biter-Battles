@@ -314,9 +314,8 @@ end
 function Public.subtract_threat(entity)
 	if not threat_values[entity.name] then return end
 	local biter_not_boss_force = entity.force.name
-	local threat_modifier = 1
 	local is_boss = false
-	local health_factor = 1
+	local factor = 1
 	if entity.force.name == 'south_biters_boss' then
 		biter_not_boss_force = 'south_biters'
 		is_boss = true
@@ -326,10 +325,16 @@ function Public.subtract_threat(entity)
 	end
 	if is_boss == true then
 		local health_buff_equivalent_revive = 1.0/(1.0-global.reanim_chance[game.forces[biter_not_boss_force].index]/100)
-		health_factor = bb_config.health_multiplier_boss*health_buff_equivalent_revive
+		factor = bb_config.health_multiplier_boss*health_buff_equivalent_revive
+	else
+		if global.try_new_threat_logic then
+			-- For normal biters, we essentially want revives to be ignored - i.e. the threat should go down on
+			-- average only once per spawned biter (no matter how many times it revives). Thus if the revive
+			-- chance is 90%, we only want the threat to go down by 10% for each kill.
+			factor = 1.0 - global.reanim_chance[game.forces[biter_not_boss_force].index]/100
+		end
 	end
-	threat_modifier = 1 * health_factor
-	global.bb_threat[biter_not_boss_force] = global.bb_threat[biter_not_boss_force] - threat_values[entity.name] * threat_modifier
+	global.bb_threat[biter_not_boss_force] = global.bb_threat[biter_not_boss_force] - threat_values[entity.name] * factor
 	return true
 end
 
