@@ -11,6 +11,8 @@ local function effects_str(effects)
 	return string.format("evo_increase: %.3f threat: %.0f", effects.evo_increase, effects.threat_increase)
 end
 
+global = { try_new_threat_logic = false }
+
 function test_feed_effects_1()
 	-- Simple early-game send
 	local difficulty = 25
