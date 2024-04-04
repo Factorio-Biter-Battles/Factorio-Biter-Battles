@@ -317,24 +317,20 @@ local function on_rocket_launched(event)
 end
 
 local entity_score_values = {
-    ['behemoth-biter'] = 100,
-    ['behemoth-spitter'] = 100,
-    ['behemoth-worm-turret'] = 300,
-    ['big-biter'] = 30,
-    ['big-spitter'] = 30,
-    ['big-worm-turret'] = 300,
-    ['biter-spawner'] = 200,
-    ['medium-biter'] = 15,
-    ['medium-spitter'] = 15,
-    ['medium-worm-turret'] = 150,
-    ['character'] = 1000,
-    ['small-biter'] = 5,
-    ['small-spitter'] = 5,
-    ['small-worm-turret'] = 50,
-    ['spitter-spawner'] = 200,
-    ['gun-turret'] = 50,
-    ['laser-turret'] = 150,
-    ['flamethrower-turret'] = 300
+    ['small-biter'] = 6,
+    ['small-spitter'] = 6,
+    ['medium-biter'] = 18,
+    ['medium-spitter'] = 18,
+    ['big-biter'] = 52,
+    ['big-spitter'] = 52,
+    ['behemoth-biter'] = 154,
+    ['behemoth-spitter'] = 154,
+    ['small-worm-turret'] = 32,
+    ['medium-worm-turret'] = 64,
+    ['big-worm-turret'] = 96,
+    ['behemoth-worm-turret'] = 128,
+    ['biter-spawner'] = 128,
+    ['spitter-spawner'] = 128,
 }
 
 local function train_type_cause(event)
