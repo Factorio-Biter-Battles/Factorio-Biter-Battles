@@ -133,55 +133,55 @@ local functions = {
         end
         spaghett()
     end,
-	["bb_team_balancing_toggle"] = function(event) 
-		if event.element.switch_state == "left" then
-			global.bb_settings.team_balancing = true
-			game.print("Team balancing has been enabled!")
-		else
-			global.bb_settings.team_balancing = false
-			game.print("Team balancing has been disabled!")
-		end
-	end,
-	
-	["bb_only_admins_vote"] = function(event) 
-		if event.element.switch_state == "left" then
-			global.bb_settings.only_admins_vote = true
-			global.difficulty_player_votes = {}
-			game.print("Admin-only difficulty voting has been enabled!")
-		else
-			global.bb_settings.only_admins_vote = false
-			game.print("Admin-only difficulty voting has been disabled!")
-		end
-	end,
-	["comfy_panel_new_year_island"] = function(event)
-		if event.element.switch_state == "left" then
-			global.bb_settings['new_year_island'] = true
+    ["bb_team_balancing_toggle"] = function(event)
+        if event.element.switch_state == "left" then
+            global.bb_settings.team_balancing = true
+            game.print("Team balancing has been enabled!")
+        else
+            global.bb_settings.team_balancing = false
+            game.print("Team balancing has been disabled!")
+        end
+    end,
+
+    ["bb_only_admins_vote"] = function(event)
+        if event.element.switch_state == "left" then
+            global.bb_settings.only_admins_vote = true
+            global.difficulty_player_votes = {}
+            game.print("Admin-only difficulty voting has been enabled!")
+        else
+            global.bb_settings.only_admins_vote = false
+            game.print("Admin-only difficulty voting has been disabled!")
+        end
+    end,
+    ["comfy_panel_new_year_island"] = function(event)
+        if event.element.switch_state == "left" then
+            global.bb_settings['new_year_island'] = true
             get_actor(event, '{New Year Island}', "New Year island has been enabled!", true)
-		else
-			global.bb_settings['new_year_island'] = false
-			get_actor(event, '{New Year Island}', "New Year island has been disabled!", true)
-		end
-	end,
-  
-	["bb_map_reveal_toggle"] = function(event)
-		if event.element.switch_state == "left" then
-			global.bb_settings['bb_map_reveal_toggle'] = true
-			game.print("Reveal map at start has been enabled!")
-		else
-			global.bb_settings['bb_map_reveal_toggle'] = false
-			game.print("Reveal map at start has been disabled!")
-		end
-	end,
-  
-	["bb_map_reroll_toggle"] = function(event)
-		if event.element.switch_state == "left" then
-			global.bb_settings.map_reroll = true
-			game.print("Map Reroll is enabled!")
-		else
-			global.bb_settings.map_reroll = false
-			game.print("Map Reroll is disabled!")
-		end
-	end,
+        else
+            global.bb_settings['new_year_island'] = false
+            get_actor(event, '{New Year Island}', "New Year island has been disabled!", true)
+        end
+    end,
+
+    ["bb_map_reveal_toggle"] = function(event)
+        if event.element.switch_state == "left" then
+            global.bb_settings['bb_map_reveal_toggle'] = true
+            game.print("Reveal map at start has been enabled!")
+        else
+            global.bb_settings['bb_map_reveal_toggle'] = false
+            game.print("Reveal map at start has been disabled!")
+        end
+    end,
+
+    ["bb_map_reroll_toggle"] = function(event)
+        if event.element.switch_state == "left" then
+            global.bb_settings.map_reroll = true
+            game.print("Map Reroll is enabled!")
+        else
+            global.bb_settings.map_reroll = false
+            game.print("Map Reroll is disabled!")
+        end
+    end,
     ["bb_map_show_healthbar_numbers"] = function(event)
         local boss = package.loaded['functions.boss_unit']
         local player = game.get_player(event.player_index)
@@ -505,8 +505,8 @@ local build_config_gui = (function(player, frame)
             'Left = Enables antigrief / Right = Disables antigrief'
         )
         scroll_pane.add({type = 'line'})
-		
-		
+
+
         if package.loaded['maps.biter_battles_v2.main'] then
             label = scroll_pane.add({type = 'label', caption = 'Biter Battles Settings'})
             label.style.font = 'default-bold'
@@ -518,36 +518,36 @@ local build_config_gui = (function(player, frame)
             label.style.font_color = Color.green
 
             scroll_pane.add({type = 'line'})
-			
-			local switch_state = "right"
-			if global.bb_settings.team_balancing then switch_state = "left" end
-			local switch = add_switch(scroll_pane, switch_state, "bb_team_balancing_toggle", "Team Balancing", "Players can only join a team that has less or equal players than the opposing.")
-			if not admin then switch.ignored_by_interaction = true end
-			
-			scroll_pane.add({type = 'line'})
-			
-			local switch_state = "right"
-			if global.bb_settings["bb_map_reveal_toggle"] then switch_state = "left" end
-			local switch = add_switch(scroll_pane, switch_state, "bb_map_reveal_toggle", "Reveal map", "Reveal map at start.")
-			if not admin then switch.ignored_by_interaction = true end
-				
-			scroll_pane.add({type = 'line'})
 
-			local switch_state = "right"
-			if global.bb_settings.only_admins_vote then switch_state = "left" end
-			local switch = add_switch(scroll_pane, switch_state, "bb_only_admins_vote", "Admin Vote", "Only admins can vote for map difficulty. Clears all currently existing votes.")
-			if not admin then switch.ignored_by_interaction = true end
-			
-			scroll_pane.add({type = 'line'})
-				
-			local switch_state = "right"	
+            local switch_state = "right"
+            if global.bb_settings.team_balancing then switch_state = "left" end
+            local switch = add_switch(scroll_pane, switch_state, "bb_team_balancing_toggle", "Team Balancing", "Players can only join a team that has less or equal players than the opposing.")
+            if not admin then switch.ignored_by_interaction = true end
+
+            scroll_pane.add({type = 'line'})
+
+            local switch_state = "right"
+            if global.bb_settings["bb_map_reveal_toggle"] then switch_state = "left" end
+            local switch = add_switch(scroll_pane, switch_state, "bb_map_reveal_toggle", "Reveal map", "Reveal map at start.")
+            if not admin then switch.ignored_by_interaction = true end
+
+            scroll_pane.add({type = 'line'})
+
+            local switch_state = "right"
+            if global.bb_settings.only_admins_vote then switch_state = "left" end
+            local switch = add_switch(scroll_pane, switch_state, "bb_only_admins_vote", "Admin Vote", "Only admins can vote for map difficulty. Clears all currently existing votes.")
+            if not admin then switch.ignored_by_interaction = true end
+
+            scroll_pane.add({type = 'line'})
+
+            local switch_state = "right"
             if global.bb_settings.map_reroll then switch_state = "left" end
-			local switch = add_switch(scroll_pane, switch_state, "bb_map_reroll_toggle", "Map Reroll", "Enables map reroll feature.")
-			if not admin then switch.ignored_by_interaction = true end
-			
-			scroll_pane.add({type = 'line'})
-		end
-		
+            local switch = add_switch(scroll_pane, switch_state, "bb_map_reroll_toggle", "Map Reroll", "Enables map reroll feature.")
+            if not admin then switch.ignored_by_interaction = true end
+
+            scroll_pane.add({type = 'line'})
+        end
+
         if package.loaded['maps.mountain_fortress_v3.main'] then
             label = scroll_pane.add({type = 'label', caption = 'Mountain Fortress Settings'})
             label.style.font = 'default-bold'
