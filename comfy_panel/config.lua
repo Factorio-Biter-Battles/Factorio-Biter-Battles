@@ -182,6 +182,12 @@ local functions = {
 			game.print("Map Reroll is disabled!")
 		end
 	end,
+    ["bb_map_show_healthbar_numbers"] = function(event)
+        local boss = package.loaded['functions.boss_unit']
+        local player = game.get_player(event.player_index)
+        if not player or not player.valid then return end
+        boss.healthbarnumbers_enable_for_player(player.name, event.element.switch_state == "left")
+    end,
 }
 
 local poll_function = {
@@ -403,6 +409,22 @@ local build_config_gui = (function(player, frame)
             'comfy_panel_poll_no_notify_toggle',
             'Notify on polls',
             'Receive a message when new polls are created and popup the poll.'
+        )
+        scroll_pane.add({type = 'line'})
+    end
+
+    if package.loaded['functions.boss_unit'] then
+        local boss = package.loaded['functions.boss_unit']
+        switch_state = 'right'
+        if boss.healthbarnumbers_enabled_for_player(player.name) then
+            switch_state = 'left'
+        end
+        add_switch(
+            scroll_pane,
+            switch_state,
+            'bb_map_show_healthbar_numbers',
+            'Healthbar Numbers',
+            'Show health values on boss units'
         )
         scroll_pane.add({type = 'line'})
     end
