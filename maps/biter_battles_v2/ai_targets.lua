@@ -53,9 +53,8 @@ local function simple_random_sample(population_list, sample_size)
     return sample
 end
 
+---@param entity LuaEntity
 function Public.start_tracking(entity)
-    if not entity then return end
-    if not entity.valid then return end
     if target_entity_type[entity.type] and entity.unit_number then
         local targets = global.ai_targets[entity.force.name]
         if targets ~= nil then
@@ -64,6 +63,8 @@ function Public.start_tracking(entity)
     end
 end
 
+---Should be pre-checked for validity
+---@param entity LuaEntity
 function Public.stop_tracking(entity)
     if target_entity_type[entity.type] and entity.unit_number then
         local targets = global.ai_targets[entity.force.name]

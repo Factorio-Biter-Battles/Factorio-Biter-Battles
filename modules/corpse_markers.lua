@@ -1,4 +1,9 @@
-local function draw_map_tag(surface, force, position)
+local Public = {}
+
+---@param surface LuaSurface
+---@param force LuaForce
+---@param position MapPosition
+function Public.draw_map_tag(surface, force, position)
 	force.add_chart_tag(surface, {icon = {type = 'item', name = 'heavy-armor'}, position = position, text = "   "})
 end
 
@@ -32,7 +37,7 @@ end
 local function redraw_all_tags()
 	for _, surface in pairs(game.surfaces) do
 		for _, corpse in pairs(surface.find_entities_filtered({name = "character-corpse"})) do
-			draw_map_tag(corpse.surface, get_corpse_force(corpse), corpse.position)
+			Public.draw_map_tag(corpse.surface, get_corpse_force(corpse), corpse.position)
 		end
 	end
 end
@@ -48,25 +53,18 @@ local function find_and_destroy_tag(corpse)
 	return false
 end
 
-local function on_player_died(event)
-	local player = game.players[event.player_index]
-	draw_map_tag(player.surface, player.force, player.position)
-end
-
-local function on_character_corpse_expired(event)
+function Public.on_character_corpse_expired(event)
 	if find_and_destroy_tag(event.corpse) then return end
 	destroy_all_tags()
 	redraw_all_tags()
 end
 
-local function on_pre_player_mined_item(event)
-	if event.entity.name ~= "character-corpse" then return end	
+---@param event EventData.on_pre_player_mined_item
+function Public.on_pre_player_mined_item(event)
+	if event.entity.name ~= "character-corpse" then return end
 	if find_and_destroy_tag(event.entity) then return end
 	destroy_all_tags()
 	redraw_all_tags()
 end
 
-local event = require 'utils.event'
-event.add(defines.events.on_player_died, on_player_died)
-event.add(defines.events.on_character_corpse_expired, on_character_corpse_expired)
-event.add(defines.events.on_pre_player_mined_item, on_pre_player_mined_item)
+return Public

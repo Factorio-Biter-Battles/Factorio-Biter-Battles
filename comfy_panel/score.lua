@@ -236,7 +236,7 @@ local show_score = (function(player, frame)
     end -- foreach entry
 end) -- show_score
 
-local function refresh_score_full()
+function Public.refresh_score_full()
     for _, player in pairs(game.connected_players) do
         local frame = Tabs.comfy_panel_get_active_frame(player)
         if frame then
@@ -247,8 +247,8 @@ local function refresh_score_full()
     end
 end
 
-local function on_player_joined_game(event)
-    local player = game.players[event.player_index]
+---@param player LuaPlayer
+function Public.on_player_joined_game(player)
     Public.init_player_table(player)
     if not this.sort_by[player.name] then
         this.sort_by[player.name] = {method = 'descending', column = 'killscore'}
@@ -261,7 +261,8 @@ local function on_player_joined_game(event)
     end
 end
 
-local function on_gui_click(event)
+---@param event EventData.on_gui_click
+function Public.on_gui_click(event)
     if not event then
         return
     end
@@ -310,10 +311,6 @@ local function on_gui_click(event)
     end
 
     -- No more to handle
-end
-
-local function on_rocket_launched(event)
-    refresh_score_full()
 end
 
 local entity_score_values = {
@@ -381,7 +378,8 @@ local kill_causes = {
     ['fluid-wagon'] = train_type_cause
 }
 
-local function on_entity_died(event)
+---@param event EventData.on_entity_died
+function Public.on_entity_died(event)
     if not event.entity.valid then
         return
     end
@@ -424,8 +422,8 @@ local function on_entity_died(event)
     end
 end
 
-local function on_player_died(event)
-    local player = game.players[event.player_index]
+---@param player LuaPlayer
+function Public.on_player_died(player)
     Public.init_player_table(player)
     local score = this.score_table[player.force.name].players[player.name]
     score.deaths = 1 + (score.deaths or 0)
@@ -443,26 +441,17 @@ function Public.on_player_mined_entity(entity, player)
 	score.mined_entities = 1 + (score.mined_entities or 0)
 end
 
-local function on_built_entity(event)
-    if not event.created_entity.valid then
+---@param entity LuaEntity
+---@param player LuaPlayer
+function Public.on_built_entity(entity, player)
+    if building_and_mining_blacklist[entity.type] then
         return
     end
-    if building_and_mining_blacklist[event.created_entity.type] then
-        return
-    end
-    local player = game.players[event.player_index]
     Public.init_player_table(player)
     local score = this.score_table[player.force.name].players[player.name]
     score.built_entities = 1 + (score.built_entities or 0)
 end
 
 comfy_panel_tabs['Scoreboard'] = {gui = show_score, admin = false}
-
-Event.add(defines.events.on_player_died, on_player_died)
-Event.add(defines.events.on_built_entity, on_built_entity)
-Event.add(defines.events.on_entity_died, on_entity_died)
-Event.add(defines.events.on_gui_click, on_gui_click)
-Event.add(defines.events.on_player_joined_game, on_player_joined_game)
-Event.add(defines.events.on_rocket_launched, on_rocket_launched)
 
 return Public

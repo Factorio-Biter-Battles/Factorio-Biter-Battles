@@ -289,36 +289,16 @@ commands.add_command(
     end
 )
 
-Event.add(
-    defines.events.on_player_joined_game,
-    function(event)
-        local player = game.get_player(event.player_index)
-        if not player or not player.valid then
-            return
-        end
-
-        local secs = Server.get_current_time()
-        if not secs then
-            return
-        end
-
-        fetch_quickbar_on_join(player)
-        fetch_logistics_on_join(player)
-    end
-)
-
-Event.add(
-    defines.events.on_research_finished,
-    function(event)
-        local research = event.research
-        if research.name == 'logistic-robotics' then
-            local players = game.connected_players
-            for i = 1, #players do
-                local player = players[i]
-                apply_stash(player)
-            end
-        end
-    end
-)
+---@param event EventData.on_research_finished
+function Public.on_research_finished(event)
+	local research = event.research
+	if research.name == 'logistic-robotics' then
+		local players = game.connected_players
+		for i = 1, #players do
+			local player = players[i]
+			apply_stash(player)
+		end
+	end
+end
 
 return Public

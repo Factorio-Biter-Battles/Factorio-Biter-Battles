@@ -1,7 +1,6 @@
 -- Biter Battles v2 -- by MewMew
 
 local Ai = require "maps.biter_battles_v2.ai"
-local AiStrikes = require "maps.biter_battles_v2.ai_strikes"
 local AiTargets = require "maps.biter_battles_v2.ai_targets"
 local bb_config = require "maps.biter_battles_v2.config"
 local Functions = require "maps.biter_battles_v2.functions"
@@ -25,11 +24,13 @@ require "maps.biter_battles_v2.sciencelogs_tab"
 require "maps.biter_battles_v2.feed_values_tab"
 require "maps.biter_battles_v2.changelog_tab"
 require 'maps.biter_battles_v2.commands'
+require "maps.biter_battles_v2.spec_spy"
 require "modules.spawners_contain_biters"
 
-local function on_player_joined_game(event)
-	local surface = game.surfaces[global.bb_surface_name]
-	local player = game.players[event.player_index]
+local Public = {}
+
+---@param player LuaPlayer
+function Public.on_player_joined_game(player)
 	if player.online_time == 0 or player.force.name == "player" then
 		Functions.init_player(player)
 	end
@@ -38,7 +39,8 @@ local function on_player_joined_game(event)
 	Team_manager.draw_top_toggle_button(player)
 end
 
-local function on_gui_click(event)
+---@param event EventData.on_gui_click
+function Public.on_gui_click(event)
 	local player = game.players[event.player_index]
 	local element = event.element
 	if not element then return end
@@ -48,9 +50,10 @@ local function on_gui_click(event)
 	Team_manager.gui_click(event)
 end
 
-local function on_research_finished(event)
+---@param event EventData.on_research_finished
+function Public.on_research_finished(event)
 	Functions.combat_balance(event)
-	
+
 	local name = event.research.name
 	local force = event.research.force
 	if name == 'uranium-processing' then
@@ -64,10 +67,10 @@ local function on_research_finished(event)
 	game.forces.spectator.print(Functions.team_name_with_color(force.name) .. " completed research [technology=" .. event.research.name .. "]")
 end
 
-local function on_console_chat(event)
+---@param player LuaPlayer
+---@param message string
+function Public.on_console_chat(player, message)
 	--Share chat with spectator force
-	if not event.message or not event.player_index then return end
-	local player = game.players[event.player_index]
 	local player_name = player.name
 	local player_force_name = player.force.name
 	local tag = player.tag
@@ -80,7 +83,7 @@ local function on_console_chat(event)
 		mute_tag = "[muted] "
 	end
 
-	local msg = player_name .. tag .. " (" .. player_force_name .. "): ".. event.message
+	local msg = player_name .. tag .. " (" .. player_force_name .. "): ".. message
 	if not muted and (player_force_name == "north" or player_force_name == "south") then
 		Functions.print_message_to_players(game.forces.spectator.players,player_name,msg,color)
 	end
@@ -88,7 +91,7 @@ local function on_console_chat(event)
 	if global.tournament_mode and not player.admin then return end
 
 	--Skip messages that would spoil coordinates from spectators and don't send gps coord to discord
-	local a, b = string.find(event.message, "gps=", 1, false)
+	local a, b = string.find(message, "gps=", 1, false)
 	if a then return end
 
 	local discord_msg = ""
@@ -101,18 +104,19 @@ local function on_console_chat(event)
 		Functions.print_message_to_players(game.forces.south.players,player_name,msg,nil)
 	end
 
-	discord_msg = discord_msg .. player_name .. " (" .. player_force_name .. "): ".. event.message
+	discord_msg = discord_msg .. player_name .. " (" .. player_force_name .. "): ".. message
 	Server.to_discord_player_chat(discord_msg)
 end
 
-local function on_console_command(event)
+---@param event EventData.on_console_command
+function Public.on_console_command(event)
 	local cmd = event.command
     if not event.player_index then return end
     local player = game.players[event.player_index]
     local param = event.parameters
-    if cmd == "ignore" then 
+    if cmd == "ignore" then
 		-- verify in argument of command that there is no space, quote, semicolon, backtick, and that it's not just whitespace
-		if param and not string.match(param, "[ '\";`]") and not param:match("^%s*$") then 
+		if param and not string.match(param, "[ '\";`]") and not param:match("^%s*$") then
 			if not global.ignore_lists[player.name] then
 				global.ignore_lists[player.name] = {}
 			end
@@ -125,7 +129,7 @@ local function on_console_command(event)
 		else
 			player.print("Invalid input. Make sure the name contains no spaces, quotes, semicolons, backticks, or any spaces.", {r = 1, g = 0, b = 0})
 		end
-    elseif cmd == "unignore" then 
+    elseif cmd == "unignore" then
 		-- verify in argument of command that there is no space, quote, semicolon, backtick, and that it's not just whitespace, and that the player was someone ignored
 		if param and not string.match(param, "[ '\";`]") and not param:match("^%s*$") and global.ignore_lists[player.name] then
 			if global.ignore_lists[player.name][param] then
@@ -140,35 +144,14 @@ local function on_console_command(event)
 	end
 end
 
-local function on_built_entity(event)
-	maybe_set_game_start_tick(event)
-	Functions.no_landfill_by_untrusted_user(event, Session.get_trusted_table())
-	Functions.no_turret_creep(event)
-	Terrain.deny_enemy_side_ghosts(event)
-	AiTargets.start_tracking(event.created_entity)
-end
-
-local function on_robot_built_entity(event)
-	Functions.no_turret_creep(event)
-	Terrain.deny_construction_bots(event)
-	AiTargets.start_tracking(event.created_entity)
-end
-
-local function on_robot_built_tile(event)
-	Terrain.deny_bot_landfill(event)
-end
-
-local function on_entity_died(event)
+---@param event EventData.on_entity_died
+function Public.on_entity_died(event)
 	local entity = event.entity
 	if not entity.valid then return end
 	if Ai.subtract_threat(entity) then Gui.refresh_threat() end
 	AiTargets.stop_tracking(entity)
 	if Functions.biters_landfill(entity) then return end
 	Game_over.silo_death(event)
-end
-
-local function on_ai_command_completed(event)
-	if not event.was_distracted then AiStrikes.step(event.unit_number, event.result) end
 end
 
 local function getTagOutpostName(pos)
@@ -240,9 +223,8 @@ local tick_minute_functions = {
 	[300 * 4 + 30 * 1] = anti_afk_system,
 }
 
-local function on_tick()
-	local tick = game.tick
-
+---@param tick int
+function Public.on_tick(tick)
 	if tick % 60 == 0 then 
 		global.bb_threat["north_biters"] = global.bb_threat["north_biters"] + global.bb_threat_income["north_biters"]
 		global.bb_threat["south_biters"] = global.bb_threat["south_biters"] + global.bb_threat_income["south_biters"]
@@ -274,7 +256,8 @@ local function on_tick()
 	Ai.reanimate_units()
 end
 
-local function on_marked_for_deconstruction(event)
+---@param event EventData.on_marked_for_deconstruction
+function Public.on_marked_for_deconstruction(event)
 	if not event.entity.valid then return end
 	if not event.player_index then return end
 	local force_name = game.get_player(event.player_index).force.name
@@ -285,18 +268,7 @@ local function on_marked_for_deconstruction(event)
 	end
 end
 
-local function on_player_built_tile(event)
-	local player = game.players[event.player_index]
-	if event.item ~= nil and event.item.name == "landfill" then
-		Terrain.restrict_landfill(player.surface, player, event.tiles)
-	end
-end
-
-local function on_robot_mined_entity(event)
-	AiTargets.stop_tracking(event.entity)
-end
-
-local function on_chunk_generated(event)
+function Public.on_chunk_generated(event)
 	local surface = event.surface
 
 	-- Check if we're out of init.
@@ -320,8 +292,8 @@ local function on_chunk_generated(event)
 	surface.request_to_generate_chunks(req_pos, 0)
 
 	-- Clone from north and south. NOTE: This WILL fire 2 times
-	-- for each chunk due to asynchronus nature of this event.
-	-- Both sides contain arbitary amount of chunks, some positions
+	-- for each chunk due to asynchronous nature of this event.
+	-- Both sides contain arbitrary amount of chunks, some positions
 	-- when inverted will be still in process of generation or not
 	-- generated at all. It is important to perform 2 passes to make
 	-- sure everything is cloned properly. Normally we would use mutex
@@ -347,7 +319,8 @@ local function on_chunk_generated(event)
 	end
 end
 
-local function on_entity_cloned(event)
+---@param event EventData.on_entity_cloned
+function Public.on_entity_cloned(event)
 	local source = event.source
 	local destination = event.destination
 
@@ -364,27 +337,11 @@ local function on_entity_cloned(event)
 	Mirror_terrain.invert_entity(event)
 end
 
-local function on_area_cloned(event)
-	local surface = event.destination_surface
-
-	-- Check if we're out of init and not between surface hot-swap.
-	if not surface or not surface.valid then return end
-
-	-- Event is fired only for south side.
-	Mirror_terrain.invert_tiles(event)
-	Mirror_terrain.invert_decoratives(event)
-
-	-- Check chunks around southen silo to remove water tiles under refined-concrete.
-	-- Silo can be removed by picking bricks from under it in a situation where
-	-- refined-concrete tiles were placed directly onto water tiles. This scenario does
-	-- not appear for north as water is removed during silo generation.
-	local position = event.destination_area.left_top
-	if position.y >= 0 and position.y <= 192 and math.abs(position.x) <= 192 then
-		Mirror_terrain.remove_hidden_tiles(event)
-	end
-end
-
-local function on_rocket_launch_ordered(event)
+---Factorio allows you to ride in the rocket if you send a vehicle up.
+---This in some cases may be exploited in this scenario, so we need too
+---dis-allow this.
+---@param event EventData.on_rocket_launch_ordered
+function Public.clear_rocket_inventory_if_contains_vehicle(event)
 	local vehicles = {
 		["car"] = true,
 		["tank"] = true,
@@ -394,10 +351,12 @@ local function on_rocket_launch_ordered(event)
 		["spidertron"] = true,
 	}
 	local inventory = event.rocket.get_inventory(defines.inventory.fuel)
-	local contents = inventory.get_contents()
-	for name, _ in pairs(contents) do
-		if vehicles[name] then
-			inventory.clear()
+	if inventory then
+		local contents = inventory.get_contents()
+		for name, _ in pairs(contents) do
+			if vehicles[name] then
+				inventory.clear()
+			end
 		end
 	end
 end
@@ -444,44 +403,7 @@ local function clear_corpses(cmd)
         player.print('Cleared biter-corpses.', Color.success)
 end
 
-local function on_init()
-	Init.tables()
-	Init.initial_setup()
-	Init.playground_surface()
-	Init.forces()
-	Init.draw_structures()
-	Init.load_spawn()
-	Init.reveal_map()
-end
-
-
-local Event = require 'utils.event'
-Event.add(defines.events.on_rocket_launch_ordered, on_rocket_launch_ordered)
-Event.add(defines.events.on_area_cloned, on_area_cloned)
-Event.add(defines.events.on_post_entity_died, Ai.schedule_reanimate)
-Event.add_event_filter(defines.events.on_post_entity_died, {
-	filter = "type",
-	type = "unit",
-})
-Event.add(defines.events.on_entity_cloned, on_entity_cloned)
-Event.add(defines.events.on_built_entity, on_built_entity)
-Event.add(defines.events.on_chunk_generated, on_chunk_generated)
-Event.add(defines.events.on_console_chat, on_console_chat)
-Event.add(defines.events.on_console_command, on_console_command)
-Event.add(defines.events.on_entity_died, on_entity_died)
-Event.add(defines.events.on_ai_command_completed, on_ai_command_completed)
-Event.add(defines.events.on_gui_click, on_gui_click)
-Event.add(defines.events.on_marked_for_deconstruction, on_marked_for_deconstruction)
-Event.add(defines.events.on_player_built_tile, on_player_built_tile)
-Event.add(defines.events.on_player_joined_game, on_player_joined_game)
-Event.add(defines.events.on_robot_mined_entity, on_robot_mined_entity)
-Event.add(defines.events.on_research_finished, on_research_finished)
-Event.add(defines.events.on_robot_built_entity, on_robot_built_entity)
-Event.add(defines.events.on_robot_built_tile, on_robot_built_tile)
-Event.add(defines.events.on_tick, on_tick)
-Event.on_init(on_init)
-
 commands.add_command('clear-corpses', 'Clears all the biter corpses..',
 		     clear_corpses)
 
-require "maps.biter_battles_v2.spec_spy"
+return Public

@@ -5,6 +5,8 @@ local Task = require 'utils.task'
 local Event = require 'utils.event'
 local gui_style = require 'utils.utils'.gui_style
 
+local Public = {}
+
 local function draw_suspend_gui(player)
 	if player.gui.top.suspend_frame then return end
 	if global.suspend_target == nil then return end
@@ -185,11 +187,11 @@ commands.add_command('suspend',
                      'Force a player to stay in spectator for 10 minutes : /suspend playerName',
                      function(cmd) suspend_player(cmd); end)
 
-local function on_player_joined_game(event)
-	local player = game.players[event.player_index]
+---@param player LuaPlayer
+function Public.on_player_joined_game(player)
 	if global.suspended_players[player.name] and (game.ticks_played - global.suspended_players[player.name]) < global.suspended_time then
 		punish_player(player)
 	end
 end
 
-Event.add(defines.events.on_player_joined_game, on_player_joined_game)
+return Public

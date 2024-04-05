@@ -1,7 +1,6 @@
 local get_active_frame = require 'comfy_panel.main'.comfy_panel_get_active_frame
 local AntiGrief_get = require 'antigrief'.get
 local lower = string.lower
-local Event = require 'utils.event'
 local Global = require 'utils.global'
 local pos_from_gps = require 'utils.string'.position_from_gps_tag
 local distance =  require 'utils.core'.distance
@@ -13,6 +12,7 @@ local this = {
     sort_by = {},
 	selected_history_index = {}
 }
+local Public = {}
 
 Global.register(
     this,
@@ -198,7 +198,8 @@ local create_histories_panel = (function(player, frame)
 	draw_events(player, frame)
 end)
 
-local function on_gui_selection_state_changed(event)
+---@param event EventData.on_gui_selection_state_changed
+function Public.on_gui_selection_state_changed(event)
 	local element = event.element
 	if not element then return end
 	if not element.valid then return end
@@ -213,7 +214,8 @@ local function on_gui_selection_state_changed(event)
 	end
 end
 
-local function on_gui_text_changed(event)
+---@param event EventData.on_gui_text_changed
+function Public.on_gui_text_changed(event)
 	local element = event.element
 	if element and element.valid then
 		local player = game.get_player(event.player_index)
@@ -231,7 +233,8 @@ local function on_gui_text_changed(event)
 	end
 end
 
-local function on_gui_click(event)
+---@param event EventData.on_gui_click
+function Public.on_gui_click(event)
 	local player = game.get_player(event.player_index)
 	local element = event.element
 	if element and element.valid then
@@ -269,23 +272,19 @@ local function on_gui_click(event)
 end
 
 
-local function on_console_chat(event)
-	if not event.player_index then return end
-	local player = game.get_player(event.player_index)
+---@param player LuaPlayer
+---@param message string
+function Public.on_console_chat(player, message)
 	if this.waiting_for_gps[player.name] then
 		local frame = get_active_frame(player)
 		if frame and frame.name == "Histories" then
-			this.filter_by_gps[player.name] = pos_from_gps(event.message)
+			this.filter_by_gps[player.name] = pos_from_gps(message)
 			frame.filter_table.gps.filter_by_gps.caption = "Filter by GPS"
 			draw_events(player, frame)
 		end
 	end
 end
 
-
 comfy_panel_tabs["Histories"] = {gui = create_histories_panel, admin = true}
 
-Event.add(defines.events.on_gui_selection_state_changed, on_gui_selection_state_changed)
-Event.add(defines.events.on_gui_text_changed, on_gui_text_changed)
-Event.add(defines.events.on_gui_click, on_gui_click)
-Event.add(defines.events.on_console_chat, on_console_chat)
+return Public

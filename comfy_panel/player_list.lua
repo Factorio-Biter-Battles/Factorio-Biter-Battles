@@ -537,7 +537,8 @@ local function player_list_show(player, frame, sort_by)
     end
 end
 
-local function on_gui_click(event)
+---@param event EventData.on_gui_click
+function Public.on_gui_click(event)
     if not event then
         return
     end
@@ -636,7 +637,7 @@ local function on_gui_click(event)
     end
 end
 
-local function refresh()
+function Public.refresh()
     for _, player in pairs(game.connected_players) do
         local frame = Tabs.comfy_panel_get_active_frame(player)
         if frame then
@@ -648,17 +649,14 @@ local function refresh()
     end
 end
 
-local function on_player_joined_game(event)
+---@param event EventData.on_player_joined_game
+function Public.on_player_joined_game(event)
     if not this.player_list.last_poke_tick[event.player_index] then
         this.player_list.pokes[event.player_index] = 0
         this.player_list.last_poke_tick[event.player_index] = 0
         this.player_list.sorting_method[event.player_index] = 'total_time_played_desc'
     end
-    refresh()
-end
-
-local function on_player_left_game()
-    refresh()
+    Public.refresh()
 end
 
 --- If the different roles should be shown in the player_list.
@@ -672,9 +670,5 @@ function Public.show_roles_in_list(value)
 end
 
 comfy_panel_tabs['Players'] = {gui = player_list_show, admin = false}
-
-Event.add(defines.events.on_player_joined_game, on_player_joined_game)
-Event.add(defines.events.on_player_left_game, on_player_left_game)
-Event.add(defines.events.on_gui_click, on_gui_click)
 
 return Public

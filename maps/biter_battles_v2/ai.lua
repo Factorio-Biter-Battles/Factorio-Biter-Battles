@@ -439,13 +439,14 @@ function Public.reanimate_units()
 	end
 end
 
-Public.schedule_reanimate = function(event)
+---@param event EventData.on_post_entity_died
+function Public.schedule_reanimate(event)
 	-- This event is to be fired from on_post_entity_died. Standard version
 	-- of this event is racing with current reanimation logic. Corpse
 	-- takes few ticks to spawn, there is also a short dying animation. This
 	-- combined makes renimation to miss corpses on the battle field
 	-- sometimes.
-	
+
 	-- If rocket silo was blown up - disable reanimate logic.
 	if global.server_restart_timer ~= nil then
 		return

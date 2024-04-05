@@ -222,12 +222,12 @@ function Profiler.Stop(averageMs, message)
 end
 ignoredFunctions[Profiler.Stop] = true
 
-local function on_tick(event)
+---@param tick int
+function Profiler.on_tick(tick)
     --if not Profiler.IsRunning then return end
-    if not (event.tick == Profiler.AutoStopTick) then return end
-    Profiler.Stop(false, "AutoStop")    
+    if not (tick == Profiler.AutoStopTick) then return end
+    Profiler.Stop(false, "AutoStop")
 end
 
-Event.add(defines.events.on_tick, on_tick)
 return Profiler
 
