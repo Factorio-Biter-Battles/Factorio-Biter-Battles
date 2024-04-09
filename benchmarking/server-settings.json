@@ -45,10 +45,10 @@
   "allow_commands": "admins-only",
 
   "_comment_autosave_interval": "Autosave interval in minutes",
-  "autosave_interval": 10,
+  "autosave_interval": 0,
 
   "_comment_autosave_slots": "server autosave slots, it is cycled through when the server autosaves.",
-  "autosave_slots": 5,
+  "autosave_slots": 0,
 
   "_comment_afk_autokick_interval": "How many minutes until someone is kicked when doing nothing, 0 for never.",
   "afk_autokick_interval": 0,
