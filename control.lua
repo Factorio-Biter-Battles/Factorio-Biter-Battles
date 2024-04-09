@@ -34,15 +34,18 @@ require 'comfy_panel.special_games'
 ---------------- ENABLE MAPS HERE ----------------
 --![[North VS South Survival PVP, feed the opposing team's biters with science flasks. Disable Autostash, Group and Poll modules.]]--
 require 'maps.biter_battles_v2.main'
-
 ---------------------------------------------------------------
 
+-- Controlled via external script
+local BENCHMARKING_ENABLED = false
+if BENCHMARKING_ENABLED then
+	require "benchmarking.main"
+end
 
 local loaded = _G.package.loaded
 function require(path)
     return loaded[path] or error('Can only require files at runtime that have been required in the control stage.', 2)
 end
-
 
 ---------------- Central Dispatch of Events ----------------
 local Event = require "utils.event"
