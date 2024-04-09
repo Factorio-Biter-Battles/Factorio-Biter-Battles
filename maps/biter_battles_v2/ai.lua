@@ -238,7 +238,8 @@ Public.pre_main_attack = function()
 	local force_name = global.next_attack
 	AiTargets.select(force_name)
 
-	if not global.training_mode or (global.training_mode and #game.forces[force_name].connected_players > 0) then
+	-- In headless benchmarking, there are no connected_players so we need a global to override this
+	if not global.training_mode or (global.training_mode and (global.benchmark_mode or #game.forces[force_name].connected_players > 0))then
 		local biter_force_name = force_name .. "_biters"
 		global.main_attack_wave_amount = math.ceil(get_threat_ratio(biter_force_name) * 7)
 

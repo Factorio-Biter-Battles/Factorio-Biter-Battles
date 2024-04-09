@@ -235,6 +235,7 @@ function Public.tables()
 	global.random_generator.re_seed(global.next_map_seed)
 	global.reroll_map_voting = {}
 	global.bb_evolution = {}
+	global.benchmark_mode = false
 	global.bb_game_won_by_team = nil
 	global.bb_game_start_tick = nil
 	global.bb_threat = {}
