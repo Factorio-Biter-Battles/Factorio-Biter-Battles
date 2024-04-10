@@ -55,9 +55,8 @@ if [ -n "$SCENARIO_RANDOM_NAME" ]; then
 			break
 		fi
 	done <factorio_output_pipe
-	echo "done"
 	sleep 1
-	echo done2
+	echo "Done creating save to run benchmark from."
 	# kill -9 "$command_pid" >/dev/null 2>&1
 	rm factorio_output_pipe
 	SAVE_SETUP_FACTORIO_DATA_PATH="${FACTORIO_DATA_DIR}/saves/${SCENARIO_RANDOM_NAME}.zip"

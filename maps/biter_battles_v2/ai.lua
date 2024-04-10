@@ -2,7 +2,7 @@ local Public = {}
 local BiterRaffle = require "maps.biter_battles_v2.biter_raffle"
 local bb_config = require "maps.biter_battles_v2.config"
 local BossUnit = require "functions.boss_unit"
-local fifo = require "maps.biter_battles_v2.fifo"
+local Event = require 'utils.event'
 local Feeding = require "maps.biter_battles_v2.feeding"
 local Functions = require "maps.biter_battles_v2.functions"
 local Tables = require "maps.biter_battles_v2.tables"
@@ -57,22 +57,22 @@ Public.send_near_biters_to_silo = function()
 			type=defines.command.attack,
 			target=global.rocket_silo["north"],
 			distraction=defines.distraction.none
-			},
+		},
 		unit_count = 8,
 		force = "north_biters",
 		unit_search_distance = 64
-		})
+	})
 
 	game.surfaces[global.bb_surface_name].set_multi_command({
 		command={
 			type=defines.command.attack,
 			target=global.rocket_silo["south"],
 			distraction=defines.distraction.none
-			},
+		},
 		unit_count = 8,
 		force = "south_biters",
 		unit_search_distance = 64
-		})
+	})
 end
 
 local function get_random_spawner(biter_force_name)
@@ -100,12 +100,14 @@ local function spawn_biters(isItnormalBiters, maxLoopIteration,spawner,biter_thr
 	-- *20 because one boss is equal of 20 biters in theory
 	-- formula because 90% revive chance is 1/(1-0.9) = 10, which means biters needs to be killed 10 times, so *10 . easy fast-check : 50% revive is 2 biters worth, formula matches. 0% revive -> 1 biter worth
 	local health_buff_equivalent_revive = 1.0/(1.0-global.reanim_chance[game.forces[biter_force_name].index]/100)
-	local health_factor = bb_config.health_multiplier_boss*health_buff_equivalent_revive
+	if not isItnormalBiters then
+		health_buff_equivalent_revive = health_buff_equivalent_revive * 20
+	end
 	local i = #valid_biters
 	for _ = 1, maxLoopIteration, 1 do
 		local unit_name = BiterRaffle.roll(roll_type, global.bb_evolution[biter_force_name])
 		if isItnormalBiters and biter_threat < 0 then break end
-		if not isItnormalBiters and biter_threat - threat_values[unit_name] * 20 * health_buff_equivalent_revive < 0 then break end -- Do not add a biter if it will make the threat goes negative when all the biters of wave were killed
+		if not isItnormalBiters and biter_threat - threat_values[unit_name] * health_buff_equivalent_revive < 0 then break end -- Do not add a biter if it will make the threat goes negative when all the biters of wave were killed
 		local position = spawner.surface.find_non_colliding_position(unit_name, spawner.position, 128, 2)
 		if not position then break end
 		local biter
@@ -118,12 +120,12 @@ local function spawn_biters(isItnormalBiters, maxLoopIteration,spawner,biter_thr
 		if isItnormalBiters then
 			biter_threat = biter_threat - threat_values[biter.name]
 		else
-			biter_threat = biter_threat - threat_values[biter.name] * 20 * health_buff_equivalent_revive -- 20 because boss is 20 biters equivalent with health buff included
+			biter_threat = biter_threat - threat_values[biter.name] * health_buff_equivalent_revive
 		end
 		i = i + 1
 		valid_biters[i] = biter
-		if not isItnormalBiters then
-			BossUnit.add_boss_unit(biter, health_factor, 0.55)
+		if health_buff_equivalent_revive > 1 then
+			BossUnit.add_high_health_unit(biter, health_buff_equivalent_revive, not isItnormalBiters)
 		end
 
 		--Announce New Spawn
@@ -138,6 +140,18 @@ local function spawn_biters(isItnormalBiters, maxLoopIteration,spawner,biter_thr
 	end
 end
 
+local function on_entity_spawned(event)
+	local entity = event.entity
+	if not entity.valid then return end
+	if entity.force.name == "north_biters" or entity.force.name == "south_biters" then
+		local health_factor = 1 / (1 - global.reanim_chance[entity.force.index] / 100)
+		if health_factor > 1 then
+			BossUnit.add_high_health_unit(entity, health_factor, false)
+		end
+	end
+end
+
+Event.add(defines.events.on_entity_spawned, on_entity_spawned)
 
 local function select_units_around_spawner(spawner, force_name)
 	local biter_force_name = spawner.force.name
@@ -333,166 +347,16 @@ function Public.subtract_threat(entity)
 		local health_buff_equivalent_revive = 1.0/(1.0-global.reanim_chance[game.forces[biter_not_boss_force].index]/100)
 		factor = bb_config.health_multiplier_boss*health_buff_equivalent_revive
 	else
-		if global.try_new_threat_logic then
-			-- For normal biters, we essentially want revives to be ignored - i.e. the threat should go down on
-			-- average only once per spawned biter (no matter how many times it revives). Thus if the revive
-			-- chance is 90%, we only want the threat to go down by 10% for each kill.
-			factor = 1.0 - global.reanim_chance[game.forces[biter_not_boss_force].index]/100
+		if not global.try_new_threat_logic then
+			-- In the code before we revamped revive (specifically, it used to actually let
+			-- biters die, and then spawn new biters, rather than just restoring the health
+			-- of biters), it would subtract threat for every biter death. To preserve
+			-- essentially the same behavior here, we scale the threat by this revive
+			-- chance/extra-health.
+			factor = 1.0 / (1 - global.reanim_chance[game.forces[biter_not_boss_force].index]/100)
 		end
 	end
 	global.bb_threat[biter_not_boss_force] = global.bb_threat[biter_not_boss_force] - threat_values[entity.name] * factor
-	return true
-end
-
-local UNIT_NAMES = {
-	'small-biter',
-	'small-spitter',
-	'medium-biter',
-	'medium-spitter',
-	'big-biter',
-	'big-spitter',
-	'behemoth-biter',
-	'behemoth-spitter',
-}
-local UNIT_NAMES_LEN = #UNIT_NAMES
-
-local function likely_biter_name(force_name)
-	-- Get most likely biter name based on current evolution.
-	local idx = UNIT_NAMES_LEN
-	local evo = global.bb_evolution[force_name]
-	-- Bother calculating threshold only for evolution less than 90.
-	if evo < 0.9 then
-		-- Map evolution onto array indicies.
-		idx = math.ceil((evo + 0.1) * UNIT_NAMES_LEN)
-	end
-
-	-- Randomly choose between pair and respect array boundaries.
-	if idx > 1 then
-		idx = math_random(idx - 1, idx)
-	end
-
-	return UNIT_NAMES[idx]
-end
-
-local CORPSE_NAMES = {
-	'behemoth-biter-corpse',
-	'big-biter-corpse',
-	'medium-biter-corpse',
-	'small-biter-corpse',
-	'behemoth-spitter-corpse',
-	'big-spitter-corpse',
-	'medium-spitter-corpse',
-	'small-spitter-corpse',
-}
-
-local function reanimate_unit(id)
-	local position = fifo.pop(id)
-
-	-- Find corpse to spawn unit on top of.
-	local surface = game.surfaces[global.bb_surface_name]
-	local corpse = surface.find_entities_filtered {
-		type = 'corpse',
-		name = CORPSE_NAMES,
-		position = position,
-		radius = 1,
-		limit = 1,
-	}[1]
-
-	local force = 'south_biters'
-	if position.y < 0 then
-		force = 'north_biters'
-	end
-
-	local direction = nil
-	local name = nil
-	if corpse == nil then
-		-- No corpse data, choose unit based on evolution %.
-		name = likely_biter_name(force)
-	else
-		-- Extract name by cutting of '-corpse' part.
-		name = string.sub(corpse.name, 0, -8)
-		position = corpse.position
-		direction = corpse.direction
-		corpse.destroy()
-	end
-
-	surface.create_entity {
-		name = name,
-		position = position,
-		force = force,
-		direction = direction,
-	}
-end
-
-local function _reanimate_units(id, cycles)
-	repeat
-		-- Reanimate unit and reassign current fifo state
-		reanimate_unit(id)
-		cycles = cycles - 1
-	until cycles == 0
-end
-
-function Public.reanimate_units()
-	-- This FIFOs can be accessed by force indices.
-	for _, id in pairs(global.dead_units) do
-		-- Check for each side if there are any biters to reanimate.
-		if fifo.empty(id) then
-			goto reanim_units_cont
-		end
-
-		-- Balance amount of unit creation requests to get rid off
-		-- excess stored in memory.
-		local cycles = fifo.length(id) / global.reanim_balancer
-		cycles = math_floor(cycles) + 1
-		_reanimate_units(id, cycles)
-
-		::reanim_units_cont::
-	end
-end
-
-Public.schedule_reanimate = function(event)
-	-- This event is to be fired from on_post_entity_died. Standard version
-	-- of this event is racing with current reanimation logic. Corpse
-	-- takes few ticks to spawn, there is also a short dying animation. This
-	-- combined makes renimation to miss corpses on the battle field
-	-- sometimes.
-	
-	-- If rocket silo was blown up - disable reanimate logic.
-	if global.server_restart_timer ~= nil then
-		return
-	end
-
-	-- There is no entity within this event and so we have to guess
-	-- force based on y axis.
-	local force = game.forces['south_biters']
-	local position = event.position
-	if position.y < 0 then
-		force = game.forces['north_biters']
-	end
-
-	local idx = force.index
-	local chance = global.reanim_chance[idx]
-	if chance <= 0 then
-		return
-	end
-
-	local reanimate = math_random(1, 100) <= chance
-	if not reanimate then
-		return
-	end
-
-	-- Store only position, that is enough to guess force and type of biter.
-	fifo.push(global.dead_units[idx], position)
-end
-
-function Public.empty_reanim_scheduler()
-	for force, id in pairs(global.dead_units) do
-		-- Check for each side if there are any biters to reanimate.
-		if not fifo.empty(id) then
-			return false
-		end
-	end
-
 	return true
 end
 

@@ -6,6 +6,8 @@ local InstantMapReset = require("commands.instant_map_reset")
 local Profiler = require("utils.profiler")
 
 local high_threat_value = 10000000
+local benchmark_start_tick = 8000
+local benchmark_duration = 8000
 
 ---@param bp_string string
 ---@param surface LuaSurface
@@ -107,12 +109,12 @@ Event.add(
 			---Save the server so that we can load it into the factorio commandline
 			---bencharking mode.  After this tick, the server will shutdown by the
 			---run_benchmark.sh script.
-		elseif event.tick == 8000 then
+		elseif event.tick == benchmark_start_tick then
 			log("total threat consumed: " .. (high_threat_value - global.bb_threat["north_biters"]))
 			game.server_save("benchmarking-bb-overwritten-often")
 
 			---Benchmarking step
-			---At this point we have a save 'abcdefg' which is loaded at or
+			---At this point we have a save 'benchmarking-bb-overwritten-often' which is loaded at or
 			---near tick 12000, we give 100 ticks of fudge-space.
 			---The profiler code stops itself at 60*60 ticks after the provided
 			---tick.  You need to be careful to manage this with the run_benchmark.sh
@@ -123,11 +125,11 @@ Event.add(
 			---what tick exactly, so we wait 100 ticks to be sure.
 			---Then we set the profiler to stop 60 ticks before that. (end tick
 			--- minus 60 times 61 instead of 60)
-		elseif event.tick == 8100 then
-			local end_tick = 8100 + 3000
+		elseif event.tick == benchmark_start_tick + 100 then
+			local end_tick = benchmark_start_tick + 100 + 3000
 			local profiler_tick = end_tick - (60 * 61)
 			--Profiler.Start(true, true, profiler_tick)
-		elseif event.tick > 8000 and event.tick % 500 == 0 then
+		elseif event.tick > benchmark_start_tick and event.tick % 500 == 0 then
 			log("total threat consumed: " .. (high_threat_value - global.bb_threat["north_biters"]))
 		end
 	end
