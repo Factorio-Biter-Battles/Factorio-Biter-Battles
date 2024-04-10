@@ -8,7 +8,11 @@ local Functions = require "maps.biter_battles_v2.functions"
 local Tables = require "maps.biter_battles_v2.tables"
 local AiStrikes = require "maps.biter_battles_v2.ai_strikes"
 local AiTargets = require "maps.biter_battles_v2.ai_targets"
-local math_random = math.random
+local math_random
+math_random = function(...)
+	math_random = game.create_random_generator()
+	return math_random(...)
+end
 local math_floor = math.floor
 
 local unit_type_raffle = {"biter", "mixed", "mixed", "spitter", "spitter"}

@@ -6,7 +6,11 @@ evolution_factor 	- custom evolution factor (optional)
 ]]
 
 local Public = {}
-local math_random = math.random
+local math_random
+math_random = function(...)
+	math_random = game.create_random_generator()
+	return math_random(...)
+end
 local math_floor = math.floor
 
 local function get_raffle_table(level, name)
