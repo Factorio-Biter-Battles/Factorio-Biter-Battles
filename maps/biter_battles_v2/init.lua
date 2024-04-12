@@ -220,8 +220,17 @@ function Public.tables()
 	end
 
 	global.suspended_time = 36000
-	global.suspend_target = nil
-	global.suspend_voting = {}
+
+	---@class SuspendTargetInfo
+	---@field suspendee_player_name string
+	---@field suspendee_force_name string
+	---@field suspender_player_name string
+	---@field suspend_votes_by_player table<string, int>
+
+	---@type SuspendTargetInfo|nil
+	global.suspend_target_info = nil
+	---Name and tick suspended at
+	---@type table<string, int>
 	global.suspended_players = {}
 	if global.random_generator == nil then
 		global.random_generator = game.create_random_generator()

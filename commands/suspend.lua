@@ -5,14 +5,15 @@ local Task = require 'utils.task'
 local Event = require 'utils.event'
 local gui_style = require 'utils.utils'.gui_style
 
+---@param player LuaPlayer
 local function draw_suspend_gui(player)
 	if player.gui.top.suspend_frame then return end
-	if global.suspend_target == nil then return end
+	if global.suspend_target_info == nil or global.suspend_target_info.suspendee_player_name == player.name then return end
 	local f = player.gui.top.add{type = "frame", name = "suspend_frame"}
 	gui_style(f, {height = 38, padding = 0})
 
 	local t = f.add{type = "table", name = "suspend_table", column_count = 3, vertical_centering = true}
-	local l = t.add{type = "label", caption = "Suspend "..global.suspend_target.." ?\t" .. global.suspend_time_left .. "s"}
+	local l = t.add{type = "label", caption = "Suspend ".. global.suspend_target_info.suspendee_player_name .." ?\t" .. global.suspend_time_left .. "s"}
 	gui_style(l, {font = "heading-2", font_color = {r = 0.88, g = 0.55, b = 0.11}, width = 210})
 
 	local b = t.add { type = "sprite-button", caption = "Yes", name = "suspend_yes" }
@@ -85,20 +86,18 @@ local suspend_token = Token.register(
 		-- count votes
 		local total_votes = table.size(global.suspend_voting)
 		local result = 0
-		if global.suspend_target ~= nil then
+		if global.suspend_target_info ~= nil then
 			if total_votes > 0 then
 				for _, vote in pairs(global.suspend_voting) do
 					result = result + vote
 				end
 				result = math.floor( 100*result / total_votes )
 				if result >= 75 and total_votes > 1 then
-					game.print(global.suspend_target .." suspended... (" .. result .. "%)")
-					Server.to_banned_embed(table.concat {global.suspend_target .. ' was suspended ( ' .. result .. ' %)' .. ', vote started by ' .. global.suspend_starter})
-					global.suspended_players[global.suspend_target] = game.ticks_played
-					local playerSuspended = game.get_player(global.suspend_target)
-					global.suspend_target = nil
-					global.suspend_starter = nil
-					global.suspend_voting = {}
+					game.print(global.suspend_target_info.suspendee_player_name .." suspended... (" .. result .. "%)")
+					Server.to_banned_embed(table.concat {global.suspend_target_info.suspendee_player_name .. ' was suspended ( ' .. result .. ' %)' .. ', vote started by ' .. global.suspend_target_info.suspender_player_name})
+					global.suspended_players[global.suspend_target_info.suspendee_player_name] = game.ticks_played
+					local playerSuspended = game.get_player(global.suspend_target_info.suspendee_player_name)
+					global.suspend_target_info = nil
 					if playerSuspended and playerSuspended.valid and playerSuspended.surface.name ~= "gulag" then
 						punish_player(playerSuspended)
 					end
@@ -107,15 +106,13 @@ local suspend_token = Token.register(
 			end
 			if total_votes == 1 and result == 100 then
 				game.print("Vote to suspend "..global.suspend_target.." has failed because only 1 player voted, need at least 2 votes")
-				Server.to_banned_embed(table.concat {global.suspend_target .. ' was not suspended and vote failed, only 1 player voted, need at least 2 votes, vote started by ' .. global.suspend_starter})
+				Server.to_banned_embed(table.concat {global.suspend_target .. ' was not suspended and vote failed, only 1 player voted, need at least 2 votes, vote started by ' .. global.suspend_target_info.suspender_player_name})
 			else
 				game.print("Vote to suspend "..global.suspend_target.." has failed (" .. result .. "%)")
-				Server.to_banned_embed(table.concat {global.suspend_target .. ' was not suspended and vote failed ( ' .. result .. ' %)' .. ', vote started by ' .. global.suspend_starter})
+				Server.to_banned_embed(table.concat {global.suspend_target .. ' was not suspended and vote failed ( ' .. result .. ' %)' .. ', vote started by ' .. global.suspend_target_info.suspender_player_name})
 			end
-			global.suspend_target = nil
+			global.suspend_target_info = nil
 		end
-		global.suspend_voting = {}
-		global.suspend_starter = nil
 	end
 )
 
@@ -135,11 +132,12 @@ decrement_timer_token = Token.register(
     end
 )
 
+---@param cmd CustomCommandData
 local function suspend_player(cmd)
 	if not cmd.player_index then return end
 	local killer = game.get_player(cmd.player_index)
 	if not killer then return end
-	if global.suspend_target then
+	if global.suspend_target_info then
 		killer.print("You cant suspend 2 players at same time, wait for previous vote to end", Color.warning)
 		return
 	end
@@ -162,10 +160,17 @@ local function suspend_player(cmd)
 					killer.print("A suspend was just started before restart, please wait 60s maximum to avoid bugs", Color.warning)
 				return
 			end
-			global.suspend_target = victim.name
-			game.print(killer.name .. 	" has started a vote to suspend " .. global.suspend_target .. " , vote in top of screen")
+			local victim_name = victim.name
+			local killer_name = killer.name
+			global.suspend_target_info = {
+				suspendee_player_name = victim_name,
+				suspendee_force_name = victim.force.name,
+				suspender_player_name = killer_name,
+				target_force_name = victim.force.name,
+				suspend_votes_by_player = {[killer_name] = 1},
+			}
+			game.print(killer.name .. 	" has started a vote to suspend " .. victim_name .. " , vote in top of screen")
 			global.suspend_token_running = true
-			global.suspend_starter = killer.name
 			Task.set_timeout_in_ticks(global.suspend_time_limit, suspend_token)
 			Event.add_removable(defines.events.on_player_joined_game, suspend_buttons_token)
 			global.suspend_time_left = global.suspend_time_limit / 60
