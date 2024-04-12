@@ -1,11 +1,7 @@
 local Public = {}
 
 local math_sqrt = math.sqrt
-local math_random
-math_random = function(...)
-	math_random = game.create_random_generator()
-	return math_random(...)
-end
+local math_random = math.random
 local table_insert = table.insert
 local table_remove = table.remove
 

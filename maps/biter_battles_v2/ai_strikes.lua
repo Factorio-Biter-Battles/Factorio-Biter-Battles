@@ -2,11 +2,7 @@ local Public = {}
 
 local bb_config = require "maps.biter_battles_v2.config"
 
-local math_random
-math_random = function(...)
-	math_random = game.create_random_generator()
-	return math_random(...)
-end
+local math_random = math.random
 local math_sqrt = math.sqrt
 local math_fmod = math.fmod
 local math_floor = math.floor
