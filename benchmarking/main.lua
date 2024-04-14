@@ -1,6 +1,7 @@
 local Ai = require("maps.biter_battles_v2.ai")
 local BenchmarkingBlueprints = require("benchmarking.blueprints")
 local Event = require("utils.event")
+local Feeding = require "maps.biter_battles_v2.feeding"
 local InstantMapReset = require("commands.instant_map_reset")
 local Profiler = require("utils.profiler")
 
@@ -78,8 +79,8 @@ Event.add(
 		elseif event.tick == 4500 then
 			global.training_mode = true
 			global.benchmark_mode = true
-			set_evo_and_threat(200, "automation-science-pack", "north_biters")
-			set_evo_and_threat(2000, "space-science-pack", "north_biters")
+			Feeding.do_raw_feed(200, "automation-science-pack", "north_biters")
+			Feeding.do_raw_feed(2000, "space-science-pack", "north_biters")
 			global.max_group_size["north_biters"] = 200
 			global.bb_threat["north_biters"] = 10000000
 			local surface = game.get_surface(global.bb_surface_name)
@@ -94,7 +95,7 @@ Event.add(
 				end
 			end
 
-			set_evo_and_threat(5000, "space-science-pack", "north_biters")
+			Feeding.do_raw_feed(5000, "space-science-pack", "north_biters")
 			global.max_group_size["north_biters"] = 200
 			global.bb_threat["north_biters"] = 10000000
 			if surface then
