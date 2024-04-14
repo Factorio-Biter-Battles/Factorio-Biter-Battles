@@ -612,9 +612,9 @@ local function on_gui_click(event)
 		local suspend_info = global.suspend_target_info
 		if suspend_info then
 			if player.force.name == suspend_info.target_force_name then
-				if global.suspend_target_info.suspend_votes_by_player[player.name] ~= 1 then
-					global.suspend_target_info.suspend_votes_by_player[player.name] = 1
-					game.print(player.name .. " wants to suspend " .. global.suspend_target,
+				if suspend_info.suspend_votes_by_player[player.name] ~= 1 then
+					suspend_info.suspend_votes_by_player[player.name] = 1
+					game.print(player.name .. " wants to suspend " .. suspend_info.suspendee_player_name,
 						{ r = 0.1, g = 0.9, b = 0.0 })
 				end
 			else
@@ -626,9 +626,9 @@ local function on_gui_click(event)
 		local suspend_info = global.suspend_target_info
 		if suspend_info then
 			if player.force.name == suspend_info.target_force_name then
-				if global.suspend_target_info.suspend_votes_by_player[player.name] ~= 0 then
-					global.suspend_target_info.suspend_votes_by_player[player.name] = 0
-					game.print(player.name .. " doesn't want to suspend " .. global.suspend_target_info.suspendee_force_name,
+				if suspend_info.suspend_votes_by_player[player.name] ~= 0 then
+					suspend_info.suspend_votes_by_player[player.name] = 0
+					game.print(player.name .. " doesn't want to suspend " .. suspend_info.suspendee_force_name,
 						{ r = 0.9, g = 0.1, b = 0.1 })
 				end
 			else
