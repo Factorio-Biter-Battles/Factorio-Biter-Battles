@@ -86,17 +86,18 @@ local suspend_token = Token.register(
 		-- count votes
 		local total_votes = table.size(global.suspend_voting)
 		local result = 0
-		if global.suspend_target_info ~= nil then
+		local suspend_info = global.suspend_target_info
+		if suspend_info ~= nil then
 			if total_votes > 0 then
 				for _, vote in pairs(global.suspend_voting) do
 					result = result + vote
 				end
 				result = math.floor( 100*result / total_votes )
 				if result >= 75 and total_votes > 1 then
-					game.print(global.suspend_target_info.suspendee_player_name .." suspended... (" .. result .. "%)")
-					Server.to_banned_embed(table.concat {global.suspend_target_info.suspendee_player_name .. ' was suspended ( ' .. result .. ' %)' .. ', vote started by ' .. global.suspend_target_info.suspender_player_name})
-					global.suspended_players[global.suspend_target_info.suspendee_player_name] = game.ticks_played
-					local playerSuspended = game.get_player(global.suspend_target_info.suspendee_player_name)
+					game.print(suspend_info.suspendee_player_name .. " suspended... (" .. result .. "%)")
+					Server.to_banned_embed(table.concat { suspend_info.suspendee_player_name .. " was suspended ( " .. result .. " %)" .. ", vote started by " .. suspend_info.suspender_player_name })
+					global.suspended_players[suspend_info.suspendee_player_name] = game.ticks_played
+					local playerSuspended = game.get_player(suspend_info.suspendee_player_name)
 					global.suspend_target_info = nil
 					if playerSuspended and playerSuspended.valid and playerSuspended.surface.name ~= "gulag" then
 						punish_player(playerSuspended)
@@ -105,11 +106,14 @@ local suspend_token = Token.register(
 				end
 			end
 			if total_votes == 1 and result == 100 then
-				game.print("Vote to suspend "..global.suspend_target.." has failed because only 1 player voted, need at least 2 votes")
-				Server.to_banned_embed(table.concat {global.suspend_target .. ' was not suspended and vote failed, only 1 player voted, need at least 2 votes, vote started by ' .. global.suspend_target_info.suspender_player_name})
+				game.print("Vote to suspend " ..
+				suspend_info.suspendee_player_name ..
+				" has failed because only 1 player voted, need at least 2 votes")
+				Server.to_banned_embed(table.concat { suspend_info.suspendee_player_name .. " was not suspended and vote failed, only 1 player voted, need at least 2 votes, vote started by " .. suspend_info.suspender_player_name })
 			else
-				game.print("Vote to suspend "..global.suspend_target.." has failed (" .. result .. "%)")
-				Server.to_banned_embed(table.concat {global.suspend_target .. ' was not suspended and vote failed ( ' .. result .. ' %)' .. ', vote started by ' .. global.suspend_target_info.suspender_player_name})
+				game.print("Vote to suspend " ..
+				suspend_info.suspendee_player_name .. " has failed (" .. result .. "%)")
+				Server.to_banned_embed(table.concat { suspend_info.suspendee_player_name .. " was not suspended and vote failed ( " .. result .. " %)" .. ", vote started by " .. suspend_info.suspender_player_name })
 			end
 			global.suspend_target_info = nil
 		end
@@ -121,11 +125,11 @@ decrement_timer_token = Token.register(
     function()
         local suspend_time_left = global.suspend_time_left - 1
         for _, player in pairs(game.connected_players) do
-			if player.gui.top.suspend_frame and global.suspend_target ~= nil then
-				player.gui.top.suspend_frame.suspend_table.children[1].caption = "Suspend ".. global.suspend_target .." ?\t" .. suspend_time_left .. "s"
+			if player.gui.top.suspend_frame and global.suspend_target_info ~= nil then
+				player.gui.top.suspend_frame.suspend_table.children[1].caption = "Suspend ".. global.suspend_target_info.suspendee_player_name .." ?\t" .. suspend_time_left .. "s"
 			end
         end
-        if suspend_time_left > 0 and global.suspend_target ~= nil then
+        if suspend_time_left > 0 and global.suspend_target_info ~= nil then
             Task.set_timeout_in_ticks(60, decrement_timer_token)
             global.suspend_time_left = suspend_time_left
         end
