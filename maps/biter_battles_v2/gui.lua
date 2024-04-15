@@ -628,7 +628,7 @@ local function on_gui_click(event)
 			if player.force.name == suspend_info.target_force_name then
 				if suspend_info.suspend_votes_by_player[player.name] ~= 0 then
 					suspend_info.suspend_votes_by_player[player.name] = 0
-					game.print(player.name .. " doesn't want to suspend " .. suspend_info.suspendee_force_name,
+					game.print(player.name .. " doesn't want to suspend " .. suspend_info.suspendee_player_name,
 						{ r = 0.9, g = 0.1, b = 0.1 })
 				end
 			else

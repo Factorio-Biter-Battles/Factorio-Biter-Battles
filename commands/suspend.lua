@@ -84,12 +84,12 @@ local suspend_token = Token.register(
 			end
 		end
 		-- count votes
-		local total_votes = table.size(global.suspend_voting)
-		local result = 0
 		local suspend_info = global.suspend_target_info
+		local result = 0
 		if suspend_info ~= nil then
+			local total_votes = table.size(suspend_info.suspend_votes_by_player)
 			if total_votes > 0 then
-				for _, vote in pairs(global.suspend_voting) do
+				for _, vote in pairs(suspend_info.suspend_votes_by_player) do
 					result = result + vote
 				end
 				result = math.floor( 100*result / total_votes )
