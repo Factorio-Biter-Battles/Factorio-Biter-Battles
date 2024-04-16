@@ -270,8 +270,6 @@ local function on_tick()
 		Gui.refresh()
 		return
 	end
-
-	Ai.reanimate_units()
 end
 
 local function on_marked_for_deconstruction(event)
@@ -458,11 +456,6 @@ end
 local Event = require 'utils.event'
 Event.add(defines.events.on_rocket_launch_ordered, on_rocket_launch_ordered)
 Event.add(defines.events.on_area_cloned, on_area_cloned)
-Event.add(defines.events.on_post_entity_died, Ai.schedule_reanimate)
-Event.add_event_filter(defines.events.on_post_entity_died, {
-	filter = "type",
-	type = "unit",
-})
 Event.add(defines.events.on_entity_cloned, on_entity_cloned)
 Event.add(defines.events.on_built_entity, on_built_entity)
 Event.add(defines.events.on_chunk_generated, on_chunk_generated)

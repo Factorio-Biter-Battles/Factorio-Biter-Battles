@@ -1,7 +1,6 @@
 local Terrain = require "maps.biter_battles_v2.terrain"
 local Score = require "comfy_panel.score"
 local Tables = require "maps.biter_battles_v2.tables"
-local fifo = require "maps.biter_battles_v2.fifo"
 local Blueprint = require 'maps.biter_battles_v2.blueprints'
 
 local Public = {}
@@ -119,6 +118,7 @@ function Public.initial_setup()
 	global.gui_refresh_delay = 0
 	global.game_lobby_active = true
 	global.bb_debug = false
+	global.bb_draw_revive_count_text = false
 	global.ignore_lists = {}
 	global.bb_settings = {
 		--TEAM SETTINGS--
@@ -253,7 +253,8 @@ function Public.tables()
 	global.tm_custom_name = {}
 	global.total_passive_feed_redpotion = 0
 	global.unit_spawners = {}
-	global.boss_units = {}
+	---@type table<integer, HighHealthUnit>
+	global.high_health_units = {}
 	global.unit_spawners.north_biters = {}
 	global.unit_spawners.south_biters = {}
 	global.ai_strikes = {}
@@ -282,27 +283,6 @@ function Public.tables()
 
 	global.difficulty_votes_timeout = 36000
 
-	-- A FIFO that holds dead unit positions. It is used by unit
-	-- reanimation logic. This container is to be accessed by force index.
-	global.dead_units = {}
-
-	-- A size of pre-allocated pool memory to be used in every FIFO.
-	-- Higher value = higher memory footprint, faster I/O.
-	-- Lower value = more resize cycles during push, dynamic memory footprint.
-	global.bb_fifo_size = 1024
-
-	-- A balancer threshold that instructs reanimation logic to increase
-	-- number of API calls to LuaSurface::create_entity. This cycle threshold
-	-- is representing amount of nodes within dead_units list. If it exceeds
-	-- a multiplication of this value, additional call is made.
-	--  * 50 = 1 additional call
-	--  * 2250 = 45 additional call(s)
-	-- This threshold is mainly used to protect against overflowing of
-	-- reanimation requests at 100% reanimation chance. Additional benefit
-	-- of it is to quickly revive a critical mass of biters in case defenses
-	-- of attacked team are overpowered.
-	global.reanim_balancer = 50
-
 	-- Maximum evolution threshold after which biters have 100% chance
 	-- to reanimate. The reanimation starts after evolution factor reaches
 	-- 100, so this value starts having an effect only at that point.
@@ -313,8 +293,6 @@ function Public.tables()
 	-- Container for storing chance of reanimation. The stored value
 	-- is a range between [0, 100], accessed by key with force's index.
 	global.reanim_chance = {}
-
-	fifo.init()
 
 	global.next_attack = "north"
 	if global.random_generator(1,2) == 1 then global.next_attack = "south" end
@@ -379,7 +357,6 @@ function Public.forces()
 	f.set_friend("player", true)
 	f.set_friend("spectator", true)
 	f.share_chart = false
-	global.dead_units[f.index] = fifo.create(global.bb_fifo_size)
 
 	local f = game.forces["south_biters"]
 	f.set_friend("north_biters", true)
@@ -389,7 +366,6 @@ function Public.forces()
 	f.set_friend("player", true)
 	f.set_friend("spectator", true)
 	f.share_chart = false
-	global.dead_units[f.index] = fifo.create(global.bb_fifo_size)
 	
 
 	local f = game.forces["north_biters_boss"]
@@ -400,7 +376,6 @@ function Public.forces()
 	f.set_friend("player", true)
 	f.set_friend("spectator", true)
 	f.share_chart = false
-	global.dead_units[f.index] = fifo.create(global.bb_fifo_size)
 
 	local f = game.forces["south_biters_boss"]
 	f.set_friend("north_biters", true)
@@ -410,7 +385,6 @@ function Public.forces()
 	f.set_friend("player", true)
 	f.set_friend("spectator", true)
 	f.share_chart = false
-	global.dead_units[f.index] = fifo.create(global.bb_fifo_size)
 
 	local f = game.forces["spectator"]
 	f.set_spawn_position({0,0},surface)

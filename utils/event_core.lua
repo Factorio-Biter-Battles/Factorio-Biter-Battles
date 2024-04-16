@@ -88,6 +88,9 @@ end
 
 --- Do not use this function, use Event.add instead as it has safety checks.
 function Public.add(event_name, handler)
+    if event_name == defines.events.on_entity_damaged then
+        error("on_entity_damaged is managed outside of the event framework.")
+    end
     local handlers = event_handlers[event_name]
     if not handlers then
         event_handlers[event_name] = {handler}
