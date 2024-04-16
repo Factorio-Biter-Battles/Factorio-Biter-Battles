@@ -12,6 +12,10 @@ local function add_changelog(player, element)
 		table.insert(changelog_change, who)
 	end
 	
+	add_entry("2024-04-16", "DrButtons", "Limit suspend voting to suspendee's force")
+	add_entry("2024-04-16", "cliff_build", "New/faster/more-predictable revive mechanics")
+	add_entry("2024-04-12", "cliff_build", "Add code support for feeding without specifying player")
+	add_entry("2024-04-09", "DrButtons", "Add script and framework for benchmarking")
 	add_entry("2024-04-07", "cliff_build", "Add experimental new threat logic")
 	add_entry("2024-04-07", "cliff_build", "Fix on_built_entity")
 	add_entry("2024-04-04", "gsquaredxc", "Remove unused file map_score.lua")
