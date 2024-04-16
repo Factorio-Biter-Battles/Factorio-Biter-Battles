@@ -1,14 +1,14 @@
 local Public = {}
 global.player_data_afk = {}
-local Server = require 'utils.server'
+local Server = require "utils.server"
 
 local bb_config = require "maps.biter_battles_v2.config"
 local bb_diff = require "maps.biter_battles_v2.difficulty_vote"
-local event = require 'utils.event'
+local event = require "utils.event"
 local Functions = require "maps.biter_battles_v2.functions"
 local Feeding = require "maps.biter_battles_v2.feeding"
 local Tables = require "maps.biter_battles_v2.tables"
-local Captain_event = require 'comfy_panel.special_games.captain'
+local Captain_event = require "comfy_panel.special_games.captain"
 
 local wait_messages = Tables.wait_messages
 local food_names = Tables.gui_foods
@@ -17,26 +17,41 @@ local math_random = math.random
 local math_abs = math.abs
 local math_ceil = math.ceil
 require "maps.biter_battles_v2.spec_spy"
-local gui_style = require 'utils.utils'.gui_style
-local has_life = require 'comfy_panel.special_games.limited_lives'.has_life
+local gui_style = require "utils.utils".gui_style
+local has_life = require "comfy_panel.special_games.limited_lives".has_life
 local gui_values = {
-		["north"] = {force = "north", biter_force = "north_biters", n1 = "join_north_button",
+	["north"] = {
+		force = "north",
+		biter_force = "north_biters",
+		n1 = "join_north_button",
 		t1 = "Evolution of north side biters.",
-		t2 = "Threat causes biters to attack. Reduces when biters are slain.", color1 = {r = 0.55, g = 0.55, b = 0.99}, color2 = {r = 0.66, g = 0.66, b = 0.99},
-		tech_spy = "spy-north-tech", prod_spy = "spy-north-prod"},
-		["south"] = {force = "south", biter_force = "south_biters", n1 = "join_south_button",
+		t2 = "Threat causes biters to attack. Reduces when biters are slain.",
+		color1 = { r = 0.55, g = 0.55, b = 0.99 },
+		color2 = { r = 0.66, g = 0.66, b = 0.99 },
+		tech_spy = "spy-north-tech",
+		prod_spy = "spy-north-prod"
+	},
+	["south"] = {
+		force = "south",
+		biter_force = "south_biters",
+		n1 = "join_south_button",
 		t1 = "Evolution of south side biters.",
-		t2 = "Threat causes biters to attack. Reduces when biters are slain.", color1 = {r = 0.99, g = 0.33, b = 0.33}, color2 = {r = 0.99, g = 0.44, b = 0.44},
-		tech_spy = "spy-south-tech", prod_spy = "spy-south-prod"}
+		t2 = "Threat causes biters to attack. Reduces when biters are slain.",
+		color1 = { r = 0.99, g = 0.33, b = 0.33 },
+		color2 = { r = 0.99, g = 0.44, b = 0.44 },
+		tech_spy = "spy-south-tech",
+		prod_spy = "spy-south-prod"
 	}
+}
 
 function Public.clear_copy_history(player)
 	if player and player.valid then
-		for i=1,21 do
+		for i = 1, 21 do
 			-- Imports blueprint of single burner miner into the cursor stack
-			stack = player.cursor_stack.import_stack("0eNp9jkEKgzAURO8y67jQhsbmKqUUrR/5kHwliVKR3L3GbrrqcoaZN7OjdwvNgSXB7uDXJBH2viPyKJ0rXtpmggUn8lCQzhfVL0EoVJ6FZayGwM4hK7AM9Iat80OBJHFi+uJOsT1l8T2FI/AXpDBP8ehOUvYPnjYKG2x1bXMhn1fsz3OFlUI8801ba3NrzEVroxud8wdvA0sn")
+			stack = player.cursor_stack.import_stack(
+				"0eNp9jkEKgzAURO8y67jQhsbmKqUUrR/5kHwliVKR3L3GbrrqcoaZN7OjdwvNgSXB7uDXJBH2viPyKJ0rXtpmggUn8lCQzhfVL0EoVJ6FZayGwM4hK7AM9Iat80OBJHFi+uJOsT1l8T2FI/AXpDBP8ehOUvYPnjYKG2x1bXMhn1fsz3OFlUI8801ba3NrzEVroxud8wdvA0sn")
 			player.add_to_clipboard(player.cursor_stack)
-			player.clear_cursor() 
+			player.clear_cursor()
 		end
 	end
 end
@@ -47,8 +62,8 @@ end
 
 local function create_sprite_button(player)
 	if player.gui.top["bb_toggle_button"] then return end
-	local button = player.gui.top.add({type = "sprite-button", name = "bb_toggle_button", sprite = "entity/big-biter"})
-	gui_style(button, {width = 38, height = 38, padding = -2, font = "default-bold"})
+	local button = player.gui.top.add({ type = "sprite-button", name = "bb_toggle_button", sprite = "entity/big-biter" })
+	gui_style(button, { width = 38, height = 38, padding = -2, font = "default-bold" })
 end
 
 local function clock(frame)
@@ -61,64 +76,62 @@ local function clock(frame)
 		time_caption = string.format("Time: %02d:%02d", total_hours, minutes)
 	end
 
-	local clock_ui = frame.add {type = "label", caption = string.format("%s   Speed: %.2f", time_caption, game.speed)}
+	local clock_ui = frame.add { type = "label", caption = string.format("%s   Speed: %.2f", time_caption, game.speed) }
 	clock_ui.style.font = "default-bold"
-	clock_ui.style.font_color = {r = 0.98, g = 0.66, b = 0.22}
-	frame.add {type = "line"}
+	clock_ui.style.font_color = { r = 0.98, g = 0.66, b = 0.22 }
+	frame.add { type = "line" }
 end
 
 local function create_first_join_gui(player)
 	if not global.game_lobby_timeout then global.game_lobby_timeout = 5999940 end
 	if global.game_lobby_timeout - game.tick < 0 then global.game_lobby_active = false end
 	local frame = player.gui.left.add { type = "frame", name = "bb_main_gui", direction = "vertical" }
-	local b = frame.add{ type = "label", caption = "Defend your Rocket Silo!" }
+	local b = frame.add { type = "label", caption = "Defend your Rocket Silo!" }
 	b.style.font = "heading-1"
-	b.style.font_color = {r=0.98, g=0.66, b=0.22}
-	local b = frame.add  { type = "label", caption = "Feed the enemy team's biters to gain advantage!" }
+	b.style.font_color = { r = 0.98, g = 0.66, b = 0.22 }
+	local b = frame.add { type = "label", caption = "Feed the enemy team's biters to gain advantage!" }
 	b.style.font = "heading-2"
-	b.style.font_color = {r=0.98, g=0.66, b=0.22}
+	b.style.font_color = { r = 0.98, g = 0.66, b = 0.22 }
 	clock(frame)
-	local d = frame.add{type = "sprite-button", name = "join_random_button", caption = "AUTO JOIN"}
+	local d = frame.add { type = "sprite-button", name = "join_random_button", caption = "AUTO JOIN" }
 	d.style.font = "default-large-bold"
-	d.style.font_color = { r=1, g=0, b=1}
+	d.style.font_color = { r = 1, g = 0, b = 1 }
 	d.style.width = 350
-	frame.add{ type = "line"}
+	frame.add { type = "line" }
 	frame.style.bottom_padding = 2
-	
+
 	for _, gui_value in pairs(gui_values) do
 		local t = frame.add { type = "table", column_count = 3 }
 		local c = Functions.team_name(gui_value.force)
-		local l = t.add  { type = "label", caption = c}
+		local l = t.add { type = "label", caption = c }
 		l.style.font = "heading-2"
 		l.style.font_color = gui_value.color1
 		l.style.single_line = false
 		l.style.maximal_width = 290
-		local l = t.add  { type = "label", caption = "  -  "}
-		local l = t.add  { type = "label", caption = #game.forces[gui_value.force].connected_players .. " Players "}
-		l.style.font_color = { r=0.22, g=0.88, b=0.22}
+		local l = t.add { type = "label", caption = "  -  " }
+		local l = t.add { type = "label", caption = #game.forces[gui_value.force].connected_players .. " Players " }
+		l.style.font_color = { r = 0.22, g = 0.88, b = 0.22 }
 
 		local c = "JOIN "
-		local font_color =  gui_value.color1
+		local font_color = gui_value.color1
 		if global.game_lobby_active then
-			font_color = {r=0.7, g=0.7, b=0.7}
+			font_color = { r = 0.7, g = 0.7, b = 0.7 }
 			c = c .. " (waiting for players...  "
-			c = c .. math_ceil((global.game_lobby_timeout - game.tick)/60)
+			c = c .. math_ceil((global.game_lobby_timeout - game.tick) / 60)
 			c = c .. ")"
 		end
-		local t = frame.add  { type = "table", column_count = 4 }
+		local t = frame.add { type = "table", column_count = 4 }
 		for _, p in pairs(game.forces[gui_value.force].connected_players) do
-			local l = t.add({type = "label", caption = p.name})
-			l.style.font_color = {r = p.color.r * 0.6 + 0.4, g = p.color.g * 0.6 + 0.4, b = p.color.b * 0.6 + 0.4, a = 1}
+			local l = t.add({ type = "label", caption = p.name })
+			l.style.font_color = { r = p.color.r * 0.6 + 0.4, g = p.color.g * 0.6 + 0.4, b = p.color.b * 0.6 + 0.4, a = 1 }
 			l.style.font = "heading-2"
 		end
-		local b = frame.add  { type = "sprite-button", name = gui_value.n1, caption = c}
+		local b = frame.add { type = "sprite-button", name = gui_value.n1, caption = c }
 		b.style.font = "default-large-bold"
 		b.style.font_color = font_color
 		b.style.width = 350
-		frame.add{ type = "line"}
+		frame.add { type = "line" }
 	end
-	
-	
 end
 
 local function add_tech_button(elem, gui_value)
@@ -169,15 +182,15 @@ function Public.create_main_gui(player)
 	end
 
 	local frame = player.gui.left.add { type = "frame", name = "bb_main_gui", direction = "vertical" }
-	
+
 	clock(frame)
 	-- Science sending GUI
 	if not is_spec then
 		frame.add { type = "table", name = "biter_battle_table", column_count = 4 }
 		local t = frame.biter_battle_table
 		for food_name, tooltip in pairs(food_names) do
-			local s = t.add { type = "sprite-button", name = food_name, sprite = "item/" .. food_name, tooltip = tooltip}
-			gui_style(s, {minimal_height = 41, minimal_width = 41, padding = 0})
+			local s = t.add { type = "sprite-button", name = food_name, sprite = "item/" .. food_name, tooltip = tooltip }
+			gui_style(s, { minimal_height = 41, minimal_width = 41, padding = 0 })
 			if global.active_special_games["disable_sciences"] and global.special_games_variables.disabled_food[food_name] then
 				s.enabled = false
 				s.tooltip = "Disabled by special game"
@@ -187,7 +200,7 @@ function Public.create_main_gui(player)
 				s.tooltip = "Disabled by special captain game"
 			end
 		end
-		local s = t.add { type = "sprite-button", name = "send_all", caption = "All", tooltip = "LMB - low to high, RMB - high to low"}
+		local s = t.add { type = "sprite-button", name = "send_all", caption = "All", tooltip = "LMB - low to high, RMB - high to low" }
 		if global.active_special_games["disable_sciences"] then
 			s.enabled = false
 			s.tooltip = "Disabled by special game"
@@ -196,10 +209,10 @@ function Public.create_main_gui(player)
 			s.enabled = false
 			s.tooltip = "Disabled by special captain game"
 		end
-		gui_style(s, {minimal_height = 41, minimal_width = 41, padding = 0, font_color = {r = 0.9, g = 0.9, b = 0.9}})
-		frame.add{type="line"}
+		gui_style(s, { minimal_height = 41, minimal_width = 41, padding = 0, font_color = { r = 0.9, g = 0.9, b = 0.9 } })
+		frame.add { type = "line" }
 	end
-	
+
 	local first_team = true
 	for _, gui_value in pairs(gui_values) do
 		-- Line separator
@@ -213,16 +226,16 @@ function Public.create_main_gui(player)
 		local t = frame.add { type = "table", column_count = 4 }
 
 		-- Team name
-		local l = t.add  { type = "label", caption = Functions.team_name(gui_value.force)}
-		gui_style(l, {font = "default-bold", font_color = gui_value.color1, single_line = false, maximal_width = 102})
+		local l = t.add { type = "label", caption = Functions.team_name(gui_value.force) }
+		gui_style(l, { font = "default-bold", font_color = gui_value.color1, single_line = false, maximal_width = 102 })
 		-- Number of players
-		local l = t.add  { type = "label", caption = " - "}
+		local l = t.add { type = "label", caption = " - " }
 		local c = #game.forces[gui_value.force].connected_players .. " Player"
 		if #game.forces[gui_value.force].connected_players ~= 1 then c = c .. "s" end
-		local l = t.add  { type = "label", caption = c}
+		local l = t.add { type = "label", caption = c }
 		l.style.font = "default"
-		l.style.font_color = { r=0.22, g=0.88, b=0.22}
-		
+		l.style.font_color = { r = 0.22, g = 0.88, b = 0.22 }
+
 		-- Tech button
 		if is_spec and not global.chosen_team[player.name] then
 			add_tech_button(t, gui_value)
@@ -231,10 +244,10 @@ function Public.create_main_gui(player)
 
 		-- Player list
 		if global.bb_view_players[player.name] == true then
-			local t = frame.add  { type = "table", column_count = 4 }
+			local t = frame.add { type = "table", column_count = 4 }
 			for _, p in pairs(game.forces[gui_value.force].connected_players) do
-				local l = t.add  { type = "label", caption = p.name }
-				l.style.font_color = {r = p.color.r * 0.6 + 0.4, g = p.color.g * 0.6 + 0.4, b = p.color.b * 0.6 + 0.4, a = 1}
+				local l = t.add { type = "label", caption = p.name }
+				l.style.font_color = { r = p.color.r * 0.6 + 0.4, g = p.color.g * 0.6 + 0.4, b = p.color.b * 0.6 + 0.4, a = 1 }
 			end
 		end
 
@@ -242,27 +255,30 @@ function Public.create_main_gui(player)
 		local t = frame.add { type = "table", name = "stats_" .. gui_value.force, column_count = 5 }
 
 		-- Evolution
-		local l = t.add  { type = "label", caption = "Evo:"}
+		local l = t.add { type = "label", caption = "Evo:" }
 		--l.style.minimal_width = 25
 		local biter_force = game.forces[gui_value.biter_force]
-		local tooltip = gui_value.t1 .. "\nDamage: " .. (biter_force.get_ammo_damage_modifier("melee") + 1) * 100 .. "%\nRevive: " .. global.reanim_chance[biter_force.index] .. "%"
-		
-		l.tooltip = tooltip		
-		
+		local tooltip = gui_value.t1 ..
+			"\nDamage: " ..
+			(biter_force.get_ammo_damage_modifier("melee") + 1) * 100 ..
+			"%\nRevive: " .. global.reanim_chance[biter_force.index] .. "%"
+
+		l.tooltip = tooltip
+
 		local evo = math.floor(1000 * global.bb_evolution[gui_value.biter_force]) * 0.1
-		local l = t.add  {type = "label", caption = evo .. "%"}
+		local l = t.add { type = "label", caption = evo .. "%" }
 		l.style.minimal_width = 40
 		l.style.font_color = gui_value.color2
 		l.style.font = "default-bold"
 		l.tooltip = tooltip
 
 		-- Threat
-		local l = t.add  {type = "label", caption = "Threat: "}
+		local l = t.add { type = "label", caption = "Threat: " }
 		l.style.minimal_width = 25
 		l.tooltip = gui_value.t2
-		
+
 		local threat_value = show_pretty_threat(gui_value.biter_force)
-		local l = t.add  {type = "label", name = "threat_" .. gui_value.force, caption = threat_value}
+		local l = t.add { type = "label", name = "threat_" .. gui_value.force, caption = threat_value }
 		l.style.font_color = gui_value.color2
 		l.style.font = "default-bold"
 		l.style.width = 50
@@ -273,20 +289,20 @@ function Public.create_main_gui(player)
 	bb_diff.difficulty_gui(player)
 
 	-- Action frame
-	local t = frame.add  { type = "table", column_count = 2 }
+	local t = frame.add { type = "table", column_count = 2 }
 
 	-- Spectate / Rejoin team
 	if is_spec then
-		local b = t.add  { type = "sprite-button", name = "bb_leave_spectate", caption = "Join Team" }
+		local b = t.add { type = "sprite-button", name = "bb_leave_spectate", caption = "Join Team" }
 	else
-		local b = t.add  { type = "sprite-button", name = "bb_spectate", caption = "Spectate" }
+		local b = t.add { type = "sprite-button", name = "bb_spectate", caption = "Spectate" }
 	end
 
 	-- Playerlist button
 	if global.bb_view_players[player.name] == true then
-		local b = t.add  { type = "sprite-button", name = "bb_hide_players", caption = "Playerlist" }
+		local b = t.add { type = "sprite-button", name = "bb_hide_players", caption = "Playerlist" }
 	else
-		local b = t.add  { type = "sprite-button", name = "bb_view_players", caption = "Playerlist" }
+		local b = t.add { type = "sprite-button", name = "bb_view_players", caption = "Playerlist" }
 	end
 
 
@@ -294,7 +310,7 @@ function Public.create_main_gui(player)
 	-- 111 when prod_spy button will be there
 	for _, b in pairs(t.children) do
 		b.style.font = "default-bold"
-		b.style.font_color = { r=0.98, g=0.66, b=0.22}
+		b.style.font_color = { r = 0.98, g = 0.66, b = 0.22 }
 		b.style.top_padding = 1
 		b.style.left_padding = 1
 		b.style.right_padding = 1
@@ -328,21 +344,25 @@ function Public.refresh_threat()
 	global.gui_refresh_delay = game.tick + 30
 end
 
-local get_player_data = function(player, remove)
-    if remove and global.player_data_afk[player.name] then
-        global.player_data_afk[player.name] = nil
-        return
-    end
-    if not global.player_data_afk[player.name] then
-        global.player_data_afk[player.name] = {}
-    end
-    return global.player_data_afk[player.name]
+local get_player_data = function (player, remove)
+	if remove and global.player_data_afk[player.name] then
+		global.player_data_afk[player.name] = nil
+		return
+	end
+	if not global.player_data_afk[player.name] then
+		global.player_data_afk[player.name] = {}
+	end
+	return global.player_data_afk[player.name]
 end
 
 function join_team(player, force_name, forced_join, auto_join)
 	if not player.character then return end
 	if not forced_join then
-		if (global.tournament_mode and not global.active_special_games["captain_mode"]) or (global.active_special_games["captain_mode"] and not global.chosen_team[player.name]) then player.print("The game is set to tournament mode. Teams can only be changed via team manager.", {r = 0.98, g = 0.66, b = 0.22}) return end
+		if (global.tournament_mode and not global.active_special_games["captain_mode"]) or (global.active_special_games["captain_mode"] and not global.chosen_team[player.name]) then
+			player.print("The game is set to tournament mode. Teams can only be changed via team manager.",
+				{ r = 0.98, g = 0.66, b = 0.22 })
+			return
+		end
 	end
 	if not force_name then return end
 	local surface = player.surface
@@ -353,7 +373,8 @@ function join_team(player, force_name, forced_join, auto_join)
 		if not forced_join then
 			if #game.forces[force_name].connected_players > #game.forces[enemy_team].connected_players then
 				if not global.chosen_team[player.name] then
-					player.print(Functions.team_name_with_color(force_name) .. " has too many players currently.", {r = 0.98, g = 0.66, b = 0.22})
+					player.print(Functions.team_name_with_color(force_name) .. " has too many players currently.",
+						{ r = 0.98, g = 0.66, b = 0.22 })
 					return
 				end
 			end
@@ -365,21 +386,24 @@ function join_team(player, force_name, forced_join, auto_join)
 			if global.active_special_games["limited_lives"] and not has_life(player.name) then
 				player.print(
 					"Special game in progress. You have no lives left until the end of the game.",
-					{r = 0.98, g = 0.66, b = 0.22}
+					{ r = 0.98, g = 0.66, b = 0.22 }
 				)
 				return
 			end
 			if global.suspended_players[player.name] and (game.ticks_played - global.suspended_players[player.name]) < global.suspended_time then
-					player.print(
-						"Not ready to return to your team yet as you are still suspended. Please wait " .. math_ceil((global.suspended_time-(math.floor((game.ticks_played - global.suspended_players[player.name]))))/60) .. " seconds.",
-						{r = 0.98, g = 0.66, b = 0.22}
-					)
-					return
+				player.print(
+					"Not ready to return to your team yet as you are still suspended. Please wait " ..
+					math_ceil((global.suspended_time - (math.floor((game.ticks_played - global.suspended_players[player.name])))) /
+						60) .. " seconds.",
+					{ r = 0.98, g = 0.66, b = 0.22 }
+				)
+				return
 			end
 			if game.tick - global.spectator_rejoin_delay[player.name] < 3600 then
 				player.print(
-					"Not ready to return to your team yet. Please wait " .. 60-(math.floor((game.tick - global.spectator_rejoin_delay[player.name])/60)) .. " seconds.",
-					{r = 0.98, g = 0.66, b = 0.22}
+					"Not ready to return to your team yet. Please wait " ..
+					60 - (math.floor((game.tick - global.spectator_rejoin_delay[player.name]) / 60)) .. " seconds.",
+					{ r = 0.98, g = 0.66, b = 0.22 }
 				)
 				return
 			end
@@ -387,28 +411,30 @@ function join_team(player, force_name, forced_join, auto_join)
 		local p = nil
 		local p_data = get_player_data(player)
 		if p_data and p_data.position then
-			p = surface.find_non_colliding_position("character", p_data.position,16, 0.5)
+			p = surface.find_non_colliding_position("character", p_data.position, 16, 0.5)
 			get_player_data(player, true)
 		else
-			p = surface.find_non_colliding_position("character", game.forces[force_name].get_spawn_position(surface), 16, 0.5)
+			p = surface.find_non_colliding_position("character", game.forces[force_name].get_spawn_position(surface), 16,
+				0.5)
 		end
 		if not p then
-			game.print("No spawn position found for " .. player.name .. "!", {255, 0, 0})
-			return 
+			game.print("No spawn position found for " .. player.name .. "!", { 255, 0, 0 })
+			return
 		end
 		player.teleport(p, surface)
 		player.force = game.forces[force_name]
 		player.character.destructible = true
 		Public.refresh()
 		game.permissions.get_group("Default").add_player(player)
-		local msg = table.concat({"Team ", player.force.name, " player ", player.name, " is no longer spectating."})
-		game.print(msg, {r = 0.98, g = 0.66, b = 0.22})
+		local msg = table.concat({ "Team ", player.force.name, " player ", player.name, " is no longer spectating." })
+		game.print(msg, { r = 0.98, g = 0.66, b = 0.22 })
 		Server.to_discord_bold(msg)
 		global.spectator_rejoin_delay[player.name] = game.tick
 		player.spectator = false
 		return
 	end
-	local pos = surface.find_non_colliding_position("character", game.forces[force_name].get_spawn_position(surface), 8, 1)
+	local pos = surface.find_non_colliding_position("character", game.forces[force_name].get_spawn_position(surface), 8,
+		1)
 	if not pos then pos = game.forces[force_name].get_spawn_position(surface) end
 	player.teleport(pos)
 	player.force = game.forces[force_name]
@@ -416,21 +442,22 @@ function join_team(player, force_name, forced_join, auto_join)
 	game.permissions.get_group("Default").add_player(player)
 	if not forced_join then
 		-- In case bots are parsing discord messages, we always refer to teams as "north" or "south"
-		Server.to_discord_bold(table.concat({player.name, " has joined team ", player.force.name, "!"}))
+		Server.to_discord_bold(table.concat({ player.name, " has joined team ", player.force.name, "!" }))
 		local join_text = "has joined"
 		if auto_join then join_text = "was automatically assigned to" end
-		local message = table.concat({player.name, " ", join_text, " ", Functions.team_name_with_color(player.force.name), "!"})
-		game.print(message, {r = 0.98, g = 0.66, b = 0.22})
+		local message = table.concat({ player.name, " ", join_text, " ", Functions.team_name_with_color(player.force
+			.name), "!" })
+		game.print(message, { r = 0.98, g = 0.66, b = 0.22 })
 	end
 	local i = player.get_inventory(defines.inventory.character_main)
 	i.clear()
-	player.insert {name = 'pistol', count = 1}
-	player.insert {name = 'raw-fish', count = 3}
-	player.insert {name = 'firearm-magazine', count = 32}
-	player.insert {name = 'iron-gear-wheel', count = 8}
-	player.insert {name = 'iron-plate', count = 16}
-	player.insert {name = 'burner-mining-drill', count = 10}
-	player.insert {name = 'wood', count = 2}
+	player.insert { name = "pistol", count = 1 }
+	player.insert { name = "raw-fish", count = 3 }
+	player.insert { name = "firearm-magazine", count = 32 }
+	player.insert { name = "iron-gear-wheel", count = 8 }
+	player.insert { name = "iron-plate", count = 16 }
+	player.insert { name = "burner-mining-drill", count = 10 }
+	player.insert { name = "wood", count = 2 }
 	global.chosen_team[player.name] = force_name
 	global.spectator_rejoin_delay[player.name] = game.tick
 	player.spectator = false
@@ -441,30 +468,36 @@ end
 function spectate(player, forced_join, stored_position)
 	if not player.character then return end
 	if not forced_join then
-		if global.tournament_mode and not global.active_special_games["captain_mode"] then player.print("The game is set to tournament mode. Teams can only be changed via team manager.", {r = 0.98, g = 0.66, b = 0.22}) return end
-		if global.active_special_games["captain_mode"] and global.special_games_variables["captain_mode"]["prepaPhase"] then 
-			player.print("The game is in prepa phase of captain event, no spectating allowed until the captain game started", {r = 0.98, g = 0.66, b = 0.22})
+		if global.tournament_mode and not global.active_special_games["captain_mode"] then
+			player.print("The game is set to tournament mode. Teams can only be changed via team manager.",
+				{ r = 0.98, g = 0.66, b = 0.22 })
+			return
+		end
+		if global.active_special_games["captain_mode"] and global.special_games_variables["captain_mode"]["prepaPhase"] then
+			player.print(
+				"The game is in prepa phase of captain event, no spectating allowed until the captain game started",
+				{ r = 0.98, g = 0.66, b = 0.22 })
 			return
 		end
 	end
-	
+
 	while player.crafting_queue_size > 0 do
 		player.cancel_crafting(player.crafting_queue[1])
 	end
-	
+
 	player.driving = false
 	player.clear_cursor()
 
 	if stored_position then
-        local p_data = get_player_data(player)
-        p_data.position = player.position
+		local p_data = get_player_data(player)
+		p_data.position = player.position
 	end
-	player.teleport(player.surface.find_non_colliding_position("character", {0,0}, 4, 1))
+	player.teleport(player.surface.find_non_colliding_position("character", { 0, 0 }, 4, 1))
 	player.force = game.forces.spectator
 	player.character.destructible = false
 	if not forced_join then
 		local msg = player.name .. " is spectating."
-		game.print(msg, {r = 0.98, g = 0.66, b = 0.22})
+		game.print(msg, { r = 0.98, g = 0.66, b = 0.22 })
 		Server.to_discord_bold(msg)
 	end
 	game.permissions.get_group("spectator").add_player(player)
@@ -478,25 +511,27 @@ local function join_gui_click(name, player, auto_join)
 
 	if global.game_lobby_active then
 		if player.admin then
-			join_team(player, name, false,  auto_join)
-			game.print("Lobby disabled, admin override.", { r=0.98, g=0.66, b=0.22})
+			join_team(player, name, false, auto_join)
+			game.print("Lobby disabled, admin override.", { r = 0.98, g = 0.66, b = 0.22 })
 			global.game_lobby_active = false
 			return
 		end
-		player.print("Waiting for more players, " .. wait_messages[math_random(1, #wait_messages)], { r=0.98, g=0.66, b=0.22})
+		player.print("Waiting for more players, " .. wait_messages[math_random(1, #wait_messages)],
+			{ r = 0.98, g = 0.66, b = 0.22 })
 		return
 	end
 	join_team(player, name, false, auto_join)
 end
 
-local spy_forces = {{"north", "south"},{"south", "north"}}
+local spy_forces = { { "north", "south" }, { "south", "north" } }
 function Public.spy_fish()
 	for _, f in pairs(spy_forces) do
 		if global.spy_fish_timeout[f[1]] - game.tick > 0 then
 			local r = 96
 			local surface = game.surfaces[global.bb_surface_name]
 			for _, player in pairs(game.forces[f[2]].connected_players) do
-				game.forces[f[1]].chart(surface, {{player.position.x - r, player.position.y - r}, {player.position.x + r, player.position.y + r}})
+				game.forces[f[1]].chart(surface,
+					{ { player.position.x - r, player.position.y - r }, { player.position.x + r, player.position.y + r } })
 			end
 		else
 			global.spy_fish_timeout[f[1]] = 0
@@ -518,13 +553,16 @@ local function on_gui_click(event)
 		return
 	end
 	for _, gui_values in pairs(gui_values) do
-		if name == gui_values.n1 then join_gui_click(gui_values.force, player) return end
+		if name == gui_values.n1 then
+			join_gui_click(gui_values.force, player)
+			return
+		end
 	end
-		
+
 	if name == "join_random_button" then
 		local teams_equal = true
 		local a = #game.forces["north"].connected_players -- Idk how to choose the 1st force without calling 'north'
-	
+
 		-- checking if teams are equal	
 		for _, gui_values in pairs(gui_values) do
 			if a ~= #game.forces[gui_values.force].connected_players then
@@ -532,14 +570,13 @@ local function on_gui_click(event)
 				break
 			end
 		end
-	
+
 		-- choosing a team at random if teams are equal
 		if teams_equal then
 			local teams = {}
 			for _, gui_values in pairs(gui_values) do table.insert(teams, gui_values.force) end
 			join_gui_click(teams[math.random(#teams)], player, true)
-	
-		else -- checking which team is smaller and joining it
+		else                                       -- checking which team is smaller and joining it
 			local smallest_team = gui_values["north"].force -- Idk how to choose the 1st force without calling 'north'
 			for _, gui_values in pairs(gui_values) do
 				if a > #game.forces[gui_values.force].connected_players then
@@ -552,7 +589,10 @@ local function on_gui_click(event)
 		return
 	end
 
-	if name == "raw-fish" then Functions.spy_fish(player, event) return end
+	if name == "raw-fish" then
+		Functions.spy_fish(player, event)
+		return
+	end
 
 	if food_names[name] then Feeding.feed_biters_from_inventory(player, name) return end
 
@@ -563,21 +603,37 @@ local function on_gui_click(event)
 		if player.position.y ^ 2 + player.position.x ^ 2 < 12000 then
 			spectate(player)
 		else
-			player.print("You are too far away from spawn to spectate.",{ r=0.98, g=0.66, b=0.22})
+			player.print("You are too far away from spawn to spectate.", { r = 0.98, g = 0.66, b = 0.22 })
 		end
 		return
 	end
 
-	if name == "suspend_yes" then 
-		if global.suspend_voting[player.name] ~= 1 then 
-			global.suspend_voting[player.name] = 1 
-			game.print(player.name .. " wants to suspend ".. global.suspend_target,{r = 0.1, g = 0.9, b = 0.0})
+	if name == "suspend_yes" then
+		local suspend_info = global.suspend_target_info
+		if suspend_info then
+			if player.force.name == suspend_info.target_force_name then
+				if suspend_info.suspend_votes_by_player[player.name] ~= 1 then
+					suspend_info.suspend_votes_by_player[player.name] = 1
+					game.print(player.name .. " wants to suspend " .. suspend_info.suspendee_player_name,
+						{ r = 0.1, g = 0.9, b = 0.0 })
+				end
+			else
+				player.print("You cannot vote from a different force!", { r = 0.9, g = 0.1, b = 0.1 })
+			end
 		end
 	end
-	if name == "suspend_no" then 
-		if global.suspend_voting[player.name] ~= 0 then 
-			global.suspend_voting[player.name] = 0
-			game.print(player.name .. " doesn't want to suspend " .. global.suspend_target, {r = 0.9, g = 0.1, b = 0.1})
+	if name == "suspend_no" then
+		local suspend_info = global.suspend_target_info
+		if suspend_info then
+			if player.force.name == suspend_info.target_force_name then
+				if suspend_info.suspend_votes_by_player[player.name] ~= 0 then
+					suspend_info.suspend_votes_by_player[player.name] = 0
+					game.print(player.name .. " doesn't want to suspend " .. suspend_info.suspendee_player_name,
+						{ r = 0.9, g = 0.1, b = 0.1 })
+				end
+			else
+				player.print("You cannot vote from a different force!", { r = 0.9, g = 0.1, b = 0.1 })
+			end
 		end
 	end
 	if name == "bb_hide_players" then
@@ -587,19 +643,19 @@ local function on_gui_click(event)
 	if name == "bb_view_players" then
 		global.bb_view_players[player.name] = true
 		Public.create_main_gui(player)
-	end	
+	end
 
-	if name == "reroll_yes" then 
-		if global.reroll_map_voting[player.name] ~= 1 then 
-			global.reroll_map_voting[player.name] = 1 
-			game.print(player.name .. " wants to reroll map ",{r = 0.1, g = 0.9, b = 0.0})
+	if name == "reroll_yes" then
+		if global.reroll_map_voting[player.name] ~= 1 then
+			global.reroll_map_voting[player.name] = 1
+			game.print(player.name .. " wants to reroll map ", { r = 0.1, g = 0.9, b = 0.0 })
 		end
 	end
-	if name == "reroll_no" then 
-		if global.reroll_map_voting[player.name] ~= 0 then 
+	if name == "reroll_no" then
+		if global.reroll_map_voting[player.name] ~= 0 then
 			global.reroll_map_voting[player.name] = 0
-			game.print(player.name .. " wants to keep this map", {r = 0.9, g = 0.1, b = 0.1})
-		end		
+			game.print(player.name .. " wants to keep this map", { r = 0.9, g = 0.1, b = 0.1 })
+		end
 	end
 end
 
