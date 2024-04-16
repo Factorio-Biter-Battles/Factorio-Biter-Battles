@@ -425,14 +425,7 @@ local function clear_corpses(cmd)
             return
         end
 
-	if not Ai.empty_reanim_scheduler() then
-		player.print("[ERROR] Some corpses are waiting to be reanimated...")
-		player.print(" => Try again in short moment")
-		return
-	end
-
         local pos = player.position
-
         local radius = {{x = (pos.x + -param), y = (pos.y + -param)}, {x = (pos.x + param), y = (pos.y + param)}}
         for _, entity in pairs(player.surface.find_entities_filtered {area = radius, type = 'corpse'}) do
             if entity.corpse_expires then
