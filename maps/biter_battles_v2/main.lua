@@ -162,7 +162,6 @@ local function on_entity_died(event)
 	local entity = event.entity
 	if not entity.valid then return end
 	if Ai.subtract_threat(entity) then Gui.refresh_threat() end
-	AiTargets.stop_tracking(entity)
 	if Functions.biters_landfill(entity) then return end
 	Game_over.silo_death(event)
 end
@@ -288,10 +287,6 @@ local function on_player_built_tile(event)
 	if event.item ~= nil and event.item.name == "landfill" then
 		Terrain.restrict_landfill(player.surface, player, event.tiles)
 	end
-end
-
-local function on_robot_mined_entity(event)
-	AiTargets.stop_tracking(event.entity)
 end
 
 local function on_chunk_generated(event)
@@ -460,7 +455,6 @@ Event.add(defines.events.on_gui_click, on_gui_click)
 Event.add(defines.events.on_marked_for_deconstruction, on_marked_for_deconstruction)
 Event.add(defines.events.on_player_built_tile, on_player_built_tile)
 Event.add(defines.events.on_player_joined_game, on_player_joined_game)
-Event.add(defines.events.on_robot_mined_entity, on_robot_mined_entity)
 Event.add(defines.events.on_research_finished, on_research_finished)
 Event.add(defines.events.on_robot_built_entity, on_robot_built_entity)
 Event.add(defines.events.on_robot_built_tile, on_robot_built_tile)

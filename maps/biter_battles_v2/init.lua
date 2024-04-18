@@ -422,7 +422,8 @@ function Public.forces()
 		game.forces[force.name].technologies["cliff-explosives"].enabled = false
 		game.forces[force.name].technologies["land-mine"].enabled = false
 		game.forces[force.name].research_queue_enabled = true
-		global.ai_targets[force.name] = { available = {}, selected = {} }
+		global.ai_targets[force.name] = { available = {}, available_list = {}, selected = {} }
+		global.ai_target_destroyed_map = {}
 		global.spy_fish_timeout[force.name] = 0
 		global.bb_evolution[force.name] = 0
 		global.reanim_chance[force.index] = 0
