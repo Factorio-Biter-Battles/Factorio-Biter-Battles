@@ -11,6 +11,13 @@ local session_data_set = 'sessions'
 local session = {}
 local online_track = {}
 local trusted = {}
+setmetatable(trusted, {__index = function()
+    -- Hacky way to ensure singleplayer is always "trusted" besides being an admin
+    -- Since players are accessed by name, return true on missing keys.
+    if not game.is_multiplayer() then return true end
+end
+})
+
 local settings = {
     -- local trusted_value = 2592000 -- 12h
     trusted_value = 5184000, -- 24h
