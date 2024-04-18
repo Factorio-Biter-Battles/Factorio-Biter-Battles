@@ -317,7 +317,8 @@ local function generate_extra_worm_turrets(surface, left_top)
 		local v = chunk_tile_vectors[global.random_generator(1, size_of_chunk_tile_vectors)]
 		local position = surface.find_non_colliding_position(worm_turret_name, {left_top.x + v[1], left_top.y + v[2]}, 8, 1)
 		if position then
-			local worm = surface.create_entity({name = worm_turret_name, position = position, force = "north_biters"})
+			local worm_force = position.y <= 0 and "north_biters" or "south_biters"
+			local worm = surface.create_entity({name = worm_turret_name, position = position, force = worm_force})
 			
 			-- add some scrap			
 			for _ = 1, global.random_generator(0, 4), 1 do
