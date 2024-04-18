@@ -9,7 +9,6 @@ if admin = true, then tab is visible only for admins (usable for map-specific se
 draw_map_scores would be a function with the player and the frame as arguments
 
 ]]
-require "utils.profiler"
 local event = require 'utils.event'
 local gui_style = require 'utils.utils'.gui_style
 comfy_panel_tabs = {}
