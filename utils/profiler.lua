@@ -1,11 +1,13 @@
 local table_sort = table.sort
 local string_rep = string.rep
 local string_format = string.format
-local debug_getinfo = debug.getinfo
+local debug_getinfo = debug and debug.getinfo
 local Event = require 'utils.event'
 local session = require 'utils.datastore.session_data'
 local admin_autostop = 60 * 60 -- 1 min
 local player_autostop = 60 * 10 -- 10 s
+
+local ignoredFunctions = {}
 
 local Profiler = {
     --	Call
@@ -14,9 +16,24 @@ local Profiler = {
     AutoStopTick = nil
 }
 
-local ignoredFunctions = {
-    [debug.sethook] = true
-}
+local WARNING_MESSAGE_DISABLED = ('The profiler cannot work in this version of Factorio by default,'
+.. ' downgrade to 1.1.106 or start the game with --enable-unsafe-lua-debug-api.'
+.. ' Do not play online with this setting enabled or you will encounter desyncs!')
+
+function Profiler.isProfilingSupported()
+	if debug and debug.getinfo and debug.sethook then
+		-- running <1.1.107, the required functions are available
+		return true
+	else
+		return false
+	end
+end
+ignoredFunctions[Profiler.isProfilingSupported] = true
+
+
+if Profiler.isProfilingSupported() then
+	ignoredFunctions[debug.sethook] = true
+end
 
 local namedSources = {
     ['[string "local n, v = "serpent", "0.30" -- (C) 2012-17..."]'] = 'serpent'
@@ -24,6 +41,12 @@ local namedSources = {
 
 local function startCommand(command)
     local player = game.get_player(command.player_index)
+
+    if not Profiler.isProfilingSupported() then
+		player.print(WARNING_MESSAGE_DISABLED, {r = 1, g = 0.25, b = 0.25})
+		return
+    end
+
     local trusted = session.get_trusted_table()
     if not trusted[player.name] then
         player.print('You have not grown accustomed to this technology yet.', {r = 0.22, g = 0.99, b = 0.99})
@@ -48,12 +71,20 @@ commands.add_command('stopProfiler', 'Stops profiling', stopCommand)
 --	assert_raw(expr, ...)
 --end
 local error_raw = error
-function error(...)
-    Profiler.Stop(false, 'Error raised')
-    error_raw(...)
+if Profiler.isProfilingSupported() then
+	function error(...)
+		Profiler.Stop(false, 'Error raised')
+		error_raw(...)
+	end
 end
 
 function Profiler.Start(excludeCalledMs, admin, tick)
+    if not Profiler.isProfilingSupported() then
+		log("WARNING in Biterbattle profiler.lua: Profiler.Start was called directly by a script although it is unavailable.")
+		log("WARNING ... " .. WARNING_MESSAGE_DISABLED)
+		return
+    end
+
     if Profiler.IsRunning then
         return
     end
@@ -228,6 +259,8 @@ local function on_tick(event)
     Profiler.Stop(false, "AutoStop")    
 end
 
-Event.add(defines.events.on_tick, on_tick)
+if Profiler.isProfilingSupported() then
+	Event.add(defines.events.on_tick, on_tick)
+end
 return Profiler
 
