@@ -16,6 +16,10 @@ local Profiler = {
     AutoStopTick = nil
 }
 
+local WARNING_MESSAGE_DISABLED = ('The profiler cannot work in this version of Factorio by default,'
+.. ' downgrade to 1.1.106 or start the game with --enable-unsafe-lua-debug-api.'
+.. ' Do not play online with this setting enabled or you will encounter desyncs!')
+
 function Profiler.isProfilingSupported()
 	if debug and debug.getinfo and debug.sethook then
 		-- running <1.1.107, the required functions are available
@@ -39,7 +43,7 @@ local function startCommand(command)
     local player = game.get_player(command.player_index)
 
     if not Profiler.isProfilingSupported() then
-		player.print('The profiler cannot work in this version of Factorio, downgrade to 1.1.106 or lower.', {r = 1, g = 0.25, b = 0.25})
+		player.print(WARNING_MESSAGE_DISABLED, {r = 1, g = 0.25, b = 0.25})
 		return
     end
 
@@ -76,7 +80,8 @@ end
 
 function Profiler.Start(excludeCalledMs, admin, tick)
     if not Profiler.isProfilingSupported() then
-		log("WARNING in Biterbattle profiler.lua: Profiler.Start was called directly by a script, but it is not supported in this game version!")
+		log("WARNING in Biterbattle profiler.lua: Profiler.Start was called directly by a script although it is unavailable.")
+		log("WARNING ... " .. WARNING_MESSAGE_DISABLED)
 		return
     end
 
