@@ -290,12 +290,16 @@ function Public.is_biter_area(position,noise_Enabled)
 	return true
 end
 
+--- Prohibits players from placing turrets too close to spawners.
+--- @param event EventData.on_built_entity|EventData.on_robot_built_entity
+--- @return nil
 function Public.no_turret_creep(event)
 	local entity = event.created_entity
 	if not entity.valid then return end
 	if not no_turret_blacklist[event.created_entity.type] then return end
 	
 	local posEntity = entity.position
+	-- sic! this does not affect the direct indexation values below somehow
 	if posEntity.y > 0 then posEntity.y = (posEntity.y + 100) * -1 end
 	if posEntity.y < 0 then posEntity.y = posEntity.y - 100 end
 	if not Public.is_biter_area(posEntity,false) then
@@ -303,20 +307,13 @@ function Public.no_turret_creep(event)
 	end
 	
 	local surface = event.created_entity.surface				
-	local spawners = surface.find_entities_filtered({type = "unit-spawner", area = {{entity.position.x - 70, entity.position.y - 70}, {entity.position.x + 70, entity.position.y + 70}}})
+	local spawners = surface.find_entities_filtered({type = "unit-spawner",
+		limit = 1,
+		area = {{entity.position.x - 64, entity.position.y - 64}, {entity.position.x + 64, entity.position.y + 64}}
+	})
 	if #spawners == 0 then return end
-	
-	local allowed_to_build = true
-	
-	for _, e in pairs(spawners) do
-		if (e.position.x - entity.position.x)^2 + (e.position.y - entity.position.y)^2 < 4096 then
-			allowed_to_build = false
-			break
-		end			
-	end
-	
-	if allowed_to_build then return end
-	
+	-- there's a spawner nearby, disallow building:
+
 	if event.player_index then
 		game.players[event.player_index].insert({name = entity.name, count = 1})		
 	else	
