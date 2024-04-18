@@ -26,6 +26,12 @@ local log = log
 local script_on_event = script.on_event
 local script_on_nth_tick = script.on_nth_tick
 
+local function errorHandler(err)
+    log("Error caught: " .. err)
+    -- Print the full stack trace
+    log(debug.traceback())
+end
+
 local call_handlers
 function call_handlers(handlers, event)
 	if not handlers then
@@ -40,11 +46,7 @@ function call_handlers(handlers, event)
 			end
 		end
 		if handler ~= nil then
-			local success, error = pcall(handler, event)
-			if not success then
-				local info = debug_getinfo(handler, 'S')
-				log({'', '[ERROR] ', error, ' in ', info.short_src, ":", info.linedefined})
-			end
+			xpcall(handler, errorHandler, event)
 		else
 			log('nil handler')
 		end
