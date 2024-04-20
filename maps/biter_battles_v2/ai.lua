@@ -251,7 +251,6 @@ end
 
 Public.pre_main_attack = function()
 	local force_name = global.next_attack
-	AiTargets.select(force_name)
 
 	-- In headless benchmarking, there are no connected_players so we need a global to override this
 	if not global.training_mode or (global.training_mode and (global.benchmark_mode or #game.forces[force_name].connected_players > 0))then

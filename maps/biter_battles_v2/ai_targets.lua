@@ -86,27 +86,19 @@ end
 
 script.on_event(defines.events.on_entity_destroyed, on_entity_destroyed)
 
-function Public.select(force_name)
-    local targets = global.ai_targets[force_name]
-    local available_list = targets.available_list
-    -- (max) 7 targets per wave
-    local selected = {}
-    for i = 1, 7, 1 do
-        local first_entity = simple_random_sample(available_list)
-        local second_entity = simple_random_sample(available_list)
-        if not first_entity or not second_entity then break end
-        local first = first_entity.position
-        local second = second_entity.position
-        local selection
-        if origin_distance(first) < origin_distance(second) then selection = first else selection = second end
-        table_insert(selected, { x = selection.x, y = selection.y })
-    end
-    targets.selected = selected
-end
-
 function Public.poll(force_name)
     local targets = global.ai_targets[force_name]
-    return table_remove(targets.selected)
+    local available_list = targets.available_list
+    local first_entity = simple_random_sample(available_list)
+    local second_entity = simple_random_sample(available_list)
+    if not first_entity or not second_entity then return nil end
+    local first = first_entity.position
+    local second = second_entity.position
+    if origin_distance(first) < origin_distance(second) then
+        return first
+    else
+        return second
+    end
 end
 
 return Public
