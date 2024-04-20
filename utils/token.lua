@@ -11,7 +11,7 @@ local counter = 0
 -- @param  var<any>
 -- @return number the unique token for the variable.
 function Token.register(var)
-    if _LIFECYCLE == 8 then
+    if _LIFECYCLE == 8 then -- Runtime
         error('Calling Token.register after on_init() or on_load() has run is a desync risk.', 2)
     end
 
