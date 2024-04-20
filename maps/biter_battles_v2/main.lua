@@ -16,6 +16,7 @@ local Terrain = require "maps.biter_battles_v2.terrain"
 local Session = require 'utils.datastore.session_data'
 local Server = require 'utils.server'
 local Color = require 'utils.color_presets'
+local ResearchInfo = require 'maps.biter_battles_v2.research_info'
 local autoTagWestOutpost = "[West]"
 local autoTagEastOutpost = "[East]"
 local autoTagDistance = 600
@@ -35,6 +36,7 @@ local function on_player_joined_game(event)
 	end
 	Gui.clear_copy_history(player)
 	Functions.create_map_intro_button(player)
+	--ResearchInfo.create_research_info_button(player)
 	Team_manager.draw_top_toggle_button(player)
 end
 
@@ -45,6 +47,7 @@ local function on_gui_click(event)
 	if not element.valid then return end
 
 	if Functions.map_intro_click(player, element) then return end
+	if ResearchInfo.research_info_click(player, element) then return end
 	Team_manager.gui_click(event)
 end
 
@@ -61,7 +64,13 @@ local function on_research_finished(event)
 	elseif name == 'rocket-silo' then
 		force.technologies['space-science-pack'].researched = true
 	end
-	game.forces.spectator.print(Functions.team_name_with_color(force.name) .. " completed research [technology=" .. event.research.name .. "]")
+	game.forces.spectator.print(Functions.team_name_with_color(force.name) .. " completed research [technology=" .. name .. "]")
+	ResearchInfo.research_finished(name, force)
+end
+
+local function on_research_reversed(event)
+	-- Note that this will not really work for Functions.combat_balance, so don't go reversing technologies.
+	ResearchInfo.research_reversed(name, force)
 end
 
 local function on_console_chat(event)
@@ -456,6 +465,8 @@ Event.add(defines.events.on_marked_for_deconstruction, on_marked_for_deconstruct
 Event.add(defines.events.on_player_built_tile, on_player_built_tile)
 Event.add(defines.events.on_player_joined_game, on_player_joined_game)
 Event.add(defines.events.on_research_finished, on_research_finished)
+Event.add(defines.events.on_research_reversed, on_research_reversed)
+Event.add(defines.events.on_research_cancelled, on_research_cancelled)
 Event.add(defines.events.on_robot_built_entity, on_robot_built_entity)
 Event.add(defines.events.on_robot_built_tile, on_robot_built_tile)
 Event.add(defines.events.on_tick, on_tick)

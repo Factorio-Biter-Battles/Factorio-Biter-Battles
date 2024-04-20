@@ -471,4 +471,13 @@ function Public.map_intro_click(player, element)
 	end	
 end
 
+function Public.format_ticks_as_time(ticks)
+	local seconds = ticks / 60
+	local hours = math.floor(seconds / 3600)
+	seconds = seconds % 3600
+	local minutes = math.floor(seconds / 60)
+	seconds = seconds % 60
+	return string.format("%d:%02d:%02d", hours, minutes, seconds)
+end
+
 return Public
