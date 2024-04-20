@@ -158,7 +158,7 @@ end
 -- @param event_name<number>
 -- @param handler<function>
 function Event.add(event_name, handler)
-    if _LIFECYCLE == 8 then
+    if _LIFECYCLE == 8 then -- Runtime
         error('Calling Event.add after on_init() or on_load() has run is a desync risk.', 2)
     end
 
@@ -170,7 +170,7 @@ end
 -- See documentation at top of file for details on using events.
 -- @param handler<function>
 function Event.on_init(handler)
-    if _LIFECYCLE == 8 then
+    if _LIFECYCLE == 8 then -- Runtime
         error('Calling Event.on_init after on_init() or on_load() has run is a desync risk.', 2)
     end
 
@@ -182,7 +182,7 @@ end
 -- See documentation at top of file for details on using events.
 -- @param handler<function>
 function Event.on_load(handler)
-    if _LIFECYCLE == 8 then
+    if _LIFECYCLE == 8 then -- Runtime
         error('Calling Event.on_load after on_init() or on_load() has run is a desync risk.', 2)
     end
 
@@ -195,7 +195,7 @@ end
 -- @param tick<number> The handler will be called every nth tick
 -- @param handler<function>
 function Event.on_nth_tick(tick, handler)
-    if _LIFECYCLE == 8 then
+    if _LIFECYCLE == 8 then -- Runtime
         error('Calling Event.on_nth_tick after on_init() or on_load() has run is a desync risk.', 2)
     end
 
