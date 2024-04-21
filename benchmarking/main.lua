@@ -1,4 +1,5 @@
 local Ai = require("maps.biter_battles_v2.ai")
+local AiTargets = require("maps.biter_battles_v2.ai_targets")
 local BenchmarkingBlueprints = require("benchmarking.blueprints")
 local Event = require("utils.event")
 local Feeding = require "maps.biter_battles_v2.feeding"
@@ -36,6 +37,7 @@ local function build_blueprint_from_string(bp_string, surface, offset, force)
 			entity.position = offset_pos
 			entity.force = force
 			surface.create_entity(entity)
+			AiTargets.start_tracking(entity)
 		end
 	end
 end

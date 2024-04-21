@@ -217,7 +217,7 @@ local function create_attack_group(surface, force_name, biter_force_name)
 	local threat = global.bb_threat[biter_force_name]
 	if threat <= 0 then return false end
 
-	local target_position = AiTargets.poll(force_name)
+	local target_position = AiTargets.get_random_target(force_name)
 	if not target_position then
 		print("No side target found for " .. force_name .. ".")
 		return
@@ -251,7 +251,6 @@ end
 
 Public.pre_main_attack = function()
 	local force_name = global.next_attack
-	AiTargets.select(force_name)
 
 	-- In headless benchmarking, there are no connected_players so we need a global to override this
 	if not global.training_mode or (global.training_mode and (global.benchmark_mode or #game.forces[force_name].connected_players > 0))then

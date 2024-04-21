@@ -40,17 +40,14 @@ local function origin_distance(position)
     return math_sqrt(x * x + y * y)
 end
 
-local function simple_random_sample(population_list, sample_size)
+local function simple_random_sample(population_list)
     local population_size = #population_list
-    local sample = {}
     if population_size > 0 then
-        for _ = 1, sample_size, 1 do
-            local random_index = math_random(1, population_size)
-            local individual = population_list[random_index]
-            table_insert(sample, individual)
-        end
+        local random_index = math_random(1, population_size)
+        local individual = population_list[random_index]
+        return individual
     end
-    return sample
+    return nil
 end
 
 function Public.start_tracking(entity)
@@ -59,47 +56,49 @@ function Public.start_tracking(entity)
     if target_entity_type[entity.type] and entity.unit_number then
         local targets = global.ai_targets[entity.force.name]
         if targets ~= nil then
-            targets.available[entity.unit_number] = entity
+            global.ai_target_destroyed_map[script.register_on_entity_destroyed(entity)] = entity.force.name
+            table_insert(targets.available_list, {unit_number = entity.unit_number, position = entity.position})
+            targets.available[entity.unit_number] = #targets.available_list
         end
     end
 end
 
-function Public.stop_tracking(entity)
-    if target_entity_type[entity.type] and entity.unit_number then
-        local targets = global.ai_targets[entity.force.name]
-        if targets ~= nil then
-            targets.available[entity.unit_number] = nil
+local function on_entity_destroyed(event)
+    local map = global.ai_target_destroyed_map
+    local unit_number = event.unit_number
+    local force = map[event.registration_number]
+    map[event.registration_number] = nil
+    local targets = global.ai_targets[force]
+    if targets ~= nil then
+        local target_list_index = targets.available[unit_number]
+        if target_list_index ~= nil then
+            if target_list_index ~= #targets.available_list then
+                -- swap the last element with the element to be removed
+                local last = targets.available_list[#targets.available_list]
+                targets.available[last.unit_number] = target_list_index
+                targets.available_list[target_list_index] = last
+            end
+            table_remove(targets.available_list)
+            targets.available[unit_number] = nil
         end
     end
 end
 
-function Public.select(force_name)
-    local population_list = {}
+script.on_event(defines.events.on_entity_destroyed, on_entity_destroyed)
+
+function Public.get_random_target(force_name)
     local targets = global.ai_targets[force_name]
-    local available = targets.available
-    for unit_number, entity in pairs(available) do
-        if entity.valid then
-            table_insert(population_list, entity.position)
-        else
-            available[unit_number] = nil
-        end
+    local available_list = targets.available_list
+    local first_entity = simple_random_sample(available_list)
+    local second_entity = simple_random_sample(available_list)
+    if not first_entity or not second_entity then return nil end
+    local first = first_entity.position
+    local second = second_entity.position
+    if origin_distance(first) < origin_distance(second) then
+        return first
+    else
+        return second
     end
-    -- (max) 7 targets per wave * 2 sub-sample size = 14 global sample size per wave
-    local sample = simple_random_sample(population_list, 14)
-    local selected = {}
-    for i = 1, #sample, 2 do
-        local first = sample[i]
-        local second = sample[i + 1]
-        local selection
-        if origin_distance(first) < origin_distance(second) then selection = first else selection = second end
-        table_insert(selected, { x = selection.x, y = selection.y })
-    end
-    targets.selected = selected
-end
-
-function Public.poll(force_name)
-    local targets = global.ai_targets[force_name]
-    return table_remove(targets.selected)
 end
 
 return Public

@@ -70,7 +70,6 @@ Event.add(defines.events.on_player_mined_entity, function (event)
 	if not entity.valid then
 		return
 	end
-	AiTargets.stop_tracking(entity)
 
 	local player = game.get_player(event.player_index)
 	if player and player.valid then

@@ -1,3 +1,4 @@
+local AiTargets = require 'maps.biter_battles_v2.ai_targets'
 local Functions = require "maps.biter_battles_v2.functions"
 local Gui = require "maps.biter_battles_v2.gui"
 local Init = require "maps.biter_battles_v2.init"
@@ -395,6 +396,7 @@ local function respawn_silo(event)
 	entity.minable = false
 	entity.health = 5
 	global.rocket_silo[force_name] = entity
+	AiTargets.start_tracking(entity)
 end
 
 function log_to_db(message,appendBool)
