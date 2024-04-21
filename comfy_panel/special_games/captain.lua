@@ -584,8 +584,18 @@ local function poll_pickLateJoiners(player)
 end
 
 local function generate_vs_text_rendering()
-	if global.active_special_games and global.special_games_variables["rendering"] and global.special_games_variables["rendering"]["captainLineVersus"] then rendering.destroy(global.special_games_variables["rendering"]["captainLineVersus"]) end
-	generateRendering("captainLineVersus","team " .. global.special_games_variables["captain_mode"]["captainList"][1] .. " vs team " .. global.special_games_variables["captain_mode"]["captainList"][2] .. ". Referee: " .. global.special_games_variables["captain_mode"]["refereeName"]  .. ". Teams on VC",0,10,0.87,0.13,0.5,1,1.5,"heading-1")
+	if global.active_special_games and global.special_games_variables["rendering"] and global.special_games_variables["rendering"]["captainLineVersus"] then
+		rendering.destroy(global.special_games_variables["rendering"]["captainLineVersus"])
+	end
+
+	local cptMode = global.special_games_variables["captain_mode"]
+	local text = string.format("Team %s (North) vs (South) Team %s. Referee: %s. Teams on Voice Chat",
+		cptMode["captainList"][1],
+		cptMode["captainList"][2],
+		cptMode["refereeName"]
+	)
+
+	generateRendering("captainLineVersus", text, 0,10,0.87,  0.13,0.5,1,1, 1.5,  "heading-1")
 end
 
 local function start_captain_event()
@@ -632,7 +642,7 @@ local countdown_captain_start_token = Token.register(
     function()
 		if global.special_games_variables["captain_mode"]["countdown"] > 0 then
 			for _, player in pairs(game.connected_players) do
-				local _sprite="file/png/"..global.special_games_variables["captain_mode"]["countdown"]..".png" 
+				local _sprite="file/png/"..global.special_games_variables["captain_mode"]["countdown"]..".png"
 				if player.gui.center["bb_captain_countdown"] then player.gui.center["bb_captain_countdown"].destroy() end
 				player.gui.center.add{name = "bb_captain_countdown", type = "sprite", sprite = _sprite}
 			end	
