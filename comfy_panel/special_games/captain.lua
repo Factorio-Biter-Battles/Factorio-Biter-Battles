@@ -522,8 +522,8 @@ local function generate_captain_mode(refereeName,autoTrust,captainKick,pickingMo
 	renderText("captainLineTwelve","Speedrunners", {6,-5}, {1,1,1,1}, 2, "heading-1")
 	renderText("captainLineThirteen","BB veteran players", {-6, -5}, {1,1,1,1}, 2, "heading-1")
 	renderText("captainLineFourteen","New players", {6,5}, {1,1,1,1}, 2, "heading-1")
-	renderText("captainLineFifteen","Not veteran but not new players", {-6,5}, {1,1,1,1}, 2, "heading-1")
-	renderText("captainLineSixteen","Spectators", {-12,0}, {1,1,1,1}, 2, "heading-1")
+	renderText("captainLineFifteen","Not veteran but not new players", {-8,5}, {1,1,1,1}, 2, "heading-1")
+	renderText("captainLineSixteen","Spectators", {-12,-1}, {1,1,1,1}, 2, "heading-1")
 
 	for i=-9,-16,-1 do
 		for k=2,-2,-1 do
