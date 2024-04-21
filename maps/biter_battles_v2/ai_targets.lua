@@ -86,7 +86,7 @@ end
 
 script.on_event(defines.events.on_entity_destroyed, on_entity_destroyed)
 
-function Public.poll(force_name)
+function Public.get_random_target(force_name)
     local targets = global.ai_targets[force_name]
     local available_list = targets.available_list
     local first_entity = simple_random_sample(available_list)
