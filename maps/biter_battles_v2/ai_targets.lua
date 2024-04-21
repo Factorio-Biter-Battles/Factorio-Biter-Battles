@@ -67,14 +67,14 @@ local function on_entity_destroyed(event)
     local map = global.ai_target_destroyed_map
     local unit_number = event.unit_number
     local force = map[event.registration_number]
-    map[unit_number] = nil
+    map[event.registration_number] = nil
     local targets = global.ai_targets[force]
     if targets ~= nil then
         local target_list_index = targets.available[unit_number]
         if target_list_index ~= nil then
-            -- swap the last element with the element to be removed
-            local last = targets.available_list[#targets.available_list]
             if target_list_index ~= #targets.available_list then
+                -- swap the last element with the element to be removed
+                local last = targets.available_list[#targets.available_list]
                 targets.available[last.unit_number] = target_list_index
                 targets.available_list[target_list_index] = last
             end
