@@ -152,5 +152,6 @@ return {
     success = {r = 0, g = 255, b = 0},
     warning = {r = 255, g = 255, b = 0},
     fail = {r = 255, g = 51, b = 51},
-    info = {r = 255, g = 255, b = 255}
+    info = {r = 255, g = 255, b = 255},
+    captain_versus_float = {r = 0.87, g = 0.5, b = 0.13, a = 1}
 }

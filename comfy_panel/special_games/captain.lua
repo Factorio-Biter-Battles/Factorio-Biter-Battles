@@ -323,7 +323,7 @@ local function generateGenericRenderingCaptain()
 		{-65,y}, {1,1,1,1}, 3, "heading-1")
 	y = y + 2
 	renderText("captainLineTwo","-Use of /nth /sth /north-chat /south-chat /s /shout by spectator can be punished (warn-tempban event)",
-		{-65,y}, {.87,0.13,0.5,1}, 3, "heading-1")
+		{-65,y}, Color.captain_versus_float, 3, "heading-1")
 	y = y + 4
 	renderText("captainLineThree","Notes: ",
 		{-65,y}, {1,1,1,1}, 2.5, "heading-1")
@@ -510,7 +510,7 @@ local function generate_captain_mode(refereeName,autoTrust,captainKick,pickingMo
 	if global.special_games_variables["rendering"] == nil then global.special_games_variables["rendering"] = {} end
 	rendering.clear()
 	renderText("captainLineTen","Special Captain's tournament mode enabled", {0,-16}, {1,0,0,1}, 5, "heading-1")
-	renderText("captainLineEleven","team xx vs team yy. Referee: " .. refereeName .. ". Teams on VC", {0,10}, {0.87,0.13,0.5,1}, 1.5,"heading-1")
+	renderText("captainLineEleven","team xx vs team yy. Referee: " .. refereeName .. ". Teams on VC", {0,10}, Color.captain_versus_float, 1.5,"heading-1")
 	generateGenericRenderingCaptain()
 	rendering.draw_line{surface = game.surfaces[global.bb_surface_name], from = {-9, -2}, to = {-9,3}, color = {r = 1},draw_on_ground = true, width = 3, gap_length = 0, dash_length = 1} 
 	rendering.draw_line{surface = game.surfaces[global.bb_surface_name], from = {0, 9}, to = {0,4}, color = {r = 1},draw_on_ground = true, width = 3, gap_length = 0, dash_length = 1} 
@@ -599,7 +599,7 @@ local function generate_vs_text_rendering()
 		cptMode["refereeName"]
 	)
 
-	renderText("captainLineVersus", text, {0,10}, {0.87, 0.13, 0.5, 1}, 1.5, "heading-1")
+	renderText("captainLineVersus", text, {0,10}, Color.captain_versus_float, 1.5, "heading-1")
 end
 
 local function start_captain_event()
