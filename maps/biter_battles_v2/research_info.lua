@@ -20,7 +20,7 @@ function Public.research_finished(tech_name, force)
         global.research_info.completed[tech_name] = tech_info
     end
     tech_info[force_name] = Functions.get_ticks_since_game_start()
-    global.research_info.progress[force_name][tech_name] = nil
+    global.research_info.current_progress[force_name][tech_name] = nil
 end
 
 local function update_research_progress()
@@ -28,7 +28,7 @@ local function update_research_progress()
         local tech = force.current_research
         local progress = force.research_progress
         if tech and progress and progress > 0 then
-            local progress_info = global.research_info.progress[force.name]
+            local progress_info = global.research_info.current_progress[force.name]
             progress_info[tech.name] = progress
         end
     end
@@ -93,7 +93,7 @@ end
 ---@param element LuaGuiElement
 ---@param force LuaForce
 local function add_research_progress_icons(element, force, all_technologies)
-    local progress_info = global.research_info.progress[force.name]
+    local progress_info = global.research_info.current_progress[force.name]
     local icons_to_add = {}
     -- For testing:
     -- progress_info["automation"] = 0.4

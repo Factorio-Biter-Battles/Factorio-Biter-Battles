@@ -209,7 +209,7 @@ end
 function Public.tables()
 	local get_score = Score.get_table()
 	get_score.score_table = {}
-	global.research_info = {completed = {}, progress = { north = {}, south = {} }}
+	global.research_info = {completed = {}, current_progress = { north = {}, south = {} }}
 	global.science_logs_text = nil
 	global.science_logs_total_north = nil
 	global.science_logs_total_south = nil
