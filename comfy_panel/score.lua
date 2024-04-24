@@ -3,6 +3,7 @@
 local Event = require 'utils.event'
 local Global = require 'utils.global'
 local Tabs = require 'comfy_panel.main'
+local Ai = require 'maps/biter_battles_v2/ai'
 
 local Public = {}
 local this = {
@@ -316,23 +317,6 @@ local function on_rocket_launched(event)
     refresh_score_full()
 end
 
-local entity_score_values = {
-    ['small-biter'] = 6,
-    ['small-spitter'] = 6,
-    ['medium-biter'] = 18,
-    ['medium-spitter'] = 18,
-    ['big-biter'] = 52,
-    ['big-spitter'] = 52,
-    ['behemoth-biter'] = 154,
-    ['behemoth-spitter'] = 154,
-    ['small-worm-turret'] = 32,
-    ['medium-worm-turret'] = 64,
-    ['big-worm-turret'] = 96,
-    ['behemoth-worm-turret'] = 128,
-    ['biter-spawner'] = 128,
-    ['spitter-spawner'] = 128,
-}
-
 local function train_type_cause(event)
     local players = {}
     if event.cause.train.passengers then
@@ -394,7 +378,8 @@ local function on_entity_died(event)
     if event.entity.force.index == event.cause.force.index then
         return
     end
-    if not entity_score_values[event.entity.name] then
+    local threat_reduction = Ai.calc_threat_reduction(event.entity)
+    if threat_reduction == 0 then
         return
     end
     if not kill_causes[event.cause.type] then
@@ -410,13 +395,13 @@ local function on_entity_died(event)
     for _, player in pairs(players_to_reward) do
         Public.init_player_table(player)
         local score = this.score_table[player.force.name].players[player.name]
-        score.killscore = score.killscore + entity_score_values[event.entity.name]
+        score.killscore = score.killscore + threat_reduction
         if global.show_floating_killscore[player.name] then
             event.entity.surface.create_entity(
                 {
                     name = 'flying-text',
                     position = event.entity.position,
-                    text = tostring(entity_score_values[event.entity.name]),
+                    text = tostring(threat_reduction),
                     color = player.chat_color
                 }
             )

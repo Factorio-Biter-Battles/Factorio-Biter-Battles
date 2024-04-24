@@ -243,6 +243,9 @@ local function create_attack_group(surface, force_name, biter_force_name)
 		else
 			unit_group.add_member(unit)
 		end
+		if global.active_special_games["alt_threatfarming"] then
+			global.special_games_variables["alt_threatfarming"]["attack_biter_ids"][unit.unit_number] = true
+		end
 	end
 	local strike_position = AiStrikes.calculate_strike_position(unit_group, target_position)
 	AiStrikes.initiate(unit_group, force_name, strike_position, target_position)
@@ -325,9 +328,9 @@ Public.reset_evo = function()
 	end
 end
 
---Biter Threat Value Subtraction
-function Public.subtract_threat(entity)
-	if not threat_values[entity.name] then return end
+--Calculates the amount of threat an entity should reduce threat by when killed, factoring in bosses and other rules.
+function Public.calc_threat_reduction(entity)
+	if not threat_values[entity.name] then return 0 end
 	local biter_not_boss_force = entity.force.name
 	local is_boss = false
 	local factor = 1
@@ -340,7 +343,7 @@ function Public.subtract_threat(entity)
 	end
 	if is_boss == true then
 		local health_buff_equivalent_revive = 1.0/(1.0-global.reanim_chance[game.forces[biter_not_boss_force].index]/100)
-		factor = bb_config.health_multiplier_boss*health_buff_equivalent_revive
+		factor = factor * bb_config.health_multiplier_boss*health_buff_equivalent_revive
 	else
 		if not global.try_new_threat_logic then
 			-- In the code before we revamped revive (specifically, it used to actually let
@@ -348,10 +351,34 @@ function Public.subtract_threat(entity)
 			-- of biters), it would subtract threat for every biter death. To preserve
 			-- essentially the same behavior here, we scale the threat by this revive
 			-- chance/extra-health.
-			factor = 1.0 / (1 - global.reanim_chance[game.forces[biter_not_boss_force].index]/100)
+			factor = factor * 1.0 / (1 - global.reanim_chance[game.forces[biter_not_boss_force].index]/100)
 		end
 	end
-	global.bb_threat[biter_not_boss_force] = global.bb_threat[biter_not_boss_force] - threat_values[entity.name] * factor
+	if global.active_special_games["alt_threatfarming"] and global.special_games_variables["alt_threatfarming"]["affected_entities"][entity.name] then
+		if global.special_games_variables["alt_threatfarming"]["spawner_biter_ids"][entity.unit_number] then
+			factor = factor * global.special_games_variables["alt_threatfarming"]["spawner_mult"]
+		elseif not global.special_games_variables["alt_threatfarming"]["attack_biter_ids"][entity.unit_number] then
+			--All biters are spawned either through the destruction of a spawner, as part of an attack, or as natural spawns (defending the spawners).
+			--We record IDs whenever we spawn spawner and attack biters, so other biters are defenders by process of elimination.
+			factor = factor * global.special_games_variables["alt_threatfarming"]["defender_mult"]
+		end
+		--unit_numbers are never reused, so no need to clear the table entries
+	end
+	return threat_values[entity.name] * factor
+end
+
+--Biter Threat Value Subtraction
+function Public.subtract_threat(entity)
+	local threat_reduction = Public.calc_threat_reduction(entity)
+	if threat_reduction == 0 then return end
+
+	local biter_not_boss_force = entity.force.name
+	if entity.force.name == 'south_biters_boss' then
+		biter_not_boss_force = 'south_biters'
+	elseif entity.force.name == 'north_biters_boss' then
+		biter_not_boss_force = 'north_biters'
+	end
+	global.bb_threat[biter_not_boss_force] = global.bb_threat[biter_not_boss_force] - threat_reduction
 	return true
 end
 

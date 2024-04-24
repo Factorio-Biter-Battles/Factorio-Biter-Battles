@@ -24,7 +24,12 @@ local function on_entity_died(event)
 	for _, t in pairs(biter_building_inhabitants[e]) do		
 		for x = 1, math_random(t[2],t[3]), 1 do
 			local p = event.entity.surface.find_non_colliding_position(t[1] , event.entity.position, 6, 1)			
-			if p then event.entity.surface.create_entity {name=t[1], position=p, force = event.entity.force.name} end
+			if p then
+				local unit = event.entity.surface.create_entity {name=t[1], position=p, force = event.entity.force.name}
+				if global.active_special_games["alt_threatfarming"] then
+					global.special_games_variables["alt_threatfarming"]["spawner_biter_ids"][unit.unit_number] = true
+				end
+			end
 		end
 	end	
 end

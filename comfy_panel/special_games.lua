@@ -17,6 +17,7 @@ local valid_special_games = {
     disable_sciences = require 'comfy_panel.special_games.disable_sciences',
     send_to_external_server = require 'comfy_panel.special_games.send_to_external_server',
     captain = require 'comfy_panel.special_games.captain',
+    alt_threatfarming = require 'comfy_panel.special_games.alt_threatfarming'
     --[[
     Add your special game here.
     Syntax:
