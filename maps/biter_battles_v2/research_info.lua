@@ -1,6 +1,5 @@
 local gui_style = require 'utils.utils'.gui_style
 local Functions = require 'maps.biter_battles_v2.functions'
-local Event = require 'utils.event'
 
 local Public = {}
 
@@ -23,15 +22,12 @@ function Public.research_finished(tech_name, force)
     global.research_info.current_progress[force_name][tech_name] = nil
 end
 
-local function update_research_progress()
-    for _, force in ipairs({game.forces.north, game.forces.south}) do
-        local tech = force.current_research
-        local progress = force.research_progress
-        if tech and progress and progress > 0 then
-            local progress_info = global.research_info.current_progress[force.name]
-            progress_info[tech.name] = progress
-        end
-    end
+---@param force string
+---@param tech_name string
+function Public.research_started(tech_name, force)
+    local force_name = force.name
+    if force_name ~= "north" and force_name ~= "south" then return end
+    global.research_info.current_progress[force_name][tech_name] = true
 end
 
 ---@param force LuaForce
@@ -92,15 +88,26 @@ end
 
 ---@param element LuaGuiElement
 ---@param force LuaForce
-local function add_research_progress_icons(element, force, all_technologies)
+local function add_research_progress_icons(element, force)
+    local all_technologies = force.technologies
+    -- force.get_saved_technology_progress
     local progress_info = global.research_info.current_progress[force.name]
     local icons_to_add = {}
     -- For testing:
     -- progress_info["automation"] = 0.4
-    for tech_name, progress in pairs(progress_info) do
-        local tooltip = all_technologies[tech_name].localised_name
-        local icon = {type = "sprite", sprite = "technology/" .. tech_name, tooltip = tooltip}
-        table.insert(icons_to_add, {icon = icon, progress = progress})
+    local current_tech = force.current_research
+    for tech_name, _ in pairs(progress_info) do
+        local progress
+        if current_tech and current_tech.name == tech_name then
+            progress = force.research_progress
+        else
+            progress = force.get_saved_technology_progress(all_technologies[tech_name])
+        end
+        if progress and progress > 0 then
+            local tooltip = all_technologies[tech_name].localised_name
+            local icon = {type = "sprite", sprite = "technology/" .. tech_name, tooltip = tooltip}
+            table.insert(icons_to_add, {icon = icon, progress = progress})
+        end
     end
     -- Just alphabetical sort by technology name so that the order is stable
     table.sort(icons_to_add, function(a, b) return a.icon.sprite < b.icon.sprite end)
@@ -136,18 +143,18 @@ function Public.show_research_info(player)
     label = scrollpanel.add {type = "label", caption = "North Current"}
     gui_style(label, {font = "heading-2"})
     add_research_queue_icons(scrollpanel, game.forces.north, all_technologies)
-    add_research_progress_icons(scrollpanel, game.forces.north, all_technologies)
+    add_research_progress_icons(scrollpanel, game.forces.north)
     label = scrollpanel.add {type = "label", caption = "South Current"}
     gui_style(label, {font = "heading-2"})
     add_research_queue_icons(scrollpanel, game.forces.south, all_technologies)
-    add_research_progress_icons(scrollpanel, game.forces.south, all_technologies)
+    add_research_progress_icons(scrollpanel, game.forces.south)
 
-    label = scrollpanel.add {type = "label", caption = "Completed - just North"}
+    label = scrollpanel.add {type = "label", caption = "Completed - Just North"}
     gui_style(label, {font = "heading-2"})
     add_completed_research_icons(scrollpanel.add {type = "table", column_count = 15},
     all_technologies,
     function(tech_name, tech_info) return tech_info.north and not tech_info.south end)
-    label = scrollpanel.add {type = "label", caption = "Completed - just South"}
+    label = scrollpanel.add {type = "label", caption = "Completed - Just South"}
     gui_style(label, {font = "heading-2"})
     add_completed_research_icons(scrollpanel.add {type = "table", column_count = 15},
     all_technologies,
@@ -178,7 +185,5 @@ function Public.research_info_click(player, element)
         end
     end
 end
-
-Event.on_nth_tick(61, update_research_progress)
 
 return Public

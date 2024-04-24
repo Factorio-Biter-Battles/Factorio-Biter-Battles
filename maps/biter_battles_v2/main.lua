@@ -53,7 +53,7 @@ end
 
 local function on_research_finished(event)
 	Functions.combat_balance(event)
-	
+
 	local name = event.research.name
 	local force = event.research.force
 	if name == 'uranium-processing' then
@@ -68,8 +68,16 @@ local function on_research_finished(event)
 	ResearchInfo.research_finished(name, force)
 end
 
+local function on_research_started(event)
+	local name = event.research.name
+	local force = event.research.force
+	ResearchInfo.research_started(name, force)
+end
+
 local function on_research_reversed(event)
 	-- Note that this will not really work for Functions.combat_balance, so don't go reversing technologies.
+	local name = event.research.name
+	local force = event.research.force
 	ResearchInfo.research_reversed(name, force)
 end
 
@@ -465,8 +473,8 @@ Event.add(defines.events.on_marked_for_deconstruction, on_marked_for_deconstruct
 Event.add(defines.events.on_player_built_tile, on_player_built_tile)
 Event.add(defines.events.on_player_joined_game, on_player_joined_game)
 Event.add(defines.events.on_research_finished, on_research_finished)
+Event.add(defines.events.on_research_started, on_research_started)
 Event.add(defines.events.on_research_reversed, on_research_reversed)
-Event.add(defines.events.on_research_cancelled, on_research_cancelled)
 Event.add(defines.events.on_robot_built_entity, on_robot_built_entity)
 Event.add(defines.events.on_robot_built_tile, on_robot_built_tile)
 Event.add(defines.events.on_tick, on_tick)
