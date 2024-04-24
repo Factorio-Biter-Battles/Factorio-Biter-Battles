@@ -378,8 +378,9 @@ local function on_entity_died(event)
     if event.entity.force.index == event.cause.force.index then
         return
     end
-    local threat_reduction = Ai.calc_threat_reduction(event.entity)
-    if threat_reduction == 0 then
+    --multiply threat reduction by four to keep killscore similar to the previous killscore values
+    local killscore_value = Ai.calc_threat_reduction(event.entity) * 4
+    if killscore_value == 0 then
         return
     end
     if not kill_causes[event.cause.type] then
@@ -395,13 +396,13 @@ local function on_entity_died(event)
     for _, player in pairs(players_to_reward) do
         Public.init_player_table(player)
         local score = this.score_table[player.force.name].players[player.name]
-        score.killscore = score.killscore + threat_reduction
+        score.killscore = score.killscore + killscore_value
         if global.show_floating_killscore[player.name] then
             event.entity.surface.create_entity(
                 {
                     name = 'flying-text',
                     position = event.entity.position,
-                    text = tostring(threat_reduction),
+                    text = tostring(killscore_value),
                     color = player.chat_color
                 }
             )
