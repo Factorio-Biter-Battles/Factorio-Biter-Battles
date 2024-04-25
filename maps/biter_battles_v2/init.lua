@@ -119,6 +119,7 @@ function Public.initial_setup()
 	global.game_lobby_active = true
 	global.bb_debug = false
 	global.bb_draw_revive_count_text = false
+	global.bb_show_research_info = nil -- "always", "spec", nil
 	global.ignore_lists = {}
 	global.bb_settings = {
 		--TEAM SETTINGS--
@@ -208,6 +209,7 @@ end
 function Public.tables()
 	local get_score = Score.get_table()
 	get_score.score_table = {}
+	global.research_info = {completed = {}, current_progress = { north = {}, south = {} }}
 	global.science_logs_text = nil
 	global.science_logs_total_north = nil
 	global.science_logs_total_south = nil

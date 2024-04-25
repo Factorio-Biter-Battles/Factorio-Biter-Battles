@@ -7,6 +7,7 @@ local bb_diff = require "maps.biter_battles_v2.difficulty_vote"
 local event = require "utils.event"
 local Functions = require "maps.biter_battles_v2.functions"
 local Feeding = require "maps.biter_battles_v2.feeding"
+local ResearchInfo = require "maps.biter_battles_v2.research_info"
 local Tables = require "maps.biter_battles_v2.tables"
 local Captain_event = require "comfy_panel.special_games.captain"
 
@@ -66,7 +67,7 @@ local function create_sprite_button(player)
 	gui_style(button, { width = 38, height = 38, padding = -2, font = "default-bold" })
 end
 
-local function clock(frame)
+local function clock(frame, player)
 	local time_caption = "Not started"
 	local total_ticks = Functions.get_ticks_since_game_start()
 	if total_ticks > 0 then
@@ -76,9 +77,15 @@ local function clock(frame)
 		time_caption = string.format("Time: %02d:%02d", total_hours, minutes)
 	end
 
-	local clock_ui = frame.add { type = "label", caption = string.format("%s   Speed: %.2f", time_caption, game.speed) }
+	local inner_frame = frame.add { type = "flow", name = "bb_main_inner_gui", direction = "horizontal" }
+	local clock_ui = inner_frame.add { type = "label", caption = string.format("%s   Speed: %.2f", time_caption, game.speed) }
 	clock_ui.style.font = "default-bold"
 	clock_ui.style.font_color = { r = 0.98, g = 0.66, b = 0.22 }
+
+	local is_spec = player.force.name == "spectator"
+	if global.bb_show_research_info == "always" or (global.bb_show_research_info == "spec" and is_spec) then
+		ResearchInfo.create_research_info_button(inner_frame)
+	end
 	frame.add { type = "line" }
 end
 
@@ -92,7 +99,7 @@ local function create_first_join_gui(player)
 	local b = frame.add { type = "label", caption = "Feed the enemy team's biters to gain advantage!" }
 	b.style.font = "heading-2"
 	b.style.font_color = { r = 0.98, g = 0.66, b = 0.22 }
-	clock(frame)
+	clock(frame, player)
 	local d = frame.add { type = "sprite-button", name = "join_random_button", caption = "AUTO JOIN" }
 	d.style.font = "default-large-bold"
 	d.style.font_color = { r = 1, g = 0, b = 1 }
@@ -183,7 +190,7 @@ function Public.create_main_gui(player)
 
 	local frame = player.gui.left.add { type = "frame", name = "bb_main_gui", direction = "vertical" }
 
-	clock(frame)
+	clock(frame, player)
 	-- Science sending GUI
 	if not is_spec then
 		frame.add { type = "table", name = "biter_battle_table", column_count = 4 }
