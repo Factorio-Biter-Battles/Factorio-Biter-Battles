@@ -11,8 +11,6 @@ local function effects_str(effects)
 	return string.format("evo_increase: %.3f threat: %.0f", effects.evo_increase, effects.threat_increase)
 end
 
-global = { try_new_threat_logic = false }
-
 function test_feed_effects_1()
 	-- Simple early-game send
 	local difficulty = 25
@@ -54,7 +52,7 @@ function test_feed_effects_4()
 	local num_flasks = 23000
 	local flask_food_value = Tables.food_values["space-science-pack"].value * difficulty / 100
 	local calc = Functions.calc_feed_effects(evo, flask_food_value, num_flasks, current_player_count, max_reanim_thresh)
-	lunatest.assert_equal("evo_increase: 2.934 threat: 5136194", effects_str(calc))
+	lunatest.assert_equal("evo_increase: 2.934 threat: 2415118", effects_str(calc))
 end
 
 function test_feed_effects_5()
@@ -65,7 +63,7 @@ function test_feed_effects_5()
 	local num_flasks = 3000
 	local flask_food_value = Tables.food_values["space-science-pack"].value * difficulty / 100
 	local calc = Functions.calc_feed_effects(evo, flask_food_value, num_flasks, current_player_count, max_reanim_thresh)
-	lunatest.assert_equal("evo_increase: 0.363 threat: 63537", effects_str(calc))
+	lunatest.assert_equal("evo_increase: 0.363 threat: 115317", effects_str(calc))
 end
 
 local function feed_split_up(evo, total_flasks, flask_food_value, num_splits)
@@ -82,8 +80,8 @@ local function feed_split_up(evo, total_flasks, flask_food_value, num_splits)
 end
 
 function test_split_up_feed()
-	-- test demonstrating that splitting up a send into multiple smaller sends gives a
-	-- smaller total threat increase (this is a worst-case scenario)
+	-- test demonstrating that splitting up a send into multiple smaller sends gives
+	-- identical total threat increase (this did not used to be the case)
 	local evo = 1.0
 	local difficulty = 30
 	local num_flasks = 25000
@@ -93,15 +91,13 @@ function test_split_up_feed()
 	local many_send = feed_split_up(evo, num_flasks, flask_food_value, 10)
 	-- same evolution increase
 	lunatest.assert_equal(big_send.evo, many_send.evo, 0.00001, "evo")
-	-- bigger theat increase for big send
-	lunatest.assert_equal(3097157, big_send.threat, 1, "threat big")
-	lunatest.assert_equal(952984, many_send.threat, 1, "threat many")
+	-- same threat increase (within 1%)
+	lunatest.assert_equal(big_send.threat, many_send.threat, big_send.threat / 100, "threat")
 end
 
 function test_calc_send()
 	local player_count = 4
 	local player = nil
-	local max_reanim_thresh = 250
 	local training_mode = false
 	local difficulty_vote_value = 0.3
 	local bb_evolution = {["north_biters"] = 0.40, ["south_biters"] = 0.90}
