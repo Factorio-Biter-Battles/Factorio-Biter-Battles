@@ -48,7 +48,7 @@ function Public.calc_feed_effects(initial_evo, food_value, num_flasks, current_p
 
 		--ADD INSTANT THREAT
 		local diminishing_modifier = 1 / (0.2 + (e2 * 0.016))
-		if global.try_new_threat_logic and evo > 1 then
+		if evo > 1 then
 			-- Give bonus threat for sending as evo grows
 			diminishing_modifier = diminishing_modifier * (1 + (evo - 1) * threat_scale_factor_past_evo100)
 		end
@@ -64,17 +64,6 @@ function Public.calc_feed_effects(initial_evo, food_value, num_flasks, current_p
 	reanim_chance = math.min(math_floor(reanim_chance), 90.0)
 
 	threat = threat * get_instant_threat_player_count_modifier(current_player_count)
-	if not global.try_new_threat_logic then
-		-- Adjust threat for revive.
-		-- Note that the fact that this is done at the end, after reanim_chance is calculated
-		-- is what gives a bonus to large single throws of science rather than many smaller
-		-- throws (in the case where final evolution is above 100%). Specifically, all of the
-		-- science thrown gets the threat increase that would be used for the final evolution
-		-- value.
-		if reanim_chance > 0 then
-			threat = threat * (100 / (100.001 - reanim_chance))
-		end
-	end
 
 	return {
 		evo_increase = evo - initial_evo,

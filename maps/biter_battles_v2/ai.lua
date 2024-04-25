@@ -341,15 +341,6 @@ function Public.subtract_threat(entity)
 	if is_boss == true then
 		local health_buff_equivalent_revive = 1.0/(1.0-global.reanim_chance[game.forces[biter_not_boss_force].index]/100)
 		factor = bb_config.health_multiplier_boss*health_buff_equivalent_revive
-	else
-		if not global.try_new_threat_logic then
-			-- In the code before we revamped revive (specifically, it used to actually let
-			-- biters die, and then spawn new biters, rather than just restoring the health
-			-- of biters), it would subtract threat for every biter death. To preserve
-			-- essentially the same behavior here, we scale the threat by this revive
-			-- chance/extra-health.
-			factor = 1.0 / (1 - global.reanim_chance[game.forces[biter_not_boss_force].index]/100)
-		end
 	end
 	global.bb_threat[biter_not_boss_force] = global.bb_threat[biter_not_boss_force] - threat_values[entity.name] * factor
 	return true
