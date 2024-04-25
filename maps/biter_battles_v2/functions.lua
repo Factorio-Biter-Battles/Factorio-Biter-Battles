@@ -290,47 +290,72 @@ function Public.is_biter_area(position,noise_Enabled)
 	return true
 end
 
+-- Returns the area that we check for overlapping flamethrower turrets (24 tiles in front or behind, just 2 tiles wide)
+local function flame_turret_overlap_area(entity)
+	local half_area_width = 1
+	local half_area_height = 24
+	local area
+	if entity.direction == defines.direction.north or entity.direction == defines.direction.south then
+		area = {
+			left_top = {x = entity.position.x - half_area_width, y = entity.position.y - half_area_height},
+			right_bottom = {x = entity.position.x + half_area_width, y = entity.position.y + half_area_height}
+		}
+	elseif entity.direction == defines.direction.east or entity.direction == defines.direction.west then
+		area = {
+			left_top = {x = entity.position.x - half_area_height, y = entity.position.y - half_area_width},
+			right_bottom = {x = entity.position.x + half_area_height, y = entity.position.y + half_area_width}
+		}
+	end
+	return area
+end
+
 function Public.no_turret_creep(event)
 	local entity = event.created_entity
 	if not entity.valid then return end
 	if not no_turret_blacklist[event.created_entity.type] then return end
-	
-	local posEntity = entity.position
-	if posEntity.y > 0 then posEntity.y = (posEntity.y + 100) * -1 end
-	if posEntity.y < 0 then posEntity.y = posEntity.y - 100 end
-	if not Public.is_biter_area(posEntity,false) then
-		return
+	local not_allowed_to_build_reason = nil
+	local surface = event.created_entity.surface
+	if global.bb_prevent_overlapping_flamers and event.created_entity.type == "fluid-turret" then
+		-- Check if there is another flame turret facing the same direction within 24 tiles
+		local area = flame_turret_overlap_area(entity)
+		local flame_turrets = surface.find_entities_filtered({type = "fluid-turret", area = area, direction = entity.direction, limit = 2})
+		-- Always find the one turret that we just placed, the question is if there are 2
+		if #flame_turrets > 1 then
+			not_allowed_to_build_reason = "Flame turret overlap prohibited"
+		end
 	end
-	
-	local surface = event.created_entity.surface				
-	local spawners = surface.find_entities_filtered({type = "unit-spawner", area = {{entity.position.x - 70, entity.position.y - 70}, {entity.position.x + 70, entity.position.y + 70}}})
-	if #spawners == 0 then return end
-	
-	local allowed_to_build = true
-	
-	for _, e in pairs(spawners) do
-		if (e.position.x - entity.position.x)^2 + (e.position.y - entity.position.y)^2 < 4096 then
-			allowed_to_build = false
-			break
-		end			
+
+	if not_allowed_to_build_reason == nil then
+		local posEntity = entity.position
+		if posEntity.y > 0 then posEntity.y = (posEntity.y + 100) * -1 end
+		if posEntity.y < 0 then posEntity.y = posEntity.y - 100 end
+		if Public.is_biter_area(posEntity,false) then
+			local spawners = surface.find_entities_filtered({type = "unit-spawner", area = {{entity.position.x - 70, entity.position.y - 70}, {entity.position.x + 70, entity.position.y + 70}}})
+			for _, e in pairs(spawners) do
+				if (e.position.x - entity.position.x)^2 + (e.position.y - entity.position.y)^2 < 4096 then
+					not_allowed_to_build_reason = "Turret too close to spawner!"
+					break
+				end
+			end
+		end
 	end
-	
-	if allowed_to_build then return end
-	
+
+	if not_allowed_to_build_reason == nil then return end
+
 	if event.player_index then
-		game.players[event.player_index].insert({name = entity.name, count = 1})		
-	else	
+		game.players[event.player_index].insert({name = entity.name, count = 1})
+	else
 		local inventory = event.robot.get_inventory(defines.inventory.robot_cargo)
-		inventory.insert({name = entity.name, count = 1})													
+		inventory.insert({name = entity.name, count = 1})
 	end
-	
+
 	surface.create_entity({
 		name = "flying-text",
 		position = entity.position,
-		text = "Turret too close to spawner!",
+		text = not_allowed_to_build_reason,
 		color = {r=0.98, g=0.66, b=0.22}
 	})
-	
+
 	entity.destroy()
 end
 
