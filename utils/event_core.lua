@@ -38,6 +38,7 @@ local call_handlers
 ---Safely executes all functions handling current event.
 ---@param handlers ( fun(event: EventData): nil )[]
 ---@param event EventData # The respective event data type
+---@return nil
 function call_handlers(handlers, event)
 	if not handlers then
 		return log('Handlers was nil!')

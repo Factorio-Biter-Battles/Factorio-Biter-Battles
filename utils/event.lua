@@ -8,7 +8,7 @@
 -- control stage add the handler in both on_init and on_load.
 -- Handlers added with Event.add cannot be removed.
 -- For handlers that need to be removed or added at runtime use Event.add_removable.
--- @usage
+---@usage
 -- local Event = require 'utils.event'
 -- Event.add(
 --     defines.events.on_built_entity,
@@ -27,7 +27,7 @@
 -- Event.add_removable cannot be called in on_load, doing so will crash the game on loading.
 -- Token is used because it's a desync risk to store closures inside the global table.
 --
--- @usage
+---@usage
 -- local Token = require 'utils.token'
 -- local Event = require 'utils.event'
 --
@@ -55,7 +55,7 @@
 -- func cannot be a closure in this case, as there is no safe way to store closures in the global table.
 -- A closure is a function that uses a local variable not defined in the function.
 --
--- @usage
+---@usage
 -- local Event = require 'utils.event'
 --
 -- If you want to remove the handler you will need to keep a reference to it.
@@ -140,7 +140,7 @@ Global.register(
 
 ---Finds the handler by value in tbl and removes it, shifting all values down
 ---@param tbl table
----@param handler<any> # must be a unique value inside table, typically a function
+---@param handler any  # must be a unique value inside table, typically a function
 local function remove(tbl, handler)
     if tbl == nil then
         return
@@ -158,8 +158,8 @@ end
 --- Register a handler for the event_name event.
 -- This function must be called in the control stage or in Event.on_init or Event.on_load.
 -- See documentation at top of file for details on using events.
--- @param event_name<number>
--- @param handler<function>
+---@param event_name number 
+---@param handler fun(event: EventData): nil
 ---@see Event.on_init
 ---@see Event.on_load
 ---@see Event.on_nth_tick
@@ -174,7 +174,7 @@ end
 --- Register a handler for the script.on_init event.
 -- This function must be called in the control stage or in Event.on_init or Event.on_load
 -- See documentation at top of file for details on using events.
--- @param handler<function>
+---@param handler fun(): nil
 function Event.on_init(handler)
     if _LIFECYCLE == 8 then -- Runtime
         error('Calling Event.on_init after on_init() or on_load() has run is a desync risk.', 2)
@@ -186,7 +186,7 @@ end
 --- Register a handler for the script.on_load event.
 -- This function must be called in the control stage or in Event.on_init or Event.on_load
 -- See documentation at top of file for details on using events.
--- @param handler<function>
+---@param handler fun(): nil
 function Event.on_load(handler)
     if _LIFECYCLE == 8 then -- Runtime
         error('Calling Event.on_load after on_init() or on_load() has run is a desync risk.', 2)
@@ -198,8 +198,8 @@ end
 --- Register a handler for the nth_tick event.
 -- This function must be called in the control stage or in Event.on_init or Event.on_load.
 -- See documentation at top of file for details on using events.
--- @param tick<number> The handler will be called every nth tick
--- @param handler<function>
+---@param tick uint # The handler will be called every nth tick
+---@param handler fun(event: NthTickEventData): nil
 function Event.on_nth_tick(tick, handler)
     if _LIFECYCLE == 8 then -- Runtime
         error('Calling Event.on_nth_tick after on_init() or on_load() has run is a desync risk.', 2)
@@ -211,8 +211,8 @@ end
 --- Register a token handler that can be safely added and removed at runtime.
 -- Calling this during on_load stage is not allowed.
 -- See documentation at top of file for details on using events.
--- @param  event_name<number>
--- @param  token<number>
+---@param event_name string | defines.events
+---@param token number # Registered token via Token lib
 function Event.add_removable(event_name, token)
     if type(token) ~= 'number' then
         error('token must be a number', 2)
@@ -237,8 +237,8 @@ end
 --- Removes a token handler for the given event_name.
 -- Calling this during on_load stage is not allowed.
 -- See documentation at top of file for details on using events.
--- @param  event_name<number>
--- @param  token<number>
+---@param event_name string | defines.events
+---@param token number # Registered token via Token lib
 function Event.remove_removable(event_name, token)
     if _LIFECYCLE == stage_load then
         error('cannot call during on_load', 2)
@@ -264,9 +264,9 @@ end
 -- The handler must not be a closure, as that is a desync risk (the caller must ensure the func's state is synchronized across save/load).
 -- Calling this during on_load stage is not allowed.
 -- See documentation at top of file for details on using events.
--- @param  event_name<number>
--- @param  func<function>
--- @param  name<string>
+---@param event_name string | defines.events
+---@param func fun(event: EventData): nil
+---@param name string | any # table key
 function Event.add_removable_function(event_name, func, name)
     if _LIFECYCLE == stage_load then
         error('cannot call during on_load', 2)
@@ -306,8 +306,8 @@ end
 --- Removes a handler for the given event_name.
 -- Calling this during on_load stage is not allowed.
 -- See documentation at top of file for details on using events.
--- @param  event_name<number>
--- @param  name<string>
+---@param event_name string | defines.events
+---@param name string | any # table key
 function Event.remove_removable_function(event_name, name)
     if _LIFECYCLE == stage_load then
         error('cannot call during on_load', 2)
@@ -346,8 +346,8 @@ end
 --- Register a token handler for the nth tick that can be safely added and removed at runtime.
 -- Calling this during on_load stage is not allowed.
 -- See documentation at top of file for details on using events.
--- @param  tick<number>
--- @param  token<number>
+---@param tick uint
+---@param token number # Registered token via Token lib
 function Event.add_removable_nth_tick(tick, token)
     if _LIFECYCLE == stage_load then
         error('cannot call during on_load', 2)
@@ -372,8 +372,8 @@ end
 --- Removes a token handler for the nth tick.
 -- Calling this during on_load stage is not allowed.
 -- See documentation at top of file for details on using events.
--- @param  tick<number>
--- @param  token<number>
+---@param tick uint
+---@param token number # Registered token via Token lib
 function Event.remove_removable_nth_tick(tick, token)
     if _LIFECYCLE == stage_load then
         error('cannot call during on_load', 2)
@@ -399,8 +399,11 @@ end
 -- The handler must not be a closure, as that is a desync risk (the caller must ensure the func's state is synchronized across save/load).
 -- Calling this during on_load stage is not allowed.
 -- See documentation at top of file for details on using events.
--- @param  tick<number>
--- @param  func<function>
+---
+---Bug: I assume this doesn't event work (pun was a typo), the table structure of funcs doesn't match what's accessed in EventCore
+---@param tick uint
+---@param func fun(event: NthTickEventData): nil # Nth tick handler
+---@param name string | any # Table key
 function Event.add_removable_nth_tick_function(tick, func, name)
     if _LIFECYCLE == stage_load then
         error('cannot call during on_load', 2)
@@ -440,8 +443,8 @@ end
 --- Removes a handler for the nth tick.
 -- Calling this during on_load stage is not allowed.
 -- See documentation at top of file for details on using events.
--- @param  tick<number>
--- @param  func<function>
+---@param tick uint
+---@param name string # table key
 function Event.remove_removable_nth_tick_function(tick, name)
     if _LIFECYCLE == stage_load then
         error('cannot call during on_load', 2)
@@ -486,7 +489,7 @@ function Event.remove_removable_nth_tick_function(tick, name)
 end
 
 --- Generate a new, unique event ID.
--- @param <string> name of the event/variable that is exposed
+---@param name string of the event/variable that is exposed
 function Event.generate_event_name(name)
     local event_id = generate_event_name()
 
@@ -494,7 +497,9 @@ function Event.generate_event_name(name)
 end
 
 ---Simply a proxy for game's `script.on_configuration_changed`, therefore only one function can be registered.
----@bug Does not allow to unset the function, use a dummy func if you need.
+---
+---Bug: Does not allow to unset the function, use a dummy func if you need.
+---@param func fun(changed: ConfigurationChangedData): nil
 function Event.on_configuration_changed(func)
     if type(func) == 'function' then
         script.on_configuration_changed(func)
@@ -504,7 +509,7 @@ end
 ---Adds the filter to currently active filters hooked to the game event.
 ---This probably shouldn't be used, because there's no way to remove a filter through this API and it's unclear how Factorio handles multiple filters, probably it's an AND filter chain, i.e. ALL filters must pass for the event to trigger.
 ---@param event uint Target event ID
----@param filter EventFiler
+---@param filter EventFilter
 function Event.add_event_filter(event, filter)
     local current_filters = script.get_event_filter(event)
 
