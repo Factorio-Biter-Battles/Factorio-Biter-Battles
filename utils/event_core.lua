@@ -1,7 +1,7 @@
 -- This module exists to break the circular dependency between event.lua and global.lua.
 -- It is not expected that any user code would require this module instead event.lua should be required.
 
-local Public = {}
+local EventCore = {}
 
 local init_event_name = -1
 local load_event_name = -2
@@ -110,7 +110,7 @@ end
 ---If it is the first handler, register the orchestrator handler with the game
 ---@param event_name string # event.name or event.input_name (technically any key)
 ---@param handler fun(event: EventData): nil # Respective event data type
-function Public.add(event_name, handler)
+function EventCore.add(event_name, handler)
     if event_name == defines.events.on_entity_damaged then
         error("on_entity_damaged is managed outside of the event framework.")
     end
@@ -130,7 +130,7 @@ end
 ---Registers/inserts the handler function to work with on_init event.
 ---If it is the first handler, register the orchestrator handler with the game
 ---@param handler fun(): nil
-function Public.on_init(handler)
+function EventCore.on_init(handler)
     local handlers = event_handlers[init_event_name]
     if not handlers then
         event_handlers[init_event_name] = {handler}
@@ -147,7 +147,7 @@ end
 ---Registers/inserts the handler function to work with on_load event.
 ---If it is the first handler, register the orchestrator handler with the game
 ---@param handler fun(): nil
-function Public.on_load(handler)
+function EventCore.on_load(handler)
     local handlers = event_handlers[load_event_name]
     if not handlers then
         event_handlers[load_event_name] = {handler}
@@ -166,7 +166,7 @@ end
 ---@see NthTickEventData
 ---@param tick uint
 ---@param handler fun(event: NthTickEventData): nil
-function Public.on_nth_tick(tick, handler)
+function EventCore.on_nth_tick(tick, handler)
     local handlers = on_nth_tick_event_handlers[tick]
     if not handlers then
         on_nth_tick_event_handlers[tick] = {handler}
@@ -181,14 +181,14 @@ end
 
 ---Returns the table with event_handlers
 ---@return table<event_name, function[]> # each event_name stores an array of handlers
-function Public.get_event_handlers()
+function EventCore.get_event_handlers()
     return event_handlers
 end
 
 ---Returns the table with only Nth tick handlers
 ---@return table<uint, function[]> # each Nth tick stores an array of handlers
-function Public.get_on_nth_tick_event_handlers()
+function EventCore.get_on_nth_tick_event_handlers()
     return on_nth_tick_event_handlers
 end
 
-return Public
+return EventCore
