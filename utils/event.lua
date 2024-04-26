@@ -138,6 +138,9 @@ Global.register(
     end
 )
 
+---Finds the handler by value in tbl and removes it, shifting all values down
+---@param tbl table
+---@param handler<any> # must be a unique value inside table, typically a function
 local function remove(tbl, handler)
     if tbl == nil then
         return
@@ -157,6 +160,9 @@ end
 -- See documentation at top of file for details on using events.
 -- @param event_name<number>
 -- @param handler<function>
+---@see Event.on_init
+---@see Event.on_load
+---@see Event.on_nth_tick
 function Event.add(event_name, handler)
     if _LIFECYCLE == 8 then -- Runtime
         error('Calling Event.add after on_init() or on_load() has run is a desync risk.', 2)
@@ -203,7 +209,7 @@ function Event.on_nth_tick(tick, handler)
 end
 
 --- Register a token handler that can be safely added and removed at runtime.
--- Do NOT call this method during on_load.
+-- Calling this during on_load stage is not allowed.
 -- See documentation at top of file for details on using events.
 -- @param  event_name<number>
 -- @param  token<number>
@@ -229,7 +235,7 @@ function Event.add_removable(event_name, token)
 end
 
 --- Removes a token handler for the given event_name.
--- Do NOT call this method during on_load.
+-- Calling this during on_load stage is not allowed.
 -- See documentation at top of file for details on using events.
 -- @param  event_name<number>
 -- @param  token<number>
@@ -255,8 +261,8 @@ function Event.remove_removable(event_name, token)
 end
 
 --- Register a handler that can be safely added and removed at runtime.
--- The handler must not be a closure, as that is a desync risk.
--- Do NOT call this method during on_load.
+-- The handler must not be a closure, as that is a desync risk (the caller must ensure the func's state is synchronized across save/load).
+-- Calling this during on_load stage is not allowed.
 -- See documentation at top of file for details on using events.
 -- @param  event_name<number>
 -- @param  func<function>
@@ -298,7 +304,7 @@ function Event.add_removable_function(event_name, func, name)
 end
 
 --- Removes a handler for the given event_name.
--- Do NOT call this method during on_load.
+-- Calling this during on_load stage is not allowed.
 -- See documentation at top of file for details on using events.
 -- @param  event_name<number>
 -- @param  name<string>
@@ -338,7 +344,7 @@ function Event.remove_removable_function(event_name, name)
 end
 
 --- Register a token handler for the nth tick that can be safely added and removed at runtime.
--- Do NOT call this method during on_load.
+-- Calling this during on_load stage is not allowed.
 -- See documentation at top of file for details on using events.
 -- @param  tick<number>
 -- @param  token<number>
@@ -364,7 +370,7 @@ function Event.add_removable_nth_tick(tick, token)
 end
 
 --- Removes a token handler for the nth tick.
--- Do NOT call this method during on_load.
+-- Calling this during on_load stage is not allowed.
 -- See documentation at top of file for details on using events.
 -- @param  tick<number>
 -- @param  token<number>
@@ -390,8 +396,8 @@ function Event.remove_removable_nth_tick(tick, token)
 end
 
 --- Register a handler for the nth tick that can be safely added and removed at runtime.
--- The handler must not be a closure, as that is a desync risk.
--- Do NOT call this method during on_load.
+-- The handler must not be a closure, as that is a desync risk (the caller must ensure the func's state is synchronized across save/load).
+-- Calling this during on_load stage is not allowed.
 -- See documentation at top of file for details on using events.
 -- @param  tick<number>
 -- @param  func<function>
@@ -432,7 +438,7 @@ function Event.add_removable_nth_tick_function(tick, func, name)
 end
 
 --- Removes a handler for the nth tick.
--- Do NOT call this method during on_load.
+-- Calling this during on_load stage is not allowed.
 -- See documentation at top of file for details on using events.
 -- @param  tick<number>
 -- @param  func<function>
@@ -487,12 +493,18 @@ function Event.generate_event_name(name)
     return event_id
 end
 
+---Simply a proxy for game's `script.on_configuration_changed`, therefore only one function can be registered.
+---@bug Does not allow to unset the function, use a dummy func if you need.
 function Event.on_configuration_changed(func)
     if type(func) == 'function' then
         script.on_configuration_changed(func)
     end
 end
 
+---Adds the filter to currently active filters hooked to the game event.
+---This probably shouldn't be used, because there's no way to remove a filter through this API and it's unclear how Factorio handles multiple filters, probably it's an AND filter chain, i.e. ALL filters must pass for the event to trigger.
+---@param event uint Target event ID
+---@param filter EventFiler
 function Event.add_event_filter(event, filter)
     local current_filters = script.get_event_filter(event)
 
@@ -505,6 +517,8 @@ function Event.add_event_filter(event, filter)
     script.set_event_filter(event, current_filters)
 end
 
+---Register all known handlers as part of map init or save load (on join).
+---Sets file-local upvalue "handlers_added" to true once finished.
 local function add_handlers()
     if not function_table then
         function_table = {}
