@@ -312,16 +312,25 @@ end
 function Public.no_turret_creep(event)
 	local entity = event.created_entity
 	if not entity.valid then return end
-	if not no_turret_blacklist[event.created_entity.type] then return end
+	if not no_turret_blacklist[entity.type] then return end
 	local not_allowed_to_build_reason = nil
-	local surface = event.created_entity.surface
-	if global.bb_prevent_overlapping_flamers and event.created_entity.type == "fluid-turret" then
+	local not_allowed_accessory_position = nil
+	local not_allowed_accessory_text = nil
+	local surface = entity.surface
+	if global.bb_prevent_overlapping_flamers and entity.name == "flamethrower-turret" then
 		-- Check if there is another flame turret facing the same direction within 24 tiles
 		local area = flame_turret_overlap_area(entity)
-		local flame_turrets = surface.find_entities_filtered({type = "fluid-turret", area = area, direction = entity.direction, limit = 2})
+		local flame_turrets = surface.find_entities_filtered({name = "flamethrower-turret", area = area, direction = entity.direction, limit = 2})
 		-- Always find the one turret that we just placed, the question is if there are 2
 		if #flame_turrets > 1 then
 			not_allowed_to_build_reason = "Flame turret overlap prohibited"
+			for _, turret in pairs(flame_turrets) do
+				if turret.unit_number ~= entity.unit_number then
+					not_allowed_accessory_position = turret.position
+					not_allowed_accessory_text = "This turret too close"
+					break
+				end
+			end
 		end
 	end
 
@@ -355,7 +364,14 @@ function Public.no_turret_creep(event)
 		text = not_allowed_to_build_reason,
 		color = {r=0.98, g=0.66, b=0.22}
 	})
-
+	if not_allowed_accessory_position and not_allowed_accessory_text then
+		surface.create_entity({
+			name = "flying-text",
+			position = not_allowed_accessory_position,
+			text = not_allowed_accessory_text,
+			color = {r=0.98, g=0.66, b=0.22}
+		})
+	end
 	entity.destroy()
 end
 
