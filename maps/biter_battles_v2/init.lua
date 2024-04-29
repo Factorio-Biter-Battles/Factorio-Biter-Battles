@@ -120,7 +120,6 @@ function Public.initial_setup()
 	global.bb_debug = false
 	global.bb_draw_revive_count_text = false
 	global.bb_show_research_info = nil -- "always", "spec", nil
-	global.bb_prevent_overlapping_flamers = true
 	global.ignore_lists = {}
 	global.bb_settings = {
 		--TEAM SETTINGS--
