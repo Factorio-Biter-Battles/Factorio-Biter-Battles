@@ -60,7 +60,7 @@ local Public = {
         [5] = {name = "eq5", type = "choose-elem-button", elem_type = "item"},
         [6] = {name = "eq6", type = "choose-elem-button", elem_type = "item"},
         [7] = {name = "eq7", type = "choose-elem-button", elem_type = "item"},
-        [8] = {name = "separate_chests", type = "switch", switch_state = "left", tooltip = "Single chest / Multiple chests"},
+        [8] = {name = "separate_chests", type = "switch", switch_state = "right", tooltip = "Single chest / Multiple chests"},
         [9] = {name = "operable", type = "switch", switch_state = "right", tooltip = "Operable? Y / N"},
         [10] = {name = "label1", type = "label", caption = "Gap size"},
         [11] = {name = "gap", type = "textfield", text = "3", numeric = true, width = 40},
