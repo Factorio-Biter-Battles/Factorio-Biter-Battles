@@ -35,13 +35,13 @@ local bring_player_messages = {
     'What are you up to?'
 }
 
-local function teleport_player_to_position(player, position)
+local function teleport_player_to_position(player, position, surface)
     if player.driving == true then
         player.driving = false
     end
-    local pos = player.surface.find_non_colliding_position('character', position, 50, 1)
+    local pos = surface.find_non_colliding_position('character', position, 50, 1)
     if pos then
-        player.teleport(pos, player.surface)
+        player.teleport(pos, surface)
     end
     return pos ~= nil
 end
@@ -50,7 +50,7 @@ local function bring_player(player, source_player)
     if player.name == source_player.name then
         return player.print("You can't select yourself!", {r = 1, g = 0.5, b = 0.1})
     end
-    if not teleport_player_to_position(player, source_player.position) then
+    if not teleport_player_to_position(player, source_player.position, source_player.surface) then
         return source_player.print("Could not teleport player to your position.", {r = 1, g = 0.5, b = 0.1})
     end
     game.print(
@@ -66,7 +66,7 @@ local function bring_player_to_spawn(player, source_player)
     if not spawn_position then
         return source_player.print("Spawn position not found.", {r = 1, g = 0.5, b = 0.1})
     end
-    if not teleport_player_to_position(player, spawn_position) then
+    if not teleport_player_to_position(player, spawn_position, player.surface) then
         return source_player.print("Could not teleport player to spawn position.", {r = 1, g = 0.5, b = 0.1})
     end
     game.print(player.name .. " has been brought to spawn.", {r = 0.98, g = 0.66, b = 0.22})
