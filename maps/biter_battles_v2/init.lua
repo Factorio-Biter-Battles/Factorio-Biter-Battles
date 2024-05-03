@@ -47,10 +47,13 @@ function Public.initial_setup()
 
 	game.map_settings.path_finder.fwd2bwd_ratio = 2
 	game.map_settings.path_finder.goal_pressure_ratio = 3
-	game.map_settings.path_finder.short_cache_size = 30
+	game.map_settings.path_finder.general_entity_collision_penalty = 3
+	game.map_settings.path_finder.general_entity_subsequent_collision_penalty = 0
+	game.map_settings.path_finder.short_cache_size = 500
 	game.map_settings.path_finder.long_cache_size = 50
-	game.map_settings.path_finder.short_cache_min_cacheable_distance = 8
-	game.map_settings.path_finder.long_cache_min_cacheable_distance = 60
+	game.map_settings.path_finder.short_cache_min_cacheable_distance = 12
+	game.map_settings.path_finder.short_cache_min_algo_steps_to_cache = 20
+	game.map_settings.path_finder.long_cache_min_cacheable_distance = 100
 	game.map_settings.path_finder.max_clients_to_accept_any_new_request = 4
 	game.map_settings.path_finder.max_clients_to_accept_short_new_request = 150
 	game.map_settings.path_finder.start_to_goal_cost_multiplier_to_terminate_path_find = 10000
