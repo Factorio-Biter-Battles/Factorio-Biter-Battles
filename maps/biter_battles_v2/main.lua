@@ -482,5 +482,3 @@ Event.on_init(on_init)
 
 commands.add_command('clear-corpses', 'Clears all the biter corpses..',
 		     clear_corpses)
-
-require "maps.biter_battles_v2.spec_spy"
