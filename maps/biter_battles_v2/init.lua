@@ -122,7 +122,7 @@ function Public.initial_setup()
 	global.game_lobby_active = true
 	global.bb_debug = false
 	global.bb_draw_revive_count_text = false
-	global.bb_show_research_info = nil -- "always", "spec", nil
+	global.bb_show_research_info = "always" -- "always", "spec", nil
 	global.ignore_lists = {}
 	global.bb_settings = {
 		--TEAM SETTINGS--
