@@ -188,7 +188,7 @@ function ResearchInfo.show_research_info(player)
         caption = "Close",
         tooltip = "Close this window."
     })
-    local frame_teams = scrollpanel.add { type = "table", name = "teams", column_count = "2", vertical_centering = false }
+    local frame_teams = scrollpanel.add { type = "table", name = "teams", column_count = 2, vertical_centering = false }
     for _, force_name in ipairs({"north", "south"}) do
         local team_frame = frame_teams.add { type = "frame", name = force_name, direction = "vertical", caption = Functions.team_name_with_color(force_name) }
         gui_style(team_frame, { natural_width = 365, vertically_stretchable = true })
