@@ -35,24 +35,41 @@ local bring_player_messages = {
     'What are you up to?'
 }
 
+local function teleport_player_to_position(player, position)
+    if player.driving == true then
+        player.driving = false
+    end
+    local pos = player.surface.find_non_colliding_position('character', position, 50, 1)
+    if pos then
+        player.teleport(pos, player.surface)
+    end
+    return pos ~= nil
+end
+
 local function bring_player(player, source_player)
     if player.name == source_player.name then
         return player.print("You can't select yourself!", {r = 1, g = 0.5, b = 0.1})
     end
-    if player.driving == true then
-        source_player.print('Target player is in a vehicle, teleport not available.', {r = 0.88, g = 0.88, b = 0.88})
-        return
+    if not teleport_player_to_position(player, source_player.position) then
+        return source_player.print("Could not teleport player to your position.", {r = 1, g = 0.5, b = 0.1})
     end
-    local pos = source_player.surface.find_non_colliding_position('character', source_player.position, 50, 1)
-    if pos then
-        player.teleport(pos, source_player.surface)
-        game.print(
-            player.name ..
-                ' has been teleported to ' ..
-                    source_player.name .. '. ' .. bring_player_messages[math.random(1, #bring_player_messages)],
-            {r = 0.98, g = 0.66, b = 0.22}
-        )
+    game.print(
+        player.name ..
+            ' has been teleported to ' ..
+                source_player.name .. '. ' .. bring_player_messages[math.random(1, #bring_player_messages)],
+        {r = 0.98, g = 0.66, b = 0.22}
+    )
+end
+
+local function bring_player_to_spawn(player, source_player)
+    local spawn_position = player.force.get_spawn_position(player.surface)
+    if not spawn_position then
+        return source_player.print("Spawn position not found.", {r = 1, g = 0.5, b = 0.1})
     end
+    if not teleport_player_to_position(player, spawn_position) then
+        return source_player.print("Could not teleport player to spawn position.", {r = 1, g = 0.5, b = 0.1})
+    end
+    game.print(player.name .. " has been brought to spawn.", {r = 0.98, g = 0.66, b = 0.22})
 end
 
 local go_to_player_messages = {
@@ -327,7 +344,15 @@ local create_admin_panel = (function(player, frame)
                 tooltip = 'Damages the selected player with greater damage. Can not kill the player.'
             }
         ),
-        t.add({type = 'button', caption = 'Kill', name = 'kill', tooltip = 'Kills the selected player instantly.'})
+        t.add({type = 'button', caption = 'Kill', name = 'kill', tooltip = 'Kills the selected player instantly.'}),
+        t.add(
+            {
+                type = 'button',
+                caption = 'MoveToSpawn',
+                name = 'bring_player_to_spawn',
+                tooltip = 'Teleports the selected player to spawn.'
+            }
+        ),
     }
     for _, button in pairs(buttons) do
         button.style.font = 'default-bold'
@@ -376,6 +401,7 @@ local admin_functions = {
     ['jail'] = jail,
     ['free'] = free,
     ['bring_player'] = bring_player,
+    ['bring_player_to_spawn'] = bring_player_to_spawn,
     ['spank'] = spank,
     ['damage'] = damage,
     ['kill'] = kill,
