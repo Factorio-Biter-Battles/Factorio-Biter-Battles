@@ -12,6 +12,12 @@ local function add_changelog(player, element)
 		table.insert(changelog_change, who)
 	end
 	
+	add_entry("2024-05-04", "cliff_build", "Research UI improvements")
+	add_entry("2024-05-03", "ness056", "Changes to the pathfinder settings")
+	add_entry("2024-05-03", "cliff_build", "Remove rule about overlapping flamethrower turrets")
+	add_entry("2024-05-01", "penguinencounter", "Research summary: use progress bar for incomplete tech")
+	add_entry("2024-05-01", "thePiedPiper13", "Update infinity_chest.lua")
+	add_entry("2024-04-27", "cliff_build", "Implement flamethrower turret overlap protection in code")
 	add_entry("2024-04-25", "cliff_build", "Add a new research info window (disabled by default)")
 	add_entry("2024-04-25", "cliff_build", "Always use the new threat logic")
 	add_entry("2024-04-23", "vadcx", "Reduce size of Captain Countdown again (-200 KiB)")
