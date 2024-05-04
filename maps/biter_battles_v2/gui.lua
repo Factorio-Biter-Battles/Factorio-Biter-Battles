@@ -17,7 +17,6 @@ local food_names = Tables.gui_foods
 local math_random = math.random
 local math_abs = math.abs
 local math_ceil = math.ceil
-require "maps.biter_battles_v2.spec_spy"
 local gui_style = require "utils.utils".gui_style
 local has_life = require "comfy_panel.special_games.limited_lives".has_life
 local gui_values = {
@@ -29,8 +28,6 @@ local gui_values = {
 		t2 = "Threat causes biters to attack. Reduces when biters are slain.",
 		color1 = { r = 0.55, g = 0.55, b = 0.99 },
 		color2 = { r = 0.66, g = 0.66, b = 0.99 },
-		tech_spy = "spy-north-tech",
-		prod_spy = "spy-north-prod"
 	},
 	["south"] = {
 		force = "south",
@@ -40,8 +37,6 @@ local gui_values = {
 		t2 = "Threat causes biters to attack. Reduces when biters are slain.",
 		color1 = { r = 0.99, g = 0.33, b = 0.33 },
 		color2 = { r = 0.99, g = 0.44, b = 0.44 },
-		tech_spy = "spy-south-tech",
-		prod_spy = "spy-south-prod"
 	}
 }
 
@@ -143,27 +138,6 @@ local function create_first_join_gui(player)
 	end
 end
 
-local function add_tech_button(elem, gui_value)
-	local tech_button = elem.add {
-		type = "sprite-button",
-		name = gui_value.tech_spy,
-		sprite = "item/space-science-pack"
-	}
-	tech_button.style.height = 25
-	tech_button.style.width = 25
-	tech_button.style.left_margin = 3
-end
-
-local function add_prod_button(elem, gui_value)
-	local prod_button = elem.add {
-		type = "sprite-button",
-		name = gui_value.prod_spy,
-		sprite = "item/assembling-machine-3"
-	}
-	prod_button.style.height = 25
-	prod_button.style.width = 25
-end
-
 local function show_pretty_threat(forceName)
 	local threat_value = math.floor(global.bb_threat[forceName])
 	if math_abs(threat_value) >= 1000000 then
@@ -245,12 +219,6 @@ function Public.create_main_gui(player)
 		l.style.font = "default"
 		l.style.font_color = { r = 0.22, g = 0.88, b = 0.22 }
 
-		-- Tech button
-		if is_spec and not global.chosen_team[player.name] then
-			add_tech_button(t, gui_value)
-			-- add_prod_button(t, gui_value)
-		end
-
 		-- Player list
 		if global.bb_view_players[player.name] == true then
 			local t = frame.add { type = "table", column_count = 4 }
@@ -314,9 +282,6 @@ function Public.create_main_gui(player)
 		local b = t.add { type = "sprite-button", name = "bb_view_players", caption = "Playerlist" }
 	end
 
-
-	local b_width = is_spec and 97 or 86
-	-- 111 when prod_spy button will be there
 	for _, b in pairs(t.children) do
 		b.style.font = "default-bold"
 		b.style.font_color = { r = 0.98, g = 0.66, b = 0.22 }
@@ -325,7 +290,7 @@ function Public.create_main_gui(player)
 		b.style.right_padding = 1
 		b.style.bottom_padding = 1
 		b.style.maximal_height = 30
-		b.style.width = b_width
+		b.style.width = 86
 	end
 end
 
