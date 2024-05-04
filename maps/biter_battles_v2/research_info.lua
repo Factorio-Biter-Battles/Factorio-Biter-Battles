@@ -1,9 +1,9 @@
 local gui_style = require 'utils.utils'.gui_style
 local Functions = require 'maps.biter_battles_v2.functions'
 
-local Public = {}
+local ResearchInfo = {}
 
-function Public.create_research_info_button(element, player)
+function ResearchInfo.create_research_info_button(element, player)
     local b = element.add({
         type = "sprite-button",
         sprite = "item/space-science-pack",
@@ -16,7 +16,7 @@ end
 
 ---@param force string
 ---@param tech_name string
-function Public.research_finished(tech_name, force)
+function ResearchInfo.research_finished(tech_name, force)
     local force_name = force.name
     if force_name ~= "north" and force_name ~= "south" then return end
     local tech_info = global.research_info.completed[tech_name]
@@ -26,23 +26,26 @@ function Public.research_finished(tech_name, force)
     end
     tech_info[force_name] = Functions.get_ticks_since_game_start()
     global.research_info.current_progress[force_name][tech_name] = nil
+    ResearchInfo.update_research_info_ui()
 end
 
 ---@param force string
 ---@param tech_name string
-function Public.research_started(tech_name, force)
+function ResearchInfo.research_started(tech_name, force)
     local force_name = force.name
     if force_name ~= "north" and force_name ~= "south" then return end
     global.research_info.current_progress[force_name][tech_name] = true
+    ResearchInfo.update_research_info_ui()
 end
 
 ---@param force LuaForce
 ---@param tech_name string
-function Public.research_reversed(tech_name, force)
+function ResearchInfo.research_reversed(tech_name, force)
     if force.name ~= "north" and force.name ~= "south" then return end
     local tech_info = global.research_info.completed[tech_name]
     if not tech_info then return end
     tech_info[force.name] = nil
+    ResearchInfo.update_research_info_ui()
 end
 
 ---@param element LuaGuiElement
@@ -76,7 +79,10 @@ end
 ---@param force LuaForce
 local function add_research_queue_icons(element, force, all_technologies)
     local queue = force.research_queue
-    if not queue or #queue == 0 then return end
+    if not queue or #queue == 0 then
+        element.add { type = "label", caption = "empty" }
+        return
+    end
     local icons_to_add = {}
     for _, tech in ipairs(queue) do
         local tooltip = tech.localised_name
@@ -84,10 +90,9 @@ local function add_research_queue_icons(element, force, all_technologies)
         local icon = { type = "sprite", sprite = "technology/" .. tech.name, tooltip = tooltip, elem_tooltip = { type = "technology", name = tech.name } }
         table.insert(icons_to_add, { time = time, icon = icon })
     end
-    local t = element.add { type = "table", column_count = #icons_to_add + 1 }
-    t.add { type = "label", caption = "Queue: " }
+    element.add { type = "label", caption = "Queue: " }
     for _, icon in ipairs(icons_to_add) do
-        local tech = t.add(icon.icon)
+        local tech = element.add(icon.icon)
         gui_style(tech, { width = 38, height = 38, padding = -2, stretch_image_to_widget_size = true })
     end
 end
@@ -128,7 +133,41 @@ local function add_research_progress_icons(element, force)
     end
 end
 
-function Public.show_research_info(player)
+local function update_research_info_element(element)
+    local all_technologies = game.forces.spectator.technologies
+    local scrollpanel = element.scroll_pane
+    local frame_teams = scrollpanel.teams
+    for _, force_name in ipairs({"north", "south"}) do
+        local other_force_name = force_name == "north" and "south" or "north"
+        local team_frame = frame_teams[force_name]
+        local force = game.forces[force_name]
+        team_frame.research_queue.clear()
+        add_research_queue_icons(team_frame.research_queue, force, all_technologies)
+        local progress = team_frame.progress
+        progress.clear()
+        add_research_progress_icons(progress, force)
+
+        team_frame.completed_research.clear()
+        add_completed_research_icons(team_frame.completed_research,
+            all_technologies,
+            function(tech_name, tech_info) return tech_info[force_name] and not tech_info[other_force_name] end)
+    end
+
+    scrollpanel.completed_research.clear()
+    add_completed_research_icons(scrollpanel.completed_research,
+        all_technologies,
+        function(tech_name, tech_info) return tech_info.north and tech_info.south end)
+end
+
+function ResearchInfo.update_research_info_ui()
+    for _, player in pairs(game.connected_players) do
+        if player.gui.center["research_info_frame"] then
+            update_research_info_element(player.gui.center["research_info_frame"])
+        end
+    end
+end
+
+function ResearchInfo.show_research_info(player)
     local all_technologies = game.forces.spectator.technologies
     if player.gui.center["research_info_frame"] then
         player.gui.center["research_info_frame"].destroy()
@@ -141,45 +180,37 @@ function Public.show_research_info(player)
     local horizontal_flow = scrollpanel.add { type = "flow", direction = "horizontal" }
     label = horizontal_flow.add { type = "label", caption = "Research Summary for both teams" }
     gui_style(label, { font = "heading-1" })
-    local button = horizontal_flow.add({
+    local spacer_flow = horizontal_flow.add { type = "flow", direction = "horizontal" }
+    gui_style(spacer_flow, { horizontally_stretchable = true, horizontal_align = "right" })
+    local button = spacer_flow.add({
         type = "button",
         name = "research_info_close", -- clicking on any element works to close
         caption = "Close",
         tooltip = "Close this window."
     })
-    button.style.font = "heading-3"
-    label = scrollpanel.add { type = "label", caption = "North Current" }
-    gui_style(label, { font = "heading-2" })
-    add_research_queue_icons(scrollpanel, game.forces.north, all_technologies)
-    local north_progress = scrollpanel.add { type = "table", column_count = 15 }
-    gui_style(north_progress, { horizontally_stretchable = false})
-    add_research_progress_icons(north_progress, game.forces.north)
-    
-    label = scrollpanel.add { type = "label", caption = "South Current" }
-    gui_style(label, { font = "heading-2" })
-    add_research_queue_icons(scrollpanel, game.forces.south, all_technologies)
-    local south_progress = scrollpanel.add { type = "table", column_count = 15 }
-    gui_style(south_progress, { horizontally_stretchable = false})
-    add_research_progress_icons(south_progress, game.forces.south)
+    local frame_teams = scrollpanel.add { type = "table", name = "teams", column_count = 2, vertical_centering = false }
+    for _, force_name in ipairs({"north", "south"}) do
+        local team_frame = frame_teams.add { type = "frame", name = force_name, direction = "vertical", caption = Functions.team_name_with_color(force_name) }
+        gui_style(team_frame, { natural_width = 365, vertically_stretchable = true })
 
-    label = scrollpanel.add { type = "label", caption = "Completed - Just North" }
+        label = team_frame.add { type = "label", caption = "Current Queue" }
+        gui_style(label, { font = "heading-2" })
+        team_frame.add { type = "flow", name = "research_queue", direction = "horizontal" }
+        local progress = team_frame.add { type = "table", name = "progress", column_count = 15 }
+        gui_style(progress, { horizontally_stretchable = false})
+
+        label = team_frame.add { type = "label", caption = "Researched (exclusive)" }
+        gui_style(label, { font = "heading-2" })
+        team_frame.add { type = "table", name = "completed_research", column_count = 8 }
+    end
+
+    label = scrollpanel.add { type = "label", caption = "Researched - Both" }
     gui_style(label, { font = "heading-2" })
-    add_completed_research_icons(scrollpanel.add { type = "table", column_count = 15 },
-        all_technologies,
-        function(tech_name, tech_info) return tech_info.north and not tech_info.south end)
-    label = scrollpanel.add { type = "label", caption = "Completed - Just South" }
-    gui_style(label, { font = "heading-2" })
-    add_completed_research_icons(scrollpanel.add { type = "table", column_count = 15 },
-        all_technologies,
-        function(tech_name, tech_info) return not tech_info.north and tech_info.south end)
-    label = scrollpanel.add { type = "label", caption = "Completed - Both" }
-    gui_style(label, { font = "heading-2" })
-    add_completed_research_icons(scrollpanel.add { type = "table", column_count = 15 },
-        all_technologies,
-        function(tech_name, tech_info) return tech_info.north and tech_info.south end)
+    scrollpanel.add { type = "table", name = "completed_research", column_count = 18 }
+    update_research_info_element(player.gui.center["research_info_frame"])
 end
 
-function Public.research_info_click(player, element)
+function ResearchInfo.research_info_click(player, element)
     local elt = element
     while elt do
         if elt.name == "research_info_frame" then
@@ -193,10 +224,10 @@ function Public.research_info_click(player, element)
             player.gui.center["research_info_frame"].destroy()
             return true
         else
-            Public.show_research_info(player)
+            ResearchInfo.show_research_info(player)
             return true
         end
     end
 end
 
-return Public
+return ResearchInfo

@@ -83,7 +83,9 @@ local function clock(frame, player)
 	clock_ui.style.font_color = { r = 0.98, g = 0.66, b = 0.22 }
 
 	local is_spec = player.force.name == "spectator"
-	if global.bb_show_research_info == "always" or (global.bb_show_research_info == "spec" and is_spec) then
+	if global.bb_show_research_info == "always"
+		or (global.bb_show_research_info == "spec" and is_spec)
+		or (global.bb_show_research_info == "pure-spec" and not global.chosen_team[player.name]) then
 		ResearchInfo.create_research_info_button(inner_frame)
 	end
 	frame.add { type = "line" }

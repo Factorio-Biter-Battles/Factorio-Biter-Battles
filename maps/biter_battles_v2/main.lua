@@ -270,7 +270,6 @@ local function on_tick()
 		if global.bb_game_won_by_team then
 			Game_over.reveal_map()
 			Game_over.server_restart()
-			return
 		end
 	end
 
@@ -278,13 +277,12 @@ local function on_tick()
 		local key = tick % 3600
 		if tick_minute_functions[key] then
 			tick_minute_functions[key]()
-			return
 		end
 	end
 
 	if (tick+5) % 180 == 0 then
 		Gui.refresh()
-		return
+		ResearchInfo.update_research_info_ui()
 	end
 end
 
