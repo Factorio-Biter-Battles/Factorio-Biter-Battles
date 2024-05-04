@@ -237,8 +237,8 @@ end
 ---@param str string
 ---@return boolean
 local function alphanumeric(str)
-    -- prohibit []() because they are confusing in the UI and allow factorio rich text injection
-    return string.match(str, '^[%w%s%p]*$') ~= nil and string.match(str, '[%(%)%[%]]') ~= nil
+    -- prohibit []()= because they are confusing in the UI and allow factorio rich text injection
+    return string.match(str, '^[%w%s%p]*$') ~= nil and string.match(str, '[%(%)%[%]%=]') ~= nil
 end
 
 ---@param event EventData.on_gui_click
