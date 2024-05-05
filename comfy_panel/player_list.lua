@@ -178,7 +178,7 @@ local pokemessages = {
     'a genetic blueprint of a Japanese teen idol'
 }
 
-local function get_formatted_playtime_from_ticks(ticks)
+function Public.get_formatted_playtime_from_ticks(ticks)
 	local math_floor = math.floor
 	local seconds = math_floor(ticks / 60)
 	local minutes = math_floor(seconds / 60)
@@ -327,10 +327,10 @@ local function get_sorted_list(sort_by)
             t = global.total_time_online_players[player.name]
         end
 
-        player_list[i].total_played_time = get_formatted_playtime_from_ticks(t)
+        player_list[i].total_played_time = Public.get_formatted_playtime_from_ticks(t)
         player_list[i].total_played_ticks = t
 
-        player_list[i].played_time = get_formatted_playtime_from_ticks(player.online_time)
+        player_list[i].played_time = Public.get_formatted_playtime_from_ticks(player.online_time)
         player_list[i].played_ticks = player.online_time
 
         player_list[i].pokes = this.player_list.pokes[player.index]

@@ -5,6 +5,7 @@ local Task = require 'utils.task'
 local Team_manager = require "maps.biter_battles_v2.team_manager"
 local session = require 'utils.datastore.session_data'
 local Tables = require "maps.biter_battles_v2.tables"
+local Player_list = require "comfy_panel.player_list"
 local gui_style = require 'utils.utils'.gui_style
 local ComfyPanelGroup = require 'comfy_panel.group'
 local math_random = math.random
@@ -240,7 +241,7 @@ local function pickPlayerGenerator(player,tableBeingLooped,frameName,questionTex
 	if player.gui.center[frameName] then player.gui.center[frameName].destroy() return end
 	frame = player.gui.center.add { type = "frame", caption = questionText, name = frameName, direction = "vertical" }
 	if global.special_games_variables["captain_mode"]["captainGroupAllowed"] then
-		finalParentGui = frame.add { type = "table", column_count = 2 }
+		finalParentGui = frame.add { type = "table", column_count = 3 }
 	else
 		finalParentGui = frame
 	end
@@ -253,12 +254,20 @@ local function pickPlayerGenerator(player,tableBeingLooped,frameName,questionTex
 		b.style.font_color = Color.antique_white
 		b.style.font = "heading-2"
 		b.style.minimal_width = 100
+		b = finalParentGui.add({type = "label", caption = "Total playtime"})
+		b.style.font_color = Color.antique_white
+		b.style.font = "heading-2"
+		b.style.minimal_width = 100
 		local listGroupAlreadyDone = {}
 		for _,pl in pairs(tableBeingLooped) do
 			if button1Text ~= nil then
 				local groupCaptionText = ""
 				local groupName = ""
 				local playerIterated = game.get_player(pl)
+				local playtimePlayer = 0
+				if global.total_time_online_players[playerIterated.name] then
+					playtimePlayer = Player_list.get_formatted_playtime_from_ticks(global.total_time_online_players[playerIterated.name])
+				end
 				if startswith(playerIterated.tag, ComfyPanelGroup.COMFY_PANEL_CAPTAINS_GROUP_PLAYER_TAG_PREFIX) then
 					if not listGroupAlreadyDone[playerIterated.tag] then
 						groupName = playerIterated.tag
@@ -277,6 +286,21 @@ local function pickPlayerGenerator(player,tableBeingLooped,frameName,questionTex
 									b.style.font_color = Color.antique_white
 									b.style.font = "heading-2"
 									b.style.minimal_width = 100
+									
+									playtimePlayer = 0
+									local nameOtherPlayer = game.get_player(plOfGroup).name
+									if global.total_time_online_players[nameOtherPlayer] then
+										playtimePlayer = Player_list.get_formatted_playtime_from_ticks(global.total_time_online_players[nameOtherPlayer])
+									end
+									b = finalParentGui.add({type = "label", caption = playtimePlayer})
+									b.style.font_color = Color.white
+									b.style.font = "heading-2"
+									b.style.minimal_width = 100
+								else
+									b = finalParentGui.add({type = "label", caption = playtimePlayer})
+									b.style.font_color = Color.white
+									b.style.font = "heading-2"
+									b.style.minimal_width = 100
 								end
 							end
 						end
@@ -284,6 +308,10 @@ local function pickPlayerGenerator(player,tableBeingLooped,frameName,questionTex
 				else
 					createButton(finalParentGui,button1Name,button1Text,pl)
 					b = finalParentGui.add({type = "label", caption = groupName})
+					b.style.font_color = Color.green
+					b.style.font = "heading-2"
+					b.style.minimal_width = 100
+					b = finalParentGui.add({type = "label", caption = playtimePlayer})
 					b.style.font_color = Color.green
 					b.style.font = "heading-2"
 					b.style.minimal_width = 100
@@ -852,6 +880,28 @@ function Public.clear_gui_special()
 	clear_gui_captain_mode()
 end
 
+local function insertPlayerByPlaytime(playerName)
+    local playtime = 0
+	if global.total_time_online_players[playerName] then
+		playtime = global.total_time_online_players[playerName]
+	end
+    local listPlayers = global.special_games_variables["captain_mode"]["listPlayers"]
+    local insertionPosition = 1
+    for i, player in ipairs(listPlayers) do
+		local playtimeOtherPlayer = 0
+		if global.total_time_online_players[player] then
+			playtimeOtherPlayer = global.total_time_online_players[player]
+		end
+        if playtimeOtherPlayer < playtime then
+            insertionPosition = i
+            break
+		else
+            insertionPosition = i + 1
+        end
+    end
+    table.insert(listPlayers, insertionPosition, playerName)
+end
+
 local function on_gui_click(event)
     local element = event.element
     if not element then return end
@@ -874,7 +924,7 @@ local function on_gui_click(event)
 		end
 	elseif element.name == "captain_no_but_play" then
 		game.print(player.name .. ' wants to play but not as a captain')
-		table.insert(global.special_games_variables["captain_mode"]["listPlayers"],player.name)
+		insertPlayerByPlaytime(player.name)
 		delete_player_from_novote_list(player.name)
 		if player.gui.center["captain_poll_frame"] ~= nil then player.gui.center["captain_poll_frame"].destroy() end
 		if player.name == global.special_games_variables["captain_mode"]["refereeName"] then
@@ -925,7 +975,7 @@ local function on_gui_click(event)
 		end
 		local indexPlayer = index[playerPicked]
 		table.remove(global.special_games_variables["captain_mode"]["captainList"],indexPlayer)
-		table.insert(global.special_games_variables["captain_mode"]["listPlayers"],playerPicked)
+		insertPlayerByPlaytime(playerPicked)
 		player.gui.center["captain_poll_chosen_choice_frame"].destroy()
 			game.print('[font=default-large-bold]' .. playerPicked .. ' was removed in the captains list[/font]', Color.cyan)
 		
@@ -1150,7 +1200,7 @@ local function on_gui_click(event)
 		updatePollLateJoinReferee()
 	elseif string.find(element.name, "captain_late_joiner_yes") then
 		if player.gui.center["captain_poll_latejoiner_question"] then player.gui.center["captain_poll_latejoiner_question"].destroy() end
-		table.insert(global.special_games_variables["captain_mode"]["listPlayers"],player.name)
+		insertPlayerByPlaytime(player.name)
 		delete_player_from_novote_list(player.name)
 		if player.name == global.special_games_variables["captain_mode"]["refereeName"] then
 			poll_captain_end_late_joiners_referee(player)
