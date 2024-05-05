@@ -312,7 +312,7 @@ local function pickPlayerGenerator(player,tableBeingLooped,frameName,questionTex
 					b.style.font = "heading-2"
 					b.style.minimal_width = 100
 					b = finalParentGui.add({type = "label", caption = playtimePlayer})
-					b.style.font_color = Color.green
+					b.style.font_color = Color.white
 					b.style.font = "heading-2"
 					b.style.minimal_width = 100
 				end
