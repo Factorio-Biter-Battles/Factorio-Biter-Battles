@@ -235,6 +235,18 @@ local function startswith(text, prefix)
     return text:find(prefix, 1, true) == 1
 end
 
+local function addGuiShowPlayerInfo(_finalParentGui,_button1Name,_button1Text,_pl,_groupName,_playtimePlayer)
+		createButton(_finalParentGui,_button1Name,_button1Text,_pl)
+		b = _finalParentGui.add({type = "label", caption = _groupName})
+		b.style.font_color = Color.antique_white
+		b.style.font = "heading-2"
+		b.style.minimal_width = 100
+		b = _finalParentGui.add({type = "label", caption = _playtimePlayer})
+		b.style.font_color = Color.white
+		b.style.font = "heading-2"
+		b.style.minimal_width = 100	
+end
+
 local function pickPlayerGenerator(player,tableBeingLooped,frameName,questionText,button1Text,button1Name)
 	local frame = nil
 	local finalParentGui = nil
@@ -272,44 +284,23 @@ local function pickPlayerGenerator(player,tableBeingLooped,frameName,questionTex
 					if not listGroupAlreadyDone[playerIterated.tag] then
 						groupName = playerIterated.tag
 						listGroupAlreadyDone[playerIterated.tag] = true
-						createButton(finalParentGui,button1Name,button1Text,pl)
-						b = finalParentGui.add({type = "label", caption = groupName})
-						b.style.font_color = Color.antique_white
-						b.style.font = "heading-2"
-						b.style.minimal_width = 100
+						addGuiShowPlayerInfo(finalParentGui,button1Name,button1Text,pl,groupName,playtimePlayer)
 						for _,plOfGroup in pairs(tableBeingLooped) do
 							if plOfGroup ~= pl then
 								local groupNameOtherPlayer = game.get_player(plOfGroup).tag
 								if groupNameOtherPlayer ~= "" and groupName == groupNameOtherPlayer then
-									createButton(finalParentGui,button1Name,button1Text,plOfGroup)
-									b = finalParentGui.add({type = "label", caption = groupName})
-									b.style.font_color = Color.antique_white
-									b.style.font = "heading-2"
-									b.style.minimal_width = 100
-									
 									playtimePlayer = 0
 									local nameOtherPlayer = game.get_player(plOfGroup).name
 									if global.total_time_online_players[nameOtherPlayer] then
 										playtimePlayer = Player_list.get_formatted_playtime_from_ticks(global.total_time_online_players[nameOtherPlayer])
 									end
-									b = finalParentGui.add({type = "label", caption = playtimePlayer})
-									b.style.font_color = Color.white
-									b.style.font = "heading-2"
-									b.style.minimal_width = 100
+									addGuiShowPlayerInfo(finalParentGui,button1Name,button1Text,plOfGroup,groupName,playtimePlayer)
 								end
 							end
 						end
 					end
 				else
-					createButton(finalParentGui,button1Name,button1Text,pl)
-					b = finalParentGui.add({type = "label", caption = groupName})
-					b.style.font_color = Color.green
-					b.style.font = "heading-2"
-					b.style.minimal_width = 100
-					b = finalParentGui.add({type = "label", caption = playtimePlayer})
-					b.style.font_color = Color.white
-					b.style.font = "heading-2"
-					b.style.minimal_width = 100
+					addGuiShowPlayerInfo(finalParentGui,button1Name,button1Text,pl,groupName,playtimePlayer)
 				end
 			end
 		end
