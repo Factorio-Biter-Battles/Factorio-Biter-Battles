@@ -276,7 +276,7 @@ local function pickPlayerGenerator(player,tableBeingLooped,frameName,questionTex
 				local groupCaptionText = ""
 				local groupName = ""
 				local playerIterated = game.get_player(pl)
-				local playtimePlayer = 0
+				local playtimePlayer = "0 minutes"
 				if global.total_time_online_players[playerIterated.name] then
 					playtimePlayer = Player_list.get_formatted_playtime_from_ticks(global.total_time_online_players[playerIterated.name])
 				end
@@ -289,7 +289,7 @@ local function pickPlayerGenerator(player,tableBeingLooped,frameName,questionTex
 							if plOfGroup ~= pl then
 								local groupNameOtherPlayer = game.get_player(plOfGroup).tag
 								if groupNameOtherPlayer ~= "" and groupName == groupNameOtherPlayer then
-									playtimePlayer = 0
+									playtimePlayer = "0 minutes"
 									local nameOtherPlayer = game.get_player(plOfGroup).name
 									if global.total_time_online_players[nameOtherPlayer] then
 										playtimePlayer = Player_list.get_formatted_playtime_from_ticks(global.total_time_online_players[nameOtherPlayer])
