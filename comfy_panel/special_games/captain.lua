@@ -236,15 +236,15 @@ local function startswith(text, prefix)
 end
 
 local function addGuiShowPlayerInfo(_finalParentGui,_button1Name,_button1Text,_pl,_groupName,_playtimePlayer)
-		createButton(_finalParentGui,_button1Name,_button1Text,_pl)
-		b = _finalParentGui.add({type = "label", caption = _groupName})
-		b.style.font_color = Color.antique_white
-		b.style.font = "heading-2"
-		b.style.minimal_width = 100
-		b = _finalParentGui.add({type = "label", caption = _playtimePlayer})
-		b.style.font_color = Color.white
-		b.style.font = "heading-2"
-		b.style.minimal_width = 100	
+	createButton(_finalParentGui,_button1Name,_button1Text,_pl)
+	b = _finalParentGui.add({type = "label", caption = _groupName})
+	b.style.font_color = Color.antique_white
+	b.style.font = "heading-2"
+	b.style.minimal_width = 100
+	b = _finalParentGui.add({type = "label", caption = _playtimePlayer})
+	b.style.font_color = Color.white
+	b.style.font = "heading-2"
+	b.style.minimal_width = 100
 end
 
 local function pickPlayerGenerator(player,tableBeingLooped,frameName,questionText,button1Text,button1Name)
