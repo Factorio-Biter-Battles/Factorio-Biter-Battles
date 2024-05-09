@@ -12,6 +12,10 @@ local function add_changelog(player, element)
 		table.insert(changelog_change, who)
 	end
 	
+	add_entry("2024-05-08", "Ragnarok77", "Captain : Add total playtime in picking up and ordered by playtime")
+	add_entry("2024-05-04", "cliff_build", "Admin option: MoveToSpawn")
+	add_entry("2024-05-04", "cliff_build", "group names: do not allow '()[]=' characters")
+	add_entry("2024-05-04", "cliff_build", "Remove 'tech-spy' function from captains games")
 	add_entry("2024-05-04", "cliff_build", "Research UI improvements")
 	add_entry("2024-05-03", "ness056", "Changes to the pathfinder settings")
 	add_entry("2024-05-03", "cliff_build", "Remove rule about overlapping flamethrower turrets")
