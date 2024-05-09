@@ -12,8 +12,6 @@ local session = {}
 local online_track = {}
 local trusted = {}
 local settings = {
-    -- local trusted_value = 2592000 -- 12h
-    trusted_value = 5184000, -- 24h
     nth_tick = 54000 --15min
 }
 local set_data = Server.set_data
@@ -37,57 +35,13 @@ Global.register(
 
 local Public = {}
 
-local try_download_data =
-    Token.register(
-    function(data)
-        local key = data.key
-        local value = data.value
-        if value then
-            session[key] = value
-            if value > settings.trusted_value then
-                trusted[key] = true
-            end
-        else
-            session[key] = 0
-            trusted[key] = false
-            set_data(session_data_set, key, session[key])
-        end
-    end
-)
-
-local try_upload_data =
-    Token.register(
-    function(data)
-        local key = data.key
-        local value = data.value
-        local player = game.get_player(key)
-        if value then
-            local old_time_ingame = value
-
-            if not online_track[key] then
-                online_track[key] = 0
-            end
-
-            local new_time = old_time_ingame + player.online_time - online_track[key]
-            if new_time <= 0 then
-                new_time = old_time_ingame + player.online_time
-                online_track[key] = 0
-                print('[ERROR] ' .. key .. ' had new time set as negative value: ' .. new_time)
-                return
-            end
-            set_data(session_data_set, key, new_time)
-            session[key] = new_time
-            online_track[key] = player.online_time
-        end
-    end
-)
-
 local nth_tick_token =
     Token.register(
     function(data)
         local player = data.player
         if player and player.valid then
 			Server.upload_time_played(player)
+			Public.autotrust_player(player.name)
         end
     end
 )
@@ -102,6 +56,14 @@ local function upload_data()
         local random_timing = count * 5
         set_timeout_in_ticks(random_timing, nth_tick_token, {player = player})
     end
+end
+
+-- Trust player automatically after a certain amount of times
+function Public.autotrust_player(playerName)
+	local playtimeRequiredForAutoTrust = 5184000 -- 24h 
+	if not trusted[playerName] and global.total_time_online_players[playerName] ~= nil and global.total_time_online_players[playerName] >= playtimeRequiredForAutoTrust then
+		trusted[playerName] = true
+	end
 end
 
 --- Prints out game.tick to real hour/minute
@@ -140,6 +102,7 @@ Event.add(
             return
         end
 		Server.set_total_time_played(player)
+		Public.autotrust_player(player.name)
     end
 )
 
