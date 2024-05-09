@@ -526,24 +526,6 @@ local function generate_captain_mode(refereeName,autoTrust,captainKick,pickingMo
 	renderText("captainLineTen","Special Captain's tournament mode enabled", {0,-16}, {1,0,0,1}, 5, "heading-1")
 	renderText("captainLineEleven","team xx vs team yy. Referee: " .. refereeName .. ". Teams on VC", {0,10}, Color.captain_versus_float, 1.5,"heading-1")
 	generateGenericRenderingCaptain()
-	rendering.draw_line{surface = game.surfaces[global.bb_surface_name], from = {-9, -2}, to = {-9,3}, color = {r = 1},draw_on_ground = true, width = 3, gap_length = 0, dash_length = 1} 
-	rendering.draw_line{surface = game.surfaces[global.bb_surface_name], from = {0, 9}, to = {0,4}, color = {r = 1},draw_on_ground = true, width = 3, gap_length = 0, dash_length = 1} 
-	rendering.draw_line{surface = game.surfaces[global.bb_surface_name], from = {0, -4}, to = {0,-9}, color = {r = 1},draw_on_ground = true, width = 3, gap_length = 0, dash_length = 1} 
-	rendering.draw_line{surface = game.surfaces[global.bb_surface_name], from = {-9, 0}, to = {-4,0}, color = {r = 1},draw_on_ground = true, width = 3, gap_length = 0, dash_length = 1} 
-	rendering.draw_line{surface = game.surfaces[global.bb_surface_name], from = {4, 0}, to = {9,0}, color = {r = 1},draw_on_ground = true, width = 3, gap_length = 0, dash_length = 1} 
-	rendering.draw_circle{surface = game.surfaces[global.bb_surface_name], target = {0, 0}, radius = 4, filled= false,draw_on_ground = true, color = {r = 1}, width = 3} 
-
-	renderText("captainLineTwelve","Speedrunners", {6,-5}, {1,1,1,1}, 2, "heading-1")
-	renderText("captainLineThirteen","BB veteran players", {-6, -5}, {1,1,1,1}, 2, "heading-1")
-	renderText("captainLineFourteen","New players", {6,5}, {1,1,1,1}, 2, "heading-1")
-	renderText("captainLineFifteen","Not veteran but not new players", {-8,5}, {1,1,1,1}, 2, "heading-1")
-	renderText("captainLineSixteen","Spectators", {-12,-1}, {1,1,1,1}, 2, "heading-1")
-
-	for i=-9,-16,-1 do
-		for k=2,-2,-1 do
-			game.surfaces[global.bb_surface_name].set_tiles({{name = "green-refined-concrete", position = {x=i,y=k}}}, true)
-		end
-	end 
 end
 
 local function are_all_players_picked()
