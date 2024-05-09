@@ -73,9 +73,7 @@ Event.add(defines.events.on_player_mined_entity, function (event)
 
 	local player = game.get_player(event.player_index)
 	if player and player.valid then
-		if Antigrief.enabled then
-			Antigrief.on_player_mined_entity(entity, player)
-		end
+		Antigrief.on_player_mined_entity(entity, player)
 		ComfyPanelScore.on_player_mined_entity(entity, player)
 		Terrain.minable_wrecks(entity, player)
 	end
