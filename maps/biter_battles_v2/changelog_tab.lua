@@ -12,6 +12,9 @@ local function add_changelog(player, element)
 		table.insert(changelog_change, who)
 	end
 	
+	add_entry("2024-05-09", "Ragnarok77", "Auto trust after 24h and code cleaning")
+	add_entry("2024-05-09", "Ragnarok77", "Captain : remove ground markers of new/not new/vet/speedrunner and spect part")
+	add_entry("2024-05-09", "developer-8", "Fix mining history is empty")
 	add_entry("2024-05-08", "Ragnarok77", "Captain : Add total playtime in picking up and ordered by playtime")
 	add_entry("2024-05-04", "cliff_build", "Admin option: MoveToSpawn")
 	add_entry("2024-05-04", "cliff_build", "group names: do not allow '()[]=' characters")
