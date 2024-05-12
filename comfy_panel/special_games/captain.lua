@@ -1021,21 +1021,22 @@ local function on_gui_click(event)
 		local playerPicked = element.name:gsub("^captain_player_picked_", "")
 		if player.gui.center["captain_poll_alternate_pick_choice_frame"] then player.gui.center["captain_poll_alternate_pick_choice_frame"].destroy() end
 		game.print(playerPicked .. " was picked by Captain " .. player.name)
+		local listPlayers = global.special_games_variables["captain_mode"]["listPlayers"]
 		local forceToGo = "north"
 		if player.name == global.special_games_variables["captain_mode"]["captainList"][2] then forceToGo = "south" end
 		switchTeamOfPlayer(playerPicked,forceToGo)
 		game.get_player(playerPicked).print("Remember to join your team channel voice on discord of free biterbattles (discord link can be found on biterbattles.org website) if possible (even if no mic, it's fine, to just listen, it's not required though but better if you do !)", Color.cyan)
-		local index={}
-		for k,v in pairs(global.special_games_variables["captain_mode"]["listPlayers"]) do
-		   index[v]=k
+		for index, name in pairs(listPlayers) do
+			if name == playerPicked then
+				table.remove(listPlayers,index)
+				break
+			end
 		end
-		local indexPlayer = index[playerPicked]
-		table.remove(global.special_games_variables["captain_mode"]["listPlayers"],indexPlayer)
-		
+
 		if are_all_players_picked() then
 			global.special_games_variables["captain_mode"]["pickingPhase"] = false
-			if #global.special_games_variables["captain_mode"]["listPlayers"] == 1 then
-				local lastPlayerToSend = game.get_player(global.special_games_variables["captain_mode"]["listPlayers"][1])
+			if #listPlayers == 1 then
+				local lastPlayerToSend = game.get_player(listPlayers[1])
 				local oppositeForce = "north"
 				local realForceNameOfCaptain = "north"
 				if player.name == global.special_games_variables["captain_mode"]["captainList"][2] then realForceNameOfCaptain = "south" end
@@ -1050,11 +1051,11 @@ local function on_gui_click(event)
 				switchTeamOfPlayer(lastPlayerToSend.name,oppositeForce)
 				lastPlayerToSend.print("Remember to join your team channel voice on discord of free biterbattles (discord link can be found on biterbattles.org website) if possible (even if no mic, it's fine, to just listen, it's not required though but better if you do !)", Color.cyan)
 				local index={}
-				for k,v in pairs(global.special_games_variables["captain_mode"]["listPlayers"]) do
+				for k,v in pairs(listPlayers) do
 				   index[v]=k
 				end
 				local indexPlayer = index[lastPlayerToSend.name]
-				table.remove(global.special_games_variables["captain_mode"]["listPlayers"],indexPlayer)
+				table.remove(listPlayers,indexPlayer)
 			end
 			if not global.special_games_variables["captain_mode"]["lateJoiners"] then
 				end_of_picking_phase()
