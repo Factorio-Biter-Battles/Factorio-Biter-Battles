@@ -132,7 +132,7 @@ local function add_science_logs(player, element)
 		end
 	end
 
-	if global.science_logs_date then
+	if global.science_logs_text then
 		for i = 1, #global.science_logs_date, 1 do
 			local real_force_name = global.science_logs_fed_team[i]
 			local custom_force_name = Functions.team_name_with_color(real_force_name);
