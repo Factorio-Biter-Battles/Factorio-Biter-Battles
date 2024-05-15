@@ -745,7 +745,7 @@ function Public.update_all_captain_player_guis()
 	if not global.special_games_variables["captain_mode"] then return end
 	for _, player in pairs(game.connected_players) do
 		if player.gui.center["captain_player_gui"] then
-			Public.draw_captain_player_gui(player)
+			Public.update_captain_player_gui(player)
 		end
 		if player.gui.center["captain_manager_gui"] then
 			Public.update_captain_manager_gui(player)
@@ -781,6 +781,9 @@ function Public.toggle_captain_referee_gui(player)
 	end
 end
 
+-- Technically we could break this up into draw_ and update_ functions, and it would be more efficient,
+-- and would move-around less for referees. But, it is annoying to do that rewrite, so I am just
+-- leaving this as-is.
 function Public.draw_captain_referee_gui(player)
 	local special = global.special_games_variables["captain_mode"]
 	if player.gui.center["captain_referee_gui"] then player.gui.center["captain_referee_gui"].destroy() end
@@ -872,42 +875,74 @@ function Public.draw_captain_player_gui(player)
 	local frame = player.gui.center.add({type = "frame", name = "captain_player_gui", caption = "Cpt Player", direction = "vertical"})
 	frame.style.maximal_width = 800
 	add_close_button(frame)
-	local special = global.special_games_variables["captain_mode"]
 
+	local prepa_flow = frame.add({type = "flow", name = "prepa_flow", direction = "vertical"})
+	prepa_flow.add({type = "label", caption = "A captains game will start soon!"})
+	local l = prepa_flow.add({type = "label", name = "want_to_play_players_list"})
+	l.style.single_line = false
+	prepa_flow.add({type = "label", name = "captain_volunteers_list"})
+	l = prepa_flow.add({type = "label", name = "remaining_players_list"})
+	l.style.single_line = false
+
+	l = frame.add({type = "label", name = "status_label"})
+	l.style.single_line = false
+	frame.add({type = "button", name = "captain_player_want_to_play", caption = "I want to play"})
+	frame.add({type = "button", name = "captain_player_want_to_be_captain", caption = "I am willing to be a captain"})
+
+	frame.add({type = "line", name = "player_table_line"})
+	local scroll = frame.add({type = "scroll-pane", name = "player_table_scroll", direction = "vertical"})
+	scroll.style.maximal_height = 600
+	Public.update_captain_player_gui(player)
+end
+
+function Public.update_captain_player_gui(player)
+	local frame = player.gui.center.captain_player_gui
+	if not frame then return end
+	local special = global.special_games_variables["captain_mode"]
+	local prepa_flow = frame.prepa_flow
+	prepa_flow.visible = special["prepaPhase"]
 	if special["prepaPhase"] then
-		frame.add({type = "label", caption = "A captains game will start soon!"})
+		local want_to_play = prepa_flow.want_to_play_players_list
+		local cpt_volunteers = prepa_flow.captain_volunteers_list
+		local rem = prepa_flow.remaining_players_list
 		if not special["initialPickingPhaseStarted"] then
-			local l = frame.add({type = "label", caption = "Players: " .. table.concat(special["listPlayers"], ", ")})
-			l.style.single_line = false
-			frame.add({type = "label", caption = "Captain volunteers: " .. table.concat(special["captainList"], ", ")})
+			want_to_play.visible = true
+			want_to_play.caption = "Players: " .. table.concat(special["listPlayers"], ", ")
+			cpt_volunteers.visible = true
+			cpt_volunteers.caption = "Captain volunteers: " .. table.concat(special["captainList"], ", ")
+			rem.visible = false
 		else
-			local l = frame.add({type = "label", caption = "Players remaining to be picked: " .. table.concat(special["listPlayers"], ", ")})
-			l.style.single_line = false
+			want_to_play.visible = false
+			cpt_volunteers.visible = false
+			rem.visible = true
+			rem.caption = "Players remaining to be picked: " .. table.concat(special["listPlayers"], ", ")
 		end
 	end
+	local want_to_play_visible = false
+	local want_to_be_captain_visible = false
+	local status_string = ""
 	if global.chosen_team[player.name] then
-		frame.add({type = "label", caption = "You are on team " .. global.chosen_team[player.name] .. ": " .. Functions.team_name_with_color(global.chosen_team[player.name])})
+		status_string = "On team " .. global.chosen_team[player.name] .. ": " .. Functions.team_name_with_color(global.chosen_team[player.name])
 	elseif not isStringInTable(special["listPlayers"], player.name) then
-		frame.add({type = "label", caption = "Currently you are just spectating the game"})
+		status_string = "Currently spectating the game"
 		-- if not in picking phase, add a button to join the game
 		if special["pickingPhase"] then
-			frame.add({type = "label", caption = "A picking phase is currently active"})
+			status_string = status_string .. "\nA picking phase is currently active."
 		else
-			frame.add({type = "button", name = "captain_player_want_to_play", caption = "I want to play"})
+			want_to_play_visible = true
 		end
 	else
 		if special["pickingPhase"] then
-			frame.add({type = "label", caption = "Currently you are waiting to be picked by a captain"})
+			status_string = "Currently waiting to be picked by a captain."
 		else
-			frame.add({type = "label", caption = "Currently you are waiting for the picking phase to start"})
+			status_string = "Currently waiting for the picking phase to start."
 		end
-		-- frame.add({type = "button", name = "captain_player_dont_want_to_play", caption = "Nevermind, I don't want to play"})
 		if special["prepaPhase"] and not special["initialPickingPhaseStarted"] then
 			if isStringInTable(special["captainList"], player.name) then
-				frame.add({type = "label", caption = "You are willing to be a captain! Thank you!"})
+				status_string = status_string .. "\nYou are willing to be a captain! Thank you!"
 			else
-				frame.add({type = "label", caption = "You are not currently willing to be captain"})
-				frame.add({type = "button", name = "captain_player_want_to_be_captain", caption = "I am willing to be a captain"})
+				status_string = status_string .. "\nYou are not currently willing to be captain."
+				want_to_be_captain_visible = true
 			end
 		end
 	end
@@ -915,81 +950,90 @@ function Public.draw_captain_player_gui(player)
 		-- waiting for next picking phase (with time remaining)
 		local ticks_until_autopick = special["nextAutoPickTicks"] - Functions.get_ticks_since_game_start()
 		if ticks_until_autopick < 0 then ticks_until_autopick = 0 end
-		frame.add({type = "label", caption = string.format("Next auto picking phase in %ds", ticks_until_autopick / 60)})
+		status_string = status_string .. string.format("\nNext auto picking phase in %ds.", ticks_until_autopick / 60)
+	end
+	frame.status_label.caption = status_string
+	if frame.captain_player_want_to_play.visible ~= want_to_play_visible then
+		frame.captain_player_want_to_play.visible = want_to_play_visible
+	end
+	if frame.captain_player_want_to_be_captain.visible ~= want_to_be_captain_visible then
+		frame.captain_player_want_to_be_captain.visible = want_to_be_captain_visible
 	end
 
-	if true or global.captains_game_include_player_table then
-		local player_info = {}
-		for player_name, force_name in pairs(global.chosen_team) do
-			local info = {
-				force = force_name,
-				status = {},
-				playtime = Public.get_total_playtime_of_player(player_name),
-				picked_at = special["playerPickedAtTicks"][player_name]
-			}
-			player_info[player_name] = info
-			local player = game.get_player(player_name)
-			local status = {}
-			if player_name == special["refereeName"] then
-				table.insert(info.status, "Referee")
-			end
-			if isStringInTable(special["captainList"], player_name) then
-				table.insert(info.status, "Captain")
-			end
-			if player and player.force.name == "spectator" then
-				table.insert(info.status, "Spectating")
-			end
-			if player and not player.connected then
-				table.insert(info.status, "Disconnected")
-			end
+	local player_info = {}
+	for player_name, force_name in pairs(global.chosen_team) do
+		local info = {
+			force = force_name,
+			status = {},
+			playtime = Public.get_total_playtime_of_player(player_name),
+			picked_at = special["playerPickedAtTicks"][player_name]
+		}
+		player_info[player_name] = info
+		local player = game.get_player(player_name)
+		local status = {}
+		if player_name == special["refereeName"] then
+			table.insert(info.status, "Referee")
 		end
-		if global.captains_add_silly_test_players_to_list then
-			local forces = {"north", "south"}
-			for i = 1, 10 do
-				status = (i % 2 == 0) and {"Spectating"} or {}
-				for index, player_name in ipairs({"alice", "bob", "charlie", "dave", "eve"}) do
-					if index % 2 == 0 then
-						table.insert(status, "Disconnected")
-					end
-					player_info[player_name .. tostring(i)] = {force = forces[index % 2 + 1], status = status, playtime = i * 60*60*10, picked_at = i * 60*60*1}
+		if isStringInTable(special["captainList"], player_name) then
+			table.insert(info.status, "Captain")
+		end
+		if player and player.force.name == "spectator" then
+			table.insert(info.status, "Spectating")
+		end
+		if player and not player.connected then
+			table.insert(info.status, "Disconnected")
+		end
+	end
+	if global.captains_add_silly_test_players_to_list then
+		local forces = {"north", "south"}
+		for i = 1, 10 do
+			status = (i % 2 == 0) and {"Spectating"} or {}
+			for index, player_name in ipairs({"alice", "bob", "charlie", "dave", "eve"}) do
+				if index % 2 == 0 then
+					table.insert(status, "Disconnected")
 				end
-			end
-			table.insert(player_info["alice1"].status, "Captain")
-			table.insert(player_info["alice1"].status, "Referee")
-		end
-		local sorted_players = {}
-		for player_name, _ in pairs(player_info) do
-			table.insert(sorted_players, player_name)
-		end
-		table.sort(sorted_players, function(a, b)
-			local info_a = player_info[a]
-			local info_b = player_info[b]
-			if info_a.force ~= info_b.force then return info_a.force == "north" end
-			if info_a.playtime ~= info_b.playtime then return info_a.playtime > info_b.playtime end
-			return a < b
-		end)
-		if #sorted_players > 0 then
-			frame.add({type = "line"})
-			local scroll = frame.add({type = "scroll-pane", name = "captain_player_scroll", direction = "vertical"})
-			scroll.style.maximal_height = 600
-			local tab = scroll.add({type = "table", name = "player_table", column_count = 5, draw_horizontal_line_after_headers = true})
-			tab.add({type = "label", caption = "Player name"})
-			tab.add({type = "label", caption = "Team"})
-			tab.add({type = "label", caption = "PickedAt"})
-			tab.add({type = "label", caption = "Playtime"})
-			tab.add({type = "label", caption = "Status"})
-			local now_tick = Functions.get_ticks_since_game_start()
-			for _, player_name in ipairs(sorted_players) do
-				local info = player_info[player_name]
-				local pick_duration = info.picked_at and (now_tick - info.picked_at) or 0
-				local playtime_frac = pick_duration > 0 and info.playtime / pick_duration or 1
-				tab.add({type = "label", caption = player_name})
-				tab.add({type = "label", caption = Functions.team_name_with_color(info.force)})
-				tab.add({type = "label", caption = info.picked_at and Functions.format_ticks_as_time(info.picked_at) or ""})
-				tab.add({type = "label", caption = string.format("%s (%d%%)", Functions.format_ticks_as_time(info.playtime), 100 * playtime_frac)})
-				tab.add({type = "label", caption = table.concat(info.status, ", ")})
+				player_info[player_name .. tostring(i)] = {force = forces[index % 2 + 1], status = status, playtime = i * 60*60*10, picked_at = i * 60*60*1}
 			end
 		end
+		table.insert(player_info["alice1"].status, "Captain")
+		table.insert(player_info["alice1"].status, "Referee")
+	end
+	local sorted_players = {}
+	for player_name, _ in pairs(player_info) do
+		table.insert(sorted_players, player_name)
+	end
+	table.sort(sorted_players, function(a, b)
+		local info_a = player_info[a]
+		local info_b = player_info[b]
+		if info_a.force ~= info_b.force then return info_a.force == "north" end
+		if info_a.playtime ~= info_b.playtime then return info_a.playtime > info_b.playtime end
+		return a < b
+	end)
+	local scroll = frame.player_table_scroll
+	if #sorted_players > 0 then
+		frame.player_table_line.visible = true
+		scroll.visible = true
+		scroll.clear()
+		local tab = scroll.add({type = "table", name = "player_table", column_count = 5, draw_horizontal_line_after_headers = true})
+		tab.add({type = "label", caption = "Player name"})
+		tab.add({type = "label", caption = "Team"})
+		tab.add({type = "label", caption = "PickedAt"})
+		tab.add({type = "label", caption = "Playtime"})
+		tab.add({type = "label", caption = "Status"})
+		local now_tick = Functions.get_ticks_since_game_start()
+		for _, player_name in ipairs(sorted_players) do
+			local info = player_info[player_name]
+			local pick_duration = info.picked_at and (now_tick - info.picked_at) or 0
+			local playtime_frac = pick_duration > 0 and info.playtime / pick_duration or 1
+			tab.add({type = "label", caption = player_name})
+			tab.add({type = "label", caption = Functions.team_name_with_color(info.force)})
+			tab.add({type = "label", caption = info.picked_at and Functions.format_ticks_as_time(info.picked_at) or ""})
+			tab.add({type = "label", caption = string.format("%s (%d%%)", Functions.format_ticks_as_time(info.playtime), 100 * playtime_frac)})
+			tab.add({type = "label", caption = table.concat(info.status, ", ")})
+		end
+	else
+		frame.player_table_line.visible = false
+		scroll.visible = false
 	end
 end
 
