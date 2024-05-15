@@ -645,7 +645,7 @@ local function add_close_button(frame)
 	local flow = frame.add({type = "flow", direction = "horizontal"})
 	flow.style.horizontal_align = "right"
 	flow.style.horizontally_stretchable = true
-	local button = flow.add({type = "sprite-button", name = "close", sprite = "utility/close_white", tooltip = "Close"})
+	local button = flow.add({type = "sprite-button", name = "captain_gui_close", sprite = "utility/close_white", tooltip = "Close"})
 	gui_style(button, {width = 38, height = 38, padding = -2})
 end
 
@@ -1215,7 +1215,7 @@ local function on_gui_click(event)
 	if not player then return end
 	local special = global.special_games_variables["captain_mode"]
 
-	if element.name == "close" then
+	if element.name == "captain_gui_close" then
 		element.parent.parent.destroy()
 	elseif element.name == "captain_player_want_to_play" then
 		insertPlayerByPlaytime(player.name)
