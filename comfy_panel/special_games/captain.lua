@@ -374,6 +374,10 @@ local function is_player_in_group_system(playerName)
 end
 
 local function generate_captain_mode(refereeName,autoTrust,captainKick,pickingMode,captainGroupAllowed,groupLimit,specialEnabled)
+	if Functions.get_ticks_since_game_start() > 0 then
+		game.print("Must start the captain event on a fresh map. Enable tournament_mode and do '/instant_map_reset current' to reset to current seed.", Color.red)
+		return
+	end
 	if captainKick == "left" then
 		captainKick = true
 	else
@@ -809,6 +813,11 @@ function Public.draw_captain_referee_gui(player)
 		button.style.font_color = Color.red
 	end
 
+	if #special["listPlayers"] > 0 and special["pickingPhase"] then
+		local button = frame.add({type = "button", name = "referee_force_picking_to_stop", caption = "Force the current round of picking to stop (only useful if changing captains)"})
+		button.style.font_color = Color.red
+	end
+
 	if special["prepaPhase"] and not special["initialPickingPhaseStarted"] then
 		frame.add({type = "label", caption = "Captain volunteers: " .. table.concat(special["captainList"], ", ")})
 		-- turn listPlayers into a map for efficiency
@@ -893,7 +902,7 @@ function Public.draw_captain_player_gui(player)
 			frame.add({type = "label", caption = "Currently you are waiting for the picking phase to start"})
 		end
 		-- frame.add({type = "button", name = "captain_player_dont_want_to_play", caption = "Nevermind, I don't want to play"})
-		if special["prepaPhase"] then
+		if special["prepaPhase"] and not special["initialPickingPhaseStarted"] then
 			if isStringInTable(special["captainList"], player.name) then
 				frame.add({type = "label", caption = "You are willing to be a captain! Thank you!"})
 			else
@@ -1070,18 +1079,21 @@ local function end_of_picking_phase()
 		game.print('[font=default-large-bold]All players were picked by captains, time to start preparation for each team ! Once your team is ready, captain, click on yes on top popup[/font]', Color.cyan)
 		for _, captain_name in pairs(global.special_games_variables["captain_mode"]["captainList"]) do
 			local captain = game.get_player(captain_name)
-			captain.print("As a captain, you can handle your team by clicking on 'Manage your team' button top of screen",{r=1,g=1,b=0})
+			captain.print("As a captain, you can handle your team by clicking on 'Cpt Captain' button top of screen",{r=1,g=1,b=0})
 			Public.draw_captain_manager_button(captain)
 			Public.draw_captain_manager_gui(captain)
 			Team_manager.custom_team_name_gui(captain, captain.force.name)
 		end
 	end
+	Public.update_all_captain_player_guis()
 end
 
 local function start_picking_phase()
 	local special = global.special_games_variables["captain_mode"]
 	special["pickingPhase"] = true
-	game.print('[font=default-large-bold]Picking phase started, captains will pick their team members[/font]', Color.cyan)
+	if special["prepaPhase"] then
+		game.print('[font=default-large-bold]Picking phase started, captains will pick their team members[/font]', Color.cyan)
+	end
 	if #special["listPlayers"] == 0 then
 		end_of_picking_phase()
 	else
@@ -1126,6 +1138,7 @@ local function start_picking_phase()
 		end
 		poll_alternate_picking(game.get_player(special["captainList"][captainChosen]))
 	end
+	Public.update_all_captain_player_guis()
 end
 
 local function check_if_right_number_of_captains(firstRun, referee)
@@ -1177,6 +1190,17 @@ local function on_gui_click(event)
 	elseif element.name == "captain_start_join_poll" then
 		if not global.special_games_variables["captain_mode"]["pickingPhase"] then
 			start_picking_phase()
+		end
+	elseif element.name == "referee_force_picking_to_stop" then
+		if special["pickingPhase"] then
+			end_of_picking_phase()
+			-- destroy any open picking UIs
+			for _, player in pairs(game.connected_players) do
+				if player.gui.center["captain_poll_alternate_pick_choice_frame"] then
+					player.gui.center["captain_poll_alternate_pick_choice_frame"].destroy()
+				end
+			end
+			game.print('[font=default-large-bold]Referee ' .. player.name .. ' has forced the picking phase to stop[/font]', Color.cyan)
 		end
 	elseif string.find(element.name, "removing_captain_in_list_") then
 		local playerPicked = element.name:gsub("^removing_captain_in_list_", "")
