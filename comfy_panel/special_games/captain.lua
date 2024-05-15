@@ -1526,8 +1526,8 @@ commands.add_command('replaceReferee', 'Admin or referee can decide to change th
 		end
 end)
 
-commands.add_command('captainDisablePicking', 'Admin or referee can decide to change the referee',
-                     function(cmd)	
+commands.add_command('captainDisablePicking', 'Convert to a normal game, disable captain event and tournament mode',
+                     function(cmd)
 	if not cmd.player_index then return end
 		local playerOfCommand = game.get_player(cmd.player_index)
 		if not playerOfCommand then return end
@@ -1540,16 +1540,16 @@ commands.add_command('captainDisablePicking', 'Admin or referee can decide to ch
 		if global.special_games_variables["captain_mode"]["refereeName"] ~= playerOfCommand.name and not playerOfCommand.admin then
 			return playerOfCommand.print("Only referee or admin have licence to use that command",Color.red)
 		end
-		
+
 		if global.special_games_variables["captain_mode"]["refereeName"] == nil then
 			return playerOfCommand.print("Something broke, no refereeName in the refereeName variable..",Color.red)
 		end
 		playerOfCommand.print("You disabled tournament mode and captain event, now players can freely join",Color.red)
-		
-		
+
 		global.active_special_games["captain_mode"] = false
 		global.tournament_mode = false
 		game.print("Players are now free to join whatever team they want (tournament mode disabled), choice made by " .. playerOfCommand.name,Color.green)
+		clear_gui_captain_mode()
 end)
 
 local function on_player_changed_force(event)
