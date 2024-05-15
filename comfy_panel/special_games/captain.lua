@@ -373,31 +373,15 @@ local function is_player_in_group_system(playerName)
 	return false
 end
 
-local function generate_captain_mode(refereeName,autoTrust,captainKick,pickingMode,captainGroupAllowed,groupLimit,specialEnabled)
+local function generate_captain_mode(refereeName, autoTrust, captainKick, pickingMode, captainGroupAllowed, groupLimit, specialEnabled)
 	if Functions.get_ticks_since_game_start() > 0 then
 		game.print("Must start the captain event on a fresh map. Enable tournament_mode and do '/instant_map_reset current' to reset to current seed.", Color.red)
 		return
 	end
-	if captainKick == "left" then
-		captainKick = true
-	else
-		captainKick = false
-	end
-	if autoTrust == "left" then
-		autoTrust = true
-	else
-		autoTrust = false
-	end
-	if pickingMode == "left" then
-		pickingMode = true
-	else
-		pickingMode = false
-	end
-	if captainGroupAllowed == "left" then
-		captainGroupAllowed = true
-	else
-		captainGroupAllowed = false
-	end
+	captainKick = captainKick == "left"
+	autoTrust = autoTrust == "left"
+	pickingMode = pickingMode == "left"
+	captainGroupAllowed = captainGroupAllowed == "left"
 
 	local auto_pick_interval_ticks = 5*60*60 -- 5 minutes
 	global.special_games_variables["captain_mode"] = {
