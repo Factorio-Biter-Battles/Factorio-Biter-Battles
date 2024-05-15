@@ -1367,7 +1367,7 @@ local function on_gui_click(event)
 				Public.draw_captain_manager_gui(player)
 				Public.draw_captain_manager_gui(player)
 			else
-				player.print(playerNameUpdateText .. "does not even exist or not even valid !", Color.red)
+				player.print(playerNameUpdateText .. " does not even exist or not even valid !", Color.red)
 			end
 		end
 	elseif element.name == "captain_remove_someone_to_throw_trustlist" then
