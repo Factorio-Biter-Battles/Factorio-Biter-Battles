@@ -52,7 +52,7 @@ local function poll_captain_player(player)
 		b.style.font = "heading-2"
 		b.style.minimal_width = 540
 		local b = frame.add({type = "button", name = "captain_no_but_play", caption = "I don't want to be captain but I want to play"})
-		b.style.font_color = Color.green
+		b.style.font_color = Color.black
 		b.style.font = "heading-2"
 		b.style.minimal_width = 540
 		local b = frame.add({type = "button", name = "captain_spectator_only", caption = "I don't want to play but only watch"})
@@ -85,7 +85,7 @@ local function poll_captain_end_captain(player)
 	if player.gui.center["captain_poll_end_frame"] then player.gui.center["captain_poll_end_frame"].destroy() return end
 	local frame = player.gui.center.add { type = "frame", caption = "End poll for players to become captain (beware, need 2 at least to continue!!)", name = "captain_poll_end_frame", direction = "vertical" }
 		local b = frame.add({type = "button", name = "captain_end_captain_choice", caption = "End the poll for players to become captain"})
-		b.style.font_color = Color.green
+		b.style.font_color = Color.black
 		b.style.font = "heading-2"
 		b.style.minimal_width = 540
 		local l = frame.add({ type = "label", caption = "-----------------------------------------------------------------"})
@@ -99,7 +99,7 @@ local function poll_captain_end_late_joiners_referee(player)
 	if player.gui.center["captain_poll_end_latejoiners_referee_frame"] then player.gui.center["captain_poll_end_latejoiners_referee_frame"].destroy() return end
 	local frame = player.gui.center.add { type = "frame", caption = "End poll for players to join late", name = "captain_poll_end_latejoiners_referee_frame", direction = "vertical" }
 		local b = frame.add({type = "button", name = "captain_end_joinlate_choice", caption = "End it"})
-		b.style.font_color = Color.green
+		b.style.font_color = Color.black
 		b.style.font = "heading-2"
 		b.style.minimal_width = 540
 		local l = frame.add({ type = "label", caption = "-----------------------------------------------------------------"})
@@ -159,7 +159,7 @@ local function createButton(frame,nameButton,captionButton, wordToPutInstead)
 	local newNameButton = nameButton:gsub("Magical1@StringHere", wordToPutInstead)
 	local newCaptionButton = captionButton:gsub("Magical1@StringHere", wordToPutInstead)
 	local b = frame.add({type = "button", name = newNameButton, caption = newCaptionButton})
-	b.style.font_color = Color.green
+	b.style.font_color = Color.black
 	b.style.font = "heading-2"
 	b.style.minimal_width = 100
 end
