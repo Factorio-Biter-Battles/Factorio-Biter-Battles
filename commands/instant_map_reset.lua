@@ -23,35 +23,27 @@ function Public.instant_map_reset(cmd, player)
 	end
 	-- Safely convert cmd.parameter to a number if given
 	local param = cmd.parameter
-	if param then
-		local new_rng_seed = tonumber(param)
-
-		-- Check if conversion was successful and the number is in the correct range
-		if new_rng_seed then
-			if new_rng_seed < 341 or new_rng_seed > 4294967294 then
-				if player ~= nil then
-					player.print("Error: Seed must be between 341 and 4294967294 (inclusive).", Color.warning)
-				end
-				return
-			else
-				global.next_map_seed = new_rng_seed
-				game.print("Restarting with map seed: " .. new_rng_seed, Color.warning)
-				Server.to_discord_bold(table.concat { "[Map Reset] " .. player.name .. " has reset the map! seed: " .. new_rng_seed })
-				global.server_restart_timer = 0
-				require "maps.biter_battles_v2.game_over".server_restart()
-			end
-		else
-			local seed = game.surfaces[global.bb_surface_name].map_gen_settings.seed
-			player.print("Error: The parameter should be a number. Current seed: " .. seed, Color.warning)
+	local next_map_seed
+	local seed_source
+	if param == "current" then
+		next_map_seed = game.surfaces[global.bb_surface_name].map_gen_settings.seed
+		seed_source = "current"
+	elseif param then
+		next_map_seed = (tonumber(param) or -1)
+		if next_map_seed == nil or next_map_seed < 341 or next_map_seed > 4294967294 then
+			player.print("Error: Seed must be between 341 and 4294967294 (inclusive).", Color.warning)
 			return
 		end
+		seed_source = "specified"
 	else
-		global.next_map_seed = global.random_generator(341, 4294967294)
-		game.print("Restarting with autopicked map seed: " .. global.next_map_seed, Color.warning)
-		Server.to_discord_bold(table.concat { "[Map Reset] " .. player.name .. " has reset the map! seed: " .. global.next_map_seed })
-		global.server_restart_timer = 0
-		require "maps.biter_battles_v2.game_over".server_restart()
+		next_map_seed = global.random_generator(341, 4294967294)
+		seed_source = "autopicked"
 	end
+	global.next_map_seed = next_map_seed
+	game.print("Restarting with " .. seed_source .. " map seed: " .. next_map_seed, Color.warning)
+	Server.to_discord_bold("[Map Reset] " .. player.name .. " has reset the map! seed: " .. next_map_seed )
+	global.server_restart_timer = 0
+	require "maps.biter_battles_v2.game_over".server_restart()
 end
 
 commands.add_command(
