@@ -289,7 +289,7 @@ local function generateGenericRenderingCaptain()
 	renderText("captainLineFive","-For admins, as spectator, use ping to talk only to spectators",
 		{-65,y}, {1,1,1,1}, 2.5, "heading-1")
 	y = y + 2
-	renderText("captainLineSix","-Teams are locked, if you want to play, ask to be moved to a team",
+	renderText("captainLineSix","-Teams are locked, if you want to play, open 'Cpt Player' window and click the button",
 		{-65,y}, {1,1,1,1}, 2.5, "heading-1")
 	y = y + 2
 	renderText("captainLineSeven","-We are using discord bb for comms (not required), feel free to join to listen, even if no mic",
@@ -556,7 +556,7 @@ local function start_captain_event()
 	renderText("captainLineSeventeen","Special Captain's tournament mode enabled", {0, -16}, {1,0,0,1}, 5, "heading-1")
 	generate_vs_text_rendering()
 	generateGenericRenderingCaptain()
-	renderText("captainLineEighteen","Want to play? Ask to join a team!", {0, -9}, {1,1,1,1}, 3, "heading-1")
+	renderText("captainLineEighteen","Want to play? Click 'Cpt Player' button at top of screen!", {0, -9}, {1,1,1,1}, 3, "heading-1")
 
 	for _, player in pairs(game.connected_players) do
 		if player.force.name == "north" or player.force.name == "south" then
