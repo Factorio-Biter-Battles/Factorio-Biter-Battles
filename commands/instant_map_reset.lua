@@ -41,7 +41,7 @@ function Public.instant_map_reset(cmd, player)
 	end
 	global.next_map_seed = next_map_seed
 	game.print("Restarting with " .. seed_source .. " map seed: " .. next_map_seed, Color.warning)
-	Server.to_discord_bold(table.concat { "[Map Reset] " .. player.name .. " has reset the map! seed: " .. next_map_seed })
+	Server.to_discord_bold("[Map Reset] " .. player.name .. " has reset the map! seed: " .. next_map_seed )
 	global.server_restart_timer = 0
 	require "maps.biter_battles_v2.game_over".server_restart()
 end
