@@ -1086,6 +1086,7 @@ local function insertPlayerByPlaytime(playerName)
 		playtime = global.total_time_online_players[playerName]
 	end
     local listPlayers = global.special_games_variables["captain_mode"]["listPlayers"]
+    if isStringInTable(listPlayers, playerName) then return end
     local insertionPosition = 1
     for i, player in ipairs(listPlayers) do
 		local playtimeOtherPlayer = 0
@@ -1209,16 +1210,18 @@ local function on_gui_click(event)
 		insertPlayerByPlaytime(player.name)
 		Public.update_all_captain_player_guis()
 	elseif element.name == "captain_player_want_to_be_captain" then
-		table.insert(special["captainList"],player.name)
-		Public.update_all_captain_player_guis()
+		if not isStringInTable(special["captainList"], player.name) then
+			table.insert(special["captainList"], player.name)
+			Public.update_all_captain_player_guis()
+		end
 	elseif element.name == "captain_end_captain_choice" then
 		-- This marks the start of a picking phase, so players can no longer volunteer to become captain or play
-		special["pickingPhase"] = true
-		special["initialPickingPhaseStarted"] = true
-
-		game.print('The referee ended the poll to get the list of captains and players playing', Color.cyan)
-
-		check_if_right_number_of_captains(true, player)
+		if not special["initialPickingPhaseStarted"] then
+			special["pickingPhase"] = true
+			special["initialPickingPhaseStarted"] = true
+			game.print('The referee ended the poll to get the list of captains and players playing', Color.cyan)
+			check_if_right_number_of_captains(true, player)
+		end
 	elseif element.name == "captain_start_join_poll" then
 		if not global.special_games_variables["captain_mode"]["pickingPhase"] then
 			start_picking_phase()
@@ -1295,9 +1298,8 @@ local function on_gui_click(event)
 			end
 		end
 	elseif string.find(element.name, "captain_is_ready") then
-		local refereeName = special["refereeName"]
-		game.print('[font=default-large-bold]Team of captain ' .. player.name .. ' is ready ![/font]', Color.cyan)
 		if not isStringInTable(special["listTeamReadyToPlay"], player.force.name) then
+			game.print('[font=default-large-bold]Team of captain ' .. player.name .. ' is ready ![/font]', Color.cyan)
 			table.insert(special["listTeamReadyToPlay"], player.force.name)
 			if #special["listTeamReadyToPlay"] >= 2 then
 				prepare_start_captain_event()
@@ -1308,8 +1310,8 @@ local function on_gui_click(event)
 		if #special["listTeamReadyToPlay"] < 2 then
 			game.print('[font=default-large-bold]Referee ' .. player.name .. ' force started the game ![/font]', Color.cyan)
 			prepare_start_captain_event()
+			Public.update_all_captain_player_guis()
 		end
-		Public.update_all_captain_player_guis()
 	elseif element.name == "captain_toggle_throw_science" then
 		if special["captainList"][2] == player.name then
 			special["southEnabledScienceThrow"] = not special["southEnabledScienceThrow"]
@@ -1336,14 +1338,12 @@ local function on_gui_click(event)
 	elseif element.name == "captain_add_someone_to_throw_trustlist" then
 		local playerNameUpdateText = player.gui.center["captain_manager_gui"]["captain_manager_root_table"]["captain_add_playerName"].text
 		if playerNameUpdateText and playerNameUpdateText ~= "" then
-		
 			local tableToUpdate = special["northThrowPlayersListAllowed"]
 			local forceForPrint = "north"
 			if player.name == special["captainList"][2] then
 				tableToUpdate = special["southThrowPlayersListAllowed"]
 				forceForPrint = "south"
 			end
-			
 			local playerToadd = game.get_player(playerNameUpdateText) 
 			if playerToadd ~= nil and playerToadd.valid then
 				if not isStringInTable(tableToUpdate, playerNameUpdateText) then
@@ -1361,7 +1361,6 @@ local function on_gui_click(event)
 	elseif element.name == "captain_remove_someone_to_throw_trustlist" then
 		local playerNameUpdateText = player.gui.center["captain_manager_gui"]["captain_manager_root_table"]["captain_remove_playerName"].text
 		if playerNameUpdateText and playerNameUpdateText ~= "" then
-		
 			local tableToUpdate = special["northThrowPlayersListAllowed"]
 			local forceForPrint = "north"
 			if player.name == special["captainList"][2] then
@@ -1388,10 +1387,10 @@ local function on_gui_click(event)
 				delete_player_from_playersList(victim.name,victim.force.name)
 				if victim.character then victim.character.die('player')	end
 				Team_manager.switch_force(victim.name,"spectator")
-		else 
+		else
 			player.print("Invalid name", Color.red)
 		end
-	end	
+	end
 end
 
 function Public.captain_is_player_prohibited_to_throw(player)
