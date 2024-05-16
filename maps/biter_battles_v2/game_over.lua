@@ -10,6 +10,7 @@ local Event = require 'utils.event'
 local Tables = require 'maps.biter_battles_v2.tables'
 local Token = require 'utils.token'
 local Task = require 'utils.task'
+local team_stats_compare = require 'maps.biter_battles_v2.team_stats_compare'
 local math_random = math.random
 local gui_style = require 'utils.utils'.gui_style
 
@@ -409,16 +410,16 @@ function Public.silo_death(event)
     if entity.name ~= "rocket-silo" then return end
     if global.bb_game_won_by_team then return end
     if entity == global.rocket_silo.south or entity == global.rocket_silo.north then
-
         -- Respawn Silo in case of friendly fire
-	if not biter_killed_the_silo(event) then
-	    respawn_silo(event)
+        if not biter_killed_the_silo(event) then
+            respawn_silo(event)
             return
         end
 
         global.bb_game_won_by_team = enemy_team_of[entity.force.name]
 
         set_victory_time()
+        team_stats_compare.game_over()
 		north_players = "NORTH PLAYERS: \\n"
 		south_players = "SOUTH PLAYERS: \\n"
 		

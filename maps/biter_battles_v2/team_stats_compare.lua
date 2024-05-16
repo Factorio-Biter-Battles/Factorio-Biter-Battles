@@ -1,0 +1,266 @@
+local gui_style = require 'utils.utils'.gui_style
+local Event = require 'utils.event'
+local Functions = require 'maps.biter_battles_v2.functions'
+local Tables = require 'maps.biter_battles_v2.tables'
+local closable_frame = require "utils.ui.closable_frame"
+local TeamStatsCollect = require 'maps.biter_battles_v2.team_stats_collect'
+local safe_wrap_with_player_print = require 'utils.utils'.safe_wrap_with_player_print
+local gui_style = require 'utils.utils'.gui_style
+local tables    = require 'maps.biter_battles_v2.tables'
+
+local TeamStatsCompare = {}
+
+local function ticks_to_hh_mm(ticks)
+    local total_minutes = math.floor(ticks / (60 * 60))
+    local total_hours = math.floor(total_minutes / 60)
+    local minutes = total_minutes - (total_hours * 60)
+    return string.format("%02d:%02d", total_hours, minutes)
+end
+
+---@param num number
+---@return string
+local function format_with_thousands_sep(num)
+    num = math.floor(num)
+    local str = tostring(num)
+    local reversed = str:reverse()
+    local formatted_reversed = reversed:gsub("(%d%d%d)", "%1,")
+    return (formatted_reversed:reverse():gsub("^,", ""))
+end
+
+---@param player LuaPlayer
+---@param stats TeamStats
+function TeamStatsCompare.show_stats(player, stats)
+    if stats == nil then
+        stats = TeamStatsCollect.compute_stats()
+    end
+    ---@type LuaGuiElement
+    local frame = player.gui.screen["teamstats_frame"]
+    if frame then
+        frame.clear()
+    else
+        frame = closable_frame.create_main_closable_frame(player, "teamstats_frame", "Team statistics")
+        gui_style(frame, { padding = 8 })
+    end
+    local scrollpanel = frame.add { type = "scroll-pane", name = "scroll_pane", direction = "vertical", horizontal_scroll_policy = "never", vertical_scroll_policy = "auto" }
+
+    ---@param force_name string
+    ---@param top_table LuaGuiElement
+    local function add_simple_force_stats(force_name, top_table)
+        --- @type ForceStats
+        local force_stats = stats.forces[force_name]
+        local team_frame = top_table.add { type = "frame", name = "summary_" .. force_name, direction = "vertical" }
+        gui_style(team_frame, { padding = 8 })
+        local team_label = team_frame.add { type = "label", caption = Functions.team_name_with_color(force_name) }
+        gui_style(team_label, { font = "heading-2" })
+        local simple_stats = {
+            {"Final evo:", string.format("%d%%", force_stats.final_evo * 100)},
+            {"Peak threat:", threat_to_pretty_string(force_stats.peak_threat or 0)},
+            {"Lowest threat:", threat_to_pretty_string(force_stats.lowest_threat or 0)},
+        }
+        if stats.ticks and stats.ticks > 0 then
+            table.insert(simple_stats, {"Average players:", string.format("%.1f [img=info]", (force_stats.player_ticks or 0) / stats.ticks), string.format("Total players: %d, Max players: %d", force_stats.total_players, force_stats.max_players)})
+        end
+        local top_simple_table = team_frame.add { type = "table", name = "top_simple_table", column_count = 2 }
+        for _, stat in ipairs(simple_stats) do
+            top_simple_table.add { type = "label", caption = stat[1] }
+            top_simple_table.add { type = "label", caption = stat[2], tooltip = stat[3] }
+        end
+    end
+    local top_centering_table = scrollpanel.add { type = "table", name = "top_centering_table", column_count = 1 }
+    top_centering_table.style.column_alignments[1] = "center"
+    local top_table = top_centering_table.add { type = "table", name = "top_table", column_count = 3, vertical_centering = true }
+    top_table.style.column_alignments[1] = "right"
+    top_table.style.column_alignments[2] = "center"
+    top_table.style.column_alignments[3] = "left"
+    add_simple_force_stats("north", top_table)
+    if true then
+        local shared_frame = top_table.add { type = "frame", name = "summary_shared", direction = "vertical" }
+        local centering_table = shared_frame.add { type = "table", name = "centering_table", column_count = 1 }
+        centering_table.style.column_alignments[1] = "center"
+        local l
+        l = centering_table.add { type = "label", caption = string.format("Difficulty: %s (%d%%)", tables.difficulties[global.difficulty_vote_index].short_name, global.difficulty_vote_value * 100) }
+        l.style.font = "default-small"
+        l = centering_table.add { type = "label", caption = string.format("Duration: %s", ticks_to_hh_mm(stats.ticks)) }
+        l.style.font = "default-small"
+        if stats.won_by_team then
+            l = centering_table.add { type = "label", caption = string.format("Winner: %s", stats.won_by_team == "north" and "North" or "South") }
+            l.style.font = "default-small"
+        end
+    end
+    add_simple_force_stats("south", top_table)
+
+    local two_table = top_centering_table.add { type = "table", name = "two_table", column_count = 2, vertical_centering = true }
+    local font = "default-small"
+    for _, force_name in ipairs({"north", "south"}) do
+        local science_flow = two_table.add { type = "flow", name = "science_flow_" .. force_name, direction = "vertical" }
+        gui_style(science_flow, { horizontal_align = "center" })
+        local cols = {
+            {""},
+            {"First [img=info]", "The time that the first item was produced."},
+            {"Produced"},
+            {"Consumed"},
+            {"Sent"},
+        }
+        local science_table = science_flow.add { type = "table", name = "science_table", column_count = #cols }
+        gui_style(science_table, { left_cell_padding = 3, right_cell_padding = 3, vertical_spacing = 0 })
+        for idx, col_info in ipairs(cols) do
+            science_table.style.column_alignments[idx] = "right"
+            local l = science_table.add { type = "label", caption = col_info[1], tooltip = col_info[2] }
+            l.style.font = font
+        end
+        local total_sent_mutagen = 0
+        for _, food in ipairs(Tables.food_long_and_short) do
+            local force_stats = stats.forces[force_name]
+            local food_stats = force_stats.food[food.long_name]
+            local l
+            l = science_table.add { type = "label", caption = string.format("[item=%s]", food.long_name) }
+            l.style.font = font
+            l = science_table.add { type = "label", caption = (food_stats.first_at and ticks_to_hh_mm(food_stats.first_at) or "") }
+            l.style.font = font
+            l = science_table.add { type = "label", caption = format_with_thousands_sep(food_stats.produced or 0) }
+            l.style.font = font
+            l = science_table.add { type = "label", caption = format_with_thousands_sep(food_stats.consumed or 0) }
+            l.style.font = font
+            l = science_table.add { type = "label", caption = food_stats.sent and format_with_thousands_sep(food_stats.sent) or "0" }
+            l.style.font = font
+            total_sent_mutagen = total_sent_mutagen + food_stats.sent * Tables.food_values[food.long_name].value
+        end
+        local l = science_flow.add { type = "label", caption = string.format("[item=space-science-pack] equivalent %d", total_sent_mutagen / Tables.food_values["space-science-pack"].value) }
+        l.style.font = font
+    end
+
+    two_table.add { type = "line" }
+    two_table.add { type = "line" }
+    for _, force_name in ipairs({"north", "south"}) do
+        local item_table = two_table.add { type = "table", name = "item_table_" .. force_name, column_count = 5 }
+        gui_style(item_table, { left_cell_padding = 3, right_cell_padding = 3, vertical_spacing = 0})
+        local cols = {
+            {""},
+            {"First [img=info]", "The time that the first item was produced."},
+            {"Produced"},
+            {"Placed [img=info]", "The highest value of (constructed-deconstructed) over time."},
+            {"Lost"},
+        }
+        for idx, col_info in ipairs(cols) do
+            item_table.style.column_alignments[idx] = "right"
+            local l = item_table.add { type = "label", caption = col_info[1], tooltip = col_info[2] }
+            l.style.font = font
+        end
+
+        for _, item_name in ipairs(TeamStatsCollect.items_to_show_summaries_of) do
+            local force_stats = stats.forces[force_name]
+            local item_stats = force_stats.items[item_name.item]
+            local l
+            l = item_table.add { type = "label", caption = string.format("[item=%s]", item_name.item) }
+            l.style.font = font
+            l = item_table.add { type = "label", caption = (item_stats.first_at and ticks_to_hh_mm(item_stats.first_at) or "") }
+            l.style.font = font
+            l = item_table.add { type = "label", caption = format_with_thousands_sep(item_stats.produced or 0) }
+            l.style.font = font
+            l = item_table.add { type = "label", caption = item_stats.placed and format_with_thousands_sep(item_stats.placed) or "" }
+            l.style.font = font
+            l = item_table.add { type = "label", caption = item_stats.lost and format_with_thousands_sep(item_stats.lost) or "" }
+            l.style.font = font
+        end
+    end
+
+    local damage_types_to_render = {}
+    local show_damage_table = false
+    for _, force_name in ipairs({"north", "south"}) do
+        local force_stats = stats.forces[force_name]
+        for damage_name, damage_info in pairs(force_stats.damage_types) do
+            if (damage_info.damage or 0) > 0 then
+                damage_types_to_render[damage_name] = true
+                show_damage_table = true
+            end
+        end
+    end
+
+    if show_damage_table then
+        two_table.add { type = "line" }
+        two_table.add { type = "line" }
+        for _, force_name in ipairs({"north", "south"}) do
+            local cols = {
+                {""},
+                {"Kills"},
+                {"Damage [img=info]", "Approximate total damage."},
+            }
+            local damage_table = two_table.add { type = "table", name = "damage_table_" .. force_name, column_count = #cols }
+            gui_style(damage_table, { left_cell_padding = 3, right_cell_padding = 3, vertical_spacing = 0})
+            for idx, col_info in ipairs(cols) do
+                if idx > 1 then
+                    damage_table.style.column_alignments[idx] = "right"
+                end
+                local l = damage_table.add { type = "label", caption = col_info[1], tooltip = col_info[2] }
+                l.style.font = font
+            end
+
+            local force_stats = stats.forces[force_name]
+            local total_kills = 0
+            local total_damage = 0
+            for _, damage_render_info in ipairs(TeamStatsCollect.damage_render_info) do
+                if damage_types_to_render[damage_render_info[1]] then
+                    local damage_info = force_stats.damage_types[damage_render_info[1]] or {}
+                    total_kills = total_kills + (damage_info.kills or 0)
+                    total_damage = total_damage + (damage_info.damage or 0)
+                    local l
+                    l = damage_table.add { type = "label", caption = damage_render_info[2], tooltip = damage_render_info[3] }
+                    l.style.font = font
+                    l = damage_table.add { type = "label", caption = format_with_thousands_sep(damage_info.kills or 0) }
+                    l.style.font = font
+                    l = damage_table.add { type = "label", caption = format_with_thousands_sep(damage_info.damage or 0) }
+                    l.style.font = font
+                end
+            end
+            local l
+            l = damage_table.add { type = "label", caption = "Total" }
+            l.style.font = font
+            l = damage_table.add { type = "label", caption = format_with_thousands_sep(total_kills) }
+            l.style.font = font
+            l = damage_table.add { type = "label", caption = format_with_thousands_sep(total_damage) }
+            l.style.font = font
+        end
+    end
+end
+
+function TeamStatsCompare.game_over()
+    for _, player in pairs(game.connected_players) do
+        safe_wrap_with_player_print(player, TeamStatsCompare.show_stats, player)
+    end
+    global.prev_game_team_stats = global.team_stats
+end
+
+commands.add_command("teamstats", "Show team stats", function (cmd)
+    if not cmd.player_index then return end
+    local player = game.get_player(cmd.player_index)
+    if not player then return end
+    local deny_reason
+    local stats
+    if cmd.parameter == "prev" then
+        stats = global.prev_game_team_stats
+        if not stats then
+            player.print("No previous game stats available.")
+            return
+        end
+    elseif cmd.parameter and cmd.parameter ~= "" then
+        player.print("Unsupported argument to /teamstats. Run either just '/teamstats' or '/teamstats prev'")
+        return
+    end
+    -- allow it always in singleplayer, or if the game is over
+    if not stats and not global.bb_game_won_by_team and game.is_multiplayer() then
+        if global.allow_teamstats == "spectators" then
+            if player.force.name ~= "spectator" then deny_reason = "spectators only" end
+        elseif global.allow_teamstats == "pure-spectators" then
+            if global.chosen_team[player.name] then deny_reason = "pure spectators only (you have joined a team)" end
+        else
+            if global.allow_teamstats ~= "always" then deny_reason = "only allowed at end of game" end
+        end
+    end
+    if deny_reason then
+        player.print("/teamstats for current game is unavailable: " .. deny_reason .. "\nYou can use '/teamstats prev' to see stats for the previous game.")
+        return
+    end
+    safe_wrap_with_player_print(player, TeamStatsCompare.show_stats, player, stats)
+end)
+
+return TeamStatsCompare

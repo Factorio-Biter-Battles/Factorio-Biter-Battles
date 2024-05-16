@@ -219,6 +219,8 @@ function Public.tables()
 	global.science_logs_text = nil
 	global.science_logs_total_north = nil
 	global.science_logs_total_south = nil
+	---@type TeamStats
+	global.team_stats = {forces = {north = {items = {}, food = {}, damage_types = {}}, south = {items = {}, food = {}, damage_types = {}}}}
 	-- Name of main BB surface within game.surfaces
 	-- We hot-swap here between 2 surfaces.
 	if global.bb_surface_name == 'bb0' then
