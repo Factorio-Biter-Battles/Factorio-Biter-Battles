@@ -183,6 +183,11 @@ function Public.maybe_set_game_start_tick(event)
 	global.bb_game_start_tick = game.ticks_played
 end
 
+function Public.set_game_start_tick()
+	if global.bb_game_start_tick then return end
+	global.bb_game_start_tick = game.ticks_played
+end
+
 function Public.biters_landfill(entity)
 	if not landfill_biters[entity.name] then return end	
 	local position = entity.position
