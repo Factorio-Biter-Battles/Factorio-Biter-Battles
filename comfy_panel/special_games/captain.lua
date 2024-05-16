@@ -874,7 +874,8 @@ function Public.draw_captain_player_gui(player)
 
 	l = frame.add({type = "label", name = "status_label"})
 	l.style.single_line = false
-	frame.add({type = "button", name = "captain_player_want_to_play", caption = "I want to play"})
+	local b = frame.add({type = "button", name = "captain_player_want_to_play", caption = "I want to play"})
+	b.style.font = "heading-1"
 	frame.add({type = "button", name = "captain_player_want_to_be_captain", caption = "I am willing to be a captain"})
 
 	frame.add({type = "line", name = "player_table_line"})
@@ -1003,10 +1004,10 @@ function Public.update_captain_player_gui(player)
 		scroll.visible = true
 		scroll.clear()
 		local tab = scroll.add({type = "table", name = "player_table", column_count = 5, draw_horizontal_line_after_headers = true})
-		tab.add({type = "label", caption = "Player name"})
+		tab.add({type = "label", caption = "Player"})
 		tab.add({type = "label", caption = "Team"})
 		tab.add({type = "label", caption = "PickedAt"})
-		tab.add({type = "label", caption = "Playtime"})
+		tab.add({type = "label", caption = "Playtime [img=info]", tooltip = "Amount of time actively on their team (fraction of time, since being picked, that the player is online and not spectating)"})
 		tab.add({type = "label", caption = "Status"})
 		local now_tick = Functions.get_ticks_since_game_start()
 		for _, player_name in ipairs(sorted_players) do
@@ -1561,6 +1562,9 @@ local function on_player_joined_game(event)
 	captain_log_start_time_player(player)
 	if global.special_games_variables["captain_mode"] then
 		Public.draw_captain_player_button(player)
+		if not global.chosen_team[player.name] then
+			Public.draw_captain_player_gui(player)
+		end
 	end
 	Public.update_all_captain_player_guis()
 end
