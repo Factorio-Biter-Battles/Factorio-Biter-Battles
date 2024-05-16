@@ -286,9 +286,6 @@ local function generateGenericRenderingCaptain()
 	renderText("captainLineFour","-Chat of spectator can only be seen by spectators for players",
 		{-65,y}, {1,1,1,1}, 2.5, "heading-1")
 	y = y + 2
-	renderText("captainLineFive","-For admins, as spectator, use ping to talk only to spectators",
-		{-65,y}, {1,1,1,1}, 2.5, "heading-1")
-	y = y + 2
 	renderText("captainLineSix","-Teams are locked, if you want to play, open 'Cpt Player' window and click the button",
 		{-65,y}, {1,1,1,1}, 2.5, "heading-1")
 	y = y + 2
