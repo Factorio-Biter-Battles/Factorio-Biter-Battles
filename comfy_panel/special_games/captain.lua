@@ -962,7 +962,6 @@ function Public.update_captain_player_gui(player)
 		}
 		player_info[player_name] = info
 		local player = game.get_player(player_name)
-		local status = {}
 		if player_name == special["refereeName"] then
 			table.insert(info.status, "Referee")
 		end
