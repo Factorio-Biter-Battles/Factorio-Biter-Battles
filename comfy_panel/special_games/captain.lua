@@ -979,7 +979,7 @@ function Public.update_captain_player_gui(player)
 	if global.captains_add_silly_test_players_to_list then
 		local forces = {"north", "south"}
 		for i = 1, 10 do
-			status = (i % 2 == 0) and {"Spectating"} or {}
+			local status = (i % 2 == 0) and {"Spectating"} or {}
 			for index, player_name in ipairs({"alice", "bob", "charlie", "dave", "eve"}) do
 				if index % 2 == 0 then
 					table.insert(status, "Disconnected")
