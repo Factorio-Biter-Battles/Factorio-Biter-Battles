@@ -734,7 +734,7 @@ function Public.update_all_captain_player_guis()
 	end
 	local referee = game.get_player(global.special_games_variables["captain_mode"]["refereeName"])
 	if referee.gui.center["captain_referee_gui"] then
-		Public.draw_captain_referee_gui(referee)
+		Public.update_captain_referee_gui(referee)
 	end
 end
 
@@ -762,14 +762,21 @@ function Public.toggle_captain_referee_gui(player)
 	end
 end
 
--- Technically we could break this up into draw_ and update_ functions, and it would be more efficient,
--- and would move-around less for referees. But, it is annoying to do that rewrite, so I am just
--- leaving this as-is.
 function Public.draw_captain_referee_gui(player)
-	local special = global.special_games_variables["captain_mode"]
 	if player.gui.center["captain_referee_gui"] then player.gui.center["captain_referee_gui"].destroy() end
 	local frame = player.gui.center.add({type = "frame", name = "captain_referee_gui", caption = "Cpt Referee", direction = "vertical"})
 	frame.style.maximal_width = 800
+	Public.update_captain_referee_gui(player)
+end
+
+function Public.update_captain_referee_gui(player)
+	local special = global.special_games_variables["captain_mode"]
+	local frame = player.gui.center.captain_referee_gui
+	if not frame then return end
+	-- Technically this would be more efficient if we didn't do the full clear here, and
+	-- instead made elements visible/invisible as needed. But this is simpler and I don't
+	-- think that performance really matters.
+	frame.clear()
 	add_close_button(frame)
 
 	-- if game hasn't started, and at least one captain isn't ready, show a button to force both captains to be ready
