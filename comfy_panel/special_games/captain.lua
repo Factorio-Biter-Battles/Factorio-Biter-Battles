@@ -385,6 +385,7 @@ local function generate_captain_mode(refereeName, autoTrust, captainKick, pickin
 		["captainList"] = {},
 		["refereeName"] = refereeName,
 		["listPlayers"] = {},
+		["kickedPlayers"] = {},
 		["listTeamReadyToPlay"] = {},
 		["prepaPhase"] = true,
 		["countdown"] = 9,
@@ -917,6 +918,8 @@ function Public.update_captain_player_gui(player)
 		-- if not in picking phase, add a button to join the game
 		if special["pickingPhase"] then
 			status_string = status_string .. "\nA picking phase is currently active."
+		elseif special["kickedPlayers"][player.name] then
+			status_string = status_string .. "\nYou were kicked from a team, talk to the Referee about joining if you want to play."
 		else
 			want_to_play_visible = true
 		end
@@ -1380,14 +1383,15 @@ local function on_gui_click(event)
 	elseif element.name == "captain_eject_player" then
 		local victim = game.get_player(player.gui.center["captain_manager_gui"]["captain_manager_root_table_two"]["captain_eject_playerName"].text)
 		if victim and victim.valid then
-				if victim.name == player.name then return player.print("You can't select yourself!", Color.red) end
-				if victim.force.name == "spectator" then return player.print('You cant use this command on a spectator.', Color.red) end
-				if victim.force.name ~=  player.force.name then return player.print('You cant use this command on a player of enemy team.', Color.red)	end
-				if not victim.connected then return player.print('You can only use this command on a connected player.', Color.red)	end
-				game.print("Captain ".. player.name .. " has decided that " .. victim.name .. " must not be in the team anymore.")
-				delete_player_from_playersList(victim.name,victim.force.name)
-				if victim.character then victim.character.die('player')	end
-				Team_manager.switch_force(victim.name,"spectator")
+			if victim.name == player.name then return player.print("You can't select yourself!", Color.red) end
+			if victim.force.name == "spectator" then return player.print('You cant use this command on a spectator.', Color.red) end
+			if victim.force.name ~=  player.force.name then return player.print('You cant use this command on a player of enemy team.', Color.red)	end
+			if not victim.connected then return player.print('You can only use this command on a connected player.', Color.red)	end
+			game.print("Captain ".. player.name .. " has decided that " .. victim.name .. " must not be in the team anymore.")
+			special["kickedPlayers"][victim.name] = true
+			delete_player_from_playersList(victim.name,victim.force.name)
+			if victim.character then victim.character.die('player')	end
+			Team_manager.switch_force(victim.name,"spectator")
 		else
 			player.print("Invalid name", Color.red)
 		end
