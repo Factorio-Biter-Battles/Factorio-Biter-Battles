@@ -800,7 +800,7 @@ function Public.update_captain_referee_gui(player)
 	l.style.single_line = false
 	frame.add({type = "label", caption = string.format("Next auto picking phase in %ds", ticks_until_autopick / 60)})
 	if #special["listPlayers"] > 0 and not special["pickingPhase"] and not special["prepaPhase"] and ticks_until_autopick > 0 then
-		local button = frame.add({type = "button", name = "captain_start_join_poll", caption = "Start poll for players to join the game (instead of waiting)", style = "red_button"})
+		local button = frame.add({type = "button", name = "captain_start_join_poll", caption = "Start poll for players to join the game (instead of waiting)"})
 	end
 
 	if #special["listPlayers"] > 0 and special["pickingPhase"] then
