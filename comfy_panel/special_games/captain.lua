@@ -119,8 +119,7 @@ end
 local function createButton(frame,nameButton,captionButton, wordToPutInstead)
 	local newNameButton = nameButton:gsub("Magical1@StringHere", wordToPutInstead)
 	local newCaptionButton = captionButton:gsub("Magical1@StringHere", wordToPutInstead)
-	local b = frame.add({type = "button", name = newNameButton, caption = newCaptionButton})
-	b.style.font_color = Color.green
+	local b = frame.add({type = "button", name = newNameButton, caption = newCaptionButton, style="green_button"})
 	b.style.font = "heading-2"
 	b.style.minimal_width = 100
 end
