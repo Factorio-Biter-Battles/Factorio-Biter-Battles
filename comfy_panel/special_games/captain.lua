@@ -116,10 +116,11 @@ local function force_end_captain_event()
 	clear_character_corpses()
 end
 
+---@param frame LuaGuiElement
 local function createButton(frame,nameButton,captionButton, wordToPutInstead)
 	local newNameButton = nameButton:gsub("Magical1@StringHere", wordToPutInstead)
 	local newCaptionButton = captionButton:gsub("Magical1@StringHere", wordToPutInstead)
-	local b = frame.add({type = "button", name = newNameButton, caption = newCaptionButton, style="green_button"})
+	local b = frame.add({type = "button", name = newNameButton, caption = newCaptionButton, style="green_button", tooltip="Click to select"})
 	b.style.font = "heading-2"
 	b.style.minimal_width = 100
 end
