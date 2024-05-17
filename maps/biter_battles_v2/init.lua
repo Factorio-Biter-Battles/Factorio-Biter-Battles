@@ -225,6 +225,7 @@ function Public.tables()
 	end
 
 	global.suspended_time = 36000
+	global.pings_to_remove = {}
 
 	---@class SuspendTargetInfo
 	---@field suspendee_player_name string

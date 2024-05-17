@@ -15,6 +15,8 @@ local Team_manager = require "maps.biter_battles_v2.team_manager"
 local Terrain = require "maps.biter_battles_v2.terrain"
 local Session = require 'utils.datastore.session_data'
 local Server = require 'utils.server'
+local Task = require 'utils.task'
+local Token = require 'utils.token'
 local Color = require 'utils.color_presets'
 local ResearchInfo = require 'maps.biter_battles_v2.research_info'
 local autoTagWestOutpost = "[West]"
@@ -81,6 +83,73 @@ local function on_research_reversed(event)
 	ResearchInfo.research_reversed(name, force)
 end
 
+local clear_pings_token = Token.register(
+	function()
+		local tick = game.tick
+		while #global.pings_to_remove > 0 do
+			local ping = global.pings_to_remove[1]
+			if ping.tick <= tick then
+				if ping.label.valid then
+					if #ping.label.parent.children == 1 then
+						ping.label.parent.destroy()
+					else
+						ping.label.destroy()
+					end
+				end
+				table.remove(global.pings_to_remove, 1)
+			else
+				break
+			end
+		end
+	end)
+
+---@param from_player_name string
+---@param to_player_name string
+---@return boolean
+local function ignore_message(from_player_name, to_player_name)
+	local ignore_list = global.ignore_lists[from_player_name]
+	return ignore_list and ignore_list[to_player_name]
+end
+
+---@param from_player_name string
+---@param to_player LuaPlayer
+---@param message string
+function do_ping(from_player_name, to_player, message)
+	local to_player_name = to_player.name
+	if ignore_message(from_player_name, to_player_name) then return end
+	if not global.want_pings[to_player_name] then return end
+	if to_player.character and to_player.character.get_health_ratio() > 0.99 then
+		to_player.character.damage(0.001, "player")
+	end
+	to_player.play_sound({path = "utility/new_objective", volume_modifier = 0.6})
+	-- to_player.surface.create_entity({name = 'big-explosion', position = to_player.position})
+	local frame = to_player.gui.screen.bb_pinged
+	if not frame then
+		frame = to_player.gui.screen.add({type = "frame", caption = "Message", name = "bb_pinged", direction = "vertical"})
+		frame.style.width = 400
+		local res = to_player.display_resolution
+		local uis = to_player.display_scale
+		frame.location = {x = res.width/2 - 200 * uis, y = 10 * uis}
+	end
+	local label = frame.add({type = "label", caption = message})
+	label.style.single_line = false
+	local remove_delay = 600
+	table.insert(global.pings_to_remove, {player = to_player, label = label, tick = game.tick + remove_delay})
+	Task.set_timeout_in_ticks(remove_delay, clear_pings_token)
+end
+
+---@param message string
+---@param from_player_name string
+---@param filter_fn fun(player: LuaPlayer): boolean
+local function possibly_do_pings(message, from_player_name, filter_fn)
+	for name, _ in pairs(Functions.extract_possible_pings(message)) do
+		local player = game.get_player(name)
+		if player and filter_fn(player) then
+			do_ping(from_player_name, player, message)
+		end
+	end
+end
+
 local function on_console_chat(event)
 	--Share chat with spectator force
 	if not event.message or not event.player_index then return end
@@ -98,8 +167,9 @@ local function on_console_chat(event)
 	end
 
 	local msg = player_name .. tag .. " (" .. player_force_name .. "): ".. event.message
+	possibly_do_pings(msg, player_name, function(ping_player) return player_force_name == ping_player.force.name end)
 	if not muted and (player_force_name == "north" or player_force_name == "south") then
-		Functions.print_message_to_players(game.forces.spectator.players,player_name,msg,color)
+		Functions.print_message_to_players(game.forces.spectator.players, player_name, msg, color, do_ping)
 	end
 
 	if global.tournament_mode then return end
@@ -114,8 +184,8 @@ local function on_console_chat(event)
 		Muted.print_muted_message(player)
 	end
 	if not muted and player_force_name == "spectator" then
-		Functions.print_message_to_players(game.forces.north.players,player_name,msg,nil)
-		Functions.print_message_to_players(game.forces.south.players,player_name,msg,nil)
+		Functions.print_message_to_players(game.forces.north.players, player_name, msg, nil, do_ping)
+		Functions.print_message_to_players(game.forces.south.players, player_name, msg, nil, do_ping)
 	end
 
 	discord_msg = discord_msg .. player_name .. " (" .. player_force_name .. "): ".. event.message
@@ -127,7 +197,7 @@ local function on_console_command(event)
     if not event.player_index then return end
     local player = game.players[event.player_index]
     local param = event.parameters
-    if cmd == "ignore" then 
+    if cmd == "ignore" then
 		-- verify in argument of command that there is no space, quote, semicolon, backtick, and that it's not just whitespace
 		if param and not string.match(param, "[ '\";`]") and not param:match("^%s*$") then 
 			if not global.ignore_lists[player.name] then
@@ -154,6 +224,16 @@ local function on_console_command(event)
 		else
 			player.print("Invalid input. Make sure the name contains no spaces, quotes, semicolons, backticks, or any spaces.", {r = 1, g = 0, b = 0})
 		end
+	elseif cmd == "w" then
+		-- split param into first word and rest of the message
+		local to_player_name, rest_of_message = string.match(param, "^%s*(%S+)%s*(.*)")
+		local to_player = game.get_player(to_player_name)
+		if to_player then
+			do_ping(player.name, to_player, player.name .. " (wisper): " .. rest_of_message)
+		end
+	elseif cmd == "s" or cmd == "shout" then
+		chatmsg = "[shout] " .. player.name .. " (" .. player.force.name .. "): " .. param
+		possibly_do_pings(chatmsg, player.name, function(ping_player) return true end)
 	end
 end
 
