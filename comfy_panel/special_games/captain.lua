@@ -116,11 +116,11 @@ local function force_end_captain_event()
 	clear_character_corpses()
 end
 
+---@param frame LuaGuiElement
 local function createButton(frame,nameButton,captionButton, wordToPutInstead)
 	local newNameButton = nameButton:gsub("Magical1@StringHere", wordToPutInstead)
 	local newCaptionButton = captionButton:gsub("Magical1@StringHere", wordToPutInstead)
-	local b = frame.add({type = "button", name = newNameButton, caption = newCaptionButton})
-	b.style.font_color = Color.green
+	local b = frame.add({type = "button", name = newNameButton, caption = newCaptionButton, style="green_button", tooltip="Click to select"})
 	b.style.font = "heading-2"
 	b.style.minimal_width = 100
 end
@@ -685,12 +685,12 @@ function Public.update_captain_manager_gui(player)
 	if special["prepaPhase"] and not isStringInTable(special["listTeamReadyToPlay"], force_name) then
 		frame.captain_is_ready.visible = true
 		frame.captain_is_ready.caption = "Team is Ready!"
-		frame.captain_is_ready.style.font_color = Color.green
+		frame.captain_is_ready.style = "green_button"
 		if game.ticks_played < global.difficulty_votes_timeout then
 			frame.diff_vote_duration.visible = true
-			frame.diff_vote_duration.caption = string.format("difficulty vote ongoing for %ds longer. Consider waiting until it is over before marking yourself as ready.", (global.difficulty_votes_timeout - game.ticks_played) / 60)
+			frame.diff_vote_duration.caption = string.format("Difficulty vote ongoing for %ds longer. Consider waiting until it is over before marking yourself as ready.", (global.difficulty_votes_timeout - game.ticks_played) / 60)
 			frame.captain_is_ready.caption = "Mark team as ready even though difficulty vote is ongoing!"
-			frame.captain_is_ready.style.font_color = Color.red
+			frame.captain_is_ready.style = "red_button"
 		end
 	end
 	local throwScienceSetting = special["northEnabledScienceThrow"]
@@ -784,8 +784,7 @@ function Public.update_captain_referee_gui(player)
 	if special["prepaPhase"] and special["initialPickingPhaseStarted"] and not special["pickingPhase"] then
 		if #special["listTeamReadyToPlay"] < 2 then
 			frame.add({type = "label", caption = "Teams ready to play: " .. table.concat(special["listTeamReadyToPlay"], ", ")})
-			local b = frame.add({type = "button", name = "captain_force_captains_ready", caption = "Force all captains to be ready"})
-			b.style.font_color = Color.red
+			local b = frame.add({type = "button", name = "captain_force_captains_ready", caption = "Force all captains to be ready", style="red_button"})
 		end
 	end
 
@@ -802,12 +801,10 @@ function Public.update_captain_referee_gui(player)
 	frame.add({type = "label", caption = string.format("Next auto picking phase in %ds", ticks_until_autopick / 60)})
 	if #special["listPlayers"] > 0 and not special["pickingPhase"] and not special["prepaPhase"] and ticks_until_autopick > 0 then
 		local button = frame.add({type = "button", name = "captain_start_join_poll", caption = "Start poll for players to join the game (instead of waiting)"})
-		button.style.font_color = Color.red
 	end
 
 	if #special["listPlayers"] > 0 and special["pickingPhase"] then
-		local button = frame.add({type = "button", name = "referee_force_picking_to_stop", caption = "Force the current round of picking to stop (only useful if changing captains)"})
-		button.style.font_color = Color.red
+		local button = frame.add({type = "button", name = "referee_force_picking_to_stop", caption = "Force the current round of picking to stop (only useful if changing captains)", style = "red_button"})
 	end
 
 	if special["prepaPhase"] and not special["initialPickingPhaseStarted"] then
@@ -826,19 +823,20 @@ function Public.update_captain_referee_gui(player)
 		table.sort(spectators)
 		frame.add({type = "label", caption = string.format("Everyone else: ", table.concat(spectators, " ,"))})
 		local caption
-		local color = Color.green
+		local button_style = "confirm_button"
 		if #special["captainList"] < 2 then
 			caption = "Cancel captains event (not enough captains)"
-			color = Color.red
+			button_style = "red_button"
 		elseif #special["captainList"] == 2 then
-			caption = "Confirm captions and start the picking phase"
+			caption = "Confirm captains and start the picking phase"
 		else
 			caption = "Select captains and start the picking phase"
 		end
-		local b = frame.add({type = "button", name = "captain_end_captain_choice", caption = caption})
-		b.style.font_color = color
+		---@type LuaGuiElement
+		local b = frame.add({type = "button", name = "captain_end_captain_choice", caption = caption, style = button_style})
 		b.style.font = "heading-2"
 		b.style.minimal_width = 540
+		b.style.horizontal_align = "center"
 	end
 
 	if special["prepaPhase"] and not special["initialPickingPhaseStarted"] then
@@ -875,9 +873,11 @@ function Public.draw_captain_player_gui(player)
 
 	l = frame.add({type = "label", name = "status_label"})
 	l.style.single_line = false
-	local b = frame.add({type = "button", name = "captain_player_want_to_play", caption = "I want to play"})
+	local b = frame.add({type = "button", name = "captain_player_want_to_play", caption = "I want to play", style = "confirm_button"})
 	b.style.font = "heading-1"
-	frame.add({type = "button", name = "captain_player_want_to_be_captain", caption = "I am willing to be a captain"})
+	b.style.horizontally_stretchable = true
+	b = frame.add({type = "button", name = "captain_player_want_to_be_captain", caption = "I am willing to be a captain", style = "green_button"})
+	b.style.horizontally_stretchable = true
 
 	frame.add({type = "line", name = "player_table_line"})
 	local scroll = frame.add({type = "scroll-pane", name = "player_table_scroll", direction = "vertical"})
