@@ -4,7 +4,8 @@ local Public = {}
 
 ---@param cmd CustomCommandData
 ---@param player LuaPlayer|nil
-function Public.instant_map_reset(cmd, player)
+function Public.instant_map_reset(cmd)
+	local player = cmd.player_index and game.get_player(cmd.player_index)
 	if player then
 		if not player.admin then
 			log("not admin player exists")
