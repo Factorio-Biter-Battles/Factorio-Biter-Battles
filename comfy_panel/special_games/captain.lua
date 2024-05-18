@@ -631,6 +631,33 @@ local function add_close_button(frame)
 	gui_style(button, {width = 38, height = 38, padding = -2})
 end
 
+-- Update the 'dropdown' GuiElement with the new items, trying to preserve the current selection (otherwise go to index 1).
+local function update_dropdown(dropdown, new_items)
+	local selected_index = dropdown.selected_index
+	if selected_index == 0 then selected_index = 1 end
+	local change_items = #dropdown.items ~= #new_items
+	if not change_items then
+		for i = 1, #new_items do
+			if new_items[i] ~= dropdown.items[i] then
+				change_items = true
+				break
+			end
+		end
+	end
+	if change_items then
+		local existing_selection = dropdown.items[selected_index]
+		selected_index = 1  -- if no match, go back to "Select Player"
+		for index, item in ipairs(new_items) do
+			if item == existing_selection then
+				selected_index = index
+				break
+			end
+		end
+		dropdown.items = new_items
+		dropdown.selected_index = selected_index
+	end
+end
+
 function Public.draw_captain_manager_gui(player)
 	if player.gui.center["captain_manager_gui"] then player.gui.center["captain_manager_gui"].destroy() end
 	local frame = player.gui.center.add({type = "frame", name = "captain_manager_gui", caption = "Cpt Captain", direction = "vertical"})
@@ -646,17 +673,17 @@ function Public.draw_captain_manager_gui(player)
 	t.add({
 		type = "button",
 		name = "captain_add_someone_to_throw_trustlist",
-		caption = "Add someone to throw trustlist",
-		tooltip = "Add someone to be able to throw science when captain disabled throwing science from his team"
+		caption = "Add to throw trustlist",
+		tooltip = "Add someone to be able to throw science when captain disabled throwing science from their team"
 	})
-	t.add({name = 'captain_add_playerName', type = "textfield", text = "ReplaceMe", numeric = false, width = 140})
+	t.add({name = 'captain_add_trustlist_playerlist', type = "drop-down", width = 140})
 	t.add({
 		type = "button",
 		name = "captain_remove_someone_to_throw_trustlist",
-		caption = "Remove someone to throw trustlist",
-		tooltip = "Remove someone to be able to throw science when captain disabled throwing science from his team"
+		caption = "Remove from throw trustlist",
+		tooltip = "Remove someone to be able to throw science when captain disabled throwing science from their team"
 	})
-	t.add({name = 'captain_remove_playerName', type = "textfield", text = "ReplaceMe", numeric = false, width = 140})
+	t.add({name = 'captain_remove_trustlist_playerlist', type = "drop-down", width = 140})
 
 	frame.add({type = "label", name = "throw_science_label"})
 
@@ -670,7 +697,7 @@ function Public.draw_captain_manager_gui(player)
 		caption = "Eject a player of your team",
 		tooltip = "If you don't want someone to be in your team anymore, use this button (used for griefers, players not listening and so on..)"
 	})
-	t2.add({name = 'captain_eject_playerName', type = "textfield", text = "ReplaceMe", numeric = false, width = 140})
+	t2.add({name = 'captain_eject_playerlist', type = "drop-down", width = 140})
 	Public.update_captain_manager_gui(player)
 end
 
@@ -710,9 +737,25 @@ function Public.update_captain_manager_gui(player)
 		tablePlayerListThrowAllowed = special["southThrowPlayersListAllowed"]
 	end
 	frame.trusted_to_throw_list_label.caption = "List of players trusted to throw : " .. table.concat(tablePlayerListThrowAllowed, ' | ')
+	local team_players = {}
+	for name, force in pairs(global.chosen_team) do
+		if force == force_name then
+			table.insert(team_players, name)
+		end
+	end
+	table.sort(team_players)
+	table.insert(team_players, 1, 'Select Player')
+	local t = frame.captain_manager_root_table
+	update_dropdown(t.captain_add_trustlist_playerlist, team_players)
+	update_dropdown(t.captain_remove_trustlist_playerlist, tablePlayerListThrowAllowed)
 	local t2 = frame.captain_manager_root_table_two
 	local allow_kick = (not special["prepaPhase"] and special["captainKick"])
 	t2.visible = allow_kick
+
+	if allow_kick then
+		local dropdown = t2.captain_eject_playerlist
+		update_dropdown(dropdown, team_players)
+	end
 end
 
 function Public.draw_captain_manager_button(player)
@@ -1198,6 +1241,12 @@ local function check_if_right_number_of_captains(firstRun, referee)
 	end
 end
 
+local function get_dropdown_value(dropdown)
+	if dropdown and dropdown.selected_index then
+		return dropdown.items[dropdown.selected_index]
+	end
+end
+
 local function on_gui_click(event)
     local element = event.element
     if not element then return end
@@ -1339,7 +1388,7 @@ local function on_gui_click(event)
 	elseif element.name == "captain_referee_toggle_button" then
 		Public.toggle_captain_referee_gui(player)
 	elseif element.name == "captain_add_someone_to_throw_trustlist" then
-		local playerNameUpdateText = player.gui.center["captain_manager_gui"]["captain_manager_root_table"]["captain_add_playerName"].text
+		local playerNameUpdateText = get_dropdown_value(player.gui.center["captain_manager_gui"]["captain_manager_root_table"]["captain_add_trustlist_playerlist"])
 		if playerNameUpdateText and playerNameUpdateText ~= "" then
 			local tableToUpdate = special["northThrowPlayersListAllowed"]
 			local forceForPrint = "north"
@@ -1362,7 +1411,7 @@ local function on_gui_click(event)
 			end
 		end
 	elseif element.name == "captain_remove_someone_to_throw_trustlist" then
-		local playerNameUpdateText = player.gui.center["captain_manager_gui"]["captain_manager_root_table"]["captain_remove_playerName"].text
+		local playerNameUpdateText = get_dropdown_value(player.gui.center["captain_manager_gui"]["captain_manager_root_table"]["captain_remove_trustlist_playerlist"])
 		if playerNameUpdateText and playerNameUpdateText ~= "" then
 			local tableToUpdate = special["northThrowPlayersListAllowed"]
 			local forceForPrint = "north"
@@ -1380,15 +1429,13 @@ local function on_gui_click(event)
 			Public.draw_captain_manager_gui(player)
 		end
 	elseif element.name == "captain_eject_player" then
-		local victim = game.get_player(player.gui.center["captain_manager_gui"]["captain_manager_root_table_two"]["captain_eject_playerName"].text)
+		local dropdown = player.gui.center["captain_manager_gui"]["captain_manager_root_table_two"]["captain_eject_playerlist"]
+		local victim = game.get_player(get_dropdown_value(dropdown))
 		if victim and victim.valid then
 			if victim.name == player.name then return player.print("You can't select yourself!", Color.red) end
-			if victim.force.name == "spectator" then return player.print('You cant use this command on a spectator.', Color.red) end
-			if victim.force.name ~=  player.force.name then return player.print('You cant use this command on a player of enemy team.', Color.red)	end
-			if not victim.connected then return player.print('You can only use this command on a connected player.', Color.red)	end
-			game.print("Captain ".. player.name .. " has decided that " .. victim.name .. " must not be in the team anymore.")
+			game.print("Captain " .. player.name .. " has decided that " .. victim.name .. " must not be in the team anymore.")
 			special["kickedPlayers"][victim.name] = true
-			delete_player_from_playersList(victim.name,victim.force.name)
+			delete_player_from_playersList(victim.name, victim.force.name)
 			if victim.character then victim.character.die('player')	end
 			Team_manager.switch_force(victim.name,"spectator")
 		else
