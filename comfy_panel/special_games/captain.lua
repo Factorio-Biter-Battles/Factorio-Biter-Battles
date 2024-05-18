@@ -300,24 +300,26 @@ local function generateGenericRenderingCaptain()
 	y = y + 2
 end
 
-local function update_bonus_picks_enemyCaptain(captainName,valueAdded)
-	if global.special_games_variables["captain_mode"]["captainGroupAllowed"] then
-		if captainName == global.special_games_variables["captain_mode"]["captainList"][1] then
-			global.special_games_variables["captain_mode"]["bonusPickCptTwo"] = global.special_games_variables["captain_mode"]["bonusPickCptTwo"] + valueAdded
+local function update_bonus_picks_enemyCaptain(captainName, valueAdded)
+	local special = global.special_games_variables["captain_mode"]
+	if special["captainGroupAllowed"] then
+		if captainName == special["captainList"][1] then
+			special["bonusPickCptTwo"] = special["bonusPickCptTwo"] + valueAdded
 		else
-			global.special_games_variables["captain_mode"]["bonusPickCptOne"] = global.special_games_variables["captain_mode"]["bonusPickCptOne"] + valueAdded
+			special["bonusPickCptOne"] = special["bonusPickCptOne"] + valueAdded
 		end
 	end
 end
 
-local function update_bonus_picks(captainName,valueAdded)
-	if global.special_games_variables["captain_mode"]["captainGroupAllowed"] then
-		if captainName == global.special_games_variables["captain_mode"]["captainList"][1] then
-			global.special_games_variables["captain_mode"]["bonusPickCptOne"] = global.special_games_variables["captain_mode"]["bonusPickCptOne"] + valueAdded
-			game.print('captain' .. captainName .. ' has now bonus picks : ' .. global.special_games_variables["captain_mode"]["bonusPickCptOne"])
+local function update_bonus_picks(captainName, valueAdded)
+	local special = global.special_games_variables["captain_mode"]
+	if special["captainGroupAllowed"] then
+		if captainName == special["captainList"][1] then
+			special["bonusPickCptOne"] = special["bonusPickCptOne"] + valueAdded
+			game.print('captain' .. captainName .. ' has now bonus picks : ' .. special["bonusPickCptOne"])
 		else
-			global.special_games_variables["captain_mode"]["bonusPickCptTwo"] = global.special_games_variables["captain_mode"]["bonusPickCptTwo"] + valueAdded
-			game.print('captain' .. captainName .. ' has now bonus picks : ' .. global.special_games_variables["captain_mode"]["bonusPickCptTwo"])
+			special["bonusPickCptTwo"] = special["bonusPickCptTwo"] + valueAdded
+			game.print('captain' .. captainName .. ' has now bonus picks : ' .. special["bonusPickCptTwo"])
 		end
 	end
 end
@@ -330,23 +332,19 @@ local function does_player_wanna_play(playerName)
 end
 
 local function auto_pick_all_of_group(cptPlayer,playerName)
-	if global.special_games_variables["captain_mode"]["captainGroupAllowed"] then
+	local special = global.special_games_variables["captain_mode"]
+	if special["captainGroupAllowed"] and not special["initialPickingPhaseFinished"] then
 		local playerChecked = game.get_player(playerName)
 		local amountPlayersSwitchedForGroup = 0
 		for _, player in pairs(game.connected_players) do
 			if global.chosen_team[player.name] == nil and player.tag == playerChecked.tag and player.force.name == "spectator" then -- only pick player without a team within the same group
 				if does_player_wanna_play(player.name) then
-					if amountPlayersSwitchedForGroup < global.special_games_variables["captain_mode"]["groupLimit"] - 1 then 
+					if amountPlayersSwitchedForGroup < special["groupLimit"] - 1 then
 						game.print(player.name .. ' was automatically picked with group system', Color.cyan)
-						switchTeamOfPlayer(player.name,playerChecked.force.name)
+						switchTeamOfPlayer(player.name, playerChecked.force.name)
 						game.get_player(player.name).print("Remember to join your team channel voice on discord of free biterbattles (discord link can be found on biterbattles.org website) if possible (even if no mic, it's fine, to just listen, it's not required though but better if you do !)", Color.cyan)
-						local index={}
-						for k,v in pairs(global.special_games_variables["captain_mode"]["listPlayers"]) do
-						   index[v]=k
-						end
-						local indexPlayer = index[player.name]
-						table.remove(global.special_games_variables["captain_mode"]["listPlayers"],indexPlayer)
-						update_bonus_picks_enemyCaptain(cptPlayer.name,1)
+						removeStringFromTable(special["listPlayers"], player.name)
+						update_bonus_picks_enemyCaptain(cptPlayer.name, 1)
 						amountPlayersSwitchedForGroup = amountPlayersSwitchedForGroup + 1
 					else
 						game.print(player.name .. ' was not picked automatically with group system, as the group limit was reached', Color.red)
@@ -391,6 +389,7 @@ local function generate_captain_mode(refereeName, autoTrust, captainKick, pickin
 		["countdown"] = 9,
 		["pickingPhase"] = false,
 		["initialPickingPhaseStarted"] = false,
+		["initialPickingPhaseFinished"] = false,
 		["nextAutoPicksFavor"] = {north = 0, south = 0},
 		["autoPickIntervalTicks"] = auto_pick_interval_ticks,
 		["nextAutoPickTicks"] = auto_pick_interval_ticks,
@@ -1152,6 +1151,10 @@ end
 local function end_of_picking_phase()
 	local special = global.special_games_variables["captain_mode"]
 	special["pickingPhase"] = false
+	special["initialPickingPhaseFinished"] = true
+	if special["captainGroupAllowed"] then
+		game.print('[font=default-large-bold]Initial Picking Phase done - group picking is now disabled[/font]', Color.cyan)
+	end
 	special["nextAutoPickTicks"] = Functions.get_ticks_since_game_start() + special["autoPickIntervalTicks"]
 	if special["prepaPhase"] then
 		allow_vote()
