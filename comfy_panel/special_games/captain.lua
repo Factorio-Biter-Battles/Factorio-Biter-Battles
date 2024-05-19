@@ -915,7 +915,7 @@ function Public.draw_captain_player_gui(player)
 
 	l = frame.add({type = "label", name = "status_label"})
 	l.style.single_line = false
-	local b = frame.add({type = "button", name = "captain_player_want_to_play", caption = "I want to play", style = "confirm_button"})
+	local b = frame.add({type = "button", name = "captain_player_want_to_play", caption = "I want to play and am willing to play on either team!", style = "confirm_button"})
 	b.style.font = "heading-1"
 	b.style.horizontally_stretchable = true
 	b = frame.add({type = "button", name = "captain_player_want_to_be_captain", caption = "I am willing to be a captain", style = "green_button"})
@@ -950,33 +950,30 @@ function Public.update_captain_player_gui(player)
 			rem.caption = "Players remaining to be picked: " .. table.concat(special["listPlayers"], ", ")
 		end
 	end
-	local want_to_play_visible = false
-	local want_to_be_captain_visible = false
-	local status_string = ""
+	frame.captain_player_want_to_play.visible = false
+	frame.captain_player_want_to_be_captain.visible = false
+	local waiting_to_be_picked = isStringInTable(special["listPlayers"], player.name)
+	local status_strings = {}
 	if global.chosen_team[player.name] then
-		status_string = "On team " .. global.chosen_team[player.name] .. ": " .. Functions.team_name_with_color(global.chosen_team[player.name])
-	elseif not isStringInTable(special["listPlayers"], player.name) then
-		status_string = "Currently spectating the game"
-		-- if not in picking phase, add a button to join the game
-		if special["pickingPhase"] then
-			status_string = status_string .. "\nA picking phase is currently active."
-		elseif special["kickedPlayers"][player.name] then
-			status_string = status_string .. "\nYou were kicked from a team, talk to the Referee about joining if you want to play."
-		else
-			want_to_play_visible = true
-		end
-	else
-		if special["pickingPhase"] then
-			status_string = "Currently waiting to be picked by a captain."
-		else
-			status_string = "Currently waiting for the picking phase to start."
-		end
+		table.insert(status_strings, "On team " .. global.chosen_team[player.name] .. ": " .. Functions.team_name_with_color(global.chosen_team[player.name]))
+	elseif special["kickedPlayers"][player.name] then
+		table.insert(status_strings, "You were kicked from a team, talk to the Referee about joining if you want to play.")
+	elseif special["pickingPhase"] and waiting_to_be_picked then
+		table.insert(status_strings, "Currently waiting to be picked by a captain.")
+	elseif special["pickingPhase"] then
+		table.insert(status_strings, "A picking phase is currently active.")
+	end
+	if not global.chosen_team[player.name] and not special["pickingPhase"] and not special["kickedPlayers"][player.name] then
+		frame.captain_player_want_to_play.visible = true
+		frame.captain_player_want_to_play.enabled = not waiting_to_be_picked
 		if special["prepaPhase"] and not special["initialPickingPhaseStarted"] then
+			frame.captain_player_want_to_be_captain.visible = true
 			if isStringInTable(special["captainList"], player.name) then
-				status_string = status_string .. "\nYou are willing to be a captain! Thank you!"
+				table.insert(status_strings, "You are willing to be a captain! Thank you!")
+				frame.captain_player_want_to_be_captain.enabled = false
 			else
-				status_string = status_string .. "\nYou are not currently willing to be captain."
-				want_to_be_captain_visible = true
+				table.insert(status_strings, "You are not currently willing to be captain.")
+				frame.captain_player_want_to_be_captain.enabled = waiting_to_be_picked
 			end
 		end
 	end
@@ -984,15 +981,9 @@ function Public.update_captain_player_gui(player)
 		-- waiting for next picking phase (with time remaining)
 		local ticks_until_autopick = special["nextAutoPickTicks"] - Functions.get_ticks_since_game_start()
 		if ticks_until_autopick < 0 then ticks_until_autopick = 0 end
-		status_string = status_string .. string.format("\nNext auto picking phase in %ds.", ticks_until_autopick / 60)
+		table.insert(status_strings, string.format("Next auto picking phase in %ds.", ticks_until_autopick / 60))
 	end
-	frame.status_label.caption = status_string
-	if frame.captain_player_want_to_play.visible ~= want_to_play_visible then
-		frame.captain_player_want_to_play.visible = want_to_play_visible
-	end
-	if frame.captain_player_want_to_be_captain.visible ~= want_to_be_captain_visible then
-		frame.captain_player_want_to_be_captain.visible = want_to_be_captain_visible
-	end
+	frame.status_label.caption = table.concat(status_strings, "\n")
 
 	local player_info = {}
 	for player_name, force_name in pairs(global.chosen_team) do
