@@ -72,7 +72,6 @@ local function clear_gui_captain_mode()
 			"captain_player_toggle_button",
 		}
 		local center_guis = {
-			"captain_poll_chosen_choice_frame",
 			"captain_poll_firstpicker_choice_frame",
 			"captain_poll_alternate_pick_choice_frame",
 			"bb_captain_countdown",
@@ -169,12 +168,6 @@ local function get_bonus_picks_amount(captainName)
 	else
 		return 0
 	end
-end
-
-local function poll_removing_captain(player)
-	pollGenerator(player,false,global.special_games_variables["captain_mode"]["captainList"],
-	"captain_poll_chosen_choice_frame","Who should be removed from captain list (popup until 2 captains remains)?",
-	"The player Magical1@StringHere wont be a captain","removing_captain_in_list_Magical1@StringHere",nil,nil,nil,nil)
 end
 
 local function startswith(text, prefix)
@@ -866,19 +859,17 @@ function Public.update_captain_referee_gui(player)
 		frame.add({type = "label", caption = string.format("Everyone else: ", table.concat(spectators, " ,"))})
 		local caption
 		local button_style = "confirm_button"
-		if #special["captainList"] < 2 then
-			caption = "Cancel captains event (not enough captains)"
-			button_style = "red_button"
-		elseif #special["captainList"] == 2 then
-			caption = "Confirm captains and start the picking phase"
-		else
-			caption = "Select captains and start the picking phase"
-		end
 		---@type LuaGuiElement
-		local b = frame.add({type = "button", name = "captain_end_captain_choice", caption = caption, style = button_style})
+		local b = frame.add({type = "button", name = "captain_force_end_event", caption = "Cancel captains event", style = "red_button"})
+		b.style.font = "heading-2"
+		b = frame.add({type = "button", name = "captain_end_captain_choice", caption = "Confirm captains and start the picking phase", style = "confirm_button", enabled = #special["captainList"] == 2})
 		b.style.font = "heading-2"
 		b.style.minimal_width = 540
 		b.style.horizontal_align = "center"
+		for index, captain in ipairs(special["captainList"]) do
+			b = frame.add({type = "button", name = "captain_remove_captain_" .. tostring(index), caption = "Remove " .. captain .. " as a captain", style = "red_button", tags = {captain = captain}})
+			b.style.font = "heading-2"
+		end
 	end
 
 	if special["prepaPhase"] and not special["initialPickingPhaseStarted"] then
@@ -1216,9 +1207,7 @@ end
 
 local function check_if_right_number_of_captains(firstRun, referee)
 	if #global.special_games_variables["captain_mode"]["captainList"] < 2 then
-		game.print('[font=default-large-bold]Not enough captains, event canceled..[/font]', Color.cyan)
-		force_end_captain_event()
-		return
+		referee.print('Not enough captains! Ask people to volunteer!', Color.cyan)
 	elseif #global.special_games_variables["captain_mode"]["captainList"] == 2 then
 		for index, force_name in ipairs({"north", "south"}) do
 			local captainName = global.special_games_variables["captain_mode"]["captainList"][index]
@@ -1228,10 +1217,7 @@ local function check_if_right_number_of_captains(firstRun, referee)
 		end
 		start_picking_phase()
 	else
-		if firstRun then
-			game.print('As there are too many players wanting to be captain, referee will pick who will be the 2 captains', Color.cyan)
-		end
-		poll_removing_captain(referee)
+		referee.print('Too many captains! Remove some first!', Color.cyan)
 	end
 end
 
@@ -1260,6 +1246,8 @@ local function on_gui_click(event)
 			table.insert(special["captainList"], player.name)
 			Public.update_all_captain_player_guis()
 		end
+	elseif element.name == "captain_force_end_event" then
+		force_end_captain_event()
 	elseif element.name == "captain_end_captain_choice" then
 		-- This marks the start of a picking phase, so players can no longer volunteer to become captain or play
 		if not special["initialPickingPhaseStarted"] then
@@ -1268,6 +1256,10 @@ local function on_gui_click(event)
 			game.print('The referee ended the poll to get the list of captains and players playing', Color.cyan)
 			check_if_right_number_of_captains(true, player)
 		end
+	elseif string.find(element.name, "captain_remove_captain_") == 1 then
+		local captain = element.tags.captain
+		removeStringFromTable(special["captainList"], captain)
+		Public.update_all_captain_player_guis()
 	elseif element.name == "captain_start_join_poll" then
 		if not global.special_games_variables["captain_mode"]["pickingPhase"] then
 			start_picking_phase()
@@ -1283,12 +1275,6 @@ local function on_gui_click(event)
 			end
 			game.print('[font=default-large-bold]Referee ' .. player.name .. ' has forced the picking phase to stop[/font]', Color.cyan)
 		end
-	elseif string.find(element.name, "removing_captain_in_list_") then
-		local playerPicked = element.name:gsub("^removing_captain_in_list_", "")
-		removeStringFromTable(special["captainList"], playerPicked)
-		player.gui.center["captain_poll_chosen_choice_frame"].destroy()
-		game.print('[font=default-large-bold]' .. playerPicked .. ' was removed in the captains list[/font]', Color.cyan)
-		check_if_right_number_of_captains(false, player)
 	elseif element.name == "captain_pick_one_in_list_choice" or
 			element.name == "captain_pick_second_in_list_choice" or
 			element.name == "captain_pick_random_in_list_choice" then
@@ -1309,7 +1295,7 @@ local function on_gui_click(event)
 		else
 			poll_alternate_picking(game.get_player(special["captainList"][captainChosen]))
 		end
-	elseif string.find(element.name, "captain_player_picked_") then
+	elseif string.find(element.name, "captain_player_picked_") == 1 then
 		local playerPicked = element.name:gsub("^captain_player_picked_", "")
 		if player.gui.center["captain_poll_alternate_pick_choice_frame"] then player.gui.center["captain_poll_alternate_pick_choice_frame"].destroy() end
 		game.print(playerPicked .. " was picked by Captain " .. player.name)
