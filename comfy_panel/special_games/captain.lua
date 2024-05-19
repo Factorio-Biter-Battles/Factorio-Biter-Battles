@@ -992,11 +992,10 @@ function Public.update_captain_player_gui(player)
 		if isStringInTable(special["captainList"], player_name) then
 			table.insert(info.status, "Captain")
 		end
-		if player and player.force.name == "spectator" then
-			table.insert(info.status, "Spectating")
-		end
 		if player and not player.connected then
 			table.insert(info.status, "Disconnected")
+		elseif player and player.force.name == "spectator" then
+			table.insert(info.status, "Spectating")
 		end
 	end
 	if global.captains_add_silly_test_players_to_list then
