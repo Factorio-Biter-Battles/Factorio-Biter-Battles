@@ -47,7 +47,6 @@ local function on_gui_click(event)
 	if not element.valid then return end
 
 	if Functions.map_intro_click(player, element) then return end
-	if ResearchInfo.research_info_click(player, element) then return end
 	Team_manager.gui_click(event)
 end
 
