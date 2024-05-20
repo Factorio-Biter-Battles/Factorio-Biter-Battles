@@ -478,5 +478,7 @@ Event.add(defines.events.on_robot_built_tile, on_robot_built_tile)
 Event.add(defines.events.on_tick, on_tick)
 Event.on_init(on_init)
 
+require 'utils.ui.gui-lite'.handle_events()
+
 commands.add_command('clear-corpses', 'Clears all the biter corpses..',
 		     clear_corpses)

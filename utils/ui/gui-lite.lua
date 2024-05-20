@@ -1,10 +1,6 @@
 --- factoriolib/flib@b0899998563322c1ed87ff4515c86adee481d21a gui-lite.lua
 --- See FLIB_LICENSE for license information.
 
-if ... ~= "__flib__.gui-lite" then
-  return require("__flib__.gui-lite")
-end
-
 --- Utilities for building GUIs and handling GUI events.
 --- ```lua
 --- local flib_gui = require("__flib__.gui-lite")
@@ -46,6 +42,7 @@ function flib_gui.add(parent, def, elems)
       local handler = def.handler
       local style_mods = def.style_mods
       local drag_target = def.drag_target
+      local extra = def.extra
       -- If children were defined in the array portion, remove and collect them
       local has_array_children = false
       if def[1] then
@@ -64,6 +61,7 @@ function flib_gui.add(parent, def, elems)
       def.handler = nil
       def.style_mods = nil
       def.drag_target = nil
+      def.extra = nil
 
       local elem = parent.add(def)
 
@@ -90,6 +88,13 @@ function flib_gui.add(parent, def, elems)
         end
         elem.drag_target = target
       end
+      -- begin modification
+      if extra then
+        for key, value in pairs(extra) do
+          elem[key] = value
+        end
+      end
+      -- end modification
       if handler then
         local out
         if type(handler) == "table" then
@@ -120,6 +125,7 @@ function flib_gui.add(parent, def, elems)
       def.handler = handler
       def.style_mods = style_mods
       def.drag_target = drag_target
+      def.extra = extra
     elseif def.tab and def.content then
       local _, tab = flib_gui.add(parent, def.tab, elems)
       local _, content = flib_gui.add(parent, def.content, elems)
@@ -162,7 +168,7 @@ end
 --- @return boolean handled True if an event handler was called.
 function flib_gui.dispatch(e)
   local elem = e.element
-  if not elem then
+  if not (elem and elem.valid) then
     return false
   end
   local tags = elem.tags --[[@as Tags]]
@@ -193,12 +199,12 @@ for name, id in pairs(defines.events) do
   end
 end
 
+-- Modified to use `Event.add` instead of skipping all the event handlers
+local Event = require 'utils.event'
 --- Handle all GUI events with `flib_gui.dispatch`. Will not overwrite any existing event handlers.
 function flib_gui.handle_events()
   for id in pairs(flib_gui.events) do
-    if not script.get_event_handler(id) then
-      script.on_event(id, flib_gui.dispatch)
-    end
+    Event.add(id, flib_gui.dispatch)
   end
 end
 
@@ -251,6 +257,7 @@ end
 --- @field children GuiElemDef[]? Children to add to this element.
 --- @field tab GuiElemDef? To add a tab, specify `tab` and `content` and leave all other fields unset.
 --- @field content GuiElemDef? To add a tab, specify `tab` and `content` and leave all other fields unset.
+--- @field extra table [**NOT VANILLA FLIB**] Additional attributes to set on the element.
 
 --- A handler function to invoke when receiving GUI events for this element.
 --- @alias GuiElemHandler fun(e: GuiEventData)
