@@ -224,12 +224,21 @@ local function on_console_command(event)
 		else
 			player.print("Invalid input. Make sure the name contains no spaces, quotes, semicolons, backticks, or any spaces.", {r = 1, g = 0, b = 0})
 		end
-	elseif cmd == "w" then
+	elseif cmd == "w" or cmd == "wisper" then
 		-- split param into first word and rest of the message
 		local to_player_name, rest_of_message = string.match(param, "^%s*(%S+)%s*(.*)")
 		local to_player = game.get_player(to_player_name)
 		if to_player then
 			do_ping(player.name, to_player, player.name .. " (wisper): " .. rest_of_message)
+			global.reply_target[to_player_name] = player.name
+		end
+	elseif cmd == "r" or cmd == "reply" then
+		local to_player_name = global.reply_target[player.name]
+		if to_player_name then
+			local to_player = game.get_player(to_player_name)
+			if to_player then
+				do_ping(player.name, to_player, player.name .. " (wisper): " .. param)
+			end
 		end
 	elseif cmd == "s" or cmd == "shout" then
 		chatmsg = "[shout] " .. player.name .. " (" .. player.force.name .. "): " .. param
