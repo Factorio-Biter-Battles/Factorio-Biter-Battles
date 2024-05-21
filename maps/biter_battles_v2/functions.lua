@@ -398,11 +398,12 @@ end
 ---@param colorChosen Color?
 ---@param ping_fn fun(from_player_name: string, to_player: LuaPlayer, message: string)
 function Functions.print_message_to_players(forcePlayerList, playerNameSendingMessage, msgToPrint, colorChosen, ping_fn)
+	local possible_pings = Functions.extract_possible_pings(msgToPrint)
 	for _, playerOfForce in pairs(forcePlayerList) do
 		if playerOfForce.connected then
 			local player_name = playerOfForce.name
 			if global.ignore_lists[player_name] == nil or not global.ignore_lists[player_name][playerNameSendingMessage] then
-				if ping_fn then ping_fn(playerNameSendingMessage, playerOfForce, msgToPrint) end
+				if ping_fn and possible_pings[player_name] then ping_fn(playerNameSendingMessage, playerOfForce, msgToPrint) end
 				if colorChosen == nil then
 					playerOfForce.print(msgToPrint)
 				else
