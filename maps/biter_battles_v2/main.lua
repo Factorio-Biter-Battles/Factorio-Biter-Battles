@@ -224,7 +224,7 @@ local function on_console_command(event)
 		else
 			player.print("Invalid input. Make sure the name contains no spaces, quotes, semicolons, backticks, or any spaces.", {r = 1, g = 0, b = 0})
 		end
-	elseif cmd == "w" or cmd == "wisper" then
+	elseif cmd == "w" or cmd == "whisper" then
 		-- split param into first word and rest of the message
 		local to_player_name, rest_of_message = string.match(param, "^%s*(%S+)%s*(.*)")
 		local to_player = game.get_player(to_player_name)
