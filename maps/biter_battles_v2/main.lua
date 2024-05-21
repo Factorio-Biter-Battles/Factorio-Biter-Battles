@@ -121,7 +121,7 @@ function do_ping(from_player_name, to_player, message)
 	if to_player.character and to_player.character.get_health_ratio() > 0.99 then
 		to_player.character.damage(0.001, "player")
 	end
-	to_player.play_sound({path = "utility/new_objective", volume_modifier = 0.6})
+	-- to_player.play_sound({path = "utility/new_objective", volume_modifier = 0.6})
 	-- to_player.surface.create_entity({name = 'big-explosion', position = to_player.position})
 	local frame = to_player.gui.screen.bb_pinged
 	if not frame then
