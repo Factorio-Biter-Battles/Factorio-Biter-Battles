@@ -279,7 +279,7 @@ local function generateGenericRenderingCaptain()
 	renderText("captainLineFour","-Chat of spectator can only be seen by spectators for players",
 		{-65,y}, {1,1,1,1}, 2.5, "heading-1")
 	y = y + 2
-	renderText("captainLineSix","-Teams are locked, if you want to play, open 'Cpt Player' window and click the button",
+	renderText("captainLineSix","-Teams are locked, if you want to play, click 'Join Info' at top of screen",
 		{-65,y}, {1,1,1,1}, 2.5, "heading-1")
 	y = y + 2
 	renderText("captainLineSeven","-We are using discord bb for comms (not required), feel free to join to listen, even if no mic",
@@ -530,7 +530,7 @@ local function start_captain_event()
 	renderText("captainLineSeventeen","Special Captain's tournament mode enabled", {0, -16}, {1,0,0,1}, 5, "heading-1")
 	generate_vs_text_rendering()
 	generateGenericRenderingCaptain()
-	renderText("captainLineEighteen","Want to play? Click 'Cpt Player' button at top of screen!", {0, -9}, {1,1,1,1}, 3, "heading-1")
+	renderText("captainLineEighteen","Want to play? Click 'Join Info' button at top of screen!", {0, -9}, {1,1,1,1}, 3, "heading-1")
 
 	for _, player in pairs(game.connected_players) do
 		if player.force.name == "north" or player.force.name == "south" then
@@ -857,12 +857,10 @@ function Public.update_captain_referee_gui(player)
 		end
 		table.sort(spectators)
 		frame.add({type = "label", caption = string.format("Everyone else: ", table.concat(spectators, " ,"))})
-		local caption
-		local button_style = "confirm_button"
 		---@type LuaGuiElement
 		local b = frame.add({type = "button", name = "captain_force_end_event", caption = "Cancel captains event", style = "red_button"})
 		b.style.font = "heading-2"
-		b = frame.add({type = "button", name = "captain_end_captain_choice", caption = "Confirm captains and start the picking phase", style = "confirm_button", enabled = #special["captainList"] == 2})
+		b = frame.add({type = "button", name = "captain_end_captain_choice", caption = "Confirm captains and start the picking phase", style = "confirm_button", enabled = #special["captainList"] == 2, tooltip = "People can add themselves to the first round of picking right up until you press this button"})
 		b.style.font = "heading-2"
 		b.style.minimal_width = 540
 		b.style.horizontal_align = "center"
@@ -892,7 +890,7 @@ end
 
 function Public.draw_captain_player_gui(player)
 	if player.gui.center["captain_player_gui"] then player.gui.center["captain_player_gui"].destroy() end
-	local frame = player.gui.center.add({type = "frame", name = "captain_player_gui", caption = "Cpt Player", direction = "vertical"})
+	local frame = player.gui.center.add({type = "frame", name = "captain_player_gui", caption = "Join Info", direction = "vertical"})
 	frame.style.maximal_width = 800
 	add_close_button(frame)
 
@@ -906,10 +904,10 @@ function Public.draw_captain_player_gui(player)
 
 	l = frame.add({type = "label", name = "status_label"})
 	l.style.single_line = false
-	local b = frame.add({type = "button", name = "captain_player_want_to_play", caption = "I want to play and am willing to play on either team!", style = "confirm_button"})
+	local b = frame.add({type = "button", name = "captain_player_want_to_play", caption = "I want to play and am willing to play on either team!", style = "confirm_button", tooltip = "Yay"})
 	b.style.font = "heading-1"
 	b.style.horizontally_stretchable = true
-	b = frame.add({type = "button", name = "captain_player_want_to_be_captain", caption = "I am willing to be a captain", style = "green_button"})
+	b = frame.add({type = "button", name = "captain_player_want_to_be_captain", caption = "I am willing to be a captain", style = "green_button", tooltip = "The community needs you"})
 	b.style.horizontally_stretchable = true
 
 	frame.add({type = "line", name = "player_table_line"})
@@ -952,7 +950,7 @@ function Public.update_captain_player_gui(player)
 	elseif special["pickingPhase"] and waiting_to_be_picked then
 		table.insert(status_strings, "Currently waiting to be picked by a captain.")
 	elseif special["pickingPhase"] then
-		table.insert(status_strings, "A picking phase is currently active.")
+		table.insert(status_strings, "A picking phase is currently active, wait until it is done before you can indicate that you want to play.")
 	end
 	if not global.chosen_team[player.name] and not special["pickingPhase"] and not special["kickedPlayers"][player.name] then
 		frame.captain_player_want_to_play.visible = true
@@ -1053,7 +1051,7 @@ end
 
 function Public.draw_captain_player_button(player)
 	if player.gui.top["captain_player_toggle_button"] then player.gui.top["captain_player_toggle_button"].destroy() end
-	local button = player.gui.top.add({type = "sprite-button", name = "captain_player_toggle_button", caption = "Cpt Player"})
+	local button = player.gui.top.add({type = "sprite-button", name = "captain_player_toggle_button", caption = "Join Info"})
 	button.style.font = "heading-2"
 	button.style.font_color = {r = 0.88, g = 0.55, b = 0.11}
 	gui_style(button, {width = 114, height = 38, padding = -2})
@@ -1132,9 +1130,11 @@ end
 local function end_of_picking_phase()
 	local special = global.special_games_variables["captain_mode"]
 	special["pickingPhase"] = false
-	special["initialPickingPhaseFinished"] = true
-	if special["captainGroupAllowed"] then
-		game.print('[font=default-large-bold]Initial Picking Phase done - group picking is now disabled[/font]', Color.cyan)
+	if not special["initialPickingPhaseFinished"] then
+		special["initialPickingPhaseFinished"] = true
+		if special["captainGroupAllowed"] then
+			game.print('[font=default-large-bold]Initial Picking Phase done - group picking is now disabled[/font]', Color.cyan)
+		end
 	end
 	special["nextAutoPickTicks"] = Functions.get_ticks_since_game_start() + special["autoPickIntervalTicks"]
 	if special["prepaPhase"] then
