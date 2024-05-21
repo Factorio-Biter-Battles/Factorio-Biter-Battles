@@ -389,7 +389,7 @@ local build_config_gui = (function(player, frame)
         switch_state,
         'comfy_panel_want_pings_switch',
         'Ping on @' .. player.name,
-        'Causes you to be clearly pinged on chat messages containing @' .. player.name
+        'Causes you to be clearly pinged on whispers and chat messages containing @' .. player.name
     )
 
     scroll_pane.add({type = 'line'})
