@@ -106,6 +106,7 @@ local functions = {
             global.want_pings[player.name] = true
         else
             global.want_pings[player.name] = nil
+            global.ping_gui_locations[player.name] = nil
         end
     end,
     ['comfy_panel_auto_hotbar_switch'] = function(event)
@@ -715,6 +716,7 @@ local function on_init()
     global.comfy_panel_config.poll_trusted = false
     global.comfy_panel_disable_antigrief = false
     global.want_pings = {}
+    global.ping_gui_locations = {}
 end
 
 comfy_panel_tabs['Config'] = {gui = build_config_gui, admin = false}

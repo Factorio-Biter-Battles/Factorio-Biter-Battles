@@ -91,6 +91,7 @@ local clear_pings_token = Token.register(
 			if ping.tick <= tick then
 				if ping.label.valid then
 					if #ping.label.parent.children == 1 then
+						ping.label.gui.screen["ping_header"].destroy()
 						ping.label.parent.destroy()
 					else
 						ping.label.destroy()
@@ -123,19 +124,54 @@ function do_ping(from_player_name, to_player, message)
 	end
 	-- to_player.play_sound({path = "utility/new_objective", volume_modifier = 0.6})
 	-- to_player.surface.create_entity({name = 'big-explosion', position = to_player.position})
-	local frame = to_player.gui.screen.bb_pinged
-	if not frame then
-		frame = to_player.gui.screen.add({type = "frame", caption = "Message", name = "bb_pinged", direction = "vertical"})
-		frame.style.width = 400
-		local res = to_player.display_resolution
-		local uis = to_player.display_scale
-		frame.location = {x = res.width/2 - 200 * uis, y = 10 * uis}
+	local ping_header = to_player.gui.screen["ping_header"]
+	if not ping_header then
+		ping_header = to_player.gui.screen.add({type = "frame", caption = "Message", name = "ping_header", direction = "vertical"})
+		ping_header.style.width = 105
+		ping_header.style.height = 38
+
+		local line = ping_header.add({type="line"})
+		line.style.width = 400
+		line.style.right_margin = -400
+		line.style.left_margin = -12
+		line.style.top_margin = -5
+
+		if global.ping_gui_locations[to_player.name] then
+			ping_header.location = global.ping_gui_locations[to_player.name]
+		else
+			local res = to_player.display_resolution
+			local uis = to_player.display_scale
+			ping_header.location = {x = res.width/2 - 200 * uis, y = 100 * uis}
+		end
 	end
-	local label = frame.add({type = "label", caption = message})
+
+	local ping_messages = to_player.gui.screen["ping_messages"]
+	if not ping_messages then
+		ping_messages = to_player.gui.screen.add({type = "flow", name = "ping_messages", direction = "vertical"})
+		ping_messages.style.width = 400
+		ping_messages.location = {x = ping_header.location.x, y = ping_header.location.y + 42}
+	end
+
+	local label = ping_messages.add({type = "label", caption = message})
 	label.style.single_line = false
+	label.style.font = "default-large-semibold"
+
 	local remove_delay = 600
 	table.insert(global.pings_to_remove, {player = to_player, label = label, tick = game.tick + remove_delay})
 	Task.set_timeout_in_ticks(remove_delay, clear_pings_token)
+end
+
+
+local function on_gui_location_changed(event)
+	local element = event.element
+	if not element.valid then return end
+	if element.name == "ping_header" then
+		local player = game.get_player(event.player_index)
+		if not player then return end
+		global.ping_gui_locations[player.name] = element.location
+
+		player.gui.screen["ping_messages"].location = {x = element.location.x, y = element.location.y + 42}
+	end
 end
 
 ---@param message string
@@ -556,6 +592,7 @@ Event.add(defines.events.on_console_command, on_console_command)
 Event.add(defines.events.on_entity_died, on_entity_died)
 Event.add(defines.events.on_ai_command_completed, on_ai_command_completed)
 Event.add(defines.events.on_gui_click, on_gui_click)
+Event.add(defines.events.on_gui_location_changed, on_gui_location_changed)
 Event.add(defines.events.on_marked_for_deconstruction, on_marked_for_deconstruction)
 Event.add(defines.events.on_player_built_tile, on_player_built_tile)
 Event.add(defines.events.on_player_joined_game, on_player_joined_game)
