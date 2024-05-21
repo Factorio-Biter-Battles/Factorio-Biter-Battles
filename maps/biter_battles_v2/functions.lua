@@ -172,10 +172,10 @@ for x = spawn_r * -1, spawn_r, 0.5 do
 end
 local size_of_spawn_positions = #spawn_positions
 
-local Public = {}
+local Functions = {}
 
 ---@param event EventData.on_player_mined_entity|EventData.on_pre_player_crafted_item|EventData.on_player_mined_item
-function Public.maybe_set_game_start_tick(event)
+function Functions.maybe_set_game_start_tick(event)
 	if global.bb_game_start_tick then return end
 	if not event.player_index then return end
 	local player = game.players[event.player_index]
@@ -183,12 +183,12 @@ function Public.maybe_set_game_start_tick(event)
 	global.bb_game_start_tick = game.ticks_played
 end
 
-function Public.set_game_start_tick()
+function Functions.set_game_start_tick()
 	if global.bb_game_start_tick then return end
 	global.bb_game_start_tick = game.ticks_played
 end
 
-function Public.biters_landfill(entity)
+function Functions.biters_landfill(entity)
 	if not landfill_biters[entity.name] then return end	
 	local position = entity.position
 	if math_abs(position.y) < 8 then return true end
@@ -213,7 +213,7 @@ function Public.biters_landfill(entity)
 	return true
 end
 
-function Public.combat_balance(event)
+function Functions.combat_balance(event)
 	local research_name = event.research.name
 	local force_name = event.research.force.name		
 	local key
@@ -226,7 +226,7 @@ function Public.combat_balance(event)
 	end
 end
 
-function Public.init_player(player)
+function Functions.init_player(player)
 	if not player.connected then
 		if player.force.index ~= 1 then
 			player.force = game.forces.player
@@ -254,7 +254,7 @@ function Public.init_player(player)
 	game.permissions.get_group("spectator").add_player(player)
 end
 
-function Public.get_noise(name, pos)
+function Functions.get_noise(name, pos)
 	local seed = game.surfaces[global.bb_surface_name].map_gen_settings.seed
 	local noise_seed_add = 25000
 	if name == 1 then
@@ -281,21 +281,21 @@ function Public.get_noise(name, pos)
 	end
 end
 
-function Public.is_biter_area(position,noise_Enabled)
+function Functions.is_biter_area(position,noise_Enabled)
 	local bitera_area_distance = bb_config.bitera_area_distance * -1
 	local biter_area_angle = 0.45
 	local a = bitera_area_distance - (math_abs(position.x) * biter_area_angle)
 	if position.y - 70 > a then return false end
 	if position.y + 70 < a then return true end	
 	if noise_Enabled then
-		if position.y + (Public.get_noise(3, position) * 64) > a then return false end
+		if position.y + (Functions.get_noise(3, position) * 64) > a then return false end
 	else
 		if position.y > a then return false end
 	end
 	return true
 end
 
-function Public.no_turret_creep(event)
+function Functions.no_turret_creep(event)
 	local entity = event.created_entity
 	if not entity.valid then return end
 	if not no_turret_blacklist[event.created_entity.type] then return end
@@ -303,7 +303,7 @@ function Public.no_turret_creep(event)
 	local posEntity = entity.position
 	if posEntity.y > 0 then posEntity.y = (posEntity.y + 100) * -1 end
 	if posEntity.y < 0 then posEntity.y = posEntity.y - 100 end
-	if not Public.is_biter_area(posEntity,false) then
+	if not Functions.is_biter_area(posEntity,false) then
 		return
 	end
 	
@@ -339,7 +339,7 @@ function Public.no_turret_creep(event)
 	entity.destroy()
 end
 
-function Public.no_landfill_by_untrusted_user(event, trusted_table)
+function Functions.no_landfill_by_untrusted_user(event, trusted_table)
 	local entity = event.created_entity
 	if not entity.valid or not event.player_index or entity.name ~= "tile-ghost" or entity.ghost_name ~= "landfill" then return end
 	local player = game.players[event.player_index]
@@ -352,13 +352,13 @@ end
 
 --- Returns the number of ticks since the game started, or 0 if it has not started.
 --- @return integer
-function Public.get_ticks_since_game_start()
+function Functions.get_ticks_since_game_start()
 	local start_tick = global.bb_game_start_tick
 	if not start_tick then return 0 end
 	return game.ticks_played - start_tick
 end
 
-function Public.team_name(force_name)
+function Functions.team_name(force_name)
 	local name = global.tm_custom_name[force_name]
 	if name == nil then
 		if force_name == "north" then
@@ -370,8 +370,8 @@ function Public.team_name(force_name)
 	return name or force_name
 end
 
-function Public.team_name_with_color(force_name)
-	local name = Public.team_name(force_name)
+function Functions.team_name_with_color(force_name)
+	local name = Functions.team_name(force_name)
 	if force_name == "north" then
 		return "[color=120, 120, 255]" .. name .. "[/color]"
 	elseif force_name == "south" then
@@ -381,10 +381,29 @@ function Public.team_name_with_color(force_name)
 	end
 end
 
-function Public.print_message_to_players(forcePlayerList, playerNameSendingMessage, msgToPrint, colorChosen)
+-- Returns every possible player name that follows "@" or "@ " in the message
+--- @param message string
+--- @return table<string, boolean>
+function Functions.extract_possible_pings(message)
+	local possible_pings = {}
+	for name in string.gmatch(message, "@%s?([a-zA-Z0-9_-]+)") do
+		possible_pings[name] = true
+	end
+	return possible_pings
+end
+
+---@param forcePlayerList LuaPlayer[]
+---@param playerNameSendingMessage string
+---@param msgToPrint string
+---@param colorChosen Color?
+---@param ping_fn fun(from_player_name: string, to_player: LuaPlayer, message: string)
+function Functions.print_message_to_players(forcePlayerList, playerNameSendingMessage, msgToPrint, colorChosen, ping_fn)
+	local possible_pings = Functions.extract_possible_pings(msgToPrint)
 	for _, playerOfForce in pairs(forcePlayerList) do
 		if playerOfForce.connected then
-			if global.ignore_lists[playerOfForce.name] == nil or (global.ignore_lists[playerOfForce.name] and not global.ignore_lists[playerOfForce.name][playerNameSendingMessage]) then
+			local player_name = playerOfForce.name
+			if global.ignore_lists[player_name] == nil or not global.ignore_lists[player_name][playerNameSendingMessage] then
+				if ping_fn and possible_pings[player_name] then ping_fn(playerNameSendingMessage, playerOfForce, msgToPrint) end
 				if colorChosen == nil then
 					playerOfForce.print(msgToPrint)
 				else
@@ -395,7 +414,7 @@ function Public.print_message_to_players(forcePlayerList, playerNameSendingMessa
 	end
 end
 
-function Public.spy_fish(player, event)
+function Functions.spy_fish(player, event)
 	local button = event.button
 	local shift = event.shift
 	if not player.character then return end
@@ -445,7 +464,7 @@ function Public.spy_fish(player, event)
 	end
 end
 
-function Public.create_map_intro_button(player)
+function Functions.create_map_intro_button(player)
 	if player.gui.top["map_intro_button"] then return end
 	local b = player.gui.top.add({type = "sprite-button", caption = "?", name = "map_intro_button", tooltip = "Map Info"})
 	b.style.font_color = {r=0.5, g=0.3, b=0.99}
@@ -453,7 +472,7 @@ function Public.create_map_intro_button(player)
 	gui_style(b, {width = 38, height = 38, padding = -2})
 end
 
-function Public.show_intro(player)
+function Functions.show_intro(player)
 	if player.gui.center["map_intro_frame"] then player.gui.center["map_intro_frame"].destroy() end
 	local frame = player.gui.center.add {type = "frame", name = "map_intro_frame", direction = "vertical"}
 	local frame = frame.add {type = "frame"}
@@ -462,7 +481,7 @@ function Public.show_intro(player)
 	l.style.font_color = {r=255, g=255, b=255}
 end
 
-function Public.map_intro_click(player, element)
+function Functions.map_intro_click(player, element)
 	if element.name == "close_map_intro_frame" then player.gui.center["map_intro_frame"].destroy() return true end	
 	if element.name == "biter_battles_map_intro" then player.gui.center["map_intro_frame"].destroy() return true end	
 	if element.name == "map_intro_button" then
@@ -470,13 +489,13 @@ function Public.map_intro_click(player, element)
 			player.gui.center["map_intro_frame"].destroy()
 			return true
 		else
-			Public.show_intro(player)
+			Functions.show_intro(player)
 			return true
 		end
 	end	
 end
 
-function Public.format_ticks_as_time(ticks)
+function Functions.format_ticks_as_time(ticks)
 	local seconds = ticks / 60
 	local hours = math.floor(seconds / 3600)
 	seconds = seconds % 3600
@@ -485,4 +504,4 @@ function Public.format_ticks_as_time(ticks)
 	return string.format("%d:%02d:%02d", hours, minutes, seconds)
 end
 
-return Public
+return Functions

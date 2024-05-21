@@ -124,6 +124,7 @@ function Public.initial_setup()
 	global.bb_draw_revive_count_text = false
 	global.bb_show_research_info = "always" -- "always", "spec", nil
 	global.ignore_lists = {}
+	global.reply_target = {}
 	global.bb_settings = {
 		--TEAM SETTINGS--
 		["team_balancing"] = true,			--Should players only be able to join a team that has less or equal members than the opposing team?
@@ -225,6 +226,7 @@ function Public.tables()
 	end
 
 	global.suspended_time = 36000
+	global.pings_to_remove = {}
 
 	---@class SuspendTargetInfo
 	---@field suspendee_player_name string
