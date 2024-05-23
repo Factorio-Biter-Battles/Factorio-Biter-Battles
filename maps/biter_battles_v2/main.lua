@@ -107,8 +107,8 @@ local clear_pings_token = Token.register(
 ---@param to_player_name string
 ---@return boolean
 local function ignore_message(from_player_name, to_player_name)
-	local ignore_list = global.ignore_lists[from_player_name]
-	return ignore_list and ignore_list[to_player_name]
+	local ignore_list = global.ignore_lists[to_player_name]
+	return ignore_list and ignore_list[from_player_name]
 end
 
 ---@param from_player_name string
