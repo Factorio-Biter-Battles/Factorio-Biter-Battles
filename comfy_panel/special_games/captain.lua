@@ -923,52 +923,54 @@ function Public.update_captain_referee_gui(player)
 			gui_style(button, {width = 40, padding = -2})
 		end
 	end
-	scroll.add({type = "switch", name = "captain_balanced_random_teams_mode", switch_state = special["balancedRandomTeamsMode"] and "left" or "right", left_label_caption = "Balanced random teams", right_label_caption = "Traditional picking"})
-	if special["balancedRandomTeamsMode"] then
-		-- add a label
-		l = scroll.add({type = "label", caption = "Move players into buckets of approximately equal team benefit/skill. Left click a player to move them to a 'better' bucket, right click to move them to a 'worse' bucket. Do not worry too much about accuracy, as players will be randomly assigned to teams as well. There is no harm in having many buckets or few buckets."})
-		l.style.single_line = false
-		scroll.add({type = "line"})
-		scroll.add({type = "label", caption = "Best"})
-		scroll.add({type = "line"})
-		for i = 1, #special["playerBuckets"] do
-			local bucket = special["playerBuckets"][i]
-			local players = {}
-			for _, player in pairs(bucket) do
-				table.insert(players, player)
-			end
-			table.sort(players)
-			local flow = scroll.add({type = "flow", direction = "horizontal"})
-			for _, player in pairs(players) do
-				if #flow.children >= 6 then
-					flow = scroll.add({type = "flow", direction = "horizontal"})
-				end
-				local b = flow.add({type = "button", name = "captain_bucket_player_" .. player, caption = player, tags = {bucket = i, player = player}})
-				b.style.minimal_width = 40
-			end
+	if not special["initialPickingPhaseStarted"] then
+		scroll.add({type = "switch", name = "captain_balanced_random_teams_mode", switch_state = special["balancedRandomTeamsMode"] and "left" or "right", left_label_caption = "Balanced random teams", right_label_caption = "Traditional picking"})
+		if special["balancedRandomTeamsMode"] then
+			-- add a label
+			l = scroll.add({type = "label", caption = "Move players into buckets of approximately equal team benefit/skill. Left click a player to move them to a 'better' bucket, right click to move them to a 'worse' bucket. Do not worry too much about accuracy, as players will be randomly assigned to teams as well. There is no harm in having many buckets or few buckets."})
+			l.style.single_line = false
 			scroll.add({type = "line"})
-		end
-		scroll.add({type = "label", caption = "Worst"})
-		scroll.add({type = "line"})
-		scroll.add({type = "switch", name = "captain_peek_at_assigned_teams", switch_state = special["peekAtRandomTeams"] and "left" or "right", left_label_caption = "Peek", right_label_caption = "No Peeking"})
-		local flow = scroll.add({type = "flow", direction = "horizontal"})
-		flow.add({type = "label", caption = "Random seed: " .. special["teamAssignmentSeed"]})
-		local button = flow.add({type = "button", name = "captain_change_assignment_seed", caption = "Change seed"})
-		if special["peekAtRandomTeams"] then
-			local forced_assignments = {}
-			for team, captain in ipairs(special["captainList"]) do
-				if not global.chosen_team[captain] then
-					forced_assignments[captain] = team
+			scroll.add({type = "label", caption = "Best"})
+			scroll.add({type = "line"})
+			for i = 1, #special["playerBuckets"] do
+				local bucket = special["playerBuckets"][i]
+				local players = {}
+				for _, player in pairs(bucket) do
+					table.insert(players, player)
 				end
+				table.sort(players)
+				local flow = scroll.add({type = "flow", direction = "horizontal"})
+				for _, player in pairs(players) do
+					if #flow.children >= 6 then
+						flow = scroll.add({type = "flow", direction = "horizontal"})
+					end
+					local b = flow.add({type = "button", name = "captain_bucket_player_" .. player, caption = player, tags = {bucket = i, player = player}})
+					b.style.minimal_width = 40
+				end
+				scroll.add({type = "line"})
 			end
-			local groups = generate_groups(special["listPlayers"])
-			local result = CaptainRandomPick.assign_teams_from_buckets(special["playerBuckets"], forced_assignments, groups, special["teamAssignmentSeed"])
-			-- horizontal flow
+			scroll.add({type = "label", caption = "Worst"})
+			scroll.add({type = "line"})
+			scroll.add({type = "switch", name = "captain_peek_at_assigned_teams", switch_state = special["peekAtRandomTeams"] and "left" or "right", left_label_caption = "Peek", right_label_caption = "No Peeking"})
 			local flow = scroll.add({type = "flow", direction = "horizontal"})
-			for i, team in ipairs(result) do
-				local l = flow.add({type = "label", caption = Functions.team_name_with_color(i == 1 and "north" or "south") .. "\n" .. table.concat(team, "\n")})
-				l.style.minimal_width = 220
-				l.style.single_line = false
+			flow.add({type = "label", caption = "Random seed: " .. special["teamAssignmentSeed"]})
+			local button = flow.add({type = "button", name = "captain_change_assignment_seed", caption = "Change seed"})
+			if special["peekAtRandomTeams"] then
+				local forced_assignments = {}
+				for team, captain in ipairs(special["captainList"]) do
+					if not global.chosen_team[captain] then
+						forced_assignments[captain] = team
+					end
+				end
+				local groups = generate_groups(special["listPlayers"])
+				local result = CaptainRandomPick.assign_teams_from_buckets(special["playerBuckets"], forced_assignments, groups, special["teamAssignmentSeed"])
+				-- horizontal flow
+				local flow = scroll.add({type = "flow", direction = "horizontal"})
+				for i, team in ipairs(result) do
+					local l = flow.add({type = "label", caption = Functions.team_name_with_color(i == 1 and "north" or "south") .. "\n" .. table.concat(team, "\n")})
+					l.style.minimal_width = 220
+					l.style.single_line = false
+				end
 			end
 		end
 	end
@@ -1222,7 +1224,7 @@ local function insertPlayerByPlaytime(playerName)
         end
     end
     table.insert(listPlayers, insertionPosition, playerName)
-	if special["balancedRandomTeamsMode"] then
+	if special["balancedRandomTeamsMode"] and not special["initialPickingPhaseStarted"] then
 		local playerBuckets = special["playerBuckets"]
 		table.insert(playerBuckets[#playerBuckets], playerName)
 	end
@@ -1256,7 +1258,11 @@ end
 
 local function start_picking_phase()
 	local special = global.special_games_variables["captain_mode"]
-	if special["balancedRandomTeamsMode"] then
+	local is_initial_picking_phase = not special["initialPickingPhaseStarted"]
+	special["pickingPhase"] = true
+	special["initialPickingPhaseStarted"] = true
+	if special["balancedRandomTeamsMode"] and is_initial_picking_phase then
+		special["initialPickingPhaseStarted"] = true
 		local groups = generate_groups(special["listPlayers"])
 		local forced_assignments = {}
 		for team = 1, 2 do
@@ -1274,7 +1280,6 @@ local function start_picking_phase()
 		end_of_picking_phase()
 		return
 	end
-	special["pickingPhase"] = true
 	if special["prepaPhase"] then
 		game.print('[font=default-large-bold]Picking phase started, captains will pick their team members[/font]', Color.cyan)
 	end
@@ -1430,8 +1435,6 @@ local function on_gui_click(event)
 	elseif element.name == "captain_end_captain_choice" then
 		-- This marks the start of a picking phase, so players can no longer volunteer to become captain or play
 		if not special["initialPickingPhaseStarted"] then
-			special["pickingPhase"] = true
-			special["initialPickingPhaseStarted"] = true
 			game.print('The referee ended the poll to get the list of captains and players playing', Color.cyan)
 			check_if_right_number_of_captains(true, player)
 		end
@@ -1453,26 +1456,6 @@ local function on_gui_click(event)
 				end
 			end
 			game.print('[font=default-large-bold]Referee ' .. player.name .. ' has forced the picking phase to stop[/font]', Color.cyan)
-		end
-	elseif element.name == "captain_pick_one_in_list_choice" or
-			element.name == "captain_pick_second_in_list_choice" or
-			element.name == "captain_pick_random_in_list_choice" then
-		local captainChosen
-		local chooser = "The referee"
-		if element.name == "captain_pick_one_in_list_choice" then
-			captainChosen = 1
-		elseif element.name == "captain_pick_second_in_list_choice" then
-			captainChosen = 2
-		elseif element.name == "captain_pick_random_in_list_choice" then
-			captainChosen = math_random(1, 2)
-			chooser = "Fortune"
-		end
-		game.print(chooser .. " has chosen that " .. special["captainList"][captainChosen] .. " will pick first", Color.cyan)
-		cpt_get_player(special["refereeName"]).gui.center["captain_poll_firstpicker_choice_frame"].destroy()
-		if #special["listPlayers"] == 0 then
-			end_of_picking_phase()
-		else
-			poll_alternate_picking(cpt_get_player(special["captainList"][captainChosen]))
 		end
 	elseif string.find(element.name, "captain_player_picked_") == 1 then
 		local playerPicked = element.name:gsub("^captain_player_picked_", "")
