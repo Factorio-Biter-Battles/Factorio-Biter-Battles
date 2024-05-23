@@ -167,10 +167,12 @@ function Public.calc_send_command(params, difficulty_vote_value, bb_evolution, m
 	end
 	if error_msg == nil and #foods == 0 and player ~= nil then
 		local i = player.get_main_inventory()
-		for food_type, _ in pairs(Tables.food_values) do
-			local flask_amount = i.get_item_count(food_type)
-			if flask_amount > 0 then
-				foods[food_type] = flask_amount
+		if i then
+			for food_type, _ in pairs(Tables.food_values) do
+				local flask_amount = i.get_item_count(food_type)
+				if flask_amount > 0 then
+					foods[food_type] = flask_amount
+				end
 			end
 		end
 	end
