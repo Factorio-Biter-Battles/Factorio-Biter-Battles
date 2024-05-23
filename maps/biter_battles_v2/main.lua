@@ -137,7 +137,10 @@ function do_ping(from_player_name, to_player, message)
 		line.style.top_margin = -5
 
 		if global.ping_gui_locations[to_player.name] then
-			ping_header.location = global.ping_gui_locations[to_player.name]
+			local saved_location = global.ping_gui_locations[to_player.name]
+			saved_location.x = math.min(saved_location.x, to_player.display_resolution.width - 200 * uis)
+			saved_location.y = math.min(saved_location.y, to_player.display_resolution.height - 100 * uis)
+			ping_header.location = saved_location
 		else
 			local res = to_player.display_resolution
 			local uis = to_player.display_scale
