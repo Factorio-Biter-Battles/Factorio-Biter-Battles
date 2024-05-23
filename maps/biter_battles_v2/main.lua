@@ -269,7 +269,7 @@ local function on_console_command(event)
 		local to_player_name, rest_of_message = string.match(param, "^%s*(%S+)%s*(.*)")
 		local to_player = game.get_player(to_player_name)
 		if to_player then
-			do_ping(player.name, to_player, player.name .. " (wisper): " .. rest_of_message)
+			do_ping(player.name, to_player, player.name .. " (whisper): " .. rest_of_message)
 			global.reply_target[to_player_name] = player.name
 		end
 	elseif cmd == "r" or cmd == "reply" then
@@ -277,7 +277,7 @@ local function on_console_command(event)
 		if to_player_name then
 			local to_player = game.get_player(to_player_name)
 			if to_player then
-				do_ping(player.name, to_player, player.name .. " (wisper): " .. param)
+				do_ping(player.name, to_player, player.name .. " (whisper): " .. param)
 			end
 		end
 	elseif cmd == "s" or cmd == "shout" then
