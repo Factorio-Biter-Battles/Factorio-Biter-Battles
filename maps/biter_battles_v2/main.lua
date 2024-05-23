@@ -117,7 +117,7 @@ end
 function do_ping(from_player_name, to_player, message)
 	local to_player_name = to_player.name
 	if ignore_message(from_player_name, to_player_name) then return end
-	if not global.want_pings[to_player_name] then return end
+	if not player_wants_pings(to_player_name) then return end
 	if to_player.character and to_player.character.get_health_ratio() > 0.99 then
 		to_player.character.damage(0.001, "player")
 	end
