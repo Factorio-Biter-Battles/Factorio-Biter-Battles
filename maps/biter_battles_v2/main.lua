@@ -124,9 +124,10 @@ function do_ping(from_player_name, to_player, message)
 	-- to_player.play_sound({path = "utility/new_objective", volume_modifier = 0.6})
 	-- to_player.surface.create_entity({name = 'big-explosion', position = to_player.position})
 	local ping_header = to_player.gui.screen["ping_header"]
+	local uis = to_player.display_scale
 	if not ping_header then
 		ping_header = to_player.gui.screen.add({type = "frame", caption = "Message", name = "ping_header", direction = "vertical"})
-		ping_header.style.width = 105
+		ping_header.style.width = 110
 		ping_header.style.height = 38
 
 		local line = ping_header.add({type="line"})
@@ -148,7 +149,8 @@ function do_ping(from_player_name, to_player, message)
 	if not ping_messages then
 		ping_messages = to_player.gui.screen.add({type = "flow", name = "ping_messages", direction = "vertical"})
 		ping_messages.style.width = 400
-		ping_messages.location = {x = ping_header.location.x, y = ping_header.location.y + 42}
+		ping_messages.style.left_padding = 10
+		ping_messages.location = {x = ping_header.location.x, y = ping_header.location.y + 42 * uis}
 	end
 
 	local label = ping_messages.add({type = "label", caption = message})
@@ -169,7 +171,7 @@ local function on_gui_location_changed(event)
 		if not player then return end
 		global.ping_gui_locations[player.name] = element.location
 
-		player.gui.screen["ping_messages"].location = {x = element.location.x, y = element.location.y + 42}
+		player.gui.screen["ping_messages"].location = {x = element.location.x, y = element.location.y + 42 * player.display_scale}
 	end
 end
 
