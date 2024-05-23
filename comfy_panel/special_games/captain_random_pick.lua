@@ -44,6 +44,39 @@ end
 function CaptainRandomPick.assign_teams_from_buckets(buckets_in, forced_assignments, groups, seed)
 	--log("buckets_in: " .. serpent.line(buckets_in) .. " forced_assignments: " .. serpent.line(forced_assignments) .. " groups: " .. serpent.line(groups) .. " seed: " .. seed)
 	local buckets = table.deepcopy(buckets_in)
+	local rnd = game.create_random_generator(seed)
+	local valid_players = {}
+	for _, bucket in ipairs(buckets) do
+		for _, player in ipairs(bucket) do
+			valid_players[player] = true
+		end
+	end
+
+	local player_to_group_name = {}
+	for group_name, group in pairs(groups) do
+		local forced_team
+		for i = #group, 1, -1 do
+			if not valid_players[group[i]] then
+				table.remove(group, i)
+			elseif forced_assignments[group[i]] then
+				local new_forced_team = forced_assignments[group[i]]
+				if forced_team and forced_team ~= new_forced_team then
+					-- Two players in same group are forced to different teams, remove someone from the team
+					table.remove(group, i)
+				else
+					forced_team = new_forced_team
+				end
+			end
+		end
+		if #group == 0 then
+			groups[group_name] = nil
+		end
+		for _, player in ipairs(group) do
+			if valid_players[player] then
+				player_to_group_name[player] = group_name
+			end
+		end
+	end
 
 	local groups_remaining = {}
 	for group_name, _ in pairs(groups) do
@@ -51,14 +84,6 @@ function CaptainRandomPick.assign_teams_from_buckets(buckets_in, forced_assignme
 	end
 	table.sort(groups_remaining)
 
-	local rnd = game.create_random_generator(seed)
-
-	local player_to_group_name = {}
-	for group_name, group in pairs(groups) do
-		for _, player in ipairs(group) do
-			player_to_group_name[player] = group_name
-		end
-	end
 
 	local player_to_bucket = {}
 	for bucket_index, bucket in ipairs(buckets) do
@@ -78,16 +103,20 @@ function CaptainRandomPick.assign_teams_from_buckets(buckets_in, forced_assignme
 			removeStringFromTable(groups_remaining, group_name)
 		end
 		for _, player_in_group in ipairs(players_in_group) do
-			table.insert(result[team], player_in_group)
-			local bucket = player_to_bucket[player_in_group]
-			result_surpluses[team][bucket] = (result_surpluses[team][bucket] or 0) + 1
-			removeStringFromTable(buckets[bucket], player_in_group)
+			if valid_players[player_in_group] then
+				table.insert(result[team], player_in_group)
+				local bucket = player_to_bucket[player_in_group]
+				result_surpluses[team][bucket] = (result_surpluses[team][bucket] or 0) + 1
+				removeStringFromTable(buckets[bucket], player_in_group)
+			end
 		end
 	end
 
 	-- First handle the forced assignments
 	for player, team in pairs(forced_assignments) do
-		assign_player_to_team(player, team)
+		if valid_players[player] then
+			assign_player_to_team(player, team)
+		end
 	end
 
 	---@param bucket number
@@ -98,7 +127,7 @@ function CaptainRandomPick.assign_teams_from_buckets(buckets_in, forced_assignme
 			for i = 1, #buckets * 2 do
 				local bucket_delta = math.ceil(i / 2) * (i % 2 == 0 and -1 or 1)
 				local close_bucket = buckets[bucket + bucket_delta]
-				if #close_bucket > 0 then
+				if close_bucket and #close_bucket > 0 then
 					return close_bucket[rnd(1, #close_bucket)]
 				end
 			end
