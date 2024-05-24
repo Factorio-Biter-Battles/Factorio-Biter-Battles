@@ -298,6 +298,7 @@ function Public.tables()
 	global.difficulty_vote_index = 3
 
 	global.difficulty_votes_timeout = 36000
+	global.threat_multiplier = nil
 
 	-- Maximum evolution threshold after which biters have 100% chance
 	-- to reanimate. The reanimation starts after evolution factor reaches

@@ -173,7 +173,7 @@ function Public.do_raw_feed(flask_amount, food, biter_force_name)
 	local current_player_count = #game.forces.north.connected_players + #game.forces.south.connected_players
 	local effects = FeedingCalculations.calc_feed_effects(evo, food_value, flask_amount, current_player_count, global.max_reanim_thresh)
 	evo = evo + effects.evo_increase
-	threat = threat + effects.threat_increase
+	threat = threat + effects.threat_increase * (global.threat_multiplier or 1)
 	evo = math_round(evo, decimals)
 	global.reanim_chance[force_index] = effects.reanim_chance
 
