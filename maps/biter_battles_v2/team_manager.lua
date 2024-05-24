@@ -24,17 +24,20 @@ function Public.freeze_players()
 	end	
 	local defs = {
 		defines.input_action.write_to_console,
+		defines.input_action.gui_checked_state_changed,
 		defines.input_action.gui_click,
-		defines.input_action.gui_selection_state_changed,
-		defines.input_action.gui_checked_state_changed	,
+		defines.input_action.gui_confirmed,
 		defines.input_action.gui_elem_changed,
+		defines.input_action.gui_location_changed,
+		defines.input_action.gui_selected_tab_changed,
+		defines.input_action.gui_selection_state_changed,
+		defines.input_action.gui_switch_state_changed,
 		defines.input_action.gui_text_changed,
 		defines.input_action.gui_value_changed,
 		defines.input_action.edit_permission_group,
-		defines.input_action.gui_selected_tab_changed,
 		defines.input_action.delete_custom_tag,
 		defines.input_action.edit_custom_tag
-	}	
+	}
 	for _, d in pairs(defs) do p.set_allows_action(d, true) end
 end
 
@@ -82,7 +85,7 @@ function Public.switch_force(player_name, force_name)
 	if not game.players[player_name] then game.print("Team Manager >> Player " .. player_name .. " does not exist.", {r=0.98, g=0.66, b=0.22}) return end
 	if not game.forces[force_name] then game.print("Team Manager >> Force " .. force_name .. " does not exist.", {r=0.98, g=0.66, b=0.22}) return end
 	
-	local player = game.players[player_name]
+	local player = game.get_player(player_name)
 	player.force = game.forces[force_name]
 				
 	game.print(player_name .. " has been switched into " .. Functions.team_name_with_color(force_name) .. ".", {r=0.98, g=0.66, b=0.22})
