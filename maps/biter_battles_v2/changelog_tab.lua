@@ -12,6 +12,10 @@ local function add_changelog(player, element)
 		table.insert(changelog_change, who)
 	end
 	
+	add_entry("2024-05-24", "cliff_build", "Captains games: add randomized-fair picking mode")
+	add_entry("2024-05-24", "cliff_build", "Ping improvements, and default to on")
+	add_entry("2024-05-24", "developer-8", "Fix error on non exist inventory")
+	add_entry("2024-05-24", "cliff_build", "Add global.threat_multiplier")
 	add_entry("2024-05-21", "sciqu", "new command /current-map-seed")
 	add_entry("2024-05-21", "cliff_build", "utils/queue: fix off by one error")
 	add_entry("2024-05-21", "cliff_build", "tiny captains game cleanups")
