@@ -222,6 +222,9 @@ function Public.feed_biters_from_inventory(player, food)
 	local biter_force_name = enemy_force_name .. "_biters"
 
 	local i = player.get_main_inventory()
+	if not i then
+		return
+	end
 	local flask_amount = i.get_item_count(food)
 	if flask_amount == 0 then
 		player.print("You have no " .. food_values[food].name .. " flask in your inventory.", {r = 0.98, g = 0.66, b = 0.22})
@@ -273,6 +276,9 @@ function Public.feed_biters_mixed_from_inventory(player, button)
 		}
 	end
 	local i = player.get_main_inventory()
+	if not i then
+		return
+	end
 	local colored_player_name = table.concat({"[color=", player.color.r * 0.6 + 0.35, ",", player.color.g * 0.6 + 0.35, ",", player.color.b * 0.6 + 0.35, "]", player.name, "[/color]"})
 	local message = {colored_player_name, " fed "}
 	for k, v in pairs(food) do
