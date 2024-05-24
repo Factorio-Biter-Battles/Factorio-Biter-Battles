@@ -107,8 +107,8 @@ local clear_pings_token = Token.register(
 ---@param to_player_name string
 ---@return boolean
 local function ignore_message(from_player_name, to_player_name)
-	local ignore_list = global.ignore_lists[from_player_name]
-	return ignore_list and ignore_list[to_player_name]
+	local ignore_list = global.ignore_lists[to_player_name]
+	return ignore_list and ignore_list[from_player_name]
 end
 
 ---@param from_player_name string
@@ -117,16 +117,17 @@ end
 function do_ping(from_player_name, to_player, message)
 	local to_player_name = to_player.name
 	if ignore_message(from_player_name, to_player_name) then return end
-	if not global.want_pings[to_player_name] then return end
+	if not player_wants_pings(to_player_name) then return end
 	if to_player.character and to_player.character.get_health_ratio() > 0.99 then
 		to_player.character.damage(0.001, "player")
 	end
 	-- to_player.play_sound({path = "utility/new_objective", volume_modifier = 0.6})
 	-- to_player.surface.create_entity({name = 'big-explosion', position = to_player.position})
 	local ping_header = to_player.gui.screen["ping_header"]
+	local uis = to_player.display_scale
 	if not ping_header then
 		ping_header = to_player.gui.screen.add({type = "frame", caption = "Message", name = "ping_header", direction = "vertical"})
-		ping_header.style.width = 105
+		ping_header.style.width = 110
 		ping_header.style.height = 38
 
 		local line = ping_header.add({type="line"})
@@ -136,7 +137,10 @@ function do_ping(from_player_name, to_player, message)
 		line.style.top_margin = -5
 
 		if global.ping_gui_locations[to_player.name] then
-			ping_header.location = global.ping_gui_locations[to_player.name]
+			local saved_location = global.ping_gui_locations[to_player.name]
+			saved_location.x = math.min(saved_location.x, to_player.display_resolution.width - 200 * uis)
+			saved_location.y = math.min(saved_location.y, to_player.display_resolution.height - 100 * uis)
+			ping_header.location = saved_location
 		else
 			local res = to_player.display_resolution
 			local uis = to_player.display_scale
@@ -148,7 +152,8 @@ function do_ping(from_player_name, to_player, message)
 	if not ping_messages then
 		ping_messages = to_player.gui.screen.add({type = "flow", name = "ping_messages", direction = "vertical"})
 		ping_messages.style.width = 400
-		ping_messages.location = {x = ping_header.location.x, y = ping_header.location.y + 42}
+		ping_messages.style.left_padding = 10
+		ping_messages.location = {x = ping_header.location.x, y = ping_header.location.y + 42 * uis}
 	end
 
 	local label = ping_messages.add({type = "label", caption = message})
@@ -169,7 +174,7 @@ local function on_gui_location_changed(event)
 		if not player then return end
 		global.ping_gui_locations[player.name] = element.location
 
-		player.gui.screen["ping_messages"].location = {x = element.location.x, y = element.location.y + 42}
+		player.gui.screen["ping_messages"].location = {x = element.location.x, y = element.location.y + 42 * player.display_scale}
 	end
 end
 
@@ -264,7 +269,7 @@ local function on_console_command(event)
 		local to_player_name, rest_of_message = string.match(param, "^%s*(%S+)%s*(.*)")
 		local to_player = game.get_player(to_player_name)
 		if to_player then
-			do_ping(player.name, to_player, player.name .. " (wisper): " .. rest_of_message)
+			do_ping(player.name, to_player, player.name .. " (whisper): " .. rest_of_message)
 			global.reply_target[to_player_name] = player.name
 		end
 	elseif cmd == "r" or cmd == "reply" then
@@ -272,7 +277,7 @@ local function on_console_command(event)
 		if to_player_name then
 			local to_player = game.get_player(to_player_name)
 			if to_player then
-				do_ping(player.name, to_player, player.name .. " (wisper): " .. param)
+				do_ping(player.name, to_player, player.name .. " (whisper): " .. param)
 			end
 		end
 	elseif cmd == "s" or cmd == "shout" then

@@ -381,12 +381,15 @@ function Functions.team_name_with_color(force_name)
 	end
 end
 
--- Returns every possible player name that follows "@" or "@ " in the message
+-- Returns every possible player name that follows "@" or "@ " in the message, as well as every name that preceeds "@"
 --- @param message string
 --- @return table<string, boolean>
 function Functions.extract_possible_pings(message)
 	local possible_pings = {}
 	for name in string.gmatch(message, "@%s?([a-zA-Z0-9_-]+)") do
+		possible_pings[name] = true
+	end
+	for name in string.gmatch(message, "([a-zA-Z0-9_-]+)@") do
 		possible_pings[name] = true
 	end
 	return possible_pings

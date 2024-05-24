@@ -134,6 +134,8 @@ function Public.initial_setup()
 		["bb_map_reveal_toggle"] = true,
 		["map_reroll"] = true,
 	}
+	global.want_pings = {}
+	global.want_pings_default_value = true
 
 	global.total_time_online_players = {}
 	global.already_logged_current_session_time_online_players = {}

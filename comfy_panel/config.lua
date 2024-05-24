@@ -105,7 +105,7 @@ local functions = {
         if event.element.switch_state == 'left' then
             global.want_pings[player.name] = true
         else
-            global.want_pings[player.name] = nil
+            global.want_pings[player.name] = false
             global.ping_gui_locations[player.name] = nil
         end
     end,
@@ -341,6 +341,13 @@ local function add_switch(element, switch_state, name, description_main, descrip
     return switch
 end
 
+function player_wants_pings(name)
+    if global.want_pings[name] ~= nil then
+        return global.want_pings[name]
+    end
+    return global.want_pings_default_value
+end
+
 local build_config_gui = (function(player, frame)
     local AG = Antigrief.get()
     local switch_state
@@ -383,7 +390,7 @@ local build_config_gui = (function(player, frame)
         'Toggles zoom-to-world view noise effect.\nEnvironmental sounds will be based on map view.'
     )
 
-    switch_state = global.want_pings[player.name] and 'left' or 'right'
+    switch_state = player_wants_pings(player.name) and 'left' or 'right'
     add_switch(
         scroll_pane,
         switch_state,
