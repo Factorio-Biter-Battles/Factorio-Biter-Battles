@@ -1423,10 +1423,12 @@ local function on_gui_click(event)
 	if element.name == "captain_gui_close" then
 		element.parent.parent.destroy()
 	elseif element.name == "captain_player_want_to_play" then
-		insertPlayerByPlaytime(player.name)
-		Public.update_all_captain_player_guis()
+		if not global.special_games_variables["captain_mode"]["pickingPhase"] then
+			insertPlayerByPlaytime(player.name)
+			Public.update_all_captain_player_guis()
+		end
 	elseif element.name == "captain_player_want_to_be_captain" then
-		if not isStringInTable(special["captainList"], player.name) then
+		if not special["initialPickingPhaseStarted"] and not isStringInTable(special["captainList"], player.name) then
 			table.insert(special["captainList"], player.name)
 			Public.update_all_captain_player_guis()
 		end
