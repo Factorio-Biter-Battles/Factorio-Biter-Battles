@@ -173,6 +173,7 @@ function Public.initiate(unit_group, target_force_name, strike_position, target_
 end
 
 function Public.step(group_number, result)
+    if global.bb_game_won_by_team then return end
     local strike = global.ai_strikes[group_number]
     if strike ~= nil then
         if result == defines.behavior_result.success then

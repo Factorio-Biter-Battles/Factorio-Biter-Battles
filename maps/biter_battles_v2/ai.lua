@@ -47,6 +47,7 @@ Public.send_near_biters_to_silo = function()
 	if Functions.get_ticks_since_game_start() < 108000 then return end
 	if not global.rocket_silo["north"] then return end
 	if not global.rocket_silo["south"] then return end
+	if global.bb_game_won_by_team then return end
 
 	game.surfaces[global.bb_surface_name].set_multi_command({
 		command={
