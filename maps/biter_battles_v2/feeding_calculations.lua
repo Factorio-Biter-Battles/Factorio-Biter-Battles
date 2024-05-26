@@ -149,9 +149,10 @@ function Public.calc_send_command(params, difficulty_vote_value, bb_evolution, m
 					flask_count = tonumber(v)
 					if flask_count == nil or flask_count <= 0 or flask_count > 1000000000 then
 						error_msg = "Invalid flask count"
+					else
+						if foods[flask_color] == nil then foods[flask_color] = 0 end
+						foods[flask_color] = foods[flask_color] + flask_count
 					end
-					if foods[flask_color] == nil then foods[flask_color] = 0 end
-					foods[flask_color] = foods[flask_color] + flask_count
 				end
 				flask_color = nil
 			else

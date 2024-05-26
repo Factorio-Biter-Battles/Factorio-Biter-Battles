@@ -41,7 +41,7 @@ local gui_values = {
 }
 
 function Public.clear_copy_history(player)
-	if player and player.valid then
+	if player and player.valid and player.cursor_stack then
 		for i = 1, 21 do
 			-- Imports blueprint of single burner miner into the cursor stack
 			stack = player.cursor_stack.import_stack(
