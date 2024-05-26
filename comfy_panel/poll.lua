@@ -9,9 +9,9 @@ local Class = {}
 
 local insert = table.insert
 
-local default_poll_duration = 300 * 60 -- in ticks
-local duration_max = 3600 -- in seconds
-local duration_step = 15 -- in seconds
+local default_poll_duration = 90 -- in seconds
+local duration_max = 600 -- in seconds
+local duration_step = 30 -- in seconds
 
 local duration_slider_max = duration_max / duration_step
 local tick_duration_step = duration_step * 60
@@ -565,7 +565,7 @@ local function draw_create_poll_frame(parent, player, previous_data)
     else
         question = ''
         answers = {{text = ''}, {text = ''}, {text = ''}}
-        duration = default_poll_duration
+        duration = default_poll_duration * 60
     end
 
     if edit_mode then
@@ -967,7 +967,7 @@ Gui.on_click(
         local data = Gui.get_data(event.element)
 
         local slider = data.duration_slider
-        slider.slider_value = math.floor(default_poll_duration * inv_tick_duration_step)
+        slider.slider_value = math.floor(default_poll_duration * 60 * inv_tick_duration_step)
         update_duration(slider)
 
         data.question = ''
@@ -1275,7 +1275,7 @@ function Class.poll(data)
     if duration then
         duration = duration * 60
     else
-        duration = default_poll_duration
+        duration = default_poll_duration * 60
     end
 
     local start_tick = game.tick
