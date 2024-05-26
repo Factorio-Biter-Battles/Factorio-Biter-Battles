@@ -12,6 +12,10 @@ local function add_changelog(player, element)
 		table.insert(changelog_change, who)
 	end
 	
+	add_entry("2024-05-26", "cliff_build", "Clean up errors in log")
+	add_entry("2024-05-26", "cliff_build", "Poll duration: make it easier to make short-duration polls")
+	add_entry("2024-05-26", "cliff_build", "Fix too-many-captains race condition")
+	add_entry("2024-05-25", "cliff_build", "Partially revert pathfinder settings change (#502)")
 	add_entry("2024-05-24", "cliff_build", "Captains games: add randomized-fair picking mode")
 	add_entry("2024-05-24", "cliff_build", "Ping improvements, and default to on")
 	add_entry("2024-05-24", "developer-8", "Fix error on non exist inventory")
