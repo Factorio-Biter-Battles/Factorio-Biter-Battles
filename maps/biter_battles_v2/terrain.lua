@@ -435,7 +435,7 @@ function Public.generate(event)
 		mixed_ore(surface, left_top_x, left_top_y)
 	end
 	generate_river(surface, left_top_x, left_top_y)
-	draw_biter_area(surface, left_top_x, left_top_y)		
+	draw_biter_area(surface, left_top_x, left_top_y)
 	generate_extra_worm_turrets(surface, left_top)
 end
 
