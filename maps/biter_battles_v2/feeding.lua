@@ -307,7 +307,7 @@ end
 local function calc_send(cmd)
 	local player
 	if cmd.player_index then
-		player = game.players[cmd.player_index]
+		player = game.get_player(cmd.player_index)
 	end
 	local player_count = #game.forces.north.connected_players + #game.forces.south.connected_players
 	local call_succeeded, result = pcall(FeedingCalculations.calc_send_command, cmd.parameter, global.difficulty_vote_value, global.bb_evolution, global.max_reanim_thresh, global.training_mode, player_count, player)

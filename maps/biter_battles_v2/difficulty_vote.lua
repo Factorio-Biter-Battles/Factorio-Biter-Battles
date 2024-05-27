@@ -96,7 +96,7 @@ local function on_player_joined_game(event)
 	if not global.difficulty_vote_index then global.difficulty_vote_index = 4 end
 	if not global.difficulty_player_votes then global.difficulty_player_votes = {} end
 	
-	local player = game.players[event.player_index]
+	local player = game.get_player(event.player_index)
 	if game.ticks_played < global.difficulty_votes_timeout then
 		if not global.difficulty_player_votes[player.name] then
 			if global.bb_settings.only_admins_vote or global.tournament_mode then
@@ -120,7 +120,7 @@ end
 
 local function on_player_left_game(event)
 	if game.ticks_played > global.difficulty_votes_timeout then return end
-	local player = game.players[event.player_index]
+	local player = game.get_player(event.player_index)
 	if not global.difficulty_player_votes[player.name] then return end
 	global.difficulty_player_votes[player.name] = nil
 	set_difficulty()
@@ -131,7 +131,7 @@ local function on_gui_click(event)
 	if not event.element then return end
 	if not event.element.valid then return end
 
-	local player = game.players[event.element.player_index]
+	local player = game.get_player(event.element.player_index)
 
 	if event.element.name == "difficulty_gui" then
 		poll_difficulty(player)

@@ -516,7 +516,7 @@ end
 local function on_gui_click(event)
 	if not event.element then return end
 	if not event.element.valid then return end
-	local player = game.players[event.player_index]
+	local player = game.get_player(event.player_index)
 	local name = event.element.name
 	if name == "bb_toggle_button" then
 		if player.gui.left["bb_main_gui"] then
@@ -635,7 +635,7 @@ end
 
 
 local function on_player_joined_game(event)
-	local player = game.players[event.player_index]
+	local player = game.get_player(event.player_index)
 	if player.online_time == 0 then
 		Functions.show_intro(player)
 	end

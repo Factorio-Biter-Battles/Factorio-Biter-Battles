@@ -178,7 +178,7 @@ local Functions = {}
 function Functions.maybe_set_game_start_tick(event)
 	if global.bb_game_start_tick then return end
 	if not event.player_index then return end
-	local player = game.players[event.player_index]
+	local player = game.get_player(event.player_index)
 	if player.force.name ~= "north" and player.force.name ~= "south" then return end
 	global.bb_game_start_tick = game.ticks_played
 end
@@ -323,7 +323,7 @@ function Functions.no_turret_creep(event)
 	if allowed_to_build then return end
 	
 	if event.player_index then
-		game.players[event.player_index].insert({name = entity.name, count = 1})		
+		game.get_player(event.player_index).insert({name = entity.name, count = 1})		
 	else	
 		local inventory = event.robot.get_inventory(defines.inventory.robot_cargo)
 		inventory.insert({name = entity.name, count = 1})													
@@ -342,7 +342,7 @@ end
 function Functions.no_landfill_by_untrusted_user(event, trusted_table)
 	local entity = event.created_entity
 	if not entity.valid or not event.player_index or entity.name ~= "tile-ghost" or entity.ghost_name ~= "landfill" then return end
-	local player = game.players[event.player_index]
+	local player = game.get_player(event.player_index)
 	if not trusted_table[player.name] then
 		player.print('You have not grown accustomed to this technology yet.', {r = 0.22, g = 0.99, b = 0.99})
 		entity.destroy()

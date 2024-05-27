@@ -193,7 +193,7 @@ end)
 
 
 local function on_gui_selection_state_changed(event)
-	local player = game.players[event.player_index]	
+	local player = game.get_player(event.player_index)	
 	if not event.element.valid then return end
 	local name = event.element.name
 	if global.dropdown_users_choice_force == nil then

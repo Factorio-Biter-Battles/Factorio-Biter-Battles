@@ -74,10 +74,10 @@ end
 function Public.print_admins(msg, source)
     local source_name
     local chat_color
-    if source and game.players[source] then
+    if source and game.get_player(source) then
         if type(source) == 'string' then
             source_name = source
-            chat_color = game.players[source].chat_color
+            chat_color = game.get_player(source).chat_color
         else
             source_name = source.name
             chat_color = source.chat_color

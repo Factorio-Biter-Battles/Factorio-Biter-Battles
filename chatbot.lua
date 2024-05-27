@@ -68,7 +68,7 @@ local links = {
 }
 
 local function on_player_created(event)
-    local player = game.players[event.player_index]
+    local player = game.get_player(event.player_index)
     player.print('[font=' .. font .. ']' .. 'Welcome! Join us on discord >> https://discord.com/invite/hAYW3K7J2A' .. '[/font]', font_color)
 end
 
@@ -88,7 +88,7 @@ commands.add_command(
             if cmd.parameter == nil then
                 return
             end
-            local target_player = game.players[cmd.parameter]
+            local target_player = game.get_player(cmd.parameter)
             if target_player then
                 if trusted[target_player.name] then
                     game.print(target_player.name .. ' is already trusted!')
@@ -106,7 +106,7 @@ commands.add_command(
             if cmd.parameter == nil then
                 return
             end
-            local target_player = game.players[cmd.parameter]
+            local target_player = game.get_player(cmd.parameter)
             if target_player then
                 if trusted[target_player.name] == true then
                     game.print(target_player.name .. ' is already trusted!')
@@ -141,7 +141,7 @@ commands.add_command(
             if cmd.parameter == nil then
                 return
             end
-            local target_player = game.players[cmd.parameter]
+            local target_player = game.get_player(cmd.parameter)
             if target_player then
                 if trusted[target_player.name] == false then
                     game.print(target_player.name .. ' is already untrusted!')
@@ -159,7 +159,7 @@ commands.add_command(
             if cmd.parameter == nil then
                 return
             end
-            local target_player = game.players[cmd.parameter]
+            local target_player = game.get_player(cmd.parameter)
             if target_player then
                 if trusted[target_player.name] == false then
                     game.print(target_player.name .. ' is already untrusted!')
@@ -173,7 +173,7 @@ commands.add_command(
 )
 
 local function process_bot_answers(event)
-    local player = game.players[event.player_index]
+    local player = game.get_player(event.player_index)
     local message = event.message
     message = string.lower(message)
     for word in string.gmatch(message, '%g+') do
@@ -199,7 +199,7 @@ local function on_console_command(event)
     if not event.player_index then
         return
     end
-    local player = game.players[event.player_index]
+    local player = game.get_player(event.player_index)
     local param = event.parameters
 
     local commands = {

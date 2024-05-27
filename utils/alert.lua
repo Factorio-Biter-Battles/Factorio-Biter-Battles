@@ -390,8 +390,8 @@ commands.add_command(
                     t_message = str
                 end
 
-                if game.players[t_player] then
-                    target_player = game.players[t_player]
+                if game.get_player(t_player) then
+                    target_player = game.get_player(t_player)
                 else
                     return p('[ERROR] No player was provided', Color.fail)
                 end

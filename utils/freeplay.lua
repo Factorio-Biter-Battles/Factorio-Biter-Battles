@@ -108,7 +108,7 @@ local on_player_respawned = function(event)
     if not this.modded then
         return
     end
-    local player = game.players[event.player_index]
+    local player = game.get_player(event.player_index)
     util.insert_safe(player, this.respawn_items)
 end
 

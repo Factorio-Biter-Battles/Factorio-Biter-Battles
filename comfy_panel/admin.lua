@@ -482,7 +482,7 @@ local function get_position_from_string(str)
 end
 
 local function on_gui_click(event)
-    local player = game.players[event.player_index]
+    local player = game.get_player(event.player_index)
     local frame = Tabs.comfy_panel_get_active_frame(player)
     if not frame then
         return
@@ -512,7 +512,7 @@ local function on_gui_click(event)
             player.print('No target player selected.', {r = 0.88, g = 0.88, b = 0.88})
             return
         end
-        local target_player = game.players[target_player_name]
+        local target_player = game.get_player(target_player_name)
         if target_player.connected == true then
             admin_functions[name](target_player, player)
         end
@@ -551,7 +551,7 @@ local function on_gui_click(event)
 end
 
 local function on_gui_selection_state_changed(event)
-    local player = game.players[event.player_index]
+    local player = game.get_player(event.player_index)
     local name = event.element.name
     if name == 'admin_player_select' then
         if not global.admin_panel_selected_player_index then

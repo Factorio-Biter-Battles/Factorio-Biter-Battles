@@ -32,7 +32,7 @@ require "modules.spawners_contain_biters"
 
 local function on_player_joined_game(event)
 	local surface = game.surfaces[global.bb_surface_name]
-	local player = game.players[event.player_index]
+	local player = game.get_player(event.player_index)
 	if player.online_time == 0 or player.force.name == "player" then
 		Functions.init_player(player)
 	end
@@ -43,7 +43,7 @@ local function on_player_joined_game(event)
 end
 
 local function on_gui_click(event)
-	local player = game.players[event.player_index]
+	local player = game.get_player(event.player_index)
 	local element = event.element
 	if not element then return end
 	if not element.valid then return end
@@ -193,7 +193,7 @@ end
 local function on_console_chat(event)
 	--Share chat with spectator force
 	if not event.message or not event.player_index then return end
-	local player = game.players[event.player_index]
+	local player = game.get_player(event.player_index)
 	local player_name = player.name
 	local player_force_name = player.force.name
 	local tag = player.tag
@@ -235,7 +235,7 @@ end
 local function on_console_command(event)
 	local cmd = event.command
     if not event.player_index then return end
-    local player = game.players[event.player_index]
+    local player = game.get_player(event.player_index)
     local param = event.parameters
     if cmd == "ignore" then
 		-- verify in argument of command that there is no space, quote, semicolon, backtick, and that it's not just whitespace
@@ -427,7 +427,7 @@ local function on_marked_for_deconstruction(event)
 end
 
 local function on_player_built_tile(event)
-	local player = game.players[event.player_index]
+	local player = game.get_player(event.player_index)
 	if event.item ~= nil and event.item.name == "landfill" then
 		Terrain.restrict_landfill(player.surface, player, event.tiles)
 	end

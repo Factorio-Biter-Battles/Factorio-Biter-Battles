@@ -636,7 +636,7 @@ function Public.ban_sync(username, reason, admin)
 
     -- game.ban_player errors if player not found.
     -- However we may still want to use this function to ban player names.
-    local player = game.players[username]
+    local player = game.get_player(username)
     if player then
         game.ban_player(player, reason)
     end
@@ -675,7 +675,7 @@ function Public.unban_sync(username, admin)
 
     -- game.unban_player errors if player not found.
     -- However we may still want to use this function to unban player names.
-    local player = game.players[username]
+    local player = game.get_player(username)
     if player then
         game.unban_player(username)
     end
@@ -844,7 +844,7 @@ Event.add(
         if not event.player_index then
             return
         end
-        local player = game.players[event.player_index]
+        local player = game.get_player(event.player_index)
         local reason = event.parameters
         if not reason then
             return

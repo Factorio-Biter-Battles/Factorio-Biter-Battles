@@ -127,7 +127,7 @@ function Public.comfy_panel_call_tab(player, name)
 end
 
 local function on_player_joined_game(event)
-    top_button(game.players[event.player_index])
+    top_button(game.get_player(event.player_index))
 end
 
 local function on_gui_click(event)
@@ -137,7 +137,7 @@ local function on_gui_click(event)
     if not event.element.valid then
         return
     end
-    local player = game.players[event.player_index]
+    local player = game.get_player(event.player_index)
 
     if event.element.name == 'comfy_panel_top_button' then
         if player.gui.left.comfy_panel then

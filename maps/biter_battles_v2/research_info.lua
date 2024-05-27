@@ -238,7 +238,7 @@ local ResearchInfo = {}
 
 ---@param evt GuiEventData
 local function show_research_info_handler(evt)
-    local player = game.players[evt.player_index]
+    local player = game.get_player(evt.player_index)
     ResearchInfo.show_research_info(player)
 end
 
@@ -511,7 +511,7 @@ end
 
 ---@param evtd EventData.on_player_display_resolution_changed | EventData.on_player_display_scale_changed
 local function on_display_changed(evtd)
-    local player = game.players[evtd.player_index]
+    local player = game.get_player(evtd.player_index)
     if not player then return end
     local el = player.gui.screen["research_info_frame"]
     if not el then return end

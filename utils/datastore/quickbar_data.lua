@@ -53,7 +53,7 @@ local fetch_quickbar =
     function(data)
         local key = data.key
         local value = data.value
-        local player = game.players[key]
+        local player = game.get_player(key)
         if not player or not player.valid then
             return
         end
@@ -72,7 +72,7 @@ local fetch_logistics =
     function(data)
         local key = data.key
         local value = data.value
-        local player = game.players[key]
+        local player = game.get_player(key)
         if not player or not player.valid then
             return
         end
