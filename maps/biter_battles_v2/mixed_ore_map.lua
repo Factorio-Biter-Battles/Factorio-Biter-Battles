@@ -118,6 +118,27 @@ local function vertical_lines(surface, left_top_x, left_top_y)
 	end
 end
 
+local function mixed_patches(surface, left_top_x, left_top_y)
+	local size = 10 - global.special_games_variables['mixed_ore_map']['size']
+	local ores = {"iron-ore", "copper-ore", "iron-ore", "stone", "copper-ore", "iron-ore", "copper-ore", "iron-ore", "coal", "iron-ore", "copper-ore",  "iron-ore", "stone", "copper-ore", "coal"}
+	local mixed_ore_multiplier = {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}
+	local seed = game.surfaces[global.bb_surface_name].map_gen_settings.seed
+	clear_ores(surface, left_top_x, left_top_y, {"coal", "stone", "copper-ore","iron-ore"})
+	for x = 0, 31, 1 do
+		for y = 0, 31, 1 do
+			local pos = {x = left_top_x + x, y = left_top_y + y}
+			if surface.can_place_entity({name = "iron-ore", position = pos}) then
+				local noise = GetNoise("bb_ore", pos, seed)
+				if noise > 0.1 * size or noise < -0.1 * size then
+					local i = math_floor(noise * 25 + math_abs(pos.x) * 0.05) % 15 + 1
+					local amount = (global.random_generator(800, 1000) + math_sqrt(pos.x ^ 2 + pos.y ^ 2) * 3) * mixed_ore_multiplier[i]
+					surface.create_entity({name = ores[i], position = pos, amount = amount})
+				end
+			end
+		end
+	end
+end
+
 -- generate ore on entire map for special game
 local function mixed_ore_map(surface, left_top_x, left_top_y)
 	if Functions.is_biter_area({x = left_top_x, y = left_top_y + 96}, true) then return end
@@ -129,6 +150,8 @@ local function mixed_ore_map(surface, left_top_x, left_top_y)
 		checkerboard(surface, left_top_x, left_top_y)
 	elseif type == 3 then
 		vertical_lines(surface, left_top_x, left_top_y)
+	elseif type == 4 then
+		mixed_patches(surface, left_top_x, left_top_y)
 	end
 
 	if left_top_y == -32 and math_abs(left_top_x) <= 32 then

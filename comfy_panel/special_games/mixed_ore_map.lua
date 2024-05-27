@@ -8,6 +8,8 @@ local function generate_mixed_ore_map(type, size)
                 size = 9
             elseif type == 2 then
                 size = 5
+            elseif type == 4 then
+                size = 4
             end
         end
         if type == 1 and size > 10 then
@@ -27,11 +29,12 @@ local Public = {
     name = {type = "label", caption = "Mixed ore map", tooltip = "Covers the entire map with mixed ore. Takes effect after map restart"},
     config = {
         [1] = {name = "label1", type = "label", caption = "Type"},
-        [2] = {name = "type1", type = "drop-down", items = {"Mixed ore", "Checkerboard", "Vertical lines"}},
+        [2] = {name = "type1", type = "drop-down", items = {"Mixed ore", "Checkerboard", "Vertical lines", "Patches"}},
         [3] = {name = "label2", type = "label", caption = "Size"},
         [4] = {name = "size", type = "textfield", text = "", numeric = true, width = 40, tooltip = "Live empty for default"
             .. "\nFor a Mixed ore, a higher value means lower features. Value range from 1 to 10, Default 9."
             .. "\nFor Checkerboard its the size of the cell. Default 5"
+            .. "\nFor Patches its the size of the patches. Value range from 1 to 10, Default 4."
         },
     },
     button = {name = "apply", type = "button", caption = "Apply"},
