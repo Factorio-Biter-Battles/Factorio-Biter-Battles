@@ -40,6 +40,11 @@ local function on_player_joined_game(event)
 	Functions.create_map_intro_button(player)
 	--ResearchInfo.create_research_info_button(player)
 	Team_manager.draw_top_toggle_button(player)
+
+	local ping_messages = player.gui.screen.ping_messages
+	if ping_messages then ping_messages.destroy() end
+	local ping_header = player.gui.screen.ping_header
+	if ping_header then ping_header.destroy() end
 end
 
 local function on_gui_click(event)
