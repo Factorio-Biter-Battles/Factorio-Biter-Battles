@@ -31,7 +31,7 @@ local fetch =
     function(data)
         local key = data.key
         local value = data.value
-        local player = game.players[key]
+        local player = game.get_player(key)
         if not player then
             return
         end

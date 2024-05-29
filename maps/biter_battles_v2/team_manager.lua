@@ -82,7 +82,7 @@ local function leave_corpse(player)
 end
 
 function Public.switch_force(player_name, force_name)
-	if not game.players[player_name] then game.print("Team Manager >> Player " .. player_name .. " does not exist.", {r=0.98, g=0.66, b=0.22}) return end
+	if not game.get_player(player_name) then game.print("Team Manager >> Player " .. player_name .. " does not exist.", {r=0.98, g=0.66, b=0.22}) return end
 	if not game.forces[force_name] then game.print("Team Manager >> Force " .. force_name .. " does not exist.", {r=0.98, g=0.66, b=0.22}) return end
 	
 	local player = game.get_player(player_name)
@@ -259,7 +259,7 @@ local function isReferee(player)
 end
 
 local function team_manager_gui_click(event)
-	local player = game.players[event.player_index]
+	local player = game.get_player(event.player_index)
 	local name = event.element.name
 	
 	if game.forces[name] then
@@ -347,7 +347,7 @@ end
 function Public.gui_click(event)	
 	if not event.element then return end
 	if not event.element.valid then return end
-	local player = game.players[event.player_index]
+	local player = game.get_player(event.player_index)
 	local name = event.element.name
 	
 	if name == "team_manager_toggle_button" then

@@ -18,7 +18,7 @@ local function validate_player(player)
     if not player.connected then
         return false
     end
-    if not game.players[player.index] then
+    if not game.get_player(player.index) then
         return false
     end
     return true
@@ -54,7 +54,7 @@ commands.add_command(
             if not cmd.parameter then
                 return
             end
-            local target_player = game.players[cmd.parameter]
+            local target_player = game.get_player(cmd.parameter)
 
             if validate_player(target_player) then
                 create_mini_camera_gui(player, target_player.name, target_player.position, target_player.surface.index)
@@ -68,7 +68,7 @@ commands.add_command(
 )
 
 local function on_gui_click(event)
-    local player = game.players[event.player_index]
+    local player = game.get_player(event.player_index)
 
     if not (event.element and event.element.valid) then
         return

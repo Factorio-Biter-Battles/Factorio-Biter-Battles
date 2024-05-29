@@ -218,7 +218,7 @@ local teleport_player_to_gulag = function(player, action)
 end
 
 local on_player_changed_surface = function(event)
-    local player = game.players[event.player_index]
+    local player = game.get_player(event.player_index)
     if not player or not player.valid then
         return
     end
@@ -244,7 +244,7 @@ local validate_args = function(data)
     local message = data.message
     local cmd = data.cmd
 
-    if not griefer or not game.players[griefer] then
+    if not griefer or not game.get_player(griefer) then
         Utils.print_to(player, 'Invalid name.')
         return false
     end
@@ -269,7 +269,7 @@ local validate_args = function(data)
         return false
     end
 
-    if game.players[griefer].admin and not player.admin then
+    if game.get_player(griefer).admin and not player.admin then
         Utils.print_to(player, 'You can´t select an admin.')
         return false
     end
@@ -353,11 +353,11 @@ local jail = function(player, griefer, msg)
         return
     end
 
-    if not game.players[griefer] then
+    if not game.get_player(griefer) then
         return
     end
 
-    local g = game.players[griefer]
+    local g = game.get_player(griefer)
     teleport_player_to_gulag(g, 'jail')
 
     if g.surface.name == 'gulag' then
@@ -366,8 +366,8 @@ local jail = function(player, griefer, msg)
     end
     local message = griefer .. ' has been jailed by ' .. player .. '. Cause: ' .. msg
 
-    if game.players[griefer].character and game.players[griefer].character.valid and game.players[griefer].character.driving then
-        game.players[griefer].character.driving = false
+    if game.get_player(griefer).character and game.get_player(griefer).character.valid and game.get_player(griefer).character.driving then
+        game.get_player(griefer).character.driving = false
     end
 
     jailed[griefer] = {jailed = true, actor = player, reason = msg}
@@ -376,9 +376,9 @@ local jail = function(player, griefer, msg)
     Utils.print_to(nil, message)
     Utils.action_warning_embed('{Jailed}', message)
 
-    game.players[griefer].clear_console()
+    game.get_player(griefer).clear_console()
     Utils.print_to(griefer, message)
-    game.players[griefer].opened = defines.gui_type.none
+    game.get_player(griefer).opened = defines.gui_type.none
     return true
 end
 
@@ -388,11 +388,11 @@ local free = function(player, griefer)
         return false
     end
 
-    if not game.players[griefer] then
+    if not game.get_player(griefer) then
         return
     end
 
-    local g = game.players[griefer]
+    local g = game.get_player(griefer)
     teleport_player_to_gulag(g, 'free')
 
     local message = griefer .. ' was set free from jail by ' .. player .. '.'
@@ -522,7 +522,7 @@ Event.add(
         local param = event.parameters
 
         if event.player_index then
-            local player = game.players[event.player_index]
+            local player = game.get_player(event.player_index)
             local playtime = validate_playtime(player)
             local trusted = validate_trusted(player)
 
@@ -557,8 +557,8 @@ Event.add(
                 return
             end
 
-            if game.players[griefer] then
-                griefer = game.players[griefer].name
+            if game.get_player(griefer) then
+                griefer = game.get_player(griefer).name
             end
 
             if trusted and playtime >= settings.playtime_for_vote and playtime < settings.playtime_for_instant_jail and not player.admin then

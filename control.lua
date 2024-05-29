@@ -60,7 +60,7 @@ local Functions = require "maps.biter_battles_v2.functions"
 local Terrain = require "maps.biter_battles_v2.terrain"
 
 Event.add(defines.events.on_player_created, function (event)
-	local player = game.players[event.player_index]
+	local player = game.get_player(event.player_index)
 	player.gui.top.style = "slot_table_spacing_horizontal_flow"
 	player.gui.left.style = "slot_table_spacing_vertical_flow"
 end)

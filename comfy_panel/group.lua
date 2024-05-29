@@ -98,8 +98,8 @@ local build_group_gui = (function(player, frame)
             l.style.minimal_width = group_name_width
             l.style.maximal_width = group_name_width
             local color
-            if game.players[group.founder] and game.players[group.founder].color then
-                color = game.players[group.founder].color
+            if game.get_player(group.founder) and game.get_player(group.founder).color then
+                color = game.get_player(group.founder).color
             else
                 color = {r = 0.90, g = 0.90, b = 0.90}
             end
@@ -201,7 +201,7 @@ end
 
 ---@param event EventData.on_player_joined_game
 local function on_player_joined_game(event)
-    local player = game.players[event.player_index]
+    local player = game.get_player(event.player_index)
 
     if not this.player_group[player.name] then
         this.player_group[player.name] = '[Group]'
@@ -253,7 +253,7 @@ local function on_gui_click(event)
         return
     end
 
-    local player = game.players[event.element.player_index]
+    local player = game.get_player(event.element.player_index)
     local name = event.element.name
     local frame = Tabs.comfy_panel_get_active_frame(player)
     if not frame then

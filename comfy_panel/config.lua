@@ -37,7 +37,7 @@ local function spaghett_deny_building(event)
     end
 
     if event.player_index then
-        game.players[event.player_index].insert({name = entity.name, count = 1})
+        game.get_player(event.player_index).insert({name = entity.name, count = 1})
     else
         local inventory = event.robot.get_inventory(defines.inventory.robot_cargo)
         inventory.insert({name = entity.name, count = 1})
@@ -94,9 +94,9 @@ end
 local functions = {
     ['comfy_panel_spectator_switch'] = function(event)
         if event.element.switch_state == 'left' then
-            game.players[event.player_index].spectator = true
+            game.get_player(event.player_index).spectator = true
         else
-            game.players[event.player_index].spectator = false
+            game.get_player(event.player_index).spectator = false
         end
     end,
     ['comfy_panel_want_pings_switch'] = function(event)

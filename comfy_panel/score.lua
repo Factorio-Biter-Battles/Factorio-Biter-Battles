@@ -205,7 +205,7 @@ local show_score = (function(player, frame)
 
     -- Score entries
     for _, entry in pairs(score_list) do
-        local p = game.players[entry.name]
+        local p = game.get_player(entry.name)
         local special_color = {
             r = p.color.r * 0.6 + 0.4,
             g = p.color.g * 0.6 + 0.4,
@@ -248,7 +248,7 @@ local function refresh_score_full()
 end
 
 local function on_player_joined_game(event)
-    local player = game.players[event.player_index]
+    local player = game.get_player(event.player_index)
     Public.init_player_table(player)
     if not this.sort_by[player.name] then
         this.sort_by[player.name] = {method = 'descending', column = 'killscore'}
@@ -272,7 +272,7 @@ local function on_gui_click(event)
         return
     end
 
-    local player = game.players[event.element.player_index]
+    local player = game.get_player(event.element.player_index)
     local frame = Tabs.comfy_panel_get_active_frame(player)
     if not frame then
         return
@@ -354,10 +354,10 @@ local kill_causes = {
         if not event.cause.last_user then
             return
         end
-        if not game.players[event.cause.last_user.index] then
+        if not game.get_player(event.cause.last_user.index) then
             return
         end
-        return {game.players[event.cause.last_user.index]}
+        return {game.get_player(event.cause.last_user.index)}
     end,
     ['car'] = function(event)
         local players = {}
@@ -425,7 +425,7 @@ local function on_entity_died(event)
 end
 
 local function on_player_died(event)
-    local player = game.players[event.player_index]
+    local player = game.get_player(event.player_index)
     Public.init_player_table(player)
     local score = this.score_table[player.force.name].players[player.name]
     score.deaths = 1 + (score.deaths or 0)
@@ -450,7 +450,7 @@ local function on_built_entity(event)
     if building_and_mining_blacklist[event.created_entity.type] then
         return
     end
-    local player = game.players[event.player_index]
+    local player = game.get_player(event.player_index)
     Public.init_player_table(player)
     local score = this.score_table[player.force.name].players[player.name]
     score.built_entities = 1 + (score.built_entities or 0)

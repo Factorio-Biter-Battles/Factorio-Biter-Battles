@@ -60,7 +60,7 @@ Event.add(
 				parameter = "123465",
 			}
 			global.bb_settings["bb_map_reveal_toggle"] = false
-			InstantMapReset.instant_map_reset(cmd_input, game.players[1])
+			InstantMapReset.instant_map_reset(cmd_input, game.get_player(1))
 			game.speed = 10000
 			game.forces["north"].research_all_technologies()
 			local surface = game.get_surface(global.bb_surface_name)

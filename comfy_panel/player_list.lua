@@ -453,7 +453,8 @@ local function player_list_show(player, frame, sort_by)
         local trusted
         local tooltip
 
-        if game.players[player_list[i].name].admin then
+        local player = game.get_player(player_list[i].name)
+        if player.admin then
             trusted = '[color=red][A][/color]'
             tooltip = 'This player is an admin of this server.\nLeft-click to show this person on map!'
         elseif jailed[player_list[i].name] then
@@ -468,32 +469,25 @@ local function player_list_show(player, frame, sort_by)
         end
 
         local caption
-        if this.show_roles_in_list or game.players[player_list[i].name].admin then
+        if this.show_roles_in_list or player.admin then
             caption = player_list[i].name .. ' ' .. trusted
         else
             caption = player_list[i].name
         end
 
-        -- Name
-        local p = game.players[player_list[i].name]
-        if not p or not p.valid then
-            return
-        end
-
         local name_label =
             player_list_panel_table.add {
             type = 'label',
-            name = 'where_player_' .. p.index,
+            name = 'where_player_' .. player.index,
             caption = caption,
             tooltip = tooltip
         }
 
-        local p_color = game.players[player_list[i].player_index]
         name_label.style.font = 'default'
         name_label.style.font_color = {
-            r = .4 + p_color.color.r * 0.6,
-            g = .4 + p_color.color.g * 0.6,
-            b = .4 + p_color.color.b * 0.6
+            r = .4 + player.color.r * 0.6,
+            g = .4 + player.color.g * 0.6,
+            b = .4 + player.color.b * 0.6
         }
         name_label.style.minimal_width = column_widths[2]
         name_label.style.maximal_width = column_widths[2]
@@ -550,7 +544,7 @@ local function on_gui_click(event)
     if not event.element.name then
         return
     end
-    local player = game.players[event.element.player_index]
+    local player = game.get_player(event.element.player_index)
 
     local frame = Tabs.comfy_panel_get_active_frame(player)
     if not frame then
@@ -604,8 +598,8 @@ local function on_gui_click(event)
     --Locate other players
     if string.sub(name, 1, 13) == 'where_player_' then
         local index = tonumber(string.sub(name, 14, string.len(name)))
-        if index and game.players[index] and index == game.players[index].index then
-            local target = game.players[index]
+        if index and game.get_player(index) and index == game.get_player(index).index then
+            local target = game.get_player(index)
             if not target or not target.valid then
                 return
             end
@@ -630,7 +624,7 @@ local function on_gui_click(event)
             str = str .. ' <<'
             game.print(str)
             this.player_list.last_poke_tick[event.element.player_index] = game.tick
-            local p = game.players[poked_player]
+            local p = game.get_player(poked_player)
             this.player_list.pokes[p.index] = this.player_list.pokes[p.index] + 1
         end
     end

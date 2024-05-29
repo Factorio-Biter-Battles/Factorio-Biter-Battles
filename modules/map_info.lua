@@ -90,7 +90,7 @@ local create_map_intro = (function(player, frame)
 end)
 
 local function on_player_joined_game(event)
-    local player = game.players[event.player_index]
+    local player = game.get_player(event.player_index)
     if player.online_time == 0 then
         Tabs.comfy_panel_call_tab(player, 'Map Info')
     end
@@ -107,7 +107,7 @@ local function on_gui_click(event)
         return
     end
     if event.element.name == 'close_map_intro' then
-        game.players[event.player_index].gui.left.comfy_panel.destroy()
+        game.get_player(event.player_index).gui.left.comfy_panel.destroy()
         return
     end
 end

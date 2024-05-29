@@ -4,7 +4,7 @@ local Muted = require 'utils.muted'
 
 local function on_console_chat(event)
 	if not event.message or not event.player_index then return end		
-	local player = game.players[event.player_index]
+	local player = game.get_player(event.player_index)
 	if not player.character then return end
 
 	if Muted and Muted.is_muted(player.name) then return end

@@ -12,8 +12,8 @@ end
 
 local function get_corpse_force(corpse)
 	if corpse.character_corpse_player_index then 
-		if game.players[corpse.character_corpse_player_index] then
-			return game.players[corpse.character_corpse_player_index].force
+		if game.get_player(corpse.character_corpse_player_index) then
+			return game.get_player(corpse.character_corpse_player_index).force
 		end
 	end
 	return game.forces.neutral
@@ -49,7 +49,7 @@ local function find_and_destroy_tag(corpse)
 end
 
 local function on_player_died(event)
-	local player = game.players[event.player_index]
+	local player = game.get_player(event.player_index)
 	draw_map_tag(player.surface, player.force, player.position)
 end
 

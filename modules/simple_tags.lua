@@ -72,7 +72,7 @@ local function draw_screen_gui(player)
 end
 
 local function on_player_joined_game(event)
-	local player = game.players[event.player_index]
+	local player = game.get_player(event.player_index)
 	draw_top_gui(player)
 end
 
@@ -83,7 +83,7 @@ local function on_gui_click(event)
 	
 	local name = element.name
 	if name == "simple_tag" then
-		local player = game.players[event.player_index]
+		local player = game.get_player(event.player_index)
 		draw_screen_gui(player)
 		return
 	end
@@ -94,7 +94,7 @@ local function on_gui_click(event)
 	if not parent.name then return end
 	if parent.name ~= "simple_tag_frame" then return end	
 	
-	local player = game.players[event.player_index]	
+	local player = game.get_player(event.player_index)	
 	local selected_tag = element.name
 	
 	if player.tag == selected_tag then	selected_tag = "" end
