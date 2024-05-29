@@ -744,6 +744,7 @@ local robot_build_restriction = {
 }
 
 function Public.deny_construction_bots(event)
+	if not event.created_entity.valid then return end
 	if not robot_build_restriction[event.robot.force.name] then return end
 	if not robot_build_restriction[event.robot.force.name](event.created_entity.position.y) then return end
 	local inventory = event.robot.get_inventory(defines.inventory.robot_cargo)
