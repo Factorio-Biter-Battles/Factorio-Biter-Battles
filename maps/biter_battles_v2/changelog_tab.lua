@@ -12,6 +12,10 @@ local function add_changelog(player, element)
 		table.insert(changelog_change, who)
 	end
 	
+	add_entry("2024-05-30", "cliff_build", "ping messages: fix permanent-ping from message before map reset")
+	add_entry("2024-05-30", "cliff_build", "More errors from logs fixes")
+	add_entry("2024-05-29", "cliff_build", "use game.get_player in more places")
+	add_entry("2024-05-27", "developer-8", "Add a new Patches type for mixed ore map special")
 	add_entry("2024-05-26", "cliff_build", "Clean up errors in log")
 	add_entry("2024-05-26", "cliff_build", "Poll duration: make it easier to make short-duration polls")
 	add_entry("2024-05-26", "cliff_build", "Fix too-many-captains race condition")
