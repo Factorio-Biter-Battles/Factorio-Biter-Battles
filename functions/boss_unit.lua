@@ -75,6 +75,7 @@ end
 ---@param event EventData.on_entity_damaged
 local function on_entity_damaged(event)
 	local entity = event.entity
+	if not entity.valid then return end
 	---@type HighHealthUnit
 	local unit = global.high_health_units[entity.unit_number]
 	if not unit then return end
