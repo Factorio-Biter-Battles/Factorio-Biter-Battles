@@ -315,6 +315,15 @@ function Public.tables()
 
 	global.next_attack = "north"
 	if global.random_generator(1,2) == 1 then global.next_attack = "south" end
+
+	-- Clear all ping UIs.  Otherwise, if a map reset happens when a ping is
+	-- visible, it will be permanently visible.
+	for _, player in pairs(game.connected_players) do
+		local ping_messages = player.gui.screen.ping_messages
+		if ping_messages then ping_messages.destroy() end
+		local ping_header = player.gui.screen.ping_header
+		if ping_header then ping_header.destroy() end
+	end
 end
 
 function Public.load_spawn()
