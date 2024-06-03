@@ -109,7 +109,7 @@ local function clear_gui_captain_mode()
 			if playergui.top[gui] then playergui.top[gui].destroy() end
 		end
 		for _, gui in pairs(center_guis) do
-			if playergui.center[gui] then playergui.center[gui].destroy() end
+			if playergui.screen[gui] then playergui.screen[gui].destroy() end
 		end
 	end
 end
@@ -654,7 +654,7 @@ end
 function Public.draw_captain_manager_gui(player)
 	if is_test_player(player) then return end
 	if player.gui.screen["captain_manager_gui"] then player.gui.screen["captain_manager_gui"].destroy() end
-	local frame = closable_frame.create_closable_frame(player, "captain_manager_gui", "Cpt Captain")
+	local frame = closable_frame.create_main_closable_frame(player, "captain_manager_gui", "Cpt Captain")
 	frame.add({type = "label", name = "diff_vote_duration"})
 	frame.add({type = "button", name = "captain_is_ready"})
 	frame.add({type = "label", caption = "[font=heading-1][color=purple]Management for science throwing[/color][/font]"})
@@ -817,7 +817,7 @@ end
 function Public.draw_captain_referee_gui(player)
 	if is_test_player(player) then return end
 	if player.gui.screen["captain_referee_gui"] then player.gui.screen["captain_referee_gui"].destroy() end
-	local frame = closable_frame.create_closable_frame(player, "captain_referee_gui", "Cpt Referee")
+	local frame = closable_frame.create_main_closable_frame(player, "captain_referee_gui", "Cpt Referee")
 	frame.style.maximal_width = 800
 	frame.add({type = "scroll-pane", name = "scroll", direction = "vertical"})
 	Public.update_captain_referee_gui(player)
@@ -970,7 +970,7 @@ end
 function Public.draw_captain_player_gui(player)
 	if is_test_player(player) then return end
 	if player.gui.screen["captain_player_gui"] then player.gui.screen["captain_player_gui"].destroy() end
-	local frame = closable_frame.create_closable_frame(player, "captain_player_gui", "Join Info")
+	local frame = closable_frame.create_main_closable_frame(player, "captain_player_gui", "Join Info")
 	frame.style.maximal_width = 800
 
 	local prepa_flow = frame.add({type = "flow", name = "prepa_flow", direction = "vertical"})

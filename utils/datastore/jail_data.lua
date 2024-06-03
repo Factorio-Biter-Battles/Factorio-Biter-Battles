@@ -50,7 +50,7 @@ local clear_gui =
     function(data)
         local player = data.player
         if player and player.valid then
-            for _, child in pairs(player.gui.center.children) do
+            for _, child in pairs(player.gui.screen.children) do
                 child.destroy()
             end
             for _, child in pairs(player.gui.left.children) do

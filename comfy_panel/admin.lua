@@ -6,6 +6,7 @@ local Tabs = require 'comfy_panel.main'
 local Server = require 'utils.server'
 local Color = require 'utils.color_presets'
 local lower = string.lower
+local closable_frame = require "utils.ui.closable_frame"
 
 local function admin_only_message(str)
     for _, player in pairs(game.connected_players) do
@@ -213,10 +214,7 @@ local function delete_all_blueprints(player)
 end
 
 local function create_mini_camera_gui(player, caption, position, surface)
-    if player.gui.center['mini_camera'] then
-        player.gui.center['mini_camera'].destroy()
-    end
-    local frame = player.gui.center.add({type = 'frame', name = 'mini_camera', caption = caption})
+    local frame = closable_frame.create_secondary_closable_frame(player, "mini_camera", caption)
     surface = tonumber(surface)
     local camera =
         frame.add(
@@ -495,7 +493,7 @@ local function on_gui_click(event)
     local name = event.element.name
 
     if name == 'mini_camera' or name == 'mini_cam_element' then
-        player.gui.center['mini_camera'].destroy()
+        player.gui.screen['mini_camera'].destroy()
         return
     end
 
@@ -540,9 +538,9 @@ local function on_gui_click(event)
         return
     end
 
-    if player.gui.center['mini_camera'] then
-        if player.gui.center['mini_camera'].caption == event.element.caption then
-            player.gui.center['mini_camera'].destroy()
+    if player.gui.screen['mini_camera'] then
+        if player.gui.screen['mini_camera'].caption == event.element.caption then
+            player.gui.screen['mini_camera'].destroy()
             return
         end
     end

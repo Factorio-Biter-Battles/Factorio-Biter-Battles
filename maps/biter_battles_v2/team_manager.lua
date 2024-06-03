@@ -113,7 +113,7 @@ end
 local function draw_manager_gui(player)
 	if player.gui.screen["team_manager_gui"] then player.gui.screen["team_manager_gui"].destroy() end
 
-	local frame = closable_frame.create_closable_frame(player, "team_manager_gui", "Manage Teams")
+	local frame = closable_frame.create_main_closable_frame(player, "team_manager_gui", "Manage Teams")
 
 	local t = frame.add({type = "table", name = "team_manager_root_table", column_count = 5})
 
@@ -223,26 +223,17 @@ local function set_custom_team_name(force_name, team_name)
 end
 
 function Public.custom_team_name_gui(player, force_name)
-	if player.gui.center["custom_team_name_gui"] then player.gui.center["custom_team_name_gui"].destroy() return end	
-	local frame = player.gui.center.add({type = "frame", name = "custom_team_name_gui", caption = "Set custom team name:", direction = "vertical"})
+	local frame = closable_frame.create_secondary_closable_frame(player, "custom_team_name_gui", "Set custom team name:")
+	if not frame then return end
 	local text = Functions.team_name(force_name)
 	
-	local textfield = frame.add({ type = "textfield", name = force_name, text = text })	
-	local t = frame.add({type = "table", column_count = 2})	
-	local button = t.add({
+	local textfield = frame.add({ type = "textfield", name = "textfield" .. force_name, text = text })
+	local button = frame.add({
 			type = "button",
 			name = "custom_team_name_gui_set",
 			caption = "Set",
 			tooltip = "Set custom team name."
-		})
-	button.style.font = "heading-2"
-	
-	local button = t.add({
-			type = "button",
-			name = "custom_team_name_gui_close",
-			caption = "Close",
-			tooltip = "Close this window."
-		})
+	})
 	button.style.font = "heading-2"
 end
 
@@ -261,7 +252,6 @@ local function team_manager_gui_click(event)
 	if game.forces[name] then
 		if not player.admin then player.print("Only admins can change team names.", {r = 175, g = 0, b = 0}) return end
 		Public.custom_team_name_gui(player, name)
-		player.gui.screen["team_manager_gui"].destroy()
 		return
 	end
 	
@@ -349,18 +339,12 @@ function Public.gui_click(event)
 	
 	if player.gui.screen["team_manager_gui"] then team_manager_gui_click(event) end
 	
-	if player.gui.center["custom_team_name_gui"] then
+	if player.gui.screen["custom_team_name_gui"] then
 		if name == "custom_team_name_gui_set" then
-			local custom_name = player.gui.center["custom_team_name_gui"].children[1].text
-			local force_name = player.gui.center["custom_team_name_gui"].children[1].name
+			local custom_name = player.gui.screen["custom_team_name_gui"].children[2].text
+			local force_name = string.sub(player.gui.screen["custom_team_name_gui"].children[2].name, 10)
 			set_custom_team_name(force_name, custom_name)
-			player.gui.center["custom_team_name_gui"].destroy()
-			draw_manager_gui(player)
-			return
-		end
-		if name == "custom_team_name_gui_close" then
-			player.gui.center["custom_team_name_gui"].destroy()
-			draw_manager_gui(player)
+			player.gui.screen["custom_team_name_gui"].destroy()
 			return
 		end
 	end	

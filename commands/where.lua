@@ -2,6 +2,7 @@
 
 local Color = require 'utils.color_presets'
 local Event = require 'utils.event'
+local closable_frame = require "utils.ui.closable_frame"
 
 local Public = {}
 
@@ -25,10 +26,10 @@ local function validate_player(player)
 end
 
 local function create_mini_camera_gui(player, caption, position, surface)
-    if player.gui.center['where_camera'] then
-        player.gui.center['where_camera'].destroy()
+    if player.gui.screen['where_camera'] then
+        player.gui.screen['where_camera'].destroy()
     end
-    local frame = player.gui.center.add({type = 'frame', name = 'where_camera', caption = caption})
+    local frame = closable_frame.create_main_closable_frame(player, "where_camera", caption)
     surface = tonumber(surface)
     local camera =
         frame.add(
@@ -67,23 +68,6 @@ commands.add_command(
     end
 )
 
-local function on_gui_click(event)
-    local player = game.get_player(event.player_index)
-
-    if not (event.element and event.element.valid) then
-        return
-    end
-
-    local name = event.element.name
-
-    if name == 'where_camera' then
-        player.gui.center['where_camera'].destroy()
-        return
-    end
-end
-
 Public.create_mini_camera_gui = create_mini_camera_gui
-
-Event.add(defines.events.on_gui_click, on_gui_click)
 
 return Public

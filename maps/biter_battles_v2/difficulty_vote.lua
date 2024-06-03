@@ -48,7 +48,7 @@ local function poll_difficulty(player)
 		return 
 	end
 	
-	local frame = closable_frame.create_closable_frame(
+	local frame = closable_frame.create_main_closable_frame(
 		player,
 		"difficulty_poll",
 		"Vote global difficulty:",
