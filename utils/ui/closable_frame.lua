@@ -83,10 +83,10 @@ local function create_draggable_frame(player, name, caption, close_tooltip, no_d
 	return frame
 end
 
----Only works if a main_closable_frame is currently exists. This should be used to things like, for example, the quick-bar filter selector,
----where you have a main GUI (the quick-bar) and when you click on something in that GUI, another GUI open up (the filter selector).
+---Only works if a main_closable_frame is currently exists. This should be used to things like, for example, the quick-bar filter selector
+---where you have a main GUI (the quick-bar) and when you click on something in that GUI, another GUI opens up (the filter selector).
 ---Creates a frame in the gui.screen that can be closed with the esc and E keys and closes the previously opened secondary closable frame, if any.
----If the main closable frame is closed, the secondary will also be closed if the main_closable_frame is closed.
+---If the main closable frame is closed, the secondary will also be closed.
 ---@param player LuaPlayer
 ---@param name string
 ---@param caption LocalisedString
