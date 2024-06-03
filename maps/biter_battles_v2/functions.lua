@@ -9,6 +9,7 @@ local math_min = math.min
 local math_floor = math.floor
 local string_find = string.find
 local gui_style = require 'utils.utils'.gui_style
+local closable_frame = require "utils.ui.closable_frame"
 
 local function get_ammo_modifier(ammo_category)
 	local result = 0
@@ -476,20 +477,18 @@ function Functions.create_map_intro_button(player)
 end
 
 function Functions.show_intro(player)
-	if player.gui.center["map_intro_frame"] then player.gui.center["map_intro_frame"].destroy() end
-	local frame = player.gui.center.add {type = "frame", name = "map_intro_frame", direction = "vertical"}
-	local frame = frame.add {type = "frame"}
+	if player.gui.screen["map_intro_frame"] then player.gui.screen["map_intro_frame"].destroy() end
+	local frame = closable_frame.create_closable_frame(player, "map_intro_frame", "-- Biter Battles --")
+
 	local l = frame.add {type = "label", caption = {"biter_battles.map_info"}, name = "biter_battles_map_intro"}
 	l.style.single_line = false
 	l.style.font_color = {r=255, g=255, b=255}
 end
 
 function Functions.map_intro_click(player, element)
-	if element.name == "close_map_intro_frame" then player.gui.center["map_intro_frame"].destroy() return true end	
-	if element.name == "biter_battles_map_intro" then player.gui.center["map_intro_frame"].destroy() return true end	
 	if element.name == "map_intro_button" then
-		if player.gui.center["map_intro_frame"] then
-			player.gui.center["map_intro_frame"].destroy()
+		if player.gui.screen["map_intro_frame"] then
+			player.gui.screen["map_intro_frame"].destroy()
 			return true
 		else
 			Functions.show_intro(player)

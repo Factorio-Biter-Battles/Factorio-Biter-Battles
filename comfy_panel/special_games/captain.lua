@@ -11,6 +11,7 @@ local gui_style = require 'utils.utils'.gui_style
 local ComfyPanelGroup = require 'comfy_panel.group'
 local CaptainRandomPick = require 'comfy_panel.special_games.captain_random_pick'
 local math_random = math.random
+local closable_frame = require "utils.ui.closable_frame"
 
 local Public = {
     name = {type = "label", caption = "Captain event", tooltip = "Captain event"},
@@ -623,14 +624,6 @@ function Public.generate(config, player)
 	generate_captain_mode(refereeName,autoTrustSystem,captainCanKick,pickingMode,specialEnabled)
 end
 
-local function add_close_button(frame)
-	local flow = frame.add({type = "flow", direction = "horizontal"})
-	flow.style.horizontal_align = "right"
-	flow.style.horizontally_stretchable = true
-	local button = flow.add({type = "sprite-button", name = "captain_gui_close", sprite = "utility/close_white", tooltip = "Close"})
-	gui_style(button, {width = 38, height = 38, padding = -2})
-end
-
 -- Update the 'dropdown' GuiElement with the new items, trying to preserve the current selection (otherwise go to index 1).
 local function update_dropdown(dropdown, new_items)
 	local selected_index = dropdown.selected_index
@@ -660,9 +653,8 @@ end
 
 function Public.draw_captain_manager_gui(player)
 	if is_test_player(player) then return end
-	if player.gui.center["captain_manager_gui"] then player.gui.center["captain_manager_gui"].destroy() end
-	local frame = player.gui.center.add({type = "frame", name = "captain_manager_gui", caption = "Cpt Captain", direction = "vertical"})
-	add_close_button(frame)
+	if player.gui.screen["captain_manager_gui"] then player.gui.screen["captain_manager_gui"].destroy() end
+	local frame = closable_frame.create_closable_frame(player, "captain_manager_gui", "Cpt Captain")
 	frame.add({type = "label", name = "diff_vote_duration"})
 	frame.add({type = "button", name = "captain_is_ready"})
 	frame.add({type = "label", caption = "[font=heading-1][color=purple]Management for science throwing[/color][/font]"})
@@ -703,7 +695,7 @@ function Public.draw_captain_manager_gui(player)
 end
 
 function Public.update_captain_manager_gui(player)
-	local frame = player.gui.center["captain_manager_gui"]
+	local frame = player.gui.screen["captain_manager_gui"]
 	if not frame then return end
 	local special = global.special_games_variables["captain_mode"]
 	local force_name = global.chosen_team[player.name]
@@ -771,38 +763,38 @@ end
 function Public.update_all_captain_player_guis()
 	if not global.special_games_variables["captain_mode"] then return end
 	for _, player in pairs(game.connected_players) do
-		if player.gui.center["captain_player_gui"] then
+		if player.gui.screen["captain_player_gui"] then
 			Public.update_captain_player_gui(player)
 		end
-		if player.gui.center["captain_manager_gui"] then
+		if player.gui.screen["captain_manager_gui"] then
 			Public.update_captain_manager_gui(player)
 		end
 	end
 	local referee = cpt_get_player(global.special_games_variables["captain_mode"]["refereeName"])
-	if referee.gui.center["captain_referee_gui"] then
+	if referee.gui.screen["captain_referee_gui"] then
 		Public.update_captain_referee_gui(referee)
 	end
 end
 
 function Public.toggle_captain_player_gui(player)
-	if player.gui.center["captain_player_gui"] then
-		player.gui.center["captain_player_gui"].destroy()
+	if player.gui.screen["captain_player_gui"] then
+		player.gui.screen["captain_player_gui"].destroy()
 	else
 		Public.draw_captain_player_gui(player)
 	end
 end
 
 function Public.toggle_captain_manager_gui(player)
-	if player.gui.center["captain_manager_gui"] then
-		player.gui.center["captain_manager_gui"].destroy()
+	if player.gui.screen["captain_manager_gui"] then
+		player.gui.screen["captain_manager_gui"].destroy()
 	else
 		Public.draw_captain_manager_gui(player)
 	end
 end
 
 function Public.toggle_captain_referee_gui(player)
-	if player.gui.center["captain_referee_gui"] then
-		player.gui.center["captain_referee_gui"].destroy()
+	if player.gui.screen["captain_referee_gui"] then
+		player.gui.screen["captain_referee_gui"].destroy()
 	else
 		Public.draw_captain_referee_gui(player)
 	end
@@ -824,17 +816,16 @@ end
 
 function Public.draw_captain_referee_gui(player)
 	if is_test_player(player) then return end
-	if player.gui.center["captain_referee_gui"] then player.gui.center["captain_referee_gui"].destroy() end
-	local frame = player.gui.center.add({type = "frame", name = "captain_referee_gui", caption = "Cpt Referee", direction = "vertical"})
+	if player.gui.screen["captain_referee_gui"] then player.gui.screen["captain_referee_gui"].destroy() end
+	local frame = closable_frame.create_closable_frame(player, "captain_referee_gui", "Cpt Referee")
 	frame.style.maximal_width = 800
-	add_close_button(frame)
 	frame.add({type = "scroll-pane", name = "scroll", direction = "vertical"})
 	Public.update_captain_referee_gui(player)
 end
 
 function Public.update_captain_referee_gui(player)
 	local special = global.special_games_variables["captain_mode"]
-	local frame = player.gui.center.captain_referee_gui
+	local frame = player.gui.screen.captain_referee_gui
 	if not frame then return end
 	local scroll = frame.scroll
 	-- Technically this would be more efficient if we didn't do the full clear here, and
@@ -978,10 +969,9 @@ end
 
 function Public.draw_captain_player_gui(player)
 	if is_test_player(player) then return end
-	if player.gui.center["captain_player_gui"] then player.gui.center["captain_player_gui"].destroy() end
-	local frame = player.gui.center.add({type = "frame", name = "captain_player_gui", caption = "Join Info", direction = "vertical"})
+	if player.gui.screen["captain_player_gui"] then player.gui.screen["captain_player_gui"].destroy() end
+	local frame = closable_frame.create_closable_frame(player, "captain_player_gui", "Join Info")
 	frame.style.maximal_width = 800
-	add_close_button(frame)
 
 	local prepa_flow = frame.add({type = "flow", name = "prepa_flow", direction = "vertical"})
 	prepa_flow.add({type = "label", caption = "A captains game will start soon!"})
@@ -1006,7 +996,7 @@ function Public.draw_captain_player_gui(player)
 end
 
 function Public.update_captain_player_gui(player)
-	local frame = player.gui.center.captain_player_gui
+	local frame = player.gui.screen.captain_player_gui
 	if not frame then return end
 	local special = global.special_games_variables["captain_mode"]
 	local prepa_flow = frame.prepa_flow
@@ -1420,9 +1410,7 @@ local function on_gui_click(event)
 	if not player then return end
 	local special = global.special_games_variables["captain_mode"]
 
-	if element.name == "captain_gui_close" then
-		element.parent.parent.destroy()
-	elseif element.name == "captain_player_want_to_play" then
+	if element.name == "captain_player_want_to_play" then
 		if not global.special_games_variables["captain_mode"]["pickingPhase"] then
 			insertPlayerByPlaytime(player.name)
 			Public.update_all_captain_player_guis()
@@ -1555,7 +1543,7 @@ local function on_gui_click(event)
 	elseif element.name == "captain_referee_toggle_button" then
 		Public.toggle_captain_referee_gui(player)
 	elseif element.name == "captain_add_someone_to_throw_trustlist" then
-		local playerNameUpdateText = get_dropdown_value(player.gui.center["captain_manager_gui"]["captain_manager_root_table"]["captain_add_trustlist_playerlist"])
+		local playerNameUpdateText = get_dropdown_value(player.gui.screen["captain_manager_gui"]["captain_manager_root_table"]["captain_add_trustlist_playerlist"])
 		if playerNameUpdateText and playerNameUpdateText ~= "" then
 			local tableToUpdate = special["northThrowPlayersListAllowed"]
 			local forceForPrint = "north"
@@ -1578,7 +1566,7 @@ local function on_gui_click(event)
 			end
 		end
 	elseif element.name == "captain_remove_someone_to_throw_trustlist" then
-		local playerNameUpdateText = get_dropdown_value(player.gui.center["captain_manager_gui"]["captain_manager_root_table"]["captain_remove_trustlist_playerlist"])
+		local playerNameUpdateText = get_dropdown_value(player.gui.screen["captain_manager_gui"]["captain_manager_root_table"]["captain_remove_trustlist_playerlist"])
 		if playerNameUpdateText and playerNameUpdateText ~= "" then
 			local tableToUpdate = special["northThrowPlayersListAllowed"]
 			local forceForPrint = "north"
@@ -1596,7 +1584,7 @@ local function on_gui_click(event)
 			Public.draw_captain_manager_gui(player)
 		end
 	elseif element.name == "captain_eject_player" then
-		local dropdown = player.gui.center["captain_manager_gui"]["captain_manager_root_table_two"]["captain_eject_playerlist"]
+		local dropdown = player.gui.screen["captain_manager_gui"]["captain_manager_root_table_two"]["captain_eject_playerlist"]
 		local victim = cpt_get_player(get_dropdown_value(dropdown))
 		if victim and victim.valid then
 			if victim.name == player.name then return player.print("You can't select yourself!", Color.red) end
@@ -1655,7 +1643,7 @@ local function changeCaptain(cmd,isItForNorth)
 						end
 						game.print(playerOfCommand.name .. " has decided that " .. victim.name .. " will be the new captain instead of " .. global.special_games_variables["captain_mode"]["captainList"][1],Color.cyan)
 						local oldCaptain = cpt_get_player(global.special_games_variables["captain_mode"]["captainList"][1])
-						if oldCaptain.gui.center["captain_manager_gui"] then oldCaptain.gui.center["captain_manager_gui"].destroy() end
+						if oldCaptain.gui.screen["captain_manager_gui"] then oldCaptain.gui.screen["captain_manager_gui"].destroy() end
 						if oldCaptain.gui.top["captain_manager_toggle_button"] then oldCaptain.gui.top["captain_manager_toggle_button"].destroy() end
 						global.special_games_variables["captain_mode"]["captainList"][1] = victim.name
 						Public.draw_captain_manager_button(cpt_get_player(victim.name))
@@ -1666,7 +1654,7 @@ local function changeCaptain(cmd,isItForNorth)
 						end
 						game.print(playerOfCommand.name .. " has decided that " .. victim.name .. " will be the new captain instead of " .. global.special_games_variables["captain_mode"]["captainList"][2],Color.cyan)
 						local oldCaptain = cpt_get_player(global.special_games_variables["captain_mode"]["captainList"][2])
-						if oldCaptain.gui.center["captain_manager_gui"] then oldCaptain.gui.center["captain_manager_gui"].destroy() end
+						if oldCaptain.gui.screen["captain_manager_gui"] then oldCaptain.gui.screen["captain_manager_gui"].destroy() end
 						if oldCaptain.gui.top["captain_manager_toggle_button"] then oldCaptain.gui.top["captain_manager_toggle_button"].destroy() end
 						global.special_games_variables["captain_mode"]["captainList"][2] = victim.name
 						Public.draw_captain_manager_button(cpt_get_player(victim.name))
@@ -1717,7 +1705,7 @@ commands.add_command('replaceReferee', 'Admin or referee can decide to change th
 
 			local refPlayer = cpt_get_player(global.special_games_variables["captain_mode"]["refereeName"])
 			if refPlayer.gui.top["captain_referee_toggle_button"] then refPlayer.gui.top["captain_referee_toggle_button"].destroy() end
-			if refPlayer.gui.center["captain_referee_gui"] then refPlayer.gui.center["captain_referee_gui"].destroy() end
+			if refPlayer.gui.screen["captain_referee_gui"] then refPlayer.gui.screen["captain_referee_gui"].destroy() end
 			Public.draw_captain_referee_button(victim)
 			game.print(playerOfCommand.name .. " has decided that " .. victim.name .. " will be the new referee instead of " .. global.special_games_variables["captain_mode"]["refereeName"],Color.cyan)
 			global.special_games_variables["captain_mode"]["refereeName"] = victim.name

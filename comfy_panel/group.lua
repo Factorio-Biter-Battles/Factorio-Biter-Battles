@@ -156,12 +156,18 @@ local build_group_gui = (function(player, frame)
         end
     end
 
+    frame.style.bottom_padding = 0
     local frame2 = frame.add({type = 'frame', name = 'frame2'})
+    frame2.style.margin = 0
+    frame2.style.bottom_padding = 4
+    frame2.style.horizontally_stretchable = true
     local t = frame2.add({type = 'table', name = 'group_table', column_count = 3})
     local textfield = t.add({type = 'textfield', name = 'new_group_name', text = 'Name'})
     textfield.style.minimal_width = 200
     local textfield = t.add({type = 'textfield', name = 'new_group_description', text = 'Description'})
-    textfield.style.minimal_width = 400
+    textfield.style.horizontally_stretchable = true
+    textfield.style.natural_width = 0
+    textfield.style.width = 0
     local b = t.add({type = 'button', name = 'create_new_group', caption = 'Create'})
     b.style.minimal_width = 150
     b.style.font = 'default-bold'

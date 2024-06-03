@@ -3,27 +3,17 @@ local flui = require 'utils.ui.gui-lite'
 local uic = require 'utils.ui.fcomponents'
 local Event = require 'utils.event'
 local Functions = require 'maps.biter_battles_v2.functions'
+local closable_frame = require "utils.ui.closable_frame"
 
 local MAXHEIGHT_PADDING = 50
 
 local function ui_template()
-    local research_info_ui = uic.blocks.ClosableWindow(
-        "research_info_frame",
-        "Research summary for both teams"
-    )
     --[[
         research_info_ui
             scroll
                 main
     ]]
     local container = uic.blocks.vflow "main"
-    uic.add(research_info_ui, {
-        type = "scroll-pane",
-        horziontal_scroll_policy = "never",
-        vertical_scroll_policy = "always",
-        name = "scroll",
-        container
-    })
     local teams = uic.add(container,
         uic.blocks.hflow "teams"
     )
@@ -164,7 +154,7 @@ local function ui_template()
             }
         }
     })
-    return research_info_ui
+    return container
 end
 local UI = ui_template()
 
@@ -499,7 +489,9 @@ function ResearchInfo.show_research_info(player)
         player.gui.screen["research_info_frame"].force_auto_center()
         return
     end
-    local named_elements = flui.add(player.gui.screen, UI)
+    local frame = closable_frame.create_closable_frame(player, "research_info_frame", "Research summary for both teams")
+    local scroll = frame.add({ type = "scroll-pane", horizontal_scroll_policy = "never", vertical_scroll_policy = "always", name = "scroll" })
+    local named_elements = flui.add(scroll, UI)
     named_elements["team_name_south"].caption = Functions.team_name_with_color("south")
     named_elements["team_name_north"].caption = Functions.team_name_with_color("north")
     local el = player.gui.screen["research_info_frame"]

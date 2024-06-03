@@ -46,13 +46,16 @@ local create_special_games_panel = (function(player, frame)
     frame.clear()
     frame.add{type = "label", caption = "Configure and apply special games here"}.style.single_line = false
     local sp = frame.add{type = "scroll-pane", horizontal_scroll_policy = "never"}
+    sp.style.vertically_squashable = true
+    sp.style.padding = 2
     for k, v in pairs(valid_special_games) do
         local a = sp.add {type = "frame"}
-        a.style.width = 750
+        a.style.horizontally_stretchable = true
         local table = a.add {name = k, type = "table", column_count = 3, draw_vertical_lines = true}
         table.add(v.name).style.width = 110
         local config = table.add {name = k .. "_config", type = "flow", direction = "horizontal"}
-        config.style.width = 500
+        config.style.horizontally_stretchable = true
+        config.style.left_padding = 3
         for _, i in ipairs(v.config) do
             config.add(i)
             config[i.name].style.width = i.width

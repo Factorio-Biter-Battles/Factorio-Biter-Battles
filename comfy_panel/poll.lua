@@ -329,8 +329,22 @@ end
 
 local function draw_main_frame(left, player)
     local trusted = session.get_trusted_table()
-    local frame = left.add {type = 'frame', name = main_frame_name, caption = 'Polls', direction = 'vertical'}
+    local frame = left.add {type = 'frame', name = main_frame_name, direction = 'vertical'}
     --frame.style.maximal_width = 640
+
+    local titleFlow = frame.add({ type = "flow", direction = "horizontal" })
+
+	titleFlow.add({ type = "label", caption = "Polls", style = "frame_title" })
+
+    local dragger = titleFlow.add({ type = "empty-widget", style = "draggable_space_header" })
+    dragger.style.horizontally_stretchable = true
+    dragger.style.height = 24
+
+	titleFlow.add({
+        type = "sprite-button", name = main_button_name,
+        sprite = "utility/close_white", clicked_sprite = "utility/close_black",
+        style = "close_button", tooltip = {"gui.close"}
+    })
 
     local poll_viewer_top_flow = frame.add {type = 'table', column_count = 5}
     poll_viewer_top_flow.style.horizontal_spacing = 0
@@ -381,20 +395,9 @@ local function draw_main_frame(left, player)
         state = not no_notify_players[player.index],
         tooltip = 'Receive a message when new polls are created and popup the poll.'
     }
-    ]] local bottom_flow =
-        frame.add {type = 'flow', direction = 'horizontal'}
+    ]]
 
-    local left_flow = bottom_flow.add {type = 'flow'}
-    left_flow.style.horizontal_align = 'left'
-    left_flow.style.horizontally_stretchable = true
-
-    local close_button = left_flow.add {type = 'button', name = main_button_name, caption = 'Close'}
-    apply_button_style(close_button)
-
-    local right_flow = bottom_flow.add {type = 'flow'}
-    right_flow.style.horizontal_align = 'right'
-
-    local create_poll_button = right_flow.add{type = 'button', name = create_poll_button_name, caption = 'Create Poll'}
+    local create_poll_button = frame.add{type = 'button', name = create_poll_button_name, caption = 'Create Poll'}
     if not player.admin then
         create_poll_button.enabled = false
         create_poll_button.tooltip = "Poll creation is disabled"
@@ -434,8 +437,8 @@ local function toggle(event)
         remove_main_frame(main_frame, left, event.player)
         Tabs.comfy_panel_restore_left_gui(event.player)
     else
-        Tabs.comfy_panel_clear_left_gui(event.player)
         draw_main_frame(left, event.player)
+        if left["bb_main_gui"] then left.swap_children(1, 2) end
     end
 end
 
