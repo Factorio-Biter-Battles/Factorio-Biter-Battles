@@ -162,8 +162,7 @@ end
 
 ---@param event EventData.on_player_left_game
 local function on_player_left_game(event)
-    ---@diagnostic disable-next-line: param-type-mismatch
-    closable_frame.close_all(game.get_player(event.player_index))
+    closable_frame.close_all(game.get_player(event.player_index) --[[@as LuaPlayer]])
     global.closable_frame.closable_frames[event.player_index] = nil
 end
 
