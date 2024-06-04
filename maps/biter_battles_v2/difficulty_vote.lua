@@ -52,9 +52,16 @@ local function poll_difficulty(player)
 		player,
 		"difficulty_poll",
 		"Vote global difficulty:",
-		math.floor((global.difficulty_votes_timeout - tick) / 3600) .. " minutes left.",
-		true
+		{
+			no_dragger = true
+		}
 	)
+
+	local time_left = frame.add{type = "label", caption = math.floor((global.difficulty_votes_timeout - tick) / 3600) .. " minutes left."}
+	time_left.style.font = "heading-2"
+	local separator = frame.add{type = "line", direction = "horizontal"}
+	separator.style.bottom_margin = 6
+
 	local vote_amounts = {}
 	for k, v in pairs(global.difficulty_player_votes) do
 		vote_amounts[v] = (vote_amounts[v] or 0) + 1
@@ -65,7 +72,7 @@ local function poll_difficulty(player)
 		local b = frame.add{type = "button", name = tostring(key), caption = caption}
 		b.style.font_color = difficulty.color
 		b.style.font = "heading-2"
-		b.style.minimal_width = 180
+		b.style.minimal_width = 211
 	end
 end
 

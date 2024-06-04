@@ -480,7 +480,8 @@ function Functions.show_intro(player)
 	if player.gui.screen["map_intro_frame"] then player.gui.screen["map_intro_frame"].destroy() end
 	local frame = closable_frame.create_main_closable_frame(player, "map_intro_frame", "-- Biter Battles --")
 
-	local l = frame.add {type = "label", caption = {"biter_battles.map_info"}, name = "biter_battles_map_intro"}
+	local scroll = frame.add { type = "scroll-pane" }
+	local l = scroll.add {type = "label", caption = {"biter_battles.map_info"}, name = "biter_battles_map_intro"}
 	l.style.single_line = false
 	l.style.font_color = {r=255, g=255, b=255}
 end

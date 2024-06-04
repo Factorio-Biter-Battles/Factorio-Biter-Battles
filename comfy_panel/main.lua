@@ -25,10 +25,11 @@ function Public.comfy_panel_get_active_frame(player)
     if not player.gui.screen.comfy_panel then
         return false
     end
-    if not player.gui.screen.comfy_panel.comfy_panel_inside.tabbed_pane.selected_tab_index then
-        return player.gui.screen.comfy_panel.comfy_panel_inside.tabbed_pane.tabs[1].content
+    local tabbed_pane = player.gui.screen.comfy_panel.comfy_panel_inside.tabbed_pane
+    if not tabbed_pane.selected_tab_index then
+        return tabbed_pane.tabs[1].content
     end
-    return player.gui.screen.comfy_panel.comfy_panel_inside.tabbed_pane.tabs[player.gui.screen.comfy_panel.comfy_panel_inside.tabbed_pane.selected_tab_index].content
+    return tabbed_pane.tabs[tabbed_pane.selected_tab_index].content
 end
 
 function Public.comfy_panel_refresh_active_tab(player)
@@ -82,17 +83,6 @@ local function main_frame(player)
     end
 
     Public.comfy_panel_refresh_active_tab(player)
-end
-
-function Public.comfy_panel_call_tab(player, name)
-    main_frame(player)
-    local tabbed_pane = player.gui.screen.comfy_panel.tabbed_pane
-    for key, v in pairs(tabbed_pane.tabs) do
-        if v.tab.caption == name then
-            tabbed_pane.selected_tab_index = key
-            Public.comfy_panel_refresh_active_tab(player)
-        end
-    end
 end
 
 local function on_player_joined_game(event)

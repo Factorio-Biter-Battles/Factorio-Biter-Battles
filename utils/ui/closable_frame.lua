@@ -8,7 +8,8 @@ local closable_frame = {}
 function closable_frame.any_main_closable_frame(player)
 	if global.closable_frame.closable_frames and
         global.closable_frame.closable_frames[player.index] and
-        global.closable_frame.closable_frames[player.index].main
+        global.closable_frame.closable_frames[player.index].main and
+        global.closable_frame.closable_frames[player.index].main.valid
     then
         return true
     end
@@ -51,17 +52,21 @@ function closable_frame.close_secondary(player)
     end
 end
 
+---Options:
+---close_tooltip: Additional string that will be showed before "gui.close-instruction" in the close button tooltip.
+---no_dragger: If true, the dragger will not be added. Useful for really thin frames. Defaults to false.
 ---@param player LuaPlayer
 ---@param name string
 ---@param caption LocalisedString
----@param close_tooltip LocalisedString? Additional string that will be showed before "gui.close-instruction" in the close button tooltip.
----@param no_dragger boolean? If true, the dragger will not be added. Useful for really thin frames. Defaults to false.
+---@param options { close_tooltip: LocalisedString?, no_dragger: boolean? }?
 ---@return LuaGuiElement
-local function create_draggable_frame(player, name, caption, close_tooltip, no_dragger)
+local function create_draggable_frame(player, name, caption, options)
 	local frame = player.gui.screen.add({type = "frame", name = name, direction = "vertical"})
     frame.auto_center = true
 
 	local flow = frame.add({ type = "flow", direction = "horizontal" })
+    flow.style.horizontal_spacing = 8
+    flow.style.bottom_padding = 4
 
 	local title = flow.add({ type = "label", caption = caption, style = "frame_title" })
 	title.drag_target = frame
@@ -70,14 +75,14 @@ local function create_draggable_frame(player, name, caption, close_tooltip, no_d
 	dragger.drag_target = frame
     dragger.style.horizontally_stretchable = true
     dragger.style.height = 24
-    if no_dragger then
+    if options and options.no_dragger then
         dragger.style.height = 0 -- Actually we need to keep the dragger, to push the button to the right
     end
 
 	flow.add({
         type = "sprite-button", name = "closable_frame_close",
         sprite = "utility/close_white", clicked_sprite = "utility/close_black",
-        style = "close_button", tooltip = {"", close_tooltip and close_tooltip .. " " or "", {"gui.close-instruction"}}
+        style = "close_button", tooltip = {"", options and options.close_tooltip and options.close_tooltip .. " " or "", {"gui.close-instruction"}}
     })
 
 	return frame
@@ -86,18 +91,20 @@ end
 ---Only works if a main_closable_frame is currently exists. This should be used to things like, for example, the quick-bar filter selector
 ---where you have a main GUI (the quick-bar) and when you click on something in that GUI, another GUI opens up (the filter selector).
 ---Creates a frame in the gui.screen that can be closed with the esc and E keys and closes the previously opened secondary closable frame, if any.
----If the main closable frame is closed, the secondary will also be closed.
+---If the main closable frame is closed, the secondary will also be closed.  
+---Options:
+---close_tooltip: Additional string that will be showed before "gui.close-instruction" in the close button tooltip.
+---no_dragger: If true, the dragger will not be added. Useful for really thin frames. Defaults to false.
 ---@param player LuaPlayer
 ---@param name string
 ---@param caption LocalisedString
----@param close_tooltip LocalisedString? Additional string that will be showed before "gui.close-instruction" in the close button tooltip.
----@param no_dragger boolean? If true, the dragger will not be added. Useful for really thin frames. Defaults to false.
+---@param options { close_tooltip: LocalisedString?, no_dragger: boolean? }?
 ---@return LuaGuiElement?
-function closable_frame.create_secondary_closable_frame(player, name, caption, close_tooltip, no_dragger)
+function closable_frame.create_secondary_closable_frame(player, name, caption, options)
     if not closable_frame.any_main_closable_frame(player) then return nil end
     closable_frame.close_secondary(player)
 
-    local frame = create_draggable_frame(player, name, caption, close_tooltip, no_dragger)
+    local frame = create_draggable_frame(player, name, caption, options)
 
     global.closable_frame.dont_close = true
     player.opened = frame
@@ -107,15 +114,17 @@ function closable_frame.create_secondary_closable_frame(player, name, caption, c
     return frame
 end
 
----Creates a frame in the gui.screen that can be closed with the esc and E keys and closes the previously opened main closable frame, if any.
+---Creates a frame in the gui.screen that can be closed with the esc and E keys and closes the previously opened main closable frame, if any.  
+---Options:
+---close_tooltip: Additional string that will be showed before "gui.close-instruction" in the close button tooltip.
+---no_dragger: If true, the dragger will not be added. Useful for really thin frames. Defaults to false.
 ---@param player LuaPlayer
 ---@param name string
 ---@param caption LocalisedString
----@param close_tooltip LocalisedString? Additional string that will be showed before "gui.close-instruction" in the close button tooltip.
----@param no_dragger boolean? If true, the dragger will not be added. Useful for really thin frames. Defaults to false.
+---@param options { close_tooltip: LocalisedString?, no_dragger: boolean? }?
 ---@return LuaGuiElement
-function closable_frame.create_main_closable_frame(player, name, caption, close_tooltip, no_dragger)
-    local frame = create_draggable_frame(player, name, caption, close_tooltip, no_dragger)
+function closable_frame.create_main_closable_frame(player, name, caption, options)
+    local frame = create_draggable_frame(player, name, caption, options)
 
 	player.opened = frame
     global.closable_frame.closable_frames[player.index].main = frame
