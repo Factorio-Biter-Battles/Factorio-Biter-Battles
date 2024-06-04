@@ -6,7 +6,7 @@ local closable_frame = {}
 ---@param player LuaPlayer
 ---@return boolean
 function closable_frame.any_main_closable_frame(player)
-	if global.closable_frame.closable_frames and
+    if global.closable_frame.closable_frames and
         global.closable_frame.closable_frames[player.index] and
         global.closable_frame.closable_frames[player.index].main and
         global.closable_frame.closable_frames[player.index].main.valid
@@ -61,37 +61,40 @@ end
 ---@param options { close_tooltip: LocalisedString?, no_dragger: boolean? }?
 ---@return LuaGuiElement
 local function create_draggable_frame(player, name, caption, options)
-	local frame = player.gui.screen.add({type = "frame", name = name, direction = "vertical"})
+    local frame = player.gui.screen.add({ type = "frame", name = name, direction = "vertical" })
     frame.auto_center = true
 
-	local flow = frame.add({ type = "flow", direction = "horizontal" })
+    local flow = frame.add({ type = "flow", direction = "horizontal" })
     flow.style.horizontal_spacing = 8
     flow.style.bottom_padding = 4
 
-	local title = flow.add({ type = "label", caption = caption, style = "frame_title" })
-	title.drag_target = frame
+    local title = flow.add({ type = "label", caption = caption, style = "frame_title" })
+    title.drag_target = frame
 
     local dragger = flow.add({ type = "empty-widget", style = "draggable_space_header" })
-	dragger.drag_target = frame
+    dragger.drag_target = frame
     dragger.style.horizontally_stretchable = true
     dragger.style.height = 24
     if options and options.no_dragger then
         dragger.style.height = 0 -- Actually we need to keep the dragger, to push the button to the right
     end
 
-	flow.add({
-        type = "sprite-button", name = "closable_frame_close",
-        sprite = "utility/close_white", clicked_sprite = "utility/close_black",
-        style = "close_button", tooltip = {"", options and options.close_tooltip and options.close_tooltip .. " " or "", {"gui.close-instruction"}}
+    flow.add({
+        type = "sprite-button",
+        name = "closable_frame_close",
+        sprite = "utility/close_white",
+        clicked_sprite = "utility/close_black",
+        style = "close_button",
+        tooltip = { "", options and options.close_tooltip and options.close_tooltip .. " " or "", { "gui.close-instruction" } }
     })
 
-	return frame
+    return frame
 end
 
 ---Only works if a main_closable_frame is currently exists. This should be used to things like, for example, the quick-bar filter selector
 ---where you have a main GUI (the quick-bar) and when you click on something in that GUI, another GUI opens up (the filter selector).
 ---Creates a frame in the gui.screen that can be closed with the esc and E keys and closes the previously opened secondary closable frame, if any.
----If the main closable frame is closed, the secondary will also be closed.  
+---If the main closable frame is closed, the secondary will also be closed.
 ---Options:
 ---close_tooltip: Additional string that will be showed before "gui.close-instruction" in the close button tooltip.
 ---no_dragger: If true, the dragger will not be added. Useful for really thin frames. Defaults to false.
@@ -114,7 +117,7 @@ function closable_frame.create_secondary_closable_frame(player, name, caption, o
     return frame
 end
 
----Creates a frame in the gui.screen that can be closed with the esc and E keys and closes the previously opened main closable frame, if any.  
+---Creates a frame in the gui.screen that can be closed with the esc and E keys and closes the previously opened main closable frame, if any.
 ---Options:
 ---close_tooltip: Additional string that will be showed before "gui.close-instruction" in the close button tooltip.
 ---no_dragger: If true, the dragger will not be added. Useful for really thin frames. Defaults to false.
@@ -126,7 +129,7 @@ end
 function closable_frame.create_main_closable_frame(player, name, caption, options)
     local frame = create_draggable_frame(player, name, caption, options)
 
-	player.opened = frame
+    player.opened = frame
     global.closable_frame.closable_frames[player.index].main = frame
 
     return frame
@@ -157,7 +160,7 @@ local function on_gui_click(event)
     if event.element.name == "closable_frame_close" then
         game.get_player(event.player_index).opened = nil
 
-        --- this is not absolutely needed, it's a security 
+        --- this is not absolutely needed, it's a security
         if event.element.valid then
             event.element.parent.parent.destroy()
         end
