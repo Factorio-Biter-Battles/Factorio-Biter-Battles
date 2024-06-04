@@ -231,12 +231,14 @@ local function redraw_poll_viewer_content(data)
             type = 'sprite-button',
             name = poll_view_edit_name,
             sprite = 'utility/rename_icon_normal',
-            tooltip = 'Edit Poll.'
+            tooltip = 'Edit Poll.',
+            style = 'button',
         }
 
         local edit_button_style = edit_button.style
         edit_button_style.width = 26
         edit_button_style.height = 26
+        edit_button_style.padding = 0
     end
 
     local question_label = question_flow.add {type = 'label', caption = poll.question}
@@ -480,7 +482,8 @@ local function redraw_create_poll_content(data)
         maximum_value = duration_slider_max,
         value = math.floor(data.duration * inv_tick_duration_step)
     }
-    duration_slider.style.width = 100
+    duration_slider.style.minimal_width = 100
+    duration_slider.style.horizontally_stretchable = true
 
     data.duration_slider = duration_slider
 
@@ -496,7 +499,10 @@ local function redraw_create_poll_content(data)
 
     local question_textfield =
         grid.add({type = 'flow'}).add {type = 'textfield', name = create_poll_question_name, text = data.question}
-    question_textfield.style.width = 170
+    question_textfield.style.natural_width = 0
+    question_textfield.style.width = 0
+    question_textfield.style.minimal_width = 170
+    question_textfield.style.horizontally_stretchable = true
 
     Gui.set_data(question_label, question_textfield)
     Gui.set_data(question_textfield, data)
@@ -511,7 +517,7 @@ local function redraw_create_poll_content(data)
                 delete_flow.add {
                 type = 'sprite-button',
                 name = create_poll_delete_answer_name,
-                sprite = 'utility/trash',
+                sprite = 'utility/trash_white',
                 tooltip = 'Delete answer field.'
             }
             delete_button.style.height = 26
@@ -532,7 +538,10 @@ local function redraw_create_poll_content(data)
         local textfield_flow = grid.add {type = 'flow'}
 
         local textfield = textfield_flow.add {type = 'textfield', name = create_poll_answer_name, text = answer.text}
-        textfield.style.width = 170
+        textfield.style.natural_width = 0
+        textfield.style.width = 0
+        textfield.style.minimal_width = 170
+        textfield.style.horizontally_stretchable = true
         Gui.set_data(textfield, {answers = answers, count = count})
 
         if delete_button then
@@ -582,11 +591,13 @@ local function draw_create_poll_frame(parent, player, previous_data)
 
     local frame =
         parent.add {type = 'frame', name = create_poll_frame_name, caption = title_text, direction = 'vertical'}
-    frame.style.maximal_width = 320
+    frame.style.minimal_width = 320
+    frame.style.horizontally_stretchable = true
 
     local scroll_pane = frame.add {type = 'scroll-pane', vertical_scroll_policy = 'always'}
     scroll_pane.style.maximal_height = 250
-    scroll_pane.style.maximal_width = 300
+    scroll_pane.style.horizontally_stretchable = true
+    scroll_pane.style.padding = 4
 
     local grid = scroll_pane.add {type = 'table', column_count = 3}
 
