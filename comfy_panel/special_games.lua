@@ -102,26 +102,23 @@ local function on_gui_click(event)
     local config = special_game_gui.children[2]
     local player = game.get_player(event.player_index)
 
-    if element.name == "apply" then
+    if element.name == "confirm" or element.name == "cancel" then
+        if element.name == "confirm" then
+            valid_special_games[special_game_gui.name].generate(config, player)
+        end
+
+        if not element.valid then return end
+        special_game_gui.children[3].visible = true -- shows back Apply button
+        element.parent.destroy() -- removes confirm/Cancel buttons
+
+    elseif element.name == "apply" then
         local flow = element.parent.add {type = "flow", direction = "vertical"}
         flow.add {type = "button", name = "confirm", caption = "Confirm"}
         flow.add {type = "button", name = "cancel", caption = "Cancel"}
         element.visible = false -- hides Apply button    
         player.print("[SPECIAL GAMES] Are you sure? This change will be reversed only on map restart!", Color.cyan)
 
-        return
-    elseif element.name == "confirm" then
-        valid_special_games[special_game_gui.name].generate(config, player)
-    end
-
-    if element.name == "confirm" or element.name == "cancel" then
-        special_game_gui.children[3].visible = true -- shows back Apply button
-        element.parent.destroy() -- removes confirm/Cancel buttons
-
-        return
-    end
-
-    if valid_special_games[special_game_gui.name]["gui_click"] then
+    elseif valid_special_games[special_game_gui.name]["gui_click"] then
         valid_special_games[special_game_gui.name].gui_click(element, config, player)
     end
 end
