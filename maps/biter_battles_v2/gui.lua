@@ -450,7 +450,7 @@ function join_team(player, force_name, forced_join, auto_join)
 	Public.clear_copy_history(player)
 	Public.refresh()
 
-    script.raise_event(Public.events.on_player_joined_team, {
+	script.raise_event(Public.events.on_player_joined_team, {
 		player_index = player.index,
 	})
 end
