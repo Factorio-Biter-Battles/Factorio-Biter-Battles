@@ -363,10 +363,7 @@ local build_config_gui = (function(player, frame)
     }
     local scroll_style = scroll_pane.style
     scroll_style.vertically_squashable = true
-    scroll_style.bottom_padding = 2
-    scroll_style.left_padding = 2
-    scroll_style.right_padding = 2
-    scroll_style.top_padding = 2
+    scroll_style.padding = 2
 
     label = scroll_pane.add({type = 'label', caption = 'Player Settings'})
     label.style.font = 'default-bold'

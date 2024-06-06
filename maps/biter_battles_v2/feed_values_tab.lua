@@ -3,6 +3,7 @@
 local Tables = require "maps.biter_battles_v2.tables"
 local food_values = Tables.food_values
 local food_long_and_short = Tables.food_long_and_short
+local Tabs = require 'comfy_panel.main'
 
 local function get_science_text(food_name, food_short_name)
     return table.concat({"[img=item/", food_name, "][color=",food_values[food_name].color, "]", food_short_name, "[/color]"})
@@ -291,14 +292,8 @@ local function add_feed_values(player, element, food_product_info)
     end
 end
 
-local function comfy_panel_get_active_frame(player)
-    if not player.gui.left.comfy_panel then return false end
-    if not player.gui.left.comfy_panel.tabbed_pane.selected_tab_index then return player.gui.left.comfy_panel.tabbed_pane.tabs[1].content end
-    return player.gui.left.comfy_panel.tabbed_pane.tabs[player.gui.left.comfy_panel.tabbed_pane.selected_tab_index].content
-end
-
 local function build_config_gui(player, frame)
-    local frame_feed_values = comfy_panel_get_active_frame(player)
+    local frame_feed_values = Tabs.comfy_panel_get_active_frame(player)
     if not frame_feed_values then
         return
     end

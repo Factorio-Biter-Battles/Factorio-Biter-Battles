@@ -176,14 +176,8 @@ local function add_science_logs(player, element)
 	end
 end
 
-function comfy_panel_get_active_frame(player)
-	if not player.gui.left.comfy_panel then return false end
-	if not player.gui.left.comfy_panel.tabbed_pane.selected_tab_index then return player.gui.left.comfy_panel.tabbed_pane.tabs[1].content end
-	return player.gui.left.comfy_panel.tabbed_pane.tabs[player.gui.left.comfy_panel.tabbed_pane.selected_tab_index].content 
-end
-
 local build_config_gui = (function (player, frame)		
-	local frame_sciencelogs = comfy_panel_get_active_frame(player)
+	local frame_sciencelogs = Tabs.comfy_panel_get_active_frame(player)
 	if not frame_sciencelogs then
 		return
 	end

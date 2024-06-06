@@ -12,6 +12,7 @@ draw_map_scores would be a function with the player and the frame as arguments
 require "utils.profiler"
 local event = require 'utils.event'
 local gui_style = require 'utils.utils'.gui_style
+local closable_frame = require "utils.ui.closable_frame"
 comfy_panel_tabs = {}
 
 local Public = {}
@@ -20,38 +21,15 @@ function Public.get_tabs(data)
     return comfy_panel_tabs
 end
 
-function Public.comfy_panel_clear_left_gui(player)
-    for _, child in pairs(player.gui.left.children) do
-        child.visible = false
-    end
-end
-
-function Public.comfy_panel_restore_left_gui(player)
-    for _, child in pairs(player.gui.left.children) do
-        child.visible = true
-    end
-end
-
-function Public.comfy_panel_clear_screen_gui(player)
-    for _, child in pairs(player.gui.screen.children) do
-        child.destroy()
-    end
-end
-
-function Public.comfy_panel_restore_screen_gui(player)
-    for _, child in pairs(player.gui.screen.children) do
-        child.visible = true
-    end
-end
-
 function Public.comfy_panel_get_active_frame(player)
-    if not player.gui.left.comfy_panel then
+    if not player.gui.screen.comfy_panel then
         return false
     end
-    if not player.gui.left.comfy_panel.tabbed_pane.selected_tab_index then
-        return player.gui.left.comfy_panel.tabbed_pane.tabs[1].content
+    local tabbed_pane = player.gui.screen.comfy_panel.comfy_panel_inside.tabbed_pane
+    if not tabbed_pane.selected_tab_index then
+        return tabbed_pane.tabs[1].content
     end
-    return player.gui.left.comfy_panel.tabbed_pane.tabs[player.gui.left.comfy_panel.tabbed_pane.selected_tab_index].content
+    return tabbed_pane.tabs[tabbed_pane.selected_tab_index].content
 end
 
 function Public.comfy_panel_refresh_active_tab(player)
@@ -72,10 +50,9 @@ end
 
 local function main_frame(player)
     local tabs = comfy_panel_tabs
-    Public.comfy_panel_clear_left_gui(player)
 
-    local frame = player.gui.left.add({type = 'frame', name = 'comfy_panel'})
-    frame.style.margin = 6
+    local frame_ = closable_frame.create_main_closable_frame(player, 'comfy_panel', "Comfy Panel")
+    local frame = frame_.add({type = "frame", name = "comfy_panel_inside", style = "inside_deep_frame_for_tabs"})
 
     local tabbed_pane = frame.add({type = 'tabbed-pane', name = 'tabbed_pane'})
 
@@ -83,28 +60,21 @@ local function main_frame(player)
         if func.admin == true then
             if player.admin then
                 local tab = tabbed_pane.add({type = 'tab', caption = name})
-                local frame = tabbed_pane.add({type = 'frame', name = name, direction = 'vertical'})
-                frame.style.minimal_height = 480
-                frame.style.maximal_height = 480
-                frame.style.minimal_width = 800
-                frame.style.maximal_width = 800
-                tabbed_pane.add_tab(tab, frame)
+                local flow = tabbed_pane.add({type = 'flow', name = name, direction = 'vertical'})
+                flow.style.horizontally_stretchable = true
+                flow.style.width = 863
+                flow.style.height = 480
+                tabbed_pane.add_tab(tab, flow)
             end
         else
             local tab = tabbed_pane.add({type = 'tab', caption = name})
-            local frame = tabbed_pane.add({type = 'frame', name = name, direction = 'vertical'})
-            frame.style.minimal_height = 480
-            frame.style.maximal_height = 480
-            frame.style.minimal_width = 800
-            frame.style.maximal_width = 800
-            tabbed_pane.add_tab(tab, frame)
+            local flow = tabbed_pane.add({type = 'flow', name = name, direction = 'vertical'})
+            flow.style.horizontally_stretchable = true
+            flow.style.width = 863
+            flow.style.height = 480
+            tabbed_pane.add_tab(tab, flow)
         end
     end
-
-    local tab = tabbed_pane.add({type = 'tab', name = 'comfy_panel_close', caption = 'X'})
-    tab.style.maximal_width = 32
-    local frame = tabbed_pane.add({type = 'frame', name = name, direction = 'vertical'})
-    tabbed_pane.add_tab(tab, frame)
 
     for _, child in pairs(tabbed_pane.children) do
         child.style.padding = 8
@@ -113,17 +83,6 @@ local function main_frame(player)
     end
 
     Public.comfy_panel_refresh_active_tab(player)
-end
-
-function Public.comfy_panel_call_tab(player, name)
-    main_frame(player)
-    local tabbed_pane = player.gui.left.comfy_panel.tabbed_pane
-    for key, v in pairs(tabbed_pane.tabs) do
-        if v.tab.caption == name then
-            tabbed_pane.selected_tab_index = key
-            Public.comfy_panel_refresh_active_tab(player)
-        end
-    end
 end
 
 local function on_player_joined_game(event)
@@ -140,22 +99,15 @@ local function on_gui_click(event)
     local player = game.get_player(event.player_index)
 
     if event.element.name == 'comfy_panel_top_button' then
-        if player.gui.left.comfy_panel then
-            player.gui.left.comfy_panel.destroy()
-			Public.comfy_panel_restore_left_gui(player)
+        if player.gui.screen.comfy_panel then
+            player.gui.screen.comfy_panel.destroy()
             return
         else
-            Public.comfy_panel_clear_screen_gui(player)
             main_frame(player)
             return
         end
     end
 
-    if event.element.caption == 'X' and event.element.name == 'comfy_panel_close' then
-        player.gui.left.comfy_panel.destroy()
-		Public.comfy_panel_restore_left_gui(player)
-        return
-    end
 
     if not event.element.caption then
         return

@@ -3,7 +3,8 @@ local Tabs = require 'comfy_panel.main'
 
 local function add_changelog(player, element)
 	local changelog_scrollpanel = element.add { type = "scroll-pane", name = "scroll_pane", direction = "vertical", horizontal_scroll_policy = "never", vertical_scroll_policy = "auto"}
-	changelog_scrollpanel.style.maximal_height = 530
+    changelog_scrollpanel.style.vertically_squashable = true
+    changelog_scrollpanel.style.padding = 2
 	
 	local changelog_change = {}
 	local function add_entry(date, who, what)
@@ -385,14 +386,8 @@ local function add_changelog(player, element)
 	end
 end
 
-function comfy_panel_get_active_frame(player)
-	if not player.gui.left.comfy_panel then return false end
-	if not player.gui.left.comfy_panel.tabbed_pane.selected_tab_index then return player.gui.left.comfy_panel.tabbed_pane.tabs[1].content end
-	return player.gui.left.comfy_panel.tabbed_pane.tabs[player.gui.left.comfy_panel.tabbed_pane.selected_tab_index].content 
-end
-
 local build_config_gui = (function (player, frame)		
-	local frame_changelog = comfy_panel_get_active_frame(player)
+	local frame_changelog = Tabs.comfy_panel_get_active_frame(player)
 	if not frame_changelog then
 		return
 	end

@@ -4,6 +4,7 @@ local event = require 'utils.event'
 local Server = require 'utils.server'
 local Tables = require "maps.biter_battles_v2.tables"
 local gui_style = require 'utils.utils'.gui_style
+local closable_frame = require "utils.ui.closable_frame"
 
 local difficulties = Tables.difficulties
 
@@ -24,7 +25,7 @@ local function difficulty_gui_all()
 end
 
 local function poll_difficulty(player)
-	if player.gui.center["difficulty_poll"] then player.gui.center["difficulty_poll"].destroy() return end
+	if player.gui.screen["difficulty_poll"] then player.gui.screen["difficulty_poll"].destroy() return end
 	if global.bb_settings.only_admins_vote or global.tournament_mode then
 		if global.active_special_games["captain_mode"] then
 			if global.bb_settings.only_admins_vote and not player.admin then return end
@@ -47,7 +48,20 @@ local function poll_difficulty(player)
 		return 
 	end
 	
-	local frame = player.gui.center.add { type = "frame", caption = "Vote global difficulty:", name = "difficulty_poll", direction = "vertical" }
+	local frame = closable_frame.create_main_closable_frame(
+		player,
+		"difficulty_poll",
+		"Vote global difficulty:",
+		{
+			no_dragger = true
+		}
+	)
+
+	local time_left = frame.add{type = "label", caption = math.floor((global.difficulty_votes_timeout - tick) / 3600) .. " minutes left."}
+	time_left.style.font = "heading-2"
+	local separator = frame.add{type = "line", direction = "horizontal"}
+	separator.style.bottom_margin = 6
+
 	local vote_amounts = {}
 	for k, v in pairs(global.difficulty_player_votes) do
 		vote_amounts[v] = (vote_amounts[v] or 0) + 1
@@ -58,13 +72,8 @@ local function poll_difficulty(player)
 		local b = frame.add{type = "button", name = tostring(key), caption = caption}
 		b.style.font_color = difficulty.color
 		b.style.font = "heading-2"
-		b.style.minimal_width = 180
+		b.style.minimal_width = 211
 	end
-	local b = frame.add({type = "label", caption = "- - - - - - - - - - - - - - - - - - - -"})
-	local b = frame.add({type = "button", name = "close", caption = "Close (" .. math.floor((global.difficulty_votes_timeout - tick) / 3600) .. " minutes left)"})
-	b.style.font_color = {r=0.66, g=0.0, b=0.66}
-	b.style.font = "heading-3"
-	b.style.minimal_width = 96
 end
 
 local function set_difficulty()
@@ -112,7 +121,7 @@ local function on_player_joined_game(event)
 			end
 		end
 	else
-		if player.gui.center["difficulty_poll"] then player.gui.center["difficulty_poll"].destroy() end
+		if player.gui.screen["difficulty_poll"] then player.gui.screen["difficulty_poll"].destroy() end
 	end
 	
 	difficulty_gui_all()
@@ -139,7 +148,6 @@ local function on_gui_click(event)
 	end
 	if event.element.type ~= "button" then return end
 	if event.element.parent.name ~= "difficulty_poll" then return end
-	if event.element.name == "close" then event.element.parent.destroy() return end
 	if game.ticks_played > global.difficulty_votes_timeout then event.element.parent.destroy() return end
 	local i = tonumber(event.element.name)
 	
