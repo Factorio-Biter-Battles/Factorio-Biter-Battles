@@ -40,6 +40,18 @@ local gui_values = {
 	}
 }
 
+-- The on_player_joined_team event is raised only once when a player joins a team for the first time
+-- at this stage, the player already has a character and starting items
+-- @usage
+-- local Gui = require "maps.biter_battles_v2.gui"
+-- local Event = require 'utils.event'
+--
+-- Event.add(Gui.events.on_player_joined_team,
+-- function(event)
+--      local player = game.get_player(event.player_index)
+-- end)
+Public.events = {on_player_joined_team = event.generate_event_name()}
+
 function Public.clear_copy_history(player)
 	if player and player.valid and player.cursor_stack then
 		for i = 1, 21 do
@@ -437,6 +449,10 @@ function join_team(player, force_name, forced_join, auto_join)
 	player.spectator = false
 	Public.clear_copy_history(player)
 	Public.refresh()
+
+	script.raise_event(Public.events.on_player_joined_team, {
+		player_index = player.index,
+	})
 end
 
 function spectate(player, forced_join, stored_position)
