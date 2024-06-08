@@ -1409,6 +1409,7 @@ local function on_gui_click(event)
 	local player = cpt_get_player(event.player_index)
 	if not player then return end
 	local special = global.special_games_variables["captain_mode"]
+	if not special then return end
 
 	if element.name == "captain_player_want_to_play" then
 		if not global.special_games_variables["captain_mode"]["pickingPhase"] then
