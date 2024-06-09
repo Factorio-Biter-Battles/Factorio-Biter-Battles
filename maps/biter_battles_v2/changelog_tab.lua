@@ -13,6 +13,9 @@ local function add_changelog(player, element)
 		table.insert(changelog_change, who)
 	end
 	
+	add_entry("2024-06-09", "penguinencounter", "Poll UI styles")
+	add_entry("2024-06-07", "developer-8", "Add `on_player_joined_team` event")
+	add_entry("2024-06-06", "ness056", "UI improvement")
 	add_entry("2024-05-30", "cliff_build", "ping messages: fix permanent-ping from message before map reset")
 	add_entry("2024-05-30", "cliff_build", "More errors from logs fixes")
 	add_entry("2024-05-29", "cliff_build", "use game.get_player in more places")
