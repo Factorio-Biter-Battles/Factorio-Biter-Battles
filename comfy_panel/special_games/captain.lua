@@ -168,6 +168,7 @@ local function startswith(text, prefix)
 end
 
 local function addGuiShowPlayerInfo(_finalParentGui,_button1Name,_button1Text,_pl,_groupName,_playtimePlayer)
+	local special = global.special_games_variables["captain_mode"]
 	createButton(_finalParentGui,_button1Name,_button1Text,_pl)
 	b = _finalParentGui.add({type = "label", caption = _groupName})
 	b.style.font_color = Color.antique_white
@@ -177,6 +178,12 @@ local function addGuiShowPlayerInfo(_finalParentGui,_button1Name,_button1Text,_p
 	b.style.font_color = Color.white
 	b.style.font = "heading-2"
 	b.style.minimal_width = 100
+	b = _finalParentGui.add({type = "label", caption = special["player_info"][_pl]})
+	b.style.font_color = Color.white
+	b.style.font = "heading-2"
+	b.style.minimal_width = 100
+	b.style.maximal_width = 800
+	b.style.single_line = false
 end
 
 local function pickPlayerGenerator(player,tableBeingLooped,frameName,questionText,button1Text,button1Name)
@@ -185,7 +192,7 @@ local function pickPlayerGenerator(player,tableBeingLooped,frameName,questionTex
 	if player.gui.center[frameName] then player.gui.center[frameName].destroy() return end
 	frame = player.gui.center.add { type = "frame", caption = questionText, name = frameName, direction = "vertical" }
 	if global.special_games_variables["captain_mode"]["captainGroupAllowed"] then
-		finalParentGui = frame.add { type = "table", column_count = 3 }
+		finalParentGui = frame.add { type = "table", column_count = 4 }
 	else
 		finalParentGui = frame
 	end
@@ -199,6 +206,10 @@ local function pickPlayerGenerator(player,tableBeingLooped,frameName,questionTex
 		b.style.font = "heading-2"
 		b.style.minimal_width = 100
 		b = finalParentGui.add({type = "label", caption = "Total playtime"})
+		b.style.font_color = Color.antique_white
+		b.style.font = "heading-2"
+		b.style.minimal_width = 100
+		b = finalParentGui.add({type = "label", caption = "Notes"})
 		b.style.font_color = Color.antique_white
 		b.style.font = "heading-2"
 		b.style.minimal_width = 100
@@ -401,6 +412,7 @@ local function generate_captain_mode(refereeName, autoTrust, captainKick, pickin
 		["captainList"] = {},
 		["refereeName"] = refereeName,
 		["listPlayers"] = {},
+		["player_info"] = {},
 		["kickedPlayers"] = {},
 		["listTeamReadyToPlay"] = {},
 		["prepaPhase"] = true,
@@ -972,6 +984,7 @@ end
 function Public.draw_captain_player_gui(player)
 	if is_test_player(player) then return end
 	if player.gui.screen["captain_player_gui"] then player.gui.screen["captain_player_gui"].destroy() end
+	local special = global.special_games_variables["captain_mode"]
 	local frame = closable_frame.create_draggable_frame(player, "captain_player_gui", "Join Info")
 	frame.style.maximal_width = 800
 
@@ -990,6 +1003,13 @@ function Public.draw_captain_player_gui(player)
 	b.style.horizontally_stretchable = true
 	b = frame.add({type = "button", name = "captain_player_want_to_be_captain", caption = "I am willing to be a captain", style = "green_button", tooltip = "The community needs you"})
 	b.style.horizontally_stretchable = true
+
+	-- Add a textbox for the player to enter info for the captains to see when picking
+	l = frame.add({type = "label", name = "captain_player_info_label", caption = "Enter any info you want the captains to see when picking players, i.e. 'I will be on discord. I can threatfarm. I can build lots of power.'"})
+	l.style.single_line = false
+	local textbox = frame.add({type = "textfield", name = "captain_player_info", text = special["player_info"][player.name] or "", tooltip = "Enter any info you want the captains to see when picking players."})
+	textbox.style.horizontally_stretchable = true
+	textbox.style.minimal_width = 400
 
 	frame.add({type = "line", name = "player_table_line"})
 	local scroll = frame.add({type = "scroll-pane", name = "player_table_scroll", direction = "vertical"})
@@ -1032,6 +1052,13 @@ function Public.update_captain_player_gui(player)
 		table.insert(status_strings, "Currently waiting to be picked by a captain.")
 	elseif special["pickingPhase"] then
 		table.insert(status_strings, "A picking phase is currently active, wait until it is done before you can indicate that you want to play.")
+	end
+	if waiting_to_be_picked and not special["pickingPhase"] then
+		frame.captain_player_info_label.visible = true
+		frame.captain_player_info.visible = true
+	else
+		frame.captain_player_info_label.visible = false
+		frame.captain_player_info.visible = false
 	end
 	if not global.chosen_team[player.name] and not special["pickingPhase"] and not special["kickedPlayers"][player.name] then
 		frame.captain_player_want_to_play.visible = true
@@ -1368,6 +1395,8 @@ if false then
 			special.test_players[playerName] = {name = playerName, tag = group_name}
 			table.insert(special["listPlayers"], playerName)
 		end
+		special["player_info"]["alice"] = "I am a test player"
+		special["player_info"]["charlie"] = "I am a test player. I write a very very very long description about what I am thinking about doing during the game that goes on and on and on and on and on and on and on and on and on and on and on and on and on and on and on and on and on and on and on and on and on and on and on and on and on and on and on."
 	end)
 end
 
@@ -1392,11 +1421,24 @@ local function on_gui_switch_state_changed(event)
 	end
 end
 
+local function on_gui_text_changed(event)
+	local element = event.element
+	if not element then return end
+	if not element.valid then return end
+	local player = cpt_get_player(event.player_index)
+	local special = global.special_games_variables["captain_mode"]
+	if not special then return end
+	if element.name == "captain_player_info" then
+		special["player_info"][player.name] = element.text
+	end
+end
+
 local function on_gui_value_changed(event)
     local element = event.element
     if not element then return end
     if not element.valid then return end
 	local special = global.special_games_variables["captain_mode"]
+	if not special then return end
 	if element.name == "captain_group_limit_slider" then
 		special["groupLimit"] = element.slider_value
 		Public.update_all_captain_player_guis()
@@ -1791,6 +1833,7 @@ end
 Event.on_nth_tick(300, every_5sec)
 Event.add(defines.events.on_gui_click, on_gui_click)
 Event.add(defines.events.on_gui_switch_state_changed, on_gui_switch_state_changed)
+Event.add(defines.events.on_gui_text_changed, on_gui_text_changed)
 Event.add(defines.events.on_gui_value_changed, on_gui_value_changed)
 Event.add(defines.events.on_player_joined_game, on_player_joined_game)
 Event.add(defines.events.on_player_left_game,on_player_left_game)
