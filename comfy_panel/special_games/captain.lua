@@ -972,7 +972,7 @@ end
 function Public.draw_captain_player_gui(player)
 	if is_test_player(player) then return end
 	if player.gui.screen["captain_player_gui"] then player.gui.screen["captain_player_gui"].destroy() end
-	local frame = closable_frame.create_main_closable_frame(player, "captain_player_gui", "Join Info")
+	local frame = closable_frame.create_draggable_frame(player, "captain_player_gui", "Join Info")
 	frame.style.maximal_width = 800
 
 	local prepa_flow = frame.add({type = "flow", name = "prepa_flow", direction = "vertical"})
