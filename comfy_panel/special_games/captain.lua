@@ -109,6 +109,8 @@ local function clear_gui_captain_mode()
 			if playergui.top[gui] then playergui.top[gui].destroy() end
 		end
 		for _, gui in pairs(center_guis) do
+			-- This is a bit of a hack, but I don't want to figure out which ones are center and which ones are screen.
+			if playergui.center[gui] then playergui.center[gui].destroy() end
 			if playergui.screen[gui] then playergui.screen[gui].destroy() end
 		end
 	end
