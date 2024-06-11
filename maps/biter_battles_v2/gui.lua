@@ -98,6 +98,24 @@ local function clock(frame, player)
 	frame.add { type = "line" }
 end
 
+---@param frame LuaGuiElement
+---@param force string
+local function add_player_list_element(frame, force)
+	local players_with_sort_keys = {}
+	for _, p in pairs(game.forces[force].connected_players) do
+		table.insert(players_with_sort_keys, { player = p, sort_key = string.lower(p.name) })
+	end
+	table.sort(players_with_sort_keys, function(a, b) return a.sort_key < b.sort_key end)
+	local players_with_colors = {}
+	for _, pair in ipairs(players_with_sort_keys) do
+		local p = pair.player
+		table.insert(players_with_colors, string.format("[color=%.2f,%.2f,%.2f]%s[/color]", p.color.r * 0.6 + 0.4, p.color.g * 0.6 + 0.4, p.color.b * 0.6 + 0.4, p.name))
+	end
+	local l = frame.add { type = "label", caption = table.concat(players_with_colors, "    ") }
+	l.style.single_line = false
+	l.style.maximal_width = 350
+end
+
 local function create_first_join_gui(player)
 	if not global.game_lobby_timeout then global.game_lobby_timeout = 5999940 end
 	if global.game_lobby_timeout - game.tick < 0 then global.game_lobby_active = false end
@@ -136,12 +154,7 @@ local function create_first_join_gui(player)
 			c = c .. math_ceil((global.game_lobby_timeout - game.tick) / 60)
 			c = c .. ")"
 		end
-		local t = frame.add { type = "table", column_count = 4 }
-		for _, p in pairs(game.forces[gui_value.force].connected_players) do
-			local l = t.add({ type = "label", caption = p.name })
-			l.style.font_color = { r = p.color.r * 0.6 + 0.4, g = p.color.g * 0.6 + 0.4, b = p.color.b * 0.6 + 0.4, a = 1 }
-			l.style.font = "heading-2"
-		end
+		add_player_list_element(frame, gui_value.force)
 		local b = frame.add { type = "sprite-button", name = gui_value.n1, caption = c }
 		b.style.font = "default-large-bold"
 		b.style.font_color = font_color
@@ -233,11 +246,7 @@ function Public.create_main_gui(player)
 
 		-- Player list
 		if global.bb_view_players[player.name] == true then
-			local t = frame.add { type = "table", column_count = 4 }
-			for _, p in pairs(game.forces[gui_value.force].connected_players) do
-				local l = t.add { type = "label", caption = p.name }
-				l.style.font_color = { r = p.color.r * 0.6 + 0.4, g = p.color.g * 0.6 + 0.4, b = p.color.b * 0.6 + 0.4, a = 1 }
-			end
+			add_player_list_element(frame, gui_value.force)
 		end
 
 		-- Statistics
