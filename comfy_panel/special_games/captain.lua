@@ -1009,7 +1009,7 @@ function Public.draw_captain_player_gui(player)
 	l.style.single_line = false
 	local textbox = frame.add({type = "textfield", name = "captain_player_info", text = special["player_info"][player.name] or "", tooltip = "Enter any info you want the captains to see when picking players."})
 	textbox.style.horizontally_stretchable = true
-	textbox.style.minimal_width = 400
+	textbox.style.width = 0
 
 	frame.add({type = "line", name = "player_table_line"})
 	local scroll = frame.add({type = "scroll-pane", name = "player_table_scroll", direction = "vertical"})
