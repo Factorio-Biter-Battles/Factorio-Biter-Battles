@@ -60,7 +60,7 @@ end
 ---@param caption LocalisedString
 ---@param options { close_tooltip: LocalisedString?, no_dragger: boolean? }?
 ---@return LuaGuiElement
-local function create_draggable_frame(player, name, caption, options)
+function closable_frame.create_draggable_frame(player, name, caption, options)
     local frame = player.gui.screen.add({ type = "frame", name = name, direction = "vertical" })
     frame.auto_center = true
 
@@ -85,7 +85,7 @@ local function create_draggable_frame(player, name, caption, options)
         sprite = "utility/close_white",
         clicked_sprite = "utility/close_black",
         style = "close_button",
-        tooltip = { "", options and options.close_tooltip and options.close_tooltip .. " " or "", { "gui.close-instruction" } }
+        tooltip = options and options.close_tooltip or {"gui.close"}
     })
 
     return frame
@@ -106,8 +106,12 @@ end
 function closable_frame.create_secondary_closable_frame(player, name, caption, options)
     if not closable_frame.any_main_closable_frame(player) then return nil end
     closable_frame.close_secondary(player)
+    if not options then options = {} end
+    if not options.close_tooltip then
+        options.close_tooltip = { "gui.close-instruction" }
+    end
 
-    local frame = create_draggable_frame(player, name, caption, options)
+    local frame = closable_frame.create_draggable_frame(player, name, caption, options)
 
     global.closable_frame.dont_close = true
     player.opened = frame
@@ -127,7 +131,11 @@ end
 ---@param options { close_tooltip: LocalisedString?, no_dragger: boolean? }?
 ---@return LuaGuiElement
 function closable_frame.create_main_closable_frame(player, name, caption, options)
-    local frame = create_draggable_frame(player, name, caption, options)
+    if not options then options = {} end
+    if not options.close_tooltip then
+        options.close_tooltip = { "gui.close-instruction" }
+    end
+    local frame = closable_frame.create_draggable_frame(player, name, caption, options)
 
     player.opened = frame
     global.closable_frame.closable_frames[player.index].main = frame
@@ -158,11 +166,15 @@ end
 ---@param event EventData.on_gui_click
 local function on_gui_click(event)
     if event.element.name == "closable_frame_close" then
-        game.get_player(event.player_index).opened = nil
-
         --- this is not absolutely needed, it's a security
         if event.element.valid then
-            event.element.parent.parent.destroy()
+            local frame = event.element.parent.parent
+            local player = game.get_player(event.player_index)
+            if not frame or not player then return end
+            if player.opened == frame then
+                player.opened = nil
+            end
+            frame.destroy()
         end
     end
 end
