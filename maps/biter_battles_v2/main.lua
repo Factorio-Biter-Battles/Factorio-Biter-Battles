@@ -277,7 +277,6 @@ local function on_console_command(event)
 		if to_player then
 			do_ping(player.name, to_player, player.name .. " (whisper): " .. rest_of_message)
 			global.reply_target[to_player_name] = player.name
-			global.reply_target[player.name] = to_player_name
 		end
 	elseif cmd == "r" or cmd == "reply" then
 		local to_player_name = global.reply_target[player.name]
