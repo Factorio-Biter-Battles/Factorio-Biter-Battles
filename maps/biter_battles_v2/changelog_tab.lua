@@ -13,6 +13,8 @@ local function add_changelog(player, element)
 		table.insert(changelog_change, who)
 	end
 	
+	add_entry("2024-06-14", "cliff_build", "Random UI changes")
+	add_entry("2024-06-14", "developer-8", "Fix reply ping")
 	add_entry("2024-06-09", "penguinencounter", "Poll UI styles")
 	add_entry("2024-06-07", "developer-8", "Add `on_player_joined_team` event")
 	add_entry("2024-06-06", "ness056", "UI improvement")
