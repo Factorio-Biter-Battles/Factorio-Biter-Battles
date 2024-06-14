@@ -1429,6 +1429,10 @@ local function on_gui_text_changed(event)
 	local special = global.special_games_variables["captain_mode"]
 	if not special then return end
 	if element.name == "captain_player_info" then
+		if #element.text > 200 then
+			player.print("Info must be 200 characters or less", Color.warning)
+			element.text = string.sub(element.text, 1, 200)
+		end
 		special["player_info"][player.name] = element.text
 	end
 end
