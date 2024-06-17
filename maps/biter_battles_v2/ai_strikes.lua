@@ -187,7 +187,9 @@ function Public.step(group_number, result)
                 global.ai_strikes[group_number] = nil
             end
         elseif result == defines.behavior_result.fail or result == defines.behavior_result.deleted then
-            global.ai_strikes[group_number] = nil
+            strike.phase = 3
+            local rocket_silo = global.rocket_silo[strike.target_force_name]
+            assassinate(strike.unit_group, rocket_silo)
         end
     end
 end
