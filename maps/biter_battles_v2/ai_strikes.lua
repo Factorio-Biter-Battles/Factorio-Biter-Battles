@@ -1,6 +1,7 @@
 local Public = {}
 
 local bb_config = require "maps.biter_battles_v2.config"
+local Color = require 'utils.color_presets'
 
 local math_random = math.random
 local math_sqrt = math.sqrt
@@ -136,8 +137,9 @@ local function attack(unit_group, position)
     })
 end
 
-local function assassinate(unit_group, target)
-    unit_group.set_command({
+local function assassinate(strike, target)
+    strike.target = target
+    strike.unit_group.set_command({
         type = defines.command.attack,
         target = target,
         distraction = defines.distraction.by_damage
@@ -182,14 +184,25 @@ function Public.step(group_number, result)
                 attack(strike.unit_group, strike.target_position)
             elseif strike.phase == 3 then
                 local rocket_silo = global.rocket_silo[strike.target_force_name]
-                assassinate(strike.unit_group, rocket_silo)
+                assassinate(strike, rocket_silo)
             else
                 global.ai_strikes[group_number] = nil
             end
         elseif result == defines.behavior_result.fail or result == defines.behavior_result.deleted then
-            strike.phase = 3
             local rocket_silo = global.rocket_silo[strike.target_force_name]
-            assassinate(strike.unit_group, rocket_silo)
+            if strike.phase == 3 and strike.target == rocket_silo then
+                local unit_group = strike.unit_group
+                if unit_group.valid then
+                    local position = unit_group.position
+                    local message = string.format("Biter attack group failed to find a path to the silo! [gps=%d,%d,%s]", position.x, position.y, unit_group.surface.name)
+                    log(message)
+                    game.print(message, Color.red)
+                end
+                global.ai_strikes[group_number] = nil
+            else
+                strike.phase = 3
+                assassinate(strike, rocket_silo)
+            end
         end
     end
 end
