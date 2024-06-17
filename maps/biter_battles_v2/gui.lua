@@ -116,79 +116,20 @@ local function add_player_list_element(frame, force)
 	l.style.maximal_width = 350
 end
 
-local function create_first_join_gui(player)
-	if not global.game_lobby_timeout then global.game_lobby_timeout = 5999940 end
-	if global.game_lobby_timeout - game.tick < 0 then global.game_lobby_active = false end
-	local frame = player.gui.left.add { type = "frame", name = "bb_main_gui", direction = "vertical" }
-	local b = frame.add { type = "label", caption = "Defend your Rocket Silo!" }
-	b.style.font = "heading-1"
-	b.style.font_color = { r = 0.98, g = 0.66, b = 0.22 }
-	local b = frame.add { type = "label", caption = "Feed the enemy team's biters to gain advantage!" }
-	b.style.font = "heading-2"
-	b.style.font_color = { r = 0.98, g = 0.66, b = 0.22 }
-	clock(frame, player)
-	local d = frame.add { type = "sprite-button", name = "join_random_button", caption = "AUTO JOIN" }
-	d.style.font = "default-large-bold"
-	d.style.font_color = { r = 1, g = 0, b = 1 }
-	d.style.width = 350
-	frame.add { type = "line" }
-	frame.style.bottom_padding = 2
-
-	for _, gui_value in pairs(gui_values) do
-		local t = frame.add { type = "table", column_count = 3 }
-		local c = Functions.team_name(gui_value.force)
-		local l = t.add { type = "label", caption = c }
-		l.style.font = "heading-2"
-		l.style.font_color = gui_value.color1
-		l.style.single_line = false
-		l.style.maximal_width = 290
-		local l = t.add { type = "label", caption = "  -  " }
-		local l = t.add { type = "label", caption = #game.forces[gui_value.force].connected_players .. " Players " }
-		l.style.font_color = { r = 0.22, g = 0.88, b = 0.22 }
-
-		local c = "JOIN "
-		local font_color = gui_value.color1
-		if global.game_lobby_active then
-			font_color = { r = 0.7, g = 0.7, b = 0.7 }
-			c = c .. " (waiting for players...  "
-			c = c .. math_ceil((global.game_lobby_timeout - game.tick) / 60)
-			c = c .. ")"
-		end
-		add_player_list_element(frame, gui_value.force)
-		local b = frame.add { type = "sprite-button", name = gui_value.n1, caption = c }
-		b.style.font = "default-large-bold"
-		b.style.font_color = font_color
-		b.style.width = 350
-		frame.add { type = "line" }
-	end
-end
-
 local function show_pretty_threat(forceName)
-	local threat_value = math.floor(global.bb_threat[forceName])
+	local threat_value = global.bb_threat[forceName]
 	if math_abs(threat_value) >= 1000000 then
-		threat_value = threat_value / 1000000
-		threat_value = tonumber(string.format("%.2f", threat_value))
-		threat_value = threat_value .. "M"
+		return string.format("%.2fM", threat_value / 1000000)
 	elseif math_abs(threat_value) >= 100000 then
-		threat_value = threat_value / 1000
-		threat_value = tonumber(string.format("%.0f", threat_value))
-		threat_value = threat_value .. "k"
+		return string.format("%.0fk", threat_value / 1000)
+	else
+		return string.format("%.0f", threat_value)
 	end
-	return threat_value
 end
 
 function Public.create_main_gui(player)
-	local is_spec = player.force.name == "spectator"
+	local is_spec = player.force.name == "spectator" or not global.chosen_team[player.name]
 	if player.gui.left["bb_main_gui"] then player.gui.left["bb_main_gui"].destroy() end
-
-	if global.bb_game_won_by_team then return end
-	if not global.chosen_team[player.name] then
-		if not global.tournament_mode then
-			create_first_join_gui(player)
-			return
-		end
-	end
-
 	local frame = player.gui.left.add { type = "frame", name = "bb_main_gui", direction = "vertical" }
 
 	clock(frame, player)
@@ -218,6 +159,14 @@ function Public.create_main_gui(player)
 			s.tooltip = "Disabled by special captain game"
 		end
 		gui_style(s, { minimal_height = 41, minimal_width = 41, padding = 0, font_color = { r = 0.9, g = 0.9, b = 0.9 } })
+		frame.add { type = "line" }
+	end
+
+	if not global.chosen_team[player.name] then
+		local d = frame.add { type = "sprite-button", name = "join_random_button", caption = "AUTO JOIN" }
+		d.style.font = "default-large-bold"
+		d.style.font_color = { r = 1, g = 0, b = 1 }
+		d.style.width = 350
 		frame.add { type = "line" }
 	end
 
@@ -281,37 +230,50 @@ function Public.create_main_gui(player)
 		l.style.font = "default-bold"
 		l.style.width = 50
 		l.tooltip = gui_value.t2
+
+		-- Join button
+		if not global.chosen_team[player.name] and not global.bb_game_won_by_team then
+			local c = "JOIN "
+			local font_color = gui_value.color1
+			local b = frame.add { type = "sprite-button", name = gui_value.n1, caption = c }
+			b.style.font = "default-large-bold"
+			b.style.font_color = font_color
+			b.style.width = 350
+			frame.add { type = "line" }
+		end
 	end
 
 	-- Difficulty mutagen effectivness update
 	bb_diff.difficulty_gui(player)
 
-	-- Action frame
-	local t = frame.add { type = "table", column_count = 2 }
 
-	-- Spectate / Rejoin team
-	if is_spec then
-		local b = t.add { type = "sprite-button", name = "bb_leave_spectate", caption = "Join Team" }
-	else
-		local b = t.add { type = "sprite-button", name = "bb_spectate", caption = "Spectate" }
-	end
+	if global.chosen_team[player.name] and not global.bb_game_won_by_team then
+	-- Action horizontal flow
+	local flow = frame.add { type = "flow", name = "bb_main_action_flow", direction = "horizontal" }
+		-- Spectate / Rejoin team
+		if is_spec then
+			local b = flow.add { type = "sprite-button", name = "bb_leave_spectate", caption = "Rejoin Team" }
+		else
+			local b = flow.add { type = "sprite-button", name = "bb_spectate", caption = "Spectate" }
+		end
 
-	-- Playerlist button
-	if global.bb_view_players[player.name] == true then
-		local b = t.add { type = "sprite-button", name = "bb_hide_players", caption = "Playerlist" }
-	else
-		local b = t.add { type = "sprite-button", name = "bb_view_players", caption = "Playerlist" }
-	end
+		-- Playerlist button
+		if global.bb_view_players[player.name] == true then
+			local b = flow.add { type = "sprite-button", name = "bb_hide_players", caption = "Playerlist" }
+		else
+			local b = flow.add { type = "sprite-button", name = "bb_view_players", caption = "Playerlist" }
+		end
 
-	for _, b in pairs(t.children) do
-		b.style.font = "default-bold"
-		b.style.font_color = { r = 0.98, g = 0.66, b = 0.22 }
-		b.style.top_padding = 1
-		b.style.left_padding = 1
-		b.style.right_padding = 1
-		b.style.bottom_padding = 1
-		b.style.maximal_height = 30
-		b.style.width = 86
+		for _, b in pairs(flow.children) do
+			b.style.font = "default-bold"
+			b.style.font_color = { r = 0.98, g = 0.66, b = 0.22 }
+			b.style.top_padding = 1
+			b.style.left_padding = 1
+			b.style.right_padding = 1
+			b.style.bottom_padding = 1
+			b.style.maximal_height = 30
+			b.style.width = 86
+		end
 	end
 end
 
@@ -508,17 +470,6 @@ end
 local function join_gui_click(name, player, auto_join)
 	if not name then return end
 
-	if global.game_lobby_active then
-		if player.admin then
-			join_team(player, name, false, auto_join)
-			game.print("Lobby disabled, admin override.", { r = 0.98, g = 0.66, b = 0.22 })
-			global.game_lobby_active = false
-			return
-		end
-		player.print("Waiting for more players, " .. wait_messages[math_random(1, #wait_messages)],
-			{ r = 0.98, g = 0.66, b = 0.22 })
-		return
-	end
 	join_team(player, name, false, auto_join)
 end
 
@@ -668,12 +619,6 @@ local function on_player_joined_game(event)
 	if not global.chosen_team then global.chosen_team = {} end
 
 	global.bb_view_players[player.name] = false
-
-	if #game.connected_players > 1 then
-		global.game_lobby_timeout = math_ceil(36000 / #game.connected_players)
-	else
-		global.game_lobby_timeout = 599940
-	end
 
 	--if not global.chosen_team[player.name] then
 	--	if global.tournament_mode then
