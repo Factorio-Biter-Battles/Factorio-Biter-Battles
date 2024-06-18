@@ -13,6 +13,8 @@ local function add_changelog(player, element)
 		table.insert(changelog_change, who)
 	end
 	
+	add_entry("2024-06-18", "cliff_build", "Always show evo/threat")
+	add_entry("2024-06-18", "cliff_build", "biter target behavior: attack silo on pathfinding error")
 	add_entry("2024-06-14", "cliff_build", "Random UI changes")
 	add_entry("2024-06-14", "developer-8", "Fix reply ping")
 	add_entry("2024-06-09", "penguinencounter", "Poll UI styles")
