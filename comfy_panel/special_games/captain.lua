@@ -417,6 +417,7 @@ local function generate_captain_mode(refereeName, autoTrust, captainKick, pickin
 		["listTeamReadyToPlay"] = {},
 		["prepaPhase"] = true,
 		["countdown"] = 9,
+		["minTotalPlaytimeToPlay"]=108000,
 		["pickingPhase"] = false,
 		["initialPickingPhaseStarted"] = false,
 		["initialPickingPhaseFinished"] = false,
@@ -1374,6 +1375,14 @@ local function get_dropdown_value(dropdown)
 	end
 end
 
+local function check_if_enough_playtime_to_play(player)
+		if global.total_time_online_players[player.name] ~= nil and global.total_time_online_players[player.name] >= global.special_games_variables["captain_mode"]["minTotalPlaytimeToPlay"] then
+			return true
+		else 
+			return false
+		end
+end
+
 if false then
 	commands.add_command("cpt-test-func", "Run some test-only code for captains games", function(event)
 		if #game.players > 1 then
@@ -1461,13 +1470,21 @@ local function on_gui_click(event)
 
 	if element.name == "captain_player_want_to_play" then
 		if not global.special_games_variables["captain_mode"]["pickingPhase"] then
-			insertPlayerByPlaytime(player.name)
-			Public.update_all_captain_player_guis()
+			if check_if_enough_playtime_to_play(player) then
+				insertPlayerByPlaytime(player.name)
+				Public.update_all_captain_player_guis()
+			else
+				player.print("You need to have spent more time on biter battles server to join the captain game event ! Learn and watch a bit meanwhile", Color.red)
+			end
 		end
 	elseif element.name == "captain_player_want_to_be_captain" then
-		if not special["initialPickingPhaseStarted"] and not isStringInTable(special["captainList"], player.name) then
-			table.insert(special["captainList"], player.name)
-			Public.update_all_captain_player_guis()
+		if check_if_enough_playtime_to_play(player) then
+			if not special["initialPickingPhaseStarted"] and not isStringInTable(special["captainList"], player.name) then
+				table.insert(special["captainList"], player.name)
+				Public.update_all_captain_player_guis()
+			end
+		else
+			player.print("You need to have spent more time on biter battles server to be a captain on the captain game event ! Learn and watch a bit meanwhile", Color.red)
 		end
 	elseif element.name == "captain_force_end_event" then
 		force_end_captain_event()
