@@ -171,10 +171,12 @@ function Public.create_main_gui(player)
 	end
 
 	local first_team = true
+	local view_player_list = global.bb_view_players[player.name]
+	if view_player_list == nil then view_player_list = true end
 	for _, gui_value in pairs(gui_values) do
 		-- Line separator
 		if not first_team then
-			frame.add { type = "line", caption = "this line", direction = "horizontal" }
+			frame.add { type = "line", direction = "horizontal" }
 		else
 			first_team = false
 		end
@@ -194,7 +196,7 @@ function Public.create_main_gui(player)
 		l.style.font_color = { r = 0.22, g = 0.88, b = 0.22 }
 
 		-- Player list
-		if global.bb_view_players[player.name] == true then
+		if view_player_list then
 			add_player_list_element(frame, gui_value.force)
 		end
 
@@ -239,41 +241,40 @@ function Public.create_main_gui(player)
 			b.style.font = "default-large-bold"
 			b.style.font_color = font_color
 			b.style.width = 350
-			frame.add { type = "line" }
 		end
 	end
 
 	-- Difficulty mutagen effectivness update
 	bb_diff.difficulty_gui(player)
 
-
-	if global.chosen_team[player.name] and not global.bb_game_won_by_team then
+	frame.add { type = "line", direction = "horizontal" }
 	-- Action horizontal flow
 	local flow = frame.add { type = "flow", name = "bb_main_action_flow", direction = "horizontal" }
+	if global.chosen_team[player.name] and not global.bb_game_won_by_team then
 		-- Spectate / Rejoin team
 		if is_spec then
 			local b = flow.add { type = "sprite-button", name = "bb_leave_spectate", caption = "Rejoin Team" }
 		else
 			local b = flow.add { type = "sprite-button", name = "bb_spectate", caption = "Spectate" }
 		end
+	end
 
-		-- Playerlist button
-		if global.bb_view_players[player.name] == true then
-			local b = flow.add { type = "sprite-button", name = "bb_hide_players", caption = "Playerlist" }
-		else
-			local b = flow.add { type = "sprite-button", name = "bb_view_players", caption = "Playerlist" }
-		end
+	-- Playerlist button
+	if view_player_list then
+		local b = flow.add { type = "sprite-button", name = "bb_hide_players", caption = "Playerlist" }
+	else
+		local b = flow.add { type = "sprite-button", name = "bb_view_players", caption = "Playerlist" }
+	end
 
-		for _, b in pairs(flow.children) do
-			b.style.font = "default-bold"
-			b.style.font_color = { r = 0.98, g = 0.66, b = 0.22 }
-			b.style.top_padding = 1
-			b.style.left_padding = 1
-			b.style.right_padding = 1
-			b.style.bottom_padding = 1
-			b.style.maximal_height = 30
-			b.style.width = 86
-		end
+	for _, b in pairs(flow.children) do
+		b.style.font = "default-bold"
+		b.style.font_color = { r = 0.98, g = 0.66, b = 0.22 }
+		b.style.top_padding = 1
+		b.style.left_padding = 1
+		b.style.right_padding = 1
+		b.style.bottom_padding = 1
+		b.style.maximal_height = 30
+		b.style.width = 86
 	end
 end
 
@@ -617,8 +618,6 @@ local function on_player_joined_game(event)
 	end
 	if not global.bb_view_players then global.bb_view_players = {} end
 	if not global.chosen_team then global.chosen_team = {} end
-
-	global.bb_view_players[player.name] = false
 
 	--if not global.chosen_team[player.name] then
 	--	if global.tournament_mode then
