@@ -134,7 +134,7 @@ function Public.create_main_gui(player)
 
 	clock(frame, player)
 	-- Science sending GUI
-	if not is_spec then
+	if not is_spec and not global.bb_game_won_by_team then
 		frame.add { type = "table", name = "biter_battle_table", column_count = 4 }
 		local t = frame.biter_battle_table
 		for food_name, tooltip in pairs(food_names) do
