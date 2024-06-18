@@ -162,7 +162,7 @@ function Public.create_main_gui(player)
 		frame.add { type = "line" }
 	end
 
-	if not global.chosen_team[player.name] then
+	if not global.chosen_team[player.name] and not global.bb_game_won_by_team then
 		local d = frame.add { type = "sprite-button", name = "join_random_button", caption = "AUTO JOIN" }
 		d.style.font = "default-large-bold"
 		d.style.font_color = { r = 1, g = 0, b = 1 }
