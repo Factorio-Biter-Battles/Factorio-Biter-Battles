@@ -190,14 +190,14 @@ function Public.step(group_number, result)
             end
         elseif result == defines.behavior_result.fail or result == defines.behavior_result.deleted then
             local rocket_silo = global.rocket_silo[strike.target_force_name]
-            if strike.phase == 3 and strike.target == rocket_silo then
-                local unit_group = strike.unit_group
-                if unit_group.valid then
-                    local position = unit_group.position
-                    local message = string.format("Biter attack group failed to find a path to the silo! [gps=%d,%d,%s]", position.x, position.y, unit_group.surface.name)
-                    log(message)
-                    game.print(message, Color.red)
-                end
+            local unit_group = strike.unit_group
+            if not unit_group.valid then
+                global.ai_strikes[group_number] = nil
+            elseif strike.phase == 3 and strike.target == rocket_silo then
+                local position = unit_group.position
+                local message = string.format("Biter attack group failed to find a path to the silo! [gps=%d,%d,%s]", position.x, position.y, unit_group.surface.name)
+                log(message)
+                game.print(message, Color.red)
                 global.ai_strikes[group_number] = nil
             else
                 strike.phase = 3
