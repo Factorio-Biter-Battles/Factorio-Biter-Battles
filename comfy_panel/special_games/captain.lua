@@ -1376,11 +1376,7 @@ local function get_dropdown_value(dropdown)
 end
 
 local function check_if_enough_playtime_to_play(player)
-	if global.total_time_online_players[player.name] ~= nil and global.total_time_online_players[player.name] >= global.special_games_variables["captain_mode"]["minTotalPlaytimeToPlay"] then
-		return true
-	else 
-		return false
-	end
+	return global.total_time_online_players[player.name] ~= nil and global.total_time_online_players[player.name] >= global.special_games_variables["captain_mode"]["minTotalPlaytimeToPlay"]
 end
 
 if false then
