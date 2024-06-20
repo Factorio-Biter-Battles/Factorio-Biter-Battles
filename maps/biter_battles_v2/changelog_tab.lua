@@ -13,6 +13,7 @@ local function add_changelog(player, element)
 		table.insert(changelog_change, who)
 	end
 	
+	add_entry("2024-06-20", "Ragnarok77", "Implement min playtime of 30 min to join captain game")
 	add_entry("2024-06-18", "cliff_build", "Always show evo/threat")
 	add_entry("2024-06-18", "cliff_build", "biter target behavior: attack silo on pathfinding error")
 	add_entry("2024-06-14", "cliff_build", "Random UI changes")
