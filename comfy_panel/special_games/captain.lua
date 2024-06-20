@@ -1481,6 +1481,7 @@ local function on_gui_click(event)
 		if not special["initialPickingPhaseStarted"] and not isStringInTable(special["captainList"], player.name) then
 			table.insert(special["captainList"], player.name)
 			Public.update_all_captain_player_guis()
+		end
 	elseif element.name == "captain_force_end_event" then
 		force_end_captain_event()
 	elseif element.name == "captain_end_captain_choice" then
