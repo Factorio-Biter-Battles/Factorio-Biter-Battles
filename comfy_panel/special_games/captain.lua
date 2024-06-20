@@ -417,7 +417,7 @@ local function generate_captain_mode(refereeName, autoTrust, captainKick, pickin
 		["listTeamReadyToPlay"] = {},
 		["prepaPhase"] = true,
 		["countdown"] = 9,
-		["minTotalPlaytimeToPlay"]=108000,
+		["minTotalPlaytimeToPlay"]= 30 * 60 * 60 , -- 30 minutes
 		["pickingPhase"] = false,
 		["initialPickingPhaseStarted"] = false,
 		["initialPickingPhaseFinished"] = false,
@@ -1376,11 +1376,11 @@ local function get_dropdown_value(dropdown)
 end
 
 local function check_if_enough_playtime_to_play(player)
-		if global.total_time_online_players[player.name] ~= nil and global.total_time_online_players[player.name] >= global.special_games_variables["captain_mode"]["minTotalPlaytimeToPlay"] then
-			return true
-		else 
-			return false
-		end
+	if global.total_time_online_players[player.name] ~= nil and global.total_time_online_players[player.name] >= global.special_games_variables["captain_mode"]["minTotalPlaytimeToPlay"] then
+		return true
+	else 
+		return false
+	end
 end
 
 if false then
@@ -1478,14 +1478,9 @@ local function on_gui_click(event)
 			end
 		end
 	elseif element.name == "captain_player_want_to_be_captain" then
-		if check_if_enough_playtime_to_play(player) then
-			if not special["initialPickingPhaseStarted"] and not isStringInTable(special["captainList"], player.name) then
-				table.insert(special["captainList"], player.name)
-				Public.update_all_captain_player_guis()
-			end
-		else
-			player.print("You need to have spent more time on biter battles server to be a captain on the captain game event ! Learn and watch a bit meanwhile", Color.red)
-		end
+		if not special["initialPickingPhaseStarted"] and not isStringInTable(special["captainList"], player.name) then
+			table.insert(special["captainList"], player.name)
+			Public.update_all_captain_player_guis()
 	elseif element.name == "captain_force_end_event" then
 		force_end_captain_event()
 	elseif element.name == "captain_end_captain_choice" then
