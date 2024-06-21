@@ -13,9 +13,9 @@ local function difficulty_gui(player)
 	if not b then
 		b = player.gui.top.add { type = "sprite-button", name = "difficulty_gui" }
 		b.style.font = "heading-2"
-		b.style.font_color = difficulties[global.difficulty_vote_index].print_color
 		gui_style(b, {width = 114, height = 38, padding = -2})
 	end
+	b.style.font_color = difficulties[global.difficulty_vote_index].print_color
 	local value = math.floor(global.difficulty_vote_value*100)
 	local str = table.concat({"Global map difficulty is ", difficulties[global.difficulty_vote_index].name, ". Mutagen has ", value, "% effectiveness."})
 	b.caption = difficulties[global.difficulty_vote_index].name
