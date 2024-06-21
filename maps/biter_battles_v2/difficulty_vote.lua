@@ -9,13 +9,17 @@ local closable_frame = require "utils.ui.closable_frame"
 local difficulties = Tables.difficulties
 
 local function difficulty_gui(player)
+	local b = player.gui.top["difficulty_gui"]
+	if not b then
+		b = player.gui.top.add { type = "sprite-button", name = "difficulty_gui" }
+		b.style.font = "heading-2"
+		b.style.font_color = difficulties[global.difficulty_vote_index].print_color
+		gui_style(b, {width = 114, height = 38, padding = -2})
+	end
 	local value = math.floor(global.difficulty_vote_value*100)
-	if player.gui.top["difficulty_gui"] then player.gui.top["difficulty_gui"].destroy() end
 	local str = table.concat({"Global map difficulty is ", difficulties[global.difficulty_vote_index].name, ". Mutagen has ", value, "% effectiveness."})
-	local b = player.gui.top.add { type = "sprite-button", caption = difficulties[global.difficulty_vote_index].name, tooltip = str, name = "difficulty_gui" }
-	b.style.font = "heading-2"
-	b.style.font_color = difficulties[global.difficulty_vote_index].print_color
-	gui_style(b, {width = 114, height = 38, padding = -2})
+	b.caption = difficulties[global.difficulty_vote_index].name
+	b.tooltip = str
 end
 
 local function difficulty_gui_all()
