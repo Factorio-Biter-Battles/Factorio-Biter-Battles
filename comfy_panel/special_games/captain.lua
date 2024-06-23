@@ -1038,7 +1038,7 @@ function Public.update_captain_player_gui(player)
 			want_to_play.visible = false
 			cpt_volunteers.visible = false
 			rem.visible = true
-			rem.caption = "Players remaining to be picked: " .. table.concat(special["listPlayers"], ", ")
+			rem.caption = #special["listPlayers"] .. " " .. "Players remaining to be picked: " .. table.concat(special["listPlayers"], ", ")
 		end
 	end
 	frame.captain_player_want_to_play.visible = false
