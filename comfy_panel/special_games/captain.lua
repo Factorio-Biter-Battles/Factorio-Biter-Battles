@@ -1397,6 +1397,7 @@ if false then
 		end
 		special["player_info"]["alice"] = "I am a test player"
 		special["player_info"]["charlie"] = "I am a test player. I write a very very very long description about what I am thinking about doing during the game that goes on and on and on and on and on and on and on and on and on and on and on and on and on and on and on and on and on and on and on and on and on and on and on and on and on and on and on."
+		special["minTotalPlaytimeToPlay"] = 0
 	end)
 end
 
