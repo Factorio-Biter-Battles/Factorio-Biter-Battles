@@ -864,7 +864,7 @@ function Public.update_captain_referee_gui(player)
 	else
 		caption = "Players waiting for next join poll"
 	end
-	local l = scroll.add({type = "label", caption = caption .. ": " .. get_player_list_with_groups(), ", "})
+	local l = scroll.add({type = "label", caption = #special["listPlayers"] .. " " .. caption .. ": " .. get_player_list_with_groups(), ", "})
 	l.style.single_line = false
 	scroll.add({type = "label", caption = string.format("Next auto picking phase in %ds", ticks_until_autopick / 60)})
 	if #special["listPlayers"] > 0 and not special["pickingPhase"] and not special["prepaPhase"] and ticks_until_autopick > 0 then
@@ -1030,7 +1030,7 @@ function Public.update_captain_player_gui(player)
 		local rem = prepa_flow.remaining_players_list
 		if not special["initialPickingPhaseStarted"] then
 			want_to_play.visible = true
-			want_to_play.caption = "Players: " .. get_player_list_with_groups()
+			want_to_play.caption = #special["listPlayers"] .. " Players: " .. get_player_list_with_groups()
 			cpt_volunteers.visible = true
 			cpt_volunteers.caption = "Captain volunteers: " .. table.concat(special["captainList"], ", ")
 			rem.visible = false
