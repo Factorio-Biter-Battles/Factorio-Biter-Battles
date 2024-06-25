@@ -259,6 +259,7 @@ function Public.tables()
 	global.bb_threat = {}
 	global.bb_threat_income = {}
 	global.chosen_team = {}
+	global.got_burners = {}
 	global.combat_balance = {}
 	global.difficulty_player_votes = {}
 	global.evo_raise_counter = 1

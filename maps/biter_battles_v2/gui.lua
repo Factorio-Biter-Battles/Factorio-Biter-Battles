@@ -374,6 +374,33 @@ local get_player_data = function (player, remove)
 	return global.player_data_afk[player.name]
 end
 
+function burners_balance(player)
+	if global.got_burners[player.name] then 
+		return
+	end	
+	local force = "north"
+	if player.force.name == "north" then 
+		force = "south" 
+	end
+	if #game.forces[force].connected_players == 0 then
+		return
+	end
+	local player2
+	for _, p in pairs(game.forces[force].connected_players) do
+		if not global.got_burners[p.name] then
+			player2 = p
+			break
+		end
+	end
+	if not player2 then
+		return 
+	end	
+	global.got_burners[player.name] = true
+	player.insert { name = "burner-mining-drill", count = 10 }
+	global.got_burners[player2.name] = true
+	player2.insert { name = "burner-mining-drill", count = 10 }
+end
+
 function join_team(player, force_name, forced_join, auto_join)
 	if not player.character then return end
 	if not player.spectator then return end
@@ -451,6 +478,7 @@ function join_team(player, force_name, forced_join, auto_join)
 		Server.to_discord_bold(msg)
 		global.spectator_rejoin_delay[player.name] = game.tick
 		player.spectator = false
+		burners_balance(player)
 		return
 	end
 	local pos = surface.find_non_colliding_position("character", game.forces[force_name].get_spawn_position(surface), 8,
@@ -476,11 +504,11 @@ function join_team(player, force_name, forced_join, auto_join)
 	player.insert { name = "firearm-magazine", count = 32 }
 	player.insert { name = "iron-gear-wheel", count = 8 }
 	player.insert { name = "iron-plate", count = 16 }
-	player.insert { name = "burner-mining-drill", count = 10 }
 	player.insert { name = "wood", count = 2 }
 	global.chosen_team[player.name] = force_name
 	global.spectator_rejoin_delay[player.name] = game.tick
 	player.spectator = false
+	burners_balance(player)
 	Public.clear_copy_history(player)
 	Public.refresh()
 
