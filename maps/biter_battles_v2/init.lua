@@ -133,6 +133,7 @@ function Public.initial_setup()
 		["new_year_island"] = false,
 		["bb_map_reveal_toggle"] = true,
 		["map_reroll"] = true,
+		["burners_balance"] = true,
 	}
 	global.want_pings = {}
 	global.want_pings_default_value = true
