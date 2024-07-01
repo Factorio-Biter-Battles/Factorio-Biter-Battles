@@ -1246,32 +1246,15 @@ local function start_picking_phase()
 			end
 		end
 		if captainChosen == nil then
-			local northThreshold = 0.5
-			-- if listplayers has an odd number of players, then favor the captain with fewer players
-			if #special["listPlayers"] % 2 == 1 then
-				local counts = {north = 0, south = 0}
-				for _, player in pairs(game.connected_players) do
-					local force = player.force.name
-					if force == "north" or force == "south" then  -- exclude "spectator"
-						counts[force] = counts[force] + 1
-					end
-				end
-				if counts.north == counts.south then
-					northThreshold = 0.5
-				else
-					-- So, for instance, if north has 8 players and south has 10, then mismatch = 0.2,
-					-- adjusted_mismatch =~ 0.32 / 2 = 0.16, so northThreshold = 0.5 + 0.16 = 0.66
-					local mismatch = 1 - math.min(counts.north, counts.south) / math.max(counts.north, counts.south)
-					local adjusted_mismatch = math.pow(mismatch, 0.7) / 2
-					if counts.north < counts.south then
-						northThreshold = 0.5 + adjusted_mismatch
-					else
-						northThreshold = 0.5 - adjusted_mismatch
-					end
+			local counts = {north = 0, south = 0}
+			for _, player in pairs(game.connected_players) do
+				local force = player.force.name
+				if force == "north" or force == "south" then  -- exclude "spectator"
+					counts[force] = counts[force] + 1
 				end
 			end
-
-		 	captainChosen = math_random() < northThreshold and 1 or 2
+			local northThreshold = 0.5 - 0.1 * (counts.north - counts.south)
+			captainChosen = math_random() < northThreshold and 1 or 2
 			log("Captain chosen: " .. captainChosen)
 		end
 		poll_alternate_picking(cpt_get_player(special["captainList"][captainChosen]))
