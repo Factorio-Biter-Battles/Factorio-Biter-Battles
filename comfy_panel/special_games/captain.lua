@@ -20,7 +20,6 @@ local Public = {
 			{name = 'refereeName', type = "textfield", text = "ReplaceMe", numeric = false, width = 140},
 			{name = "autoTrust", type = "switch", switch_state = "right", allow_none_state = false, tooltip = "Trust all players automatically : Yes / No"},
 			{name = "captainKickPower", type = "switch", switch_state = "left", allow_none_state = false, tooltip = "Captain can eject players from his team : Yes / No"},
-			{name = "pickingMode", type = "switch", switch_state = "left", allow_none_state = false, tooltip = "Picking order at start of event : 1 1 1 1 1 1 1 / 1 2 1 1 1 1 1"},
 			{name = "specialEnabled", type = "switch", switch_state = "right", allow_none_state = false, tooltip = "A special will be added to the event : Yes / No"}
     },
     button = {name = "apply", type = "button", caption = "Apply"},
@@ -33,6 +32,7 @@ local function cpt_get_player(playerName)
 		res.print = function(msg, color)
 			game.print("to player " .. playerName .. ":" .. msg, color)
 		end
+		res.force = {name = (global.chosen_team[playerName] or "spectator")}
 		return res
 	end
 	return game.get_player(playerName)
@@ -97,7 +97,6 @@ local function clear_gui_captain_mode()
 			"captain_player_toggle_button",
 		}
 		local center_guis = {
-			"captain_poll_firstpicker_choice_frame",
 			"captain_poll_alternate_pick_choice_frame",
 			"bb_captain_countdown",
 			"captain_manager_gui",
@@ -149,18 +148,6 @@ local function createButton(frame,nameButton,captionButton, wordToPutInstead)
 	local b = frame.add({type = "button", name = newNameButton, caption = newCaptionButton, style="green_button", tooltip="Click to select"})
 	b.style.font = "heading-2"
 	b.style.minimal_width = 100
-end
-
-local function get_bonus_picks_amount(captainName)
-	if global.special_games_variables["captain_mode"]["captainGroupAllowed"] then
-		if captainName == global.special_games_variables["captain_mode"]["captainList"][1] then
-			return global.special_games_variables["captain_mode"]["bonusPickCptOne"]
-		else
-			return global.special_games_variables["captain_mode"]["bonusPickCptTwo"]
-		end
-	else
-		return 0
-	end
 end
 
 local function startswith(text, prefix)
@@ -247,7 +234,7 @@ end
 
 local function poll_alternate_picking(player)
 	pickPlayerGenerator(player,global.special_games_variables["captain_mode"]["listPlayers"],
-	"captain_poll_alternate_pick_choice_frame","Who do you want to pick ? Bonus pick remaining : " .. get_bonus_picks_amount(player.name),
+	"captain_poll_alternate_pick_choice_frame","Who do you want to pick ?",
 	"Magical1@StringHere","captain_player_picked_Magical1@StringHere")
 end
 
@@ -292,58 +279,30 @@ local function generateGenericRenderingCaptain()
 	y = y + 2
 end
 
-local function update_bonus_picks_enemyCaptain(captainName, valueAdded)
-	local special = global.special_games_variables["captain_mode"]
-	if special["captainGroupAllowed"] then
-		if captainName == special["captainList"][1] then
-			special["bonusPickCptTwo"] = special["bonusPickCptTwo"] + valueAdded
-		else
-			special["bonusPickCptOne"] = special["bonusPickCptOne"] + valueAdded
-		end
-	end
-end
-
-local function update_bonus_picks(captainName, valueAdded)
-	local special = global.special_games_variables["captain_mode"]
-	if special["captainGroupAllowed"] then
-		if captainName == special["captainList"][1] then
-			special["bonusPickCptOne"] = special["bonusPickCptOne"] + valueAdded
-			game.print('captain' .. captainName .. ' has now bonus picks : ' .. special["bonusPickCptOne"])
-		else
-			special["bonusPickCptTwo"] = special["bonusPickCptTwo"] + valueAdded
-			game.print('captain' .. captainName .. ' has now bonus picks : ' .. special["bonusPickCptTwo"])
-		end
-	end
-end
-
-local function does_player_wanna_play(playerName)
-	for k,v in pairs(global.special_games_variables["captain_mode"]["listPlayers"]) do
-	   if playerName == v then return true end
-	end
-	return false
-end
-
 local function auto_pick_all_of_group(cptPlayer,playerName)
 	local special = global.special_games_variables["captain_mode"]
 	if special["captainGroupAllowed"] and not special["initialPickingPhaseFinished"] then
 		local playerChecked = cpt_get_player(playerName)
 		local amountPlayersSwitchedForGroup = 0
-		for _, player in pairs(game.connected_players) do
-			if global.chosen_team[player.name] == nil and player.tag == playerChecked.tag and player.force.name == "spectator" then -- only pick player without a team within the same group
-				if does_player_wanna_play(player.name) then
-					if amountPlayersSwitchedForGroup < special["groupLimit"] - 1 then
-						game.print(player.name .. ' was automatically picked with group system', Color.cyan)
-						switchTeamOfPlayer(player.name, playerChecked.force.name)
-						cpt_get_player(player.name).print("Remember to join your team channel voice on discord of free biterbattles (discord link can be found on biterbattles.org website) if possible (even if no mic, it's fine, to just listen, it's not required though but better if you do !)", Color.cyan)
-						removeStringFromTable(special["listPlayers"], player.name)
-						update_bonus_picks_enemyCaptain(cptPlayer.name, 1)
-						amountPlayersSwitchedForGroup = amountPlayersSwitchedForGroup + 1
-					else
-						game.print(player.name .. ' was not picked automatically with group system, as the group limit was reached', Color.red)
-					end
+		local playersToSwitch = {}
+		for _, playerName in ipairs(special["listPlayers"]) do
+			local player = cpt_get_player(playerName)
+			if global.chosen_team[playerName] == nil and player.tag == playerChecked.tag and player.force.name == "spectator" then -- only pick player without a team within the same group
+				if amountPlayersSwitchedForGroup < special["groupLimit"] - 1 then
+					table.insert(playersToSwitch, playerName)
+					amountPlayersSwitchedForGroup = amountPlayersSwitchedForGroup + 1
+				else
+					game.print(playerName .. ' was not picked automatically with group system, as the group limit was reached', Color.red)
 				end
 			end
-		end 
+		end
+		for _, playerName in ipairs(playersToSwitch) do
+			local player = cpt_get_player(playerName)
+			game.print(playerName .. ' was automatically picked with group system', Color.cyan)
+			switchTeamOfPlayer(playerName, playerChecked.force.name)
+			player.print("Remember to join your team channel voice on discord of free biterbattles (discord link can be found on biterbattles.org website) if possible (even if no mic, it's fine, to just listen, it's not required though but better if you do !)", Color.cyan)
+			removeStringFromTable(special["listPlayers"], playerName)
+		end
 	end
 end
 
@@ -393,14 +352,13 @@ local function generate_groups(playerNames)
 	return groups
 end
 
-local function generate_captain_mode(refereeName, autoTrust, captainKick, pickingMode, specialEnabled)
+local function generate_captain_mode(refereeName, autoTrust, captainKick, specialEnabled)
 	if Functions.get_ticks_since_game_start() > 0 then
 		game.print("Must start the captain event on a fresh map. Enable tournament_mode and do '/instant_map_reset current' to reset to current seed.", Color.red)
 		return
 	end
 	captainKick = captainKick == "left"
 	autoTrust = autoTrust == "left"
-	pickingMode = pickingMode == "left"
 
 	local auto_pick_interval_ticks = 5*60*60 -- 5 minutes
 	global.special_games_variables["captain_mode"] = {
@@ -425,13 +383,9 @@ local function generate_captain_mode(refereeName, autoTrust, captainKick, pickin
 		["northThrowPlayersListAllowed"] = {},
 		["southEnabledScienceThrow"] = true,
 		["southThrowPlayersListAllowed"] = {},
-		["pickingModeAlternateBasic"] = pickingMode,
-		["firstPick"] = true,
 		["captainGroupAllowed"] = true,
 		["groupLimit"] = 3,
 		["teamAssignmentSeed"] = math.random(10000, 100000),
-		["bonusPickCptOne"] = 0,
-		["bonusPickCptTwo"] = 0,
 		["playerPickedAtTicks"] = {},
 		["stats"] = {["northPicks"]={},["southPicks"]={},["tickGameStarting"]=0,["playerPlaytimes"]={},["playerSessionStartTimes"]={}}}
 	global.active_special_games["captain_mode"] = true
@@ -463,11 +417,7 @@ local function generate_captain_mode(refereeName, autoTrust, captainKick, pickin
 	if global.special_games_variables["captain_mode"]["captainKick"] then
 		game.print('Option was enabled : Captains can eject players of their team', Color.cyan)
 	end
-	if global.special_games_variables["captain_mode"]["pickingModeAlternateBasic"] then 
-		game.print('Picking system : 1-1-1-1-1-1-1...', Color.cyan)
-	else
-		game.print('Picking system : 1-2-1-1-1-1-1-1...', Color.cyan)
-	end
+	game.print('Picking system : 1-2-2-2-2...', Color.cyan)
 	referee.print("Command only allowed for referee to change a captain : /replaceCaptainNorth <playerName> or /replaceCaptainSouth <playerName>", Color.cyan)
 	for _, player in pairs(game.connected_players) do
 		if player.admin then
@@ -602,21 +552,6 @@ local function allow_vote()
 			game.print('[font=default-large-bold]Difficulty voting is opened for 3 minutes![/font]', Color.cyan)
 end
 
-local function group_system_pick(player,playerPicked,captainChosen)
-	if is_player_in_group_system(playerPicked) then
-		auto_pick_all_of_group(player,playerPicked)
-	end
-	if get_bonus_picks_amount(player.name) > 0 then
-		if get_bonus_picks_amount(player.name) > 0 then 
-			player.print("You have " .. get_bonus_picks_amount(player.name) .. " bonus pick remaining")
-		end
-		update_bonus_picks(player.name,-1)
-		poll_alternate_picking(player)
-	else
-		poll_alternate_picking(cpt_get_player(global.special_games_variables["captain_mode"]["captainList"][captainChosen]))
-	end
-end
-
 local function captain_log_start_time_player(player)
 	if global.special_games_variables["captain_mode"] ~=nil and (player.force.name == "south" or player.force.name == "north") and not global.special_games_variables["captain_mode"]["prepaPhase"] then
 		if not global.special_games_variables["captain_mode"]["stats"]["playerSessionStartTimes"][player.name] then
@@ -629,9 +564,8 @@ function Public.generate(config, player)
 	local refereeName = config["refereeName"].text
 	local autoTrustSystem = config["autoTrust"].switch_state
 	local captainCanKick = config["captainKickPower"].switch_state
-	local pickingMode = config["pickingMode"].switch_state
 	local specialEnabled = config["specialEnabled"].switch_state
-	generate_captain_mode(refereeName,autoTrustSystem,captainCanKick,pickingMode,specialEnabled)
+	generate_captain_mode(refereeName, autoTrustSystem, captainCanKick, specialEnabled)
 end
 
 -- Update the 'dropdown' GuiElement with the new items, trying to preserve the current selection (otherwise go to index 1).
@@ -1383,9 +1317,8 @@ if false then
 		local refereeName = game.player.name
 		local autoTrustSystem = "left"
 		local captainCanKick = "left"
-		local pickingMode = "left"
 		local specialEnabled = "left"
-		generate_captain_mode(refereeName,autoTrustSystem,captainCanKick,pickingMode,specialEnabled)
+		generate_captain_mode(refereeName, autoTrustSystem, captainCanKick, specialEnabled)
 		local special = global.special_games_variables["captain_mode"]
 		special.test_players = {}
 		for _, playerName in ipairs({"alice", "bob", "charlie", "eve1", "eve2", "eve3", "fredrick_longname", "greg1", "greg2"}) do
@@ -1516,25 +1449,35 @@ local function on_gui_click(event)
 				break
 			end
 		end
+		if is_player_in_group_system(playerPicked) then
+			auto_pick_all_of_group(player, playerPicked)
+		end
 
 		if #global.special_games_variables["captain_mode"]["listPlayers"] == 0 then
 			special["pickingPhase"] = false
 			end_of_picking_phase()
 		else
-			if player.name == cpt_get_player(special["captainList"][1]).name then
-				if not special["pickingModeAlternateBasic"] and special["firstPick"] then
-					update_bonus_picks_enemyCaptain(player.name, 1)
-					special["firstPick"] = false
+			local captain_to_pick_next
+			if not special["initialPickingPhaseFinished"] then
+				-- The logic below defaults to a 1-2-2-2-2-... picking system. However, if large groups
+				-- are picked, then whatever captain is picking gets to keep picking until they have more
+				-- players than the other team, so if there is one group of 3 that is picked first, then
+				-- the picking would go 3-4-2-2-2-...
+				if #special["stats"]["southPicks"] > #special["stats"]["northPicks"] then
+					captain_to_pick_next = 1
+				elseif #special["stats"]["northPicks"] > #special["stats"]["southPicks"] then
+					captain_to_pick_next = 2
+				else
+					-- default to the same captain continuing to pick
+					captain_to_pick_next = (player.name == special["captainList"][1] and 1 or 2)
 				end
-				group_system_pick(player, playerPicked, 2)
 			else
-				if not special["pickingModeAlternateBasic"] and special["firstPick"] then
-					update_bonus_picks_enemyCaptain(player.name, 1)
-					special["firstPick"] = false
-				end
-				group_system_pick(player, playerPicked, 1)
+				-- just alternate picking
+				captain_to_pick_next = (player.name == special["captainList"][1] and 2 or 1)
 			end
+			poll_alternate_picking(cpt_get_player(special["captainList"][captain_to_pick_next]))
 		end
+		Public.update_all_captain_player_guis()
 	elseif string.find(element.name, "captain_is_ready") then
 		if not isStringInTable(special["listTeamReadyToPlay"], player.force.name) then
 			game.print('[font=default-large-bold]Team of captain ' .. player.name .. ' is ready ![/font]', Color.cyan)
