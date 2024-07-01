@@ -386,25 +386,40 @@ function Public.burners_balance(player)
 		player.insert { name = "burner-mining-drill", count = 10 }
 		return
 	end
-	local force = "north"
+	local enemy_force = "north"
 	if player.force.name == "north" then 
-		force = "south" 
+		enemy_force = "south" 
 	end
 	local player2
+	-- factorio Lua promises that pairs() iterates in insertion order
 	for enemy_player_name, _ in pairs(global.got_burners) do 
-		if not (global.got_burners[enemy_player_name]) and (game.get_player(enemy_player_name).force.name == force) and game.get_player(enemy_player_name).connected then
+		if not (global.got_burners[enemy_player_name]) and (game.get_player(enemy_player_name).force.name == enemy_force) and game.get_player(enemy_player_name).connected then
 			player2 = game.get_player(enemy_player_name)
 			break
 		end
 	end
 	if not player2 then
 		global.got_burners[player.name] = false
-		return 
+		return 		
 	end		
+	local can_insert
 	global.got_burners[player.name] = true
-	player.insert { name = "burner-mining-drill", count = 10 }
-	global.got_burners[player2.name] = true
+	can_insert = player.get_inventory(defines.inventory.character_main).get_insertable_count("burner-mining-drill")
+	player.insert { name = "burner-mining-drill", count = 10 }		
+	if can_insert < 10 then
+		local items = player.surface.spill_item_stack(player.position,{name="burner-mining-drill", count = 10 - can_insert}, false, nil, false )
+	end
+	player.print("You have recived 10 burners, check inventory",{ r = 1, g = 1, b = 0 })
+	player.create_local_flying_text({text = "You have recived 10 burners, check inventory", position = player.position})
+
+	global.got_burners[player2.name] = true		
+	can_insert = player2.get_inventory(defines.inventory.character_main).get_insertable_count("burner-mining-drill")	
 	player2.insert { name = "burner-mining-drill", count = 10 }
+	if can_insert < 10 then
+		local items = player2.surface.spill_item_stack(player2.position,{name="burner-mining-drill", count = 10 - can_insert}, false, nil, false )
+	end
+	player2.print("You have recived 10 burners, check inventory",{ r = 1, g = 1, b = 0 })
+	player2.create_local_flying_text({text = "You have recived 10 burners, check inventory", position = player2.position})
 end
 
 function join_team(player, force_name, forced_join, auto_join)
