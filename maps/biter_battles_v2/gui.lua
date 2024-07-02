@@ -401,12 +401,12 @@ function Public.burners_balance(player)
 	if not player2 then
 		global.got_burners[player.name] = false
 		return 		
-	end			
-	local inserted
+	end				
 	local burners_to_insert = 10
 	for i = 1 , 0, -1 do
+		local inserted
 		global.got_burners[player.name] = true		
-		inserted = game.players[player.name].insert { name = "burner-mining-drill", count = burners_to_insert }	
+		inserted = player.insert { name = "burner-mining-drill", count = burners_to_insert }	
 		if inserted < burners_to_insert then
 			local items = player.surface.spill_item_stack(player.position,{name="burner-mining-drill", count = burners_to_insert - inserted}, false, nil, false )
 		end
