@@ -314,7 +314,8 @@ end
 
 Public.reset_evo = function()
 	-- Shouldn't reset evo if any of the teams fed. Feeding is blocked when voting is in progress.
-	if game.ticks_played >= global.difficulty_votes_timeout then return end
+	-- However, if /difficulty-revote is done late in a game, we don't want to reset evo.
+	if global.science_logs_text then return end
 
 	local amount = global.total_passive_feed_redpotion
 	if amount < 1 then return end
