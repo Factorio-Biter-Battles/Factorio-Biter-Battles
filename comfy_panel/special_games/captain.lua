@@ -174,18 +174,18 @@ local function startswith(text, prefix)
     return text:find(prefix, 1, true) == 1
 end
 
-local function addGuiShowPlayerInfo(_finalParentGui,_button1Name,_button1Text,_pl,_groupName,_playtimePlayer)
+local function addGuiShowPlayerInfo(_t,_button1Name,_button1Text,_pl,_groupName,_playtimePlayer)
 	local special = global.special_games_variables["captain_mode"]
-	createButton(_finalParentGui,_button1Name,_button1Text,_pl)
-	local b = _finalParentGui.add({type = "label", caption = _groupName})
+	createButton(_t,_button1Name,_button1Text,_pl)
+	local b = _t.add({type = "label", caption = _groupName})
 	b.style.font_color = Color.antique_white
 	b.style.font = "heading-2"
 	b.style.minimal_width = 100
-	b = _finalParentGui.add({type = "label", caption = _playtimePlayer})
+	b = _t.add({type = "label", caption = _playtimePlayer})
 	b.style.font_color = Color.white
 	b.style.font = "heading-2"
 	b.style.minimal_width = 100
-	b = _finalParentGui.add({type = "label", caption = special["player_info"][_pl]})
+	b = _t.add({type = "label", caption = special["player_info"][_pl]})
 	b.style.font_color = Color.white
 	b.style.font = "heading-2"
 	b.style.minimal_width = 100
@@ -196,26 +196,21 @@ end
 local function pickPlayerGenerator(player,tableBeingLooped,frameName,questionText,button1Text,button1Name)
 	if player.gui.center[frameName] then player.gui.center[frameName].destroy() return end
 	local frame = player.gui.center.add { type = "frame", caption = questionText, name = frameName, direction = "vertical" }
-	local finalParentGui
-	if global.special_games_variables["captain_mode"]["captainGroupAllowed"] then
-		finalParentGui = frame.add { type = "table", column_count = 4 }
-	else
-		finalParentGui = frame
-	end
+	local t = frame.add { type = "table", column_count = 4 }
 	if tableBeingLooped ~=nil then
-		local b = finalParentGui.add({type = "label", caption = "playerName"})
+		local b = t.add({type = "label", caption = "playerName"})
 		b.style.font_color = Color.antique_white
 		b.style.font = "heading-2"
 		b.style.minimal_width = 100
-		b = finalParentGui.add({type = "label", caption = "GroupName"})
+		b = t.add({type = "label", caption = "GroupName"})
 		b.style.font_color = Color.antique_white
 		b.style.font = "heading-2"
 		b.style.minimal_width = 100
-		b = finalParentGui.add({type = "label", caption = "Total playtime"})
+		b = t.add({type = "label", caption = "Total playtime"})
 		b.style.font_color = Color.antique_white
 		b.style.font = "heading-2"
 		b.style.minimal_width = 100
-		b = finalParentGui.add({type = "label", caption = "Notes"})
+		b = t.add({type = "label", caption = "Notes"})
 		b.style.font_color = Color.antique_white
 		b.style.font = "heading-2"
 		b.style.minimal_width = 100
@@ -233,7 +228,7 @@ local function pickPlayerGenerator(player,tableBeingLooped,frameName,questionTex
 					if not listGroupAlreadyDone[playerIterated.tag] then
 						groupName = playerIterated.tag
 						listGroupAlreadyDone[playerIterated.tag] = true
-						addGuiShowPlayerInfo(finalParentGui,button1Name,button1Text,pl,groupName,playtimePlayer)
+						addGuiShowPlayerInfo(t,button1Name,button1Text,pl,groupName,playtimePlayer)
 						for _,plOfGroup in pairs(tableBeingLooped) do
 							if plOfGroup ~= pl then
 								local groupNameOtherPlayer = cpt_get_player(plOfGroup).tag
@@ -243,13 +238,13 @@ local function pickPlayerGenerator(player,tableBeingLooped,frameName,questionTex
 									if global.total_time_online_players[nameOtherPlayer] then
 										playtimePlayer = Player_list.get_formatted_playtime_from_ticks(global.total_time_online_players[nameOtherPlayer])
 									end
-									addGuiShowPlayerInfo(finalParentGui,button1Name,button1Text,plOfGroup,groupName,playtimePlayer)
+									addGuiShowPlayerInfo(t,button1Name,button1Text,plOfGroup,groupName,playtimePlayer)
 								end
 							end
 						end
 					end
 				else
-					addGuiShowPlayerInfo(finalParentGui,button1Name,button1Text,pl,groupName,playtimePlayer)
+					addGuiShowPlayerInfo(t,button1Name,button1Text,pl,groupName,playtimePlayer)
 				end
 			end
 		end
@@ -1408,6 +1403,7 @@ if false then
 		end
 		special["player_info"]["alice"] = "I am a test player"
 		special["player_info"]["charlie"] = "I am a test player. I write a very very very long description about what I am thinking about doing during the game that goes on and on and on and on and on and on and on and on and on and on and on and on and on and on and on and on and on and on and on and on and on and on and on and on and on and on and on."
+		special["minTotalPlaytimeToPlay"] = 0
 	end)
 end
 
