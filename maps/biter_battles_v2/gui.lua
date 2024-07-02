@@ -374,6 +374,48 @@ local get_player_data = function (player, remove)
 	return global.player_data_afk[player.name]
 end
 
+function Public.burners_balance(player)
+	if player.force.name == "spectator" then 
+		return 
+	end
+	if global.got_burners[player.name] then 
+		return
+	end	
+	if global.training_mode or not (global.bb_settings.burners_balance) then 
+		global.got_burners[player.name] = true
+		player.insert { name = "burner-mining-drill", count = 10 }
+		return
+	end
+	local enemy_force = "north"
+	if player.force.name == "north" then 
+		enemy_force = "south" 
+	end
+	local player2
+	-- factorio Lua promises that pairs() iterates in insertion order
+	for enemy_player_name, _ in pairs(global.got_burners) do 
+		if not (global.got_burners[enemy_player_name]) and (game.get_player(enemy_player_name).force.name == enemy_force) and game.get_player(enemy_player_name).connected then
+			player2 = game.get_player(enemy_player_name)
+			break
+		end
+	end
+	if not player2 then
+		global.got_burners[player.name] = false
+		return 		
+	end				
+	local burners_to_insert = 10
+	for i = 1 , 0, -1 do
+		local inserted
+		global.got_burners[player.name] = true		
+		inserted = player.insert { name = "burner-mining-drill", count = burners_to_insert }	
+		if inserted < burners_to_insert then
+			local items = player.surface.spill_item_stack(player.position,{name="burner-mining-drill", count = burners_to_insert - inserted}, false, nil, false )
+		end
+		player.print("You have received ".. burners_to_insert .. " x [item=burner-mining-drill] check inventory",{ r = 1, g = 1, b = 0 })
+		player.create_local_flying_text({text = "You have received ".. burners_to_insert .. " x [item=burner-mining-drill] check inventory", position = player.position})
+		player=player2
+	end
+end
+
 function join_team(player, force_name, forced_join, auto_join)
 	if not player.character then return end
 	if not player.spectator then return end
@@ -451,6 +493,7 @@ function join_team(player, force_name, forced_join, auto_join)
 		Server.to_discord_bold(msg)
 		global.spectator_rejoin_delay[player.name] = game.tick
 		player.spectator = false
+		Public.burners_balance(player)
 		return
 	end
 	local pos = surface.find_non_colliding_position("character", game.forces[force_name].get_spawn_position(surface), 8,
@@ -476,11 +519,11 @@ function join_team(player, force_name, forced_join, auto_join)
 	player.insert { name = "firearm-magazine", count = 32 }
 	player.insert { name = "iron-gear-wheel", count = 8 }
 	player.insert { name = "iron-plate", count = 16 }
-	player.insert { name = "burner-mining-drill", count = 10 }
 	player.insert { name = "wood", count = 2 }
 	global.chosen_team[player.name] = force_name
 	global.spectator_rejoin_delay[player.name] = game.tick
 	player.spectator = false
+	Public.burners_balance(player)
 	Public.clear_copy_history(player)
 	Public.refresh()
 
