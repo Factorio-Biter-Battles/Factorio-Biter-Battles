@@ -401,25 +401,19 @@ function Public.burners_balance(player)
 	if not player2 then
 		global.got_burners[player.name] = false
 		return 		
-	end		
-	local can_insert
-	global.got_burners[player.name] = true
-	can_insert = player.get_inventory(defines.inventory.character_main).get_insertable_count("burner-mining-drill")
-	player.insert { name = "burner-mining-drill", count = 10 }		
-	if can_insert < 10 then
-		local items = player.surface.spill_item_stack(player.position,{name="burner-mining-drill", count = 10 - can_insert}, false, nil, false )
+	end			
+	local inserted
+	local burners_to_insert = 10
+	for i = 1 , 0, -1 do
+		global.got_burners[player.name] = true		
+		inserted = game.players[player.name].insert { name = "burner-mining-drill", count = burners_to_insert }	
+		if inserted < burners_to_insert then
+			local items = player.surface.spill_item_stack(player.position,{name="burner-mining-drill", count = burners_to_insert - inserted}, false, nil, false )
+		end
+		player.print("You have received ".. burners_to_insert .. " x [item=burner-mining-drill] check inventory",{ r = 1, g = 1, b = 0 })
+		player.create_local_flying_text({text = "You have received ".. burners_to_insert .. " x [item=burner-mining-drill] check inventory", position = player.position})
+		player=player2
 	end
-	player.print("You have recived 10 burners, check inventory",{ r = 1, g = 1, b = 0 })
-	player.create_local_flying_text({text = "You have recived 10 burners, check inventory", position = player.position})
-
-	global.got_burners[player2.name] = true		
-	can_insert = player2.get_inventory(defines.inventory.character_main).get_insertable_count("burner-mining-drill")	
-	player2.insert { name = "burner-mining-drill", count = 10 }
-	if can_insert < 10 then
-		local items = player2.surface.spill_item_stack(player2.position,{name="burner-mining-drill", count = 10 - can_insert}, false, nil, false )
-	end
-	player2.print("You have recived 10 burners, check inventory",{ r = 1, g = 1, b = 0 })
-	player2.create_local_flying_text({text = "You have recived 10 burners, check inventory", position = player2.position})
 end
 
 function join_team(player, force_name, forced_join, auto_join)
