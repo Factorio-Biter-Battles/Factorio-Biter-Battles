@@ -461,7 +461,7 @@ function join_team(player, force_name, forced_join, auto_join)
 				)
 				return
 			end
-			if game.tick - global.spectator_rejoin_delay[player.name] < 3600 then
+			if global.spectator_rejoin_delay[player.name] and game.tick - global.spectator_rejoin_delay[player.name] < 3600 then
 				player.print(
 					"Not ready to return to your team yet. Please wait " ..
 					60 - (math.floor((game.tick - global.spectator_rejoin_delay[player.name]) / 60)) .. " seconds.",

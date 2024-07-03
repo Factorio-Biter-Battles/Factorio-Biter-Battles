@@ -75,11 +75,18 @@ local function add_to_trust(playerName)
 end
 
 local function switchTeamOfPlayer(playerName, playerForceName)
+	if global.chosen_team[playerName] then
+		if global.chosen_team[playerName] ~= playerForceName then
+			game.print(playerName .. ' is already on ' .. global.chosen_team[playerName] .. ' and thus was not switched to ' .. playerForceName, Color.red)
+		end
+		return
+	end
 	local special = global.special_games_variables["captain_mode"]
-	if not is_test_player_name(playerName) then
-		Team_manager.switch_force(playerName, playerForceName)
-	else
+	local player = cpt_get_player(playerName)
+	if is_test_player_name(playerName) or not player.connected then
 		global.chosen_team[playerName] = playerForceName
+	else
+		Team_manager.switch_force(playerName, playerForceName)
 	end
 	local forcePickName = playerForceName .. "Picks"
 	table.insert(special["stats"][forcePickName], playerName)
@@ -157,7 +164,7 @@ end
 local function addGuiShowPlayerInfo(_t,_button1Name,_button1Text,_pl,_groupName,_playtimePlayer)
 	local special = global.special_games_variables["captain_mode"]
 	createButton(_t,_button1Name,_button1Text,_pl)
-	b = _t.add({type = "label", caption = _groupName})
+	local b = _t.add({type = "label", caption = _groupName})
 	b.style.font_color = Color.antique_white
 	b.style.font = "heading-2"
 	b.style.minimal_width = 100
@@ -174,9 +181,8 @@ local function addGuiShowPlayerInfo(_t,_button1Name,_button1Text,_pl,_groupName,
 end
 
 local function pickPlayerGenerator(player,tableBeingLooped,frameName,questionText,button1Text,button1Name)
-	local frame = nil
 	if player.gui.center[frameName] then player.gui.center[frameName].destroy() return end
-	frame = player.gui.center.add { type = "frame", caption = questionText, name = frameName, direction = "vertical" }
+	local frame = player.gui.center.add { type = "frame", caption = questionText, name = frameName, direction = "vertical" }
 	local t = frame.add { type = "table", column_count = 4 }
 	if tableBeingLooped ~=nil then
 		local b = t.add({type = "label", caption = "playerName"})
@@ -1288,7 +1294,7 @@ local function get_dropdown_value(dropdown)
 end
 
 local function check_if_enough_playtime_to_play(player)
-	return global.total_time_online_players[player.name] ~= nil and global.total_time_online_players[player.name] >= global.special_games_variables["captain_mode"]["minTotalPlaytimeToPlay"]
+	return (global.total_time_online_players[player.name] or 0) >= global.special_games_variables["captain_mode"]["minTotalPlaytimeToPlay"]
 end
 
 if false then
