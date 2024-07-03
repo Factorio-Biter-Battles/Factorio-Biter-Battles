@@ -86,6 +86,9 @@ local function checkerboard(surface, left_top_x, left_top_y)
 	clear_ores(surface, left_top_x, left_top_y, ores)
 	local uranium_cells = {}
 	local cell_size = global.special_games_variables['mixed_ore_map']['size']
+	if cell_size == 0 then
+		cell_size = 1
+	end
 	local seed = game.surfaces[global.bb_surface_name].map_gen_settings.seed
 	for x = 0, 31, 1 do
 		for y = 0, 31, 1 do
