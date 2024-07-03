@@ -3,8 +3,18 @@ local ItemCosts = require 'maps.biter_battles_v2.item_costs'
 local function inventory_cost(player)
     local inventory = player.get_inventory(defines.inventory.character_main)
     local cost = 0
+    local freebies
+    if global.special_games_variables["infinity_chest"] then
+        freebies = global.special_games_variables["infinity_chest"].freebies
+    end
     for name, count in pairs(inventory.get_contents()) do
-        cost = cost + ItemCosts.get_cost(name) * count
+        local item_cost
+        if freebies and freebies[name] then
+            item_cost = 0
+        else
+            item_cost = ItemCosts.get_cost(name)
+        end
+        cost = cost + item_cost * count
     end
     return cost
 end

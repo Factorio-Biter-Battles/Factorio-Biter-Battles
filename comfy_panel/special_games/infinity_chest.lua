@@ -48,6 +48,14 @@ local function generate_infinity_chest(separate_chests, operable, gap, eq)
         end
     end
     global.active_special_games["infinity_chest"] = true
+    local special = global.special_games_variables["infinity_chest"]
+    if not special then
+        special = { freebies = {} }
+        global.special_games_variables["infinity_chest"] = special
+    end
+    for i, v in ipairs(eq) do
+        special.freebies[v] = true
+    end
 end
 
 local Public = {
