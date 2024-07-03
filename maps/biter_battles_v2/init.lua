@@ -133,6 +133,7 @@ function Public.initial_setup()
 		["new_year_island"] = false,
 		["bb_map_reveal_toggle"] = true,
 		["map_reroll"] = true,
+		["burners_balance"] = true,
 	}
 	global.want_pings = {}
 	global.want_pings_default_value = true
@@ -259,6 +260,7 @@ function Public.tables()
 	global.bb_threat = {}
 	global.bb_threat_income = {}
 	global.chosen_team = {}
+	global.got_burners = {}
 	global.combat_balance = {}
 	global.difficulty_player_votes = {}
 	global.evo_raise_counter = 1
