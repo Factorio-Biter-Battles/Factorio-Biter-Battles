@@ -218,7 +218,7 @@ local function on_gui_click(event)
         return
     end
     if player.spectator and is_captain_enabled() and not is_vote_allowed_in_captain(player.name) then
-        player.print("You must express wish to play to be able to vote in captain game")
+        player.print("You must first sign up to play in order to vote in captain game")
 		event.element.parent.destroy()
         return
     end
