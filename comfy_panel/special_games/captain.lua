@@ -12,6 +12,7 @@ local ComfyPanelGroup = require 'comfy_panel.group'
 local CaptainRandomPick = require 'comfy_panel.special_games.captain_random_pick'
 local math_random = math.random
 local closable_frame = require "utils.ui.closable_frame"
+local bb_diff = require "maps.biter_battles_v2.difficulty_vote"
 
 local Public = {
     name = {type = "label", caption = "Captain event", tooltip = "Captain event"},
@@ -145,6 +146,7 @@ local function force_end_captain_event()
 			Team_manager.switch_force(pl.name,"spectator")
 		end
 	end
+    global.difficulty_votes_timeout = game.ticks_played + 36000
 	clear_character_corpses()
 end
 
@@ -362,6 +364,13 @@ local function check_if_enough_playtime_to_play(player)
 	return (global.total_time_online_players[player.name] or 0) >= global.special_games_variables["captain_mode"]["minTotalPlaytimeToPlay"]
 end
 
+local function allow_vote()
+            local tick = game.ticks_played
+            global.difficulty_votes_timeout = tick + 999999
+            global.difficulty_player_votes = {}
+			game.print('[font=default-large-bold]Difficulty voting until captain starts picking players ![/font]', Color.cyan)
+end
+
 local function generate_captain_mode(refereeName, autoTrust, captainKick, specialEnabled)
 	if Functions.get_ticks_since_game_start() > 0 then
 		game.print("Must start the captain event on a fresh map. Enable tournament_mode and do '/instant_map_reset current' to reset to current seed.", Color.red)
@@ -453,6 +462,7 @@ local function generate_captain_mode(refereeName, autoTrust, captainKick, specia
 		Team_manager.freeze_players()
 		game.print(">>> Players have been frozen!", {r = 111, g = 111, b = 255})
 	end
+	allow_vote()
 
 	local y = 0
 	if global.special_games_variables["rendering"] == nil then global.special_games_variables["rendering"] = {} end
@@ -563,11 +573,9 @@ local function prepare_start_captain_event()
 	Task.set_timeout_in_ticks(600, countdown_captain_start_token)
 end
 
-local function allow_vote()
-            local tick = game.ticks_played
-            global.difficulty_votes_timeout = tick + 10800
-            global.difficulty_player_votes = {}
-			game.print('[font=default-large-bold]Difficulty voting is opened for 3 minutes![/font]', Color.cyan)
+local function close_difficulty_vote()
+            global.difficulty_votes_timeout = game.ticks_played
+			game.print('[font=default-large-bold]Difficulty voting is now closed ![/font]', Color.cyan)
 end
 
 local function captain_log_start_time_player(player)
@@ -1217,7 +1225,6 @@ local function end_of_picking_phase()
 	end
 	special["nextAutoPickTicks"] = Functions.get_ticks_since_game_start() + special["autoPickIntervalTicks"]
 	if special["prepaPhase"] then
-		allow_vote()
 		game.print('[font=default-large-bold]All players were picked by captains, time to start preparation for each team ! Once your team is ready, captain, click on yes on top popup[/font]', Color.cyan)
 		for _, captain_name in pairs(global.special_games_variables["captain_mode"]["captainList"]) do
 			local captain = cpt_get_player(captain_name)
@@ -1257,6 +1264,7 @@ local function start_picking_phase()
 		return
 	end
 	if special["prepaPhase"] then
+		close_difficulty_vote()
 		game.print('[font=default-large-bold]Picking phase started, captains will pick their team members[/font]', Color.cyan)
 	end
 	if #special["listPlayers"] == 0 then
@@ -1410,6 +1418,7 @@ local function on_gui_click(event)
 		end
 	elseif element.name == "captain_player_do_not_want_to_play" then
 		if not special["pickingPhase"] then
+			bb_diff.update_difficulty(player)
 			removeStringFromTable(special["listPlayers"], player.name)
 			Public.update_all_captain_player_guis()
 		end
