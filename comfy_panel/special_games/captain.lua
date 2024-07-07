@@ -146,7 +146,7 @@ local function force_end_captain_event()
 			Team_manager.switch_force(pl.name,"spectator")
 		end
 	end
-    global.difficulty_votes_timeout = game.ticks_played + 36000
+	global.difficulty_votes_timeout = game.ticks_played + 36000
 	clear_character_corpses()
 end
 
@@ -368,7 +368,7 @@ local function allow_vote()
             local tick = game.ticks_played
             global.difficulty_votes_timeout = tick + 999999
             global.difficulty_player_votes = {}
-			game.print('[font=default-large-bold]Difficulty voting until captain starts picking players ![/font]', Color.cyan)
+            game.print('[font=default-large-bold]Difficulty voting until captain starts picking players ![/font]', Color.cyan)
 end
 
 local function generate_captain_mode(refereeName, autoTrust, captainKick, specialEnabled)
