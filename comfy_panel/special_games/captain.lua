@@ -575,7 +575,7 @@ end
 
 local function close_difficulty_vote()
             global.difficulty_votes_timeout = game.ticks_played
-			game.print('[font=default-large-bold]Difficulty voting is now closed ![/font]', Color.cyan)
+            game.print('[font=default-large-bold]Difficulty voting is now closed ![/font]', Color.cyan)
 end
 
 local function captain_log_start_time_player(player)
