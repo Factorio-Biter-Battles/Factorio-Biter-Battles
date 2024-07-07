@@ -368,7 +368,7 @@ local function allow_vote()
             local tick = game.ticks_played
             global.difficulty_votes_timeout = tick + 999999
             global.difficulty_player_votes = {}
-            game.print('[font=default-large-bold]Difficulty voting is opened until captain starts picking players ![/font]', Color.cyan)
+            game.print('[font=default-large-bold]Difficulty voting is opened until the referee starts the picking phase ![/font]', Color.cyan)
 end
 
 local function generate_captain_mode(refereeName, autoTrust, captainKick, specialEnabled)
