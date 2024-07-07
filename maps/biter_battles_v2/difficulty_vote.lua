@@ -53,10 +53,8 @@ local function poll_difficulty(player)
 	if global.bb_settings.only_admins_vote or global.tournament_mode then
 		if global.active_special_games["captain_mode"] then
 			if global.bb_settings.only_admins_vote and not player.admin then return end
-			if (is_captain_enabled() and not is_vote_allowed_in_captain(player.name)) or 
-			(not is_captain_enabled() and player.spectator and not global.bb_settings.only_admins_vote) then
-				return
-			end
+			if is_captain_enabled() and not global.bb_settings.only_admins_vote and not is_vote_allowed_in_captain(player.name) then return end 
+			if not is_captain_enabled() and player.spectator and not global.bb_settings.only_admins_vote then return end
 		else
 			if not player.admin then return end
 		end
