@@ -8,6 +8,7 @@ local Functions = require 'maps.biter_battles_v2.functions'
 local Tables = require "maps.biter_battles_v2.tables"
 local Player_list = require "comfy_panel.player_list"
 local gui_style = require 'utils.utils'.gui_style
+local ternary = require 'utils.utils'.ternary
 local ComfyPanelGroup = require 'comfy_panel.group'
 local CaptainRandomPick = require 'comfy_panel.special_games.captain_random_pick'
 local math_random = math.random
@@ -17,7 +18,7 @@ local Public = {
     name = {type = "label", caption = "Captain event", tooltip = "Captain event"},
     config = {
 			{name = "label4", type = "label", caption = "Referee"},
-			{name = 'refereeName', type = "textfield", text = "ReplaceMe", numeric = false, width = 140},
+			{name = 'refereeName', type = "textfield", text = "", numeric = false, width = 140},
 			{name = "autoTrust", type = "switch", switch_state = "right", allow_none_state = false, tooltip = "Trust all players automatically : Yes / No"},
 			{name = "captainKickPower", type = "switch", switch_state = "left", allow_none_state = false, tooltip = "Captain can eject players from his team : Yes / No"},
 			{name = "specialEnabled", type = "switch", switch_state = "right", allow_none_state = false, tooltip = "A special will be added to the event : Yes / No"}
@@ -402,7 +403,7 @@ local function generate_captain_mode(refereeName, autoTrust, captainKick, specia
 	global.active_special_games["captain_mode"] = true
 	local referee = cpt_get_player(special["refereeName"])
 	if referee == nil then
-		game.print("Event captain aborted, referee is not a player connected.. Referee name of player was : ".. special["refereeName"])
+		game.print("Event captain aborted, referee is not a player connected. Provided referee name was: " .. special["refereeName"])
 		global.special_games_variables["captain_mode"] = nil
 		global.active_special_games["captain_mode"] = false
 		return
@@ -579,7 +580,7 @@ local function captain_log_start_time_player(player)
 end
 
 function Public.generate(config, player)
-	local refereeName = config["refereeName"].text
+	local refereeName = ternary(config["refereeName"].text == "", player.name, config["refereeName"].text)
 	local autoTrustSystem = config["autoTrust"].switch_state
 	local captainCanKick = config["captainKickPower"].switch_state
 	local specialEnabled = config["specialEnabled"].switch_state
@@ -938,26 +939,38 @@ function Public.draw_captain_player_gui(player)
 
 	local prepa_flow = frame.add({type = "flow", name = "prepa_flow", direction = "vertical"})
 	prepa_flow.add({type = "label", caption = "A captains game will start soon!"})
+	prepa_flow.add({type = "line"})
 	local l = prepa_flow.add({type = "label", name = "want_to_play_players_list"})
 	l.style.single_line = false
 	prepa_flow.add({type = "label", name = "captain_volunteers_list"})
 	l = prepa_flow.add({type = "label", name = "remaining_players_list"})
 	l.style.single_line = false
 
+	frame.add({type = "line"})
 	l = frame.add({type = "label", name = "status_label"})
 	l.style.single_line = false
-	local b = frame.add({type = "button", name = "captain_player_want_to_play", caption = "I want to play and am willing to play on either team!", style = "confirm_button", tooltip = "Yay"})
-	b.style.font = "heading-1"
+
+	frame.add({type = "line"})
+	local want_to_play_row = frame.add({type = "table", name = "captain_player_want_to_play_row", column_count = 2})
+	local b = want_to_play_row.add({type = "button", name = "captain_player_want_to_play", caption = "I want to be a PLAYER!", style = "confirm_button", tooltip = "Yay"})
+	b.style.font = "heading-2"
 	b.style.horizontally_stretchable = true
-	b = frame.add({type = "button", name = "captain_player_do_not_want_to_play", caption = "Nevermind, I don't want to play", style = "red_button", tooltip = "Boo"})
-	b = frame.add({type = "button", name = "captain_player_want_to_be_captain", caption = "I am willing to be a captain", style = "green_button", tooltip = "The community needs you"})
+	b.style.horizontal_align = "left"
+	b = want_to_play_row.add({type = "button", name = "captain_player_do_not_want_to_play", caption = "Nevermind, I don't want to play", style = "red_button", tooltip = "Boo"})
+
+	local want_to_be_captain_row = frame.add({type = "table", name = "captain_player_want_to_be_captain_row", column_count = 2})
+	b = want_to_be_captain_row.add({type = "button", name = "captain_player_want_to_be_captain", caption = "I want to be a CAPTAIN!", style = "confirm_button", tooltip = "The community needs you"})
+	b.style.font = "heading-2"
 	b.style.horizontally_stretchable = true
-	b = frame.add({type = "button", name = "captain_player_do_not_want_to_be_captain", caption = "Nevermind, I don't want to captain", style = "red_button", tooltip = "The weight of responsibility is too great"})
+	b.style.horizontal_align = "left"
+	b = want_to_be_captain_row.add({type = "button", name = "captain_player_do_not_want_to_be_captain", caption = "Nevermind, I don't want to captain", style = "red_button", tooltip = "The weight of responsibility is too great"})
 
 	-- Add a textbox for the player to enter info for the captains to see when picking
-	l = frame.add({type = "label", name = "captain_player_info_label", caption = "Enter any info you want the captains to see when picking players,\ni.e. 'I will be on discord. I can threatfarm. I can build lots of power.'"})
+	local player_info_flow = frame.add({type = "flow", name = "captain_player_info_flow", direction = "vertical"})
+	player_info_flow.add({type = "line", name = "captain_player_info_label_above_line"})
+	l = player_info_flow.add({type = "label", name = "captain_player_info_label", caption = "Enter any info you want the captains to see when picking players,\ni.e. 'I will be on discord. I can threatfarm. I can build lots of power.'"})
 	l.style.single_line = false
-	local textbox = frame.add({type = "textfield", name = "captain_player_info", text = special["player_info"][player.name] or "", tooltip = "Enter any info you want the captains to see when picking players."})
+	local textbox = player_info_flow.add({type = "textfield", name = "captain_player_info", text = special["player_info"][player.name] or "", tooltip = "Enter any info you want the captains to see when picking players."})
 	textbox.style.horizontally_stretchable = true
 	textbox.style.width = 0
 
@@ -979,9 +992,9 @@ function Public.update_captain_player_gui(player)
 		local rem = prepa_flow.remaining_players_list
 		if not special["initialPickingPhaseStarted"] then
 			want_to_play.visible = true
-			want_to_play.caption = #special["listPlayers"] .. " Players: " .. get_player_list_with_groups()
+			want_to_play.caption = "Players (" .. #special["listPlayers"] .. "): " .. get_player_list_with_groups()
 			cpt_volunteers.visible = true
-			cpt_volunteers.caption = "Captain volunteers: " .. table.concat(special["captainList"], ", ")
+			cpt_volunteers.caption = "Captain volunteers (" .. #special["captainList"] .. "): " .. table.concat(special["captainList"], ", ")
 			rem.visible = false
 		else
 			want_to_play.visible = false
@@ -990,10 +1003,10 @@ function Public.update_captain_player_gui(player)
 			rem.caption = #special["listPlayers"] .. " " .. "Players remaining to be picked: " .. table.concat(special["listPlayers"], ", ")
 		end
 	end
-	frame.captain_player_want_to_play.visible = false
-	frame.captain_player_do_not_want_to_play.visible = false
-	frame.captain_player_want_to_be_captain.visible = false
-	frame.captain_player_do_not_want_to_be_captain.visible = false
+	frame.captain_player_want_to_play_row.captain_player_want_to_play.visible = false
+	frame.captain_player_want_to_play_row.captain_player_do_not_want_to_play.visible = false
+	frame.captain_player_want_to_be_captain_row.captain_player_want_to_be_captain.visible = false
+	frame.captain_player_want_to_be_captain_row.captain_player_do_not_want_to_be_captain.visible = false
 	local waiting_to_be_picked = isStringInTable(special["listPlayers"], player.name)
 	local status_strings = {}
 	if global.chosen_team[player.name] then
@@ -1006,17 +1019,15 @@ function Public.update_captain_player_gui(player)
 		table.insert(status_strings, "A picking phase is currently active, wait until it is done before you can indicate that you want to play.")
 	end
 	if waiting_to_be_picked and not special["pickingPhase"] then
-		frame.captain_player_info_label.visible = true
-		frame.captain_player_info.visible = true
+		frame.captain_player_info_flow.visible = true
 	else
-		frame.captain_player_info_label.visible = false
-		frame.captain_player_info.visible = false
+		frame.captain_player_info_flow.visible = false
 	end
 	if not global.chosen_team[player.name] and not special["pickingPhase"] and not special["kickedPlayers"][player.name] then
-		frame.captain_player_want_to_play.visible = true
-		frame.captain_player_want_to_play.enabled = not waiting_to_be_picked
-		frame.captain_player_do_not_want_to_play.visible = true
-		frame.captain_player_do_not_want_to_play.enabled = waiting_to_be_picked
+		frame.captain_player_want_to_play_row.captain_player_want_to_play.visible = true
+		frame.captain_player_want_to_play_row.captain_player_want_to_play.enabled = not waiting_to_be_picked
+		frame.captain_player_want_to_play_row.captain_player_do_not_want_to_play.visible = true
+		frame.captain_player_want_to_play_row.captain_player_do_not_want_to_play.enabled = waiting_to_be_picked
 		if special["prepaPhase"] and not special["initialPickingPhaseStarted"] then
 			if special["captainGroupAllowed"] then
 				table.insert(status_strings, string.format('Groups of players: ENABLED, group name must start with "%s"', ComfyPanelGroup.COMFY_PANEL_CAPTAINS_GROUP_PREFIX))
@@ -1025,16 +1036,16 @@ function Public.update_captain_player_gui(player)
 				table.insert(status_strings, 'Groups of players: DISABLED')
 			end
 
-			frame.captain_player_want_to_be_captain.visible = true
-			frame.captain_player_do_not_want_to_be_captain.visible = true
+			frame.captain_player_want_to_be_captain_row.captain_player_want_to_be_captain.visible = true
+			frame.captain_player_want_to_be_captain_row.captain_player_do_not_want_to_be_captain.visible = true
 			if isStringInTable(special["captainList"], player.name) then
 				table.insert(status_strings, "You are willing to be a captain! Thank you!")
-				frame.captain_player_want_to_be_captain.enabled = false
-				frame.captain_player_do_not_want_to_be_captain.enabled = true
+				frame.captain_player_want_to_be_captain_row.captain_player_want_to_be_captain.enabled = false
+				frame.captain_player_want_to_be_captain_row.captain_player_do_not_want_to_be_captain.enabled = true
 			else
 				table.insert(status_strings, "You are not currently willing to be captain.")
-				frame.captain_player_want_to_be_captain.enabled = waiting_to_be_picked
-				frame.captain_player_do_not_want_to_be_captain.enabled = false
+				frame.captain_player_want_to_be_captain_row.captain_player_want_to_be_captain.enabled = waiting_to_be_picked
+				frame.captain_player_want_to_be_captain_row.captain_player_do_not_want_to_be_captain.enabled = false
 			end
 		end
 	end
