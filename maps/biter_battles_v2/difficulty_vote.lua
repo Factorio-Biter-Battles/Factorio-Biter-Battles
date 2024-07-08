@@ -31,7 +31,7 @@ end
 
 
 local function is_captain_enabled()
-	return global.special_games_variables["captain_mode"]
+	return global.special_games_variables["captain_mode"] ~= nil
 end
 
 local function isStringInTable(tab, str)
