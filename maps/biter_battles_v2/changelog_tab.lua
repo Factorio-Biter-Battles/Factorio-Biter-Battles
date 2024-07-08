@@ -13,6 +13,10 @@ local function add_changelog(player, element)
 		table.insert(changelog_change, who)
 	end
 	
+	add_entry("2024-07-08", "Ragnarok77", "Captain : Difficulty is now chosen before captain start picking players")
+	add_entry("2024-07-08", "PlayerNoon", "Special games, add ore pattern  in mixed ore")
+	add_entry("2024-07-08", "gabrielchl", "feat(ui/captains): minor join info panel layout update")
+	add_entry("2024-07-08", "cliff_build", "captains: fix some weird conditions with 'I do not want to play/captain'")
 	add_entry("2024-07-03", "cliff_build", "captains: allow players to un-volunteer to play/captain")
 	add_entry("2024-07-03", "cliff_build", "add /inventory-costs comand")
 	add_entry("2024-07-03", "cliff_build", "captains: fix picking of offline players")
