@@ -1411,10 +1411,11 @@ local function on_gui_click(event)
 	elseif element.name == "captain_player_do_not_want_to_play" then
 		if not special["pickingPhase"] then
 			removeStringFromTable(special["listPlayers"], player.name)
+			removeStringFromTable(special["captainList"], player.name)
 			Public.update_all_captain_player_guis()
 		end
 	elseif element.name == "captain_player_want_to_be_captain" then
-		if not special["initialPickingPhaseStarted"] and not isStringInTable(special["captainList"], player.name) then
+		if not special["initialPickingPhaseStarted"] and not isStringInTable(special["captainList"], player.name) and isStringInTable(special["listPlayers"], player.name) then
 			table.insert(special["captainList"], player.name)
 			Public.update_all_captain_player_guis()
 		end
