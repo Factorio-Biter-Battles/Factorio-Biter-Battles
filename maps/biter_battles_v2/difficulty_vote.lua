@@ -152,7 +152,7 @@ local function on_player_joined_game(event)
 	difficulty_gui_all()
 end
 
-function Public.update_difficulty(player)
+function Public.remove_player_from_difficulty_vote(player)
 	if game.ticks_played > global.difficulty_votes_timeout then return end
 	if not global.difficulty_player_votes[player.name] then return end
 	global.difficulty_player_votes[player.name] = nil
@@ -160,7 +160,7 @@ function Public.update_difficulty(player)
 end
 
 local function on_player_left_game(event)
-	Public.update_difficulty(game.get_player(event.player_index))
+	Public.remove_player_from_difficulty_vote(game.get_player(event.player_index))
 end
 
 local function on_gui_click(event)

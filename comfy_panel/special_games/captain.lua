@@ -1418,7 +1418,7 @@ local function on_gui_click(event)
 		end
 	elseif element.name == "captain_player_do_not_want_to_play" then
 		if not special["pickingPhase"] then
-			bb_diff.update_difficulty(player)
+			bb_diff.remove_player_from_difficulty_vote(player)
 			removeStringFromTable(special["listPlayers"], player.name)
 			Public.update_all_captain_player_guis()
 		end
