@@ -1780,7 +1780,7 @@ commands.add_command('captainDisablePicking', 'Convert to a normal game, disable
 end)
 
 local function on_player_changed_force(event)
-    local player = game.get_player(event.player_index)
+  local player = game.get_player(event.player_index)
 	if player.force.name == "spectator" then
 		Public.captain_log_end_time_player(player)
 	else
@@ -1790,13 +1790,20 @@ local function on_player_changed_force(event)
 end
 
 local function on_player_left_game(event)
-    local player = game.get_player(event.player_index)
+  local player = game.get_player(event.player_index)
+
+	local special = global.special_games_variables["captain_mode"]
+	if not special or not player then return end
+  bb_diff.remove_player_from_difficulty_vote(player)
+	removeStringFromTable(special["listPlayers"], player.name)
+	removeStringFromTable(special["captainList"], player.name)
+
 	Public.captain_log_end_time_player(player)
 	Public.update_all_captain_player_guis()
 end
 
 local function on_player_joined_game(event)
-    local player = game.get_player(event.player_index)
+  local player = game.get_player(event.player_index)
 	if global.special_games_variables["captain_mode"] ~=nil and player.gui.center["bb_captain_countdown"] then player.gui.center["bb_captain_countdown"].destroy() end
 	captain_log_start_time_player(player)
 	if global.special_games_variables["captain_mode"] then
