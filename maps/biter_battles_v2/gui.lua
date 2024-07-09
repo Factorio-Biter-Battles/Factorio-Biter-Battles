@@ -10,6 +10,7 @@ local Feeding = require "maps.biter_battles_v2.feeding"
 local ResearchInfo = require "maps.biter_battles_v2.research_info"
 local Tables = require "maps.biter_battles_v2.tables"
 local Captain_event = require "comfy_panel.special_games.captain"
+local player_utils = require "utils.player"
 
 local wait_messages = Tables.wait_messages
 local food_names = Tables.gui_foods
@@ -109,16 +110,7 @@ end
 ---@param force string
 ---@return string
 local function get_player_list_caption(frame, force)
-	local players_with_sort_keys = {}
-	for _, p in pairs(game.forces[force].connected_players) do
-		table.insert(players_with_sort_keys, { player = p, sort_key = string.lower(p.name) })
-	end
-	table.sort(players_with_sort_keys, function(a, b) return a.sort_key < b.sort_key end)
-	local players_with_colors = {}
-	for _, pair in ipairs(players_with_sort_keys) do
-		local p = pair.player
-		table.insert(players_with_colors, string.format("[color=%.2f,%.2f,%.2f]%s[/color]", p.color.r * 0.6 + 0.4, p.color.g * 0.6 + 0.4, p.color.b * 0.6 + 0.4, p.name))
-	end
+	local players_with_colors = player_utils.get_sorted_colored_player_list(game.forces[force].connected_players)
 	return table.concat(players_with_colors, "    ")
 end
 

@@ -14,6 +14,7 @@ local CaptainRandomPick = require 'comfy_panel.special_games.captain_random_pick
 local math_random = math.random
 local closable_frame = require "utils.ui.closable_frame"
 local bb_diff = require "maps.biter_battles_v2.difficulty_vote"
+local player_utils = require "utils.player"
 
 local Public = {
     name = {type = "label", caption = "Captain event", tooltip = "Captain event"},
@@ -773,11 +774,11 @@ end
 
 local function get_player_list_with_groups()
 	local special = global.special_games_variables["captain_mode"]
-	local result = table.concat(special["listPlayers"], ", ")
+	local result = table.concat(player_utils.get_sorted_colored_player_list(player_utils.get_lua_players_from_player_names(special["listPlayers"])), ", ")
 	local groups = generate_groups(special["listPlayers"])
 	local group_strings = {}
 	for _, group in pairs(groups) do
-		table.insert(group_strings, "(" .. table.concat(group, ", ") .. ")")
+		table.insert(group_strings, "(" .. table.concat(player_utils.get_sorted_colored_player_list(player_utils.get_lua_players_from_player_names(group)), ", ") .. ")")
 	end
 	if #group_strings > 0 then
 		result = result .. "\nGroups: " .. table.concat(group_strings, ", ")
@@ -832,7 +833,7 @@ function Public.update_captain_referee_gui(player)
 	end
 
 	if special["prepaPhase"] and not special["initialPickingPhaseStarted"] then
-		scroll.add({type = "label", caption = "Captain volunteers: " .. table.concat(special["captainList"], ", ")})
+		scroll.add({type = "label", caption = "Captain volunteers: " .. table.concat(player_utils.get_sorted_colored_player_list(player_utils.get_lua_players_from_player_names(special["captainList"])), ", ")})
 		-- turn listPlayers into a map for efficiency
 		local players = {}
 		for _, player in pairs(special["listPlayers"]) do
@@ -958,7 +959,7 @@ function Public.draw_captain_player_gui(player)
 	l = frame.add({type = "label", name = "status_label"})
 	l.style.single_line = false
 
-	frame.add({type = "line"})
+	frame.add({type = "line", name = "captain_player_buttons_line"})
 	local want_to_play_row = frame.add({type = "table", name = "captain_player_want_to_play_row", column_count = 2})
 	local b = want_to_play_row.add({type = "button", name = "captain_player_want_to_play", caption = "I want to be a PLAYER!", style = "confirm_button", tooltip = "Yay"})
 	b.style.font = "heading-2"
@@ -1002,15 +1003,16 @@ function Public.update_captain_player_gui(player)
 			want_to_play.visible = true
 			want_to_play.caption = "Players (" .. #special["listPlayers"] .. "): " .. get_player_list_with_groups()
 			cpt_volunteers.visible = true
-			cpt_volunteers.caption = "Captain volunteers (" .. #special["captainList"] .. "): " .. table.concat(special["captainList"], ", ")
+			cpt_volunteers.caption = "Captain volunteers (" .. #special["captainList"] .. "): " .. table.concat(player_utils.get_sorted_colored_player_list(player_utils.get_lua_players_from_player_names(special["captainList"])), ", ")
 			rem.visible = false
 		else
 			want_to_play.visible = false
 			cpt_volunteers.visible = false
 			rem.visible = true
-			rem.caption = #special["listPlayers"] .. " " .. "Players remaining to be picked: " .. table.concat(special["listPlayers"], ", ")
+			rem.caption = "Players remaining to be picked (" .. #special["listPlayers"] .. "): " .. table.concat(player_utils.get_sorted_colored_player_list(player_utils.get_lua_players_from_player_names(special["listPlayers"])), ", ")
 		end
 	end
+	frame.captain_player_buttons_line.visible = false
 	frame.captain_player_want_to_play_row.captain_player_want_to_play.visible = false
 	frame.captain_player_want_to_play_row.captain_player_do_not_want_to_play.visible = false
 	frame.captain_player_want_to_be_captain_row.captain_player_want_to_be_captain.visible = false
@@ -1032,6 +1034,7 @@ function Public.update_captain_player_gui(player)
 		frame.captain_player_info_flow.visible = false
 	end
 	if not global.chosen_team[player.name] and not special["pickingPhase"] and not special["kickedPlayers"][player.name] then
+		frame.captain_player_buttons_line.visible = true
 		frame.captain_player_want_to_play_row.captain_player_want_to_play.visible = true
 		frame.captain_player_want_to_play_row.captain_player_want_to_play.enabled = not waiting_to_be_picked
 		frame.captain_player_want_to_play_row.captain_player_do_not_want_to_play.visible = true
@@ -1044,6 +1047,7 @@ function Public.update_captain_player_gui(player)
 				table.insert(status_strings, 'Groups of players: DISABLED')
 			end
 
+			frame.captain_player_buttons_line.visible = true
 			frame.captain_player_want_to_be_captain_row.captain_player_want_to_be_captain.visible = true
 			frame.captain_player_want_to_be_captain_row.captain_player_do_not_want_to_be_captain.visible = true
 			if isStringInTable(special["captainList"], player.name) then
