@@ -9,6 +9,28 @@ local Public = {}
 
 local difficulties = Tables.difficulties
 
+function Public.difficulty_name()
+	local index = global.difficulty_vote_index
+	if index then
+		return difficulties[global.difficulty_vote_index].name
+	else
+		return "Custom"
+	end
+end
+
+function Public.short_difficulty_name()
+	local index = global.difficulty_vote_index
+	if index then
+		return difficulties[global.difficulty_vote_index].short_name
+	else
+		return "Custom"
+	end
+end
+
+function Public.difficulty_color()
+	return difficulties[global.difficulty_vote_index or 3].color
+end
+
 local function difficulty_gui(player)
 	local b = player.gui.top["difficulty_gui"]
 	if not b then
@@ -16,10 +38,11 @@ local function difficulty_gui(player)
 		b.style.font = "heading-2"
 		gui_style(b, {width = 114, height = 38, padding = -2})
 	end
-	b.style.font_color = difficulties[global.difficulty_vote_index].print_color
+	b.style.font_color = Public.difficulty_color()
 	local value = math.floor(global.difficulty_vote_value*100)
-	local str = table.concat({"Global map difficulty is ", difficulties[global.difficulty_vote_index].name, ". Mutagen has ", value, "% effectiveness."})
-	b.caption = difficulties[global.difficulty_vote_index].name
+	local name = Public.difficulty_name()
+	local str = table.concat({"Global map difficulty is ", name, ". Mutagen has ", value, "% effectiveness."})
+	b.caption = name
 	b.tooltip = str
 end
 
@@ -126,10 +149,6 @@ local function set_difficulty()
 end
 
 local function on_player_joined_game(event)
-	if not global.difficulty_vote_value then global.difficulty_vote_value = 1 end
-	if not global.difficulty_vote_index then global.difficulty_vote_index = 4 end
-	if not global.difficulty_player_votes then global.difficulty_player_votes = {} end
-	
 	local player = game.get_player(event.player_index)
 	if game.ticks_played < global.difficulty_votes_timeout then
 		if not global.difficulty_player_votes[player.name] then

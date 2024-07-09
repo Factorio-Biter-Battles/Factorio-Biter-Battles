@@ -4,6 +4,7 @@ local TeamStatsCollect = {}
 local functions = require 'maps.biter_battles_v2.functions'
 local tables = require 'maps.biter_battles_v2.tables'
 local event = require 'utils.event'
+local difficulty_vote = require 'maps.biter_battles_v2.difficulty_vote'
 
 ---@class ForceStats
 ---@field final_evo? number
@@ -21,6 +22,8 @@ local event = require 'utils.event'
 ---@field forces table<string, ForceStats>
 ---@field ticks integer?
 ---@field won_by_team string?
+---@field difficulty string?
+---@field difficulty_value number?
 
 TeamStatsCollect.items_to_show_summaries_of = {
     {item = "coal"},
@@ -59,9 +62,11 @@ TeamStatsCollect.damage_render_info = {
 local function update_teamstats()
     local team_stats = global.team_stats
     local tick = functions.get_ticks_since_game_start()
-    if tick == 0 then return end
     if team_stats.won_by_team then return end
     team_stats.won_by_team = global.bb_game_won_by_team
+    team_stats.difficulty = difficulty_vote.short_difficulty_name()
+    team_stats.difficulty_value = global.difficulty_vote_value
+    if tick == 0 then return end
     local prev_ticks = team_stats.ticks or 0
     team_stats.ticks = tick
     local total_players = {north = 0, south = 0}
