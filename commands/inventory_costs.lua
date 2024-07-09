@@ -1,4 +1,5 @@
 local ItemCosts = require 'maps.biter_battles_v2.item_costs'
+local safe_wrap_with_player_print = require 'utils.utils'.safe_wrap_with_player_print
 
 local function inventory_cost(player)
     local inventory = player.get_inventory(defines.inventory.character_main)
@@ -50,8 +51,14 @@ local function inventory_costs(cmd)
     end
 end
 
+local function inventory_costs_command(cmd)
+    local player = game.get_player(cmd.player_index)
+    if not player then return end
+    safe_wrap_with_player_print(player, inventory_costs, cmd)
+end
+
 commands.add_command(
 	"inventory-costs",
 	"Print out the top players by inventory values. Pass 'all' to see it for both forces.",
-	inventory_costs
+	inventory_costs_command
 )
