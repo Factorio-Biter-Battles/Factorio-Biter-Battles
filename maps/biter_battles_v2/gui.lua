@@ -374,6 +374,18 @@ local get_player_data = function (player, remove)
 	return global.player_data_afk[player.name]
 end
 
+local function on_player_left_game(event)
+	if global.training_mode or not (global.bb_settings.burners_balance) then 		
+		return
+	end
+	local player = game.get_player(event.player_index)
+	local inventory = player.get_item_count("burner-mining-drill")	
+	if not (inventory == 0) then
+    	local items = player.surface.spill_item_stack(player.position,{name="burner-mining-drill", count = inventory}, false, nil, false )
+		player.remove_item({name="burner-mining-drill", count = inventory})
+	end
+end
+
 function Public.burners_balance(player)
 	if player.force.name == "spectator" then 
 		return 
@@ -740,5 +752,6 @@ end
 
 event.add(defines.events.on_gui_click, on_gui_click)
 event.add(defines.events.on_player_joined_game, on_player_joined_game)
+event.add(defines.events.on_player_left_game, on_player_left_game)
 
 return Public
