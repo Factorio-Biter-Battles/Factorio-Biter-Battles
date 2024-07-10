@@ -68,6 +68,12 @@ local function removeStringFromTable(tab, str)
     end
 end
 
+---@param names string[]
+---@return string
+local function pretty_print_player_list(names)
+	return table.concat(player_utils.get_sorted_colored_player_list(player_utils.get_lua_players_from_player_names(names)), ", ")
+end
+
 local function add_to_trust(playerName)
 	if global.special_games_variables["captain_mode"]["autoTrust"] then
 		local trusted = session.get_trusted_table()
@@ -774,11 +780,11 @@ end
 
 local function get_player_list_with_groups()
 	local special = global.special_games_variables["captain_mode"]
-	local result = table.concat(player_utils.get_sorted_colored_player_list(player_utils.get_lua_players_from_player_names(special["listPlayers"])), ", ")
+	local result = pretty_print_player_list(special["listPlayers"])
 	local groups = generate_groups(special["listPlayers"])
 	local group_strings = {}
 	for _, group in pairs(groups) do
-		table.insert(group_strings, "(" .. table.concat(player_utils.get_sorted_colored_player_list(player_utils.get_lua_players_from_player_names(group)), ", ") .. ")")
+		table.insert(group_strings, "(" .. pretty_print_player_list(group) .. ")")
 	end
 	if #group_strings > 0 then
 		result = result .. "\nGroups: " .. table.concat(group_strings, ", ")
@@ -833,7 +839,7 @@ function Public.update_captain_referee_gui(player)
 	end
 
 	if special["prepaPhase"] and not special["initialPickingPhaseStarted"] then
-		scroll.add({type = "label", caption = "Captain volunteers: " .. table.concat(player_utils.get_sorted_colored_player_list(player_utils.get_lua_players_from_player_names(special["captainList"])), ", ")})
+		scroll.add({type = "label", caption = "Captain volunteers: " .. pretty_print_player_list(special["captainList"])})
 		-- turn listPlayers into a map for efficiency
 		local players = {}
 		for _, player in pairs(special["listPlayers"]) do
@@ -1003,13 +1009,13 @@ function Public.update_captain_player_gui(player)
 			want_to_play.visible = true
 			want_to_play.caption = "Players (" .. #special["listPlayers"] .. "): " .. get_player_list_with_groups()
 			cpt_volunteers.visible = true
-			cpt_volunteers.caption = "Captain volunteers (" .. #special["captainList"] .. "): " .. table.concat(player_utils.get_sorted_colored_player_list(player_utils.get_lua_players_from_player_names(special["captainList"])), ", ")
+			cpt_volunteers.caption = "Captain volunteers (" .. #special["captainList"] .. "): " .. pretty_print_player_list(special["captainList"])
 			rem.visible = false
 		else
 			want_to_play.visible = false
 			cpt_volunteers.visible = false
 			rem.visible = true
-			rem.caption = "Players remaining to be picked (" .. #special["listPlayers"] .. "): " .. table.concat(player_utils.get_sorted_colored_player_list(player_utils.get_lua_players_from_player_names(special["listPlayers"])), ", ")
+			rem.caption = "Players remaining to be picked (" .. #special["listPlayers"] .. "): " .. pretty_print_player_list(special["listPlayers"])
 		end
 	end
 	frame.captain_player_buttons_line.visible = false

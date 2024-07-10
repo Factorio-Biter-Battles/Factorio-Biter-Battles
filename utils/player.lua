@@ -1,6 +1,6 @@
 local Public = {}
 
----@param player_list LuaPlayer
+---@param player_list LuaPlayer[]
 ---@return string[]
 function Public.get_sorted_colored_player_list(player_list)
 	local players_with_sort_keys = {}
@@ -19,13 +19,13 @@ function Public.get_sorted_colored_player_list(player_list)
 end
 
 ---@param names string[]
----@return LuaPlayer
+---@return LuaPlayer[]
 function Public.get_lua_players_from_player_names(names)
-  local players = {}
-  for _, name in pairs(names) do
-    table.insert(players, game.players[name])
-  end
-  return players
+	local players = {}
+	for _, name in pairs(names) do
+		table.insert(players, game.players[name])
+	end
+	return players
 end
 
 return Public
