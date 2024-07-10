@@ -1207,14 +1207,14 @@ local function insertPlayerByPlaytime(playerName)
 	if isStringInTable(listPlayers, playerName) then return end
 	local insertionPosition = 1
 	for i, player in ipairs(listPlayers) do
-	local playtimeOtherPlayer = 0
-	if global.total_time_online_players[player] then
-		playtimeOtherPlayer = global.total_time_online_players[player]
-	end
+		local playtimeOtherPlayer = 0
+		if global.total_time_online_players[player] then
+			playtimeOtherPlayer = global.total_time_online_players[player]
+		end
 		if playtimeOtherPlayer < playtime then
 			insertionPosition = i
 			break
-	else
+		else
 			insertionPosition = i + 1
 		end
 	end
