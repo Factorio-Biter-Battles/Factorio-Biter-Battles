@@ -1703,17 +1703,17 @@ local function changeCaptain(cmd,isItForNorth)
 end
 
 commands.add_command('replaceCaptainNorth', 'Referee can decide to change the captain of north team',
-										 function(cmd)	
+                     function(cmd)	
 	changeCaptain(cmd,true)
 end)
 
 commands.add_command('replaceCaptainSouth', 'Referee can decide to change the captain of south team',
-										 function(cmd)	
+                     function(cmd)	
 	changeCaptain(cmd,false)
 end)
 
 commands.add_command('replaceReferee', 'Admin or referee can decide to change the referee',
-										 function(cmd)	
+                     function(cmd)	
 	if not cmd.player_index then return end
 		local playerOfCommand = cpt_get_player(cmd.player_index)
 		if not playerOfCommand then return end
@@ -1754,7 +1754,7 @@ commands.add_command('replaceReferee', 'Admin or referee can decide to change th
 end)
 
 commands.add_command('captainDisablePicking', 'Convert to a normal game, disable captain event and tournament mode',
-										 function(cmd)
+                     function(cmd)
 	if not cmd.player_index then return end
 		local playerOfCommand = cpt_get_player(cmd.player_index)
 		if not playerOfCommand then return end
