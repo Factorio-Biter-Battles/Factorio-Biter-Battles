@@ -541,19 +541,19 @@ end
 
 local countdown_captain_start_token = Token.register(
 	function()
-	if global.special_games_variables["captain_mode"]["countdown"] > 0 then
-		for _, player in pairs(game.connected_players) do
-			local _sprite="file/png/"..global.special_games_variables["captain_mode"]["countdown"]..".png"
-			if player.gui.center["bb_captain_countdown"] then player.gui.center["bb_captain_countdown"].destroy() end
-			player.gui.center.add{name = "bb_captain_countdown", type = "sprite", sprite = _sprite}
-		end	
-		global.special_games_variables["captain_mode"]["countdown"] = global.special_games_variables["captain_mode"]["countdown"] - 1
-	else
-		for _, player in pairs(game.connected_players) do
-			if player.gui.center["bb_captain_countdown"] then player.gui.center["bb_captain_countdown"].destroy() end
-		end	
-		start_captain_event()
-	end
+		if global.special_games_variables["captain_mode"]["countdown"] > 0 then
+			for _, player in pairs(game.connected_players) do
+				local _sprite="file/png/"..global.special_games_variables["captain_mode"]["countdown"]..".png"
+				if player.gui.center["bb_captain_countdown"] then player.gui.center["bb_captain_countdown"].destroy() end
+				player.gui.center.add{name = "bb_captain_countdown", type = "sprite", sprite = _sprite}
+			end	
+			global.special_games_variables["captain_mode"]["countdown"] = global.special_games_variables["captain_mode"]["countdown"] - 1
+		else
+			for _, player in pairs(game.connected_players) do
+				if player.gui.center["bb_captain_countdown"] then player.gui.center["bb_captain_countdown"].destroy() end
+			end	
+			start_captain_event()
+		end
 	end
 )
 
@@ -1199,26 +1199,26 @@ end
 
 local function insertPlayerByPlaytime(playerName)
 	local special = global.special_games_variables["captain_mode"]
-		local playtime = 0
+	local playtime = 0
 	if global.total_time_online_players[playerName] then
 		playtime = global.total_time_online_players[playerName]
 	end
-		local listPlayers = special["listPlayers"]
-		if isStringInTable(listPlayers, playerName) then return end
-		local insertionPosition = 1
-		for i, player in ipairs(listPlayers) do
-		local playtimeOtherPlayer = 0
-		if global.total_time_online_players[player] then
-			playtimeOtherPlayer = global.total_time_online_players[player]
+	local listPlayers = special["listPlayers"]
+	if isStringInTable(listPlayers, playerName) then return end
+	local insertionPosition = 1
+	for i, player in ipairs(listPlayers) do
+	local playtimeOtherPlayer = 0
+	if global.total_time_online_players[player] then
+		playtimeOtherPlayer = global.total_time_online_players[player]
+	end
+		if playtimeOtherPlayer < playtime then
+			insertionPosition = i
+			break
+	else
+			insertionPosition = i + 1
 		end
-			if playtimeOtherPlayer < playtime then
-				insertionPosition = i
-				break
-		else
-				insertionPosition = i + 1
-			end
-		end
-		table.insert(listPlayers, insertionPosition, playerName)
+	end
+	table.insert(listPlayers, insertionPosition, playerName)
 	if special["balancedRandomTeamsMode"] and not special["initialPickingPhaseStarted"] then
 		local playerBuckets = special["playerBuckets"]
 		table.insert(playerBuckets[#playerBuckets], playerName)
