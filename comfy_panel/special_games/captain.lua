@@ -1580,9 +1580,9 @@ local function on_gui_text_changed(event)
 		end
 		special["player_info"][player.name] = element.text
 	elseif string.find(element.name, "^task_name_field") then
-		if #element.text > 30 then
-			player.print("Task name must be 30 characters or less", Color.warning)
-			element.text = string.sub(element.text, 1, 30)
+		if #element.text > 40 then
+			player.print("Task name must be 40 characters or less", Color.warning)
+			element.text = string.sub(element.text, 1, 40)
 		end
 		
 	end
