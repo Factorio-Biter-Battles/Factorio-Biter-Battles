@@ -122,19 +122,22 @@ local token_handlers = {}
 local token_nth_tick_handlers = {}
 local function_handlers = {}
 local function_nth_tick_handlers = {}
+local removable_function_uid = 0
 
 Global.register(
     {
         token_handlers = token_handlers,
         token_nth_tick_handlers = token_nth_tick_handlers,
         function_handlers = function_handlers,
-        function_nth_tick_handlers = function_nth_tick_handlers
+        function_nth_tick_handlers = function_nth_tick_handlers,
+        removable_function_uid = removable_function_uid
     },
     function(tbl)
         token_handlers = tbl.token_handlers
         token_nth_tick_handlers = tbl.token_nth_tick_handlers
         function_handlers = tbl.function_handlers
         function_nth_tick_handlers = tbl.function_nth_tick_handlers
+        removable_function_uid = tbl.removable_function_uid
     end
 )
 
@@ -254,26 +257,56 @@ function Event.remove_removable(event_name, token)
     end
 end
 
---- Register a handler that can be safely added and removed at runtime.
--- The handler must not be a closure, as that is a desync risk.
--- Do NOT call this method during on_load.
--- See documentation at top of file for details on using events.
--- @param  event_name<number>
--- @param  func<function>
--- @param  name<string>
-function Event.add_removable_function(event_name, func, name)
+---Register a handler that can be safely added and removed at runtime.
+---The handler must not be a closure, as that is a desync risk.
+---Do NOT call this method during on_load.
+---See documentation at top of file for details on using events.
+---
+---The second parameter (func) has to be a function contained inside a string.
+---This is necessary for the scenario to be multiplayer and save/load safe.
+---
+---The third parameter is used to remove the function later.
+---It can either be a string, in which case the function will be removed
+---when Event.remove_removable_function is called with that name,
+---or it can be an event name, in which case, the function will be removed on that event.
+---
+---The first option should NOT be used (unless it is necessary)
+---as the function may not be removed because of a coding mistake
+---(for example because of a spelling mistake of the name), as it has already happened.
+---Nevertheless I didn't removed this option so that we don't have to rewrite all current specials.
+---@overload fun(event_name: number, func: string, name: string)
+---@overload fun(event_name: number, func: string, remove_event_name: defines.events)
+---@param event_name number
+---@param func string
+---@param overload1 string | defines.events
+function Event.add_removable_function(event_name, func, overload1)
     if _LIFECYCLE == stage_load then
         error('cannot call during on_load', 2)
     end
 
-    if not event_name or not func or not name then
+    if not event_name or not func or not overload1 then
         return
+    end
+
+    local name = overload1
+    if type(overload1) ~= "string" then
+        local remove_event_name = overload1
+        removable_function_uid = removable_function_uid + 1
+        name = tostring(removable_function_uid)
+
+        Event.add_removable_function(remove_event_name,
+        "function()" ..
+            "local Event = require(\"utils.event\")" ..
+            "Event.remove_removable_function(" .. event_name .. ", \"" .. name .. "\")" ..
+            "Event.remove_removable_function(" .. remove_event_name .. ", \"" .. name .. "\")" ..
+        "end",
+        name)
     end
 
     local f = assert(load('return ' .. func))()
 
     if type(f) ~= 'function' then
-        error('func must be a function', 2)
+        error('func must be a function contained in a string.', 2)
     end
 
     local funcs = function_handlers[name]
@@ -389,25 +422,40 @@ function Event.remove_removable_nth_tick(tick, token)
     end
 end
 
---- Register a handler for the nth tick that can be safely added and removed at runtime.
--- The handler must not be a closure, as that is a desync risk.
--- Do NOT call this method during on_load.
--- See documentation at top of file for details on using events.
--- @param  tick<number>
--- @param  func<function>
-function Event.add_removable_nth_tick_function(tick, func, name)
+---see Event.add_removable_function comment.
+---@overload fun(event_name: number, func: string, name: string)
+---@overload fun(event_name: number, func: string, remove_event_name: defines.events)
+---@param tick number
+---@param func string
+---@param overload1 string | defines.events
+function Event.add_removable_nth_tick_function(tick, func, overload1)
     if _LIFECYCLE == stage_load then
         error('cannot call during on_load', 2)
     end
 
-    if not tick or not func or not name then
+    if not tick or not func or not overload1 then
         return
+    end
+
+    local name = overload1
+    if type(overload1) ~= "string" then
+        local remove_event_name = overload1
+        removable_function_uid = removable_function_uid + 1
+        name = tostring(removable_function_uid)
+
+        Event.add_removable_function(remove_event_name,
+        "function()" ..
+            "local Event = require(\"utils.event\")" ..
+            "Event.remove_removable_nth_tick_function(" .. tick .. ", \"" .. name .. "\")" ..
+            "Event.remove_removable_function(" .. remove_event_name .. ", \"" .. name .. "\")" ..
+        "end",
+        name)
     end
 
     local f = assert(load('return ' .. func))()
 
     if type(f) ~= 'function' then
-        error('func must be a function', 2)
+        error('func must be a function contained in a string.', 2)
     end
 
     local funcs = function_nth_tick_handlers[name]
@@ -521,10 +569,10 @@ local function add_handlers()
     end
 
     for name, funcs in pairs(function_handlers) do
-        for i = 1, #funcs do
-            local e_name = funcs[i].event_name
-            local func = funcs[i].handler
-            local handler = assert(load('return ' .. func))()
+        for i, func in pairs(funcs) do
+            local e_name = func.event_name
+            local func_string = func.handler
+            local handler = assert(load('return ' .. func_string))()
             local func_handler = function_table[name]
             if not func_handler then
                 function_table[name] = {}
@@ -544,10 +592,10 @@ local function add_handlers()
     end
 
     for name, funcs in pairs(function_nth_tick_handlers) do
-        for i = 1, #funcs do
-            local tick = funcs[i].tick
-            local func = funcs[i].handler
-            local handler = assert(load('return ' .. func))()
+        for i, func in pairs(funcs) do
+            local tick = func.tick
+            local func_string = func.handler
+            local handler = assert(load('return ' .. func_string))()
             local func_handler = function_nth_tick_table[name]
             if not func_handler then
                 function_nth_tick_table[name] = {}
