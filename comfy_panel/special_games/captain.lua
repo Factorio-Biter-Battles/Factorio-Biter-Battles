@@ -2050,7 +2050,7 @@ commands.add_command('captainDisablePicking', 'Convert to a normal game, disable
 end)
 
 local function on_player_changed_force(event)
-  local player = game.get_player(event.player_index)
+	local player = game.get_player(event.player_index)
 	if global.special_games_variables["captain_mode"] then
 		if player.force.name == "north" or player.force.name == "south" then
 			draw_captain_team_organization_button(player)
