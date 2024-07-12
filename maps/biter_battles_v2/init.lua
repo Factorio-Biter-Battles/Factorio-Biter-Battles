@@ -119,7 +119,6 @@ function Public.initial_setup()
 	global.suspend_time_limit = 3600
 	global.reroll_time_limit = 1800
 	global.gui_refresh_delay = 0
-	global.game_lobby_active = true
 	global.bb_debug = false
 	global.bb_draw_revive_count_text = false
 	global.bb_show_research_info = "always" -- "always", "spec", nil
