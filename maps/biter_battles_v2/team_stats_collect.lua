@@ -59,6 +59,7 @@ TeamStatsCollect.damage_render_info = {
 local function update_teamstats()
     local team_stats = global.team_stats
     local tick = functions.get_ticks_since_game_start()
+    if tick == 0 then return end
     if team_stats.won_by_team then return end
     team_stats.won_by_team = global.bb_game_won_by_team
     local prev_ticks = team_stats.ticks or 0

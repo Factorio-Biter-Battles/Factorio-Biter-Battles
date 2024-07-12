@@ -53,12 +53,12 @@ function TeamStatsCompare.show_stats(player, stats)
         local team_label = team_frame.add { type = "label", caption = Functions.team_name_with_color(force_name) }
         gui_style(team_label, { font = "heading-2" })
         local simple_stats = {
-            {"Final evo:", string.format("%d%%", force_stats.final_evo * 100)},
+            {"Final evo:", string.format("%d%%", (force_stats.final_evo or 0) * 100)},
             {"Peak threat:", threat_to_pretty_string(force_stats.peak_threat or 0)},
             {"Lowest threat:", threat_to_pretty_string(force_stats.lowest_threat or 0)},
         }
         if stats.ticks and stats.ticks > 0 then
-            table.insert(simple_stats, {"Average players:", string.format("%.1f [img=info]", (force_stats.player_ticks or 0) / stats.ticks), string.format("Total players: %d, Max players: %d", force_stats.total_players, force_stats.max_players)})
+            table.insert(simple_stats, {"Average players:", string.format("%.1f [img=info]", (force_stats.player_ticks or 0) / (stats.ticks or 1)), string.format("Total players: %d, Max players: %d", force_stats.total_players, force_stats.max_players)})
         end
         local top_simple_table = team_frame.add { type = "table", name = "top_simple_table", column_count = 2 }
         for _, stat in ipairs(simple_stats) do
@@ -80,7 +80,7 @@ function TeamStatsCompare.show_stats(player, stats)
         local l
         l = centering_table.add { type = "label", caption = string.format("Difficulty: %s (%d%%)", tables.difficulties[global.difficulty_vote_index].short_name, global.difficulty_vote_value * 100) }
         l.style.font = "default-small"
-        l = centering_table.add { type = "label", caption = string.format("Duration: %s", ticks_to_hh_mm(stats.ticks)) }
+        l = centering_table.add { type = "label", caption = string.format("Duration: %s", ticks_to_hh_mm(stats.ticks or 0)) }
         l.style.font = "default-small"
         if stats.won_by_team then
             l = centering_table.add { type = "label", caption = string.format("Winner: %s", stats.won_by_team == "north" and "North" or "South") }
@@ -111,7 +111,7 @@ function TeamStatsCompare.show_stats(player, stats)
         local total_sent_mutagen = 0
         for _, food in ipairs(Tables.food_long_and_short) do
             local force_stats = stats.forces[force_name]
-            local food_stats = force_stats.food[food.long_name]
+            local food_stats = force_stats.food[food.long_name] or {}
             local l
             l = science_table.add { type = "label", caption = string.format("[item=%s]", food.long_name) }
             l.style.font = font
@@ -123,7 +123,7 @@ function TeamStatsCompare.show_stats(player, stats)
             l.style.font = font
             l = science_table.add { type = "label", caption = food_stats.sent and format_with_thousands_sep(food_stats.sent) or "0" }
             l.style.font = font
-            total_sent_mutagen = total_sent_mutagen + food_stats.sent * Tables.food_values[food.long_name].value
+            total_sent_mutagen = total_sent_mutagen + (food_stats.sent or 0) * Tables.food_values[food.long_name].value
         end
         local l = science_flow.add { type = "label", caption = string.format("[item=space-science-pack] equivalent %d", total_sent_mutagen / Tables.food_values["space-science-pack"].value) }
         l.style.font = font
@@ -149,7 +149,7 @@ function TeamStatsCompare.show_stats(player, stats)
 
         for _, item_info in ipairs(TeamStatsCollect.items_to_show_summaries_of) do
             local force_stats = stats.forces[force_name]
-            local item_stats = force_stats.items[item_info.item]
+            local item_stats = force_stats.items[item_info.item] or {}
             local l
             l = item_table.add { type = "label", caption = string.format("[item=%s]", item_info.item) }
             l.style.font = font
