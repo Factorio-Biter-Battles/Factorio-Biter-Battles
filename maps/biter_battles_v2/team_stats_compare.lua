@@ -132,7 +132,7 @@ function TeamStatsCompare.show_stats(player, stats)
     two_table.add { type = "line" }
     two_table.add { type = "line" }
     for _, force_name in ipairs({"north", "south"}) do
-        local item_table = two_table.add { type = "table", name = "item_table_" .. force_name, column_count = 5 }
+        local item_table = two_table.add { type = "table", name = "item_table_" .. force_name, column_count = 5, vertical_centering = false }
         gui_style(item_table, { left_cell_padding = 3, right_cell_padding = 3, vertical_spacing = 0})
         local cols = {
             {""},
@@ -147,12 +147,15 @@ function TeamStatsCompare.show_stats(player, stats)
             l.style.font = font
         end
 
-        for _, item_name in ipairs(TeamStatsCollect.items_to_show_summaries_of) do
+        for _, item_info in ipairs(TeamStatsCollect.items_to_show_summaries_of) do
             local force_stats = stats.forces[force_name]
-            local item_stats = force_stats.items[item_name.item]
+            local item_stats = force_stats.items[item_info.item]
             local l
-            l = item_table.add { type = "label", caption = string.format("[item=%s]", item_name.item) }
+            l = item_table.add { type = "label", caption = string.format("[item=%s]", item_info.item) }
             l.style.font = font
+            if item_info.space_after then
+                l.style.bottom_padding = 12
+            end
             l = item_table.add { type = "label", caption = (item_stats.first_at and ticks_to_hh_mm(item_stats.first_at) or "") }
             l.style.font = font
             l = item_table.add { type = "label", caption = format_with_thousands_sep(item_stats.produced or 0) }

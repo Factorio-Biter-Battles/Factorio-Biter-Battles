@@ -27,18 +27,19 @@ TeamStatsCollect.items_to_show_summaries_of = {
     {item = "stone"},
     {item = "iron-plate"},
     {item = "copper-plate"},
-    {item = "steel-plate"},
+    {item = "steel-plate", space_after = true},
 
     {item = "electronic-circuit"},
     {item = "advanced-circuit"},
-    {item = "processing-unit"},
+    {item = "processing-unit", space_after = true},
 
     {item = "transport-belt", placed = true},
-    {item = "fast-transport-belt", placed = true},
+    {item = "fast-transport-belt", placed = true, space_after = true},
 
     {item = "roboport", placed = true},
     {item = "construction-robot"},
-    {item = "nuclear-reactor", placed = true},
+    {item = "nuclear-reactor", placed = true, space_after = true},
+
     {item = "stone-wall", placed = true},
     {item = "gun-turret", placed = true},
     {item = "flamethrower-turret", placed = true},
