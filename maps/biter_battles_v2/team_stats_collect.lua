@@ -130,6 +130,9 @@ function TeamStatsCollect.compute_stats()
         update_teamstats()
         return global.team_stats
     end
+
+    -- In the (very uncommon) case of team_stats_use_fake_data being set, we will generate fake data for
+    -- testing the UI.
     local teams = {"north", "south"}
     ---@type TeamStats
     local stats = { ticks = 110*3600, won_by_team = teams[math.random(1, 3)], forces = {} }
@@ -212,7 +215,9 @@ end
 -- aligned to game time.  Thus we collect every 16 seconds instead, which will make the
 -- numbers a bit more accurate (i.e. off by at most 16 seconds, instead of off by at
 -- most 60 seconds).
-event.on_nth_tick(60 * 16, update_teamstats)
+-- I use (60*16-1) rather than 60*16 just to avoid doing extra work on per-second boundaries,
+-- which are quite common in our code.
+event.on_nth_tick(60 * 16 - 1, update_teamstats)
 
 event.add(defines.events.on_entity_died, on_entity_died)
 

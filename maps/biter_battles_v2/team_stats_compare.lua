@@ -6,21 +6,24 @@ local closable_frame = require "utils.ui.closable_frame"
 local TeamStatsCollect = require 'maps.biter_battles_v2.team_stats_collect'
 local safe_wrap_with_player_print = require 'utils.utils'.safe_wrap_with_player_print
 local gui_style = require 'utils.utils'.gui_style
-local tables    = require 'maps.biter_battles_v2.tables'
+local tables = require 'maps.biter_battles_v2.tables'
+
+local math_floor = math.floor
+local string_format = string.format
 
 local TeamStatsCompare = {}
 
 local function ticks_to_hh_mm(ticks)
-    local total_minutes = math.floor(ticks / (60 * 60))
-    local total_hours = math.floor(total_minutes / 60)
+    local total_minutes = math_floor(ticks / (60 * 60))
+    local total_hours = math_floor(total_minutes / 60)
     local minutes = total_minutes - (total_hours * 60)
-    return string.format("%02d:%02d", total_hours, minutes)
+    return string_format("%02d:%02d", total_hours, minutes)
 end
 
 ---@param num number
 ---@return string
 local function format_with_thousands_sep(num)
-    num = math.floor(num)
+    num = math_floor(num)
     local str = tostring(num)
     local reversed = str:reverse()
     local formatted_reversed = reversed:gsub("(%d%d%d)", "%1,")
@@ -53,12 +56,12 @@ function TeamStatsCompare.show_stats(player, stats)
         local team_label = team_frame.add { type = "label", caption = Functions.team_name_with_color(force_name) }
         gui_style(team_label, { font = "heading-2" })
         local simple_stats = {
-            {"Final evo:", string.format("%d%%", (force_stats.final_evo or 0) * 100)},
+            {"Final evo:", string_format("%d%%", (force_stats.final_evo or 0) * 100)},
             {"Peak threat:", threat_to_pretty_string(force_stats.peak_threat or 0)},
             {"Lowest threat:", threat_to_pretty_string(force_stats.lowest_threat or 0)},
         }
         if stats.ticks and stats.ticks > 0 then
-            table.insert(simple_stats, {"Average players:", string.format("%.1f [img=info]", (force_stats.player_ticks or 0) / (stats.ticks or 1)), string.format("Total players: %d, Max players: %d", force_stats.total_players, force_stats.max_players)})
+            table.insert(simple_stats, {"Average players:", string_format("%.1f [img=info]", (force_stats.player_ticks or 0) / (stats.ticks or 1)), string_format("Total players: %d, Max players: %d", force_stats.total_players, force_stats.max_players)})
         end
         local top_simple_table = team_frame.add { type = "table", name = "top_simple_table", column_count = 2 }
         for _, stat in ipairs(simple_stats) do
@@ -78,12 +81,12 @@ function TeamStatsCompare.show_stats(player, stats)
         local centering_table = shared_frame.add { type = "table", name = "centering_table", column_count = 1 }
         centering_table.style.column_alignments[1] = "center"
         local l
-        l = centering_table.add { type = "label", caption = string.format("Difficulty: %s (%d%%)", tables.difficulties[global.difficulty_vote_index].short_name, global.difficulty_vote_value * 100) }
+        l = centering_table.add { type = "label", caption = string_format("Difficulty: %s (%d%%)", tables.difficulties[global.difficulty_vote_index].short_name, global.difficulty_vote_value * 100) }
         l.style.font = "default-small"
-        l = centering_table.add { type = "label", caption = string.format("Duration: %s", ticks_to_hh_mm(stats.ticks or 0)) }
+        l = centering_table.add { type = "label", caption = string_format("Duration: %s", ticks_to_hh_mm(stats.ticks or 0)) }
         l.style.font = "default-small"
         if stats.won_by_team then
-            l = centering_table.add { type = "label", caption = string.format("Winner: %s", stats.won_by_team == "north" and "North" or "South") }
+            l = centering_table.add { type = "label", caption = string_format("Winner: %s", stats.won_by_team == "north" and "North" or "South") }
             l.style.font = "default-small"
         end
     end
@@ -113,7 +116,7 @@ function TeamStatsCompare.show_stats(player, stats)
             local force_stats = stats.forces[force_name]
             local food_stats = force_stats.food[food.long_name] or {}
             local l
-            l = science_table.add { type = "label", caption = string.format("[item=%s]", food.long_name) }
+            l = science_table.add { type = "label", caption = string_format("[item=%s]", food.long_name) }
             l.style.font = font
             l = science_table.add { type = "label", caption = (food_stats.first_at and ticks_to_hh_mm(food_stats.first_at) or "") }
             l.style.font = font
@@ -125,7 +128,7 @@ function TeamStatsCompare.show_stats(player, stats)
             l.style.font = font
             total_sent_mutagen = total_sent_mutagen + (food_stats.sent or 0) * Tables.food_values[food.long_name].value
         end
-        local l = science_flow.add { type = "label", caption = string.format("[item=space-science-pack] equivalent %d", total_sent_mutagen / Tables.food_values["space-science-pack"].value) }
+        local l = science_flow.add { type = "label", caption = string_format("[item=space-science-pack] equivalent %d", total_sent_mutagen / Tables.food_values["space-science-pack"].value) }
         l.style.font = font
     end
 
@@ -151,7 +154,7 @@ function TeamStatsCompare.show_stats(player, stats)
             local force_stats = stats.forces[force_name]
             local item_stats = force_stats.items[item_info.item] or {}
             local l
-            l = item_table.add { type = "label", caption = string.format("[item=%s]", item_info.item) }
+            l = item_table.add { type = "label", caption = string_format("[item=%s]", item_info.item) }
             l.style.font = font
             if item_info.space_after then
                 l.style.bottom_padding = 12
