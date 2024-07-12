@@ -119,7 +119,6 @@ function Public.initial_setup()
 	global.suspend_time_limit = 3600
 	global.reroll_time_limit = 1800
 	global.gui_refresh_delay = 0
-	global.game_lobby_active = true
 	global.bb_debug = false
 	global.bb_draw_revive_count_text = false
 	global.bb_show_research_info = "always" -- "always", "spec", nil
@@ -133,6 +132,7 @@ function Public.initial_setup()
 		["new_year_island"] = false,
 		["bb_map_reveal_toggle"] = true,
 		["map_reroll"] = true,
+		["burners_balance"] = true,
 	}
 	global.want_pings = {}
 	global.want_pings_default_value = true
@@ -263,6 +263,7 @@ function Public.tables()
 	global.bb_threat = {}
 	global.bb_threat_income = {}
 	global.chosen_team = {}
+	global.got_burners = {}
 	global.combat_balance = {}
 	global.difficulty_player_votes = {}
 	global.evo_raise_counter = 1

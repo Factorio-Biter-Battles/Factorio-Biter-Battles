@@ -50,11 +50,45 @@ local function mixed_ore(surface, left_top_x, left_top_y)
 	end
 end
 
+local function dots(surface, left_top_x, left_top_y)
+	local ores = {"uranium-ore", "stone", "copper-ore", "iron-ore", "coal"}
+	clear_ores(surface, left_top_x, left_top_y, ores)
+	local space = global.special_games_variables['mixed_ore_map']['size']
+	for x = 0, 31, 1 do
+		for y = 0, 31, 1 do
+			local pos = {x = left_top_x + x, y = left_top_y + y}
+			if surface.can_place_entity({name = "iron-ore", position = pos}) then
+				local ore				
+				local cx = pos.x % (space*2)
+				local cy = pos.y % (space*2)
+				if ( cx == 0 and cy == 0 ) then
+					ore = ores[2]
+				elseif ( cx == 0 and cy == space ) then
+					ore = ores[3]
+				elseif	( cx == space  and cy == 0 ) then
+					ore = ores[4]
+				elseif	( cx == space  and cy == space  ) then											
+					ore = ores[5]
+					if math.random(1,1000) > 998 then
+						ore = ores[1]
+					end
+				end				
+				if ore then					
+					surface.create_entity({name = ore, position = pos, amount = 100000, enable_tree_removal = false})
+				end
+			end
+		end
+	end
+end
+
 local function checkerboard(surface, left_top_x, left_top_y)
 	local ores = {"uranium-ore", "stone", "copper-ore", "iron-ore", "coal"}
 	clear_ores(surface, left_top_x, left_top_y, ores)
 	local uranium_cells = {}
 	local cell_size = global.special_games_variables['mixed_ore_map']['size']
+	if cell_size == 0 then
+		cell_size = 1
+	end
 	local seed = game.surfaces[global.bb_surface_name].map_gen_settings.seed
 	for x = 0, 31, 1 do
 		for y = 0, 31, 1 do
@@ -152,6 +186,8 @@ local function mixed_ore_map(surface, left_top_x, left_top_y)
 		vertical_lines(surface, left_top_x, left_top_y)
 	elseif type == 4 then
 		mixed_patches(surface, left_top_x, left_top_y)
+	elseif type == 5 then
+		dots(surface, left_top_x, left_top_y)
 	end
 
 	if left_top_y == -32 and math_abs(left_top_x) <= 32 then

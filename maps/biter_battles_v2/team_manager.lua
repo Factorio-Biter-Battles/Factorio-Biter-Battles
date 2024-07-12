@@ -292,13 +292,11 @@ local function team_manager_gui_click(event)
 		if not player.admin then player.print("Only admins can switch training mode.", {r = 175, g = 0, b = 0}) return end
 		if global.training_mode then
 			global.training_mode = false
-			global.game_lobby_active = true
 			draw_manager_gui(player)
 			game.print(">>> Training Mode has been disabled.", {r = 111, g = 111, b = 111})
 			return
 		end
 		global.training_mode = true
-		global.game_lobby_active = false
 		draw_manager_gui(player)
 		game.print(">>> Training Mode has been enabled!", {r = 225, g = 0, b = 0})
 		return

@@ -201,6 +201,16 @@ local functions = {
 			game.print("Map Reroll is disabled!")
 		end
 	end,
+
+    ["bb_burners_balance_toggle"] = function(event)
+		if event.element.switch_state == "left" then
+			global.bb_settings.burners_balance = true
+			game.print("Burners balance is enabled!")
+		else
+			global.bb_settings.burners_balance = false
+			game.print("Burners balance is disabled!")
+		end
+	end,
 }
 
 local poll_function = {
@@ -573,6 +583,13 @@ local build_config_gui = (function(player, frame)
 			local switch_state = "right"	
             if global.bb_settings.map_reroll then switch_state = "left" end
 			local switch = add_switch(scroll_pane, switch_state, "bb_map_reroll_toggle", "Map Reroll", "Enables map reroll feature.")
+			if not admin then switch.ignored_by_interaction = true end
+			
+			scroll_pane.add({type = 'line'})
+
+			local switch_state = "right"	
+            if global.bb_settings.burners_balance then switch_state = "left" end
+			local switch = add_switch(scroll_pane, switch_state, "bb_burners_balance_toggle", "Burners balance", "Enables Burners balance.")
 			if not admin then switch.ignored_by_interaction = true end
 			
 			scroll_pane.add({type = 'line'})

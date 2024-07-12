@@ -5,17 +5,22 @@ local Server = require 'utils.server'
 local Tables = require "maps.biter_battles_v2.tables"
 local gui_style = require 'utils.utils'.gui_style
 local closable_frame = require "utils.ui.closable_frame"
+local Public = {}
 
 local difficulties = Tables.difficulties
 
 local function difficulty_gui(player)
-	local value = math.floor(global.difficulty_vote_value*100)
-	if player.gui.top["difficulty_gui"] then player.gui.top["difficulty_gui"].destroy() end
-	local str = table.concat({"Global map difficulty is ", difficulties[global.difficulty_vote_index].name, ". Mutagen has ", value, "% effectiveness."})
-	local b = player.gui.top.add { type = "sprite-button", caption = difficulties[global.difficulty_vote_index].name, tooltip = str, name = "difficulty_gui" }
-	b.style.font = "heading-2"
+	local b = player.gui.top["difficulty_gui"]
+	if not b then
+		b = player.gui.top.add { type = "sprite-button", name = "difficulty_gui" }
+		b.style.font = "heading-2"
+		gui_style(b, {width = 114, height = 38, padding = -2})
+	end
 	b.style.font_color = difficulties[global.difficulty_vote_index].print_color
-	gui_style(b, {width = 114, height = 38, padding = -2})
+	local value = math.floor(global.difficulty_vote_value*100)
+	local str = table.concat({"Global map difficulty is ", difficulties[global.difficulty_vote_index].name, ". Mutagen has ", value, "% effectiveness."})
+	b.caption = difficulties[global.difficulty_vote_index].name
+	b.tooltip = str
 end
 
 local function difficulty_gui_all()
@@ -24,12 +29,32 @@ local function difficulty_gui_all()
 	end
 end
 
+
+local function is_captain_enabled()
+	return global.special_games_variables["captain_mode"] ~= nil
+end
+
+local function isStringInTable(tab, str)
+    for _, entry in ipairs(tab) do
+        if entry == str then
+            return true
+        end
+    end
+    return false
+end
+
+local function is_vote_allowed_in_captain(playerName)
+    local special = global.special_games_variables["captain_mode"]
+    return special and special["prepaPhase"] and (isStringInTable(special["listPlayers"], playerName) or isStringInTable(special["captainList"], playerName))
+end
+
 local function poll_difficulty(player)
 	if player.gui.screen["difficulty_poll"] then player.gui.screen["difficulty_poll"].destroy() return end
 	if global.bb_settings.only_admins_vote or global.tournament_mode then
 		if global.active_special_games["captain_mode"] then
 			if global.bb_settings.only_admins_vote and not player.admin then return end
-			if player.spectator and not global.bb_settings.only_admins_vote then return end
+			if is_captain_enabled() and not global.bb_settings.only_admins_vote and not is_vote_allowed_in_captain(player.name) then return end 
+			if not is_captain_enabled() and player.spectator and not global.bb_settings.only_admins_vote then return end
 		else
 			if not player.admin then return end
 		end
@@ -127,12 +152,15 @@ local function on_player_joined_game(event)
 	difficulty_gui_all()
 end
 
-local function on_player_left_game(event)
+function Public.remove_player_from_difficulty_vote(player)
 	if game.ticks_played > global.difficulty_votes_timeout then return end
-	local player = game.get_player(event.player_index)
 	if not global.difficulty_player_votes[player.name] then return end
 	global.difficulty_player_votes[player.name] = nil
 	set_difficulty()
+end
+
+local function on_player_left_game(event)
+	Public.remove_player_from_difficulty_vote(game.get_player(event.player_index))
 end
 
 local function on_gui_click(event)
@@ -162,7 +190,7 @@ local function on_gui_click(event)
 							difficulty_gui(player)
 						end
 					else
-						if not player.spectator then
+						if not player.spectator or is_vote_allowed_in_captain(player.name) then
 							game.print(player.name .. " has voted for " .. difficulties[i].name .. " difficulty!", difficulties[i].print_color)
 							global.difficulty_player_votes[player.name] = i
 							set_difficulty()
@@ -182,8 +210,13 @@ local function on_gui_click(event)
 		return
 	end
 
-    if player.spectator then
+    if player.spectator and not is_captain_enabled() then
         player.print("spectators can't vote for difficulty")
+		event.element.parent.destroy()
+        return
+    end
+    if player.spectator and is_captain_enabled() and not is_vote_allowed_in_captain(player.name) then
+        player.print("You must first sign up to play in order to vote in captain game")
 		event.element.parent.destroy()
         return
     end
@@ -212,7 +245,6 @@ event.add(defines.events.on_gui_click, on_gui_click)
 event.add(defines.events.on_player_left_game, on_player_left_game)
 event.add(defines.events.on_player_joined_game, on_player_joined_game)
 
-local Public = {}
 Public.difficulties = difficulties
 Public.difficulty_gui = difficulty_gui
 Public.difficulty_gui_all = difficulty_gui_all

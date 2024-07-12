@@ -46,6 +46,8 @@ local function on_player_joined_game(event)
 	if ping_messages then ping_messages.destroy() end
 	local ping_header = player.gui.screen.ping_header
 	if ping_header then ping_header.destroy() end
+
+	Gui.burners_balance(player)
 end
 
 local function on_gui_click(event)

@@ -190,6 +190,7 @@ function Public.step(group_number, result)
             end
         elseif result == defines.behavior_result.fail or result == defines.behavior_result.deleted then
             local rocket_silo = global.rocket_silo[strike.target_force_name]
+            if not rocket_silo then return end  -- helps multi-silo special code
             local unit_group = strike.unit_group
             if not unit_group.valid then
                 global.ai_strikes[group_number] = nil
