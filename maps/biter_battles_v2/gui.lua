@@ -482,6 +482,7 @@ function join_team(player, force_name, forced_join, auto_join)
 		game.permissions.get_group("Default").add_player(player)
 		local msg = table.concat({ "Team ", player.force.name, " player ", player.name, " is no longer spectating." })
 		game.print(msg, { r = 0.98, g = 0.66, b = 0.22 })
+		Sounds.notify_allies(player.force, "utility/build_blueprint_large")
 		Server.to_discord_bold(msg)
 		global.spectator_rejoin_delay[player.name] = game.tick
 		player.spectator = false
@@ -553,6 +554,7 @@ function spectate(player, forced_join, stored_position)
 		p_data.position = player.position
 	end
 	player.teleport(player.surface.find_non_colliding_position("character", { 0, 0 }, 4, 1))
+	Sounds.notify_player(player, "utility/build_blueprint_large")
 	player.force = game.forces.spectator
 	player.character.destructible = false
 	if not forced_join then
