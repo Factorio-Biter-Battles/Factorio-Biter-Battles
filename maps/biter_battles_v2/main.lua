@@ -127,6 +127,7 @@ function do_ping(from_player_name, to_player, message)
 	if to_player.character and to_player.character.get_health_ratio() > 0.99 then
 		to_player.character.damage(0.001, "player")
 	end
+	Sounds.notify_player(tp_player, "utility/blueprint_selection_ended")
 	-- to_player.play_sound({path = "utility/new_objective", volume_modifier = 0.6})
 	-- to_player.surface.create_entity({name = 'big-explosion', position = to_player.position})
 	local ping_header = to_player.gui.screen["ping_header"]

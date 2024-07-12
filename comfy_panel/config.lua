@@ -109,6 +109,15 @@ local functions = {
             global.ping_gui_locations[player.name] = nil
         end
     end,
+    ['comfy_panel_want_notification_sounds_switch'] = function(event)
+        local player = game.get_player(event.player_index)
+        if not player then return end
+        if event.element.switch_state == 'left' then
+            global.want_notification_sounds[player.name] = true
+        else
+            global.want_notification_sounds[player.name] = false
+        end
+    end,
     ['comfy_panel_auto_hotbar_switch'] = function(event)
         if event.element.switch_state == 'left' then
             global.auto_hotbar_enabled[event.player_index] = true
@@ -310,7 +319,7 @@ local fortress_functions = {
     end
 }
 
-local function add_switch(element, switch_state, name, description_main, description)
+local function add_switch(element, switch_state, name, description_main, description, tooltip)
     local t = element.add({type = 'table', column_count = 5})
     local label = t.add({type = 'label', caption = 'ON'})
     label.style.padding = 0
@@ -338,6 +347,10 @@ local function add_switch(element, switch_state, name, description_main, descrip
     label.style.font = 'heading-3'
     label.style.font_color = {0.85, 0.85, 0.85}
 
+    if tooltip then
+        label.tooltip = tooltip
+    end
+
     return switch
 end
 
@@ -346,6 +359,13 @@ function player_wants_pings(name)
         return global.want_pings[name]
     end
     return global.want_pings_default_value
+end
+
+function player_wants_sounds(name)
+    if global.want_notification_sounds[name] ~= nil then
+        return global.want_notification_sounds[name]
+    end
+    return global.want_notification_sounds_default_value
 end
 
 local build_config_gui = (function(player, frame)
@@ -396,6 +416,15 @@ local build_config_gui = (function(player, frame)
         'Causes you to be clearly pinged on whispers and chat messages containing @' .. player.name
     )
 
+    switch_state = player_wants_sounds(player.name) and 'left' or 'right'
+    add_switch(
+        scroll_pane,
+        switch_state,
+        'comfy_panel_want_notification_sounds_switch',
+        'Sound notifications',
+        'Receive sound feedbacks on management actions',
+        'i.e. closing polls, picking phase, map rerolls, switched/assigned team'
+    )
     scroll_pane.add({type = 'line'})
 
     if global.auto_hotbar_enabled then

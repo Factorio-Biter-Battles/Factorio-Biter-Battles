@@ -58,6 +58,7 @@ commands.add_command(
             local target_player = game.get_player(cmd.parameter)
 
             if validate_player(target_player) then
+                Sounds.notify_player(player, 'utility/smart_pipette')
                 create_mini_camera_gui(player, target_player.name, target_player.position, target_player.surface.index)
             else
                 player.print('Please type a name of a player who is connected.', Color.warning)

@@ -555,6 +555,10 @@ decrement_timer_token = Token.register(
                 end
             end
 
+            if global.reroll_time_left <= 30 then
+                Sounds.notify_all('utility/armor_insert')
+            end
+
             Task.set_timeout_in_ticks(60, decrement_timer_token)
         else
             stop_map_reroll()
@@ -588,6 +592,7 @@ local function start_map_reroll()
         for _, player in pairs(game.connected_players) do
             draw_reroll_gui(player)
         end
+        Sounds.notify_all('utility/scenario_message')
     end
 end
 

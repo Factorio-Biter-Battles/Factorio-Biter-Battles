@@ -231,6 +231,7 @@ commands.add_command(
             return
         end
         load_quickbar(player)
+        Sounds.notify_player(player, 'utility/armor_insert')
     end
 )
 
