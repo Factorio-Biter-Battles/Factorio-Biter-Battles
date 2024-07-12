@@ -1,12 +1,9 @@
 local gui_style = require 'utils.utils'.gui_style
-local Event = require 'utils.event'
 local Functions = require 'maps.biter_battles_v2.functions'
 local Tables = require 'maps.biter_battles_v2.tables'
 local closable_frame = require "utils.ui.closable_frame"
 local TeamStatsCollect = require 'maps.biter_battles_v2.team_stats_collect'
 local safe_wrap_with_player_print = require 'utils.utils'.safe_wrap_with_player_print
-local gui_style = require 'utils.utils'.gui_style
-local tables = require 'maps.biter_battles_v2.tables'
 
 local math_floor = math.floor
 local string_format = string.format
@@ -81,7 +78,7 @@ function TeamStatsCompare.show_stats(player, stats)
         local centering_table = shared_frame.add { type = "table", name = "centering_table", column_count = 1 }
         centering_table.style.column_alignments[1] = "center"
         local l
-        l = centering_table.add { type = "label", caption = string_format("Difficulty: %s (%d%%)", tables.difficulties[global.difficulty_vote_index].short_name, global.difficulty_vote_value * 100) }
+        l = centering_table.add { type = "label", caption = string_format("Difficulty: %s (%d%%)", Tables.difficulties[global.difficulty_vote_index].short_name, global.difficulty_vote_value * 100) }
         l.style.font = "default-small"
         l = centering_table.add { type = "label", caption = string_format("Duration: %s", ticks_to_hh_mm(stats.ticks or 0)) }
         l.style.font = "default-small"
