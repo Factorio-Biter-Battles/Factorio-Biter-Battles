@@ -368,6 +368,26 @@ local get_player_data = function (player, remove)
 	return global.player_data_afk[player.name]
 end
 
+local function drop_burners(player, forced_join)
+	if forced_join then 
+		global.got_burners[player.name] = nil
+		return
+	end
+	if global.training_mode or not (global.bb_settings.burners_balance) then 		
+		return
+	end			
+	local burners_to_drop = player.get_item_count("burner-mining-drill")	
+	if burners_to_drop ~= 0 then
+    	local items = player.surface.spill_item_stack(player.position,{name="burner-mining-drill", count = burners_to_drop}, false, nil, false )
+		player.remove_item({name="burner-mining-drill", count = burners_to_drop})
+	end
+end
+
+local function on_player_left_game(event)
+	local player = game.get_player(event.player_index)
+	drop_burners(player)
+end
+
 function Public.burners_balance(player)
 	if player.force.name == "spectator" then 
 		return 
@@ -550,6 +570,7 @@ function spectate(player, forced_join, stored_position)
 
 	player.driving = false
 	player.clear_cursor()
+	drop_burners(player, forced_join)
 
 	if stored_position then
 		local p_data = get_player_data(player)
@@ -736,5 +757,6 @@ end
 
 event.add(defines.events.on_gui_click, on_gui_click)
 event.add(defines.events.on_player_joined_game, on_player_joined_game)
+event.add(defines.events.on_player_left_game, on_player_left_game)
 
 return Public
