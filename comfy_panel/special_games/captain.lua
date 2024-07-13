@@ -15,6 +15,7 @@ local math_random = math.random
 local closable_frame = require "utils.ui.closable_frame"
 local bb_diff = require "maps.biter_battles_v2.difficulty_vote"
 local player_utils = require "utils.player"
+local max_num_organization_groups = 15
 
 local Public = {
 	name = {type = "label", caption = "Captain event", tooltip = "Captain event"},
@@ -89,7 +90,7 @@ local function add_to_trust(playerName)
 end
 
 local function team_organization_can_edit_all(player)
-	return isStringInTable(player.name, global.special_games_variables["captain_mode"]["captainList"])
+	return isStringInTable(global.special_games_variables["captain_mode"]["captainList"], player.name)
 end
 
 local function team_organization_can_edit_group_name(player, group)
@@ -102,7 +103,7 @@ local function update_list_of_players_without_task(force)
     if groupsOrganization == nil then return end
     local playersWithoutTask = {}
     local playersWithTask = {}
-    for i = 1, 15 do
+    for i = 1, max_num_organization_groups do
         local players_list = groupsOrganization[i].player_order
         for _, player in ipairs(players_list) do
             playersWithTask[player] = true
@@ -125,7 +126,7 @@ local function update_team_organization_gui_player(player)
     local gui_table = frame.group_scroll.group_table
     local player_group = nil
 	
-    for i = 1, 15 do
+    for i = 1, max_num_organization_groups do
         local group = groupsOrganization[i] or {name = "Group " .. i, players = {}, player_order = {}}
         
         -- Update group name
@@ -199,7 +200,7 @@ local function create_team_organization_gui(player)
     gui_table.add{type="label", caption="[color=blue]Player list[/color]"}
     
     local player_group = nil
-    for i = 1, 15 do
+    for i = 1, max_num_organization_groups do
         local group = groupsOrganization[i] or {name = "Group " .. i, players = {}, player_order = {}}
 		
         if team_organization_can_edit_all(player) then
@@ -586,7 +587,7 @@ local function generate_captain_mode(refereeName, autoTrust, captainKick, specia
 		["playerPickedAtTicks"] = {},
 		["stats"] = {["northPicks"]={},["southPicks"]={},["tickGameStarting"]=0,["playerPlaytimes"]={},["playerSessionStartTimes"]={}},
 		["groupsOrganization"]={north={},south={}}}
-	for i = 1, 15 do
+	for i = 1, max_num_organization_groups do
 		special["groupsOrganization"]["north"][i] = {name = "Group " .. i, players = {}, player_order = {}}
 		special["groupsOrganization"]["south"][i] = {name = "Group " .. i, players = {}, player_order = {}}
 	end
@@ -1826,7 +1827,7 @@ local function on_gui_click(event)
 	elseif element.name:sub(1, 11) == "join_group_" then
 		local group_index = tonumber(element.name:sub(12))
 		-- Remove player from current group
-		for i = 1, 15 do
+		for i = 1, max_num_organization_groups do
 			local group = groupsOrganization[i]
 			if group and group.players then
 				if group.players[player.name] then
@@ -1849,7 +1850,7 @@ local function on_gui_click(event)
 		
 		update_team_organization_gui()
 	elseif element.name == "leave_group" then
-		for i = 1, 15 do
+		for i = 1, max_num_organization_groups do
 			local group = groupsOrganization[i]
 			if group and group.players then
 				if group.players[player.name] then
