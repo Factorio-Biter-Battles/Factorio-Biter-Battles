@@ -441,6 +441,7 @@ local function generate_captain_mode(refereeName, autoTrust, captainKick, specia
 		end
 		Public.draw_captain_player_button(pl)
 		Public.draw_captain_player_gui(pl)
+		Sounds.notify_player(pl, 'utility/new_objective')
 	end
 	global.chosen_team = {}
 	clear_character_corpses()
@@ -555,6 +556,7 @@ local countdown_captain_start_token = Token.register(
 				if player.gui.center["bb_captain_countdown"] then player.gui.center["bb_captain_countdown"].destroy() end
 				player.gui.center.add{name = "bb_captain_countdown", type = "sprite", sprite = _sprite}
 			end	
+			Sounds.notify_all("utility/build_blueprint_large")
 			global.special_games_variables["captain_mode"]["countdown"] = global.special_games_variables["captain_mode"]["countdown"] - 1
 		else
 			for _, player in pairs(game.connected_players) do
@@ -1821,6 +1823,7 @@ local function on_player_joined_game(event)
 		Public.draw_captain_player_button(player)
 		if not global.chosen_team[player.name] then
 			Public.draw_captain_player_gui(player)
+			Sounds.notify_player(player, 'utility/new_objective')
 		end
 	end
 	Public.update_all_captain_player_guis()
