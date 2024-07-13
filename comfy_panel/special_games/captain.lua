@@ -125,10 +125,10 @@ local function update_team_organization_gui_player(player)
     local frame = player.gui.screen["group_selection"]
     if not frame then return end
     local gui_table = frame.group_scroll.group_table
-    local player_group = nil
-	
+    
     for i = 1, max_num_organization_groups do
         local group = groupsOrganization[i] or {name = "Group " .. i, players = {}, player_order = {}}
+        local player_group = nil
         
         -- Update group name
         local name_label = gui_table["group_name_" .. i]
@@ -142,46 +142,27 @@ local function update_team_organization_gui_player(player)
             player_list.caption = pretty_print_player_list(group.player_order)
         end
         
-        if group.players[player.name] then
-            player_group = group
-        end
-        
-        -- Add or update edit controls if player has permission
-        if team_organization_can_edit_all(player) then
-            local name_field = gui_table["task_name_field_" .. i]
-            if not name_field then
-                name_field = gui_table.add{type="textfield", name="task_name_field_" .. i, text=group.name}
-                name_field.style.width = 100
-                gui_table.add{type="button", name="set_name_" .. i, caption="Set"}
-            else
+        -- Show/hide captain controls and placeholders
+        local set_button = gui_table["set_name_" .. i]
+        local name_field = gui_table["task_name_field_" .. i]
+        local placeholder1 = gui_table["placeholder1_" .. i]
+        local placeholder2 = gui_table["placeholder2_" .. i]
+        if set_button and name_field and placeholder1 and placeholder2 then
+            if group.players[player.name] then player_group = group	end
+            if team_organization_can_edit_all(player) or team_organization_can_edit_group_name(player, player_group) then
+                set_button.visible = true
+                name_field.visible = true
+                placeholder1.visible = false
+                placeholder2.visible = false
                 name_field.text = group.name
+                set_button.style.minimal_width = 50
+                name_field.style.minimal_width = 100
+            else
+                set_button.visible = false
+                name_field.visible = false
+                placeholder1.visible = true
+                placeholder2.visible = true
             end
-        end
-    end
-    
-    -- Update or create the set_name_flow
-    local set_name_flow = frame.set_name_flow
-    if team_organization_can_edit_group_name(player, player_group) then
-        if not set_name_flow then
-            set_name_flow = frame.add{type="flow", name="set_name_flow", direction="horizontal"}
-            set_name_flow.style.horizontal_align = "center"
-        end
-        
-        local name_field = set_name_flow.task_name_field
-        if not name_field then
-            name_field = set_name_flow.add{type="textfield", name="task_name_field", text=player_group.name}
-            name_field.style.width = 200
-        else
-            name_field.text = player_group.name
-        end
-        
-        local set_name_button = set_name_flow.set_name
-        if not set_name_button then
-            set_name_flow.add{type="button", name="set_name", caption="Set task name"}
-        end
-    else
-        if set_name_flow then
-            set_name_flow.destroy()
         end
     end
     
@@ -200,20 +181,20 @@ local function create_team_organization_gui(player)
         player.gui.screen["group_selection"].destroy()
     end
     
-    local frame = closable_frame.create_main_closable_frame(player, "group_selection", "Team organization of " .. force.name) 
-    frame.auto_center = true
+    local frame = closable_frame.create_main_closable_frame(player, "group_selection", "Team organization of " .. force.name)
     local scroll = frame.add{type="scroll-pane", name="group_scroll"}
     local gui_table = scroll.add{type="table", name="group_table", column_count=5}
     
-    gui_table.add{type="label", caption=""}
-    gui_table.add{type="label", caption=""}
-    gui_table.add{type="label", caption=""}
+    gui_table.add{type="label", caption="[color=yellow]Set name[/color]"}
+    gui_table.add{type="label", caption="[color=yellow]Edit name[/color]"}
+    gui_table.add{type="label", caption="[color=blue]Join task group[/color]"}
     gui_table.add{type="label", caption="[color=acid]Task name[/color]"}
     gui_table.add{type="label", caption="[color=blue]Player list[/color]"}
-    
     for i = 1, max_num_organization_groups do
-        gui_table.add{type="empty-widget"}
-        gui_table.add{type="empty-widget"}
+        gui_table.add{type="button", name="set_name_" .. i, caption="Set"}
+        gui_table.add{type="textfield", name="task_name_field_" .. i}
+        gui_table.add{type="empty-widget", name="placeholder1_" .. i}
+        gui_table.add{type="empty-widget", name="placeholder2_" .. i}
         gui_table.add{type="button", name="join_group_" .. i, caption="Join"}
         gui_table.add{type="label", name="group_name_" .. i}
         gui_table.add{type="label", name="player_list_" .. i}
