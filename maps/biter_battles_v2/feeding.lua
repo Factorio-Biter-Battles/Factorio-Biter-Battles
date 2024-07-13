@@ -9,6 +9,7 @@ local force_translation = tables.force_translation
 local enemy_team_of = tables.enemy_team_of
 local math_floor = math.floor
 local math_round = math.round
+local safe_wrap_with_player_print = require "utils.utils".safe_wrap_with_player_print
 
 local Public = {}
 
@@ -310,10 +311,8 @@ local function calc_send(cmd)
 		player = game.get_player(cmd.player_index)
 	end
 	local player_count = #game.forces.north.connected_players + #game.forces.south.connected_players
-	local call_succeeded, result = pcall(FeedingCalculations.calc_send_command, cmd.parameter, global.difficulty_vote_value, global.bb_evolution, global.max_reanim_thresh, global.training_mode, player_count, player)
-	if not call_succeeded then
-		log(string.format("Error in calc_send: %q  parameter: %q", result, cmd.parameter))
-	end
+	local result = safe_wrap_with_player_print(player, FeedingCalculations.calc_send_command, cmd.parameter, global.difficulty_vote_value, global.bb_evolution, global.max_reanim_thresh, global.training_mode, player_count, player)
+	if not result then return end
 	if player then
 		player.print(result)
 	else

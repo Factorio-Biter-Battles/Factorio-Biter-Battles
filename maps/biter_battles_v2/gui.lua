@@ -8,6 +8,7 @@ local event = require "utils.event"
 local Functions = require "maps.biter_battles_v2.functions"
 local Feeding = require "maps.biter_battles_v2.feeding"
 local ResearchInfo = require "maps.biter_battles_v2.research_info"
+local TeamStatsCompare = require "maps.biter_battles_v2.team_stats_compare"
 local Tables = require "maps.biter_battles_v2.tables"
 local Captain_event = require "comfy_panel.special_games.captain"
 local player_utils = require "utils.player"
@@ -114,8 +115,9 @@ local function get_player_list_caption(frame, force)
 	return table.concat(players_with_colors, "    ")
 end
 
-local function show_pretty_threat(forceName)
-	local threat_value = global.bb_threat[forceName]
+---@param threat_value number
+---@return string
+function threat_to_pretty_string(threat_value)
 	if math_abs(threat_value) >= 1000000 then
 		return string.format("%.2fM", threat_value / 1000000)
 	elseif math_abs(threat_value) >= 100000 then
@@ -192,7 +194,7 @@ function Public.create_main_gui(player)
 		local l = t.add { type = "label", name = "threat_label_" .. gui_value.force, caption = "Threat: " }
 		l.style.minimal_width = 25
 
-		local threat_value = show_pretty_threat(gui_value.biter_force)
+		local threat_value = threat_to_pretty_string(global.bb_threat[gui_value.biter_force])
 		local l = t.add { type = "label", name = "threat_" .. gui_value.force, caption = threat_value }
 		l.style.font_color = gui_value.color2
 		l.style.font = "default-bold"
@@ -313,7 +315,7 @@ function Public.refresh_main_gui(player)
 		t["threat_label_" .. gui_value.force].tooltip = gui_value.t2
 
 		local l = t["threat_" .. gui_value.force]
-		local threat_value = show_pretty_threat(gui_value.biter_force)
+		local threat_value = threat_to_pretty_string(global.bb_threat[gui_value.biter_force])
 		l.caption = threat_value
 		l.tooltip = gui_value.t2
 
@@ -342,8 +344,8 @@ end
 
 function Public.refresh_threat()
 	if global.gui_refresh_delay > game.tick then return end
-	local north_threat_text = show_pretty_threat("north_biters")
-	local south_threat_text = show_pretty_threat("south_biters")
+	local north_threat_text = threat_to_pretty_string(global.bb_threat["north_biters"])
+	local south_threat_text = threat_to_pretty_string(global.bb_threat["south_biters"])
 	for _, player in pairs(game.connected_players) do
 		if player.gui.left["bb_main_gui"] then
 			if player.gui.left["bb_main_gui"].stats_north then

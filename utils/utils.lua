@@ -98,6 +98,18 @@ Module.ternary = function(c, t, f)
     end
 end
 
+function Module.safe_wrap_with_player_print(player, func, ...)
+	local function error_handler(err)
+		local print_target = player or game
+		log("Error caught: " .. err)
+		print_target.print("Error caught: " .. err)
+		-- Print the full stack trace to the log
+		log(debug.traceback())
+	end
+	local call_succeeded, result = xpcall(func, error_handler, ...)
+	return result
+end
+
 
 local minutes_to_ticks = 60 * 60
 local hours_to_ticks = 60 * 60 * 60
