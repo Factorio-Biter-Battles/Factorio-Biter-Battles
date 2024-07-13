@@ -30,7 +30,7 @@ local Public = {
 
 local function destroy_team_organization_gui(player)
 	if player.gui.top["captain_team_organization_toggle_button"] then player.gui.top["captain_team_organization_toggle_button"].destroy() end
-	if player.gui.screen.group_selection then player.gui.screen.group_selection.destroy() end
+	if player.gui.screen["group_selection"] then player.gui.screen["group_selection"].destroy() end
 end
 
 local function cpt_get_player(playerName)
