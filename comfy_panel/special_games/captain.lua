@@ -15,7 +15,7 @@ local math_random = math.random
 local closable_frame = require "utils.ui.closable_frame"
 local bb_diff = require "maps.biter_battles_v2.difficulty_vote"
 local player_utils = require "utils.player"
-local max_num_organization_groups = 15
+local max_num_organization_groups = 11
 
 local Public = {
 	name = {type = "label", caption = "Captain event", tooltip = "Captain event"},
