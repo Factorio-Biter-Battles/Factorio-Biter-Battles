@@ -36,11 +36,10 @@ function TeamStatsCompare.show_stats(player, stats)
     ---@type LuaGuiElement
     local frame = player.gui.screen["teamstats_frame"]
     if frame then
-        frame.clear()
-    else
-        frame = closable_frame.create_main_closable_frame(player, "teamstats_frame", "Team statistics")
-        gui_style(frame, { padding = 8 })
+        frame.destroy()
     end
+    frame = closable_frame.create_main_closable_frame(player, "teamstats_frame", "Team statistics")
+    gui_style(frame, { padding = 8 })
     local scrollpanel = frame.add { type = "scroll-pane", name = "scroll_pane", direction = "vertical", horizontal_scroll_policy = "never", vertical_scroll_policy = "auto" }
 
     ---@param force_name string
