@@ -233,8 +233,7 @@ local function create_team_organization_gui(player)
         name_field.style.width = 200
         set_name_flow.add{type="button", name="set_name", caption="Set task name"}
     end
-	local listPlayersWithoutTask = ""
-	if update_list_of_players_without_task(force) ~= nil then listPlayersWithoutTask = table.concat(update_list_of_players_without_task(force), ", ") end
+	local listPlayersWithoutTask = table.concat((update_list_of_players_without_task(force) or {}), ", ")
 	frame.add{type="label", name="list_players_without_task", caption="Players without task : [color=red]" .. listPlayersWithoutTask .. "[/color]"}
 end
 
