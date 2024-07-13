@@ -56,6 +56,23 @@ TeamStatsCollect.damage_render_info = {
     {"impact", "Impact [item=locomotive][item=car][item=tank]"},
 }
 
+TeamStatsCollect.tracked_inventories = {
+    ['assembling-machine'] = true,
+    ['boiler'] = true,
+    ['car'] = true,
+    ['cargo-wagon'] = true,
+    ['character-corpse'] = true,
+    ['container'] = true,
+    ['furnace'] = true,
+    ['inserter'] = true,
+    ['lab'] = true,
+    ['logistic-container'] = true,
+    ['reactor'] = true,
+    ['roboport'] = true,
+    ['rocket-silo'] = true,
+    ['spider-vehicle'] = true,
+}
+
 local function update_teamstats()
     local team_stats = global.team_stats
     local tick = functions.get_ticks_since_game_start()
@@ -194,6 +211,16 @@ local function on_entity_died(event)
         force_name = "south"
         biter_force_name = "south_biters"
         if entity.force.name == "south_biters_boss" then health_factor = health_factor * 20 end
+    elseif entity.force.name == "north" or entity.force.name == "south" then
+        if TeamStatsCollect.tracked_inventories[entity.type] then
+            global.team_stats.forces[entity.force.name].items = global.team_stats.forces[entity.force.name].items or {}
+            local item_stats = global.team_stats.forces[entity.force.name].items
+            for item, amount in pairs(functions.get_entity_contents(entity)) do
+                item_stats[item] = item_stats[item] or {}
+                item_stats[item].lost = (item_stats[item].lost or 0) + amount
+            end
+        end
+        return
     else
         return
     end

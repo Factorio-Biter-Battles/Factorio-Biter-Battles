@@ -507,4 +507,20 @@ function Functions.format_ticks_as_time(ticks)
 	return string.format("%d:%02d:%02d", hours, minutes, seconds)
 end
 
+function Functions.get_entity_contents(entity)
+	local totals = {}
+	if not (entity and entity.valid and entity.get_max_inventory_index() > 0) then
+		return totals
+	end
+	for i_id = 1, entity.get_max_inventory_index() do
+		local inventory = entity.get_inventory(i_id)
+		if inventory and inventory.valid and not inventory.is_empty() then
+			for item, amount in pairs(inventory.get_contents()) do
+				totals[item] = (totals[item] or 0) + amount
+			end
+		end
+	end
+	return totals
+end
+
 return Functions
