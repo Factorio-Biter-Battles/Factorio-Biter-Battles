@@ -144,6 +144,18 @@ local function update_team_organization_gui_player(player)
         if group.players[player.name] then
             player_group = group
         end
+        
+        -- Add or update edit controls if player has permission
+        if team_organization_can_edit_all(player) then
+            local name_field = gui_table["task_name_field_" .. i]
+            if not name_field then
+                name_field = gui_table.add{type="textfield", name="task_name_field_" .. i, text=group.name}
+                name_field.style.width = 100
+                gui_table.add{type="button", name="set_name_" .. i, caption="Set"}
+            else
+                name_field.text = group.name
+            end
+        end
     end
     
     -- Update or create the set_name_flow
@@ -175,14 +187,13 @@ local function update_team_organization_gui_player(player)
     -- Update the list of players without task
     local list_players_without_task = frame.list_players_without_task
     if list_players_without_task then
-        list_players_without_task.caption = "Players without task : [color=red]" .. table.concat(update_list_of_players_without_task(force), ", ") .. "[/color]"
+        local listPlayersWithoutTask = table.concat((update_list_of_players_without_task(force) or {}), ", ")
+        list_players_without_task.caption = "Players without task : [color=red]" .. listPlayersWithoutTask .. "[/color]"
     end
 end
 
 local function create_team_organization_gui(player)
     local force = player.force
-	local special = global.special_games_variables["captain_mode"]
-    local groupsOrganization = special["groupsOrganization"][force.name] or {}
     
     if player.gui.screen["group_selection"] then
         player.gui.screen["group_selection"].destroy()
@@ -199,42 +210,22 @@ local function create_team_organization_gui(player)
     gui_table.add{type="label", caption="[color=acid]Task name[/color]"}
     gui_table.add{type="label", caption="[color=blue]Player list[/color]"}
     
-    local player_group = nil
     for i = 1, max_num_organization_groups do
-        local group = groupsOrganization[i] or {name = "Group " .. i, players = {}, player_order = {}}
-		
-        if team_organization_can_edit_all(player) then
-            local name_field = gui_table.add{type="textfield", name="task_name_field_" .. i, text=group.name}
-            name_field.style.width = 100
-            gui_table.add{type="button", name="set_name_" .. i, caption="Set"}
-        else
-            gui_table.add{type="empty-widget"}
-            gui_table.add{type="empty-widget"}
-        end
-		
-        local join_button = gui_table.add{type="button", name="join_group_" .. i, caption="Join"}
-        local name_label = gui_table.add{type="label", name="group_name_" .. i, caption="[color=acid]"..group.name.."[/color]"}
-        
-        local player_list = gui_table.add{type="label", name="player_list_" .. i, caption=pretty_print_player_list(group.player_order)}
-        
-        
-        if group.players[player.name] then
-            player_group = group
-        end
+        gui_table.add{type="empty-widget"}
+        gui_table.add{type="empty-widget"}
+        gui_table.add{type="button", name="join_group_" .. i, caption="Join"}
+        gui_table.add{type="label", name="group_name_" .. i}
+        gui_table.add{type="label", name="player_list_" .. i}
     end
     
     local bottom_flow = frame.add{type="flow", name="bottom_flow", direction="horizontal"}
     bottom_flow.style.horizontal_align = "center"
-    bottom_flow.add{type="button", name="leave_group", caption="Leave task group"}
-	if team_organization_can_edit_group_name(player,player_group) then
-        local set_name_flow = frame.add{type="flow", name="set_name_flow", direction="horizontal"}
-        set_name_flow.style.horizontal_align = "center"
-        local name_field = set_name_flow.add{type="textfield", name="task_name_field", text=player_group.name}
-        name_field.style.width = 200
-        set_name_flow.add{type="button", name="set_name", caption="Set task name"}
-    end
-	local listPlayersWithoutTask = table.concat((update_list_of_players_without_task(force) or {}), ", ")
-	frame.add{type="label", name="list_players_without_task", caption="Players without task : [color=red]" .. listPlayersWithoutTask .. "[/color]"}
+    bottom_flow.add{type="button", name="leave_task_group", caption="Leave task group"}
+
+    frame.add{type="label", name="list_players_without_task"}
+
+    -- Call update function to populate dynamic content
+    update_team_organization_gui_player(player)
 end
 
 local function draw_captain_team_organization_button(player)
@@ -1850,7 +1841,7 @@ local function on_gui_click(event)
 		table.insert(groupsOrganization[group_index].player_order, player.name)
 		
 		update_team_organization_gui()
-	elseif element.name == "leave_group" then
+	elseif element.name == "leave_task_group" then
 		for i = 1, max_num_organization_groups do
 			local group = groupsOrganization[i]
 			if group and group.players then
@@ -1869,14 +1860,16 @@ local function on_gui_click(event)
 	elseif element.name:sub(1, 9) == "set_name_" then
 		-- For captains who can edit all
 		local group_index = tonumber(element.name:sub(10))
-		local name_field = player.gui.screen["group_selection"].group_scroll.group_table["task_name_field_" .. group_index]
-		local new_name = name_field.text
-		if groupsOrganization[group_index].name ~= new_name then
-			groupsOrganization[group_index].name = new_name
-			player.force.print(player.name .. ' has set task name to ' .. new_name)
-			update_team_organization_gui()
-		else
-			player.print("You cant set the task name with same one as before !!", Color.warning)
+		if group_index ~= nil then 
+			local name_field = player.gui.screen["group_selection"].group_scroll.group_table["task_name_field_" .. group_index]
+			local new_name = name_field.text
+			if groupsOrganization[group_index].name ~= new_name then
+				groupsOrganization[group_index].name = new_name
+				player.force.print(player.name .. ' has set task name to ' .. new_name)
+				update_team_organization_gui()
+			else
+				player.print("You cant set the task name with same one as before !!", Color.warning)
+			end
 		end
 	elseif element.name == "set_name" then
 		-- For players editing their own group
