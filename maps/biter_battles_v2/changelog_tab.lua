@@ -13,6 +13,11 @@ local function add_changelog(player, element)
 		table.insert(changelog_change, who)
 	end
 	
+	add_entry("2024-07-13", "RedRafe", "Sound enhancement")
+	add_entry("2024-07-13", "cliff_build", "/close-difficulty-vote: add optional param to force difficulty")
+	add_entry("2024-07-13", "cliff_build", "End game stats UI")
+	add_entry("2024-07-10", "gabrielchl", "feat(captains): remove player from joiner list on disconnect")
+	add_entry("2024-07-10", "gabrielchl", "feat(captains): order and colorize player names in info panels")
 	add_entry("2024-07-08", "Ragnarok77", "Captain : Difficulty is now chosen before captain start picking players")
 	add_entry("2024-07-08", "PlayerNoon", "Special games, add ore pattern  in mixed ore")
 	add_entry("2024-07-08", "gabrielchl", "feat(ui/captains): minor join info panel layout update")

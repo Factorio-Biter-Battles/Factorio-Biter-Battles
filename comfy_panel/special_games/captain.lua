@@ -11,6 +11,7 @@ local gui_style = require 'utils.utils'.gui_style
 local ternary = require 'utils.utils'.ternary
 local ComfyPanelGroup = require 'comfy_panel.group'
 local CaptainRandomPick = require 'comfy_panel.special_games.captain_random_pick'
+local difficulty_vote = require 'maps.biter_battles_v2.difficulty_vote'
 local math_random = math.random
 local closable_frame = require "utils.ui.closable_frame"
 local bb_diff = require "maps.biter_battles_v2.difficulty_vote"
@@ -608,6 +609,7 @@ local function generate_captain_mode(refereeName, autoTrust, captainKick, specia
 		end
 		Public.draw_captain_player_button(pl)
 		Public.draw_captain_player_gui(pl)
+		Sounds.notify_player(pl, 'utility/new_objective')
 	end
 	global.chosen_team = {}
 	clear_character_corpses()
@@ -693,7 +695,7 @@ local function start_captain_event()
 	global.special_games_variables["captain_mode"]["stats"]["NorthInitialCaptain"] = global.special_games_variables["captain_mode"]["captainList"][1]
 	global.special_games_variables["captain_mode"]["stats"]["SouthInitialCaptain"] = global.special_games_variables["captain_mode"]["captainList"][2]
 	global.special_games_variables["captain_mode"]["stats"]["InitialReferee"] = global.special_games_variables["captain_mode"]["refereeName"]
-	local difficulty = Tables.difficulties[global.difficulty_vote_index].name;
+	local difficulty = difficulty_vote.difficulty_name()
 	if "difficulty" == "I'm Too Young to Die" then difficulty = "ITYTD"
 	elseif "difficulty" == "Fun and Fast" then difficulty = "FNF"
 	elseif "difficulty" == "Piece of Cake" then difficulty = "POC" end
@@ -722,6 +724,7 @@ local countdown_captain_start_token = Token.register(
 				if player.gui.center["bb_captain_countdown"] then player.gui.center["bb_captain_countdown"].destroy() end
 				player.gui.center.add{name = "bb_captain_countdown", type = "sprite", sprite = _sprite}
 			end	
+			Sounds.notify_all("utility/build_blueprint_large")
 			global.special_games_variables["captain_mode"]["countdown"] = global.special_games_variables["captain_mode"]["countdown"] - 1
 		else
 			for _, player in pairs(game.connected_players) do
@@ -2067,8 +2070,12 @@ local function on_player_left_game(event)
 	local special = global.special_games_variables["captain_mode"]
 	if not special or not player then return end
 	bb_diff.remove_player_from_difficulty_vote(player)
-	removeStringFromTable(special["listPlayers"], player.name)
-	removeStringFromTable(special["captainList"], player.name)
+	if not special["pickingPhase"] then
+		removeStringFromTable(special["listPlayers"], player.name)
+		if special["prepaPhase"] then
+			removeStringFromTable(special["captainList"], player.name)
+		end
+	end
 
 	Public.captain_log_end_time_player(player)
 	Public.update_all_captain_player_guis()
@@ -2084,6 +2091,7 @@ local function on_player_joined_game(event)
 		Public.draw_captain_player_button(player)
 		if not global.chosen_team[player.name] then
 			Public.draw_captain_player_gui(player)
+			Sounds.notify_player(player, 'utility/new_objective')
 		end
 	else
 		destroy_team_organization_gui(player)

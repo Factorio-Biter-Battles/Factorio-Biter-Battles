@@ -119,7 +119,6 @@ function Public.initial_setup()
 	global.suspend_time_limit = 3600
 	global.reroll_time_limit = 1800
 	global.gui_refresh_delay = 0
-	global.game_lobby_active = true
 	global.bb_debug = false
 	global.bb_draw_revive_count_text = false
 	global.bb_show_research_info = "always" -- "always", "spec", nil
@@ -137,6 +136,8 @@ function Public.initial_setup()
 	}
 	global.want_pings = {}
 	global.want_pings_default_value = true
+	global.want_notification_sounds = {}
+	global.want_notification_sounds_default_value = true
 
 	global.total_time_online_players = {}
 	global.already_logged_current_session_time_online_players = {}
@@ -153,8 +154,6 @@ function Public.initial_setup()
 	createTrollSong(game.forces.north.name,{x=-40,y=0})
 	createTrollSong(game.forces.spectator.name,{x=-80,y=0})
 end
-
-
 
 --Terrain Playground Surface
 function Public.playground_surface()
@@ -198,17 +197,21 @@ function Public.draw_structures()
 end
 
 function Public.reveal_map()
-	if global.bb_settings["bb_map_reveal_toggle"] then
-		local surface = game.surfaces[global.bb_surface_name]
-		local width = 2000 -- for one side
-		local height = 500 -- for one side
-		for x = 16, width, 32 do
-			for y = 16, height, 32 do
-				game.forces["spectator"].chart(surface, {{-x, -y}, {-x, -y}})
-				game.forces["spectator"].chart(surface, {{x, -y}, {x, -y}})
-				game.forces["spectator"].chart(surface, {{-x, y}, {-x, y}})
-				game.forces["spectator"].chart(surface, {{x, y}, {x, y}})
-			end
+	if not global.bb_settings["bb_map_reveal_toggle"] then
+		return
+	end
+
+	local surface = game.surfaces[global.bb_surface_name]
+	local spectator = game.forces.spectator
+	local width = 2000 -- for one side
+	local height = 500 -- for one side
+
+	for x = 16, width, 32 do
+		for y = 16, height, 32 do
+			spectator.chart(surface, {{-x, -y}, {-x, -y}})
+			spectator.chart(surface, {{x, -y}, {x, -y}})
+			spectator.chart(surface, {{-x, y}, {-x, y}})
+			spectator.chart(surface, {{x, y}, {x, y}})
 		end
 	end
 end
@@ -220,6 +223,8 @@ function Public.tables()
 	global.science_logs_text = nil
 	global.science_logs_total_north = nil
 	global.science_logs_total_south = nil
+	---@type TeamStats
+	global.team_stats = {forces = {north = {items = {}, food = {}, damage_types = {}}, south = {items = {}, food = {}, damage_types = {}}}}
 	-- Name of main BB surface within game.surfaces
 	-- We hot-swap here between 2 surfaces.
 	if global.bb_surface_name == 'bb0' then

@@ -8,6 +8,7 @@ local event = require "utils.event"
 local Functions = require "maps.biter_battles_v2.functions"
 local Feeding = require "maps.biter_battles_v2.feeding"
 local ResearchInfo = require "maps.biter_battles_v2.research_info"
+local TeamStatsCompare = require "maps.biter_battles_v2.team_stats_compare"
 local Tables = require "maps.biter_battles_v2.tables"
 local Captain_event = require "comfy_panel.special_games.captain"
 local player_utils = require "utils.player"
@@ -114,8 +115,9 @@ local function get_player_list_caption(frame, force)
 	return table.concat(players_with_colors, "    ")
 end
 
-local function show_pretty_threat(forceName)
-	local threat_value = global.bb_threat[forceName]
+---@param threat_value number
+---@return string
+function threat_to_pretty_string(threat_value)
 	if math_abs(threat_value) >= 1000000 then
 		return string.format("%.2fM", threat_value / 1000000)
 	elseif math_abs(threat_value) >= 100000 then
@@ -192,7 +194,7 @@ function Public.create_main_gui(player)
 		local l = t.add { type = "label", name = "threat_label_" .. gui_value.force, caption = "Threat: " }
 		l.style.minimal_width = 25
 
-		local threat_value = show_pretty_threat(gui_value.biter_force)
+		local threat_value = threat_to_pretty_string(global.bb_threat[gui_value.biter_force])
 		local l = t.add { type = "label", name = "threat_" .. gui_value.force, caption = threat_value }
 		l.style.font_color = gui_value.color2
 		l.style.font = "default-bold"
@@ -313,7 +315,7 @@ function Public.refresh_main_gui(player)
 		t["threat_label_" .. gui_value.force].tooltip = gui_value.t2
 
 		local l = t["threat_" .. gui_value.force]
-		local threat_value = show_pretty_threat(gui_value.biter_force)
+		local threat_value = threat_to_pretty_string(global.bb_threat[gui_value.biter_force])
 		l.caption = threat_value
 		l.tooltip = gui_value.t2
 
@@ -342,8 +344,8 @@ end
 
 function Public.refresh_threat()
 	if global.gui_refresh_delay > game.tick then return end
-	local north_threat_text = show_pretty_threat("north_biters")
-	local south_threat_text = show_pretty_threat("south_biters")
+	local north_threat_text = threat_to_pretty_string(global.bb_threat["north_biters"])
+	local south_threat_text = threat_to_pretty_string(global.bb_threat["south_biters"])
 	for _, player in pairs(game.connected_players) do
 		if player.gui.left["bb_main_gui"] then
 			if player.gui.left["bb_main_gui"].stats_north then
@@ -364,6 +366,26 @@ local get_player_data = function (player, remove)
 		global.player_data_afk[player.name] = {}
 	end
 	return global.player_data_afk[player.name]
+end
+
+local function drop_burners(player, forced_join)
+	if forced_join then 
+		global.got_burners[player.name] = nil
+		return
+	end
+	if global.training_mode or not (global.bb_settings.burners_balance) then 		
+		return
+	end			
+	local burners_to_drop = player.get_item_count("burner-mining-drill")	
+	if burners_to_drop ~= 0 then
+    	local items = player.surface.spill_item_stack(player.position,{name="burner-mining-drill", count = burners_to_drop}, false, nil, false )
+		player.remove_item({name="burner-mining-drill", count = burners_to_drop})
+	end
+end
+
+local function on_player_left_game(event)
+	local player = game.get_player(event.player_index)
+	drop_burners(player)
 end
 
 function Public.burners_balance(player)
@@ -482,6 +504,7 @@ function join_team(player, force_name, forced_join, auto_join)
 		game.permissions.get_group("Default").add_player(player)
 		local msg = table.concat({ "Team ", player.force.name, " player ", player.name, " is no longer spectating." })
 		game.print(msg, { r = 0.98, g = 0.66, b = 0.22 })
+		Sounds.notify_allies(player.force, "utility/build_blueprint_large")
 		Server.to_discord_bold(msg)
 		global.spectator_rejoin_delay[player.name] = game.tick
 		player.spectator = false
@@ -547,12 +570,14 @@ function spectate(player, forced_join, stored_position)
 
 	player.driving = false
 	player.clear_cursor()
+	drop_burners(player, forced_join)
 
 	if stored_position then
 		local p_data = get_player_data(player)
 		p_data.position = player.position
 	end
 	player.teleport(player.surface.find_non_colliding_position("character", { 0, 0 }, 4, 1))
+	Sounds.notify_player(player, "utility/build_blueprint_large")
 	player.force = game.forces.spectator
 	player.character.destructible = false
 	if not forced_join then
@@ -732,5 +757,6 @@ end
 
 event.add(defines.events.on_gui_click, on_gui_click)
 event.add(defines.events.on_player_joined_game, on_player_joined_game)
+event.add(defines.events.on_player_left_game, on_player_left_game)
 
 return Public

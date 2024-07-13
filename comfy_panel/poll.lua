@@ -104,6 +104,9 @@ local function do_remaining_time(poll, remaining_time_label)
     local ticks = end_tick - game.tick
     if ticks < 0 then
         remaining_time_label.caption = 'Poll Finished.'
+        if ticks == -1 then
+            Sounds.notify_all('utility/achievement_unlocked')
+        end
         polls.running = false
         return false
     else

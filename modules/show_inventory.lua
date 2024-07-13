@@ -482,6 +482,7 @@ commands.add_command(
             end
 
             if validate_player(target_player) then
+                Sounds.notify_player(player, "utility/smart_pipette")
                 open_inventory(player, target_player)
             else
                 player.print('Please type a name of a player who is connected.', Color.warning)
