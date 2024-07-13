@@ -181,7 +181,6 @@ local functions = {
 			get_actor(event, '{New Year Island}', "New Year island has been disabled!", true)
 		end
 	end,
-  
 	["bb_map_reveal_toggle"] = function(event)
 		if event.element.switch_state == "left" then
 			global.bb_settings['bb_map_reveal_toggle'] = true
@@ -191,7 +190,6 @@ local functions = {
 			game.print("Reveal map at start has been disabled!")
 		end
 	end,
-  
 	["bb_map_reroll_toggle"] = function(event)
 		if event.element.switch_state == "left" then
 			global.bb_settings.map_reroll = true
@@ -201,7 +199,6 @@ local functions = {
 			game.print("Map Reroll is disabled!")
 		end
 	end,
-
     ["bb_burners_balance_toggle"] = function(event)
 		if event.element.switch_state == "left" then
 			global.bb_settings.burners_balance = true
@@ -346,20 +343,16 @@ local function add_switch(element, switch_state, name, description_main, descrip
     local label = t.add({type = 'label', caption = description_main})
     label.style.padding = 2
     label.style.left_padding = 10
-    label.style.minimal_width = 120
+    label.style.minimal_width = 140
     label.style.font = 'heading-2'
     label.style.font_color = {0.88, 0.88, 0.99}
 
-    local label = t.add({type = 'label', caption = description})
+    local label = t.add({type = 'label', caption = description, tooltip = tooltip})
     label.style.padding = 2
     label.style.left_padding = 10
     label.style.single_line = false
     label.style.font = 'heading-3'
     label.style.font_color = {0.85, 0.85, 0.85}
-
-    if tooltip then
-        label.tooltip = tooltip
-    end
 
     return switch
 end
@@ -417,6 +410,8 @@ local build_config_gui = (function(player, frame)
         'Toggles zoom-to-world view noise effect.\nEnvironmental sounds will be based on map view.'
     )
 
+    scroll_pane.add({type = 'line'})
+
     switch_state = player_wants_pings(player.name) and 'left' or 'right'
     add_switch(
         scroll_pane,
@@ -426,14 +421,16 @@ local build_config_gui = (function(player, frame)
         'Causes you to be clearly pinged on whispers and chat messages containing @' .. player.name
     )
 
+    scroll_pane.add({type = 'line'})
+
     switch_state = player_wants_sounds(player.name) and 'left' or 'right'
     add_switch(
         scroll_pane,
         switch_state,
         'comfy_panel_want_notification_sounds_switch',
-        'Sound notifications',
-        'Receive sound feedbacks on management actions',
-        'i.e. closing polls, picking phase, map rerolls, switched/assigned team'
+        'Enhanced sound FX',
+        'Enable specific sound effects on player actions',
+        'i.e. closing polls, picking phase, map rerolls, assigned/leaving team, @ and whispers, player commands'
     )
     scroll_pane.add({type = 'line'})
 
