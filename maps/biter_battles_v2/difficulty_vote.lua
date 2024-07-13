@@ -27,8 +27,8 @@ function Public.short_difficulty_name()
 	end
 end
 
-function Public.difficulty_color()
-	return difficulties[global.difficulty_vote_index or 3].color
+function Public.difficulty_print_color()
+	return difficulties[global.difficulty_vote_index or 3].print_color
 end
 
 local function difficulty_gui(player)
@@ -38,7 +38,7 @@ local function difficulty_gui(player)
 		b.style.font = "heading-2"
 		gui_style(b, {width = 114, height = 38, padding = -2})
 	end
-	b.style.font_color = Public.difficulty_color()
+	b.style.font_color = Public.difficulty_print_color()
 	local value = math.floor(global.difficulty_vote_value*100)
 	local name = Public.difficulty_name()
 	local str = table.concat({"Global map difficulty is ", name, ". Mutagen has ", value, "% effectiveness."})
