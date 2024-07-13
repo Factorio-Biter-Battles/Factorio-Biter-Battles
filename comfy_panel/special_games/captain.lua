@@ -1808,8 +1808,12 @@ local function on_player_left_game(event)
 	local special = global.special_games_variables["captain_mode"]
 	if not special or not player then return end
 	bb_diff.remove_player_from_difficulty_vote(player)
-	removeStringFromTable(special["listPlayers"], player.name)
-	removeStringFromTable(special["captainList"], player.name)
+	if not special["pickingPhase"] then
+		removeStringFromTable(special["listPlayers"], player.name)
+		if special["prepaPhase"] then
+			removeStringFromTable(special["captainList"], player.name)
+		end
+	end
 
 	Public.captain_log_end_time_player(player)
 	Public.update_all_captain_player_guis()
