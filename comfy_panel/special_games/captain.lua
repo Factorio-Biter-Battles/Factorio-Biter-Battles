@@ -121,7 +121,7 @@ local function update_team_organization_gui_player(player)
     local force = player.force
     local special = global.special_games_variables["captain_mode"]
     local groupsOrganization = special["groupsOrganization"][force.name] or {}
-    local frame = player.gui.screen.group_selection
+    local frame = player.gui.screen["group_selection"]
     if not frame then return end
     local gui_table = frame.group_scroll.group_table
     local player_group = nil
@@ -184,8 +184,8 @@ local function create_team_organization_gui(player)
 	local special = global.special_games_variables["captain_mode"]
     local groupsOrganization = special["groupsOrganization"][force.name] or {}
     
-    if player.gui.screen.group_selection then
-        player.gui.screen.group_selection.destroy()
+    if player.gui.screen["group_selection"] then
+        player.gui.screen["group_selection"].destroy()
     end
     
     local frame = closable_frame.create_main_closable_frame(player, "group_selection", "Team organization of " .. force.name) 
@@ -247,7 +247,7 @@ end
 
 local function update_team_organization_gui()
     for _, player in pairs(game.connected_players) do
-        if player.gui.screen.group_selection then
+        if player.gui.screen["group_selection"] then
             update_team_organization_gui_player(player)
         end
     end
@@ -1868,7 +1868,7 @@ local function on_gui_click(event)
 	elseif element.name:sub(1, 9) == "set_name_" then
 		-- For captains who can edit all
 		local group_index = tonumber(element.name:sub(10))
-		local name_field = player.gui.screen.group_selection.group_scroll.group_table["task_name_field_" .. group_index]
+		local name_field = player.gui.screen["group_selection"].group_scroll.group_table["task_name_field_" .. group_index]
 		local new_name = name_field.text
 		if groupsOrganization[group_index].name ~= new_name then
 			groupsOrganization[group_index].name = new_name
@@ -1879,7 +1879,7 @@ local function on_gui_click(event)
 		end
 	elseif element.name == "set_name" then
 		-- For players editing their own group
-		local name_field = player.gui.screen.group_selection.set_name_flow.task_name_field
+		local name_field = player.gui.screen["group_selection"].set_name_flow.task_name_field
 		local new_name = name_field.text
 		for _, group in pairs(groupsOrganization) do
 			if group.players[player.name] and group.player_order[1] == player.name then
@@ -1894,8 +1894,8 @@ local function on_gui_click(event)
 			end
 		end
 	elseif element.name == "captain_team_organization_toggle_button" then
-		if player.gui.screen.group_selection then
-			player.gui.screen.group_selection.destroy()
+		if player.gui.screen["group_selection"] then
+			player.gui.screen["group_selection"].destroy()
 		else
 			create_team_organization_gui(player)
 		end
