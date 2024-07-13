@@ -50,7 +50,7 @@ function TeamStatsCompare.show_stats(player, stats)
         local team_frame = top_table.add { type = "frame", name = "summary_" .. force_name, direction = "vertical" }
         gui_style(team_frame, { padding = 8 })
         local team_label = team_frame.add { type = "label", caption = Functions.team_name_with_color(force_name) }
-        gui_style(team_label, { font = "heading-2" })
+        gui_style(team_label, { font = "heading-2", single_line = false, maximal_width = 150})
         local simple_stats = {
             {"Final evo:", string_format("%d%%", (force_stats.final_evo or 0) * 100)},
             {"Peak threat:", threat_to_pretty_string(force_stats.peak_threat or 0)},
@@ -77,7 +77,7 @@ function TeamStatsCompare.show_stats(player, stats)
         local centering_table = shared_frame.add { type = "table", name = "centering_table", column_count = 1 }
         centering_table.style.column_alignments[1] = "center"
         local l
-        l = centering_table.add { type = "label", caption = string_format("Difficulty: %s (%d%%)", Tables.difficulties[global.difficulty_vote_index].short_name, global.difficulty_vote_value * 100) }
+        l = centering_table.add { type = "label", caption = string_format("Difficulty: %s (%d%%)", (stats.difficulty or ""), (stats.difficulty_value or 0) * 100) }
         l.style.font = "default-small"
         l = centering_table.add { type = "label", caption = string_format("Duration: %s", ticks_to_hh_mm(stats.ticks or 0)) }
         l.style.font = "default-small"

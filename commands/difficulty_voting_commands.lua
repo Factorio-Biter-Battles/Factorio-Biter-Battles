@@ -1,5 +1,6 @@
 local Server = require 'utils.server'
 local Color = require 'utils.color_presets'
+local tables = require 'maps.biter_battles_v2.tables'
 
 local function revote()
     local player = game.player
@@ -20,24 +21,35 @@ local function revote()
     end
 end
 
-local function close_difficulty_votes()
+local function close_difficulty_votes(cmd)
     local player = game.player
-
-    if player and player ~= nil then
-        if not player.admin then
-            player.print("[ERROR] Command is admin-only. Please ask an admin.", Color.warning)
-            return
+    if not player then return end
+    if not player.admin then
+        player.print("[ERROR] Command is admin-only. Please ask an admin.", Color.warning)
+        return
+    end
+    if cmd.parameter and cmd.parameter ~= "" then
+        local param = string.lower(cmd.parameter)
+        local idx = tables.difficulty_lowered_names_to_index[param]
+        if idx then
+            global.difficulty_vote_index = idx
+            global.difficulty_vote_value = tables.difficulties[idx].value
+        elseif string.match(param, "^%d+%.?%d*%%$") then
+            global.difficulty_vote_index = nil
+            global.difficulty_vote_value = tonumber(param:sub(1, -2)) / 100.0
         else
-            global.difficulty_votes_timeout = game.ticks_played
-            local msg = player.name .. " closed difficulty voting"
-            game.print(msg)
-            Server.to_discord_embed(msg)
+            player.print("Invalid difficulty parameter. Please provide either a difficulty name/abbreviation or mutagen effectiveness as a percentage, i.e. `33%'.")
+            return
         end
     end
+    global.difficulty_votes_timeout = game.ticks_played
+    local msg = player.name .. " closed difficulty voting"
+    game.print(msg)
+    Server.to_discord_embed(msg)
 end
 
 commands.add_command('difficulty-revote', 'open difficulty revote',
                      function(cmd) revote(); end)
 
-commands.add_command('difficulty-close-vote', 'open difficulty revote',
-                     function(cmd) close_difficulty_votes(); end)
+commands.add_command('difficulty-close-vote', 'closes difficulty revote. Takes optional argument of new difficulty, either by name/abbreviation or mutagen effectiveness.',
+                     function(cmd) close_difficulty_votes(cmd); end)
