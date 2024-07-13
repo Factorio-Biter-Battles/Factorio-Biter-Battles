@@ -89,8 +89,7 @@ local function add_to_trust(playerName)
 end
 
 local function team_organization_can_edit_all(player)
-	local special = global.special_games_variables["captain_mode"]
-	return player.name == special["captainList"][2] or player.name == special["captainList"][1]
+	return isStringInTable(player.name, global.special_games_variables["captain_mode"]["captainList"])
 end
 
 local function team_organization_can_edit_group_name(player, group)
