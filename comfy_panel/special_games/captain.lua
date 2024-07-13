@@ -138,7 +138,7 @@ local function update_team_organization_gui_player(player)
         -- Update player list
         local player_list = gui_table["player_list_" .. i]
         if player_list then
-            player_list.caption = "[color=blue]" .. table.concat(group.player_order, ", ") .. "[/color]"
+            player_list.caption = pretty_print_player_list(group.player_order)
         end
         
         if group.players[player.name] then
@@ -215,7 +215,7 @@ local function create_team_organization_gui(player)
         local join_button = gui_table.add{type="button", name="join_group_" .. i, caption="Join"}
         local name_label = gui_table.add{type="label", name="group_name_" .. i, caption="[color=acid]"..group.name.."[/color]"}
         
-        local player_list = gui_table.add{type="label", name="player_list_" .. i, caption="[color=blue]".. table.concat(group.player_order, ", ") .. "[/color]"}
+        local player_list = gui_table.add{type="label", name="player_list_" .. i, caption=pretty_print_player_list(group.player_order)}
         
         
         if group.players[player.name] then
@@ -233,7 +233,9 @@ local function create_team_organization_gui(player)
         name_field.style.width = 200
         set_name_flow.add{type="button", name="set_name", caption="Set task name"}
     end
-	frame.add{type="label", name="list_players_without_task", caption="Players without task : [color=red]".. table.concat(update_list_of_players_without_task(force), ", ") .. "[/color]"}
+	local listPlayersWithoutTask = ""
+	if update_list_of_players_without_task(force) ~= nil then listPlayersWithoutTask = table.concat(update_list_of_players_without_task(force), ", ") end
+	frame.add{type="label", name="list_players_without_task", caption="Players without task : [color=red]" .. listPlayersWithoutTask .. "[/color]"}
 end
 
 local function draw_captain_team_organization_button(player)
