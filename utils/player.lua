@@ -12,10 +12,16 @@ function Public.get_sorted_colored_player_list(player_list)
 	local players_with_colors = {}
 	for _, pair in ipairs(players_with_sort_keys) do
 		local p = pair.player
-		table.insert(players_with_colors, string.format("[color=%.2f,%.2f,%.2f]%s[/color]", p.color.r * 0.6 + 0.4, p.color.g * 0.6 + 0.4, p.color.b * 0.6 + 0.4, p.name))
+		table.insert(players_with_colors, Public.player_name_with_color(p))
 	end
 
 	return players_with_colors
+end
+
+---@param player LuaPlayer
+---@return string
+function Public.player_name_with_color(player)
+	return string.format("[color=%.2f,%.2f,%.2f]%s[/color]", player.color.r * 0.6 + 0.4, player.color.g * 0.6 + 0.4, player.color.b * 0.6 + 0.4, player.name)
 end
 
 ---@param names string[]

@@ -3,8 +3,16 @@ local TeamStatsCollect = {}
 
 local functions = require 'maps.biter_battles_v2.functions'
 local tables = require 'maps.biter_battles_v2.tables'
-local event = require 'utils.event'
+local Event = require 'utils.event'
 local difficulty_vote = require 'maps.biter_battles_v2.difficulty_vote'
+local inventory_costs = require 'commands.inventory_costs'
+
+---@class PlayerStats
+---@field player_ticks integer
+---@field crafting_ticks integer
+---@field built_entities table<string, {built: number, mined: number}>
+-- inventory_value_cumulative / player_ticks = average inventory value
+---@field inventory_value_cumulative number
 
 ---@class ForceStats
 ---@field final_evo? number
@@ -17,6 +25,7 @@ local difficulty_vote = require 'maps.biter_battles_v2.difficulty_vote'
 ---@field food table<string, {first_at?: integer, produced: number, consumed: number, sent: number}>
 ---@field items table<string, {first_at?: integer, produced?: number, placed?: number, lost?: number, kill_count?: number}>
 ---@field damage_types table<string, {kills?: integer, damage?: number}>
+---@field players table<string, PlayerStats>
 
 ---@class TeamStats
 ---@field forces table<string, ForceStats>
@@ -58,6 +67,48 @@ TeamStatsCollect.damage_render_info = {
     {"poison", "Poison [item=poison-capsule]"},
     {"impact", "Impact [item=locomotive][item=car][item=tank]"},
 }
+
+TeamStatsCollect.per_player_build_items_to_display = {
+    "transport-belt",
+    "inserter",
+	"long-handed-inserter",
+	"fast-inserter",
+	"stone-furnace",
+	"burner-mining-drill",
+	"electric-mining-drill",
+	"assembling-machine-1",
+	"assembling-machine-2",
+	"boiler",
+    "steam-engine",
+}
+
+-- We could theoretically collect just once per minute, but this collection will not be
+-- aligned to game time.  Thus we collect every 16 seconds instead, which will make the
+-- numbers a bit more accurate (i.e. off by at most 16 seconds, instead of off by at
+-- most 60 seconds).
+-- I use (60*16-1) rather than 60*16 just to avoid doing extra work on per-second boundaries,
+-- which are quite common in our code.
+local update_teamstats_interval = 60 * 16 - 1
+
+---@return TeamStats
+TeamStatsCollect.initial_team_stats = function()
+    return {
+        forces = {
+            north = {
+                food = {},
+                items = {},
+                damage_types = {},
+                players = {},
+            },
+            south = {
+                food = {},
+                items = {},
+                damage_types = {},
+                players = {},
+            },
+        },
+    }
+end
 
 local tracked_inventories = {
     ['assembling-machine'] = true,
@@ -106,17 +157,19 @@ local function update_teamstats()
     for _, force_name in pairs(global.chosen_team) do
         total_players[force_name] = (total_players[force_name] or 0) + 1
     end
+    local forces = game.forces
     for _, force_name in ipairs({"north", "south"}) do
-        local force = game.forces[force_name]
+        local force = forces[force_name]
         local biter_force_name = force_name .. "_biters"
         local force_stats = team_stats.forces[force_name]
         local threat = global.bb_threat[biter_force_name]
+        local force_connected_players = force.connected_players
         force_stats.final_evo = global.bb_evolution[biter_force_name]
         force_stats.peak_threat = (force_stats.peak_threat and math.max(threat, force_stats.peak_threat) or threat)
         force_stats.lowest_threat = (force_stats.lowest_threat and math.min(threat, force_stats.lowest_threat) or threat)
         force_stats.total_players = total_players[force_name]
-        force_stats.player_ticks = (force_stats.player_ticks or 0) + #force.connected_players * (tick - prev_ticks)
-        force_stats.max_players = math.max(force_stats.max_players or 0, #force.connected_players)
+        force_stats.player_ticks = (force_stats.player_ticks or 0) + #force_connected_players * (tick - prev_ticks)
+        force_stats.max_players = math.max(force_stats.max_players or 0, #force_connected_players)
         local item_prod = force.item_production_statistics
         --local item_prod_inputs = item_prod.input_counts
         --log(serpent.line(item_prod_inputs))
@@ -159,6 +212,19 @@ local function update_teamstats()
                 food_stat.first_at = tick
             end
         end
+        for _, player in pairs(force_connected_players) do
+            local player_stats = force_stats.players[player.name]
+            if not player_stats then
+                player_stats = {player_ticks = 0, crafting_ticks = 0, built_entities = {}, inventory_value_cumulative = 0}
+                force_stats.players[player.name] = player_stats
+            end
+            player_stats.player_ticks = player_stats.player_ticks + update_teamstats_interval
+            local inv_value = inventory_costs.inventory_cost(player)
+            player_stats.inventory_value_cumulative = player_stats.inventory_value_cumulative + inv_value * update_teamstats_interval
+            if player.crafting_queue_size > 0 then
+                player_stats.crafting_ticks = player_stats.crafting_ticks + update_teamstats_interval
+            end
+        end
     end
 end
 
@@ -194,6 +260,7 @@ function TeamStatsCollect.compute_stats()
             },
             items = {},
             damage_types = {},
+            players = {},
         }
         for _, item_info in ipairs(TeamStatsCollect.items_to_show_summaries_of) do
             force_stats.items[item_info.item] = {
@@ -211,6 +278,28 @@ function TeamStatsCollect.compute_stats()
                     damage = math.random(1, 10000000),
                 }
             end
+        end
+        for _, player_name in ipairs({"player1", "player2", "player3", "player4", "player5"}) do
+            player_ticks = math.random() * stats.ticks
+            local player_stats = {
+                player_ticks = player_ticks,
+                crafting_ticks = math.random() * player_ticks,
+                built_entities = {},
+                inventory_value_cumulative = math.random() * 10000 * player_ticks,
+            }
+            for _, item_name in ipairs(TeamStatsCollect.per_player_build_items_to_display) do
+                player_stats.built_entities[item_name] = {
+                    built = math.random(1, 1000),
+                    mined = math.random(1, 1000),
+                }
+            end
+            for _, item in ipairs({"nuclear-reactor", "roboport"}) do
+                player_stats.built_entities[item] = {
+                    built = math.random(1, 10),
+                    mined = math.random(1, 10),
+                }
+            end
+            force_stats.players[player_name .. force_name] = player_stats
         end
         stats.forces[force_name] = force_stats
     end
@@ -264,14 +353,61 @@ local function on_entity_died(event)
     damage_stats.damage = damage_stats.damage + entity.prototype.max_health * health_factor
 end
 
--- We could theoretically collect just once per minute, but this collection will not be
--- aligned to game time.  Thus we collect every 16 seconds instead, which will make the
--- numbers a bit more accurate (i.e. off by at most 16 seconds, instead of off by at
--- most 60 seconds).
--- I use (60*16-1) rather than 60*16 just to avoid doing extra work on per-second boundaries,
--- which are quite common in our code.
-event.on_nth_tick(60 * 16 - 1, update_teamstats)
+local building_and_mining_blacklist = {
+    ['tile-ghost'] = true,
+    ['entity-ghost'] = true,
+    ['item-entity'] = true
+}
 
-event.add(defines.events.on_entity_died, on_entity_died)
+---@param event EventData.on_built_entity
+local function on_built_entity(event)
+    local entity = event.created_entity
+    if not entity.valid then return end
+    if building_and_mining_blacklist[entity.type] then return end
+    local player = game.players[event.player_index]
+    local force_name = player.force.name
+    if force_name ~= "north" and force_name ~= "south" then return end
+    local force_stats = global.team_stats.forces[force_name]
+    local item_name = entity.name
+    local player_stats = force_stats.players[player.name]
+    if not player_stats then
+        player_stats = {player_ticks = 0, crafting_ticks = 0, built_entities = {}, inventory_value_cumulative = 0}
+        force_stats.players[player.name] = player_stats
+    end
+    local built = player_stats.built_entities[item_name]
+    if not built then
+        built = {built = 0, mined = 0}
+        player_stats.built_entities[item_name] = built
+    end
+    built.built = built.built + 1
+end
+
+---@param event EventData.on_player_mined_entity
+local function on_player_mined_entity(event)
+    local entity = event.entity
+    if not entity.valid then return end
+    local player = game.players[event.player_index]
+    local force_name = player.force.name
+    if force_name ~= "north" and force_name ~= "south" then return end
+    local force_stats = global.team_stats.forces[force_name]
+    local item_name = entity.name
+    local player_stats = force_stats.players[player.name]
+    if not player_stats then
+        player_stats = {player_ticks = 0, crafting_ticks = 0, built_entities = {}, inventory_value_cumulative = 0}
+        force_stats.players[player.name] = player_stats
+    end
+    local built = player_stats.built_entities[item_name]
+    if not built then
+        built = {built = 0, mined = 0}
+        player_stats.built_entities[item_name] = built
+    end
+    built.mined = built.mined + 1
+end
+
+Event.on_nth_tick(update_teamstats_interval, update_teamstats)
+
+Event.add(defines.events.on_entity_died, on_entity_died)
+Event.add(defines.events.on_built_entity, on_built_entity)
+Event.add(defines.events.on_player_mined_entity, on_player_mined_entity)
 
 return TeamStatsCollect

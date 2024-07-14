@@ -359,6 +359,8 @@ function Functions.get_ticks_since_game_start()
 	return game.ticks_played - start_tick
 end
 
+---@param force_name string
+---@return string
 function Functions.team_name(force_name)
 	local name = global.tm_custom_name[force_name]
 	if name == nil then
@@ -371,12 +373,27 @@ function Functions.team_name(force_name)
 	return name or force_name
 end
 
+---@param force_name string
+---@return string
 function Functions.team_name_with_color(force_name)
 	local name = Functions.team_name(force_name)
 	if force_name == "north" then
 		return "[color=120, 120, 255]" .. name .. "[/color]"
 	elseif force_name == "south" then
 		return "[color=255, 65, 65]" .. name .. "[/color]"
+	else
+		return name
+	end
+end
+
+---@param force_name string
+---@return string
+function Functions.short_team_name_with_color(force_name)
+	local name = Functions.team_name(force_name)
+	if force_name == "north" then
+		return "[color=120, 120, 255]North[/color]"
+	elseif force_name == "south" then
+		return "[color=255, 65, 65]South[/color]"
 	else
 		return name
 	end

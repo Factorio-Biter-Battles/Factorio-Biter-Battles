@@ -4,8 +4,11 @@ local Tables = require 'maps.biter_battles_v2.tables'
 local closable_frame = require "utils.ui.closable_frame"
 local TeamStatsCollect = require 'maps.biter_battles_v2.team_stats_collect'
 local safe_wrap_with_player_print = require 'utils.utils'.safe_wrap_with_player_print
+local ItemCosts = require 'maps.biter_battles_v2.item_costs'
+local PlayerUtil = require 'utils.player'
 
 local math_floor = math.floor
+local math_max = math.max
 local string_format = string.format
 
 local TeamStatsCompare = {}
@@ -27,9 +30,136 @@ local function format_with_thousands_sep(num)
     return (formatted_reversed:reverse():gsub("^,", ""))
 end
 
+---@param stats TeamStats
+---@param frame LuaGuiElement
+function populate_player_stats(stats, frame)
+    local scrollpanel = frame.add { type = "scroll-pane", name = "scroll_pane_player_stats", direction = "vertical", horizontal_scroll_policy = "never", vertical_scroll_policy = "auto" }
+    local top_centering_table = scrollpanel.add { type = "table", name = "top_centering_table", column_count = 1 }
+    top_centering_table.style.column_alignments[1] = "center"
+    local top_label = top_centering_table.add { type = "label", caption = "Player stats for first hour of game" }
+    top_label.style.font = "heading-2"
+    local cols = {
+        {"Force"},
+        {"Player"},
+        {"Playtime"},
+        {"Craft%", "Approximate percentage of time that this player was crafting."},
+        {"Avg Inv Value", "Approximate average value of the player's inventory."},
+        {"Placed value/min", "Value of placed items per minute."},
+        {"Placed"},
+    }
+    local player_table = top_centering_table.add { type = "table", name = "player_table", column_count = #cols, vertical_centering = false, draw_horizontal_line_after_headers = true }
+    player_table.style.cell_padding = 4
+    for idx, col_info in ipairs(cols) do
+        if idx == 3 or idx == 4 or idx == 5 or idx == 6 then
+            player_table.style.column_alignments[idx] = "right"
+        end
+        local l = player_table.add { type = "label", caption = col_info[1], tooltip = col_info[2] }
+        l.style.font = "default-small"
+    end
+    ---@alias PlayerTableEntry {force_name: string, player_name: string, craft_frac: number, avg_inv_value: number, placed_val_per_min: number, total_placed_cost: number, playtime_ticks: number, placed: table<string, {built: number, mined: number}>}
+    ---@type PlayerTableEntry[]
+    local player_table_entries = {}
+    ---@type table<string, number>
+    local max_placed_per_item = {}
+    for _, force_name in ipairs({"north", "south"}) do
+        local force_stats_players = stats.forces[force_name].players
+        for player_name, info in pairs(force_stats_players) do
+            local player_ticks = info.player_ticks
+            if player_ticks and player_ticks >= 1 then
+                -- eventually maybe skip players who have played less than 10 minutes
+                local total_cost = 0
+                for item, item_info in pairs(info.built_entities) do
+                    local placed = math_max((item_info.built or 0) - (item_info.mined or 0), 0)
+                    total_cost = total_cost + ItemCosts.get_cost(item) * placed
+                    max_placed_per_item[item] = math_max(max_placed_per_item[item] or 0, placed)
+                end
+                local entry = {
+                    force_name = force_name,
+                    player_name = player_name,
+                    craft_frac = (info.crafting_ticks or 0) / player_ticks,
+                    avg_inv_value = (info.inventory_value_cumulative or 0) / player_ticks,
+                    placed_val_per_min = total_cost * 3600.0 / player_ticks,
+                    total_placed_cost = total_cost,
+                    playtime_ticks = player_ticks,
+                    placed = info.built_entities,
+                }
+                table.insert(player_table_entries, entry)
+            end
+        end
+    end
+    local sort_order = {{"force_name", 1}, {"placed_val_per_min", -1}}
+    table.sort(player_table_entries,
+        function(a, b)
+            for _, order in ipairs(sort_order) do
+                local col = order[1]
+                local dir = order[2]
+                local a_val = a[col]
+                local b_val = b[col]
+                if a_val ~= b_val then
+                    if dir == 1 then
+                        return a_val < b_val
+                    else
+                        return a_val > b_val
+                    end
+                end
+            end
+            return a.player_name < b.player_name
+        end)
+    for _, entry in ipairs(player_table_entries) do
+        local player_name = entry.player_name
+        local l = player_table.add { type = "label", caption = Functions.short_team_name_with_color(entry.force_name) }
+        l.style.font = "default-small"
+        local player = game.get_player(player_name)
+        l = player_table.add { type = "label", caption = (player and PlayerUtil.player_name_with_color(player) or player_name) }
+        l.style.font = "default-small"
+        l = player_table.add { type = "label", caption = ticks_to_hh_mm(entry.playtime_ticks) }
+        l.style.font = "default-small"
+        l = player_table.add { type = "label", caption = string_format("%.1f%%", entry.craft_frac * 100) }
+        l.style.font = "default-small"
+        l = player_table.add { type = "label", caption = string_format("%d", entry.avg_inv_value) }
+        l.style.font = "default-small"
+        l = player_table.add { type = "label", caption = string_format("%d", entry.placed_val_per_min) }
+        l.style.font = "default-small"
+        -- add horizontal flow, with each of per_player_build_items_to_display as a sprite with number
+        local player_flow = player_table.add { type = "flow", name = "player_flow_" .. player_name, direction = "horizontal" }
+        for _, item_name in ipairs(TeamStatsCollect.per_player_build_items_to_display) do
+            local item_info = entry.placed[item_name]
+            local built = item_info and item_info.built or 0
+            local mined = item_info and item_info.mined or 0
+            local net_built = math_max(0, built - mined)
+            local style = "slot"
+            if net_built > 0.5 * (max_placed_per_item[item_name] or 0) then
+                style = "green_slot"
+            elseif net_built > 0.1 * (max_placed_per_item[item_name] or 0) then
+                style = "yellow_slot"
+            end
+            local b = player_flow.add { type = "sprite-button", style = style, sprite = "item/" .. item_name, number = net_built, tooltip = string_format("Built %d, Mined %d", built, mined) }
+            --b.enabled = false
+            gui_style(b, {width = 30, height = 30, padding = -2})
+        end
+        local tooltip_items = {}
+        local total_built = 0
+        for item, item_info in pairs(entry.placed) do
+            if item_info.built - item_info.mined > 0 then
+                table.insert(tooltip_items, { item_info.built - item_info.mined, item })
+                total_built = total_built + item_info.built - item_info.mined
+            end
+        end
+        table.sort(tooltip_items, function(a, b) return a[1] > b[1] end)
+        local tooltips = {}
+        for _, item_info in ipairs(tooltip_items) do
+            table.insert(tooltips, string_format("[item=%s]: %d", item_info[2], item_info[1]))
+        end
+        local b = player_flow.add { type = "sprite-button", style = "slot", sprite = "info", number = total_built, tooltip = table.concat(tooltips, "\n") }
+        b.enabled = false
+        gui_style(b, {width = 30, height = 30, padding = -2})
+    end
+end
+
 ---@param player LuaPlayer
 ---@param stats TeamStats
-function TeamStatsCompare.show_stats(player, stats)
+---@param show_playerstats boolean
+function TeamStatsCompare.show_stats(player, stats, show_playerstats)
     if stats == nil then
         stats = TeamStatsCollect.compute_stats()
     end
@@ -40,6 +170,10 @@ function TeamStatsCompare.show_stats(player, stats)
     end
     frame = closable_frame.create_main_closable_frame(player, "teamstats_frame", "Team statistics")
     gui_style(frame, { padding = 8 })
+    if show_playerstats then
+        populate_player_stats(stats, frame)
+        return
+    end
     local scrollpanel = frame.add { type = "scroll-pane", name = "scroll_pane", direction = "vertical", horizontal_scroll_policy = "never", vertical_scroll_policy = "auto" }
 
     ---@param force_name string
@@ -238,17 +372,26 @@ commands.add_command("teamstats", "Show team stats", function (cmd)
     if not cmd.player_index then return end
     local player = game.get_player(cmd.player_index)
     if not player then return end
+    local prev = false
+    local show_playerstats = false
     local deny_reason
+    for word in string.gmatch(cmd.parameter or "", "%S+") do
+        if cmd.parameter == "prev" then
+            prev = true
+        elseif cmd.parameter == "alpha_playerstats" then
+            show_playerstats = true
+        else
+            player.print("Unsupported argument to /teamstats. Run either just '/teamstats' or '/teamstats prev'")
+            return
+        end
+    end
     local stats
-    if cmd.parameter == "prev" then
+    if prev then
         stats = global.prev_game_team_stats
         if not stats then
             player.print("No previous game stats available.")
             return
         end
-    elseif cmd.parameter and cmd.parameter ~= "" then
-        player.print("Unsupported argument to /teamstats. Run either just '/teamstats' or '/teamstats prev'")
-        return
     end
     -- allow it always in singleplayer, or if the game is over
     if not stats and not global.bb_game_won_by_team and game.is_multiplayer() then
@@ -264,7 +407,7 @@ commands.add_command("teamstats", "Show team stats", function (cmd)
         player.print("/teamstats for current game is unavailable: " .. deny_reason .. "\nYou can use '/teamstats prev' to see stats for the previous game.")
         return
     end
-    safe_wrap_with_player_print(player, TeamStatsCompare.show_stats, player, stats)
+    safe_wrap_with_player_print(player, TeamStatsCompare.show_stats, player, stats, show_playerstats)
 end)
 
 return TeamStatsCompare
