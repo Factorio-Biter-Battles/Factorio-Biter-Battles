@@ -86,10 +86,6 @@ local function main_frame(player)
     Public.comfy_panel_refresh_active_tab(player)
 end
 
-local function on_player_joined_game(event)
-    top_button(game.get_player(event.player_index))
-end
-
 local function on_gui_click(event)
     if not event.element then
         return
@@ -119,7 +115,6 @@ local function on_gui_click(event)
     Public.comfy_panel_refresh_active_tab(player)
 end
 
-event.add(defines.events.on_player_joined_game, on_player_joined_game)
 event.add(defines.events.on_gui_click, on_gui_click)
 
 return Public
