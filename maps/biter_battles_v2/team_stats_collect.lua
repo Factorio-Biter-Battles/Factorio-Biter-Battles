@@ -73,6 +73,20 @@ TeamStatsCollect.tracked_inventories = {
     ['spider-vehicle'] = true,
 }
 
+TeamStatsCollect.force_name_map = {
+    north_biters = 'north',
+    north_biters_boss = 'north',
+    south_biters = 'south',
+    south_biters_boss = 'south',
+}
+
+TeamStatsCollect.health_factor_map = {
+    north_biters = 1,
+    north_biters_boss = 20,
+    south_biters = 1,
+    south_biters_boss = 20,
+}
+
 local function update_teamstats()
     local team_stats = global.team_stats
     local tick = functions.get_ticks_since_game_start()
@@ -120,7 +134,7 @@ local function update_teamstats()
                 end
                 local kill_count = kill_stat.get_output_count(item_info.item)
                 if (kill_count or 0) > 0 then
-                    item_stat.lost = kill_count
+                    item_stat.kill_count = kill_count
                 end
             end
         end
@@ -196,40 +210,38 @@ function TeamStatsCollect.compute_stats()
     return stats
 end
 
+-- Tracks items lost by each team and damage inflicted to enemy biters
 ---@param event EventData.on_entity_died
 local function on_entity_died(event)
     local entity = event.entity
-    if not entity.valid then return end
-    if not event.damage_type then return end
-    local force_name, biter_force_name
-    local health_factor = 1
-    if entity.force.name == "north_biters" or entity.force.name == "north_biters_boss" then
-        force_name = "north"
-        biter_force_name = "north_biters"
-        if entity.force.name == "north_biters_boss" then health_factor = health_factor * 20 end
-    elseif entity.force.name == "south_biters" or entity.force.name == "south_biters_boss" then
-        force_name = "south"
-        biter_force_name = "south_biters"
-        if entity.force.name == "south_biters_boss" then health_factor = health_factor * 20 end
-    elseif entity.force.name == "north" or entity.force.name == "south" then
+    if not (entity and entity.valid) then return end
+    local entity_force_name = (entity.force and entity.force.name) or ''
+
+    -- North/South entities
+    if entity_force_name == 'north' or entity_force_name == 'south' then
         if TeamStatsCollect.tracked_inventories[entity.type] then
-            global.team_stats.forces[entity.force.name].items = global.team_stats.forces[entity.force.name].items or {}
-            local item_stats = global.team_stats.forces[entity.force.name].items
+            global.team_stats.forces[entity_force_name].items = global.team_stats.forces[entity_force_name].items or {}
+            local item_stats = global.team_stats.forces[entity_force_name].items
             for item, amount in pairs(functions.get_entity_contents(entity)) do
                 item_stats[item] = item_stats[item] or {}
                 item_stats[item].lost = (item_stats[item].lost or 0) + amount
             end
         end
         return
-    else
-        return
     end
-    health_factor = health_factor / (1 - global.reanim_chance[game.forces[biter_force_name].index] / 100)
+
+    -- North/South biters
+    if not event.damage_type then return end
+    local health_factor = TeamStatsCollect.health_factor_map[entity_force_name]
+    local force_name = TeamStatsCollect.force_name_map[entity_force_name]
+    if not health_factor or not force_name then return end
+
+    health_factor = health_factor / (1 - global.reanim_chance[game.forces[force_name .. '_biters'].index] / 100)
 
     local force_stats = global.team_stats.forces[force_name]
     local damage_stats = force_stats.damage_types[event.damage_type.name]
     if not damage_stats then
-        damage_stats = {kills = 0, damage = 0}
+        damage_stats = { kills = 0, damage = 0 }
         force_stats.damage_types[event.damage_type.name] = damage_stats
     end
     damage_stats.kills = damage_stats.kills + 1
