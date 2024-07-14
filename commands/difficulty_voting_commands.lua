@@ -42,11 +42,7 @@ local function close_difficulty_votes(cmd)
             player.print("Invalid difficulty parameter. Please provide either a difficulty name/abbreviation or mutagen effectiveness as a percentage, i.e. `33%'.")
             return
         end
-        local difficulty_name = difficulty_vote.difficulty_name()
-        if not global.difficulty_vote_index then
-            difficulty_name = string.format("%s (%d%%)", difficulty_name, global.difficulty_vote_value * 100)
-        end
-        local message = table.concat({">> Map difficulty has changed to ", difficulty_name, " difficulty!"})
+        local message = table.concat({">> Map difficulty has changed to ", difficulty_vote.difficulty_name(), " difficulty!"})
         game.print(message, difficulty_vote.difficulty_print_color())
         Server.to_discord_embed(message)
     end

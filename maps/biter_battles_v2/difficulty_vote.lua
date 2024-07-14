@@ -14,7 +14,7 @@ function Public.difficulty_name()
 	if index then
 		return difficulties[global.difficulty_vote_index].name
 	else
-		return "Custom"
+		return string.format("Custom (%d%%)", global.difficulty_vote_value * 100)
 	end
 end
 
