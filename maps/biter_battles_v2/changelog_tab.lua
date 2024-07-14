@@ -13,6 +13,9 @@ local function add_changelog(player, element)
 		table.insert(changelog_change, who)
 	end
 	
+	add_entry("2024-07-14", "Ragnarok77", "Captain : Fix wrong logging of game length in DB")
+	add_entry("2024-07-13", "PlayerNoon", "burners-balance. now player drop burners when left game")
+	add_entry("2024-07-13", "cliff_build", "captains on_player_left_game: fix bugs hopefully")
 	add_entry("2024-07-13", "RedRafe", "Sound enhancement")
 	add_entry("2024-07-13", "cliff_build", "/close-difficulty-vote: add optional param to force difficulty")
 	add_entry("2024-07-13", "cliff_build", "End game stats UI")
