@@ -1,6 +1,7 @@
 local Server = require 'utils.server'
 local Color = require 'utils.color_presets'
 local tables = require 'maps.biter_battles_v2.tables'
+local difficulty_vote = require 'maps.biter_battles_v2.difficulty_vote'
 
 local function revote()
     local player = game.player
@@ -41,6 +42,9 @@ local function close_difficulty_votes(cmd)
             player.print("Invalid difficulty parameter. Please provide either a difficulty name/abbreviation or mutagen effectiveness as a percentage, i.e. `33%'.")
             return
         end
+        local message = table.concat({">> Map difficulty has changed to ", difficulty_vote.difficulty_name(), " difficulty!"})
+        game.print(message, difficulty_vote.difficulty_print_color())
+        Server.to_discord_embed(message)
     end
     global.difficulty_votes_timeout = game.ticks_played
     local msg = player.name .. " closed difficulty voting"

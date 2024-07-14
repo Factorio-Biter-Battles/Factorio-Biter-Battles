@@ -20,6 +20,9 @@ local Task = require 'utils.task'
 local Token = require 'utils.token'
 local Color = require 'utils.color_presets'
 local ResearchInfo = require 'maps.biter_battles_v2.research_info'
+local DifficultyVote = require 'maps.biter_battles_v2.difficulty_vote'
+local ComfyMain = require 'comfy_panel.main'
+local ComfyPoll = require 'comfy_panel.poll'
 local autoTagWestOutpost = "[West]"
 local autoTagEastOutpost = "[East]"
 local autoTagDistance = 600
@@ -34,10 +37,15 @@ require "modules.spawners_contain_biters"
 local function on_player_joined_game(event)
 	local surface = game.surfaces[global.bb_surface_name]
 	local player = game.get_player(event.player_index)
+	if not player then return end
 	if player.online_time == 0 or player.force.name == "player" then
 		Functions.init_player(player)
 	end
 	Gui.clear_copy_history(player)
+	ComfyMain.comfy_panel_add_top_button(player)
+	ComfyPoll.create_top_button(player)
+	DifficultyVote.add_difficulty_gui_top_button(player)
+	Gui.create_biter_button(player)
 	Functions.create_map_intro_button(player)
 	--ResearchInfo.create_research_info_button(player)
 	Team_manager.draw_top_toggle_button(player)
