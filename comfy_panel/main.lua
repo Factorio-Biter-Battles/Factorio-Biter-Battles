@@ -40,7 +40,8 @@ function Public.comfy_panel_refresh_active_tab(player)
     comfy_panel_tabs[frame.name].gui(player, frame)
 end
 
-local function top_button(player)
+---@param player LuaPlayer
+function Public.comfy_panel_add_top_button(player)
     if player.gui.top['comfy_panel_top_button'] then
         return
     end

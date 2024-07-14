@@ -70,7 +70,7 @@ function Public.reset_tables_gui()
 	global.player_data_afk = {}
 end
 
-local function create_sprite_button(player)
+function Public.create_biter_button(player)
 	if player.gui.top["bb_toggle_button"] then return end
 	local button = player.gui.top.add({ type = "sprite-button", name = "bb_toggle_button", sprite = "entity/big-biter" })
 	gui_style(button, { width = 38, height = 38, padding = -2, font = "default-bold" })
@@ -750,7 +750,6 @@ local function on_player_joined_game(event)
 	--	end
 	--end
 
-	create_sprite_button(player)
 	Public.create_main_gui(player)
 end
 

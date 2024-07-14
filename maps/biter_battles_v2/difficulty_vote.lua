@@ -33,11 +33,7 @@ end
 
 local function difficulty_gui(player)
 	local b = player.gui.top["difficulty_gui"]
-	if not b then
-		b = player.gui.top.add { type = "sprite-button", name = "difficulty_gui" }
-		b.style.font = "heading-2"
-		gui_style(b, {width = 114, height = 38, padding = -2})
-	end
+	if not b then return end
 	b.style.font_color = Public.difficulty_print_color()
 	local value = math.floor(global.difficulty_vote_value*100)
 	local name = Public.difficulty_name()
@@ -52,6 +48,16 @@ local function difficulty_gui_all()
 	end
 end
 
+---@param player LuaPlayer
+local function add_difficulty_gui_top_button(player)
+	local b = player.gui.top["difficulty_gui"]
+	if not b then
+		b = player.gui.top.add { type = "sprite-button", name = "difficulty_gui" }
+		b.style.font = "heading-2"
+		gui_style(b, {width = 114, height = 38, padding = -2})
+	end
+	difficulty_gui(player)
+end
 
 local function is_captain_enabled()
 	return global.special_games_variables["captain_mode"] ~= nil
@@ -267,5 +273,6 @@ event.add(defines.events.on_player_joined_game, on_player_joined_game)
 Public.difficulties = difficulties
 Public.difficulty_gui = difficulty_gui
 Public.difficulty_gui_all = difficulty_gui_all
+Public.add_difficulty_gui_top_button = add_difficulty_gui_top_button
 
 return Public
