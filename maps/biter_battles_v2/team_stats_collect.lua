@@ -37,7 +37,7 @@ TeamStatsCollect.items_to_show_summaries_of = {
     {item = "fast-transport-belt", placed = true, space_after = true},
 
     {item = "roboport", placed = true},
-    {item = "construction-robot"},
+    {item = "construction-robot", placed = true},
     {item = "nuclear-reactor", placed = true, space_after = true},
 
     {item = "stone-wall", placed = true},
@@ -56,17 +56,19 @@ TeamStatsCollect.damage_render_info = {
     {"impact", "Impact [item=locomotive][item=car][item=tank]"},
 }
 
-TeamStatsCollect.tracked_inventories = {
+local tracked_inventories = {
     ['assembling-machine'] = true,
     ['boiler'] = true,
     ['car'] = true,
     ['cargo-wagon'] = true,
     ['character-corpse'] = true,
+    ['construction-robot'] = true,
     ['container'] = true,
     ['furnace'] = true,
     ['inserter'] = true,
     ['lab'] = true,
     ['logistic-container'] = true,
+    ['logistic-robot'] = true,
     ['reactor'] = true,
     ['roboport'] = true,
     ['rocket-silo'] = true,
@@ -219,9 +221,16 @@ local function on_entity_died(event)
 
     -- North/South entities
     if entity_force_name == 'north' or entity_force_name == 'south' then
-        if TeamStatsCollect.tracked_inventories[entity.type] then
-            global.team_stats.forces[entity_force_name].items = global.team_stats.forces[entity_force_name].items or {}
-            local item_stats = global.team_stats.forces[entity_force_name].items
+        local item_stats = global.team_stats.forces[entity_force_name].items
+        if not item_stats then
+            item_stats = {}
+            global.team_stats.forces[entity_force_name].items = item_stats
+        end
+        if entity.type == 'construction-robot' or entity.type == 'logistic-robot' then
+            item_stats[entity.name] = item_stats[entity.name] or {}
+            item_stats[entity.name].kill_count = (item_stats[entity.name].kill_count or 0) + 1
+        end
+        if tracked_inventories[entity.type] then
             for item, amount in pairs(functions.get_entity_contents(entity)) do
                 item_stats[item] = item_stats[item] or {}
                 item_stats[item].lost = (item_stats[item].lost or 0) + amount

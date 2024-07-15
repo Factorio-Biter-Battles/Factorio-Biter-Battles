@@ -509,7 +509,7 @@ end
 
 function Functions.get_entity_contents(entity)
 	local totals = {}
-	if not (entity and entity.valid and entity.get_max_inventory_index() > 0) then
+	if not (entity and entity.valid) then
 		return totals
 	end
 	for i_id = 1, entity.get_max_inventory_index() do
