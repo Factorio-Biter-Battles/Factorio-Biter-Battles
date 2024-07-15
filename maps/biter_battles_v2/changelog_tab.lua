@@ -13,6 +13,9 @@ local function add_changelog(player, element)
 		table.insert(changelog_change, who)
 	end
 	
+	add_entry("2024-07-15", "RedRafe", "Add inventory tracking for lost item teamstats")
+	add_entry("2024-07-14", "ness056", "Special game desync fixes and change in removable functions")
+	add_entry("2024-07-14", "cliff_build", "/close-difficulty-vote: add logging if difficulty changes")
 	add_entry("2024-07-14", "Ragnarok77", "Captain : Fix wrong logging of game length in DB")
 	add_entry("2024-07-13", "PlayerNoon", "burners-balance. now player drop burners when left game")
 	add_entry("2024-07-13", "cliff_build", "captains on_player_left_game: fix bugs hopefully")
