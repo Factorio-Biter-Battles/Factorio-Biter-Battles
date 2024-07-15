@@ -227,10 +227,11 @@ end
 local ResearchInfo = {}
 
 ---@param evt GuiEventData
-local function show_research_info_handler(evt)
+function ResearchInfo.show_research_info_handler(evt)
     local player = game.get_player(evt.player_index)
     ResearchInfo.show_research_info(player)
 end
+local show_research_info_handler = ResearchInfo.show_research_info_handler
 
 flui.add_handlers {
     research_info_button_click = show_research_info_handler
@@ -240,7 +241,7 @@ function ResearchInfo.create_research_info_button(element)
     ---@type GuiElemDef
     local template = {
         type = "sprite-button",
-        sprite = "item/space-science-pack",
+        sprite = "item/lab",
         name = "research_info_button",
         tooltip = "Science Info",
         style_mods = {

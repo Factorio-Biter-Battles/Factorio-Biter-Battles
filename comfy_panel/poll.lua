@@ -830,13 +830,12 @@ local function player_joined(event)
             update_poll_viewer(data)
         end
     else
-        local button = player.gui.top.add {
+        local button = Gui.add_mod_button(player, {
             type = 'sprite-button',
             name = main_button_name,
             sprite = 'item/programmable-speaker',
             tooltip = 'Let your question be heard!'
-        }
-        gui_style(button, {width = 38, height = 38, padding = -2})
+        })
     end
 end
 

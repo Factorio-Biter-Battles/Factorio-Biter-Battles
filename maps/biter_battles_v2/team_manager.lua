@@ -1,6 +1,7 @@
 local Public = {}
 local Functions = require "maps.biter_battles_v2.functions"
 local Server = require 'utils.server'
+local Gui = require 'utils.gui'
 local gui_style = require 'utils.utils'.gui_style
 local closable_frame = require "utils.ui.closable_frame"
 local forces = {
@@ -104,10 +105,7 @@ end
 
 function Public.draw_top_toggle_button(player)
 	if player.gui.top["team_manager_toggle_button"] then player.gui.top["team_manager_toggle_button"].destroy() end	
-	local button = player.gui.top.add({type = "sprite-button", name = "team_manager_toggle_button", caption = "Team Manager", tooltip = tooltip})
-	button.style.font = "heading-2"
-	button.style.font_color = {r = 0.88, g = 0.55, b = 0.11}
-	gui_style(button, {width = 114, height = 38, padding = -2})
+	local button = Gui.add_mod_button(player, {type = "sprite-button", name = "team_manager_toggle_button", sprite = "utility/force_editor_icon", tooltip = "Team Manager", index = 7})
 end
 
 local function draw_manager_gui(player)

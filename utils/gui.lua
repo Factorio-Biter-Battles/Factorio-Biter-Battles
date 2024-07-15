@@ -1,6 +1,8 @@
 local Token = require 'utils.token'
 local Event = require 'utils.event'
 local Global = require 'utils.global'
+local mod_gui = require '__core__/lualib/mod-gui'
+local gui_style = require 'utils.utils'.gui_style
 
 local tostring = tostring
 local next = next
@@ -113,6 +115,20 @@ end
 function Gui.clear(element)
     remove_children_data(element)
     element.clear()
+end
+
+---@param player LuaPlayer
+---@param frame userdata|table
+function Gui.add_mod_button(player, frame)
+	if mod_gui.get_button_flow(player)[frame.name] and mod_gui.get_button_flow(player)[frame.name].valid then
+		return mod_gui.get_button_flow(player)[frame.name]
+	end
+	if not frame.style then
+		frame.style = 'mod_gui_button'
+	end
+	local button = mod_gui.get_button_flow(player).add(frame)
+	gui_style(button, {font_color = { 165, 165, 165 }, font = 'heading-3', minimal_height = 36, maximal_height = 36, minimal_width = 40, padding = -2})
+    return button
 end
 
 local function clear_invalid_data()

@@ -11,6 +11,7 @@ draw_map_scores would be a function with the player and the frame as arguments
 ]]
 require "utils.profiler"
 local event = require 'utils.event'
+local Gui = require 'utils.gui'
 local gui_style = require 'utils.utils'.gui_style
 local closable_frame = require "utils.ui.closable_frame"
 comfy_panel_tabs = {}
@@ -44,9 +45,44 @@ local function top_button(player)
     if player.gui.top['comfy_panel_top_button'] then
         return
     end
-    local button = player.gui.top.add({type = 'sprite-button', name = 'comfy_panel_top_button', sprite = 'item/raw-fish'})
-    gui_style(button, {width = 38, height = 38, padding = -2})
+
+    local toggle = Gui.add_mod_button(player, {
+        type = 'sprite-button',
+        name = 'main_toggle_button_name',
+        sprite = 'utility/preset',
+        tooltip = 'Click to hide top buttons!',
+    })
+    gui_style(toggle, {minimal_width = 15, maximal_width = 15})
+
+    local button = Gui.add_mod_button(player, {
+        type = 'sprite-button',
+        name = 'comfy_panel_top_button',
+        sprite = 'item/raw-fish',
+    })
 end
+
+Gui.on_click('main_toggle_button_name', function (event)
+    local button = event.element
+    local player = event.player
+    local top = player.gui.top
+
+    local default = button.sprite == 'utility/preset'
+    button.sprite = default and 'utility/expand_dots_white' or 'utility/preset' 
+    button.tooltip = default and 'Click to show top buttons!' or 'Click to hide top buttons!'
+
+    for _, ele in pairs(top.mod_gui_top_frame.mod_gui_inner_frame.children) do
+        if ele and ele.valid and (ele.name ~= 'main_toggle_button_name' and ele.name ~= 'bb_frame_statistics') then
+            ele.visible = not default
+        end
+    end
+    for _, position in pairs({'screen', 'left', 'center'}) do
+        for _, ele in pairs(player.gui[position].children) do
+            if ele and ele.valid and ele.name ~= 'bb_floating_shortcuts' then
+                ele.visible = not default
+            end
+        end
+    end
+end)
 
 local function main_frame(player)
     local tabs = comfy_panel_tabs

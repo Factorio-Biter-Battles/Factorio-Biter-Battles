@@ -8,6 +8,7 @@ local math_abs = math.abs
 local math_min = math.min
 local math_floor = math.floor
 local string_find = string.find
+local Gui = require 'utils.gui'
 local gui_style = require 'utils.utils'.gui_style
 local closable_frame = require "utils.ui.closable_frame"
 
@@ -470,10 +471,7 @@ end
 
 function Functions.create_map_intro_button(player)
 	if player.gui.top["map_intro_button"] then return end
-	local b = player.gui.top.add({type = "sprite-button", caption = "?", name = "map_intro_button", tooltip = "Map Info"})
-	b.style.font_color = {r=0.5, g=0.3, b=0.99}
-	b.style.font = "heading-1"
-	gui_style(b, {width = 38, height = 38, padding = -2})
+	local b = Gui.add_mod_button(player, {type = "sprite-button", sprite = "utility/custom_tag_icon", name = "map_intro_button", tooltip = "Map Info", index = 6 })
 end
 
 function Functions.show_intro(player)

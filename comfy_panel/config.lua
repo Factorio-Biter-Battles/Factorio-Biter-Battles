@@ -1,6 +1,7 @@
 -- config tab --
 
 local Antigrief = require 'antigrief'
+local Shortcuts = require 'maps.biter_battles_v2.shortcuts'
 local Color = require 'utils.color_presets'
 local SessionData = require 'utils.datastore.session_data'
 local Utils = require 'utils.core'
@@ -116,6 +117,8 @@ local functions = {
             global.auto_hotbar_enabled[event.player_index] = false
         end
     end,
+    ['comfy_panel_floating_shortcuts'] = function(event)
+    end,
     ['comfy_panel_blueprint_toggle'] = function(event)
         if event.element.switch_state == 'left' then
             game.permissions.get_group('Default').set_allows_action(
@@ -172,7 +175,7 @@ local functions = {
 			get_actor(event, '{New Year Island}', "New Year island has been disabled!", true)
 		end
 	end,
-  
+
 	["bb_map_reveal_toggle"] = function(event)
 		if event.element.switch_state == "left" then
 			global.bb_settings['bb_map_reveal_toggle'] = true
@@ -182,7 +185,7 @@ local functions = {
 			game.print("Reveal map at start has been disabled!")
 		end
 	end,
-  
+
 	["bb_map_reroll_toggle"] = function(event)
 		if event.element.switch_state == "left" then
 			global.bb_settings.map_reroll = true
@@ -439,6 +442,15 @@ local build_config_gui = (function(player, frame)
         )
         scroll_pane.add({type = 'line'})
     end
+
+    switch_state = Shortcuts.get_main_frame(player).visible and 'left' or 'right'
+    add_switch(
+        scroll_pane,
+        switch_state,
+        'comfy_panel_floating_shortcuts',
+        'Floating shortcuts',
+        'Adds a minimalistic UI with game shortcuts'
+    )
 
     if admin then
         label = scroll_pane.add({type = 'label', caption = 'Admin Settings'})

@@ -3,6 +3,7 @@ local ai = require "maps.biter_battles_v2.ai"
 local event = require 'utils.event'
 local Server = require 'utils.server'
 local Tables = require "maps.biter_battles_v2.tables"
+local Gui = require 'utils.gui'
 local gui_style = require 'utils.utils'.gui_style
 local closable_frame = require "utils.ui.closable_frame"
 local Public = {}
@@ -12,9 +13,8 @@ local difficulties = Tables.difficulties
 local function difficulty_gui(player)
 	local b = player.gui.top["difficulty_gui"]
 	if not b then
-		b = player.gui.top.add { type = "sprite-button", name = "difficulty_gui" }
-		b.style.font = "heading-2"
-		gui_style(b, {width = 114, height = 38, padding = -2})
+		b = Gui.add_mod_button(player, { type = "sprite-button", name = "difficulty_gui" })
+		gui_style(b, {width = 114})
 	end
 	b.style.font_color = difficulties[global.difficulty_vote_index].print_color
 	local value = math.floor(global.difficulty_vote_value*100)

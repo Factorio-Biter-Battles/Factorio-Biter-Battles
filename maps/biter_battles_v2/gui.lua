@@ -11,6 +11,7 @@ local ResearchInfo = require "maps.biter_battles_v2.research_info"
 local TeamStatsCompare = require "maps.biter_battles_v2.team_stats_compare"
 local Tables = require "maps.biter_battles_v2.tables"
 local Captain_event = require "comfy_panel.special_games.captain"
+local Shortcuts = require 'maps.biter_battles_v2.shortcuts'
 local player_utils = require "utils.player"
 
 local wait_messages = Tables.wait_messages
@@ -19,6 +20,7 @@ local food_names = Tables.gui_foods
 local math_random = math.random
 local math_abs = math.abs
 local math_ceil = math.ceil
+local Gui = require 'utils.gui'
 local gui_style = require "utils.utils".gui_style
 local has_life = require "comfy_panel.special_games.limited_lives".has_life
 local gui_values = {
@@ -71,10 +73,71 @@ function Public.reset_tables_gui()
 end
 
 local function create_sprite_button(player)
-	if player.gui.top["bb_toggle_button"] then return end
-	local button = player.gui.top.add({ type = "sprite-button", name = "bb_toggle_button", sprite = "entity/big-biter" })
-	gui_style(button, { width = 38, height = 38, padding = -2, font = "default-bold" })
+	local top = player.gui.top
+	if top["bb_toggle_button"] then return end
+	local button = Gui.add_mod_button(player,{ type = "sprite-button", name = "bb_toggle_button", sprite = "entity/big-biter", tooltip = "Game info" })
+
+	local summary = Gui.add_mod_button(player, { type = "sprite-button", name = "bb_toggle_statistics", sprite = "utility/expand", tooltip = 'Show statistics!' })
+
+	local frame = top.mod_gui_top_frame.mod_gui_inner_frame.add { type = 'frame', name = 'bb_frame_statistics', style = 'finished_game_subheader_frame' }
+	frame.location = { x = 1, y = 38 }
+	gui_style(frame, { minimal_height = 36, maximal_height = 36 })
+
+	local label, line
+
+	label = frame.add({ type = 'label', caption = 'North', name = 'north_name'})
+	gui_style(label, { font = 'heading-2', right_padding = 4, left_padding = 4, font_color = gui_values.north.color1 })
+
+	label = frame.add({ type = 'label', caption = ' ', name = 'north_players'})
+	gui_style(label, { font = 'heading-2', right_padding = 4, left_padding = 4, font_color = { 165, 165, 165 } })
+
+	line = frame.add({ type = 'line', direction = 'vertical', style = 'dark_line' })
+
+	label = frame.add({ type = 'label', caption = ' ', name = 'north_evolution', font_color = { 165, 165, 165 }})
+	gui_style(label, { font = 'heading-2', right_padding = 4, left_padding = 4, font_color = gui_values.north.color1 })
+
+	line = frame.add({ type = 'line', direction = 'vertical', style = 'dark_line' })
+
+	label = frame.add({ type = 'label', caption = ' ', name = 'north_threat'})
+	gui_style(label, { font = 'heading-2', right_padding = 4, left_padding = 4, font_color = gui_values.north.color1 })
+
+	line = frame.add({ type = 'line', direction = 'vertical' })
+
+	label = frame.add({ type = 'label', caption = '00:00', name = 'clock'})
+	gui_style(label, { font = 'heading-2', right_padding = 4, left_padding = 4, font_color = { 165, 165, 165 } })
+
+	line = frame.add({ type = 'line', direction = 'vertical' })
+
+	label = frame.add({ type = 'label', caption = ' ', name = 'south_threat'})
+	gui_style(label, { font = 'heading-2', right_padding = 4, left_padding = 4, font_color = gui_values.south.color1 })
+
+	line = frame.add({ type = 'line', direction = 'vertical', style = 'dark_line', font_color = { 165, 165, 165 } })
+
+	label = frame.add({ type = 'label', caption = ' ', name = 'south_evolution'})
+	gui_style(label, { font = 'heading-2', right_padding = 4, left_padding = 4, font_color = gui_values.south.color1 })
+
+	line = frame.add({ type = 'line', direction = 'vertical', style = 'dark_line' })
+
+	label = frame.add({ type = 'label', caption = ' ', name = 'south_players'})
+	gui_style(label, { font = 'heading-2', right_padding = 4, left_padding = 4, font_color = { 165, 165, 165 } })
+
+	label = frame.add({ type = 'label', caption = 'South', name = 'south_name'})
+	gui_style(label, { font = 'heading-2', right_padding = 4, left_padding = 4, font_color = gui_values.south.color1 })
+
+	frame.visible = false
 end
+
+Gui.on_click('bb_toggle_statistics', function (event)
+	local button = event.element
+	local player = event.player
+	local top = player.gui.top
+
+	local default = button.sprite == 'utility/expand'
+	button.sprite = default and 'utility/collapse' or 'utility/expand' 
+	button.tooltip = default and 'Hide statistics!' or 'Show statistics!'
+
+	top.mod_gui_top_frame.mod_gui_inner_frame.bb_frame_statistics.visible = not top.mod_gui_top_frame.mod_gui_inner_frame.bb_frame_statistics.visible
+end)
 
 ---@param frame LuaGuiElement
 local function create_clock(frame)
@@ -87,19 +150,23 @@ local function create_clock(frame)
 	frame.add { type = "line" }
 end
 
----@param frame LuaGuiElement
----@param player LuaPlayer
-local function update_clock(frame, player)
+local function get_format_time()
 	local time_caption = "Not started"
 	local total_ticks = Functions.get_ticks_since_game_start()
 	if total_ticks > 0 then
 		local total_minutes = math.floor(total_ticks / (60 * 60))
 		local total_hours = math.floor(total_minutes / 60)
 		local minutes = total_minutes - (total_hours * 60)
-		time_caption = string.format("Time: %02d:%02d", total_hours, minutes)
+		time_caption = string.format("%02d:%02d", total_hours, minutes)
 	end
+	return time_caption
+end
 
-	frame.bb_main_clock_flow.bb_main_clock_label.caption = string.format("%s   Speed: %.2f", time_caption, game.speed)
+---@param frame LuaGuiElement
+---@param player LuaPlayer
+local function update_clock(frame, player)
+	frame.bb_main_clock_flow.bb_main_clock_label.caption = string.format("Time: %s   Speed: %.2f", get_format_time(), game.speed)
+	
 	local is_spec = player.force.name == "spectator"
 	frame.bb_main_clock_flow.research_info_button.visible =
 		global.bb_show_research_info == "always"
@@ -233,6 +300,26 @@ function Public.create_main_gui(player)
 	Public.refresh_main_gui(player)
 end
 
+---@param player LuaPlayer
+function Public.refresh_statistics(player)
+	local frame = player.gui.top.mod_gui_top_frame.mod_gui_inner_frame.bb_frame_statistics
+	if not frame or not frame.visible then
+		return
+	end
+
+	frame.clock.caption = get_format_time()
+
+	--frame.north_name.caption = 'North'
+	frame.north_players.caption = '([color=green]' .. #game.forces.north.connected_players .. '[/color])'
+	frame.north_evolution.caption = (math.floor(1000 * global.bb_evolution.north_biters) * 0.1) .. '%'
+	frame.north_threat.caption = threat_to_pretty_string(global.bb_threat.north_biters)
+
+	--frame.south_name.caption = 'South'
+	frame.south_players.caption = '([color=green]' .. #game.forces.south.connected_players .. '[/color])'
+	frame.south_evolution.caption = (math.floor(1000 * global.bb_evolution.south_biters) * 0.1) .. '%'
+	frame.south_threat.caption = threat_to_pretty_string(global.bb_threat.south_biters)
+end
+
 function Public.refresh_main_gui(player)
 	local is_spec = player.force.name == "spectator" or not global.chosen_team[player.name]
 	local frame = player.gui.left["bb_main_gui"]
@@ -337,7 +424,9 @@ end
 
 function Public.refresh()
 	for _, player in pairs(game.connected_players) do
+		Public.refresh_statistics(player)
 		Public.refresh_main_gui(player)
+		Shortcuts.refresh()
 	end
 	global.gui_refresh_delay = game.tick + 30
 end
@@ -729,6 +818,7 @@ local function on_player_joined_game(event)
 
 	create_sprite_button(player)
 	Public.create_main_gui(player)
+	Shortcuts.get_main_frame(player)
 end
 
 
