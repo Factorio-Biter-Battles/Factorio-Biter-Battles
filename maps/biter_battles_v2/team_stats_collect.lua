@@ -15,7 +15,7 @@ local difficulty_vote = require 'maps.biter_battles_v2.difficulty_vote'
 ---@field total_players? integer
 ---@field max_players? integer
 ---@field food table<string, {first_at?: integer, produced: number, consumed: number, sent: number}>
----@field items table<string, {first_at?: integer, produced?: number, placed?: number, lost?: number}>
+---@field items table<string, {first_at?: integer, produced?: number, placed?: number, lost?: number, kill_count?: number}>
 ---@field damage_types table<string, {kills?: integer, damage?: number}>
 
 ---@class TeamStats
@@ -57,6 +57,39 @@ TeamStatsCollect.damage_render_info = {
     {"electric", "Electric [item=discharge-defense-equipment][item=destroyer-capsule]"},
     {"poison", "Poison [item=poison-capsule]"},
     {"impact", "Impact [item=locomotive][item=car][item=tank]"},
+}
+
+local tracked_inventories = {
+    ['assembling-machine'] = true,
+    ['boiler'] = true,
+    ['car'] = true,
+    ['cargo-wagon'] = true,
+    ['character-corpse'] = true,
+    ['construction-robot'] = true,
+    ['container'] = true,
+    ['furnace'] = true,
+    ['inserter'] = true,
+    ['lab'] = true,
+    ['logistic-container'] = true,
+    ['logistic-robot'] = true,
+    ['reactor'] = true,
+    ['roboport'] = true,
+    ['rocket-silo'] = true,
+    ['spider-vehicle'] = true,
+}
+
+local force_name_map = {
+    north_biters = 'north',
+    north_biters_boss = 'north',
+    south_biters = 'south',
+    south_biters_boss = 'south',
+}
+
+local health_factor_map = {
+    north_biters = 1,
+    north_biters_boss = 20,
+    south_biters = 1,
+    south_biters_boss = 20,
 }
 
 local function update_teamstats()
@@ -108,7 +141,7 @@ local function update_teamstats()
                 end
                 local kill_count = kill_stat.get_output_count(item_info.item)
                 if (kill_count or 0) > 0 then
-                    item_stat.lost = kill_count
+                    item_stat.kill_count = kill_count
                 end
             end
         end
@@ -184,30 +217,45 @@ function TeamStatsCollect.compute_stats()
     return stats
 end
 
+-- Tracks items lost by each team and damage inflicted to enemy biters
 ---@param event EventData.on_entity_died
 local function on_entity_died(event)
     local entity = event.entity
-    if not entity.valid then return end
-    if not event.damage_type then return end
-    local force_name, biter_force_name
-    local health_factor = 1
-    if entity.force.name == "north_biters" or entity.force.name == "north_biters_boss" then
-        force_name = "north"
-        biter_force_name = "north_biters"
-        if entity.force.name == "north_biters_boss" then health_factor = health_factor * 20 end
-    elseif entity.force.name == "south_biters" or entity.force.name == "south_biters_boss" then
-        force_name = "south"
-        biter_force_name = "south_biters"
-        if entity.force.name == "south_biters_boss" then health_factor = health_factor * 20 end
-    else
+    if not (entity and entity.valid) then return end
+    local entity_force_name = (entity.force and entity.force.name) or ''
+
+    -- North/South entities
+    if entity_force_name == 'north' or entity_force_name == 'south' then
+        local item_stats = global.team_stats.forces[entity_force_name].items
+        if not item_stats then
+            item_stats = {}
+            global.team_stats.forces[entity_force_name].items = item_stats
+        end
+        if entity.type == 'construction-robot' or entity.type == 'logistic-robot' then
+            item_stats[entity.name] = item_stats[entity.name] or {}
+            item_stats[entity.name].kill_count = (item_stats[entity.name].kill_count or 0) + 1
+        end
+        if tracked_inventories[entity.type] then
+            for item, amount in pairs(functions.get_entity_contents(entity)) do
+                item_stats[item] = item_stats[item] or {}
+                item_stats[item].lost = (item_stats[item].lost or 0) + amount
+            end
+        end
         return
     end
-    health_factor = health_factor / (1 - global.reanim_chance[game.forces[biter_force_name].index] / 100)
+
+    -- North/South biters
+    if not event.damage_type then return end
+    local health_factor = health_factor_map[entity_force_name]
+    local force_name = force_name_map[entity_force_name]
+    if not health_factor or not force_name then return end
+
+    health_factor = health_factor / (1 - global.reanim_chance[game.forces[force_name .. '_biters'].index] / 100)
 
     local force_stats = global.team_stats.forces[force_name]
     local damage_stats = force_stats.damage_types[event.damage_type.name]
     if not damage_stats then
-        damage_stats = {kills = 0, damage = 0}
+        damage_stats = { kills = 0, damage = 0 }
         force_stats.damage_types[event.damage_type.name] = damage_stats
     end
     damage_stats.kills = damage_stats.kills + 1
