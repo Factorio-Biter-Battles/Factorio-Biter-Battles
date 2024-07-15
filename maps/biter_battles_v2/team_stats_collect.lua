@@ -14,7 +14,7 @@ local event = require 'utils.event'
 ---@field total_players? integer
 ---@field max_players? integer
 ---@field food table<string, {first_at?: integer, produced: number, consumed: number, sent: number}>
----@field items table<string, {first_at?: integer, produced?: number, placed?: number, lost?: number}>
+---@field items table<string, {first_at?: integer, produced?: number, placed?: number, lost?: number, kill_count?: number}>
 ---@field damage_types table<string, {kills?: integer, damage?: number}>
 
 ---@class TeamStats
@@ -73,14 +73,14 @@ TeamStatsCollect.tracked_inventories = {
     ['spider-vehicle'] = true,
 }
 
-TeamStatsCollect.force_name_map = {
+local force_name_map = {
     north_biters = 'north',
     north_biters_boss = 'north',
     south_biters = 'south',
     south_biters_boss = 'south',
 }
 
-TeamStatsCollect.health_factor_map = {
+local health_factor_map = {
     north_biters = 1,
     north_biters_boss = 20,
     south_biters = 1,
@@ -232,8 +232,8 @@ local function on_entity_died(event)
 
     -- North/South biters
     if not event.damage_type then return end
-    local health_factor = TeamStatsCollect.health_factor_map[entity_force_name]
-    local force_name = TeamStatsCollect.force_name_map[entity_force_name]
+    local health_factor = health_factor_map[entity_force_name]
+    local force_name = force_name_map[entity_force_name]
     if not health_factor or not force_name then return end
 
     health_factor = health_factor / (1 - global.reanim_chance[game.forces[force_name .. '_biters'].index] / 100)
