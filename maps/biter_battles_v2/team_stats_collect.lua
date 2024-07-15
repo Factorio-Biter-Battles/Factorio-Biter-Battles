@@ -36,7 +36,7 @@ TeamStatsCollect.items_to_show_summaries_of = {
     {item = "transport-belt", placed = true},
     {item = "fast-transport-belt", placed = true, space_after = true},
 
-    {item = "roboport", placed = true},
+    {item = "roboport"},
     {item = "construction-robot", placed = true},
     {item = "nuclear-reactor", placed = true, space_after = true},
 
