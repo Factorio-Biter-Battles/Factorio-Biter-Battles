@@ -485,12 +485,19 @@ end
 ---@param player LuaPlayer
 function ResearchInfo.show_research_info(player)
     local all_technologies = game.forces.spectator.technologies
-    if player.gui.screen["research_info_frame"] then
-        player.gui.screen["research_info_frame"].bring_to_front()
-        player.gui.screen["research_info_frame"].force_auto_center()
+    local frame = player.gui.screen["research_info_frame"]
+
+    if frame and frame.valid then
+        --player.gui.screen["research_info_frame"].bring_to_front()
+        --player.gui.screen["research_info_frame"].force_auto_center()
+        if player.opened == frame then
+            player.opened = nil
+        end
+        frame.destroy()
         return
     end
-    local frame = closable_frame.create_main_closable_frame(player, "research_info_frame", "Research summary for both teams")
+
+    frame = closable_frame.create_main_closable_frame(player, "research_info_frame", "Research summary for both teams")
     local scroll = frame.add({ type = "scroll-pane", horizontal_scroll_policy = "never", vertical_scroll_policy = "always", name = "scroll" })
     local named_elements = flui.add(scroll, UI)
     named_elements["team_name_south"].caption = Functions.team_name_with_color("south")

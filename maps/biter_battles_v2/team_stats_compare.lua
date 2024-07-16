@@ -260,6 +260,7 @@ commands.add_command("teamstats", "Show team stats", function (cmd)
     end
     if deny_reason then
         player.print("/teamstats for current game is unavailable: " .. deny_reason .. "\nYou can use '/teamstats prev' to see stats for the previous game.")
+        Sounds.notify_player(player, "utility/cannot_build")
         return
     end
     safe_wrap_with_player_print(player, TeamStatsCompare.show_stats, player, stats)

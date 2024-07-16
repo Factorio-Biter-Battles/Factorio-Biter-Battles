@@ -471,7 +471,7 @@ end
 
 function Functions.create_map_intro_button(player)
 	if player.gui.top["map_intro_button"] then return end
-	local b = Gui.add_mod_button(player, {type = "sprite-button", sprite = "utility/custom_tag_icon", name = "map_intro_button", tooltip = "Map Info", index = 6 })
+	local b = Gui.add_mod_button(player, {type = "sprite-button", sprite = "utility/custom_tag_icon", name = "map_intro_button", tooltip = "[font=default-bold]Scenario Info[/font] - Read the introduction to Biter Battles", index = 6 })
 end
 
 function Functions.show_intro(player)

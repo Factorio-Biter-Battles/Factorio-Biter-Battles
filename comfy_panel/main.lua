@@ -57,7 +57,8 @@ local function top_button(player)
     local button = Gui.add_mod_button(player, {
         type = 'sprite-button',
         name = 'comfy_panel_top_button',
-        sprite = 'item/raw-fish',
+        sprite = 'utility/favourite_server_icon',
+        tooltip = '[font=default-bold]Menu & Settings[/font]'
     })
 end
 
@@ -87,7 +88,7 @@ end)
 local function main_frame(player)
     local tabs = comfy_panel_tabs
 
-    local frame_ = closable_frame.create_main_closable_frame(player, 'comfy_panel', "Comfy Panel")
+    local frame_ = closable_frame.create_main_closable_frame(player, 'comfy_panel', "Menu & Settings")
     local frame = frame_.add({type = "frame", name = "comfy_panel_inside", style = "inside_deep_frame_for_tabs"})
 
     local tabbed_pane = frame.add({type = 'tabbed-pane', name = 'tabbed_pane'})

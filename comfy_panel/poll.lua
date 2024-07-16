@@ -834,7 +834,7 @@ local function player_joined(event)
             type = 'sprite-button',
             name = main_button_name,
             sprite = 'item/programmable-speaker',
-            tooltip = 'Let your question be heard!'
+            tooltip = '[font=default-bold]Polls[/font] - see current/past polls'
         })
     end
 end

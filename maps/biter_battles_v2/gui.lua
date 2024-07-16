@@ -72,10 +72,10 @@ function Public.reset_tables_gui()
 	global.player_data_afk = {}
 end
 
-local function create_sprite_button(player)
+local function create_top_gui_buttons(player)
 	local top = player.gui.top
 	if top["bb_toggle_button"] then return end
-	local button = Gui.add_mod_button(player,{ type = "sprite-button", name = "bb_toggle_button", sprite = "entity/big-biter", tooltip = "Game info" })
+	local button = Gui.add_mod_button(player,{ type = "sprite-button", name = "bb_toggle_button", sprite = "entity/big-biter", tooltip = "[font=default-bold]Game Info[/font] - Toggle left gui" })
 
 	local summary = Gui.add_mod_button(player, { type = "sprite-button", name = "bb_toggle_statistics", sprite = "utility/expand", tooltip = 'Show statistics!' })
 
@@ -124,6 +124,7 @@ local function create_sprite_button(player)
 	label = frame.add({ type = 'label', caption = 'South', name = 'south_name'})
 	gui_style(label, { font = 'heading-2', right_padding = 4, left_padding = 4, font_color = gui_values.south.color1 })
 
+	Public.refresh_statistics(player)
 	frame.visible = false
 end
 
@@ -816,7 +817,7 @@ local function on_player_joined_game(event)
 	--	end
 	--end
 
-	create_sprite_button(player)
+	create_top_gui_buttons(player)
 	Public.create_main_gui(player)
 	Shortcuts.get_main_frame(player)
 end
