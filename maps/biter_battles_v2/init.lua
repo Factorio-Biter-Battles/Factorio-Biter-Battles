@@ -2,6 +2,10 @@ local Terrain = require "maps.biter_battles_v2.terrain"
 local Score = require "comfy_panel.score"
 local Tables = require "maps.biter_battles_v2.tables"
 local Blueprint = require 'maps.biter_battles_v2.blueprints'
+local Queue = require 'utils.queue'
+local q_size = Queue.size
+local q_push = Queue.push
+local q_pop  = Queue.pop
 
 local Public = {}
 
@@ -118,6 +122,7 @@ function Public.initial_setup()
 
 	global.suspend_time_limit = 3600
 	global.reroll_time_limit = 1800
+	global.chart_queue = Queue.new()
 	global.gui_refresh_delay = 0
 	global.bb_debug = false
 	global.bb_draw_revive_count_text = false
@@ -201,18 +206,20 @@ function Public.reveal_map()
 		return
 	end
 
-	local surface = game.surfaces[global.bb_surface_name]
-	local spectator = game.forces.spectator
+	local chart_queue = global.chart_queue
+	Queue.clear(chart_queue)
+
 	local width = 2000 -- for one side
 	local height = 500 -- for one side
 
 	for x = 16, width, 32 do
 		for y = 16, height, 32 do
-			spectator.chart(surface, {{-x, -y}, {-x, -y}})
-			spectator.chart(surface, {{x, -y}, {x, -y}})
-			spectator.chart(surface, {{-x, y}, {-x, y}})
-			spectator.chart(surface, {{x, y}, {x, y}})
+			q_push(chart_queue, {{-x, -y}, {-x, -y}})
+			q_push(chart_queue, {{ x, -y}, { x, -y}})
+			q_push(chart_queue, {{-x,  y}, {-x,  y}})
+			q_push(chart_queue, {{ x,  y}, { x,  y}})
 		end
+		q_push(chart_queue, {{-16, -16}, {16, 16}})
 	end
 end
 
@@ -355,6 +362,18 @@ function Public.load_spawn()
 		surface.request_to_generate_chunks({x = -16, y = y * -1 - 16}, 0)
 		surface.request_to_generate_chunks({x = -48, y = y * -1 - 16}, 0)
 		surface.request_to_generate_chunks({x = -80, y = y * -1 - 16}, 0)
+	end
+end
+
+function Public.pop_chunk_requests()
+	local max_requests = 65 -- 16 chunks * 4 + 1 starting area
+	local chart_queue = global.chart_queue
+	local surface = game.surfaces[global.bb_surface_name]
+	local spectator = game.forces.spectator
+
+	while max_requests > 0 and q_size(chart_queue) > 0 do
+		spectator.chart(surface, q_pop(chart_queue))
+		max_requests = max_requests - 1
 	end
 end
 
