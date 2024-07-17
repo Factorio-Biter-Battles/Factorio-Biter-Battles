@@ -4,38 +4,11 @@ local gui_style = require 'utils.utils'.gui_style
 local closable_frame = require "utils.ui.closable_frame"
 local Event = require 'utils.event'
 local player_utils = require "utils.player"
+local CaptainUtils = require 'comfy_panel.special_games.captain_utils'
 local max_num_organization_groups = 11
 
 function CaptainTaskGroup.get_max_num_organization_groups()
 	return max_num_organization_groups
-end
-
----@param names string[]
----@return string
-local function pretty_print_player_list(names)
-	return table.concat(player_utils.get_sorted_colored_player_list(player_utils.get_lua_players_from_player_names(names)), ", ")
-end
-
-local function isStringInTable(tab, str)
-	for _, entry in ipairs(tab) do
-		if entry == str then
-			return true
-		end
-	end
-	return false
-end
-
-local function cpt_get_player(playerName)
-	local special = global.special_games_variables["captain_mode"]
-	if special and special.test_players and special.test_players[playerName] then
-		local res = table.deepcopy(special.test_players[playerName])
-		res.print = function(msg, color)
-			game.print("to player " .. playerName .. ":" .. msg, color)
-		end
-		res.force = {name = (global.chosen_team[playerName] or "spectator")}
-		return res
-	end
-	return game.get_player(playerName)
 end
 
 function CaptainTaskGroup.destroy_team_organization_gui(player)
@@ -44,7 +17,7 @@ function CaptainTaskGroup.destroy_team_organization_gui(player)
 end
 
 function CaptainTaskGroup.team_organization_can_edit_all(player)
-	return isStringInTable(global.special_games_variables["captain_mode"]["captainList"], player.name)
+	return CaptainUtils.isStringInTable(global.special_games_variables["captain_mode"]["captainList"], player.name)
 end
 
 function CaptainTaskGroup.team_organization_can_edit_group_name(player, group)
@@ -92,7 +65,7 @@ function CaptainTaskGroup.update_team_organization_gui_player(player)
         -- Update player list
         local player_list = gui_table["player_list_" .. i]
         if player_list then
-            player_list.caption = pretty_print_player_list(group.player_order)
+            player_list.caption = CaptainUtils.pretty_print_player_list(group.player_order)
         end
         
         -- Show/hide captain controls and placeholders
@@ -201,7 +174,7 @@ local function on_gui_click(event)
 	if not element then return end
 	if not element.valid then return end
 	if not element.type == "button" then return end
-	local player = cpt_get_player(event.player_index)
+	local player = CaptainUtils.cpt_get_player(event.player_index)
 	if not player then return end
 	local special = global.special_games_variables["captain_mode"]
 	if not special then return end
