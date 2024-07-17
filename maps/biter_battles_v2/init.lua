@@ -207,7 +207,8 @@ function Public.reveal_map()
 	end
 
 	local chart_queue = global.chart_queue
-	Queue.clear(chart_queue)
+	-- important to flush the queue upon resetting a map or chunk requests from previous maps could overlap
+	Queue.clear(chart_queue) 
 
 	local width = 2000 -- for one side
 	local height = 500 -- for one side
@@ -365,8 +366,9 @@ function Public.load_spawn()
 	end
 end
 
-function Public.pop_chunk_requests()
-	local max_requests = 65 -- 16 chunks * 4 + 1 starting area
+---@param max_requests number
+function Public.pop_chunk_request(max_requests)
+	max_requests = max_requests or 1
 	local chart_queue = global.chart_queue
 	local surface = game.surfaces[global.bb_surface_name]
 	local spectator = game.forces.spectator

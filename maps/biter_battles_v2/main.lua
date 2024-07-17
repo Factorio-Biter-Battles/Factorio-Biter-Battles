@@ -432,8 +432,18 @@ local function on_tick()
 		ResearchInfo.update_research_info_ui()
 	end
 
+	--[[
+		Map width: 2000 tiles (~64 chunks) each direction
+		Map height: 500 tiles (~16 chunks) each direction
+		Estimated time for complete reveal: 90s (5400 ticks)
+
+		pop_chunk_request will chart the queued chunk requests issued during a new map reveal.
+		We chart 65 chunks each iteration because of 16-chunks-tall zones NE, NW, SE, SW, + 1 bonus chunk which is the starting area.
+		To fully reveal the new map within the time window, the time interval between requests should be ~84 ticks (5400 / 64-chunks-length),
+		plus + 24 ticks as offset to avoid tick_0
+	]]
 	if (tick+24) % 84 == 0 then
-		Init.pop_chunk_requests()
+		Init.pop_chunk_request(65)
 	end
 end
 
