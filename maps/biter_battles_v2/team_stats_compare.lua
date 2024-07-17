@@ -50,7 +50,7 @@ function TeamStatsCompare.show_stats(player, stats)
         local team_frame = top_table.add { type = "frame", name = "summary_" .. force_name, direction = "vertical" }
         gui_style(team_frame, { padding = 8 })
         local team_label = team_frame.add { type = "label", caption = Functions.team_name_with_color(force_name) }
-        gui_style(team_label, { font = "heading-2" })
+        gui_style(team_label, { font = "heading-2", single_line = false, maximal_width = 150})
         local simple_stats = {
             {"Final evo:", string_format("%d%%", (force_stats.final_evo or 0) * 100)},
             {"Peak threat:", threat_to_pretty_string(force_stats.peak_threat or 0)},
@@ -77,7 +77,7 @@ function TeamStatsCompare.show_stats(player, stats)
         local centering_table = shared_frame.add { type = "table", name = "centering_table", column_count = 1 }
         centering_table.style.column_alignments[1] = "center"
         local l
-        l = centering_table.add { type = "label", caption = string_format("Difficulty: %s (%d%%)", Tables.difficulties[global.difficulty_vote_index].short_name, global.difficulty_vote_value * 100) }
+        l = centering_table.add { type = "label", caption = string_format("Difficulty: %s (%d%%)", (stats.difficulty or ""), (stats.difficulty_value or 0) * 100) }
         l.style.font = "default-small"
         l = centering_table.add { type = "label", caption = string_format("Duration: %s", ticks_to_hh_mm(stats.ticks or 0)) }
         l.style.font = "default-small"
@@ -149,6 +149,8 @@ function TeamStatsCompare.show_stats(player, stats)
         for _, item_info in ipairs(TeamStatsCollect.items_to_show_summaries_of) do
             local force_stats = stats.forces[force_name]
             local item_stats = force_stats.items[item_info.item] or {}
+            local killed_or_lost = (item_stats.kill_count or 0) + (item_stats.lost or 0)
+            if killed_or_lost == 0 then killed_or_lost = nil end
             local l
             l = item_table.add { type = "label", caption = string_format("[item=%s]", item_info.item) }
             l.style.font = font
@@ -161,7 +163,7 @@ function TeamStatsCompare.show_stats(player, stats)
             l.style.font = font
             l = item_table.add { type = "label", caption = item_stats.placed and format_with_thousands_sep(item_stats.placed) or "" }
             l.style.font = font
-            l = item_table.add { type = "label", caption = item_stats.lost and format_with_thousands_sep(item_stats.lost) or "" }
+            l = item_table.add { type = "label", caption = killed_or_lost and format_with_thousands_sep(killed_or_lost) or "" }
             l.style.font = font
         end
     end

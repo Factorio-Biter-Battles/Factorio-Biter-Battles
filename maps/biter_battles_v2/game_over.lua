@@ -474,7 +474,7 @@ function Public.silo_death(event)
 			log_to_db('[NorthTeam]'..listPicks..'\n',true)
 			listPicks = table.concat(global.special_games_variables["captain_mode"]["stats"]["southPicks"],";")
 			log_to_db('[SouthTeam]'..listPicks..'\n',true)
-			log_to_db('[Gamelength]'..Functions.get_ticks_since_game_start()..'\n',true)
+			log_to_db('[Gamelength]'..game.ticks_played..'\n',true)
 			log_to_db('[StartTick]'..global.special_games_variables["captain_mode"]["stats"]["tickGameStarting"]..'\n',true)
 			log_to_db('[WinnerTeam]'..global.bb_game_won_by_team..'\n',true)
 			log_to_db('[ExtraInfo]'..global.special_games_variables["captain_mode"]["stats"]["extrainfo"]..'\n',true)
@@ -556,6 +556,10 @@ decrement_timer_token = Token.register(
                 end
             end
 
+            if global.reroll_time_left <= 30 then
+                Sounds.notify_all('utility/armor_insert')
+            end
+
             Task.set_timeout_in_ticks(60, decrement_timer_token)
         else
             stop_map_reroll()
@@ -589,6 +593,7 @@ local function start_map_reroll()
         for _, player in pairs(game.connected_players) do
             draw_reroll_gui(player)
         end
+        Sounds.notify_all('utility/scenario_message')
     end
 end
 

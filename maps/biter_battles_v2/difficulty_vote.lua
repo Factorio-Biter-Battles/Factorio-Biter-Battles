@@ -10,6 +10,28 @@ local Public = {}
 
 local difficulties = Tables.difficulties
 
+function Public.difficulty_name()
+	local index = global.difficulty_vote_index
+	if index then
+		return difficulties[global.difficulty_vote_index].name
+	else
+		return string.format("Custom (%d%%)", global.difficulty_vote_value * 100)
+	end
+end
+
+function Public.short_difficulty_name()
+	local index = global.difficulty_vote_index
+	if index then
+		return difficulties[global.difficulty_vote_index].short_name
+	else
+		return "Custom"
+	end
+end
+
+function Public.difficulty_print_color()
+	return difficulties[global.difficulty_vote_index or 3].print_color
+end
+
 local function difficulty_gui(player)
 	local b = player.gui.top["difficulty_gui"]
 	if not b then
@@ -18,8 +40,9 @@ local function difficulty_gui(player)
 	end
 	b.style.font_color = difficulties[global.difficulty_vote_index].print_color
 	local value = math.floor(global.difficulty_vote_value*100)
-	local str = table.concat({"Global map difficulty is ", difficulties[global.difficulty_vote_index].name, ". Mutagen has ", value, "% effectiveness."})
-	b.caption = difficulties[global.difficulty_vote_index].name
+	local name = Public.difficulty_name()
+	local str = table.concat({"Global map difficulty is ", name, ". Mutagen has ", value, "% effectiveness."})
+	b.caption = name
 	b.tooltip = str
 end
 
@@ -29,6 +52,16 @@ local function difficulty_gui_all()
 	end
 end
 
+---@param player LuaPlayer
+local function add_difficulty_gui_top_button(player)
+	local b = player.gui.top["difficulty_gui"]
+	if not b then
+		b = player.gui.top.add { type = "sprite-button", name = "difficulty_gui" }
+		b.style.font = "heading-2"
+		gui_style(b, {width = 114, height = 38, padding = -2})
+	end
+	difficulty_gui(player)
+end
 
 local function is_captain_enabled()
 	return global.special_games_variables["captain_mode"] ~= nil
@@ -126,10 +159,6 @@ local function set_difficulty()
 end
 
 local function on_player_joined_game(event)
-	if not global.difficulty_vote_value then global.difficulty_vote_value = 1 end
-	if not global.difficulty_vote_index then global.difficulty_vote_index = 4 end
-	if not global.difficulty_player_votes then global.difficulty_player_votes = {} end
-	
 	local player = game.get_player(event.player_index)
 	if game.ticks_played < global.difficulty_votes_timeout then
 		if not global.difficulty_player_votes[player.name] then
@@ -248,5 +277,6 @@ event.add(defines.events.on_player_joined_game, on_player_joined_game)
 Public.difficulties = difficulties
 Public.difficulty_gui = difficulty_gui
 Public.difficulty_gui_all = difficulty_gui_all
+Public.add_difficulty_gui_top_button = add_difficulty_gui_top_button
 
 return Public

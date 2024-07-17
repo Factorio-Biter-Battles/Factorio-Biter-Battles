@@ -458,6 +458,26 @@ local get_player_data = function (player, remove)
 	return global.player_data_afk[player.name]
 end
 
+local function drop_burners(player, forced_join)
+	if forced_join then 
+		global.got_burners[player.name] = nil
+		return
+	end
+	if global.training_mode or not (global.bb_settings.burners_balance) then 		
+		return
+	end			
+	local burners_to_drop = player.get_item_count("burner-mining-drill")	
+	if burners_to_drop ~= 0 then
+    	local items = player.surface.spill_item_stack(player.position,{name="burner-mining-drill", count = burners_to_drop}, false, nil, false )
+		player.remove_item({name="burner-mining-drill", count = burners_to_drop})
+	end
+end
+
+local function on_player_left_game(event)
+	local player = game.get_player(event.player_index)
+	drop_burners(player)
+end
+
 function Public.burners_balance(player)
 	if player.force.name == "spectator" then 
 		return 
@@ -574,6 +594,7 @@ function join_team(player, force_name, forced_join, auto_join)
 		game.permissions.get_group("Default").add_player(player)
 		local msg = table.concat({ "Team ", player.force.name, " player ", player.name, " is no longer spectating." })
 		game.print(msg, { r = 0.98, g = 0.66, b = 0.22 })
+		Sounds.notify_allies(player.force, "utility/build_blueprint_large")
 		Server.to_discord_bold(msg)
 		global.spectator_rejoin_delay[player.name] = game.tick
 		player.spectator = false
@@ -639,12 +660,14 @@ function spectate(player, forced_join, stored_position)
 
 	player.driving = false
 	player.clear_cursor()
+	drop_burners(player, forced_join)
 
 	if stored_position then
 		local p_data = get_player_data(player)
 		p_data.position = player.position
 	end
 	player.teleport(player.surface.find_non_colliding_position("character", { 0, 0 }, 4, 1))
+	Sounds.notify_player(player, "utility/build_blueprint_large")
 	player.force = game.forces.spectator
 	player.character.destructible = false
 	if not forced_join then
@@ -825,5 +848,6 @@ end
 
 event.add(defines.events.on_gui_click, on_gui_click)
 event.add(defines.events.on_player_joined_game, on_player_joined_game)
+event.add(defines.events.on_player_left_game, on_player_left_game)
 
 return Public

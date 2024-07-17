@@ -104,6 +104,9 @@ local function do_remaining_time(poll, remaining_time_label)
     local ticks = end_tick - game.tick
     if ticks < 0 then
         remaining_time_label.caption = 'Poll Finished.'
+        if ticks == -1 then
+            Sounds.notify_all('utility/achievement_unlocked')
+        end
         polls.running = false
         return false
     else
@@ -815,6 +818,17 @@ local function vote(event)
             end
         end
     end
+end
+
+function Class.create_top_button(player)
+    if player.gui.top[main_button_name] ~= nil then return end
+    local button = player.gui.top.add {
+        type = 'sprite-button',
+        name = main_button_name,
+        sprite = 'item/programmable-speaker',
+        tooltip = 'Let your question be heard!'
+    }
+    gui_style(button, {width = 38, height = 38, padding = -2})
 end
 
 local function player_joined(event)
