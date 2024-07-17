@@ -1,7 +1,6 @@
 -- config tab --
 
 local Antigrief = require 'antigrief'
-local Shortcuts = require 'maps.biter_battles_v2.shortcuts'
 local Color = require 'utils.color_presets'
 local SessionData = require 'utils.datastore.session_data'
 local Utils = require 'utils.core'

@@ -13,6 +13,7 @@ local Muted = require "utils.muted"
 ---Disabled according to discord poll https://discord.com/channels/823696400797138974/823771211421974579/1241772236268896276
 -- require 'modules.simple_tags'
 local Team_manager = require "maps.biter_battles_v2.team_manager"
+local Shortcuts = require 'maps.biter_battles_v2.shortcuts'
 local Terrain = require "maps.biter_battles_v2.terrain"
 local Session = require 'utils.datastore.session_data'
 local Server = require 'utils.server'
