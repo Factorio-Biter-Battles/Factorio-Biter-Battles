@@ -43,19 +43,21 @@ end
 
 ---@param player LuaPlayer
 function Public.comfy_panel_add_top_button(player)
-    if player.gui.top['comfy_panel_top_button'] then
+    if Gui.get_top_button(player, 'comfy_panel_top_button') then
         return
     end
 
-    local toggle = Gui.add_mod_button(player, {
+    Gui.init_gui_style(player)
+
+    local toggle = Gui.add_top_button(player, {
         type = 'sprite-button',
         name = 'main_toggle_button_name',
         sprite = 'utility/preset',
         tooltip = 'Click to hide top buttons!',
     })
-    gui_style(toggle, {minimal_width = 15, maximal_width = 15})
+    gui_style(toggle, { minimal_width = 15, maximal_width = 15 })
 
-    local button = Gui.add_mod_button(player, {
+    local button = Gui.add_top_button(player, {
         type = 'sprite-button',
         name = 'comfy_panel_top_button',
         sprite = 'utility/favourite_server_icon',

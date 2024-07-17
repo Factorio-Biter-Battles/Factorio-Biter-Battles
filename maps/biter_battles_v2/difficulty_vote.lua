@@ -33,12 +33,9 @@ function Public.difficulty_print_color()
 end
 
 local function difficulty_gui(player)
-	local b = player.gui.top["difficulty_gui"]
-	if not b then
-		b = Gui.add_mod_button(player, { type = "sprite-button", name = "difficulty_gui" })
-		gui_style(b, {width = 114})
-	end
-	b.style.font_color = difficulties[global.difficulty_vote_index].print_color
+	local b = Gui.get_top_button(player, "difficulty_gui")
+	if not b then return end
+	b.style.font_color = Public.difficulty_print_color()
 	local value = math.floor(global.difficulty_vote_value*100)
 	local name = Public.difficulty_name()
 	local str = table.concat({"Global map difficulty is ", name, ". Mutagen has ", value, "% effectiveness."})
@@ -54,12 +51,8 @@ end
 
 ---@param player LuaPlayer
 local function add_difficulty_gui_top_button(player)
-	local b = player.gui.top["difficulty_gui"]
-	if not b then
-		b = player.gui.top.add { type = "sprite-button", name = "difficulty_gui" }
-		b.style.font = "heading-2"
-		gui_style(b, {width = 114, height = 38, padding = -2})
-	end
+	local button = Gui.add_top_button(player, { type = "sprite-button", name = "difficulty_gui" })
+	gui_style(button, { minimal_width = 114, maximal_width = 114 })
 	difficulty_gui(player)
 end
 

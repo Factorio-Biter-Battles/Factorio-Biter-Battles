@@ -3,7 +3,10 @@
 local Antigrief = require 'antigrief'
 local Color = require 'utils.color_presets'
 local SessionData = require 'utils.datastore.session_data'
+local Shortcuts = require 'maps.biter_battles_v2.shortcuts'
 local Utils = require 'utils.core'
+local Gui = require 'utils.gui'
+local gui_themes = require 'utils.utils'.gui_themes
 
 local spaghett_entity_blacklist = {
     ['logistic-chest-requester'] = true,
@@ -91,6 +94,14 @@ local function trust_connected_players()
     end
 end
 
+local function theme_names()
+    local locales = {}
+    for _, v in pairs(gui_themes) do
+        locales[#locales + 1] = v.name
+    end
+    return locales
+end
+
 local functions = {
     ['comfy_panel_spectator_switch'] = function(event)
         if event.element.switch_state == 'left' then
@@ -126,6 +137,14 @@ local functions = {
         end
     end,
     ['comfy_panel_floating_shortcuts'] = function(event)
+        local player = game.get_player(event.player_index)
+        if not player then return end
+        local state = event.element.switch_state == 'left'
+        local shortcut_gui = Shortcuts.get_main_frame(player)
+        if shortcut_gui and shortcut_gui.valid then
+            shortcut_gui.visible = state
+            shortcut_gui.bring_to_front()
+        end
     end,
     ['comfy_panel_blueprint_toggle'] = function(event)
         if event.element.switch_state == 'left' then
@@ -330,6 +349,22 @@ local fortress_functions = {
     end
 }
 
+local selection_functions = {
+    ['comfy_panel_theme_dropdown'] = function(event)
+        local player = game.get_player(event.player_index)
+        if not player then return end
+        local selected_index = event.element.selected_index
+        local selected_style = gui_themes[selected_index].type
+        local previous_style = global.gui_theme[player.name] or gui_themes[1].type
+        if previous_style ~= selected_style then
+            local label = event.element.parent.comfy_panel_theme_label
+            label.caption = theme_names()[selected_index]
+            Gui.restyle_top_buttons(player, selected_style)
+        end
+        global.gui_theme[player.name] = selected_style
+    end
+}
+
 local function add_switch(element, switch_state, name, description_main, description, tooltip)
     local t = element.add({type = 'table', column_count = 5})
     local label = t.add({type = 'label', caption = 'ON'})
@@ -478,6 +513,33 @@ local build_config_gui = (function(player, frame)
         'Floating shortcuts',
         'Adds a minimalistic UI with game shortcuts'
     )
+
+    if global.gui_theme ~= nil then
+        local theme_idx = _G.table.index_of(theme_names(), global.gui_theme[player.name]) or 1
+        local theme_name = theme_names()[theme_idx]
+
+        scroll_pane.add({type = 'line'})
+        local t = scroll_pane.add {type = 'table', column_count = 3}
+
+        local label = t.add {type = 'label', name = 'comfy_panel_theme_label', ignored_by_interaction = true, caption = theme_name }
+        label.style.padding = 0
+        label.style.left_padding = 10
+        label.style.font_color = {0.77, 0.77, 0.77}
+        label.style.minimal_width = 100
+
+        local label = t.add({type = 'label', caption = 'Top UI theme'})
+        label.style.padding = 2
+        label.style.left_padding = 10
+        label.style.minimal_width = 140
+        label.style.font = 'heading-2'
+        label.style.font_color = {0.88, 0.88, 0.99}
+
+        local dropdown = t.add { type = 'drop-down', style = 'dropdown', name = 'comfy_panel_theme_dropdown', items = theme_names(), selected_index = theme_idx }
+        dropdown.style.height = 24
+        dropdown.style.natural_width = 200
+        dropdown.style.left_margin = 10
+        dropdown.style.vertical_align = 'center'
+    end
 
     if admin then
         label = scroll_pane.add({type = 'label', caption = 'Admin Settings'})
@@ -757,6 +819,17 @@ local function on_gui_switch_state_changed(event)
     end
 end
 
+local function on_gui_selection_state_changed(event)
+    local ele = event.element
+    if not (ele and ele.valid) then
+        return
+    end
+    if selection_functions[ele.name] then
+        selection_functions[ele.name](event)
+        return
+    end
+end
+
 local function on_force_created()
     spaghett()
 end
@@ -784,6 +857,7 @@ comfy_panel_tabs['Config'] = {gui = build_config_gui, admin = false}
 local Event = require 'utils.event'
 Event.on_init(on_init)
 Event.add(defines.events.on_gui_switch_state_changed, on_gui_switch_state_changed)
+Event.add(defines.events.on_gui_selection_state_changed, on_gui_selection_state_changed)
 Event.add(defines.events.on_force_created, on_force_created)
 Event.add(defines.events.on_built_entity, on_built_entity)
 Event.add(defines.events.on_robot_built_entity, on_robot_built_entity)

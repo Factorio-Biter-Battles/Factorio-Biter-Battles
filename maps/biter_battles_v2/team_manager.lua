@@ -104,8 +104,7 @@ function Public.switch_force(player_name, force_name)
 end
 
 function Public.draw_top_toggle_button(player)
-	if player.gui.top["team_manager_toggle_button"] then player.gui.top["team_manager_toggle_button"].destroy() end	
-	local button = Gui.add_mod_button(player, {type = "sprite-button", name = "team_manager_toggle_button", sprite = "utility/force_editor_icon", tooltip = "[font=default-bold]Team Manager[/font]", index = 7})
+	local button = Gui.add_top_button(player, {type = "sprite-button", name = "team_manager_toggle_button", sprite = "utility/force_editor_icon", tooltip = "[font=default-bold]Team Manager[/font]" })
 end
 
 local function draw_manager_gui(player)

@@ -146,4 +146,21 @@ Module.gui_style = function(element, attributes)
     end
 end
 
+Module.gui_themes = {
+    { type = 'slot_button',      name = 'Dark rounded' },
+    { type = 'side_menu_button', name = 'Dark squared' },
+    { type = 'rounded_button',   name = 'Light rounded' },
+    { type = 'mod_gui_button',   name = 'Light squared' },
+}
+
+Module.top_button_style = function() return {
+        font_color = { 165, 165, 165 },
+        font = 'heading-3',
+        minimal_height = 36,
+        maximal_height = 36,
+        minimal_width = 40,
+        padding = -2
+    }
+end
+
 return Module

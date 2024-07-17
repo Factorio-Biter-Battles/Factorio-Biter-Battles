@@ -11,21 +11,24 @@ local ResearchInfo = require "maps.biter_battles_v2.research_info"
 local TeamStatsCompare = require "maps.biter_battles_v2.team_stats_compare"
 local Tables = require "maps.biter_battles_v2.tables"
 local Captain_event = require "comfy_panel.special_games.captain"
-local Shortcuts = require 'maps.biter_battles_v2.shortcuts'
 local player_utils = require "utils.player"
 
 local wait_messages = Tables.wait_messages
 local food_names = Tables.gui_foods
+local automation_feed = Tables.food_values["automation-science-pack"].value * 75
 
 local math_random = math.random
 local math_abs = math.abs
 local math_ceil = math.ceil
+local math_floor = math.floor
+local string_format = string.format
+
 local Gui = require 'utils.gui'
 local gui_style = require "utils.utils".gui_style
 local has_life = require "comfy_panel.special_games.limited_lives".has_life
 local gui_values = {
 	["north"] = {
-		force = "north",
+		force_name = "north",
 		biter_force = "north_biters",
 		n1 = "join_north_button",
 		t1 = "Evolution of north side biters.",
@@ -34,7 +37,7 @@ local gui_values = {
 		color2 = { r = 0.66, g = 0.66, b = 0.99 },
 	},
 	["south"] = {
-		force = "south",
+		force_name = "south",
 		biter_force = "south_biters",
 		n1 = "join_south_button",
 		t1 = "Evolution of south side biters.",
@@ -72,13 +75,18 @@ function Public.reset_tables_gui()
 	global.player_data_afk = {}
 end
 
-local function create_top_gui_buttons(player)
+function Public.create_biter_gui_button(player)
+	local button = Gui.add_top_button(player,{ type = "sprite-button", name = "bb_toggle_button", sprite = "entity/big-biter", tooltip = "[font=default-bold]Game Info[/font] - Toggle left gui" })
+end
+
+function Public.create_statistics_gui_button(player)
+	if Gui.get_top_button(player, 'bb_toggle_statistics') then
+		return
+	end
+
+	local summary = Gui.add_top_button(player, { type = "sprite-button", name = "bb_toggle_statistics", sprite = "utility/expand", tooltip = 'Show statistics!' })
+
 	local top = player.gui.top
-	if top["bb_toggle_button"] then return end
-	local button = Gui.add_mod_button(player,{ type = "sprite-button", name = "bb_toggle_button", sprite = "entity/big-biter", tooltip = "[font=default-bold]Game Info[/font] - Toggle left gui" })
-
-	local summary = Gui.add_mod_button(player, { type = "sprite-button", name = "bb_toggle_statistics", sprite = "utility/expand", tooltip = 'Show statistics!' })
-
 	local frame = top.mod_gui_top_frame.mod_gui_inner_frame.add { type = 'frame', name = 'bb_frame_statistics', style = 'finished_game_subheader_frame' }
 	frame.location = { x = 1, y = 38 }
 	gui_style(frame, { minimal_height = 36, maximal_height = 36 })
@@ -140,6 +148,16 @@ Gui.on_click('bb_toggle_statistics', function (event)
 	top.mod_gui_top_frame.mod_gui_inner_frame.bb_frame_statistics.visible = not top.mod_gui_top_frame.mod_gui_inner_frame.bb_frame_statistics.visible
 end)
 
+local style = {
+	bold = function(str) return '[font=default-bold]'..str..'[/font]' end,
+	listbox = function(str) return '[font=default-listbox]'..str..'[/font]' end,
+	stat = function(str) return '[font=count-font]'..str..'[/font]' end,
+	green = function(str) return '[color=green]'..str..'[/color]' end,
+	yellow = function(str) return '[color=yellow]'..str..'[/color]' end,
+	red = function(str) return '[color=red]'..str..'[/color]' end,
+	blue = function(str) return '[color=blue]'..str..'[/color]' end,
+}
+
 ---@param frame LuaGuiElement
 local function create_clock(frame)
 	local inner_frame = frame.add { type = "flow", name = "bb_main_clock_flow", direction = "horizontal" }
@@ -155,10 +173,10 @@ local function get_format_time()
 	local time_caption = "Not started"
 	local total_ticks = Functions.get_ticks_since_game_start()
 	if total_ticks > 0 then
-		local total_minutes = math.floor(total_ticks / (60 * 60))
-		local total_hours = math.floor(total_minutes / 60)
+		local total_minutes = math_floor(total_ticks / (60 * 60))
+		local total_hours = math_floor(total_minutes / 60)
 		local minutes = total_minutes - (total_hours * 60)
-		time_caption = string.format("%02d:%02d", total_hours, minutes)
+		time_caption = string_format("%02d:%02d", total_hours, minutes)
 	end
 	return time_caption
 end
@@ -166,7 +184,7 @@ end
 ---@param frame LuaGuiElement
 ---@param player LuaPlayer
 local function update_clock(frame, player)
-	frame.bb_main_clock_flow.bb_main_clock_label.caption = string.format("Time: %s   Speed: %.2f", get_format_time(), game.speed)
+	frame.bb_main_clock_flow.bb_main_clock_label.caption = string_format("Time: %s   Speed: %.2f", get_format_time(), game.speed)
 	
 	local is_spec = player.force.name == "spectator"
 	frame.bb_main_clock_flow.research_info_button.visible =
@@ -175,11 +193,10 @@ local function update_clock(frame, player)
 		or (global.bb_show_research_info == "pure-spec" and not global.chosen_team[player.name])
 end
 
----@param frame LuaGuiElement
 ---@param force string
 ---@return string
-local function get_player_list_caption(frame, force)
-	local players_with_colors = player_utils.get_sorted_colored_player_list(game.forces[force].connected_players)
+local function get_player_list_caption(force_name)
+	local players_with_colors = player_utils.get_sorted_colored_player_list(game.forces[force_name].connected_players)
 	return table.concat(players_with_colors, "    ")
 end
 
@@ -187,11 +204,11 @@ end
 ---@return string
 function threat_to_pretty_string(threat_value)
 	if math_abs(threat_value) >= 1000000 then
-		return string.format("%.2fM", threat_value / 1000000)
+		return string_format("%.2fM", threat_value / 1000000)
 	elseif math_abs(threat_value) >= 100000 then
-		return string.format("%.0fk", threat_value / 1000)
+		return string_format("%.0fk", threat_value / 1000)
 	else
-		return string.format("%.0f", threat_value)
+		return string_format("%.0f", threat_value)
 	end
 end
 
@@ -220,7 +237,7 @@ function Public.create_main_gui(player)
 	local first_team = true
 	local view_player_list = global.bb_view_players[player.name]
 	if view_player_list == nil then view_player_list = true end
-	for _, gui_value in pairs(gui_values) do
+	for force_name, gui_value in pairs(gui_values) do
 		-- Line separator
 		if not first_team then
 			frame.add { type = "line", direction = "horizontal" }
@@ -229,7 +246,7 @@ function Public.create_main_gui(player)
 		end
 
 		-- Team name & Player count
-		local t = frame.add { type = "table", name = "team_name_table_" .. gui_value.force, column_count = 4 }
+		local t = frame.add { type = "table", name = "team_name_table_" .. force_name, column_count = 4 }
 
 		-- Team name
 		local l = t.add { type = "label", name = "team_name" }
@@ -241,29 +258,29 @@ function Public.create_main_gui(player)
 		l.style.font_color = { r = 0.22, g = 0.88, b = 0.22 }
 
 		-- Player list
-		local l = frame.add { type = "label", name = "player_list_" .. gui_value.force }
+		local l = frame.add { type = "label", name = "player_list_" .. force_name }
 		l.style.single_line = false
 		l.style.maximal_width = 350
 
 		-- Statistics
-		local t = frame.add { type = "table", name = "stats_" .. gui_value.force, column_count = 5 }
+		local t = frame.add { type = "table", name = "stats_" .. force_name, column_count = 5 }
 
 		-- Evolution
-		local l = t.add { type = "label", name = "evo_label_" .. gui_value.force, caption = "Evo:" }
+		local l = t.add { type = "label", name = "evo_label_" .. force_name, caption = "Evo:" }
 		--l.style.minimal_width = 25
 
-		local l = t.add { type = "label", name = "evo_value_label_" .. gui_value.force }
+		local l = t.add { type = "label", name = "evo_value_label_" .. force_name }
 		l.style.minimal_width = 40
 		l.style.font_color = gui_value.color2
 		l.style.font = "default-bold"
 		l.tooltip = tooltip
 
 		-- Threat
-		local l = t.add { type = "label", name = "threat_label_" .. gui_value.force, caption = "Threat: " }
+		local l = t.add { type = "label", name = "threat_label_" .. force_name, caption = "Threat: " }
 		l.style.minimal_width = 25
 
 		local threat_value = threat_to_pretty_string(global.bb_threat[gui_value.biter_force])
-		local l = t.add { type = "label", name = "threat_" .. gui_value.force, caption = threat_value }
+		local l = t.add { type = "label", name = "threat_" .. force_name, caption = threat_value }
 		l.style.font_color = gui_value.color2
 		l.style.font = "default-bold"
 		l.style.width = 50
@@ -303,22 +320,30 @@ end
 
 ---@param player LuaPlayer
 function Public.refresh_statistics(player)
-	local frame = player.gui.top.mod_gui_top_frame.mod_gui_inner_frame.bb_frame_statistics
+	local frame = Gui.get_top_button(player, 'bb_frame_statistics')
 	if not frame or not frame.visible then
 		return
 	end
 
 	frame.clock.caption = get_format_time()
+	frame.clock.tooltip = string_format('Game speed: ' .. style.yellow(style.stat('%.2f')), game.speed)
 
-	--frame.north_name.caption = 'North'
-	frame.north_players.caption = '([color=green]' .. #game.forces.north.connected_players .. '[/color])'
-	frame.north_evolution.caption = (math.floor(1000 * global.bb_evolution.north_biters) * 0.1) .. '%'
-	frame.north_threat.caption = threat_to_pretty_string(global.bb_threat.north_biters)
+	for force_name, gui_value in pairs(gui_values) do
+		local biter_force = game.forces[gui_value.biter_force]
+		local damage, revive = (biter_force.get_ammo_damage_modifier('melee') + 1) * 100, global.reanim_chance[biter_force.index]
+		local evolution_tooltip = style.listbox('Damage: ') .. style.yellow(style.stat(damage)) .. style.listbox('%\nRevive: ') .. style.yellow(style.stat(revive)) .. style.listbox('%')
 
-	--frame.south_name.caption = 'South'
-	frame.south_players.caption = '([color=green]' .. #game.forces.south.connected_players .. '[/color])'
-	frame.south_evolution.caption = (math.floor(1000 * global.bb_evolution.south_biters) * 0.1) .. '%'
-	frame.south_threat.caption = threat_to_pretty_string(global.bb_threat.south_biters)
+		frame[force_name..'_name'].tooltip = style.bold(Functions.team_name(force_name))
+		
+		frame[force_name..'_players'].caption = '(' .. style.green(#game.forces[force_name].connected_players) .. ')'
+		frame[force_name..'_players'].tooltip = get_player_list_caption(force_name)
+
+		frame[force_name..'_evolution'].caption = (math_floor(1000 * global.bb_evolution[biter_force.name]) * 0.1) .. '%'
+		frame[force_name..'_evolution'].tooltip = evolution_tooltip
+		
+		frame[force_name..'_threat'].caption = threat_to_pretty_string(global.bb_threat[biter_force.name])
+		frame[force_name..'_threat'].tooltip = style.listbox('Passive feed:') .. style.yellow(style.stat(' +'..math_ceil(automation_feed * global.evo_raise_counter)))
+	end
 end
 
 function Public.refresh_main_gui(player)
@@ -367,25 +392,25 @@ function Public.refresh_main_gui(player)
 
 	local view_player_list = global.bb_view_players[player.name]
 	if view_player_list == nil then view_player_list = true end
-	for _, gui_value in pairs(gui_values) do
+	for force_name, gui_value in pairs(gui_values) do
 		-- Team name & Player count
-		local t = frame["team_name_table_" .. gui_value.force]
+		local t = frame["team_name_table_" .. force_name]
 
 		-- Team name
-		t["team_name"].caption = Functions.team_name(gui_value.force)
+		t["team_name"].caption = Functions.team_name(force_name)
 		-- Number of players
-		local c = #game.forces[gui_value.force].connected_players .. " Player"
-		if #game.forces[gui_value.force].connected_players ~= 1 then c = c .. "s" end
+		local c = #game.forces[force_name].connected_players .. " Player"
+		if #game.forces[force_name].connected_players ~= 1 then c = c .. "s" end
 		t["team_player_count"].caption = c
 
 		-- Player list
-		local l = frame["player_list_" .. gui_value.force]
+		local l = frame["player_list_" .. force_name]
 		l.visible = view_player_list
 		if view_player_list then
-			l.caption = get_player_list_caption(frame, gui_value.force)
+			l.caption = get_player_list_caption(force_name)
 		end
 
-		local t = frame["stats_" .. gui_value.force]
+		local t = frame["stats_" .. force_name]
 		--l.style.minimal_width = 25
 		local biter_force = game.forces[gui_value.biter_force]
 		local tooltip = gui_value.t1 ..
@@ -393,16 +418,16 @@ function Public.refresh_main_gui(player)
 			(biter_force.get_ammo_damage_modifier("melee") + 1) * 100 ..
 			"%\nRevive: " .. global.reanim_chance[biter_force.index] .. "%"
 
-		t["evo_label_" .. gui_value.force].tooltip = tooltip
+		t["evo_label_" .. force_name].tooltip = tooltip
 
-		local evo = math.floor(1000 * global.bb_evolution[gui_value.biter_force]) * 0.1
-		t["evo_value_label_" .. gui_value.force].caption = evo .. "%"
-		t["evo_value_label_" .. gui_value.force].tooltip = tooltip
+		local evo = math_floor(1000 * global.bb_evolution[gui_value.biter_force]) * 0.1
+		t["evo_value_label_" .. force_name].caption = evo .. "%"
+		t["evo_value_label_" .. force_name].tooltip = tooltip
 
 		-- Threat
-		t["threat_label_" .. gui_value.force].tooltip = gui_value.t2
+		t["threat_label_" .. force_name].tooltip = gui_value.t2
 
-		local l = t["threat_" .. gui_value.force]
+		local l = t["threat_" .. force_name]
 		local threat_value = threat_to_pretty_string(global.bb_threat[gui_value.biter_force])
 		l.caption = threat_value
 		l.tooltip = gui_value.t2
@@ -427,7 +452,6 @@ function Public.refresh()
 	for _, player in pairs(game.connected_players) do
 		Public.refresh_statistics(player)
 		Public.refresh_main_gui(player)
-		Shortcuts.refresh()
 	end
 	global.gui_refresh_delay = game.tick + 30
 end
@@ -468,7 +492,7 @@ local function drop_burners(player, forced_join)
 	end			
 	local burners_to_drop = player.get_item_count("burner-mining-drill")	
 	if burners_to_drop ~= 0 then
-    	local items = player.surface.spill_item_stack(player.position,{name="burner-mining-drill", count = burners_to_drop}, false, nil, false )
+    local items = player.surface.spill_item_stack(player.position,{name="burner-mining-drill", count = burners_to_drop}, false, nil, false )
 		player.remove_item({name="burner-mining-drill", count = burners_to_drop})
 	end
 end
@@ -559,7 +583,7 @@ function join_team(player, force_name, forced_join, auto_join)
 			if global.suspended_players[player.name] and (game.ticks_played - global.suspended_players[player.name]) < global.suspended_time then
 				player.print(
 					"Not ready to return to your team yet as you are still suspended. Please wait " ..
-					math_ceil((global.suspended_time - (math.floor((game.ticks_played - global.suspended_players[player.name])))) /
+					math_ceil((global.suspended_time - (math_floor((game.ticks_played - global.suspended_players[player.name])))) /
 						60) .. " seconds.",
 					{ r = 0.98, g = 0.66, b = 0.22 }
 				)
@@ -568,7 +592,7 @@ function join_team(player, force_name, forced_join, auto_join)
 			if global.spectator_rejoin_delay[player.name] and game.tick - global.spectator_rejoin_delay[player.name] < 3600 then
 				player.print(
 					"Not ready to return to your team yet. Please wait " ..
-					60 - (math.floor((game.tick - global.spectator_rejoin_delay[player.name]) / 60)) .. " seconds.",
+					60 - (math_floor((game.tick - global.spectator_rejoin_delay[player.name]) / 60)) .. " seconds.",
 					{ r = 0.98, g = 0.66, b = 0.22 }
 				)
 				return
@@ -716,9 +740,9 @@ local function on_gui_click(event)
 		end
 		return
 	end
-	for _, gui_values in pairs(gui_values) do
+	for force_name, gui_values in pairs(gui_values) do
 		if name == gui_values.n1 then
-			join_gui_click(gui_values.force, player)
+			join_gui_click(force_name, player)
 			return
 		end
 	end
@@ -728,8 +752,8 @@ local function on_gui_click(event)
 		local a = #game.forces["north"].connected_players -- Idk how to choose the 1st force without calling 'north'
 
 		-- checking if teams are equal	
-		for _, gui_values in pairs(gui_values) do
-			if a ~= #game.forces[gui_values.force].connected_players then
+		for force_name, gui_values in pairs(gui_values) do
+			if a ~= #game.forces[force_name].connected_players then
 				teams_equal = false
 				break
 			end
@@ -738,14 +762,14 @@ local function on_gui_click(event)
 		-- choosing a team at random if teams are equal
 		if teams_equal then
 			local teams = {}
-			for _, gui_values in pairs(gui_values) do table.insert(teams, gui_values.force) end
-			join_gui_click(teams[math.random(#teams)], player, true)
+			for force_name, gui_values in pairs(gui_values) do table.insert(teams, force_name) end
+			join_gui_click(teams[math_random(#teams)], player, true)
 		else                                       -- checking which team is smaller and joining it
 			local smallest_team = gui_values["north"].force -- Idk how to choose the 1st force without calling 'north'
-			for _, gui_values in pairs(gui_values) do
-				if a > #game.forces[gui_values.force].connected_players then
-					smallest_team = gui_values.force
-					a = #game.forces[gui_values.force].connected_players
+			for force_name, gui_values in pairs(gui_values) do
+				if a > #game.forces[force_name].connected_players then
+					smallest_team = force_name
+					a = #game.forces[force_name].connected_players
 				end
 			end
 			join_gui_click(smallest_team, player, true)
@@ -840,9 +864,9 @@ local function on_player_joined_game(event)
 	--	end
 	--end
 
-	create_top_gui_buttons(player)
-	Public.create_main_gui(player)
-	Shortcuts.get_main_frame(player)
+	--Public.create_top_gui_buttons(player)
+  Public.create_main_gui(player)
+	--Shortcuts.get_main_frame(player)
 end
 
 

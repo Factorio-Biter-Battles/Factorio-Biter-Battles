@@ -106,8 +106,8 @@ local main_frame_actions = {
   [main_frame_name..'_send_fish'] = function(player, event) if handle_spectator(player) then return end Functions.spy_fish(player, event) end,
   [main_frame_name..'_send_science'] = function(player, event) if handle_spectator(player) then return end  Feeding.feed_biters_mixed_from_inventory(player, event.button) end,
   [main_frame_name..'_research_info'] = function(player, event) ResearchInfo.show_research_info_handler(event) end,
-  [main_frame_name..'_clear_corpses'] = function(player, event) clear_corpses(player) end,
   [main_frame_name..'_teamstats'] = function(player, event) show_teamstats(player) end,
+  [main_frame_name..'_clear_corpses'] = function(player, event) if handle_spectator(player) then return end clear_corpses(player) end,
   [main_frame_name..'_settings'] = function(player, event) toggle_shortcuts_settings(player) end,
 }
 
@@ -130,7 +130,7 @@ function Public.get_main_frame(player)
       style = 'quick_bar_window_frame'
     }
     main_frame.auto_center = true
-    --main_frame.visible = false
+    main_frame.visible = false
 
     local title_bar = main_frame.add { type = 'flow', name = 'titlebar', direction = 'horizontal', style = 'horizontal_flow' }
     gui_style(title_bar, { vertical_align = 'center' })

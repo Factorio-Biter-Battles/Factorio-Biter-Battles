@@ -2,7 +2,11 @@ local Token = require 'utils.token'
 local Event = require 'utils.event'
 local Global = require 'utils.global'
 local mod_gui = require '__core__/lualib/mod-gui'
-local gui_style = require 'utils.utils'.gui_style
+
+local _utils = require 'utils.utils'
+local gui_style = _utils.gui_style
+local gui_themes = _utils.gui_themes
+local top_button_style = _utils.top_button_style
 
 local tostring = tostring
 local next = next
@@ -117,18 +121,48 @@ function Gui.clear(element)
     element.clear()
 end
 
+function Gui.init_gui_style(player)
+    local mod_gui_top_frame = player.gui.top.mod_gui_top_frame
+    gui_style(mod_gui_top_frame, { padding = 2 })
+
+    --local mod_gui_inner_frame = mod_gui_top_frame.mod_gui_inner_frame
+    --gui_style(mod_gui_inner_frame, { })
+end
+
+---@param player LuaPlayer
+---@param button_name string
+function Gui.get_top_button(player, button_name)
+	return mod_gui.get_button_flow(player)[button_name]
+end
+
 ---@param player LuaPlayer
 ---@param frame userdata|table
-function Gui.add_mod_button(player, frame)
-	if mod_gui.get_button_flow(player)[frame.name] and mod_gui.get_button_flow(player)[frame.name].valid then
-		return mod_gui.get_button_flow(player)[frame.name]
+function Gui.add_top_button(player, frame, style_name)
+    local button = mod_gui.get_button_flow(player)[frame.name]
+	if button and button.valid then
+        return button
 	end
 	if not frame.style then
-		frame.style = 'mod_gui_button'
+        frame.style = style_name or gui_themes[1].type
 	end
-	local button = mod_gui.get_button_flow(player).add(frame)
-	gui_style(button, {font_color = { 165, 165, 165 }, font = 'heading-3', minimal_height = 36, maximal_height = 36, minimal_width = 40, padding = -2})
+	button = mod_gui.get_button_flow(player).add(frame)
+	gui_style(button, top_button_style())
     return button
+end
+
+local backup_attributes = { 'minimal_width', 'maximal_width' }
+function Gui.restyle_top_buttons(player, new_style)
+    for _, ele in pairs(mod_gui.get_button_flow(player).children) do
+        if ele.type == 'button' or ele.type == 'sprite-button' then
+            local custom_styles = {}
+            for _, attr in pairs(backup_attributes) do
+                custom_styles[attr] = ele.style[attr]
+            end
+            ele.style = new_style
+            gui_style(ele, top_button_style())
+            gui_style(ele, custom_styles)
+        end
+    end
 end
 
 local function clear_invalid_data()

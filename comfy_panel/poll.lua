@@ -821,14 +821,12 @@ local function vote(event)
 end
 
 function Class.create_top_button(player)
-    if player.gui.top[main_button_name] ~= nil then return end
-    local button = player.gui.top.add {
+    local button = Gui.add_top_button(player, {
         type = 'sprite-button',
         name = main_button_name,
         sprite = 'item/programmable-speaker',
-        tooltip = 'Let your question be heard!'
-    }
-    gui_style(button, {width = 38, height = 38, padding = -2})
+        tooltip = '[font=default-bold]Polls[/font] - see current/past polls'
+    })
 end
 
 local function player_joined(event)
@@ -837,19 +835,13 @@ local function player_joined(event)
         return
     end
 
-    if player.gui.top[main_button_name] ~= nil then
+    local polls = Gui.get_top_button(player, main_button_name)
+    if polls then
         local frame = player.gui.top[main_frame_name]
         if frame and frame.valid then
             local data = Gui.get_data(frame)
             update_poll_viewer(data)
         end
-    else
-        local button = Gui.add_mod_button(player, {
-            type = 'sprite-button',
-            name = main_button_name,
-            sprite = 'item/programmable-speaker',
-            tooltip = '[font=default-bold]Polls[/font] - see current/past polls'
-        })
     end
 end
 
