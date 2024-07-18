@@ -613,7 +613,7 @@ local function on_init()
 	Init.forces()
 	Init.draw_structures()
 	Init.load_spawn()
-	Init.reveal_map()
+	Init.queue_reveal_map()
 end
 
 

@@ -201,11 +201,7 @@ function Public.draw_structures()
 	--Terrain.generate_spawn_goodies(surface)
 end
 
-function Public.reveal_map()
-	if not global.bb_settings["bb_map_reveal_toggle"] then
-		return
-	end
-
+function Public.queue_reveal_map()
 	local chart_queue = global.chart_queue
 	-- important to flush the queue upon resetting a map or chunk requests from previous maps could overlap
 	Queue.clear(chart_queue) 
@@ -220,7 +216,27 @@ function Public.reveal_map()
 			q_push(chart_queue, {{-x,  y}, {-x,  y}})
 			q_push(chart_queue, {{ x,  y}, { x,  y}})
 		end
+		-- spectator island (guarantees sounds to be played during map reveal)
 		q_push(chart_queue, {{-16, -16}, {16, 16}})
+	end
+
+	-- request whole starting area at the end again to clear any charting hiccup
+	q_push(chart_queue, {{-height, -height}, {height, height}})
+end
+
+---@param max_requests number
+function Public.pop_chunk_request(max_requests)
+	if not global.bb_settings.bb_map_reveal_toggle then
+		return
+	end
+	max_requests = max_requests or 1
+	local chart_queue = global.chart_queue
+	local surface = game.surfaces[global.bb_surface_name]
+	local spectator = game.forces.spectator
+
+	while max_requests > 0 and q_size(chart_queue) > 0 do
+		spectator.chart(surface, q_pop(chart_queue))
+		max_requests = max_requests - 1
 	end
 end
 
