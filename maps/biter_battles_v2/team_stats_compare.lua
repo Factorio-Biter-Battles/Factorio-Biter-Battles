@@ -376,9 +376,9 @@ commands.add_command("teamstats", "Show team stats", function (cmd)
     local show_playerstats = false
     local deny_reason
     for word in string.gmatch(cmd.parameter or "", "%S+") do
-        if cmd.parameter == "prev" then
+        if word == "prev" then
             prev = true
-        elseif cmd.parameter == "alpha_playerstats" then
+        elseif word == "alpha_playerstats" then
             show_playerstats = true
         else
             player.print("Unsupported argument to /teamstats. Run either just '/teamstats' or '/teamstats prev'")
