@@ -2,6 +2,7 @@ local Terrain = require "maps.biter_battles_v2.terrain"
 local Score = require "comfy_panel.score"
 local Tables = require "maps.biter_battles_v2.tables"
 local Blueprint = require 'maps.biter_battles_v2.blueprints'
+local TeamStatsCollect = require 'maps.biter_battles_v2.team_stats_collect'
 local Queue = require 'utils.queue'
 local q_size = Queue.size
 local q_push = Queue.push
@@ -232,7 +233,7 @@ function Public.tables()
 	global.science_logs_total_north = nil
 	global.science_logs_total_south = nil
 	---@type TeamStats
-	global.team_stats = {forces = {north = {items = {}, food = {}, damage_types = {}}, south = {items = {}, food = {}, damage_types = {}}}}
+	global.team_stats = TeamStatsCollect.initial_team_stats()
 	-- Name of main BB surface within game.surfaces
 	-- We hot-swap here between 2 surfaces.
 	if global.bb_surface_name == 'bb0' then

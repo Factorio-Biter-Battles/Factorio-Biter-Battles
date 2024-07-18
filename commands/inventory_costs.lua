@@ -1,6 +1,8 @@
 local ItemCosts = require 'maps.biter_battles_v2.item_costs'
 local safe_wrap_with_player_print = require 'utils.utils'.safe_wrap_with_player_print
 
+---@param player LuaPlayer
+---@return number
 local function inventory_cost(player)
     local inventory = player.get_inventory(defines.inventory.character_main)
     if not inventory then return 0 end
@@ -62,3 +64,6 @@ commands.add_command(
 	"Print out the top players by inventory values. Pass 'all' to see it for both forces.",
 	inventory_costs_command
 )
+
+local Public = { inventory_cost = inventory_cost }
+return Public
