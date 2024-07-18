@@ -220,6 +220,22 @@ function Public.queue_reveal_map()
 	end
 end
 
+---@param max_requests number
+function Public.pop_chunk_request(max_requests)
+	if not global.bb_settings.bb_map_reveal_toggle then
+		return
+	end
+	max_requests = max_requests or 1
+	local chart_queue = global.chart_queue
+	local surface = game.surfaces[global.bb_surface_name]
+	local spectator = game.forces.spectator
+
+	while max_requests > 0 and q_size(chart_queue) > 0 do
+		spectator.chart(surface, q_pop(chart_queue))
+		max_requests = max_requests - 1
+	end
+end
+
 function Public.tables()
 	local get_score = Score.get_table()
 	get_score.score_table = {}
@@ -359,22 +375,6 @@ function Public.load_spawn()
 		surface.request_to_generate_chunks({x = -16, y = y * -1 - 16}, 0)
 		surface.request_to_generate_chunks({x = -48, y = y * -1 - 16}, 0)
 		surface.request_to_generate_chunks({x = -80, y = y * -1 - 16}, 0)
-	end
-end
-
----@param max_requests number
-function Public.pop_chunk_request(max_requests)
-	if not global.bb_settings.bb_map_reveal_toggle then
-		return
-	end
-	max_requests = max_requests or 1
-	local chart_queue = global.chart_queue
-	local surface = game.surfaces[global.bb_surface_name]
-	local spectator = game.forces.spectator
-
-	while max_requests > 0 and q_size(chart_queue) > 0 do
-		spectator.chart(surface, q_pop(chart_queue))
-		max_requests = max_requests - 1
 	end
 end
 
