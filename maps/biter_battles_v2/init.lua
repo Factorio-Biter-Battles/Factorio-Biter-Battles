@@ -201,11 +201,7 @@ function Public.draw_structures()
 	--Terrain.generate_spawn_goodies(surface)
 end
 
-function Public.reveal_map()
-	if not global.bb_settings["bb_map_reveal_toggle"] then
-		return
-	end
-
+function Public.queue_reveal_map()
 	local chart_queue = global.chart_queue
 	-- important to flush the queue upon resetting a map or chunk requests from previous maps could overlap
 	Queue.clear(chart_queue) 
@@ -368,6 +364,9 @@ end
 
 ---@param max_requests number
 function Public.pop_chunk_request(max_requests)
+	if not global.bb_settings.bb_map_reveal_toggle then
+		return
+	end
 	max_requests = max_requests or 1
 	local chart_queue = global.chart_queue
 	local surface = game.surfaces[global.bb_surface_name]
