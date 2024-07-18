@@ -219,10 +219,12 @@ local function update_teamstats()
                 force_stats.players[player.name] = player_stats
             end
             player_stats.player_ticks = player_stats.player_ticks + update_teamstats_interval
-            local inv_value = inventory_costs.inventory_cost(player)
-            player_stats.inventory_value_cumulative = player_stats.inventory_value_cumulative + inv_value * update_teamstats_interval
-            if player.crafting_queue_size > 0 then
-                player_stats.crafting_ticks = player_stats.crafting_ticks + update_teamstats_interval
+            if player.character then
+                local inv_value = inventory_costs.inventory_cost(player)
+                player_stats.inventory_value_cumulative = player_stats.inventory_value_cumulative + inv_value * update_teamstats_interval
+                if player.crafting_queue_size > 0 then
+                    player_stats.crafting_ticks = player_stats.crafting_ticks + update_teamstats_interval
+                end
             end
         end
     end

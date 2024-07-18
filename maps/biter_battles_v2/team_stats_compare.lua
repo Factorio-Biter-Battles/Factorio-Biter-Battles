@@ -121,7 +121,7 @@ function populate_player_stats(stats, frame)
         l = player_table.add { type = "label", caption = string_format("%d", entry.placed_val_per_min) }
         l.style.font = "default-small"
         -- add horizontal flow, with each of per_player_build_items_to_display as a sprite with number
-        local player_flow = player_table.add { type = "flow", name = "player_flow_" .. player_name, direction = "horizontal" }
+        local player_flow = player_table.add { type = "flow", name = "player_flow_" .. entry.force_name .. "_" .. player_name, direction = "horizontal" }
         for _, item_name in ipairs(TeamStatsCollect.per_player_build_items_to_display) do
             local item_info = entry.placed[item_name]
             local built = item_info and item_info.built or 0
