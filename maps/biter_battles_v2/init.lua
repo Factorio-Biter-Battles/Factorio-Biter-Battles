@@ -216,8 +216,12 @@ function Public.queue_reveal_map()
 			q_push(chart_queue, {{-x,  y}, {-x,  y}})
 			q_push(chart_queue, {{ x,  y}, { x,  y}})
 		end
+		-- spectator island (guarantees sounds to be played during map reveal)
 		q_push(chart_queue, {{-16, -16}, {16, 16}})
 	end
+
+	-- request whole starting area at the end again to clear any charting hiccup
+	q_push(chart_queue, {{-height, -height}, {height, height}})
 end
 
 ---@param max_requests number
