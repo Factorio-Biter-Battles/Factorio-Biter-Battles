@@ -26,7 +26,7 @@ end
 ---@param names string[]
 ---@return string
 function CaptainUtils.pretty_print_player_list(names)
-	return table.concat(player_utils.get_sorted_colored_player_list(player_utils.get_lua_players_from_player_names(names)), ", ")
+	return table.concat(player_utils.get_colored_player_list(player_utils.get_lua_players_from_player_names(names)), ", ")
 end
 
 return CaptainUtils
