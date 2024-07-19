@@ -188,6 +188,17 @@ local function on_player_left_game(event)
 	Public.remove_player_from_difficulty_vote(game.get_player(event.player_index))
 end
 
+local function difficulty_voted(player, i)
+	if global.difficulty_player_votes[player.name] ~= i then
+		game.print(player.name .. " has voted for " .. difficulties[i].name .. " difficulty!", difficulties[i].print_color)
+		global.difficulty_player_votes[player.name] = i	
+		set_difficulty()	
+		difficulty_gui_all()
+	else
+		player.print("You already voted for this difficulty", {r = 0.98, g = 0.66, b = 0.22})
+	end
+end
+
 local function on_gui_click(event)
 	if not event then return end
 	if not event.element then return end
@@ -209,25 +220,16 @@ local function on_gui_click(event)
 				if global.active_special_games["captain_mode"] then
 					if global.bb_settings.only_admins_vote then
 						if player.admin then
-							game.print(player.name .. " has voted for " .. difficulties[i].name .. " difficulty!", difficulties[i].print_color)
-							global.difficulty_player_votes[player.name] = i
-							set_difficulty()
-							difficulty_gui(player)
+							difficulty_voted(player, i)
 						end
 					else
 						if not player.spectator or is_vote_allowed_in_captain(player.name) then
-							game.print(player.name .. " has voted for " .. difficulties[i].name .. " difficulty!", difficulties[i].print_color)
-							global.difficulty_player_votes[player.name] = i
-							set_difficulty()
-							difficulty_gui(player)
+							difficulty_voted(player, i)
 						end
 					end
 				else
 					if player.admin then
-						game.print(player.name .. " has voted for " .. difficulties[i].name .. " difficulty!", difficulties[i].print_color)
-						global.difficulty_player_votes[player.name] = i
-						set_difficulty()
-						difficulty_gui(player)
+						difficulty_voted(player, i)
 					end
 				end
 			end
@@ -255,14 +257,7 @@ local function on_gui_click(event)
         return
     end
 	
-	if global.difficulty_player_votes[player.name] ~= i then
-		game.print(player.name .. " has voted for " .. difficulties[i].name .. " difficulty!", difficulties[i].print_color)
-		global.difficulty_player_votes[player.name] = i	
-		set_difficulty()	
-		difficulty_gui_all()
-	else
-		player.print("You already voted for this difficulty", {r = 0.98, g = 0.66, b = 0.22})
-	end
+	difficulty_voted(player, i)	
 	event.element.parent.destroy()
 end
 	
