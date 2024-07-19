@@ -106,6 +106,7 @@ function CaptainTaskGroup.create_team_organization_gui(player)
     if player.gui.screen["group_selection"] then
         player.gui.screen["group_selection"].destroy()
     end
+	if force.name == "spectator" then return end
     
     local frame = closable_frame.create_main_closable_frame(player, "group_selection", "Team organization of " .. force.name)
     local scroll = frame.add{type="scroll-pane", name="group_scroll"}
@@ -138,6 +139,7 @@ end
 
 function CaptainTaskGroup.draw_captain_team_organization_button(player)
 	if player.gui.top["cpt_task_team_organization_toggle_button"] then player.gui.top["cpt_task_team_organization_toggle_button"].destroy() end
+	if player.force.name == "spectator" then return end
 	local button = player.gui.top.add({type = "sprite-button", name = "cpt_task_team_organization_toggle_button", caption = "Team organization"})
 	button.style.font = "heading-2"
 	button.style.font_color = {r = 0.88, g = 0.55, b = 0.11}
@@ -179,6 +181,7 @@ local function on_gui_click(event)
 	local special = global.special_games_variables["captain_mode"]
 	if not special then return end
 	local force = player.force
+	if force.name == "spectator" then return end
 	local groupsOrganization = special["groupsOrganization"][force.name]
 	if element.name:sub(1, 20) == "cpt_task_join_group_" then
 		local group_index = tonumber(element.name:sub(21))
