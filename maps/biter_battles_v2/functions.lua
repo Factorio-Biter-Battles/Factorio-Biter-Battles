@@ -470,7 +470,6 @@ function Functions.spy_fish(player, event)
 end
 
 function Functions.create_map_intro_button(player)
-	if player.gui.top["map_intro_button"] then return end
 	local b = Gui.add_top_button(player, {type = "sprite-button", sprite = "utility/custom_tag_icon", name = "map_intro_button", tooltip = "[font=default-bold]Scenario Info[/font] - Read the introduction to Biter Battles" })
 end
 

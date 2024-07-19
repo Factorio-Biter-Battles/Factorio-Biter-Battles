@@ -1,6 +1,6 @@
 local AiTargets = require 'maps.biter_battles_v2.ai_targets'
 local Functions = require "maps.biter_battles_v2.functions"
-local Gui = require "maps.biter_battles_v2.gui"
+local BBGui = require "maps.biter_battles_v2.gui"
 local Init = require "maps.biter_battles_v2.init"
 local Score = require "comfy_panel.score"
 local Server = require 'utils.server'
@@ -12,6 +12,7 @@ local Token = require 'utils.token'
 local Task = require 'utils.task'
 local team_stats_compare = require 'maps.biter_battles_v2.team_stats_compare'
 local math_random = math.random
+local Gui = require 'utils.gui'
 local gui_style = require 'utils.utils'.gui_style
 
 local Public = {}
@@ -505,19 +506,26 @@ local function chat_with_everyone(event)
 end
 
 local function draw_reroll_gui(player)
-    if player.gui.top.reroll_frame then return end
-    local f = player.gui.top.add{type = "frame", name = "reroll_frame"}
-    gui_style(f, {height = 38, padding = 0})
+    if Gui.get_top_button(player, "reroll_frame") then
+        return
+    end
+
+    local f = Gui.add_top_button(player, { type = "frame", name = "reroll_frame", style = "finished_game_subheader_frame" })
+    gui_style(f, { minimal_height = 36, maximal_height = 36, padding = 0, vertical_align = "center" })
+
+    local line = f.add({ type = 'line', direction = 'vertical' })
 
     local t = f.add{type = "table", name = "reroll_table", column_count = 3, vertical_centering = true}
+    gui_style(t, { top_margin = 2, left_margin = 8, right_margin = 8 })
+
     local l = t.add{type = "label", caption = "Reroll map?\t" .. global.reroll_time_left .. "s"}
-    gui_style(l, {font = "heading-2", font_color = {r = 0.88, g = 0.55, b = 0.11}, width = 105})
+    gui_style(l, { font = "heading-2", font_color = {r = 0.88, g = 0.55, b = 0.11}, minimal_width = 120, maximal_width = 120, right_padding = 2 })
 
-    local b = t.add { type = "sprite-button", caption = "Yes", name = "reroll_yes" }
-    gui_style(b, {width = 50, height = 28 , font = "heading-2", font_color = {r = 0.1, g = 0.9, b = 0.0}} )
+    b = t.add { type = "button", caption = "No", name = "reroll_no", style = "red_back_button" }
+    gui_style(b, { minimal_width = 56, maximal_width = 56, font = "heading-2", --[[font_color = {r = 0.9, g = 0.1, b = 0.1}]] })
 
-    b = t.add { type = "sprite-button", caption = "No", name = "reroll_no" }
-    gui_style(b, {width = 50, height = 28 , font = "heading-2", font_color = {r = 0.9, g = 0.1, b = 0.1}} )
+    local b = t.add { type = "button", caption = "Yes", name = "reroll_yes", style = "confirm_button_without_tooltip" }
+    gui_style(b, { minimal_width = 56, maximal_width = 56, font = "heading-2", --[[font_color = {r = 0.1, g = 0.9, b = 0.0}]] })
 end
 
 local reroll_buttons_token = Token.register(
@@ -534,9 +542,8 @@ local function stop_map_reroll()
     Event.remove_removable(defines.events.on_player_joined_game, reroll_buttons_token)
     -- remove existing buttons
     for _, player in pairs(game.players) do
-        if player.gui.top.reroll_frame then
-            player.gui.top.reroll_frame.destroy()
-        end
+        local frame = Gui.get_top_button(player, "reroll_frame")
+        if frame then frame.destroy() end
     end
 end
 
@@ -551,8 +558,9 @@ decrement_timer_token = Token.register(
         global.reroll_time_left = global.reroll_time_left - 1
         if global.reroll_time_left > 0 then
             for _, player in pairs(game.connected_players) do
-                if player.gui.top.reroll_frame ~= nil then
-                    player.gui.top.reroll_frame.reroll_table.children[1].caption = "Reroll map?\t" .. global.reroll_time_left .. "s"
+                local frame = Gui.get_top_button(player, "reroll_frame")
+                if frame and frame.valid then
+                    frame.reroll_table.children[1].caption = "Reroll map?\t" .. global.reroll_time_left .. "s"
                 end
             end
 
@@ -605,7 +613,7 @@ function Public.generate_new_map()
     Init.playground_surface()
     Init.forces()
     Init.draw_structures()
-    Gui.reset_tables_gui()
+    BBGui.reset_tables_gui()
     Init.load_spawn()
     Init.reveal_map()
     for _, player in pairs(game.players) do
@@ -613,8 +621,11 @@ function Public.generate_new_map()
         for _, e in pairs(player.gui.left.children) do
             e.destroy()
         end
-        if player.gui.top.suspend_frame then player.gui.top.suspend_frame.destroy() end
-        Gui.create_main_gui(player)
+        local suspend_frame = Gui.get_top_button(player, 'suspend_frame')
+        if suspend_frame then
+            suspend_frame.destroy()
+        end
+        BBGui.create_main_gui(player)
     end
     game.reset_time_played()
     global.server_restart_timer = nil

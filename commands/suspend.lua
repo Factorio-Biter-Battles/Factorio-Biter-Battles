@@ -3,24 +3,30 @@ local Color = require 'utils.color_presets'
 local Token = require 'utils.token'
 local Task = require 'utils.task'
 local Event = require 'utils.event'
+local Gui = require 'utils.gui'
 local gui_style = require 'utils.utils'.gui_style
 
 ---@param player LuaPlayer
 local function draw_suspend_gui(player)
-	if player.gui.top.suspend_frame then return end
-	if global.suspend_target_info == nil or global.suspend_target_info.suspendee_player_name == player.name then return end
-	local f = player.gui.top.add{type = "frame", name = "suspend_frame"}
-	gui_style(f, {height = 38, padding = 0})
+	if Gui.get_top_button(player, "suspend_frame") then return end
+	if global.suspend_target_info == nil --[[or global.suspend_target_info.suspendee_player_name == player.name]] then return end
+	
+	local f = Gui.add_top_button(player, { type = "frame", name = "suspend_frame", style = "finished_game_subheader_frame" })
+	gui_style(f, { minimal_height = 36, maximal_height = 36, padding = 0, vertical_align = "center" })
+
+	local line = f.add({ type = 'line', direction = 'vertical' })
 
 	local t = f.add{type = "table", name = "suspend_table", column_count = 3, vertical_centering = true}
+	gui_style(t, { top_margin = 2, left_margin = 8, right_margin = 8 })
+
 	local l = t.add{type = "label", caption = "Suspend ".. global.suspend_target_info.suspendee_player_name .." ?\t" .. global.suspend_time_left .. "s"}
-	gui_style(l, {font = "heading-2", font_color = {r = 0.88, g = 0.55, b = 0.11}, width = 210})
+	gui_style(l, { minimal_width = 120 + 6*string.len(global.suspend_target_info.suspendee_player_name), font_color = {r = 0.88, g = 0.55, b = 0.11}, font = "heading-2" })
 
-	local b = t.add { type = "sprite-button", caption = "Yes", name = "suspend_yes" }
-	gui_style(b, {width = 50, height = 28 , font = "heading-2", font_color = {r = 0.1, g = 0.9, b = 0.0}} )
+	local b = t.add { type = "sprite-button", caption = "No", name = "suspend_no", style = "red_back_button" }
+	gui_style(b, { minimal_width = 56, maximal_width = 56, font = "heading-2", --[[font_color = {r = 0.9, g = 0.1, b = 0.1}]] })
 
-	b = t.add { type = "sprite-button", caption = "No", name = "suspend_no" }
-	gui_style(b, {width = 50, height = 28 , font = "heading-2", font_color = {r = 0.9, g = 0.1, b = 0.1}} )
+	local b = t.add { type = "sprite-button", caption = "Yes", name = "suspend_yes", style = "confirm_button_without_tooltip" }
+	gui_style(b, { minimal_width = 56, maximal_width = 56, font = "heading-2", --[[font_color = {r = 0.1, g = 0.9, b = 0.0}]] })
 end
 
 local suspend_buttons_token = Token.register(
@@ -28,6 +34,7 @@ local suspend_buttons_token = Token.register(
 	function(event)
 		local player = game.get_player(event.player_index)
 		draw_suspend_gui(player)
+		Sounds.notify_player(player, 'utility/new_objective')
 	end
 )
 
@@ -79,8 +86,9 @@ local suspend_token = Token.register(
 		Event.remove_removable(defines.events.on_player_joined_game, suspend_buttons_token)
 		-- remove existing buttons
 		for _, player in pairs(game.players) do
-			if player.gui.top["suspend_frame"] then
-				player.gui.top["suspend_frame"].destroy()
+			local frame = Gui.get_top_button(player, 'suspend_frame')
+			if frame then
+				frame.destroy()
 			end
 		end
 		-- count votes
@@ -121,20 +129,19 @@ local suspend_token = Token.register(
 )
 
 local decrement_timer_token = Token.get_counter() + 1 -- predict what the token will look like
-decrement_timer_token = Token.register(
-    function()
-        local suspend_time_left = global.suspend_time_left - 1
-        for _, player in pairs(game.connected_players) do
-			if player.gui.top.suspend_frame and global.suspend_target_info ~= nil then
-				player.gui.top.suspend_frame.suspend_table.children[1].caption = "Suspend ".. global.suspend_target_info.suspendee_player_name .." ?\t" .. suspend_time_left .. "s"
-			end
-        end
-        if suspend_time_left > 0 and global.suspend_target_info ~= nil then
-            Task.set_timeout_in_ticks(60, decrement_timer_token)
-            global.suspend_time_left = suspend_time_left
-        end
-    end
-)
+decrement_timer_token = Token.register(function()
+	local suspend_time_left = global.suspend_time_left - 1
+	for _, player in pairs(game.connected_players) do
+		local frame = Gui.get_top_button(player, 'suspend_frame')
+		if frame and frame.valid and global.suspend_target_info ~= nil then
+			frame.suspend_table.children[1].caption = "Suspend ".. global.suspend_target_info.suspendee_player_name .." ?\t" .. suspend_time_left .. "s"
+		end
+	end
+	if suspend_time_left > 0 and global.suspend_target_info ~= nil then
+		Task.set_timeout_in_ticks(60, decrement_timer_token)
+		global.suspend_time_left = suspend_time_left
+	end
+end)
 
 ---@param cmd CustomCommandData
 local function suspend_player(cmd)
@@ -180,6 +187,7 @@ local function suspend_player(cmd)
 			global.suspend_time_left = global.suspend_time_limit / 60
 			for _, player in pairs(game.connected_players) do
 				draw_suspend_gui(player)
+				Sounds.notify_all('utility/new_objective')
 			end
 			Task.set_timeout_in_ticks(60, decrement_timer_token)
 		else

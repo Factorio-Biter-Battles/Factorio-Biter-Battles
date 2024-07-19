@@ -837,7 +837,7 @@ local function player_joined(event)
 
     local polls = Gui.get_top_button(player, main_button_name)
     if polls then
-        local frame = player.gui.top[main_frame_name]
+        local frame = player.gui.left[main_frame_name]
         if frame and frame.valid then
             local data = Gui.get_data(frame)
             update_poll_viewer(data)

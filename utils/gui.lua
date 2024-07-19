@@ -150,7 +150,7 @@ function Gui.add_top_button(player, frame, style_name)
     return button
 end
 
-local backup_attributes = { 'minimal_width', 'maximal_width' }
+local backup_attributes = { 'minimal_width', 'maximal_width', 'font_color', 'font' }
 function Gui.restyle_top_buttons(player, new_style)
     for _, ele in pairs(mod_gui.get_button_flow(player).children) do
         if ele.type == 'button' or ele.type == 'sprite-button' then

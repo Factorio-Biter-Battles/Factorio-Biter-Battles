@@ -26,7 +26,6 @@ local checks = {
 
 local function get_x_offset(player)
 	local x = 24
-	--for _, element in pairs(player.gui.top.children) do
 	for _, element in pairs(mod_gui.get_button_flow(player).children) do 
 		if element.name == "simple_tag" then break end		
 		local style = element.style

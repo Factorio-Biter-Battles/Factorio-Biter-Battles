@@ -65,6 +65,12 @@ function Public.comfy_panel_add_top_button(player)
     })
 end
 
+local gui_toggle_blacklist = {
+    reroll_frame = true,
+    bb_frame_statistics = true,
+    suspend_frame = true,
+}
+
 Gui.on_click('main_toggle_button_name', function (event)
     local button = event.element
     local player = event.player
@@ -75,7 +81,7 @@ Gui.on_click('main_toggle_button_name', function (event)
     button.tooltip = default and 'Click to show top buttons!' or 'Click to hide top buttons!'
 
     for _, ele in pairs(top.mod_gui_top_frame.mod_gui_inner_frame.children) do
-        if ele and ele.valid and (ele.name ~= 'main_toggle_button_name' and ele.name ~= 'bb_frame_statistics') then
+        if ele and ele.valid and (ele.name ~= 'main_toggle_button_name' and gui_toggle_blacklist[ele.name] ~= true) then
             ele.visible = not default
         end
     end

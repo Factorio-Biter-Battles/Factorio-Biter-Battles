@@ -10,6 +10,7 @@ local Feeding = require "maps.biter_battles_v2.feeding"
 local ResearchInfo = require "maps.biter_battles_v2.research_info"
 local TeamStatsCompare = require "maps.biter_battles_v2.team_stats_compare"
 local Tables = require "maps.biter_battles_v2.tables"
+local DifficultyVote = require 'maps.biter_battles_v2.difficulty_vote'
 local Captain_event = require "comfy_panel.special_games.captain"
 local player_utils = require "utils.player"
 
@@ -86,8 +87,7 @@ function Public.create_statistics_gui_button(player)
 
 	local summary = Gui.add_top_button(player, { type = "sprite-button", name = "bb_toggle_statistics", sprite = "utility/expand", tooltip = 'Show statistics!' })
 
-	local top = player.gui.top
-	local frame = top.mod_gui_top_frame.mod_gui_inner_frame.add { type = 'frame', name = 'bb_frame_statistics', style = 'finished_game_subheader_frame' }
+	local frame = summary.parent.add { type = 'frame', name = 'bb_frame_statistics', style = 'finished_game_subheader_frame' }
 	frame.location = { x = 1, y = 38 }
 	gui_style(frame, { minimal_height = 36, maximal_height = 36 })
 
@@ -139,13 +139,15 @@ end
 Gui.on_click('bb_toggle_statistics', function (event)
 	local button = event.element
 	local player = event.player
-	local top = player.gui.top
 
 	local default = button.sprite == 'utility/expand'
 	button.sprite = default and 'utility/collapse' or 'utility/expand' 
 	button.tooltip = default and 'Hide statistics!' or 'Show statistics!'
 
-	top.mod_gui_top_frame.mod_gui_inner_frame.bb_frame_statistics.visible = not top.mod_gui_top_frame.mod_gui_inner_frame.bb_frame_statistics.visible
+	local frame = Gui.get_top_button(player, 'bb_frame_statistics')
+	if frame then
+		frame.visible = not frame.visible
+	end
 end)
 
 local style = {
@@ -325,8 +327,11 @@ function Public.refresh_statistics(player)
 		return
 	end
 
+	local difficulty = DifficultyVote.difficulty_name()
+	local color = DifficultyVote.difficulty_print_color()
 	frame.clock.caption = get_format_time()
-	frame.clock.tooltip = string_format('Game speed: ' .. style.yellow(style.stat('%.2f')), game.speed)
+	frame.clock.tooltip = style.listbox('Difficulty: ') .. style.stat(string_format('[color=%.2f,%.2f,%.2f]%s[/color]', color.r, color.g, color.b, difficulty)) .. 
+		string_format(style.listbox('\nGame speed: ') .. style.yellow(style.stat('%.2f')), game.speed)
 
 	for force_name, gui_value in pairs(gui_values) do
 		local biter_force = game.forces[gui_value.biter_force]
