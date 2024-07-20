@@ -25,7 +25,7 @@ function Public.get_sorted_colored_player_list(player_list)
 		table.insert(sorted_player_list, pair.player)
 	end
 
-	return Public.get_colored_player_list(player_list)
+	return Public.get_colored_player_list(sorted_player_list)
 end
 
 ---@param names string[]
