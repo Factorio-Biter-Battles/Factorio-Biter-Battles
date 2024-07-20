@@ -13,6 +13,8 @@ local function add_changelog(player, element)
 		table.insert(changelog_change, who)
 	end
 	
+	add_entry("2024-07-20", "gabrielchl", "fix: teams player list no longer sorted")
+	add_entry("2024-07-20", "RedRafe", "Charting fixes")
 	add_entry("2024-07-19", "PlayerNoon", "Fix, prevent voting same difficulty: Now also in captains.")
 	add_entry("2024-07-19", "Ragnarok77", "Bugfix captain : dont show task group for spectators")
 	add_entry("2024-07-19", "gabrielchl", "feat(captains): revert captains join info panel player list sort logic")
