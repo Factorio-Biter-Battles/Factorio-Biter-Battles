@@ -129,9 +129,18 @@ function Gui.init_gui_style(player)
     --gui_style(mod_gui_inner_frame, { })
 end
 
+function Gui.get_top_index(player)
+    local flow = mod_gui.get_button_flow(player)
+    if flow.bb_toggle_statistics then
+        return flow.bb_toggle_statistics.get_index_in_parent() 
+    end
+    return
+end
+
 ---@param player LuaPlayer
 ---@param button_name string
 function Gui.get_top_button(player, button_name)
+    -- player.gui.top.mod_gui_top_frame.mod_gui_inner_frame
 	return mod_gui.get_button_flow(player)[button_name]
 end
 
@@ -142,7 +151,7 @@ function Gui.add_top_button(player, frame, style_name)
 	if button and button.valid then
         return button
 	end
-	if not frame.style then
+	if (frame.type == 'button' or frame.type == 'sprite-button') and frame.style == nil then
         frame.style = style_name or gui_themes[1].type
 	end
 	button = mod_gui.get_button_flow(player).add(frame)

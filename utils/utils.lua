@@ -153,7 +153,8 @@ Module.gui_themes = {
     { type = 'rounded_button',   name = 'Light rounded' },
 }
 
-Module.top_button_style = function() return {
+Module.top_button_style = function()
+    return {
         font_color = { 165, 165, 165 },
         font = 'heading-3',
         minimal_height = 36,

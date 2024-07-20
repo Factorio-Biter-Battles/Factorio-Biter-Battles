@@ -1,6 +1,7 @@
 local Public = {}
 global.player_data_afk = {}
 local Server = require "utils.server"
+local Color = require 'utils.color_presets'
 
 local bb_config = require "maps.biter_battles_v2.config"
 local bb_diff = require "maps.biter_battles_v2.difficulty_vote"
@@ -85,7 +86,7 @@ function Public.create_statistics_gui_button(player)
 		return
 	end
 
-	local summary = Gui.add_top_button(player, { type = "sprite-button", name = "bb_toggle_statistics", sprite = "utility/expand", tooltip = 'Show statistics!' })
+	local summary = Gui.add_top_button(player, { type = "sprite-button", name = "bb_toggle_statistics", sprite = "utility/expand", tooltip = 'Show game status!' })
 
 	local frame = summary.parent.add { type = 'frame', name = 'bb_frame_statistics', style = 'finished_game_subheader_frame' }
 	frame.location = { x = 1, y = 38 }
@@ -142,7 +143,7 @@ Gui.on_click('bb_toggle_statistics', function (event)
 
 	local default = button.sprite == 'utility/expand'
 	button.sprite = default and 'utility/collapse' or 'utility/expand' 
-	button.tooltip = default and 'Hide statistics!' or 'Show statistics!'
+	button.tooltip = default and 'Hide game status!' or 'Show game status!'
 
 	local frame = Gui.get_top_button(player, 'bb_frame_statistics')
 	if frame then
@@ -168,7 +169,6 @@ local function create_clock(frame)
 	clock_ui.style.font_color = { r = 0.98, g = 0.66, b = 0.22 }
 
 	ResearchInfo.create_research_info_button(inner_frame)
-	frame.add { type = "line" }
 end
 
 local function get_format_time()
@@ -215,26 +215,60 @@ function threat_to_pretty_string(threat_value)
 end
 
 function Public.create_main_gui(player)
-	local is_spec = player.force.name == "spectator" or not global.chosen_team[player.name]
-	if player.gui.left["bb_main_gui"] then player.gui.left["bb_main_gui"].destroy() end
-	local frame = player.gui.left.add { type = "frame", name = "bb_main_gui", direction = "vertical" }
+	local is_spec = player.force.name == 'spectator' or not global.chosen_team[player.name]
+	if player.gui.left.bb_main_gui then
+		player.gui.left.bb_main_gui.destroy()
+	end
+	
+	local main_frame = player.gui.left.add { type = 'frame', name = 'bb_main_gui', direction = 'vertical', caption = 'Biter menu' }
+	gui_style(main_frame, { padding = 2, font_color = { 165, 165, 165 }, font = 'heading-3' })
 
-	create_clock(frame)
+	local flow = main_frame.add { type = 'flow', name = 'flow', style = 'vertical_flow', direction = 'vertical' }
+	local inner_frame = flow.add { type = 'frame', name = 'inner_frame', style = 'window_content_frame_packed', direction = 'vertical' }
+	local subheader = inner_frame.add { type = 'frame', name = 'subheader', style = 'subheader_frame' }
+	gui_style(subheader, { horizontally_stretchable = true, use_header_filler = true })
+	
+	create_clock(subheader)
+
+	local sp = inner_frame.add { type = 'scroll-pane', name = 'scroll_pane', style = 'scroll_pane_under_subheader', direction = 'vertical' }
+
 	-- Science sending GUI
-	local t = frame.add { type = "table", name = "bb_main_send_table", column_count = 4 }
+	local science_frame = sp.add { type = 'frame', name = 'science_frame', style = 'bordered_frame', direction = 'vertical', caption = 'Feeding' }
+	gui_style(science_frame, { horizontally_stretchable = true, horizontal_align = 'center' })
+
+	local flow = science_frame.add { type = 'flow', direction = 'vertical' }
+	gui_style(flow, { horizontally_stretchable = true, horizontal_align = 'center' })
+
+	local table_frame = flow.add { type = 'frame', name = 'table_frame', direction = 'horizontal', style = 'quick_bar_inner_panel' } --slot_button_deep_frame, quick_bar_window_frame
+	gui_style(table_frame, { horizontally_stretchable = true, margin = 0, use_header_filler = false })
+
+	local t = table_frame.add { type = 'table', name = 'bb_main_send_table', column_count = 5, style = 'filter_slot_table' }
+	gui_style(t, { horizontally_stretchable = true })
+
 	for food_name, tooltip in pairs(food_names) do
-		local s = t.add { type = "sprite-button", name = food_name, sprite = "item/" .. food_name }
+		local s = t.add { type = 'sprite-button', name = food_name, sprite = 'item/' .. food_name, style = 'quick_bar_slot_button' }
 		gui_style(s, { minimal_height = 41, minimal_width = 41, padding = 0 })
 	end
-	local s = t.add { type = "sprite-button", name = "send_all", caption = "All" }
+	local s = t.add { type = 'sprite-button', name = 'send_all', caption = 'All', style = 'quick_bar_slot_button' }
 	gui_style(s, { minimal_height = 41, minimal_width = 41, padding = 0, font_color = { r = 0.9, g = 0.9, b = 0.9 } })
-	frame.add { type = "line", name = "bb_main_send_table_line" }
 
-	local d = frame.add { type = "sprite-button", name = "join_random_button", caption = "AUTO JOIN" }
-	d.style.font = "default-large-bold"
-	d.style.font_color = { r = 1, g = 0, b = 1 }
-	d.style.width = 350
-	frame.add { type = "line", name = "join_random_line"}
+	-- Join
+	local join_frame = sp.add { type = 'frame', name = 'auto_frame', style = 'bordered_frame', direction = 'horizontal', caption = 'Join' }
+	gui_style(join_frame, { horizontally_stretchable = true })
+
+	local t = join_frame.add { type = 'table', column_count = 3}
+	gui_style(t, { vertical_align = 'center' })
+
+	local button = t.add { type = 'button', name = 'join_north', caption = 'North ', style = 'back_button' }
+	gui_style(button, { font = 'default-semibold', font_color = Color.dark_blue, width = 80, height = 24, horizontal_align = 'right' })
+
+	local button = t.add { type = 'button', name = 'join_random_button', caption = 'Random', style = 'dialog_button' }
+	gui_style(button, { font = 'default-semibold', font_color = Color.dark_green, width = 90, height = 24 })
+
+	local button = t.add { type = 'button', name = 'join_south', caption = ' South', style = 'forward_button' }
+	gui_style(button, { font = 'default-semibold', font_color = Color.dark_red, width = 80, height = 24, horizontal_align = 'left' })
+
+	if true then return end
 
 	local first_team = true
 	local view_player_list = global.bb_view_players[player.name]
@@ -355,8 +389,10 @@ function Public.refresh_main_gui(player)
 	local is_spec = player.force.name == "spectator" or not global.chosen_team[player.name]
 	local frame = player.gui.left["bb_main_gui"]
 	if not frame then return end
+	
+	if true then return end
 
-	update_clock(frame, player)
+	update_clock(frame.flow.subheader, player)
 	-- Science sending GUI
 	if not is_spec and not global.bb_game_won_by_team then
 		local t = frame["bb_main_send_table"]

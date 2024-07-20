@@ -2,6 +2,7 @@ local Color = require 'utils.color_presets'
 local Event = require 'utils.event'
 local Token = require 'utils.token'
 local Task = require 'utils.task'
+local Gui = require 'utils.gui'
 local Team_manager = require "maps.biter_battles_v2.team_manager"
 local session = require 'utils.datastore.session_data'
 local Functions = require 'maps.biter_battles_v2.functions'
@@ -120,14 +121,15 @@ local function clear_gui_captain_mode()
 			"captain_referee_gui",
 			"captain_player_gui",
 		}
-		local playergui = player.gui
-		for _, gui in pairs(top_guis) do
-			if playergui.top[gui] then playergui.top[gui].destroy() end
+		local player_gui = player.gui
+		for _, gui_name in pairs(top_guis) do
+			local top_button = Gui.get_top_button(player, gui_name)
+			if top_button then top_button.destroy() end
 		end
 		for _, gui in pairs(center_guis) do
 			-- This is a bit of a hack, but I don't want to figure out which ones are center and which ones are screen.
-			if playergui.center[gui] then playergui.center[gui].destroy() end
-			if playergui.screen[gui] then playergui.screen[gui].destroy() end
+			if player_gui.center[gui] then player_gui.center[gui].destroy() end
+			if player_gui.screen[gui] then player_gui.screen[gui].destroy() end
 		end
 	end
 end
@@ -734,11 +736,8 @@ end
 
 function Public.draw_captain_manager_button(player)
 	if is_test_player(player) then return end
-	if player.gui.top["captain_manager_toggle_button"] then player.gui.top["captain_manager_toggle_button"].destroy() end
-	local button = player.gui.top.add({type = "sprite-button", name = "captain_manager_toggle_button", caption = "Cpt Captain"})
-	button.style.font = "heading-2"
-	button.style.font_color = {r = 0.88, g = 0.55, b = 0.11}
-	gui_style(button, {width = 114, height = 38, padding = -2})
+	local button = Gui.add_top_button(player, { type = "sprite-button", name = "captain_manager_toggle_button", sprite = "utility/force_editor_icon", caption = "CPT", tooltip = '[font=default-bold]Captain Manager[/font] - Toggle captain manager window', index = Gui.get_top_index(player) })
+	gui_style(button, { font_color = Color.yellow, vertical_align = 'bottom', font = 'default-bold' })
 end
 
 function Public.update_all_captain_player_guis()
@@ -1155,20 +1154,14 @@ end
 
 function Public.draw_captain_player_button(player)
 	if is_test_player(player) then return end
-	if player.gui.top["captain_player_toggle_button"] then player.gui.top["captain_player_toggle_button"].destroy() end
-	local button = player.gui.top.add({type = "sprite-button", name = "captain_player_toggle_button", caption = "Join Info"})
-	button.style.font = "heading-2"
-	button.style.font_color = {r = 0.88, g = 0.55, b = 0.11}
-	gui_style(button, {width = 114, height = 38, padding = -2})
+	local button = Gui.add_top_button(player, { type = "sprite-button", sprite = "entity/big-biter", name = "captain_player_toggle_button", caption = "CPT", tooltip = '[font=default-bold]Join Info[/font] - Toggle join window for captain event', index = Gui.get_top_index(player) })
+	gui_style(button, { font_color = Color.yellow, vertical_align = 'bottom', font = 'default-bold' })
 end
 
 function Public.draw_captain_referee_button(player)
 	if is_test_player(player) then return end
-	if player.gui.top["captain_referee_toggle_button"] then player.gui.top["captain_referee_toggle_button"].destroy() end
-	local button = player.gui.top.add({type = "sprite-button", name = "captain_referee_toggle_button", caption = "Cpt Referee"})
-	button.style.font = "heading-2"
-	button.style.font_color = {r = 0.88, g = 0.55, b = 0.11}
-	gui_style(button, {width = 114, height = 38, padding = -2})
+	local button = Gui.add_top_button(player, { type = "sprite-button", sprite = "achievement/lazy-bastard", name = "captain_referee_toggle_button", tooltip = '[font=default-bold]Referee Manager[/font] - Toggle referee manager window', index = Gui.get_top_index(player) })
+	gui_style(button, { font_color = Color.yellow, vertical_align = 'bottom', font = 'default-bold' })
 end
 
 function Public.reset_special_games()
@@ -1363,7 +1356,7 @@ if false then
 			local group_name = ""
 			if startswith(playerName, "eve") then group_name = "[cpt_eve]" end
 			if startswith(playerName, "greg") then group_name = "[cpt_greg]" end
-			special.test_players[playerName] = {name = playerName, tag = group_name}
+			special.test_players[playerName] = {name = playerName, tag = group_name, color = { r = 1, g = 1, b = 1 }}
 			table.insert(special["listPlayers"], playerName)
 		end
 		special["player_info"]["alice"] = "I am a test player"
@@ -1691,7 +1684,7 @@ local function changeCaptain(cmd,isItForNorth)
 						game.print(playerOfCommand.name .. " has decided that " .. victim.name .. " will be the new captain instead of " .. global.special_games_variables["captain_mode"]["captainList"][1],Color.cyan)
 						local oldCaptain = cpt_get_player(global.special_games_variables["captain_mode"]["captainList"][1])
 						if oldCaptain.gui.screen["captain_manager_gui"] then oldCaptain.gui.screen["captain_manager_gui"].destroy() end
-						if oldCaptain.gui.top["captain_manager_toggle_button"] then oldCaptain.gui.top["captain_manager_toggle_button"].destroy() end
+						if Gui.get_top_button(oldCaptain, "captain_manager_toggle_button") then Gui.get_top_button(oldCaptain, "captain_manager_toggle_button").destroy() end
 						global.special_games_variables["captain_mode"]["captainList"][1] = victim.name
 						Public.draw_captain_manager_button(cpt_get_player(victim.name))
 						generate_vs_text_rendering()
@@ -1702,7 +1695,7 @@ local function changeCaptain(cmd,isItForNorth)
 						game.print(playerOfCommand.name .. " has decided that " .. victim.name .. " will be the new captain instead of " .. global.special_games_variables["captain_mode"]["captainList"][2],Color.cyan)
 						local oldCaptain = cpt_get_player(global.special_games_variables["captain_mode"]["captainList"][2])
 						if oldCaptain.gui.screen["captain_manager_gui"] then oldCaptain.gui.screen["captain_manager_gui"].destroy() end
-						if oldCaptain.gui.top["captain_manager_toggle_button"] then oldCaptain.gui.top["captain_manager_toggle_button"].destroy() end
+						if Gui.get_top_button(oldCaptain, "captain_manager_toggle_button") then Gui.get_top_button(oldCaptain, "captain_manager_toggle_button").destroy() end
 						global.special_games_variables["captain_mode"]["captainList"][2] = victim.name
 						Public.draw_captain_manager_button(cpt_get_player(victim.name))
 						generate_vs_text_rendering()
@@ -1751,7 +1744,7 @@ commands.add_command('replaceReferee', 'Admin or referee can decide to change th
 			end
 
 			local refPlayer = cpt_get_player(global.special_games_variables["captain_mode"]["refereeName"])
-			if refPlayer.gui.top["captain_referee_toggle_button"] then refPlayer.gui.top["captain_referee_toggle_button"].destroy() end
+			if Gui.get_top_button(refPlayer, "captain_referee_toggle_button") then Gui.get_top_button(refPlayer, "captain_referee_toggle_button").destroy() end
 			if refPlayer.gui.screen["captain_referee_gui"] then refPlayer.gui.screen["captain_referee_gui"].destroy() end
 			Public.draw_captain_referee_button(victim)
 			game.print(playerOfCommand.name .. " has decided that " .. victim.name .. " will be the new referee instead of " .. global.special_games_variables["captain_mode"]["refereeName"],Color.cyan)

@@ -9,7 +9,7 @@ local gui_style = require 'utils.utils'.gui_style
 ---@param player LuaPlayer
 local function draw_suspend_gui(player)
 	if Gui.get_top_button(player, "suspend_frame") then return end
-	if global.suspend_target_info == nil --[[or global.suspend_target_info.suspendee_player_name == player.name]] then return end
+	if global.suspend_target_info == nil or global.suspend_target_info.suspendee_player_name == player.name then return end
 	
 	local f = Gui.add_top_button(player, { type = "frame", name = "suspend_frame", style = "finished_game_subheader_frame" })
 	gui_style(f, { minimal_height = 36, maximal_height = 36, padding = 0, vertical_align = "center" })
