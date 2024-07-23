@@ -146,6 +146,9 @@ function Public.initial_setup()
 
 	global.total_time_online_players = {}
 	global.already_logged_current_session_time_online_players = {}
+	---@type table<string, {show_hidden: boolean?}>
+	global.teamstats_preferences = {}
+	global.allow_teamstats = "always"
 	--Disable Nauvis
 	local surface = game.surfaces[1]
 	local map_gen_settings = surface.map_gen_settings
