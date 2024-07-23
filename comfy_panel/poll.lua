@@ -825,7 +825,7 @@ function Class.create_top_button(player)
         type = 'sprite-button',
         name = main_button_name,
         sprite = 'item/programmable-speaker',
-        tooltip = '[font=default-bold]Polls[/font] - see current/past polls'
+        tooltip = '[font=default-bold]Polls[/font] - Toggle current/past polls window'
     })
 end
 

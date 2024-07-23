@@ -174,6 +174,44 @@ function Gui.restyle_top_buttons(player, new_style)
     end
 end
 
+function Gui.add_pusher(element)
+    if not (element and element.valid) then
+        return
+    end
+    local p = element.add { type = 'empty-widget' }
+    p.ignored_by_interaction = true
+    gui_style(p, { 
+        horizontally_stretchable = true,
+        vertically_stretchable = true,
+        top_margin = 0,
+        bottom_margin = 0,
+        left_margin = 0,
+        right_margin = 0,
+    })
+end
+
+function Gui.get_child_recursively(element, child_name)
+    if element.name == child_name then
+        return element
+    end
+
+    for _, e in pairs(element.children) do
+        if e.name == child_name then
+            return element[child_name]
+        end
+    end
+
+    local res
+    for _, e in pairs(element.children) do
+        local c = Gui.get_child_recursively(e, child_name)
+        if c then
+            res = c
+            break
+        end
+    end
+    return res
+end
+
 local function clear_invalid_data()
     for _, player in pairs(game.connected_players) do
         local player_index = player.index

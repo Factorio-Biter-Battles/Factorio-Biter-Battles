@@ -26,36 +26,6 @@ local function handle_spectator(player)
   return is_spectator
 end
 
-local function show_teamstats(player)
-  local frame = player.gui.screen.teamstats_frame
-
-  if frame and frame.valid then
-    if player.opened == frame then
-        player.opened = nil
-    end
-    frame.destroy()
-    return
-  end
-
-  local deny_reason = false
-  -- allow it always in singleplayer, or if the game is over
-  if global.bb_game_won_by_team and game.is_multiplayer() then
-    if global.allow_teamstats == "spectators" then
-      if player.force.name ~= "spectator" then deny_reason = "spectators only" end
-    elseif global.allow_teamstats == "pure-spectators" then
-      if global.chosen_team[player.name] then deny_reason = "pure spectators only (you have joined a team)" end
-    else
-      if global.allow_teamstats ~= "always" then deny_reason = "only allowed at end of game" end
-    end
-  end
-  if deny_reason then
-    player.print("Team stats for current game is unavailable: " .. deny_reason)
-    Sounds.notify_player(player, "utility/cannot_build")
-    return
-  end
-  safe_wrap_with_player_print(player, TeamStatsCompare.show_stats, player)
-end
-
 local function clear_corpses(player)
   local param = 160
   local pos = player.position
@@ -106,7 +76,7 @@ local main_frame_actions = {
   [main_frame_name..'_send_fish'] = function(player, event) if handle_spectator(player) then return end Functions.spy_fish(player, event) end,
   [main_frame_name..'_send_science'] = function(player, event) if handle_spectator(player) then return end  Feeding.feed_biters_mixed_from_inventory(player, event.button) end,
   [main_frame_name..'_research_info'] = function(player, event) ResearchInfo.show_research_info_handler(event) end,
-  [main_frame_name..'_teamstats'] = function(player, event) show_teamstats(player) end,
+  [main_frame_name..'_teamstats'] = function(player, event) TeamStatsCompare.toggle_team_stats(player) end,
   [main_frame_name..'_clear_corpses'] = function(player, event) if handle_spectator(player) then return end clear_corpses(player) end,
   [main_frame_name..'_settings'] = function(player, event) toggle_shortcuts_settings(player) end,
 }

@@ -244,14 +244,16 @@ function ResearchInfo.create_research_info_button(element)
         sprite = "item/lab",
         name = "research_info_button",
         tooltip = "Science Info",
+        style = "transparent_slot",
         style_mods = {
-            width = 18,
-            height = 18,
-            padding = -2
+            width = 24,
+            height = 24,
+            --padding = -2
         },
         handler = show_research_info_handler
     }
-    flui.add(element, template)
+    local _, button = flui.add(element, template)
+    return button
 end
 
 ---@param force string

@@ -234,6 +234,42 @@ function TeamStatsCompare.game_over()
     global.prev_game_team_stats = global.team_stats
 end
 
+function TeamStatsCompare.toggle_team_stats(player, stats)
+    local frame = player.gui.screen.teamstats_frame
+
+    if frame and frame.valid then
+        if player.opened == frame then
+            player.opened = nil
+        end
+        frame.destroy()
+        return
+    end
+
+    local deny_reason = false
+    -- allow it always in singleplayer, or if the game is over
+    if not stats and not global.bb_game_won_by_team and game.is_multiplayer() then
+        if global.allow_teamstats == 'spectators' then
+            if player.force.name ~= 'spectator' then
+                deny_reason = 'spectators only'
+            end
+        elseif global.allow_teamstats == 'pure-spectators' then
+            if global.chosen_team[player.name] then
+                deny_reason = 'pure spectators only (you have joined a team)'
+            end
+        else
+            if global.allow_teamstats ~= 'always' then
+                deny_reason = 'only allowed at end of game'
+            end
+        end
+    end
+    if deny_reason then
+        player.print('Team stats for current game is unavailable: ' .. deny_reason)
+        Sounds.notify_player(player, 'utility/cannot_build')
+        return
+    end
+    safe_wrap_with_player_print(player, TeamStatsCompare.show_stats, player, stats)
+end
+
 commands.add_command("teamstats", "Show team stats", function (cmd)
     if not cmd.player_index then return end
     local player = game.get_player(cmd.player_index)
@@ -250,22 +286,7 @@ commands.add_command("teamstats", "Show team stats", function (cmd)
         player.print("Unsupported argument to /teamstats. Run either just '/teamstats' or '/teamstats prev'")
         return
     end
-    -- allow it always in singleplayer, or if the game is over
-    if not stats and not global.bb_game_won_by_team and game.is_multiplayer() then
-        if global.allow_teamstats == "spectators" then
-            if player.force.name ~= "spectator" then deny_reason = "spectators only" end
-        elseif global.allow_teamstats == "pure-spectators" then
-            if global.chosen_team[player.name] then deny_reason = "pure spectators only (you have joined a team)" end
-        else
-            if global.allow_teamstats ~= "always" then deny_reason = "only allowed at end of game" end
-        end
-    end
-    if deny_reason then
-        player.print("/teamstats for current game is unavailable: " .. deny_reason .. "\nYou can use '/teamstats prev' to see stats for the previous game.")
-        Sounds.notify_player(player, "utility/cannot_build")
-        return
-    end
-    safe_wrap_with_player_print(player, TeamStatsCompare.show_stats, player, stats)
+    TeamStatsCompare.toggle_team_stats(player, stats)
 end)
 
 return TeamStatsCompare
