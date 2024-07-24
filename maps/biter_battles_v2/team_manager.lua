@@ -104,7 +104,7 @@ function Public.switch_force(player_name, force_name)
 end
 
 function Public.draw_top_toggle_button(player)
-	local button = Gui.add_top_button(player, {type = "sprite-button", name = "team_manager_toggle_button", sprite = "utility/force_editor_icon", tooltip = "[font=default-bold]Team Manager[/font]" })
+	local button = Gui.add_top_element(player, {type = "sprite-button", name = "team_manager_toggle_button", sprite = "utility/force_editor_icon", tooltip = "[font=default-bold]Team Manager[/font]" })
 end
 
 local function draw_manager_gui(player)

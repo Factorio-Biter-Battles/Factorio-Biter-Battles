@@ -75,13 +75,13 @@ local TEST_1 = '[color=acid]cliff_build[/color] [color=red]Carl3[/color] [color=
 Public.events = { on_player_joined_team = Event.generate_event_name() }
 
 local function get_format_time()
-	local time_caption = "Not started"
+	local time_caption = 'Not started'
 	local total_ticks = Functions.get_ticks_since_game_start()
 	if total_ticks > 0 then
 		local total_minutes = math_floor(total_ticks / (60 * 60))
 		local total_hours = math_floor(total_minutes / 60)
 		local minutes = total_minutes - (total_hours * 60)
-		time_caption = string_format("%02d:%02d", total_hours, minutes)
+		time_caption = string_format('%02d:%02d', total_hours, minutes)
 	end
 	return time_caption
 end
@@ -105,10 +105,10 @@ local function drop_burners(player, forced_join)
 	if global.training_mode or not (global.bb_settings.burners_balance) then 		
 		return
 	end			
-	local burners_to_drop = player.get_item_count("burner-mining-drill")	
+	local burners_to_drop = player.get_item_count('burner-mining-drill')	
 	if burners_to_drop ~= 0 then
-    local items = player.surface.spill_item_stack(player.position,{name="burner-mining-drill", count = burners_to_drop}, false, nil, false )
-		player.remove_item({name="burner-mining-drill", count = burners_to_drop})
+    local items = player.surface.spill_item_stack(player.position, { name = 'burner-mining-drill', count = burners_to_drop }, false, nil, false)
+		player.remove_item({ name = 'burner-mining-drill', count = burners_to_drop })
 	end
 end
 
@@ -124,11 +124,11 @@ end
 ---@return string
 function threat_to_pretty_string(threat_value)
 	if math_abs(threat_value) >= 1000000 then
-		return string_format("%.2fM", threat_value / 1000000)
+		return string_format('%.2fM', threat_value / 1000000)
 	elseif math_abs(threat_value) >= 100000 then
-		return string_format("%.0fk", threat_value / 1000)
+		return string_format('%.0fk', threat_value / 1000)
 	else
-		return string_format("%.0f", threat_value)
+		return string_format('%.0f', threat_value)
 	end
 end
 
@@ -191,7 +191,7 @@ function Public.clear_copy_history(player)
 		for i = 1, 21 do
 			-- Imports blueprint of single burner miner into the cursor stack
 			stack = player.cursor_stack.import_stack(
-				"0eNp9jkEKgzAURO8y67jQhsbmKqUUrR/5kHwliVKR3L3GbrrqcoaZN7OjdwvNgSXB7uDXJBH2viPyKJ0rXtpmggUn8lCQzhfVL0EoVJ6FZayGwM4hK7AM9Iat80OBJHFi+uJOsT1l8T2FI/AXpDBP8ehOUvYPnjYKG2x1bXMhn1fsz3OFlUI8801ba3NrzEVroxud8wdvA0sn")
+				'0eNp9jkEKgzAURO8y67jQhsbmKqUUrR/5kHwliVKR3L3GbrrqcoaZN7OjdwvNgSXB7uDXJBH2viPyKJ0rXtpmggUn8lCQzhfVL0EoVJ6FZayGwM4hK7AM9Iat80OBJHFi+uJOsT1l8T2FI/AXpDBP8ehOUvYPnjYKG2x1bXMhn1fsz3OFlUI8801ba3NrzEVroxud8wdvA0sn')
 			player.add_to_clipboard(player.cursor_stack)
 			player.clear_cursor()
 		end
@@ -204,16 +204,16 @@ end
 
 ---@param player LuaPlayer
 function Public.create_biter_gui_button(player)
-	local button = Gui.add_top_button(player,{ type = "sprite-button", name = "bb_toggle_main_gui", sprite = "entity/big-biter", tooltip = "[font=default-bold]Game Info[/font] - Toggle left gui" })
+	local button = Gui.add_top_element(player,{ type = 'sprite-button', name = 'bb_toggle_main_gui', sprite = 'entity/big-biter', tooltip = '[font=default-bold]Game Info[/font] - Toggle left gui' })
 end
 
 ---@param player LuaPlayer
 function Public.create_statistics_gui_button(player)
-	if Gui.get_top_button(player, 'bb_toggle_statistics') then
+	if Gui.get_top_element(player, 'bb_toggle_statistics') then
 		return
 	end
 
-	local summary = Gui.add_top_button(player, { type = "sprite-button", name = "bb_toggle_statistics", sprite = "utility/expand", tooltip = 'Show game status!' })
+	local summary = Gui.add_top_element(player, { type = 'sprite-button', name = 'bb_toggle_statistics', sprite = 'utility/expand', hovered_sprite = 'utility/expand_dark', tooltip = 'Show game status!' })
 
 	local frame = summary.parent.add { type = 'frame', name = 'bb_frame_statistics', style = 'finished_game_subheader_frame' }
 	frame.location = { x = 1, y = 38 }
@@ -267,19 +267,21 @@ end
 ---@param player LuaPlayer
 function Public.create_main_gui(player)
 	local is_spec = player.force.name == 'spectator' or not global.chosen_team[player.name]
-	if player.gui.left.bb_main_gui then
-		player.gui.left.bb_main_gui.destroy()
+
+	local main_frame = Gui.get_left_element(player, 'bb_main_gui')
+	if main_frame and main_frame.valid then
+		main_frame.destroy()
 	end
 	
-	local main_frame = player.gui.left.add { type = 'frame', name = 'bb_main_gui', direction = 'vertical', --[[caption = 'Biter menu']] }
-	gui_style(main_frame, { padding = 2, font_color = { 165, 165, 165 }, font = 'heading-3', use_header_filler = false })
+	local main_frame = Gui.add_left_element(player, { type = 'frame', name = 'bb_main_gui', direction = 'vertical', index = 1 })
+	gui_style(main_frame, { maximal_width = 360 })
 
 	local flow = main_frame.add { type = 'flow', name = 'flow', style = 'vertical_flow', direction = 'vertical' }
 	local inner_frame = flow.add { type = 'frame', name = 'inner_frame', style = 'window_content_frame_packed', direction = 'vertical' }
 
 	-- == SUBHEADER =================================================================
 	local subheader = inner_frame.add { type = 'frame', name = 'subheader', style = 'subheader_frame' }
-	gui_style(subheader, { horizontally_stretchable = true, horizontally_squashable = true })
+	gui_style(subheader, { horizontally_stretchable = true, horizontally_squashable = true, maximal_height = 40 })
 
 	local label = subheader.add { type = 'label', name = 'clock' }
 	gui_style(label, { font = 'heading-3', font_color = { 165, 165, 165 }, left_margin = 4 })
@@ -292,7 +294,7 @@ function Public.create_main_gui(player)
 	gui_style(label, { font = 'heading-3', font_color = { 165, 165, 165 }, right_margin = 4 })
 
 	local sp = inner_frame.add { type = 'scroll-pane', name = 'scroll_pane', style = 'scroll_pane_under_subheader', direction = 'vertical' }
-
+	
 	-- == MAIN FRAME ================================================================
 	-- North & South overview
 	for force_name, gui_value in pairs(gui_values) do
@@ -406,7 +408,7 @@ function Public.create_main_gui(player)
 
 	-- == SUBFOOTER ===============================================================
 	local subfooter = inner_frame.add { type = 'frame', name = 'subfooter', style = 'subfooter_frame', direction = 'horizontal' }
-	gui_style(subfooter, { horizontally_stretchable = true, horizontally_squashable = true })
+	gui_style(subfooter, { horizontally_stretchable = true, horizontally_squashable = true, maximal_height = 36 })
 
 	Gui.add_pusher(subfooter)
 	local button = ResearchInfo.create_research_info_button(subfooter)
@@ -423,7 +425,7 @@ end
 
 ---@param player LuaPlayer
 function Public.refresh_statistics(player)
-	local frame = Gui.get_top_button(player, 'bb_frame_statistics')
+	local frame = Gui.get_top_element(player, 'bb_frame_statistics')
 	if not frame or not frame.visible then
 		return
 	end
@@ -450,7 +452,7 @@ function Public.refresh_statistics(player)
 end
 
 function Public.refresh_main_gui(player)
-	local frame = player.gui.left.bb_main_gui
+	local frame = Gui.get_left_element(player, 'bb_main_gui')
 	if not frame or not frame.visible then
 		return
 	end
@@ -546,14 +548,27 @@ function Public.refresh()
 end
 
 function Public.refresh_threat()
-	if global.gui_refresh_delay > game.tick then return end
-	local north_threat_text = threat_to_pretty_string(global.bb_threat["north_biters"])
-	local south_threat_text = threat_to_pretty_string(global.bb_threat["south_biters"])
+	if global.gui_refresh_delay > game.tick then
+		return
+	end
+	local updates = {
+		north = {
+			number = global.bb_threat.north_biters,
+			tooltip = get_threat_tooltip('north', true)
+		},
+		south = {
+			number = global.bb_threat.south_biters,
+			tooltip = get_threat_tooltip('south', true)
+		},
+	}
 	for _, player in pairs(game.connected_players) do
-		if player.gui.left["bb_main_gui"] then
-			if player.gui.left["bb_main_gui"].stats_north then
-				player.gui.left["bb_main_gui"].stats_north.threat_north.caption = north_threat_text
-				player.gui.left["bb_main_gui"].stats_south.threat_south.caption = south_threat_text
+		local frame = Gui.get_left_element(player, 'bb_main_gui')
+		if frame and frame.visible then
+			local teams = frame.flow.inner_frame.scroll_pane
+			for k, v in pairs(updates) do
+				local info = teams[k].flow.table
+				info.threat.number = v.number
+				info.threat.tooltip = v.tooltip
 			end
 		end
 	end
@@ -562,7 +577,7 @@ end
 
 ---@param player LuaPlayer
 function Public.burners_balance(player)
-	if player.force.name == "spectator" then 
+	if player.force.name == 'spectator' then 
 		return 
 	end
 	if global.got_burners[player.name] then 
@@ -570,12 +585,12 @@ function Public.burners_balance(player)
 	end	
 	if global.training_mode or not (global.bb_settings.burners_balance) then 
 		global.got_burners[player.name] = true
-		player.insert { name = "burner-mining-drill", count = 10 }
+		player.insert { name = 'burner-mining-drill', count = 10 }
 		return
 	end
-	local enemy_force = "north"
-	if player.force.name == "north" then 
-		enemy_force = "south" 
+	local enemy_force = 'north'
+	if player.force.name == 'north' then 
+		enemy_force = 'south' 
 	end
 	local player2
 	-- factorio Lua promises that pairs() iterates in insertion order
@@ -593,13 +608,13 @@ function Public.burners_balance(player)
 	for i = 1 , 0, -1 do
 		local inserted
 		global.got_burners[player.name] = true		
-		inserted = player.insert { name = "burner-mining-drill", count = burners_to_insert }	
+		inserted = player.insert { name = 'burner-mining-drill', count = burners_to_insert }	
 		if inserted < burners_to_insert then
-			local items = player.surface.spill_item_stack(player.position,{name="burner-mining-drill", count = burners_to_insert - inserted}, false, nil, false )
+			local items = player.surface.spill_item_stack(player.position, { name = 'burner-mining-drill', count = burners_to_insert - inserted }, false, nil, false )
 		end
-		player.print("You have received ".. burners_to_insert .. " x [item=burner-mining-drill] check inventory",{ r = 1, g = 1, b = 0 })
-		player.create_local_flying_text({text = "You have received ".. burners_to_insert .. " x [item=burner-mining-drill] check inventory", position = player.position})
-		player=player2
+		player.print('You have received '.. burners_to_insert .. ' x [item=burner-mining-drill] check inventory',{ r = 1, g = 1, b = 0 })
+		player.create_local_flying_text({text = 'You have received '.. burners_to_insert .. ' x [item=burner-mining-drill] check inventory', position = player.position })
+		player = player2
 	end
 end
 
@@ -803,8 +818,9 @@ local function on_gui_click(event)
 	local name = element.name
 
 	if name == 'bb_toggle_main_gui' then
-		if player.gui.left.bb_main_gui then
-			player.gui.left.bb_main_gui.destroy()
+		local main_frame = Gui.get_left_element(player, 'bb_main_gui')
+		if main_frame then
+			main_frame.destroy()
 		else
 			Public.create_main_gui(player)
 		end
@@ -813,10 +829,11 @@ local function on_gui_click(event)
 
 	if name == 'bb_toggle_statistics' then
 		local default = element.sprite == 'utility/expand'
-		element.sprite = default and 'utility/collapse' or 'utility/expand' 
+		element.sprite = default and 'utility/collapse' or 'utility/expand'
+		element.hovered_sprite = default and 'utility/collapse_dark' or 'utility/expand_dark'
 		element.tooltip = default and 'Hide game status!' or 'Show game status!'
 
-		local frame = Gui.get_top_button(player, 'bb_frame_statistics')
+		local frame = Gui.get_top_element(player, 'bb_frame_statistics')
 		if frame then
 			frame.visible = not frame.visible
 		end
@@ -954,8 +971,6 @@ local function on_player_joined_game(event)
 	if player.online_time == 0 then
 		Functions.show_intro(player)
 	end
-	if not global.bb_view_players then global.bb_view_players = {} end
-	if not global.chosen_team then global.chosen_team = {} end
 
   Public.create_main_gui(player)
 end

@@ -7,6 +7,7 @@ local _utils = require 'utils.utils'
 local gui_style = _utils.gui_style
 local gui_themes = _utils.gui_themes
 local top_button_style = _utils.top_button_style
+local left_frame_style = _utils.left_frame_style
 
 local tostring = tostring
 local next = next
@@ -121,6 +122,7 @@ function Gui.clear(element)
     element.clear()
 end
 
+---@param player LuaPlayer
 function Gui.init_gui_style(player)
     local mod_gui_top_frame = player.gui.top.mod_gui_top_frame
     gui_style(mod_gui_top_frame, { padding = 2 })
@@ -129,6 +131,7 @@ function Gui.init_gui_style(player)
     --gui_style(mod_gui_inner_frame, { })
 end
 
+---@param player LuaPlayer
 function Gui.get_top_index(player)
     local flow = mod_gui.get_button_flow(player)
     if flow.bb_toggle_statistics then
@@ -138,29 +141,36 @@ function Gui.get_top_index(player)
 end
 
 ---@param player LuaPlayer
----@param button_name string
-function Gui.get_top_button(player, button_name)
+---@param element_name string
+---@return LuaGuiElement|nil
+function Gui.get_top_element(player, element_name)
     -- player.gui.top.mod_gui_top_frame.mod_gui_inner_frame
-	return mod_gui.get_button_flow(player)[button_name]
+	return mod_gui.get_button_flow(player)[element_name]
 end
 
 ---@param player LuaPlayer
----@param frame userdata|table
-function Gui.add_top_button(player, frame, style_name)
-    local button = mod_gui.get_button_flow(player)[frame.name]
-	if button and button.valid then
-        return button
+---@param frame LuaGuiElement|table
+---@param style_name string
+---@return LuaGuiElement
+function Gui.add_top_element(player, frame, style_name)
+    local element = mod_gui.get_button_flow(player)[frame.name]
+	if element and element.valid then
+        return element
 	end
 	if (frame.type == 'button' or frame.type == 'sprite-button') and frame.style == nil then
         frame.style = style_name or gui_themes[1].type
 	end
-	button = mod_gui.get_button_flow(player).add(frame)
-	gui_style(button, top_button_style())
-    return button
+	element = mod_gui.get_button_flow(player).add(frame)
+    if element.type == 'button' or element.type == 'sprite-button' then
+        gui_style(element, top_button_style())
+    end
+    return element
 end
 
 local backup_attributes = { 'minimal_width', 'maximal_width', 'font_color', 'font' }
-function Gui.restyle_top_buttons(player, new_style)
+---@param player LuaPlayer
+---@param new_style string
+function Gui.restyle_top_elements(player, new_style)
     for _, ele in pairs(mod_gui.get_button_flow(player).children) do
         if ele.type == 'button' or ele.type == 'sprite-button' then
             local custom_styles = {}
@@ -174,20 +184,49 @@ function Gui.restyle_top_buttons(player, new_style)
     end
 end
 
-function Gui.add_pusher(element)
-    if not (element and element.valid) then
+---@param player LuaPlayer
+---@param element_name string
+---@return LuaGuiElement|nil
+function Gui.get_left_element(player, element_name)
+    return mod_gui.get_frame_flow(player)[element_name]
+end
+
+---@param player LuaPlayer
+---@param frame LuaGuiElement|table
+---@return LuaGuiElement
+function Gui.add_left_element(player, frame)
+    local element = mod_gui.get_frame_flow(player)[frame.name]
+    if element and element.valid then
+        return element
+    end
+    element = mod_gui.get_frame_flow(player).add(frame)
+    if element.type == 'frame' then
+        gui_style(element, left_frame_style())
+    end
+    return element
+end
+
+---@param parent LuaGuiElement
+---@param direction? string, default: horizontal
+---@return LuaGuiElement
+function Gui.add_pusher(parent, direction)
+    if not (parent and parent.valid) then
         return
     end
-    local p = element.add { type = 'empty-widget' }
-    p.ignored_by_interaction = true
-    gui_style(p, { 
-        horizontally_stretchable = true,
-        vertically_stretchable = true,
+    local pusher = parent.add { type = 'empty-widget' }
+    pusher.ignored_by_interaction = true
+    gui_style(pusher, { 
         top_margin = 0,
         bottom_margin = 0,
         left_margin = 0,
         right_margin = 0,
     })
+    if direction == 'vertical' then
+        pusher.style.vertically_stretchable = true
+    else
+        pusher.style.horizontally_stretchable = true
+    end
+    return pusher
 end
 
 function Gui.get_child_recursively(element, child_name)

@@ -426,8 +426,9 @@ function Public.silo_death(event)
 		
         for _, player in pairs(game.connected_players) do
             player.play_sound {path = "utility/game_won", volume_modifier = 1}
-            if player.gui.left["bb_main_gui"] then
-                player.gui.left["bb_main_gui"].visible = false
+            local main_frame = Gui.get_left_element(player, 'bb_main_gui')
+            if main_frame then
+                main_frame.visible = false
             end
             create_victory_gui(player)
 			show_mvps(player)
@@ -506,11 +507,11 @@ local function chat_with_everyone(event)
 end
 
 local function draw_reroll_gui(player)
-    if Gui.get_top_button(player, "reroll_frame") then
+    if Gui.get_top_element(player, "reroll_frame") then
         return
     end
 
-    local f = Gui.add_top_button(player, { type = "frame", name = "reroll_frame", style = "finished_game_subheader_frame" })
+    local f = Gui.add_top_element(player, { type = "frame", name = "reroll_frame", style = "finished_game_subheader_frame" })
     gui_style(f, { minimal_height = 36, maximal_height = 36, padding = 0, vertical_align = "center" })
 
     local line = f.add({ type = 'line', direction = 'vertical' })
@@ -542,7 +543,7 @@ local function stop_map_reroll()
     Event.remove_removable(defines.events.on_player_joined_game, reroll_buttons_token)
     -- remove existing buttons
     for _, player in pairs(game.players) do
-        local frame = Gui.get_top_button(player, "reroll_frame")
+        local frame = Gui.get_top_element(player, "reroll_frame")
         if frame then frame.destroy() end
     end
 end
@@ -558,7 +559,7 @@ decrement_timer_token = Token.register(
         global.reroll_time_left = global.reroll_time_left - 1
         if global.reroll_time_left > 0 then
             for _, player in pairs(game.connected_players) do
-                local frame = Gui.get_top_button(player, "reroll_frame")
+                local frame = Gui.get_top_element(player, "reroll_frame")
                 if frame and frame.valid then
                     frame.reroll_table.children[1].caption = "Reroll map?\t" .. global.reroll_time_left .. "s"
                 end
@@ -621,7 +622,7 @@ function Public.generate_new_map()
         for _, e in pairs(player.gui.left.children) do
             e.destroy()
         end
-        local suspend_frame = Gui.get_top_button(player, 'suspend_frame')
+        local suspend_frame = Gui.get_top_element(player, 'suspend_frame')
         if suspend_frame then
             suspend_frame.destroy()
         end

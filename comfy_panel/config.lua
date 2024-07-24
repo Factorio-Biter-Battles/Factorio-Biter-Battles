@@ -7,6 +7,7 @@ local Shortcuts = require 'maps.biter_battles_v2.shortcuts'
 local Utils = require 'utils.core'
 local Gui = require 'utils.gui'
 local gui_themes = require 'utils.utils'.gui_themes
+local index_of = table.index_of
 
 local spaghett_entity_blacklist = {
     ['logistic-chest-requester'] = true,
@@ -95,12 +96,14 @@ local function trust_connected_players()
 end
 
 local function theme_names()
-    local locales = {}
+    local keys, values = {}, {}
     for _, v in pairs(gui_themes) do
-        locales[#locales + 1] = v.name
+        keys[#keys + 1] = v.type
+        values[#values + 1] = v.name
     end
-    return locales
+    return { keys = keys, values = values }
 end
+local themes = theme_names()
 
 local functions = {
     ['comfy_panel_spectator_switch'] = function(event)
@@ -358,8 +361,8 @@ local selection_functions = {
         local previous_style = global.gui_theme[player.name] or gui_themes[1].type
         if previous_style ~= selected_style then
             local label = event.element.parent.comfy_panel_theme_label
-            label.caption = theme_names()[selected_index]
-            Gui.restyle_top_buttons(player, selected_style)
+            label.caption = gui_themes[selected_index].name
+            Gui.restyle_top_elements(player, selected_style)
         end
         global.gui_theme[player.name] = selected_style
     end
@@ -515,8 +518,8 @@ local build_config_gui = (function(player, frame)
     )
 
     if global.gui_theme ~= nil then
-        local theme_idx = _G.table.index_of(theme_names(), global.gui_theme[player.name]) or 1
-        local theme_name = theme_names()[theme_idx]
+        local theme_idx = index_of(themes.keys, global.gui_theme[player.name]) or 1
+        local theme_name = gui_themes[theme_idx].name
 
         scroll_pane.add({type = 'line'})
         local t = scroll_pane.add {type = 'table', column_count = 3}
@@ -534,7 +537,7 @@ local build_config_gui = (function(player, frame)
         label.style.font = 'heading-2'
         label.style.font_color = {0.88, 0.88, 0.99}
 
-        local dropdown = t.add { type = 'drop-down', style = 'dropdown', name = 'comfy_panel_theme_dropdown', items = theme_names(), selected_index = theme_idx }
+        local dropdown = t.add { type = 'drop-down', style = 'dropdown', name = 'comfy_panel_theme_dropdown', items = themes.values, selected_index = theme_idx }
         dropdown.style.height = 24
         dropdown.style.natural_width = 200
         dropdown.style.left_margin = 10

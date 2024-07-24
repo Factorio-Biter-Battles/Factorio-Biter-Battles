@@ -8,10 +8,10 @@ local gui_style = require 'utils.utils'.gui_style
 
 ---@param player LuaPlayer
 local function draw_suspend_gui(player)
-	if Gui.get_top_button(player, "suspend_frame") then return end
+	if Gui.get_top_element(player, "suspend_frame") then return end
 	if global.suspend_target_info == nil or global.suspend_target_info.suspendee_player_name == player.name then return end
 	
-	local f = Gui.add_top_button(player, { type = "frame", name = "suspend_frame", style = "finished_game_subheader_frame" })
+	local f = Gui.add_top_element(player, { type = "frame", name = "suspend_frame", style = "finished_game_subheader_frame" })
 	gui_style(f, { minimal_height = 36, maximal_height = 36, padding = 0, vertical_align = "center" })
 
 	local line = f.add({ type = 'line', direction = 'vertical' })
@@ -86,7 +86,7 @@ local suspend_token = Token.register(
 		Event.remove_removable(defines.events.on_player_joined_game, suspend_buttons_token)
 		-- remove existing buttons
 		for _, player in pairs(game.players) do
-			local frame = Gui.get_top_button(player, 'suspend_frame')
+			local frame = Gui.get_top_element(player, 'suspend_frame')
 			if frame then
 				frame.destroy()
 			end
@@ -132,7 +132,7 @@ local decrement_timer_token = Token.get_counter() + 1 -- predict what the token 
 decrement_timer_token = Token.register(function()
 	local suspend_time_left = global.suspend_time_left - 1
 	for _, player in pairs(game.connected_players) do
-		local frame = Gui.get_top_button(player, 'suspend_frame')
+		local frame = Gui.get_top_element(player, 'suspend_frame')
 		if frame and frame.valid and global.suspend_target_info ~= nil then
 			frame.suspend_table.children[1].caption = "Suspend ".. global.suspend_target_info.suspendee_player_name .." ?\t" .. suspend_time_left .. "s"
 		end

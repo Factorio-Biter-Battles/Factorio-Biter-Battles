@@ -42,14 +42,14 @@ function Public.comfy_panel_refresh_active_tab(player)
 end
 
 ---@param player LuaPlayer
-function Public.comfy_panel_add_top_button(player)
-    if Gui.get_top_button(player, 'comfy_panel_top_button') then
+function Public.comfy_panel_add_top_element(player)
+    if Gui.get_top_element(player, 'comfy_panel_top_button') then
         return
     end
 
     Gui.init_gui_style(player)
 
-    local toggle = Gui.add_top_button(player, {
+    local toggle = Gui.add_top_element(player, {
         type = 'sprite-button',
         name = 'main_toggle_button_name',
         sprite = 'utility/preset',
@@ -58,7 +58,7 @@ function Public.comfy_panel_add_top_button(player)
     })
     gui_style(toggle, { minimal_width = 15, maximal_width = 15 })
 
-    local button = Gui.add_top_button(player, {
+    local button = Gui.add_top_element(player, {
         type = 'sprite-button',
         name = 'comfy_panel_top_button',
         sprite = 'utility/favourite_server_icon',
@@ -76,7 +76,7 @@ local gui_toggle_blacklist = {
 Gui.on_click('main_toggle_button_name', function (event)
     local button = event.element
     local player = event.player
-    local mod_gui_inner_frame = Gui.get_top_button(player, 'main_toggle_button_name').parent
+    local mod_gui_inner_frame = Gui.get_top_element(player, 'main_toggle_button_name').parent
 
     local default = button.sprite == 'utility/preset'
     button.sprite = default and 'utility/expand_dots_white' or 'utility/preset' 

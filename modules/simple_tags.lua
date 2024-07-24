@@ -39,7 +39,7 @@ local function get_x_offset(player)
 end
 
 function Public.create_simple_tags_button(player)
-	local button = Gui.add_top_button(player, { type = "sprite-button", name = "simple_tag", sprite = "utility/bookmark", tooltip = "[font=default-bold]Tags[/font] - Assign yourself to a group tag"})
+	local button = Gui.add_top_element(player, { type = "sprite-button", name = "simple_tag", sprite = "utility/bookmark", tooltip = "[font=default-bold]Tags[/font] - Assign yourself to a group tag"})
 end
 
 local function draw_screen_gui(player)

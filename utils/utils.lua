@@ -164,4 +164,13 @@ Module.top_button_style = function()
     }
 end
 
+Module.left_frame_style = function()
+    return {
+        padding = 2,
+        font_color = { 165, 165, 165 },
+        font = 'heading-3',
+        use_header_filler = false
+    }
+end
+
 return Module
