@@ -370,14 +370,17 @@ local selection_functions = {
 
 local function add_switch(element, switch_state, name, description_main, description, tooltip)
     local t = element.add({type = 'table', column_count = 5})
+    
     local label = t.add({type = 'label', caption = 'ON'})
     label.style.padding = 0
     label.style.left_padding = 10
     label.style.font_color = {0.77, 0.77, 0.77}
+
     local switch = t.add({type = 'switch', name = name})
     switch.switch_state = switch_state
     switch.style.padding = 0
     switch.style.margin = 0
+    
     local label = t.add({type = 'label', caption = 'OFF'})
     label.style.padding = 0
     label.style.font_color = {0.70, 0.70, 0.70}

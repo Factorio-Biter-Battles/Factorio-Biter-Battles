@@ -62,7 +62,7 @@ function Public.comfy_panel_add_top_element(player)
         type = 'sprite-button',
         name = 'comfy_panel_top_button',
         sprite = 'utility/favourite_server_icon',
-        tooltip = '[font=default-bold]Menu & Settings[/font]'
+        tooltip = {'gui.comfy_panel_top_button'}
     })
 end
 
@@ -99,8 +99,8 @@ end)
 local function main_frame(player)
     local tabs = comfy_panel_tabs
 
-    local frame_ = closable_frame.create_main_closable_frame(player, 'comfy_panel', "Menu & Settings")
-    local frame = frame_.add({type = "frame", name = "comfy_panel_inside", style = "inside_deep_frame_for_tabs"})
+    local frame_ = closable_frame.create_main_closable_frame(player, 'comfy_panel', {'gui.comfy_panel_top_button'})
+    local frame = frame_.add({type = 'frame', name = 'comfy_panel_inside', style = 'inside_deep_frame_for_tabs'})
 
     local tabbed_pane = frame.add({type = 'tabbed-pane', name = 'tabbed_pane'})
 

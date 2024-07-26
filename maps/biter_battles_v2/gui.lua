@@ -11,6 +11,7 @@ local Gui = require 'utils.gui'
 local PlayerUtils = require 'utils.player'
 local ResearchInfo = require 'maps.biter_battles_v2.research_info'
 local Server = require 'utils.server'
+local Shortcuts = require 'maps.biter_battles_v2.shortcuts'
 local Tables = require 'maps.biter_battles_v2.tables'
 local TeamStatsCompare = require 'maps.biter_battles_v2.team_stats_compare'
 local gui_style = require 'utils.utils'.gui_style
@@ -123,10 +124,14 @@ end
 ---@param threat_value number
 ---@return string
 function threat_to_pretty_string(threat_value)
-	if math_abs(threat_value) >= 1000000 then
-		return string_format('%.2fM', threat_value / 1000000)
-	elseif math_abs(threat_value) >= 100000 then
-		return string_format('%.0fk', threat_value / 1000)
+	if math_abs(threat_value) >= 1e12 then
+		return string_format('%.1fT', threat_value / 1e12)
+	elseif math_abs(threat_value) >= 1e9 then
+		return string_format('%.1fG', threat_value / 1e9)
+	elseif math_abs(threat_value) >= 1e6 then
+		return string_format('%.2fM', threat_value / 1e6)
+	elseif math_abs(threat_value) >= 1e5 then
+		return string_format('%.0fk', threat_value / 1e3)
 	else
 		return string_format('%.0f', threat_value)
 	end
@@ -204,7 +209,7 @@ end
 
 ---@param player LuaPlayer
 function Public.create_biter_gui_button(player)
-	local button = Gui.add_top_element(player,{ type = 'sprite-button', name = 'bb_toggle_main_gui', sprite = 'entity/big-biter', tooltip = '[font=default-bold]Game Info[/font] - Toggle left gui' })
+	local button = Gui.add_top_element(player,{ type = 'sprite-button', name = 'bb_toggle_main_gui', sprite = 'entity/big-biter', tooltip = {'gui.main_gui_top_button'} })
 end
 
 ---@param player LuaPlayer
@@ -221,21 +226,23 @@ function Public.create_statistics_gui_button(player)
 
 	local label, line
 
-	label = frame.add({ type = 'label', caption = 'North', name = 'north_name'})
-	gui_style(label, { font = 'heading-2', right_padding = 4, left_padding = 4, font_color = gui_values.north.color1 })
+	do -- North
+		label = frame.add({ type = 'label', caption = 'North', name = 'north_name'})
+		gui_style(label, { font = 'heading-2', right_padding = 4, left_padding = 4, font_color = gui_values.north.color1 })
 
-	label = frame.add({ type = 'label', caption = ' ', name = 'north_players'})
-	gui_style(label, { font = 'heading-2', right_padding = 4, left_padding = 4, font_color = { 165, 165, 165 } })
+		label = frame.add({ type = 'label', caption = ' ', name = 'north_players'})
+		gui_style(label, { font = 'heading-2', right_padding = 4, left_padding = 4, font_color = { 165, 165, 165 } })
 
-	line = frame.add({ type = 'line', direction = 'vertical', style = 'dark_line' })
+		line = frame.add({ type = 'line', direction = 'vertical', style = 'dark_line' })
 
-	label = frame.add({ type = 'label', caption = ' ', name = 'north_evolution', font_color = { 165, 165, 165 }})
-	gui_style(label, { font = 'heading-2', right_padding = 4, left_padding = 4, font_color = gui_values.north.color1 })
+		label = frame.add({ type = 'label', caption = ' ', name = 'north_evolution', font_color = { 165, 165, 165 }})
+		gui_style(label, { font = 'heading-2', right_padding = 4, left_padding = 4, font_color = gui_values.north.color1 })
 
-	line = frame.add({ type = 'line', direction = 'vertical', style = 'dark_line' })
+		line = frame.add({ type = 'line', direction = 'vertical', style = 'dark_line' })
 
-	label = frame.add({ type = 'label', caption = ' ', name = 'north_threat'})
-	gui_style(label, { font = 'heading-2', right_padding = 4, left_padding = 4, font_color = gui_values.north.color1 })
+		label = frame.add({ type = 'label', caption = ' ', name = 'north_threat'})
+		gui_style(label, { font = 'heading-2', right_padding = 4, left_padding = 4, font_color = gui_values.north.color1 })
+	end
 
 	line = frame.add({ type = 'line', direction = 'vertical' })
 
@@ -244,21 +251,23 @@ function Public.create_statistics_gui_button(player)
 
 	line = frame.add({ type = 'line', direction = 'vertical' })
 
-	label = frame.add({ type = 'label', caption = ' ', name = 'south_threat'})
-	gui_style(label, { font = 'heading-2', right_padding = 4, left_padding = 4, font_color = gui_values.south.color1 })
+	do -- South
+		label = frame.add({ type = 'label', caption = ' ', name = 'south_threat'})
+		gui_style(label, { font = 'heading-2', right_padding = 4, left_padding = 4, font_color = gui_values.south.color1 })
 
-	line = frame.add({ type = 'line', direction = 'vertical', style = 'dark_line', font_color = { 165, 165, 165 } })
+		line = frame.add({ type = 'line', direction = 'vertical', style = 'dark_line', font_color = { 165, 165, 165 } })
 
-	label = frame.add({ type = 'label', caption = ' ', name = 'south_evolution'})
-	gui_style(label, { font = 'heading-2', right_padding = 4, left_padding = 4, font_color = gui_values.south.color1 })
+		label = frame.add({ type = 'label', caption = ' ', name = 'south_evolution'})
+		gui_style(label, { font = 'heading-2', right_padding = 4, left_padding = 4, font_color = gui_values.south.color1 })
 
-	line = frame.add({ type = 'line', direction = 'vertical', style = 'dark_line' })
+		line = frame.add({ type = 'line', direction = 'vertical', style = 'dark_line' })
 
-	label = frame.add({ type = 'label', caption = ' ', name = 'south_players'})
-	gui_style(label, { font = 'heading-2', right_padding = 4, left_padding = 4, font_color = { 165, 165, 165 } })
+		label = frame.add({ type = 'label', caption = ' ', name = 'south_players'})
+		gui_style(label, { font = 'heading-2', right_padding = 4, left_padding = 4, font_color = { 165, 165, 165 } })
 
-	label = frame.add({ type = 'label', caption = 'South', name = 'south_name'})
-	gui_style(label, { font = 'heading-2', right_padding = 4, left_padding = 4, font_color = gui_values.south.color1 })
+		label = frame.add({ type = 'label', caption = 'South', name = 'south_name'})
+		gui_style(label, { font = 'heading-2', right_padding = 4, left_padding = 4, font_color = gui_values.south.color1 })
+	end
 
 	Public.refresh_statistics(player)
 	frame.visible = false
@@ -274,149 +283,172 @@ function Public.create_main_gui(player)
 	end
 	
 	local main_frame = Gui.add_left_element(player, { type = 'frame', name = 'bb_main_gui', direction = 'vertical', index = 1 })
-	gui_style(main_frame, { maximal_width = 360 })
+	gui_style(main_frame, { maximal_width = 325 })
 
 	local flow = main_frame.add { type = 'flow', name = 'flow', style = 'vertical_flow', direction = 'vertical' }
 	local inner_frame = flow.add { type = 'frame', name = 'inner_frame', style = 'window_content_frame_packed', direction = 'vertical' }
 
 	-- == SUBHEADER =================================================================
-	local subheader = inner_frame.add { type = 'frame', name = 'subheader', style = 'subheader_frame' }
-	gui_style(subheader, { horizontally_stretchable = true, horizontally_squashable = true, maximal_height = 40 })
+	do
+		local subheader = inner_frame.add { type = 'frame', name = 'subheader', style = 'subheader_frame' }
+		gui_style(subheader, { horizontally_squashable = true, maximal_height = 40 })
 
-	local label = subheader.add { type = 'label', name = 'clock' }
-	gui_style(label, { font = 'heading-3', font_color = { 165, 165, 165 }, left_margin = 4 })
+		local label = subheader.add { type = 'label', name = 'clock' }
+		gui_style(label, { font = 'heading-3', font_color = { 165, 165, 165 }, left_margin = 4 })
 
-	Gui.add_pusher(subheader)
-	local line = subheader.add { type = 'line', direction = 'vertical' }
-	Gui.add_pusher(subheader)
+		Gui.add_pusher(subheader)
+		local line = subheader.add { type = 'line', direction = 'vertical' }
+		Gui.add_pusher(subheader)
 
-	local label = subheader.add{ type = 'label', name = 'game_speed' }
-	gui_style(label, { font = 'heading-3', font_color = { 165, 165, 165 }, right_margin = 4 })
-
-	local sp = inner_frame.add { type = 'scroll-pane', name = 'scroll_pane', style = 'scroll_pane_under_subheader', direction = 'vertical' }
+		local label = subheader.add{ type = 'label', name = 'game_speed' }
+		gui_style(label, { font = 'heading-3', font_color = { 165, 165, 165 }, right_margin = 4 })
+	end
 	
 	-- == MAIN FRAME ================================================================
-	-- North & South overview
-	for force_name, gui_value in pairs(gui_values) do
-		local team_frame = sp.add { type = 'frame', name = force_name, style = 'bordered_frame', direction = 'vertical' }
-		gui_style(team_frame, { horizontally_stretchable = true })
+	local sp = inner_frame.add { type = 'scroll-pane', name = 'scroll_pane', style = 'scroll_pane_under_subheader', direction = 'vertical' }
 
-		local flow = team_frame.add { type = 'flow', name = 'flow', direction = 'horizontal' }
-		gui_style(flow, { horizontally_stretchable = true, horizontal_align = 'center' })
+	do -- North & South overview
+		for force_name, gui_value in pairs(gui_values) do
+			local team_frame = sp.add { type = 'frame', name = force_name, style = 'bordered_frame', direction = 'vertical' }
 
-		local caption_flow = flow.add { type = 'flow', name = 'caption_flow', direction = 'vertical' }
-		
-		local label = caption_flow.add { type = 'label', name = 'team_name', style = 'caption_label' }
-		gui_style(label, { font_color = gui_value.color1, single_line = false, maximal_width = 125 })
+			local flow = team_frame.add { type = 'flow', name = 'flow', direction = 'horizontal' }
+			gui_style(flow, { horizontal_align = 'center' })
 
-		Gui.add_pusher(flow)
+			local caption_flow = flow.add { type = 'flow', name = 'caption_flow', direction = 'vertical' }
+			
+			local label = caption_flow.add { type = 'label', name = 'team_name', style = 'caption_label' }
+			gui_style(label, { font_color = gui_value.color1, single_line = false, maximal_width = 125 })
 
-		local t = flow.add { type = 'table', name = 'table', column_count = 3, style = 'compact_slot_table' }
+			Gui.add_pusher(flow)
 
-		local players_button = t.add {
-			type = 'sprite-button',
-			style = 'slot_button_in_shallow_frame',
-			sprite = 'entity/character',
-			name = 'bb_toggle_player_list',
-			auto_toggle  = true,
-			tooltip = style.bold('Player list') .. ' - Show player list'
-		}
+			local t = flow.add { type = 'table', name = 'table', column_count = 3, style = 'compact_slot_table' }
 
-		local evolution_button = t.add {
-			type = 'sprite-button',
-			style = 'slot_button_in_shallow_frame',
-			sprite = 'entity/small-biter',
-			name = 'evolution',
-			tooltip = style.bold('Evolution') .. ' - ' .. gui_value.t1
-		}
+			local players_button = t.add {
+				type = 'sprite-button',
+				style = 'slot_button_in_shallow_frame',
+				sprite = 'entity/character',
+				name = 'bb_toggle_player_list',
+				auto_toggle  = true,
+				tooltip = style.bold('Player list') .. ' - Show player list'
+			}
 
-		local threat_button = t.add {
-			type = 'sprite-button',
-			style = 'slot_button_in_shallow_frame',
-			sprite = 'utility/enemy_force_icon',
-			name = 'threat',
-			tooltip = style.bold('Threat') .. ' - ' .. gui_value.t2
-		}
+			local evolution_button = t.add {
+				type = 'sprite-button',
+				style = 'slot_button_in_shallow_frame',
+				sprite = 'entity/small-biter',
+				name = 'evolution',
+				tooltip = style.bold('Evolution') .. ' - ' .. gui_value.t1
+			}
 
-		local size = 36
-		for _, b in pairs({ players_button, evolution_button, threat_button }) do
-			gui_style(b, { minimal_height = size, minimal_width = size, maximal_height = size, maximal_width = size })
+			local threat_button = t.add {
+				type = 'sprite-button',
+				style = 'slot_button_in_shallow_frame',
+				sprite = 'utility/enemy_force_icon',
+				name = 'threat',
+				tooltip = style.bold('Threat') .. ' - ' .. gui_value.t2
+			}
+
+			local size = 36
+			for _, b in pairs({ players_button, evolution_button, threat_button }) do
+				gui_style(b, { minimal_height = size, minimal_width = size, maximal_height = size, maximal_width = size })
+			end
+
+			local players_frame = team_frame.add { type = 'frame', name = 'players', direction = 'vertical', style = 'deep_frame_in_shallow_frame' } --quick_bar_window_frame
+			gui_style(players_frame, { horizontal_align = 'center', maximal_width = 285, padding = 5 })
+
+			local label = players_frame.add { type = 'label', name = 'captain', caption = 'Captain: ---' }
+			local label = players_frame.add { type = 'label', name = 'members', caption = TEST_1 }
+			gui_style(label, { single_line = false, font = 'default-small', horizontal_align = 'center' })
+
+			players_frame.visible = players_button.toggled
 		end
-
-		local players_frame = team_frame.add { type = 'frame', name = 'players', direction = 'vertical', style = 'deep_frame_in_shallow_frame' } --quick_bar_window_frame
-		gui_style(players_frame, { horizontal_align = 'center', horizontally_stretchable = true, maximal_width = 285, padding = 5 })
-
-		local label = players_frame.add { type = 'label', name = 'captain', caption = 'Captain: ---' }
-		local label = players_frame.add { type = 'label', name = 'members', caption = TEST_1 }
-		gui_style(label, { single_line = false, font = 'default-small', horizontal_align = 'center' })
-
-		players_frame.visible = players_button.toggled
 	end
 
-	-- Science sending GUI
-	local science_frame = sp.add { type = 'frame', name = 'science_frame', style = 'bordered_frame', direction = 'vertical', caption = 'Feeding' }
-	gui_style(science_frame, { horizontally_stretchable = true, horizontal_align = 'center' })
+	do -- Science sending GUI
+		local science_frame = sp.add { type = 'frame', name = 'science_frame', style = 'bordered_frame', direction = 'vertical', caption = 'Feeding' }
+		gui_style(science_frame, { horizontal_align = 'center' })
 
-	local flow = science_frame.add { type = 'flow', name = 'flow', direction = 'vertical' }
-	gui_style(flow, { horizontally_stretchable = true, horizontal_align = 'center' })
+		local flow = science_frame.add { type = 'flow', name = 'flow', direction = 'vertical' }
+		gui_style(flow, { horizontal_align = 'center' })
 
-	local table_frame = flow.add { type = 'frame', name = 'table_frame', direction = 'horizontal', style = 'filter_scroll_pane_background_frame' } --slot_button_deep_frame, quick_bar_window_frame, quick_bar_inner_panel
-	gui_style(table_frame, { horizontally_stretchable = true, minimal_height = 40 })
+		local table_frame = flow.add { type = 'frame', name = 'table_frame', direction = 'horizontal', style = 'filter_scroll_pane_background_frame' } --slot_button_deep_frame, quick_bar_window_frame, quick_bar_inner_panel
+		gui_style(table_frame, { minimal_height = 40 })
 
-	local t = table_frame.add { type = 'table', name = 'send_table', column_count = 5, style = 'filter_slot_table' }
-	gui_style(t, { horizontally_stretchable = true })
+		local t = table_frame.add { type = 'table', name = 'send_table', column_count = 5, style = 'filter_slot_table' }
+		gui_style(t, { horizontally_stretchable = true })
 
-	for food_name, tooltip in pairs(food_names) do
-		local f = t.add { type = 'sprite-button', name = food_name, sprite = 'item/' .. food_name, style = 'recipe_slot_button', tooltip = tooltip }
+		for food_name, tooltip in pairs(food_names) do
+			local f = t.add { type = 'sprite-button', name = food_name, sprite = 'item/' .. food_name, style = 'recipe_slot_button', tooltip = tooltip }
+			gui_style(f, { padding = 0 })
+		end
+		local f = t.add { type = 'sprite-button', name = 'send_all', caption = 'All', style = 'recipe_slot_button', tooltip = 'LMB - low to high, RMB - high to low' }
+		gui_style(f, { padding = 0, font_color = { r = 0.9, g = 0.9, b = 0.9 } })
+		local f = t.add { type = 'sprite-button', name = 'info', style = 'recipe_slot_button', sprite = 'utility/warning_white', tooltip = 'If you don\'t see a food, it may have been disabled by special game mode, or you have not been authorized by your captain.' }
 		gui_style(f, { padding = 0 })
 	end
-	local f = t.add { type = 'sprite-button', name = 'send_all', caption = 'All', style = 'recipe_slot_button', tooltip = 'LMB - low to high, RMB - high to low' }
-	gui_style(f, { padding = 0, font_color = { r = 0.9, g = 0.9, b = 0.9 } })
-	local f = t.add { type = 'sprite-button', name = 'info', style = 'recipe_slot_button', sprite = 'utility/warning_white', tooltip = 'If you don\'t see a food, it may have been disabled by special game mode, or you have not been authorized by your captain.' }
-	gui_style(f, { padding = 0 })
 
-	-- Join/Resume
-	local join_frame = sp.add { type = 'frame', name = 'join_frame', style = 'bordered_frame', direction = 'vertical' }
-	gui_style(join_frame, { horizontally_stretchable = true, vertical_align = 'center' })
+	do -- Join/Resume
+		local join_frame = sp.add { type = 'frame', name = 'join_frame', style = 'bordered_frame', direction = 'vertical' }
+		gui_style(join_frame, { vertical_align = 'center' })
 
-	local flow = join_frame.add { type = 'flow', name = 'assign', direction = 'horizontal' }
-	gui_style(flow, { horizontally_stretchable = true, vertical_align = 'center', horizontal_spacing = 4 })
+		local flow = join_frame.add { type = 'flow', name = 'assign', direction = 'horizontal' }
+		gui_style(flow, { vertical_align = 'center', horizontal_spacing = 4 })
 
-	local label = flow.add{ type = 'label', caption = 'Join', style = 'caption_label' }
-	Gui.add_pusher(flow)
+		local label = flow.add{ type = 'label', caption = 'Join', style = 'caption_label' }
+		Gui.add_pusher(flow)
 
-	local button = flow.add { type = 'sprite-button', name = 'join_north', sprite = 'utility/speed_up', tooltip = style.bold('Join North team'), style = 'tool_button' }
-	gui_style(button, { size = 24, padding = 1 })
+		local button = flow.add { type = 'sprite-button', name = 'join_north', sprite = 'utility/speed_up', tooltip = style.bold('Join North team'), style = 'tool_button' }
+		gui_style(button, { size = 28, padding = 1 })
 
-	local button = flow.add { type = 'sprite-button', name = 'join_random', sprite = 'utility/shuffle', tooltip = style.bold('Join random team'), style = 'tool_button' }
-	gui_style(button, { size = 24, padding = 1 })
+		local button = flow.add { type = 'sprite-button', name = 'join_random', sprite = 'utility/shuffle', tooltip = style.bold('Join random team'), style = 'tool_button' }
+		gui_style(button, { size = 28, padding = 3 })
 
-	local button = flow.add { type = 'sprite-button', name = 'join_south', sprite = 'utility/speed_down', tooltip = style.bold('Join South team'), style = 'tool_button' }
-	gui_style(button, { size = 24, padding = 1 })
+		local button = flow.add { type = 'sprite-button', name = 'join_south', sprite = 'utility/speed_down', tooltip = style.bold('Join South team'), style = 'tool_button' }
+		gui_style(button, { size = 28, padding = 1 })
 
-	local flow = join_frame.add { type = 'flow', name = 'resume', direction = 'horizontal' }
-	gui_style(flow, { horizontally_stretchable = true, vertical_align = 'center', horizontal_spacing = 4 })
+		local flow = join_frame.add { type = 'flow', name = 'resume', direction = 'horizontal' }
+		gui_style(flow, { vertical_align = 'center', horizontal_spacing = 4 })
 
-	local label = flow.add { type = 'label', caption = 'Resume', style = 'caption_label' }
-	Gui.add_pusher(flow)
+		local label = flow.add { type = 'label', caption = 'Resume', style = 'caption_label' }
+		Gui.add_pusher(flow)
 
-	local button = flow.add { type = 'sprite-button', name = 'bb_resume', sprite = 'utility/reset', tooltip = style.bold('Rejoin team'), style = 'back_button' }
-	gui_style(button, { padding = 2, maximal_width = 38, maximal_height = 28 })
+		local button = flow.add { type = 'sprite-button', name = 'bb_resume', sprite = 'utility/reset', tooltip = style.bold('Rejoin team'), style = 'back_button' }
+		gui_style(button, { padding = 2, maximal_width = 38, maximal_height = 28 })
 
-	local button = flow.add { type = 'sprite-button', name = 'bb_spectate', sprite = 'utility/ghost_time_to_live_modifier_icon', tooltip = style.bold('Spectate'), style = 'forward_button' }
-	gui_style(button, { padding = 2, maximal_width = 38, maximal_height = 28 })
+		local button = flow.add { type = 'sprite-button', name = 'bb_spectate', sprite = 'utility/ghost_time_to_live_modifier_icon', tooltip = style.bold('Spectate'), style = 'forward_button' }
+		gui_style(button, { padding = 2, maximal_width = 38, maximal_height = 28 })
+	end
 
 	-- == SUBFOOTER ===============================================================
-	local subfooter = inner_frame.add { type = 'frame', name = 'subfooter', style = 'subfooter_frame', direction = 'horizontal' }
-	gui_style(subfooter, { horizontally_stretchable = true, horizontally_squashable = true, maximal_height = 36 })
+	do
+		local subfooter = inner_frame.add { type = 'frame', name = 'subfooter', style = 'subfooter_frame', direction = 'horizontal' }
+		gui_style(subfooter, { horizontally_squashable = true, vertical_align = 'center' })
 
-	Gui.add_pusher(subfooter)
-	local button = ResearchInfo.create_research_info_button(subfooter)
-	button.tooltip = style.bold('Research Info') .. ' - Toggle the research summary window'
+		Gui.add_pusher(subfooter)
 
-	local button = subfooter.add { type = 'sprite-button', name = 'bb_team_statistics', style = 'transparent_slot', sprite = 'utility/side_menu_production_icon', tooltip = style.bold('Team statistics') .. ' - Toggle the team statistics window' }
-	gui_style(button, { size = 24 })
-	Gui.add_pusher(subfooter)
+		local switch = subfooter.add {
+			type = 'switch',
+			name = 'comfy_panel_floating_shortcuts',
+			switch_state = Shortcuts.get_main_frame(player).visible and 'left' or 'right',
+			tooltip = {'gui.floating_shortcuts'},
+		}
+		gui_style(switch, { top_margin = 4 })
+
+		local button = ResearchInfo.create_research_info_button(subfooter)
+		button.tooltip = {'gui.research_info'}
+		gui_style(button, { left_margin = 4 })
+
+		local button = subfooter.add {
+			type = 'sprite-button',
+			name = 'bb_team_statistics',
+			style = 'transparent_slot',
+			sprite = 'utility/side_menu_production_icon',
+			tooltip = {'gui.team_statistics'}
+		}
+		gui_style(button, { size = 26, left_margin = 4 })
+
+		Gui.add_pusher(subfooter)
+	end
 
 	-- ============================================================================
 
@@ -466,76 +498,83 @@ function Public.refresh_main_gui(player)
 	header.game_speed.caption = string_format('Speed: %.2f', game.speed)
 
 	-- == MAIN FRAME ================================================================
-	-- North & South overview
-	local is_cpt = global.active_special_games.captain_mode
-	for force_name, gui_value in pairs(gui_values) do
-		local team = main[force_name]
-		team.flow.caption_flow.team_name.caption = Functions.team_name(force_name)
+	do -- North & South overview
+		local is_cpt = global.active_special_games.captain_mode
+		for force_name, gui_value in pairs(gui_values) do
+			local team = main[force_name]
+			team.flow.caption_flow.team_name.caption = Functions.team_name(force_name)
 
-		local team_info = team.flow.table
-		local evolution = math_floor(1000 * global.bb_evolution[gui_value.biter_force]) * 0.1
+			local team_info = team.flow.table
+			local evolution = math_floor(1000 * global.bb_evolution[gui_value.biter_force]) * 0.1
 
-		team_info.bb_toggle_player_list.number = #game.forces[force_name].connected_players
-		team_info.bb_toggle_player_list.tooltip = style.bold('Player list') .. (team_info.bb_toggle_player_list.toggled and ' - Hide player list' or ' - Show player list')
-		
-		team_info.evolution.number = evolution
-		team_info.evolution.sprite = get_evo_sprite(evolution)
-		team_info.evolution.tooltip = get_evo_tooltip(force_name, true)
-		
-		team_info.threat.number = global.bb_threat[gui_value.biter_force]
-		team_info.threat.tooltip = get_threat_tooltip(force_name, true)
+			team_info.bb_toggle_player_list.number = #game.forces[force_name].connected_players
+			team_info.bb_toggle_player_list.tooltip = style.bold('Player list') .. (team_info.bb_toggle_player_list.toggled and ' - Hide player list' or ' - Show player list')
+			
+			team_info.evolution.number = evolution
+			team_info.evolution.sprite = get_evo_sprite(evolution)
+			team_info.evolution.tooltip = get_evo_tooltip(force_name, true)
+			
+			team_info.threat.number = global.bb_threat[gui_value.biter_force]
+			team_info.threat.tooltip = get_threat_tooltip(force_name, true)
 
-		if team.players.visible then
-			team.players.captain.visible = is_cpt
-			team.players.captain.caption = get_captain_caption(force_name)
-			team.players.members.caption = get_player_list_caption(force_name)
+			if team.players.visible then
+				team.players.captain.visible = is_cpt
+				team.players.captain.caption = get_captain_caption(force_name)
+				team.players.members.caption = get_player_list_caption(force_name)
+			end
 		end
 	end
 
-	-- Science sending
-	if is_spec or global.bb_game_won_by_team then
-		main.science_frame.visible = _DEBUG or false
-	else
-		main.science_frame.visible = true
-		local table = main.science_frame.flow.table_frame.send_table
-		local all_enabled = true
-		local button
-		for food_name, tooltip in pairs(food_names) do
-			button = table[food_name]
+	do -- Science sending
+		if is_spec or global.bb_game_won_by_team then
+			main.science_frame.visible = _DEBUG or false
+		else
+			main.science_frame.visible = true
+			local table = main.science_frame.flow.table_frame.send_table
+			local all_enabled = true
+			local button
+			for food_name, tooltip in pairs(food_names) do
+				button = table[food_name]
+				button.visible = true
+				button.tooltip = tooltip
+				if global.active_special_games.disable_sciences and global.special_games_variables.disabled_food[food_name] then
+					button.visible = false
+				end
+				if Captain_event.captain_is_player_prohibited_to_throw(player) and food_name ~= 'raw-fish' then
+					button.visible = false
+				end
+				all_enabled = all_enabled and button.visible
+			end
+			button = table.send_all
 			button.visible = true
-			button.tooltip = tooltip
-			if global.active_special_games.disable_sciences and global.special_games_variables.disabled_food[food_name] then
+			if global.active_special_games.disable_sciences then
 				button.visible = false
 			end
-			if Captain_event.captain_is_player_prohibited_to_throw(player) and food_name ~= 'raw-fish' then
+			if Captain_event.captain_is_player_prohibited_to_throw(player) then
 				button.visible = false
 			end
 			all_enabled = all_enabled and button.visible
+			table.info.visible = not all_enabled
 		end
-		button = table.send_all
-		button.visible = true
-		if global.active_special_games.disable_sciences then
-			button.visible = false
-		end
-		if Captain_event.captain_is_player_prohibited_to_throw(player) then
-			button.visible = false
-		end
-		all_enabled = all_enabled and button.visible
-		table.info.visible = not all_enabled
 	end
 
-	-- Join/Resume
-	local assign, resume = main.join_frame.assign, main.join_frame.resume
-	assign.visible = _DEBUG or (not global.bb_game_won_by_team and not global.chosen_team[player.name])
-	resume.visible = _DEBUG or (not global.bb_game_won_by_team and global.chosen_team[player.name])
-	resume.bb_resume.visible = _DEBUG or is_spec
-	resume.bb_spectate.visible = _DEBUG or not is_spec
+	do -- Join/Resume
+		local assign, resume = main.join_frame.assign, main.join_frame.resume
+		assign.visible = _DEBUG or (not global.bb_game_won_by_team and not global.chosen_team[player.name])
+		resume.visible = _DEBUG or (not global.bb_game_won_by_team and global.chosen_team[player.name])
+		resume.bb_resume.visible = _DEBUG or is_spec
+		resume.bb_spectate.visible = _DEBUG or not is_spec
+	end
 
 	-- == SUBFOOTER ===============================================================
-	footer.research_info_button.visible = _DEBUG or
-		global.bb_show_research_info == 'always'
-		or (global.bb_show_research_info == 'spec' and player.force.name == 'spectator')
-		or (global.bb_show_research_info == 'pure-spec' and not global.chosen_team[player.name])
+	do
+		footer.research_info_button.visible = _DEBUG or
+			global.bb_show_research_info == 'always'
+			or (global.bb_show_research_info == 'spec' and player.force.name == 'spectator')
+			or (global.bb_show_research_info == 'pure-spec' and not global.chosen_team[player.name])
+
+		footer.comfy_panel_floating_shortcuts.switch_state = Shortcuts.get_main_frame(player).visible and 'left' or 'right'
+	end
 end
 
 function Public.refresh()
@@ -612,8 +651,8 @@ function Public.burners_balance(player)
 		if inserted < burners_to_insert then
 			local items = player.surface.spill_item_stack(player.position, { name = 'burner-mining-drill', count = burners_to_insert - inserted }, false, nil, false )
 		end
-		player.print('You have received '.. burners_to_insert .. ' x [item=burner-mining-drill] check inventory',{ r = 1, g = 1, b = 0 })
-		player.create_local_flying_text({text = 'You have received '.. burners_to_insert .. ' x [item=burner-mining-drill] check inventory', position = player.position })
+		player.print({'info.burner_balance', burners_to_insert}, { r = 1, g = 1, b = 0 })
+		player.create_local_flying_text({text = {'info.burner_balance', burners_to_insert}, position = player.position })
 		player = player2
 	end
 end
@@ -836,6 +875,7 @@ local function on_gui_click(event)
 		local frame = Gui.get_top_element(player, 'bb_frame_statistics')
 		if frame then
 			frame.visible = not frame.visible
+			Public.refresh_statistics(player)
 		end
 		return
 	end

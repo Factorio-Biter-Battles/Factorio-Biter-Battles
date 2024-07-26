@@ -1,14 +1,15 @@
-local Event = require 'utils.event'
-local Gui = require 'utils.gui'
-local gui_style = require 'utils.utils'.gui_style
-local Tables = require 'maps.biter_battles_v2.tables'
 local Color = require 'utils.color_presets'
-local Functions = require 'maps.biter_battles_v2.functions'
-local ResearchInfo = require 'maps.biter_battles_v2.research_info'
+local Event = require 'utils.event'
 local Feeding = require 'maps.biter_battles_v2.feeding'
+local Functions = require 'maps.biter_battles_v2.functions'
+local Gui = require 'utils.gui'
+local ResearchInfo = require 'maps.biter_battles_v2.research_info'
+local Tables = require 'maps.biter_battles_v2.tables'
 local TeamStatsCompare = require 'maps.biter_battles_v2.team_stats_compare'
-local safe_wrap_with_player_print = require 'utils.utils'.safe_wrap_with_player_print
+
 local math_floor = math.floor
+local gui_style = require 'utils.utils'.gui_style
+local safe_wrap_with_player_print = require 'utils.utils'.safe_wrap_with_player_print
 
 local Public = {}
 
@@ -76,17 +77,17 @@ local main_frame_actions = {
   [main_frame_name..'_send_fish'] = function(player, event) if handle_spectator(player) then return end Functions.spy_fish(player, event) end,
   [main_frame_name..'_send_science'] = function(player, event) if handle_spectator(player) then return end  Feeding.feed_biters_mixed_from_inventory(player, event.button) end,
   [main_frame_name..'_research_info'] = function(player, event) ResearchInfo.show_research_info_handler(event) end,
-  [main_frame_name..'_teamstats'] = function(player, event) TeamStatsCompare.toggle_team_stats(player) end,
+  [main_frame_name..'_team_statistics'] = function(player, event) TeamStatsCompare.toggle_team_stats(player) end,
   [main_frame_name..'_clear_corpses'] = function(player, event) if handle_spectator(player) then return end clear_corpses(player) end,
   [main_frame_name..'_settings'] = function(player, event) toggle_shortcuts_settings(player) end,
 }
 
 local shortcut_buttons = {
   { name = main_frame_name..'_send_fish', caption = 'Send fish', sprite = 'item/raw-fish', tooltip = '[font=default-bold]Send fish[/font] - ' .. Tables.gui_foods['raw-fish'] },
-  { name = main_frame_name..'_send_science', caption = 'Send science', sprite = 'item/automation-science-pack', tooltip = '[font=default-bold]Send science[/font] - Send all science packs in your inventory' },
-  { name = main_frame_name..'_research_info', caption = 'Research info', sprite = 'item/lab', hovered_sprite = '', tooltip = '[font=default-bold]Research info[/font] - Toggle the research info UI' },
-  { name = main_frame_name..'_teamstats', caption = 'Team statistics', sprite = 'utility/side_menu_production_icon', hovered_sprite = 'utility/side_menu_production_hover_icon', tooltip = '[font=default-bold]Team statistics[/font] - Toggle the team statistics UI' },
-  { name = main_frame_name..'_clear_corpses', caption = 'Clear corpses', sprite = 'entity/behemoth-biter', hovered_sprite = '', tooltip = '[font=default-bold]Clear corpses[/font] - Clear biter corpses around you' },
+  { name = main_frame_name..'_send_science', caption = 'Send science', sprite = 'item/automation-science-pack', tooltip = {'gui.send_all_science'} },
+  { name = main_frame_name..'_research_info', caption = 'Research info', sprite = 'item/lab', hovered_sprite = '', tooltip = {'gui.research_info'} },
+  { name = main_frame_name..'_team_statistics', caption = 'Team statistics', sprite = 'utility/side_menu_production_icon', hovered_sprite = 'utility/side_menu_production_hover_icon', tooltip = {'gui.team_statistics'} },
+  { name = main_frame_name..'_clear_corpses', caption = 'Clear corpses', sprite = 'entity/behemoth-biter', hovered_sprite = '', tooltip = {'gui.clear_corpses'} },
 }
 
 function Public.get_main_frame(player)
@@ -119,7 +120,7 @@ function Public.get_main_frame(player)
       sprite = 'utility/expand_dots_white',
       hovered_sprite = 'utility/expand_dots',
       clicked_sprite = 'utility/expand_dots',
-      tooltip = '[font=default-small-bold]Shortcuts settings[/font] - Customize your shortcuts bar',
+      tooltip = {'gui.shortcut_settings'},
       mouse_button_filter = { 'left' },
       auto_toggle = true,
     }
@@ -133,10 +134,10 @@ function Public.get_main_frame(player)
     for _, s in pairs(shortcut_buttons) do
       add_shortcut_selection_row(player, settings_scroll_pane, s)
     end
-    add_shortcut_selection_row(player, settings_scroll_pane, { caption = 'Rocket silo health', sprite = 'utility/short_indication_line_green', tooltip = '[font=default-bold]Rocket Silo health[/font] - Show your team rocket silo health status', name = 'silo_health' })
+    add_shortcut_selection_row(player, settings_scroll_pane, { caption = 'Rocket silo health', sprite = 'utility/short_indication_line_green', tooltip = {'gui.rocket_silo_health'}, name = 'silo_health' })
     settings_scroll_pane.visible = false
 
-    local table_frame = main_frame.add { type = 'frame', name = 'table_frame', direction = 'horizontal', style = 'quick_bar_inner_panel' } --slot_button_deep_frame, quick_bar_window_frame
+    local table_frame = main_frame.add { type = 'frame', name = 'table_frame', direction = 'horizontal', style = 'quick_bar_inner_panel' }
     gui_style(table_frame, { horizontally_stretchable = true, margin = 0 })
 
     local table = table_frame.add { type = 'table', name = 'table', column_count = #shortcut_buttons, style = 'filter_slot_table' }
@@ -150,8 +151,8 @@ function Public.get_main_frame(player)
     end
 
     -- Silo progress bar
-    local progress_bar = main_frame.add { type = 'progressbar', name = 'silo_health', tooltip = '[font=default-bold]Rocket Silo health[/font]', value = 1 }
-    gui_style(progress_bar, { horizontally_stretchable = true })
+    local progress_bar = main_frame.add { type = 'progressbar', name = 'silo_health', tooltip = {'gui.rocket_silo_health'}, value = 1 }
+    gui_style(progress_bar, { horizontally_stretchable = true, color = { 165, 165, 165 } })
     progress_bar.style.natural_width = nil
     progress_bar.visible = get_player_preferences(player)['silo_health']
   end
@@ -194,9 +195,20 @@ function Public.refresh()
       local HP_percent = math_floor(1000 * health) * 0.1
       for _, player in pairs(force.connected_players) do
         local frame = Public.get_main_frame(player)
-        frame.silo_health.value = health
-        frame.silo_health.style.color = { r = 1 - health, g = health, b = 0 }
-        frame.silo_health.tooltip = '[font=default-bold]Rocket Silo health[/font] - ' .. HP .. '/5000  (' .. HP_percent .. '%)'
+        if frame.visible then
+          frame.silo_health.value = health
+          frame.silo_health.style.color = { r = 1 - health, g = health, b = 0 }
+          frame.silo_health.tooltip = {'gui.rocket_silo_health_stats', HP, HP_percent}
+        end
+      end
+    else
+      for _, player in pairs(force.connected_players) do
+        local frame = Public.get_main_frame(player)
+        if frame.visible then
+          frame.silo_health.value = 1
+          frame.silo_health.style.color = { 165, 165, 165 }
+          frame.silo_health.tooltip = {'gui.rocket_silo_health'}
+        end
       end
     end
   end

@@ -246,9 +246,9 @@ function ResearchInfo.create_research_info_button(element)
         tooltip = "Science Info",
         style = "transparent_slot",
         style_mods = {
-            width = 24,
-            height = 24,
-            --padding = -2
+            width = 26,
+            height = 26,
+            padding = 2
         },
         handler = show_research_info_handler
     }
