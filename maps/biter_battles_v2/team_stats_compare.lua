@@ -12,6 +12,16 @@ local string_format = string.format
 
 local TeamStatsCompare = {}
 
+---@param parent LuaGuiElement
+---@param a LuaGuiElement.add_param
+---@return LuaGuiElement
+local function add_small_label(parent, a)
+    a.type = "label"
+    local l = parent.add(a)
+    l.style.font = "default-small"
+    return l
+end
+
 local function ticks_to_hh_mm(ticks)
     local total_minutes = math_floor(ticks / (60 * 60))
     local total_hours = math_floor(total_minutes / 60)
@@ -92,14 +102,10 @@ function TeamStatsCompare.show_stats(player, stats)
         local shared_frame = top_table.add { type = "frame", name = "summary_shared", direction = "vertical" }
         local centering_table = shared_frame.add { type = "table", name = "centering_table", column_count = 1 }
         centering_table.style.column_alignments[1] = "center"
-        local l
-        l = centering_table.add { type = "label", caption = string_format("Difficulty: %s (%d%%)", (stats.difficulty or ""), (stats.difficulty_value or 0) * 100) }
-        l.style.font = "default-small"
-        l = centering_table.add { type = "label", caption = string_format("Duration: %s", ticks_to_hh_mm(stats.ticks or 0)) }
-        l.style.font = "default-small"
+        add_small_label(centering_table, { caption = string_format("Difficulty: %s (%d%%)", (stats.difficulty or ""), (stats.difficulty_value or 0) * 100) })
+        add_small_label(centering_table, { caption = string_format("Duration: %s", ticks_to_hh_mm(stats.ticks or 0)) })
         if stats.won_by_team then
-            l = centering_table.add { type = "label", caption = string_format("Winner: %s", stats.won_by_team == "north" and "North" or "South") }
-            l.style.font = "default-small"
+            add_small_label(centering_table, { caption = string_format("Winner: %s", stats.won_by_team == "north" and "North" or "South") })
         end
     end
     add_simple_force_stats("south", top_table)
@@ -108,7 +114,6 @@ function TeamStatsCompare.show_stats(player, stats)
     two_table.style.column_alignments[1] = "right"
     two_table.style.left_cell_padding = 4
     two_table.style.right_cell_padding = 4
-    local font = "default-small"
     for _, force_name in ipairs({"north", "south"}) do
         local science_flow = two_table.add { type = "flow", name = "science_flow_" .. force_name, direction = "vertical" }
         gui_style(science_flow, { horizontal_align = "center" })
@@ -123,8 +128,7 @@ function TeamStatsCompare.show_stats(player, stats)
         gui_style(science_table, { left_cell_padding = 3, right_cell_padding = 3, vertical_spacing = 0 })
         for idx, col_info in ipairs(cols) do
             science_table.style.column_alignments[idx] = "right"
-            local l = science_table.add { type = "label", caption = col_info[1], tooltip = col_info[2] }
-            l.style.font = font
+            add_small_label(science_table, { caption = col_info[1], tooltip = col_info[2] })
         end
         local total_sent_mutagen = 0
         local total_produced_mutagen = 0
@@ -135,22 +139,15 @@ function TeamStatsCompare.show_stats(player, stats)
             local produced = food_stats.produced or 0
             local consumed = food_stats.consumed or 0
             local sent = food_stats.sent or 0
-            local l
-            l = science_table.add { type = "label", caption = string_format("[item=%s]", food.long_name) }
-            l.style.font = font
-            l = science_table.add { type = "label", caption = (food_stats.first_at and ticks_to_hh_mm(food_stats.first_at) or "") }
-            l.style.font = font
-            l = science_table.add { type = "label", caption = format_with_thousands_sep(produced), tooltip = "[item=space-science-pack] equivalent: " .. format_one_sig_fig(produced * food_mutagen / space_sci_mutagen) }
-            l.style.font = font
-            l = science_table.add { type = "label", caption = format_with_thousands_sep(consumed), tooltip = "[item=space-science-pack] equivalent: " .. format_one_sig_fig(consumed * food_mutagen / space_sci_mutagen) }
-            l.style.font = font
-            l = science_table.add { type = "label", caption = format_with_thousands_sep(sent), tooltip = "[item=space-science-pack] equivalent: " .. format_one_sig_fig(sent * food_mutagen / space_sci_mutagen) }
-            l.style.font = font
+            add_small_label(science_table, { caption = string_format("[item=%s]", food.long_name) })
+            add_small_label(science_table, { caption = (food_stats.first_at and ticks_to_hh_mm(food_stats.first_at) or "") })
+            add_small_label(science_table, { caption = format_with_thousands_sep(produced), tooltip = "[item=space-science-pack] equivalent: " .. format_one_sig_fig(produced * food_mutagen / space_sci_mutagen) })
+            add_small_label(science_table, { caption = format_with_thousands_sep(consumed), tooltip = "[item=space-science-pack] equivalent: " .. format_one_sig_fig(consumed * food_mutagen / space_sci_mutagen) })
+            add_small_label(science_table, { caption = format_with_thousands_sep(sent), tooltip = "[item=space-science-pack] equivalent: " .. format_one_sig_fig(sent * food_mutagen / space_sci_mutagen) })
             total_sent_mutagen = total_sent_mutagen + (food_stats.sent or 0) * food_mutagen
             total_produced_mutagen = total_produced_mutagen + (food_stats.produced or 0) * food_mutagen
         end
-        local l = science_flow.add { type = "label", caption = string_format("[item=space-science-pack] equivalent produced: %s sent: %s", format_one_sig_fig(total_produced_mutagen/space_sci_mutagen), format_one_sig_fig(total_sent_mutagen / space_sci_mutagen)) }
-        l.style.font = font
+        add_small_label(science_flow, { caption = string_format("[item=space-science-pack] equivalent produced: %s sent: %s", format_one_sig_fig(total_produced_mutagen/space_sci_mutagen), format_one_sig_fig(total_sent_mutagen / space_sci_mutagen)) })
     end
 
     two_table.add { type = "line" }
@@ -171,8 +168,7 @@ function TeamStatsCompare.show_stats(player, stats)
         gui_style(item_table, { left_cell_padding = 3, right_cell_padding = 3, vertical_spacing = 0})
         for idx, col_info in ipairs(cols) do
             item_table.style.column_alignments[idx] = "right"
-            local l = item_table.add { type = "label", caption = col_info[1], tooltip = col_info[2] }
-            l.style.font = font
+            add_small_label(item_table, { caption = col_info[1], tooltip = col_info[2] })
         end
 
         for _, item_info in ipairs(TeamStatsCollect.items_to_show_summaries_of) do
@@ -187,24 +183,17 @@ function TeamStatsCompare.show_stats(player, stats)
                     format_with_thousands_sep(item_stats.consumed or 0),
                     format_with_thousands_sep(item_stats.lost or 0),
                     format_with_thousands_sep(buffered))
-                local l
-                l = item_table.add { type = "label", caption = string_format("[item=%s]", item_info.item), tooltip = tooltip}
-                l.style.font = font
+                local l = add_small_label(item_table, { caption = string_format("[item=%s]", item_info.item), tooltip = tooltip})
                 if item_info.space_after then
                     l.style.bottom_padding = 12
                 end
-                l = item_table.add { type = "label", caption = (item_stats.first_at and ticks_to_hh_mm(item_stats.first_at) or "") }
-                l.style.font = font
-                l = item_table.add { type = "label", caption = format_with_thousands_sep(item_stats.produced or 0) }
-                l.style.font = font
+                add_small_label(item_table, { caption = (item_stats.first_at and ticks_to_hh_mm(item_stats.first_at) or "") })
+                add_small_label(item_table, { caption = format_with_thousands_sep(item_stats.produced or 0) })
                 if show_hidden then
-                    l = item_table.add { type = "label", caption = format_with_thousands_sep(buffered) }
-                    l.style.font = font
+                    add_small_label(item_table, { caption = format_with_thousands_sep(buffered) })
                 end
-                l = item_table.add { type = "label", caption = item_stats.placed and format_with_thousands_sep(item_stats.placed) or "" }
-                l.style.font = font
-                l = item_table.add { type = "label", caption = killed_or_lost and format_with_thousands_sep(killed_or_lost) or "" }
-                l.style.font = font
+                add_small_label(item_table, { caption = item_stats.placed and format_with_thousands_sep(item_stats.placed) or "" })
+                add_small_label(item_table, { caption = killed_or_lost and format_with_thousands_sep(killed_or_lost) or "" })
             end
         end
     end
@@ -236,8 +225,7 @@ function TeamStatsCompare.show_stats(player, stats)
                 if idx > 1 then
                     damage_table.style.column_alignments[idx] = "right"
                 end
-                local l = damage_table.add { type = "label", caption = col_info[1], tooltip = col_info[2] }
-                l.style.font = font
+                add_small_label(damage_table, { caption = col_info[1], tooltip = col_info[2] })
             end
 
             local force_stats = stats.forces[force_name]
@@ -248,22 +236,14 @@ function TeamStatsCompare.show_stats(player, stats)
                     local damage_info = force_stats.damage_types[damage_render_info[1]] or {}
                     total_kills = total_kills + (damage_info.kills or 0)
                     total_damage = total_damage + (damage_info.damage or 0)
-                    local l
-                    l = damage_table.add { type = "label", caption = damage_render_info[2], tooltip = damage_render_info[3] }
-                    l.style.font = font
-                    l = damage_table.add { type = "label", caption = format_with_thousands_sep(damage_info.kills or 0) }
-                    l.style.font = font
-                    l = damage_table.add { type = "label", caption = format_with_thousands_sep(damage_info.damage or 0) }
-                    l.style.font = font
+                    add_small_label(damage_table, { caption = damage_render_info[2], tooltip = damage_render_info[3] })
+                    add_small_label(damage_table, { caption = format_with_thousands_sep(damage_info.kills or 0) })
+                    add_small_label(damage_table, { caption = format_with_thousands_sep(damage_info.damage or 0) })
                 end
             end
-            local l
-            l = damage_table.add { type = "label", caption = "Total" }
-            l.style.font = font
-            l = damage_table.add { type = "label", caption = format_with_thousands_sep(total_kills) }
-            l.style.font = font
-            l = damage_table.add { type = "label", caption = format_with_thousands_sep(total_damage) }
-            l.style.font = font
+            add_small_label(damage_table, { caption = "Total" })
+            add_small_label(damage_table, { caption = format_with_thousands_sep(total_kills) })
+            add_small_label(damage_table, { caption = format_with_thousands_sep(total_damage) })
         end
     end
     top_centering_table.add { type = "line" }
