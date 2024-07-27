@@ -121,7 +121,7 @@ function Public.initial_setup()
 	for _, d in pairs(defs) do p.set_allows_action(d, true) end
 
 	global.suspend_time_limit = 3600
-	global.reroll_time_limit = 1800
+	global.reroll_time_limit = 45 * 60 -- 45 seconds
 	global.chart_queue = Queue.new()
 	global.gui_refresh_delay = 0
 	global.bb_debug = false
