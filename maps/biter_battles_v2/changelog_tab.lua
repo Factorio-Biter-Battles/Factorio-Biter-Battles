@@ -13,6 +13,9 @@ local function add_changelog(player, element)
 		table.insert(changelog_change, who)
 	end
 	
+	add_entry("2024-07-27", "cliff_build", "Increase reroll time to 45 seconds")
+	add_entry("2024-07-27", "cliff_build", "teamstats: add a bit more info")
+	add_entry("2024-07-27", "Ragnarok77", "Reduce the majority required for a map reroll from 75% to 66%")
 	add_entry("2024-07-20", "gabrielchl", "fix: teams player list no longer sorted")
 	add_entry("2024-07-20", "RedRafe", "Charting fixes")
 	add_entry("2024-07-19", "PlayerNoon", "Fix, prevent voting same difficulty: Now also in captains.")
