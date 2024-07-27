@@ -13,9 +13,9 @@ local function revote()
             return
 
         else
-            local tick = game.ticks_played
-            if not global.active_special_games["captain_mode"] then
-                tick = Functions.get_ticks_since_game_start() 
+            local tick = Functions.get_ticks_since_game_start()
+            if global.active_special_games["captain_mode"] then
+                 tick = game.ticks_played 
             end
             global.difficulty_votes_timeout = tick + 10800
             global.difficulty_player_votes = {}
@@ -50,10 +50,10 @@ local function close_difficulty_votes(cmd)
         game.print(message, difficulty_vote.difficulty_print_color())
         Server.to_discord_embed(message)
     end
-    local tick = game.ticks_played
-    if not global.active_special_games["captain_mode"] then
-        tick = Functions.get_ticks_since_game_start() 
-    end
+	local tick = Functions.get_ticks_since_game_start()
+	if global.active_special_games["captain_mode"] then
+		 tick = game.ticks_played 
+	end
     global.difficulty_votes_timeout = tick
     local msg = player.name .. " closed difficulty voting"
     game.print(msg)
