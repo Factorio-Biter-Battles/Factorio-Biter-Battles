@@ -90,9 +90,9 @@ local function poll_difficulty(player)
 		end
 	end
 	
-	local tick = game.ticks_played
-	if not global.active_special_games["captain_mode"] then
-		 tick = Functions.get_ticks_since_game_start() 
+	local tick = Functions.get_ticks_since_game_start()
+	if global.active_special_games["captain_mode"] then
+		 tick = game.ticks_played 
 	end
 	if tick >= global.difficulty_votes_timeout then
 		if player.online_time ~= 0 then
@@ -216,9 +216,9 @@ local function on_gui_click(event)
 	end
 	if event.element.type ~= "button" then return end
 	if event.element.parent.name ~= "difficulty_poll" then return end
-	local tick = game.ticks_played
-	if not global.active_special_games["captain_mode"] then
-		 tick = Functions.get_ticks_since_game_start() 
+	local tick = Functions.get_ticks_since_game_start()
+	if global.active_special_games["captain_mode"] then
+		 tick = game.ticks_played 
 	end
 	if tick >= global.difficulty_votes_timeout then event.element.parent.destroy() return end
 	local i = tonumber(event.element.name)

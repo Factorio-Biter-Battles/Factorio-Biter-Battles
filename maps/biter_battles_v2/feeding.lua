@@ -212,9 +212,9 @@ end
 --- @param player LuaPlayer
 --- @param food string
 function Public.feed_biters_from_inventory(player, food)
-	local tick = game.ticks_played
-	if not global.active_special_games["captain_mode"] then
-		tick = Functions.get_ticks_since_game_start() 
+	local tick = Functions.get_ticks_since_game_start()
+	if global.active_special_games["captain_mode"] then
+		 tick = game.ticks_played 
 	end
 	if tick <= global.difficulty_votes_timeout then
 		player.print("Please wait for voting to finish before feeding")
@@ -254,9 +254,9 @@ end
 --- @param player LuaPlayer
 --- @param button defines.mouse_button_type
 function Public.feed_biters_mixed_from_inventory(player, button)
-	local tick = game.ticks_played
-	if not global.active_special_games["captain_mode"] then
-		tick = Functions.get_ticks_since_game_start() 
+	local tick = Functions.get_ticks_since_game_start()
+	if global.active_special_games["captain_mode"] then
+		 tick = game.ticks_played 
 	end
 	if tick <= global.difficulty_votes_timeout then
 		player.print("Please wait for voting to finish before feeding")
