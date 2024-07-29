@@ -227,45 +227,45 @@ function Public.create_statistics_gui_button(player)
 	local label, line
 
 	do -- North
-		label = frame.add({ type = 'label', caption = 'North', name = 'north_name'})
+		label = frame.add { type = 'label', caption = 'North', name = 'north_name'}
 		gui_style(label, { font = 'heading-2', right_padding = 4, left_padding = 4, font_color = gui_values.north.color1 })
 
-		label = frame.add({ type = 'label', caption = ' ', name = 'north_players'})
+		label = frame.add { type = 'label', caption = ' ', name = 'north_players'}
 		gui_style(label, { font = 'heading-2', right_padding = 4, left_padding = 4, font_color = { 165, 165, 165 } })
 
-		line = frame.add({ type = 'line', direction = 'vertical', style = 'dark_line' })
+		line = frame.add { type = 'line', direction = 'vertical', style = 'dark_line' }
 
-		label = frame.add({ type = 'label', caption = ' ', name = 'north_evolution', font_color = { 165, 165, 165 }})
+		label = frame.add { type = 'label', caption = ' ', name = 'north_evolution', font_color = { 165, 165, 165 }}
 		gui_style(label, { font = 'heading-2', right_padding = 4, left_padding = 4, font_color = gui_values.north.color1 })
 
-		line = frame.add({ type = 'line', direction = 'vertical', style = 'dark_line' })
+		line = frame.add { type = 'line', direction = 'vertical', style = 'dark_line' }
 
-		label = frame.add({ type = 'label', caption = ' ', name = 'north_threat'})
+		label = frame.add { type = 'label', caption = ' ', name = 'north_threat'}
 		gui_style(label, { font = 'heading-2', right_padding = 4, left_padding = 4, font_color = gui_values.north.color1 })
 	end
 
-	line = frame.add({ type = 'line', direction = 'vertical' })
+	line = frame.add { type = 'line', direction = 'vertical' }
 
-	label = frame.add({ type = 'label', caption = '00:00', name = 'clock'})
+	label = frame.add { type = 'label', caption = '00:00', name = 'clock'}
 	gui_style(label, { font = 'heading-2', right_padding = 4, left_padding = 4, font_color = { 165, 165, 165 } })
 
-	line = frame.add({ type = 'line', direction = 'vertical' })
+	line = frame.add { type = 'line', direction = 'vertical' }
 
 	do -- South
-		label = frame.add({ type = 'label', caption = ' ', name = 'south_threat'})
+		label = frame.add { type = 'label', caption = ' ', name = 'south_threat'}
 		gui_style(label, { font = 'heading-2', right_padding = 4, left_padding = 4, font_color = gui_values.south.color1 })
 
 		line = frame.add({ type = 'line', direction = 'vertical', style = 'dark_line', font_color = { 165, 165, 165 } })
 
-		label = frame.add({ type = 'label', caption = ' ', name = 'south_evolution'})
+		label = frame.add { type = 'label', caption = ' ', name = 'south_evolution'}
 		gui_style(label, { font = 'heading-2', right_padding = 4, left_padding = 4, font_color = gui_values.south.color1 })
 
-		line = frame.add({ type = 'line', direction = 'vertical', style = 'dark_line' })
+		line = frame.add { type = 'line', direction = 'vertical', style = 'dark_line' }
 
-		label = frame.add({ type = 'label', caption = ' ', name = 'south_players'})
+		label = frame.add { type = 'label', caption = ' ', name = 'south_players'}
 		gui_style(label, { font = 'heading-2', right_padding = 4, left_padding = 4, font_color = { 165, 165, 165 } })
 
-		label = frame.add({ type = 'label', caption = 'South', name = 'south_name'})
+		label = frame.add { type = 'label', caption = 'South', name = 'south_name'}
 		gui_style(label, { font = 'heading-2', right_padding = 4, left_padding = 4, font_color = gui_values.south.color1 })
 	end
 
@@ -354,7 +354,7 @@ function Public.create_main_gui(player)
 			end
 
 			local players_frame = team_frame.add { type = 'frame', name = 'players', direction = 'vertical', style = 'deep_frame_in_shallow_frame' } --quick_bar_window_frame
-			gui_style(players_frame, { horizontal_align = 'center', maximal_width = 285, padding = 5 })
+			gui_style(players_frame, { horizontal_align = 'center', maximal_width = 285, padding = 5, horizontally_stretchable = true })
 
 			local label = players_frame.add { type = 'label', name = 'captain', caption = 'Captain: ---' }
 			local label = players_frame.add { type = 'label', name = 'members', caption = TEST_1 }
