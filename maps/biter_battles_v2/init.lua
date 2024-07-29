@@ -2,6 +2,10 @@ local Terrain = require "maps.biter_battles_v2.terrain"
 local Score = require "comfy_panel.score"
 local Tables = require "maps.biter_battles_v2.tables"
 local Blueprint = require 'maps.biter_battles_v2.blueprints'
+local Queue = require 'utils.queue'
+local q_size = Queue.size
+local q_push = Queue.push
+local q_pop  = Queue.pop
 
 local Public = {}
 
@@ -117,7 +121,8 @@ function Public.initial_setup()
 	for _, d in pairs(defs) do p.set_allows_action(d, true) end
 
 	global.suspend_time_limit = 3600
-	global.reroll_time_limit = 1800
+	global.reroll_time_limit = 45 * 60 -- 45 seconds
+	global.chart_queue = Queue.new()
 	global.gui_refresh_delay = 0
 	global.bb_debug = false
 	global.bb_draw_revive_count_text = false
@@ -142,6 +147,9 @@ function Public.initial_setup()
 
 	global.total_time_online_players = {}
 	global.already_logged_current_session_time_online_players = {}
+	---@type table<string, {show_hidden: boolean?}>
+	global.teamstats_preferences = {}
+	global.allow_teamstats = "always"
 	--Disable Nauvis
 	local surface = game.surfaces[1]
 	local map_gen_settings = surface.map_gen_settings
@@ -197,23 +205,44 @@ function Public.draw_structures()
 	--Terrain.generate_spawn_goodies(surface)
 end
 
-function Public.reveal_map()
-	if not global.bb_settings["bb_map_reveal_toggle"] then
-		return
-	end
+function Public.queue_reveal_map()
+	local chart_queue = global.chart_queue
+	-- important to flush the queue upon resetting a map or chunk requests from previous maps could overlap
+	Queue.clear(chart_queue) 
 
-	local surface = game.surfaces[global.bb_surface_name]
-	local spectator = game.forces.spectator
 	local width = 2000 -- for one side
 	local height = 500 -- for one side
 
 	for x = 16, width, 32 do
 		for y = 16, height, 32 do
-			spectator.chart(surface, {{-x, -y}, {-x, -y}})
-			spectator.chart(surface, {{x, -y}, {x, -y}})
-			spectator.chart(surface, {{-x, y}, {-x, y}})
-			spectator.chart(surface, {{x, y}, {x, y}})
+			q_push(chart_queue, {{-x, -y}, {-x, -y}})
+			q_push(chart_queue, {{ x, -y}, { x, -y}})
+			q_push(chart_queue, {{-x,  y}, {-x,  y}})
+			q_push(chart_queue, {{ x,  y}, { x,  y}})
+
+			if x == 496 and y == 496 then
+				-- request whole starting area at the end again to clear any charting hiccup
+				q_push(chart_queue, {{-height, -height}, {height, height}})
+			end
 		end
+		-- spectator island (guarantees sounds to be played during map reveal)
+		q_push(chart_queue, {{-16, -16}, {16, 16}})
+	end
+end
+
+---@param max_requests number
+function Public.pop_chunk_request(max_requests)
+	if not global.bb_settings.bb_map_reveal_toggle then
+		return
+	end
+	max_requests = max_requests or 1
+	local chart_queue = global.chart_queue
+	local surface = game.surfaces[global.bb_surface_name]
+	local spectator = game.forces.spectator
+
+	while max_requests > 0 and q_size(chart_queue) > 0 do
+		spectator.chart(surface, q_pop(chart_queue))
+		max_requests = max_requests - 1
 	end
 end
 

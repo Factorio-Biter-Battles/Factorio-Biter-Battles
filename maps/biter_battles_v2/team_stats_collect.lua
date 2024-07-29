@@ -15,7 +15,7 @@ local difficulty_vote = require 'maps.biter_battles_v2.difficulty_vote'
 ---@field total_players? integer
 ---@field max_players? integer
 ---@field food table<string, {first_at?: integer, produced: number, consumed: number, sent: number}>
----@field items table<string, {first_at?: integer, produced?: number, placed?: number, lost?: number, kill_count?: number}>
+---@field items table<string, {first_at?: integer, produced?: number, consumed?: number, placed?: number, lost?: number, kill_count?: number}>
 ---@field damage_types table<string, {kills?: integer, damage?: number}>
 
 ---@class TeamStats
@@ -25,6 +25,7 @@ local difficulty_vote = require 'maps.biter_battles_v2.difficulty_vote'
 ---@field difficulty string?
 ---@field difficulty_value number?
 
+---@type {item: string, placed?: boolean, space_after?: boolean, hide_by_default?: boolean}[]
 TeamStatsCollect.items_to_show_summaries_of = {
     {item = "coal"},
     {item = "stone"},
@@ -32,12 +33,19 @@ TeamStatsCollect.items_to_show_summaries_of = {
     {item = "copper-plate"},
     {item = "steel-plate", space_after = true},
 
-    {item = "electronic-circuit"},
-    {item = "advanced-circuit"},
-    {item = "processing-unit", space_after = true},
+    {item = "electronic-circuit", hide_by_default = true},
+    {item = "advanced-circuit", hide_by_default = true},
+    {item = "processing-unit", space_after = true, hide_by_default = true},
 
-    {item = "transport-belt", placed = true},
-    {item = "fast-transport-belt", placed = true, space_after = true},
+    {item = "rocket-control-unit", hide_by_default = true},
+    {item = "rocket-fuel", hide_by_default = true},
+    {item = "low-density-structure", space_after = true, hide_by_default = true},
+
+    {item = "electric-mining-drill", placed = true},
+    {item = "boiler", placed = true, hide_by_default = true},
+    {item = "steam-engine", placed = true, hide_by_default = true},
+    {item = "fast-transport-belt", placed = true, hide_by_default = true},
+    {item = "transport-belt", placed = true, space_after = true},
 
     {item = "roboport", placed = true},
     {item = "construction-robot"},
@@ -123,23 +131,25 @@ local function update_teamstats()
         local build_stat = force.entity_build_count_statistics
         local kill_stat = force.kill_count_statistics
         for _, item_info in ipairs(TeamStatsCollect.items_to_show_summaries_of) do
-            local item_stat = force_stats.items[item_info.item]
+            local item = item_info.item
+            local item_stat = force_stats.items[item]
             if not item_stat then
                 item_stat = {}
-                force_stats.items[item_info.item] = item_stat
+                force_stats.items[item] = item_stat
             end
-            item_stat.produced = item_prod.get_input_count(item_info.item)
+            item_stat.produced = item_prod.get_input_count(item)
+            item_stat.consumed = item_prod.get_output_count(item)
             if not item_stat.first_at and item_stat.produced and item_stat.produced > 0 then
                 item_stat.first_at = tick
             end
             if item_info.placed then
-                local item_build_stat = build_stat.get_input_count(item_info.item)
+                local item_build_stat = build_stat.get_input_count(item)
                 if (item_build_stat or 0) > 0 then
                     -- we subtract out the number deconstructed, so this is really a max-net-placed-over-time
-                    local net_built = item_build_stat - build_stat.get_output_count(item_info.item)
+                    local net_built = item_build_stat - build_stat.get_output_count(item)
                     item_stat.placed = math.max(0, item_stat.placed or 0, net_built)
                 end
-                local kill_count = kill_stat.get_output_count(item_info.item)
+                local kill_count = kill_stat.get_output_count(item)
                 if (kill_count or 0) > 0 then
                     item_stat.kill_count = kill_count
                 end
@@ -147,19 +157,38 @@ local function update_teamstats()
         end
         local science_logs = global["science_logs_total_" .. force_name]
         for idx, info in ipairs(tables.food_long_and_short) do
-            local food_stat = force_stats.food[info.long_name]
+            local item = info.long_name
+            local food_stat = force_stats.food[item]
             if not food_stat then
                 food_stat = {}
-                force_stats.food[info.long_name] = food_stat
+                force_stats.food[item] = food_stat
             end
             food_stat.sent = science_logs and science_logs[idx] or 0
-            food_stat.produced = item_prod.get_input_count(info.long_name)
-            food_stat.consumed = item_prod.get_output_count(info.long_name)
+            food_stat.produced = item_prod.get_input_count(item)
+            food_stat.consumed = item_prod.get_output_count(item)
             if not food_stat.first_at and (food_stat.produced or 0) > 0 then
                 food_stat.first_at = tick
             end
         end
     end
+end
+
+---@param max number
+---@return number
+local function random_item_quantity(max)
+    if math.random() < 0.3 then
+        return 0
+    end
+    return math.floor(math.exp(math.random() * math.log(max)))
+end
+
+---@param num number
+---@return number
+local function random_item_subset(num)
+    if math.random() < 0.2 then
+        return 0
+    end
+    return math.floor(math.exp(math.random() * math.log(num)))
 end
 
 ---@return TeamStats
@@ -196,19 +225,21 @@ function TeamStatsCollect.compute_stats()
             damage_types = {},
         }
         for _, item_info in ipairs(TeamStatsCollect.items_to_show_summaries_of) do
-            force_stats.items[item_info.item] = {
+            local item_stat = {
                 first_at = math.floor(math.random() * 100*3600),
-                produced = math.random(1, 10000000),
+                produced = random_item_quantity(1000000),
             }
+            force_stats.items[item_info.item] = item_stat
+            item_stat.consumed = random_item_subset(item_stat.produced)
             if item_info.placed then
-                force_stats.items[item_info.item].placed = math.random(1, force_stats.items[item_info.item].produced)
+                item_stat.placed = random_item_subset(item_stat.produced - item_stat.consumed)
             end
         end
         for _, damage_info in ipairs(TeamStatsCollect.damage_render_info) do
             if math.random() < 0.5 then
                 force_stats.damage_types[damage_info[1]] = {
-                    kills = math.random(1, 1000),
-                    damage = math.random(1, 10000000),
+                    kills = random_item_quantity(10000),
+                    damage = random_item_quantity(10000000),
                 }
             end
         end

@@ -1,4 +1,6 @@
 local CaptainRandomPick = require 'comfy_panel.special_games.captain_random_pick'
+local CaptainTaskGroup = require 'comfy_panel.special_games.captain_task_group'
+local CaptainUtils = require 'comfy_panel.special_games.captain_utils'
 local ClosableFrame = require 'utils.ui.closable_frame'
 local Color = require 'utils.color_presets'
 local ComfyPanelGroup = require 'comfy_panel.group'
@@ -17,20 +19,15 @@ local Token = require 'utils.token'
 local gui_style = require'utils.utils'.gui_style
 local frame_style = require'utils.utils'.left_frame_style
 local ternary = require'utils.utils'.ternary
+local pretty_print_player_list = CaptainUtils.pretty_print_player_list
+local cpt_get_player = CaptainUtils.cpt_get_player
+local table_contains = CaptainUtils.table_contains
 local insert, remove, concat, sort = table.insert, table.remove, table.concat, table.sort
 local math_floor = math.floor
 local math_random = math.random
 local string_find = string.find
 local string_format = string.format
 local string_sub = string.sub
-
-local tournament_pages = {
-  { name = 'captain_join_info',        sprite = 'utility/custom_tag_icon',          caption = 'Event info',         tooltip = 'Toggle introductory window to captains event' },
-  { name = 'captain_player_gui',       sprite = 'entity/big-biter',                 caption = 'Join captain event', tooltip = 'Toggle join window for captain event' },
-  { name = 'captain_referee_gui',      sprite = 'achievement/lazy-bastard',         caption = 'Referee',            tooltip = 'Toggle the referee window' },
-  { name = 'captain_manager_gui',      sprite = 'utility/technology_white',         caption = 'Team Permissions',   tooltip = 'Toggle the captain\'s team manager window' },
-  { name = 'captain_organization_gui', sprite = 'utility/slot_icon_robot_material', caption = 'Team Organization',  tooltip = 'Toggle your team organization window' },
-}
 
 local Public = {
   name = { type = 'label', caption = 'Captain event', tooltip = 'Captain event' },
@@ -63,20 +60,15 @@ local Public = {
 }
 global.captain_ui = global.captain_ui or {}
 
--- == UTILS ===================================================================
-local function cpt_get_player(playerName)
-  local special = global.special_games_variables.captain_mode
-  if special and special.test_players and special.test_players[playerName] then
-    local res = table.deepcopy(special.test_players[playerName])
-    res.print = function(msg, color)
-      game.print('to player ' .. playerName .. ':' .. msg, color)
-    end
-    res.force = { name = (global.chosen_team[playerName] or 'spectator') }
-    return res
-  end
-  return game.get_player(playerName)
-end
+local tournament_pages = {
+  { name = 'captain_join_info',        sprite = 'utility/custom_tag_icon',          caption = 'Event info',         tooltip = 'Toggle introductory window to captains event' },
+  { name = 'captain_player_gui',       sprite = 'entity/big-biter',                 caption = 'Join captain event', tooltip = 'Toggle join window for captain event' },
+  { name = 'captain_referee_gui',      sprite = 'achievement/lazy-bastard',         caption = 'Referee',            tooltip = 'Toggle the referee window' },
+  { name = 'captain_manager_gui',      sprite = 'utility/technology_white',         caption = 'Team Permissions',   tooltip = 'Toggle the captain\'s team manager window' },
+  { name = 'captain_organization_gui', sprite = 'utility/slot_icon_robot_material', caption = 'Team Organization',  tooltip = 'Toggle your team organization window' },
+}
 
+-- == UTILS ===================================================================
 local function is_test_player(player)
   return not player.gui
 end
@@ -104,12 +96,6 @@ local function table_remove_element(tab, str)
   end
 end
 
----@param names string[]
----@return string
-local function pretty_print_player_list(names)
-  return concat(PlayerUtils.get_sorted_colored_player_list(PlayerUtils.get_lua_players_from_player_names(names)), ', ')
-end
-
 local function add_to_trust(playerName)
   if global.special_games_variables.captain_mode.autoTrust then
     local trusted = Session.get_trusted_table()
@@ -119,7 +105,7 @@ local function add_to_trust(playerName)
   end
 end
 
-local function switchTeamOfPlayer(playerName, playerForceName)
+local function switch_team_of_player(playerName, playerForceName)
   if global.chosen_team[playerName] then
     if global.chosen_team[playerName] ~= playerForceName then
       game.print({'captain.change_player_team_err', playerName, global.chosen_team[playerName], playerForceName}, Color.red)
@@ -153,6 +139,7 @@ local function clear_gui_captain_mode()
       screen.captain_player_gui,
       screen.captain_referee_gui,
       screen.captain_manager_gui,
+      screen.captain_organization_gui,
       screen.captain_tournament_frame,
       screen.captain_poll_alternate_pick_choice_frame
     }) do
@@ -197,7 +184,7 @@ local function starts_with(text, prefix)
   return text:find(prefix, 1, true) == 1
 end
 
-local function pickPlayerGenerator(player, tableBeingLooped, name, caption, button1Text, button1Name, location)
+local function pick_player_generator(player, tableBeingLooped, name, caption, button1Text, button1Name, location)
   if player.gui.screen[name] then
     player.gui.screen[name].destroy()
     return
@@ -310,7 +297,7 @@ local function pickPlayerGenerator(player, tableBeingLooped, name, caption, butt
 end
 
 local function poll_alternate_picking(player, location)
-  pickPlayerGenerator(
+  pick_player_generator(
     player,
     global.special_games_variables.captain_mode.listPlayers,
     'captain_poll_alternate_pick_choice_frame',
@@ -321,7 +308,7 @@ local function poll_alternate_picking(player, location)
   )
 end
 
-local function renderText(textId, textChosen, targetPos, color, scaleChosen, fontChosen)
+local function render_text(textId, textChosen, targetPos, color, scaleChosen, fontChosen)
   global.special_games_variables.rendering[textId] = rendering.draw_text {
     text = textChosen,
     surface = game.surfaces[global.bb_surface_name],
@@ -334,23 +321,23 @@ local function renderText(textId, textChosen, targetPos, color, scaleChosen, fon
   }
 end
 
-local function generateGenericRenderingCaptain()
+local function generate_generic_rendering_captain()
   local y = -14
-  renderText('captainLineOne', 'Special event rule only : ', { -65, y }, { 1, 1, 1, 1 }, 3, 'heading-1')
+  render_text('captainLineOne', 'Special event rule only : ', { -65, y }, { 1, 1, 1, 1 }, 3, 'heading-1')
   y = y + 2
-  renderText('captainLineTwo', '-Use of /nth /sth /north-chat /south-chat /s /shout by spectator can be punished (warn-tempban event)', { -65, y }, Color.captain_versus_float, 3, 'heading-1')
+  render_text('captainLineTwo', '-Use of /nth /sth /north-chat /south-chat /s /shout by spectator can be punished (warn-tempban event)', { -65, y }, Color.captain_versus_float, 3, 'heading-1')
   y = y + 4
-  renderText('captainLineThree', 'Notes: ', { -65, y }, { 1, 1, 1, 1 }, 2.5, 'heading-1')
+  render_text('captainLineThree', 'Notes: ', { -65, y }, { 1, 1, 1, 1 }, 2.5, 'heading-1')
   y = y + 2
-  renderText('captainLineFour', '-Chat of spectator can only be seen by spectators for players', { -65, y }, { 1, 1, 1, 1 }, 2.5, 'heading-1')
+  render_text('captainLineFour', '-Chat of spectator can only be seen by spectators for players', { -65, y }, { 1, 1, 1, 1 }, 2.5, 'heading-1')
   y = y + 2
-  renderText('captainLineSix', '-Teams are locked, if you want to play, click "Join captain event" in your Tournament menu', { -65, y }, { 1, 1, 1, 1 }, 2.5, 'heading-1')
+  render_text('captainLineSix', '-Teams are locked, if you want to play, click "Join captain event" in your Tournament menu', { -65, y }, { 1, 1, 1, 1 }, 2.5, 'heading-1')
   y = y + 2
-  renderText('captainLineSeven', '-We are using discord bb for comms (not required), feel free to join to listen, even if no mic', { -65, y }, { 1, 1, 1, 1 }, 2.5, 'heading-1')
+  render_text('captainLineSeven', '-We are using discord bb for comms (not required), feel free to join to listen, even if no mic', { -65, y }, { 1, 1, 1, 1 }, 2.5, 'heading-1')
   y = y + 2
-  renderText('captainLineEight', '-If you are not playing, you can listen to any team, but your mic must be off', { -65, y }, { 1, 1, 1, 1 }, 2.5, 'heading-1')
+  render_text('captainLineEight', '-If you are not playing, you can listen to any team, but your mic must be off', { -65, y }, { 1, 1, 1, 1 }, 2.5, 'heading-1')
   y = y + 2
-  renderText('captainLineNine', '-No sign up required, anyone can play the event!', { -65, y }, { 1, 1, 1, 1 }, 2.5, 'heading-1')
+  render_text('captainLineNine', '-No sign up required, anyone can play the event!', { -65, y }, { 1, 1, 1, 1 }, 2.5, 'heading-1')
   y = y + 2
 end
 
@@ -374,7 +361,7 @@ local function auto_pick_all_of_group(cptPlayer, playerName)
     for _, playerName in ipairs(playersToSwitch) do
       local player = cpt_get_player(playerName)
       game.print(playerName .. ' was automatically picked with group system', Color.cyan)
-      switchTeamOfPlayer(playerName, playerChecked.force.name)
+      switch_team_of_player(playerName, playerChecked.force.name)
       player.print({'captain.comms_reminder'}, Color.cyan)
       table_remove_element(special.listPlayers, playerName)
     end
@@ -481,9 +468,14 @@ local function generate_captain_mode(refereeName, autoTrust, captainKick, specia
       playerPlaytimes = {},
       playerSessionStartTimes = {},
     },
+    groupsOrganization = { north = {}, south = {} }
   }
   global.special_games_variables.captain_mode = special
   global.active_special_games.captain_mode = true
+  for i = 1, CaptainTaskGroup.get_max_num_organization_groups() do
+		special.groupsOrganization.north[i] = { name = 'Group ' .. i, players = {}, player_order = {} }
+		special.groupsOrganization.south[i] = { name = 'Group ' .. i, players = {}, player_order = {} }
+	end
   local referee = cpt_get_player(special.refereeName)
   if referee == nil then
     game.print('Event captain aborted, referee is not a player connected. Provided referee name was: ' .. special.refereeName)
@@ -550,9 +542,9 @@ local function generate_captain_mode(refereeName, autoTrust, captainKick, specia
     global.special_games_variables.rendering = {}
   end
   rendering.clear()
-  renderText('captainLineTen', 'Special Captain\'s tournament mode enabled', { 0, -16 }, { 1, 0, 0, 1 }, 5, 'heading-1')
-  renderText('captainLineEleven', 'team xx vs team yy. Referee: ' .. refereeName .. '. Teams on VC', { 0, 10 }, Color.captain_versus_float, 1.5, 'heading-1')
-  generateGenericRenderingCaptain()
+  render_text('captainLineTen', 'Special Captain\'s tournament mode enabled', { 0, -16 }, { 1, 0, 0, 1 }, 5, 'heading-1')
+  render_text('captainLineEleven', 'team xx vs team yy. Referee: ' .. refereeName .. '. Teams on VC', { 0, 10 }, Color.captain_versus_float, 1.5, 'heading-1')
+  generate_generic_rendering_captain()
 end
 
 local function delete_player_from_playersList(playerName, isNorthPlayerBoolean)
@@ -578,7 +570,7 @@ local function generate_vs_text_rendering()
   local special = global.special_games_variables.captain_mode
   local text = string_format('Team %s (North) vs (South) Team %s. Referee: %s. Teams on Voice Chat', special.captainList[1], special.captainList[2], special.refereeName)
 
-  renderText('captainLineVersus', text, { 0, 10 }, Color.captain_versus_float, 1.5, 'heading-1')
+  render_text('captainLineVersus', text, { 0, 10 }, Color.captain_versus_float, 1.5, 'heading-1')
 end
 
 local function start_captain_event()
@@ -606,10 +598,10 @@ local function start_captain_event()
   global.bb_threat.south_biters = 0
 
   rendering.clear()
-  renderText('captainLineSeventeen', 'Special Captain\'s tournament mode enabled', { 0, -16 }, { 1, 0, 0, 1 }, 5, 'heading-1')
+  render_text('captainLineSeventeen', 'Special Captain\'s tournament mode enabled', { 0, -16 }, { 1, 0, 0, 1 }, 5, 'heading-1')
   generate_vs_text_rendering()
-  generateGenericRenderingCaptain()
-  renderText('captainLineEighteen', 'Want to play? Click "Join captain event" in your Tournament menu!', { 0, -9 }, { 1, 1, 1, 1 }, 3, 'heading-1')
+  generate_generic_rendering_captain()
+  render_text('captainLineEighteen', 'Want to play? Click "Join captain event" in your Tournament menu!', { 0, -9 }, { 1, 1, 1, 1 }, 3, 'heading-1')
 
   for _, player in pairs(game.connected_players) do
     if player.force.name == 'north' or player.force.name == 'south' then
@@ -716,7 +708,7 @@ local function get_player_list_with_groups()
   return result
 end
 
-local function insertPlayerByPlaytime(playerName)
+local function insert_player_by_playtime(playerName)
   local special = global.special_games_variables.captain_mode
   local playtime = 0
   if global.total_time_online_players[playerName] then
@@ -785,7 +777,7 @@ local function start_picking_phase()
     local result = CaptainRandomPick.assign_teams_from_buckets(special.playerBuckets, forced_assignments, groups, special.teamAssignmentSeed)
     for i, team in ipairs(result) do
       for _, player in pairs(team) do
-        switchTeamOfPlayer(player, i == 1 and 'north' or 'south')
+        switch_team_of_player(player, i == 1 and 'north' or 'south')
         table_remove_element(special.listPlayers, player)
       end
     end
@@ -837,7 +829,7 @@ local function check_if_right_number_of_captains(firstRun, referee)
       local captainName = special.captainList[index]
       add_to_trust(captainName)
       if not special.balancedRandomTeamsMode then
-        switchTeamOfPlayer(captainName, force_name)
+        switch_team_of_player(captainName, force_name)
         table_remove_element(special.listPlayers, captainName)
       end
     end
@@ -853,7 +845,7 @@ local function get_dropdown_value(dropdown)
   end
 end
 
-local function changeCaptain(cmd, isItForNorth)
+local function change_captain(cmd, isItForNorth)
   if not cmd.player_index then
     return
   end
@@ -1015,7 +1007,7 @@ local function on_gui_click(event)
   if name == 'captain_player_want_to_play' then
     if not special.pickingPhase then
       if check_if_enough_playtime_to_play(player) then
-        insertPlayerByPlaytime(player.name)
+        insert_player_by_playtime(player.name)
         Public.update_all_captain_player_guis()
       else
         player.print('You need to have spent more time on biter battles server to join the captain game event! Learn and watch a bit meanwhile', Color.red)
@@ -1104,7 +1096,7 @@ local function on_gui_click(event)
     if player.name == special.captainList[2] then
       forceToGo = 'south'
     end
-    switchTeamOfPlayer(playerPicked, forceToGo)
+    switch_team_of_player(playerPicked, forceToGo)
     cpt_get_player(playerPicked).print({'captain.comms_reminder'}, Color.cyan)
     for index, name in pairs(listPlayers) do
       if name == playerPicked then
@@ -1394,13 +1386,7 @@ function Public.toggle_captain_manager_gui(player)
 end
 
 function Public.toggle_captain_organization_gui(player)
-  if player.gui.screen.captain_organization_gui then
-    global.captain_ui[player.name].captain_organization_gui = false
-    player.gui.screen.captain_organization_gui.destroy()
-  else
-    global.captain_ui[player.name].captain_organization_gui = true
-    Public.captain_organization_gui(player)
-  end
+  CaptainTaskGroup.toggle_captain_organization_gui(player)
 end
 
 function Public.toggle_captain_tournament_button(player)
@@ -1734,7 +1720,10 @@ function Public.draw_captain_manager_gui(player, main_frame)
 end
 
 function Public.draw_captain_organization_gui(player, main_frame)
-  return
+  if is_test_player(player) then
+    return
+  end
+  CaptainTaskGroup.draw_captain_organization_gui(player, main_frame)
 end
 
 function Public.draw_captain_tournament_gui(player)
@@ -1748,7 +1737,7 @@ function Public.draw_captain_tournament_gui(player)
 	end
 
 	local main_frame = Gui.add_left_element(player, { type = 'frame', name = 'captain_tournament_gui', direction = 'vertical'})
-  gui_style(main_frame, { maximal_width = 206 })
+  gui_style(main_frame, { maximal_width = 220, maximal_height = 600 })
 
 	local flow = main_frame.add { type = 'flow', name = 'flow', style = 'vertical_flow', direction = 'vertical' }
 	local inner_frame = flow.add { type = 'frame', name = 'inner_frame', style = 'window_content_frame_packed', direction = 'vertical' }
@@ -1831,7 +1820,7 @@ function Public.draw_captain_tournament_frame(player)
     horizontally_stretchable = true,
     natural_width = 800,
     natural_height = 640,
-    maximal_height = 800,
+    maximal_height = 900,
     top_padding = 8,
     bottom_padding = 2,
   })
@@ -1842,7 +1831,7 @@ function Public.draw_captain_tournament_frame(player)
     horizontally_stretchable = true,
     vertically_stretchable = true,
     vertically_squashable = false,
-    maximal_height = 600,
+    maximal_height = 860,
   })
   sp.vertical_scroll_policy = 'always'
 
@@ -2386,6 +2375,10 @@ function Public.update_captain_manager_gui(player, frame)
   end
 end
 
+function Public.update_captain_organization_gui(player, frame)
+  CaptainTaskGroup.update_captain_organization_gui(player, frame)
+end
+
 function Public.update_captain_tournament_gui(player)
   local frame = Gui.get_left_element(player, 'captain_tournament_gui')
   if not frame then
@@ -2512,11 +2505,11 @@ end
 -- == COMMANDS ================================================================
 
 commands.add_command('replaceCaptainNorth', 'Referee can decide to change the captain of north team', function(cmd)
-  changeCaptain(cmd, true)
+  change_captain(cmd, true)
 end)
 
 commands.add_command('replaceCaptainSouth', 'Referee can decide to change the captain of south team', function(cmd)
-  changeCaptain(cmd, false)
+  change_captain(cmd, false)
 end)
 
 commands.add_command('replaceReferee', 'Admin or referee can decide to change the referee', function(cmd)
@@ -2595,7 +2588,7 @@ commands.add_command('captainDisablePicking', 'Convert to a normal game, disable
   clear_gui_captain_mode()
 end)
 
-if true then
+if false then
   commands.add_command('cpt-test-func', 'Run some test-only code for captains games', function(event)
     if #game.players > 1 then
       game.print('This command is only for testing, and should only be run when there is exactly one player in the game.', Color.red)
@@ -2629,10 +2622,6 @@ if true then
 end
 
 -- == HANDLERS ================================================================
-
-Gui.on_click('tournament_subheader_toggle', on_toggle)
-
-
 Event.on_nth_tick(300, every_5sec)
 Event.add(defines.events.on_gui_click, on_gui_click)
 Event.add(defines.events.on_gui_switch_state_changed, on_gui_switch_state_changed)
