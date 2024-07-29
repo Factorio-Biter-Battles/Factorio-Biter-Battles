@@ -409,7 +409,7 @@ function Public.create_main_gui(player)
 		local flow = join_frame.add { type = 'flow', name = 'resume', direction = 'horizontal' }
 		gui_style(flow, { vertical_align = 'center', horizontal_spacing = 4 })
 
-		local label = flow.add { type = 'label', caption = 'Resume', style = 'caption_label' }
+		local label = flow.add { type = 'label', caption = 'Options', style = 'caption_label' }
 		Gui.add_pusher(flow)
 
 		local button = flow.add { type = 'sprite-button', name = 'bb_resume', sprite = 'utility/reset', tooltip = style.bold('Rejoin team'), style = 'back_button' }
@@ -441,7 +441,7 @@ function Public.create_main_gui(player)
 		local button = subfooter.add {
 			type = 'sprite-button',
 			name = 'bb_team_statistics',
-			style = 'transparent_slot',
+			style = 'transparent_slot', -- 'quick_bar_slot_button', 'frame_action_button',
 			sprite = 'utility/side_menu_production_icon',
 			tooltip = {'gui.team_statistics'}
 		}
@@ -564,6 +564,7 @@ function Public.refresh_main_gui(player)
 		resume.visible = _DEBUG or (not global.bb_game_won_by_team and global.chosen_team[player.name])
 		resume.bb_resume.visible = _DEBUG or is_spec
 		resume.bb_spectate.visible = _DEBUG or not is_spec
+		main.join_frame.visible = assign.visible or resume.visible
 	end
 
 	-- == SUBFOOTER ===============================================================

@@ -144,7 +144,7 @@ local function draw_manager_gui(player)
   local i2 = 1
   for i = 1, #forces * 2 - 1, 1 do
     if i % 2 == 1 then
-      local l = t.add({ type = 'sprite-button', caption = string.upper(forces[i2].name), name = forces[i2].name })
+      local l = t.add({ type = 'sprite-button', caption = string.upper(forces[i2].name), name = forces[i2].name, style = 'side_menu_button' })
       l.style.minimal_width = 160
       l.style.maximal_width = 160
       l.style.font_color = forces[i2].color

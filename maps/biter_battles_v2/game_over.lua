@@ -184,28 +184,29 @@ local function show_endgame_gui(player)
     local sp = inner_frame.add { type = 'scroll-pane', style = 'scroll_pane_under_subheader', direction = 'vertical' }
 
     -- North
-    local f = sp.add { type = 'frame', style = 'bordered_frame', direction = 'vertical', caption = 'North:' }
-    gui_style(f, { font = 'default-listbox', font_color = { r = 0.55, g = 0.55, b = 0.99 } })
-
-    local t = f.add { type = 'table', column_count = 2 }
     local mvp = get_mvps('north')
     if mvp then
-      l = t.add { type = 'label', caption = 'Defender >> ' }
+      local f = sp.add { type = 'frame', style = 'bordered_frame', direction = 'vertical', caption = 'North:' }
+      gui_style(f, { font = 'default-listbox', font_color = { r = 0.55, g = 0.55, b = 0.99 } })
+      
+      local t = f.add { type = 'table', column_count = 2 }
+
+      local l = t.add { type = 'label', caption = 'Defender >> ' }
       gui_style(l, category_style)
 
-      l = t.add { type = 'label', caption = mvp.killscore.name .. ' with a score of ' .. mvp.killscore.score }
+      local l = t.add { type = 'label', caption = mvp.killscore.name .. ' with a score of ' .. mvp.killscore.score }
       gui_style(l, winner_style)
 
-      l = t.add { type = 'label', caption = 'Builder >> ' }
+      local l = t.add { type = 'label', caption = 'Builder >> ' }
       gui_style(l, category_style)
       
-      l = t.add { type = 'label', caption = mvp.built_entities.name .. ' built ' .. mvp.built_entities.score .. ' things' }
+      local l = t.add { type = 'label', caption = mvp.built_entities.name .. ' built ' .. mvp.built_entities.score .. ' things' }
       gui_style(l, winner_style)
 
-      l = t.add { type = 'label', caption = 'Deaths >> ' }
+      local l = t.add { type = 'label', caption = 'Deaths >> ' }
       gui_style(l, category_style)
 
-      l = t.add { type = 'label', caption = mvp.deaths.name .. ' died ' .. mvp.deaths.score .. ' times' }
+      local l = t.add { type = 'label', caption = mvp.deaths.name .. ' died ' .. mvp.deaths.score .. ' times' }
       gui_style(l, winner_style)
 
       if not global.results_sent_north then
@@ -226,28 +227,29 @@ local function show_endgame_gui(player)
     end
 
     -- South
-    local f = sp.add { type = 'frame', style = 'bordered_frame', direction = 'vertical', caption = 'South:' }
-    gui_style(f, { font = 'default-listbox', font_color = { r = 0.99, g = 0.33, b = 0.33 } })
-
-    t = f.add { type = 'table', column_count = 2 }
     mvp = get_mvps('south')
     if mvp then
-      l = t.add { type = 'label', caption = 'Defender >> ' }
+      local f = sp.add { type = 'frame', style = 'bordered_frame', direction = 'vertical', caption = 'South:' }
+      gui_style(f, { font = 'default-listbox', font_color = { r = 0.99, g = 0.33, b = 0.33 } })
+
+      local t = f.add { type = 'table', column_count = 2 }
+
+      local l = t.add { type = 'label', caption = 'Defender >> ' }
       gui_style(l, category_style)
 
-      l = t.add { type = 'label', caption = mvp.killscore.name .. ' with a score of ' .. mvp.killscore.score }
+      local l = t.add { type = 'label', caption = mvp.killscore.name .. ' with a score of ' .. mvp.killscore.score }
       gui_style(l, winner_style)
 
-      l = t.add { type = 'label', caption = 'Builder >> ' }
+      local l = t.add { type = 'label', caption = 'Builder >> ' }
       gui_style(l, category_style)
 
-      l = t.add { type = 'label', caption = mvp.built_entities.name .. ' built ' .. mvp.built_entities.score .. ' things' }
+      local l = t.add { type = 'label', caption = mvp.built_entities.name .. ' built ' .. mvp.built_entities.score .. ' things' }
       gui_style(l, winner_style)
 
-      l = t.add { type = 'label', caption = 'Deaths >> ' }
+      local l = t.add { type = 'label', caption = 'Deaths >> ' }
       gui_style(l, category_style)
 
-      l = t.add { type = 'label', caption = mvp.deaths.name .. ' died ' .. mvp.deaths.score .. ' times' }
+      local l = t.add { type = 'label', caption = mvp.deaths.name .. ' died ' .. mvp.deaths.score .. ' times' }
       gui_style(l, winner_style)
 
       if not global.results_sent_south then

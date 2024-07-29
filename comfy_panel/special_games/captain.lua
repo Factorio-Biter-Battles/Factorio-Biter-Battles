@@ -25,11 +25,11 @@ local string_format = string.format
 local string_sub = string.sub
 
 local tournament_pages = {
-  { name = 'captain_join_info',        sprite = 'utility/custom_tag_icon',          caption = 'Tournament info',   tooltip = 'Toggle tournament mode introductory window' },
-  { name = 'captain_player_gui',       sprite = 'entity/big-biter',                 caption = 'Join tournament',   tooltip = 'Toggle join window for special event' },
-  { name = 'captain_referee_gui',      sprite = 'achievement/lazy-bastard',         caption = 'Referee',           tooltip = 'Toggle the referee window' },
-  { name = 'captain_manager_gui',      sprite = 'utility/technology_white',         caption = 'Team Permissions',  tooltip = 'Toggle the captain\'s team manager window' },
-  { name = 'captain_organization_gui', sprite = 'utility/slot_icon_robot_material', caption = 'Team Organization', tooltip = 'Toggle your team organization window' },
+  { name = 'captain_join_info',        sprite = 'utility/custom_tag_icon',          caption = 'Event info',         tooltip = 'Toggle introductory window to captains event' },
+  { name = 'captain_player_gui',       sprite = 'entity/big-biter',                 caption = 'Join captain event', tooltip = 'Toggle join window for captain event' },
+  { name = 'captain_referee_gui',      sprite = 'achievement/lazy-bastard',         caption = 'Referee',            tooltip = 'Toggle the referee window' },
+  { name = 'captain_manager_gui',      sprite = 'utility/technology_white',         caption = 'Team Permissions',   tooltip = 'Toggle the captain\'s team manager window' },
+  { name = 'captain_organization_gui', sprite = 'utility/slot_icon_robot_material', caption = 'Team Organization',  tooltip = 'Toggle your team organization window' },
 }
 
 local Public = {
@@ -344,7 +344,7 @@ local function generateGenericRenderingCaptain()
   y = y + 2
   renderText('captainLineFour', '-Chat of spectator can only be seen by spectators for players', { -65, y }, { 1, 1, 1, 1 }, 2.5, 'heading-1')
   y = y + 2
-  renderText('captainLineSix', '-Teams are locked, if you want to play, click "Join Tournament" in your Tournament menu', { -65, y }, { 1, 1, 1, 1 }, 2.5, 'heading-1')
+  renderText('captainLineSix', '-Teams are locked, if you want to play, click "Join captain event" in your Tournament menu', { -65, y }, { 1, 1, 1, 1 }, 2.5, 'heading-1')
   y = y + 2
   renderText('captainLineSeven', '-We are using discord bb for comms (not required), feel free to join to listen, even if no mic', { -65, y }, { 1, 1, 1, 1 }, 2.5, 'heading-1')
   y = y + 2
@@ -609,7 +609,7 @@ local function start_captain_event()
   renderText('captainLineSeventeen', 'Special Captain\'s tournament mode enabled', { 0, -16 }, { 1, 0, 0, 1 }, 5, 'heading-1')
   generate_vs_text_rendering()
   generateGenericRenderingCaptain()
-  renderText('captainLineEighteen', 'Want to play? Click "Join Tournament" in your Tournament menu!', { 0, -9 }, { 1, 1, 1, 1 }, 3, 'heading-1')
+  renderText('captainLineEighteen', 'Want to play? Click "Join captain event" in your Tournament menu!', { 0, -9 }, { 1, 1, 1, 1 }, 3, 'heading-1')
 
   for _, player in pairs(game.connected_players) do
     if player.force.name == 'north' or player.force.name == 'south' then
@@ -761,7 +761,7 @@ local function end_of_picking_phase()
     game.print('[font=default-large-bold]All players were picked by captains, time to start preparation for each team ! Once your team is ready, captain, click on yes on top popup[/font]', Color.cyan)
     for _, captain_name in pairs(global.special_games_variables.captain_mode.captainList) do
       local captain = cpt_get_player(captain_name)
-      captain.print('As a captain, you can handle your team by accessing "Team Permissions" on your Tournament menu', Color.yellow)
+      captain.print('As a captain, you can handle your team by accessing "Team Permissions" in your Tournament menu', Color.yellow)
       if not is_test_player(captain) then
         TeamManager.custom_team_name_gui(captain, captain.force.name)
       end
