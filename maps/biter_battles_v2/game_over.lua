@@ -445,6 +445,7 @@ function Public.silo_death(event)
                           '\\n\\n' .. north_players .. '\\n\\n' .. south_players
 
     Server.to_discord_embed(discord_message)
+    log({'', '[TEAMSTATS-FINAL]', game.table_to_json(global.team_stats)})
 
     global.results_sent_south = false
     global.results_sent_north = false
@@ -476,6 +477,7 @@ function Public.silo_death(event)
           log_to_db('[Playtime][' .. player.name .. ']' .. special.stats.playerPlaytimes[player.name] .. '\n', true)
         end
       end
+      log_to_db('[TeamStats]'..game.table_to_json(global.team_stats)..'\n',true)
       log_to_db('>End of log', true)
     end
   end
