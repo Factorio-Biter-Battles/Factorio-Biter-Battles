@@ -600,16 +600,13 @@ decrement_timer_token = Token.register(function()
       end
     end
 
-    if global.reroll_time_left <= 30 then
-      Sounds.notify_all('utility/armor_insert')
-    end
-
+    Sounds.notify_all('utility/armor_insert')
     Task.set_timeout_in_ticks(60, decrement_timer_token)
   else
     stop_map_reroll()
     -- count votes
     local result, _, _ = get_reroll_stats()
-    if result >= 75 then
+    if result >= 66 then
       game.print('Vote to reload the map has succeeded (' .. result .. '%)')
       game.print('Map is being rerolled!', { r = 0.22, g = 0.88, b = 0.22 })
       Public.generate_new_map()

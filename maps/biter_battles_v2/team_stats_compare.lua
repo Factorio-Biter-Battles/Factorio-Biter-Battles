@@ -261,15 +261,12 @@ function TeamStatsCompare.toggle_team_stats(player, stats)
     local frame = player.gui.screen.teamstats_frame
 
     if frame and frame.valid then
-        if player.opened == frame then
-            player.opened = nil
-        end
         frame.destroy()
         return
     end
 
     local deny_reason = false
-    -- allow it always in singleplayer, or if the game is over
+    -- allow it always in single player, or if the game is over
     if not stats and not global.bb_game_won_by_team and game.is_multiplayer() then
         if global.allow_teamstats == 'spectators' then
             if player.force.name ~= 'spectator' then

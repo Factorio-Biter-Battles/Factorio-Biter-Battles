@@ -490,9 +490,6 @@ function ResearchInfo.show_research_info(player)
     local frame = player.gui.screen["research_info_frame"]
 
     if frame and frame.valid then
-        if player.opened == frame then
-            player.opened = nil
-        end
         frame.destroy()
         return
     end

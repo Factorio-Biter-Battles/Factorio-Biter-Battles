@@ -153,7 +153,6 @@ function Public.get_main_frame(player)
     main_frame = player.gui.screen.add {
       type = 'frame',
       name = main_frame_name,
-      -- caption = 'Shortcuts',
       direction = 'vertical',
       style = 'quick_bar_window_frame',
     }
