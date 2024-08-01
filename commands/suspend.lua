@@ -4,7 +4,7 @@ local Token = require 'utils.token'
 local Task = require 'utils.task'
 local Event = require 'utils.event'
 local Gui = require 'utils.gui'
-local gui_style = require'utils.utils'.gui_style
+local gui_style = require 'utils.utils'.gui_style
 
 ---@return success_percent number [0-1] yes/total
 ---@return yes_count number
@@ -262,8 +262,7 @@ end)
 
 local function on_player_joined_game(event)
   local player = game.get_player(event.player_index)
-  if global.suspended_players[player.name] and (game.ticks_played - global.suspended_players[player.name]) <
-      global.suspended_time then
+  if global.suspended_players[player.name] and (game.ticks_played - global.suspended_players[player.name]) < global.suspended_time then
     punish_player(player)
   end
 end

@@ -738,7 +738,6 @@ local function insert_player_by_playtime(playerName)
   end
 end
 
--- TODO: improve players feedbacks with these prints
 local function end_of_picking_phase()
   local special = global.special_games_variables.captain_mode
   special.pickingPhase = false
@@ -858,7 +857,7 @@ local function change_captain(cmd, isItForNorth)
   end
   local special = global.special_games_variables.captain_mode
   if special.prepaPhase then
-    return playerOfCommand.print({'captain.cmd_only_prepa_phase'}, Color.red)
+    return playerOfCommand.print({'captain.cmd_only_after_prepa_phase'}, Color.red)
   end
   if special.refereeName ~= playerOfCommand.name then
     return playerOfCommand.print('Only referee have license to use that command', Color.red)
@@ -913,7 +912,7 @@ local function change_captain(cmd, isItForNorth)
   end
 end
 
-local cpt_permissions = {
+local cpt_ui_visibility = {
   -- visible to all
   captain_join_info = function(player)
     return true
@@ -1209,7 +1208,6 @@ local function on_gui_click(event)
           player.print(playerNameUpdateText .. ' was already added to throw trustlist !', Color.red)
         end
         Public.draw_captain_manager_gui(player)
-        Public.draw_captain_manager_gui(player)
       else
         player.print(playerNameUpdateText .. ' does not even exist or not even valid !', Color.red)
       end
@@ -1229,7 +1227,6 @@ local function on_gui_click(event)
       else
         player.print(playerNameUpdateText .. ' was not found in throw trustlist !', Color.red)
       end
-      Public.draw_captain_manager_gui(player)
       Public.draw_captain_manager_gui(player)
     end
   elseif name == 'captain_eject_player' then
@@ -2387,7 +2384,7 @@ function Public.update_captain_tournament_gui(player)
   local menu = frame.flow.inner_frame.qbip.qbsp
   for _, data in pairs(tournament_pages) do
     local gui_name = data.name
-    local action = cpt_permissions[gui_name]
+    local action = cpt_ui_visibility[gui_name]
     if menu[gui_name] and action then
       menu[gui_name].visible = action(player)
     elseif not menu[gui_name] then
@@ -2406,7 +2403,7 @@ function Public.update_captain_tournament_frame(player)
   local menu = frame.frame.sp
   for _, data in pairs(tournament_pages) do
     local gui_name = data.name
-    local action = cpt_permissions[gui_name]
+    local action = cpt_ui_visibility[gui_name]
     if menu[gui_name] and action then
       menu[gui_name].visible = action(player)
     elseif not menu[gui_name] then
@@ -2524,7 +2521,7 @@ commands.add_command('replaceReferee', 'Admin or referee can decide to change th
     return playerOfCommand.print({'captain.cmd_only_captain_mode'}, Color.red)
   end
   if global.special_games_variables.captain_mode.prepaPhase then
-    return playerOfCommand.print({'captain.cmd_only_prepa_phase'}, Color.red)
+    return playerOfCommand.print({'captain.cmd_only_after_prepa_phase'}, Color.red)
   end
   if global.special_games_variables.captain_mode.refereeName ~= playerOfCommand.name and not playerOfCommand.admin then
     return playerOfCommand.print({'captain.cmd_only_admin'}, Color.red)
@@ -2571,7 +2568,7 @@ commands.add_command('captainDisablePicking', 'Convert to a normal game, disable
     return playerOfCommand.print({'captain.cmd_only_captain_mode'}, Color.red)
   end
   if global.special_games_variables.captain_mode.prepaPhase then
-    return playerOfCommand.print({'captain.cmd_only_prepa_phase'}, Color.red)
+    return playerOfCommand.print({'captain.cmd_only_after_prepa_phase'}, Color.red)
   end
   if global.special_games_variables.captain_mode.refereeName ~= playerOfCommand.name and not playerOfCommand.admin then
     return playerOfCommand.print({'captain.cmd_only_admin'}, Color.red)
@@ -2588,38 +2585,36 @@ commands.add_command('captainDisablePicking', 'Convert to a normal game, disable
   clear_gui_captain_mode()
 end)
 
-if false then
-  commands.add_command('cpt-test-func', 'Run some test-only code for captains games', function(event)
-    if #game.players > 1 then
-      game.print('This command is only for testing, and should only be run when there is exactly one player in the game.', Color.red)
-      return
+commands.add_command('cpt-test-func', 'Run some test-only code for captains games', function(event)
+  if game.is_multiplayer() then
+    game.print('This command is only for testing, and should only be run when there is exactly one player in the game.', Color.red)
+    return
+  end
+  local refereeName = game.player.name
+  local autoTrustSystem = 'left'
+  local captainCanKick = 'left'
+  local specialEnabled = 'left'
+  generate_captain_mode(refereeName, autoTrustSystem, captainCanKick, specialEnabled)
+  local special = global.special_games_variables.captain_mode
+  special.test_players = {}
+  for _, playerName in pairs({ 'alice', 'bob', 'charlie', 'eve1', 'eve2', 'eve3', 'fredrick_longname', 'greg1', 'greg2', 'hilary', 'iacob', 'james', 'kelly', 'lana', 'manny', 'niles', 'oratio', 'pan', 'quasil', 'reidd', 'sil', 'tina', 'ustav', 'vince', 'winny', 'xetr', 'yamal', 'zin' }) do
+    local group_name = ''
+    if starts_with(playerName, 'eve') then
+      group_name = '[cpt_eve]'
     end
-    local refereeName = game.player.name
-    local autoTrustSystem = 'left'
-    local captainCanKick = 'left'
-    local specialEnabled = 'left'
-    generate_captain_mode(refereeName, autoTrustSystem, captainCanKick, specialEnabled)
-    local special = global.special_games_variables.captain_mode
-    special.test_players = {}
-    for _, playerName in pairs({ 'alice', 'bob', 'charlie', 'eve1', 'eve2', 'eve3', 'fredrick_longname', 'greg1', 'greg2', 'hilary', 'iacob', 'james', 'kelly', 'lana', 'manny', 'niles', 'oratio', 'pan', 'quasil', 'reidd', 'sil', 'tina', 'ustav', 'vince', 'winny', 'xetr', 'yamal', 'zin' }) do
-      local group_name = ''
-      if starts_with(playerName, 'eve') then
-        group_name = '[cpt_eve]'
-      end
-      if starts_with(playerName, 'greg') then
-        group_name = '[cpt_greg]'
-      end
-      special.test_players[playerName] = { name = playerName, tag = group_name, color = Color.white }
-      insert(special.listPlayers, playerName)
+    if starts_with(playerName, 'greg') then
+      group_name = '[cpt_greg]'
     end
-    special.player_info.alice = 'I am a test player'
-    special.player_info.charlie = string.rep('This is a really long description. ', 5)
-    special.minTotalPlaytimeToPlay = 0
+    special.test_players[playerName] = { name = playerName, tag = group_name, color = Color.white }
+    insert(special.listPlayers, playerName)
+  end
+  special.player_info.alice = 'I am a test player'
+  special.player_info.charlie = string.rep('This is a really long description. ', 5)
+  special.minTotalPlaytimeToPlay = 0
 
-		insert(special.captainList, game.player.name)
-		insert(special.captainList, game.player.name)
-  end)
-end
+  insert(special.captainList, game.player.name)
+  insert(special.captainList, game.player.name)
+end)
 
 -- == HANDLERS ================================================================
 Event.on_nth_tick(300, every_5sec)

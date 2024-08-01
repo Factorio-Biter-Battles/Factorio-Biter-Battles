@@ -61,7 +61,7 @@ local style = {
 	blue = function(str) return '[color=blue]'..str..'[/color]' end,
 }
 
-local TEST_1 = '[color=acid]cliff_build[/color] [color=red]Carl3[/color] [color=white]Blitzi__[/color] [color=pink]califerbopbp[/color] [color=blue]Jimmy50[/color] [color=red]Ncling[/color] [color=acid]thesoldier_57[/color] [color=gray]sticklord[/color] [color=red]TheCakeISALie[/color] [color=yellow]Zerosun[/color] [color=green]kingofgugu[/color] [color=cyan]PaveV[/color] [color=cyan]cojito[/color] [color=orange]julianbrall[/color] [color=pink]gabrielchl[/color] [color=green]jumbobillybob[/color] [color=red]RuneBoggler[/color] [color=cyan]RedRafe[/color]'
+local TEST_1 = '[color=acid]Zyphorix[/color] [color=red]NibbleWorm[/color] [color=white]Velocisphere[/color] [color=pink]Currygeist[/color] [color=blue]QuarkBlaster[/color] [color=red]Drogoat[/color] [color=acid]Froozowizzle[/color] [color=gray]Tinkershadow[/color] [color=red]Axtorm[/color] [color=yellow]Vexonalux[/color] [color=green]Glimwiggle[/color] [color=cyan]Borqee[/color] [color=cyan]Zyglot[/color] [color=orange]Crimboxnattle[/color] [color=pink]TwinklePuff[/color] [color=green]Jumboborax[/color] [color=red]Fizzywerp[/color] [color=cyan]MocachinoBeast[/color]'
 
 -- The on_player_joined_team event is raised only once when a player joins a team for the first time
 -- at this stage, the player already has a character and starting items

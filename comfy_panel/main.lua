@@ -67,10 +67,10 @@ function Public.comfy_panel_add_top_element(player)
 end
 
 local gui_toggle_blacklist = {
-    reroll_frame = true,
-    bb_frame_statistics = true,
-    suspend_frame = true,
-    main_toggle_button_name = true,
+    ['reroll_frame'] = true,
+    ['bb_frame_statistics'] = true,
+    ['suspend_frame'] = true,
+    ['main_toggle_button_name'] = true,
 }
 
 Gui.on_click('main_toggle_button_name', function (event)

@@ -290,7 +290,7 @@ function TeamStatsCompare.toggle_team_stats(player, stats)
         Sounds.notify_player(player, 'utility/cannot_build')
         return
     end
-    safe_wrap_with_player_print(player, TeamStatsCompare.show_stats, player, stats)
+    TeamStatsCompare.show_stats(player, stats)
 end
 
 commands.add_command("teamstats", "Show team stats", function (cmd)

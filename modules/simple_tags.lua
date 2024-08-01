@@ -54,7 +54,7 @@ local function draw_screen_gui(player)
 		name = "simple_tag_frame",
 		direction = "vertical",
 	})	
-	frame.location = {x = get_x_offset(player) * player.display_scale - 2, y = --[[39]] 54 * player.display_scale}
+	frame.location = {x = get_x_offset(player) * player.display_scale - 2, y = 54 * player.display_scale}
 	frame.style.padding = -2
 	frame.style.maximal_width = 42
 	

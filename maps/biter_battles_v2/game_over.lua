@@ -19,8 +19,8 @@ local gui_style = require'utils.utils'.gui_style
 local Public = {}
 
 local gui_values = {
-  north = { color1 = { r = 0.55, g = 0.55, b = 0.99 } },
-  south = { color1 = { r = 0.99, g = 0.33, b = 0.33 } },
+  ['north'] = { color1 = { r = 0.55, g = 0.55, b = 0.99 } },
+  ['south'] = { color1 = { r = 0.99, g = 0.33, b = 0.33 } },
 }
 
 local function shuffle(tbl)
@@ -434,10 +434,10 @@ function Public.silo_death(event)
 
     game.speed = 1
 
-    north_evo = math.floor(1000 * global.bb_evolution.north_biters) * 0.1
-    north_threat = math.floor(global.bb_threat.north_biters)
-    south_evo = math.floor(1000 * global.bb_evolution.south_biters) * 0.1
-    south_threat = math.floor(global.bb_threat.south_biters)
+    north_evo = math.floor(1000 * global.bb_evolution['north_biters']) * 0.1
+    north_threat = math.floor(global.bb_threat['north_biters'])
+    south_evo = math.floor(1000 * global.bb_evolution['south_biters']) * 0.1
+    south_threat = math.floor(global.bb_threat['south_biters'])
 
     discord_message = '*** Team ' .. global.bb_game_won_by_team .. ' has won! ***' .. '\\n' .. global.victory_time ..
                           '\\n\\n' .. 'North Evo: ' .. north_evo .. '%\\n' .. 'North Threat: ' .. north_threat ..

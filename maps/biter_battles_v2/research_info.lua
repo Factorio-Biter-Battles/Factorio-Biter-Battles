@@ -490,8 +490,6 @@ function ResearchInfo.show_research_info(player)
     local frame = player.gui.screen["research_info_frame"]
 
     if frame and frame.valid then
-        --player.gui.screen["research_info_frame"].bring_to_front()
-        --player.gui.screen["research_info_frame"].force_auto_center()
         if player.opened == frame then
             player.opened = nil
         end

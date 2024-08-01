@@ -142,14 +142,14 @@ end
 
 ---@param player LuaPlayer
 ---@param element_name string
----@return LuaGuiElement|nil
+---@return LuaGuiElement?
 function Gui.get_top_element(player, element_name)
     -- player.gui.top.mod_gui_top_frame.mod_gui_inner_frame
 	return mod_gui.get_button_flow(player)[element_name]
 end
 
 ---@param player LuaPlayer
----@param frame LuaGuiElement|table
+---@param frame LuaGuiElement|LuaGuiElement.add_param
 ---@param style_name string
 ---@return LuaGuiElement
 function Gui.add_top_element(player, frame, style_name)
@@ -186,13 +186,13 @@ end
 
 ---@param player LuaPlayer
 ---@param element_name string
----@return LuaGuiElement|nil
+---@return LuaGuiElement?
 function Gui.get_left_element(player, element_name)
     return mod_gui.get_frame_flow(player)[element_name]
 end
 
 ---@param player LuaPlayer
----@param frame LuaGuiElement|table
+---@param frame LuaGuiElement|LuaGuiElement.add_param
 ---@return LuaGuiElement
 function Gui.add_left_element(player, frame)
     local element = mod_gui.get_frame_flow(player)[frame.name]
@@ -227,28 +227,6 @@ function Gui.add_pusher(parent, direction)
         pusher.style.horizontally_stretchable = true
     end
     return pusher
-end
-
-function Gui.get_child_recursively(element, child_name)
-    if element.name == child_name then
-        return element
-    end
-
-    for _, e in pairs(element.children) do
-        if e.name == child_name then
-            return element[child_name]
-        end
-    end
-
-    local res
-    for _, e in pairs(element.children) do
-        local c = Gui.get_child_recursively(e, child_name)
-        if c then
-            res = c
-            break
-        end
-    end
-    return res
 end
 
 local function clear_invalid_data()
