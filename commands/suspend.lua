@@ -188,10 +188,10 @@ decrement_timer_token = Token.register(function()
   for _, player in pairs(game.connected_players) do
     local frame = Gui.get_top_element(player, 'suspend_frame')
     if frame and frame.valid and global.suspend_target_info ~= nil then
-      frame.suspend_table.children[1].caption = {'gui.suspend_caption', global.suspend_target_info.suspendee_player_name, global.suspend_time_left }
+      frame.flow.suspend_table.children[1].caption = {'gui.suspend_caption', global.suspend_target_info.suspendee_player_name, global.suspend_time_left }
 
       local percent, yes_votes, no_votes = get_suspend_stats()
-      frame.suspend_stats.caption = {'gui.suspend_stats', no_votes, yes_votes, percent} 
+      frame.flow.suspend_stats.caption = {'gui.suspend_stats', no_votes, yes_votes, percent} 
     end
   end
   if suspend_time_left > 0 and global.suspend_target_info ~= nil then
