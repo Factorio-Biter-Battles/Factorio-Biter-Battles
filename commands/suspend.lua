@@ -59,9 +59,9 @@ local function draw_suspend_gui(player)
 	local line = f.add { type = 'line', direction = 'vertical' }
 
 	do -- stats
-    local percent, yes_votes, no_votes = get_reroll_stats()
+    local percent, yes_votes, no_votes = get_suspend_stats()
 
-    local l = f.add { type = 'label', name = 'reroll_stats', caption = {'gui.suspend_stats', no_votes, yes_votes, percent} }
+    local l = f.add { type = 'label', name = 'suspend_stats', caption = {'gui.suspend_stats', no_votes, yes_votes, percent} }
     gui_style(l, { font = 'heading-2', right_padding = 4, left_padding = 4,  top_margin = 6, font_color = { 165, 165, 165 } })
   end
 end
@@ -189,6 +189,9 @@ decrement_timer_token = Token.register(function()
     local frame = Gui.get_top_element(player, 'suspend_frame')
     if frame and frame.valid and global.suspend_target_info ~= nil then
       frame.suspend_table.children[1].caption = {'gui.suspend_caption', global.suspend_target_info.suspendee_player_name, global.suspend_time_left }
+
+      local percent, yes_votes, no_votes = get_suspend_stats()
+      frame.suspend_stats.caption = {'gui.suspend_stats', no_votes, yes_votes, percent} 
     end
   end
   if suspend_time_left > 0 and global.suspend_target_info ~= nil then
