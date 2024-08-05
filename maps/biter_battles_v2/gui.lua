@@ -181,7 +181,7 @@ local function get_captain_caption(force)
 	if is_cpt then
 		local cpt_name = '---'
 		local p_name = global.special_games_variables.captain_mode.captainList[gui_values[force].cpt_idx]
-		if p_name then
+		if p_name and global.chosen_team[p_name] then
 			local p = game.players[p_name]
 			cpt_name = string_format('[color=%.2f,%.2f,%.2f]%s[/color]', p.color.r * 0.6 + 0.4, p.color.g * 0.6 + 0.4, p.color.b * 0.6 + 0.4, p.name)
 		end
