@@ -3,7 +3,6 @@
 local Antigrief = require 'antigrief'
 local Color = require 'utils.color_presets'
 local SessionData = require 'utils.datastore.session_data'
-local Shortcuts = require 'maps.biter_battles_v2.shortcuts'
 local Utils = require 'utils.core'
 local Gui = require 'utils.gui'
 local gui_themes = require 'utils.utils'.gui_themes
@@ -123,30 +122,11 @@ local functions = {
             global.ping_gui_locations[player.name] = nil
         end
     end,
-    ['comfy_panel_want_notification_sounds_switch'] = function(event)
-        local player = game.get_player(event.player_index)
-        if not player then return end
-        if event.element.switch_state == 'left' then
-            global.want_notification_sounds[player.name] = true
-        else
-            global.want_notification_sounds[player.name] = false
-        end
-    end,
     ['comfy_panel_auto_hotbar_switch'] = function(event)
         if event.element.switch_state == 'left' then
             global.auto_hotbar_enabled[event.player_index] = true
         else
             global.auto_hotbar_enabled[event.player_index] = false
-        end
-    end,
-    ['comfy_panel_floating_shortcuts'] = function(event)
-        local player = game.get_player(event.player_index)
-        if not player then return end
-        local state = event.element.switch_state == 'left'
-        local shortcut_gui = Shortcuts.get_main_frame(player)
-        if shortcut_gui and shortcut_gui.valid then
-            shortcut_gui.visible = state
-            shortcut_gui.bring_to_front()
         end
     end,
     ['comfy_panel_blueprint_toggle'] = function(event)
@@ -409,13 +389,6 @@ function player_wants_pings(name)
     return global.want_pings_default_value
 end
 
-function player_wants_sounds(name)
-    if global.want_notification_sounds[name] ~= nil then
-        return global.want_notification_sounds[name]
-    end
-    return global.want_notification_sounds_default_value
-end
-
 local build_config_gui = (function(player, frame)
     local AG = Antigrief.get()
     local switch_state
@@ -468,17 +441,6 @@ local build_config_gui = (function(player, frame)
 
     scroll_pane.add({type = 'line'})
 
-    switch_state = player_wants_sounds(player.name) and 'left' or 'right'
-    add_switch(
-        scroll_pane,
-        switch_state,
-        'comfy_panel_want_notification_sounds_switch',
-        'Enhanced sound FX',
-        'Enable specific sound effects on player actions',
-        'i.e. closing polls, picking phase, map rerolls, assigned/leaving team, @ and whispers, player commands'
-    )
-    scroll_pane.add({type = 'line'})
-
     if global.auto_hotbar_enabled then
         switch_state = 'right'
         if global.auto_hotbar_enabled[player.index] then
@@ -511,20 +473,10 @@ local build_config_gui = (function(player, frame)
         scroll_pane.add({type = 'line'})
     end
 
-    switch_state = Shortcuts.get_main_frame(player).visible and 'left' or 'right'
-    add_switch(
-        scroll_pane,
-        switch_state,
-        'comfy_panel_floating_shortcuts',
-        'Floating shortcuts',
-        'Adds a minimalistic UI with game shortcuts'
-    )
-
     if global.gui_theme ~= nil then
         local theme_idx = index_of(themes.keys, global.gui_theme[player.name]) or 1
         local theme_name = gui_themes[theme_idx].name
 
-        scroll_pane.add({type = 'line'})
         local t = scroll_pane.add {type = 'table', column_count = 3}
 
         local label = t.add {type = 'label', name = 'comfy_panel_theme_label', ignored_by_interaction = true, caption = theme_name }
@@ -545,6 +497,8 @@ local build_config_gui = (function(player, frame)
         dropdown.style.natural_width = 200
         dropdown.style.left_margin = 10
         dropdown.style.vertical_align = 'center'
+
+        scroll_pane.add({type = 'line'})
     end
 
     if admin then

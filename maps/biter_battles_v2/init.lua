@@ -142,8 +142,6 @@ function Public.initial_setup()
 	global.gui_theme = {}
 	global.want_pings = {}
 	global.want_pings_default_value = true
-	global.want_notification_sounds = {}
-	global.want_notification_sounds_default_value = true
 
 	global.total_time_online_players = {}
 	global.already_logged_current_session_time_online_players = {}

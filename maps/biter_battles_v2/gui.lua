@@ -426,13 +426,14 @@ function Public.create_main_gui(player)
 
 		Gui.add_pusher(subfooter)
 
-		local switch = subfooter.add {
-			type = 'switch',
-			name = 'comfy_panel_floating_shortcuts',
-			switch_state = Shortcuts.get_main_frame(player).visible and 'left' or 'right',
+		local button = subfooter.add {
+			type = 'sprite-button',
+			name = 'bb_floating_shortcut_button',
+			style = 'transparent_slot', -- 'quick_bar_slot_button', 'frame_action_button',
+			sprite = 'utility/slot_icon_module',
 			tooltip = {'gui.floating_shortcuts'},
 		}
-		gui_style(switch, { top_margin = 4 })
+		gui_style(button, { size = 26 })
 
 		local button = ResearchInfo.create_research_info_button(subfooter)
 		button.tooltip = {'gui.research_info'}
@@ -573,8 +574,6 @@ function Public.refresh_main_gui(player)
 			global.bb_show_research_info == 'always'
 			or (global.bb_show_research_info == 'spec' and player.force.name == 'spectator')
 			or (global.bb_show_research_info == 'pure-spec' and not global.chosen_team[player.name])
-
-		footer.comfy_panel_floating_shortcuts.switch_state = Shortcuts.get_main_frame(player).visible and 'left' or 'right'
 	end
 end
 
@@ -953,6 +952,15 @@ local function on_gui_click(event)
 			spectate(player)
 		else
 			player.print('You are too far away from spawn to spectate.', { r = 0.98, g = 0.66, b = 0.22 })
+		end
+		return
+	end
+
+	if name == 'bb_floating_shortcut_button' then
+		local shortcuts_frame = Shortcuts.get_main_frame(player)
+		if shortcuts_frame and shortcuts_frame.valid then
+			shortcuts_frame.visible = not shortcuts_frame.visible
+			shortcuts_frame.bring_to_front()
 		end
 		return
 	end

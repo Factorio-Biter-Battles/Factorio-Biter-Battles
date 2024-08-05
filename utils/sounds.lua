@@ -1,18 +1,15 @@
 local default_sound_path = 'utility/console_message'
 
 Sounds = {}
-Sounds.defines = {
-  
-}
 
 local function play(players, sound_path)
   local sound = sound_path or default_sound_path
   if not game.is_valid_sound_path(sound) then
-    error('Invalid sound path ' .. sound_path)
+    log('Invalid sound path ' .. sound_path)
     return
   end
   for _, player in pairs(players) do
-    if player and player.valid and player_wants_sounds(player.name) then
+    if player and player.valid then
       player.play_sound{ path = sound, volume_modifier = 1 }
     end
   end
