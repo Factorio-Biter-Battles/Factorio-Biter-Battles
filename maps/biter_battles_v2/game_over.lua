@@ -164,7 +164,7 @@ local function show_endgame_gui(player)
     local l = sp.add { type = 'label', style = 'caption_label', caption = global.victory_time }
     gui_style(l, { left_padding = 8 })
 
-    local l = sp.add { type = 'label', style = 'caption_label', caption = 'Tot. players - ' .. #game.players }
+    local l = sp.add { type = 'label', style = 'caption_label', caption = 'Total players - ' .. table_size(global.chosen_team) }
     gui_style(l, { left_padding = 8 })
 	end
 
