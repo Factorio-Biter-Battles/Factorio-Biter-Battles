@@ -13,6 +13,10 @@ local function add_changelog(player, element)
 		table.insert(changelog_change, who)
 	end
 	
+	add_entry("2024-08-06", "cliff_build", "teamstats: log json version of stats in various places")
+	add_entry("2024-08-06", "PlayerNoon", "now can't join team if reroll didn't end.")
+	add_entry("2024-08-06", "PlayerNoon", "Synchronize voting time with displayed time in gui. ")
+	add_entry("2024-08-06", "RedRafe", "UI merge")
 	add_entry("2024-07-27", "cliff_build", "Increase reroll time to 45 seconds")
 	add_entry("2024-07-27", "cliff_build", "teamstats: add a bit more info")
 	add_entry("2024-07-27", "Ragnarok77", "Reduce the majority required for a map reroll from 75% to 66%")
