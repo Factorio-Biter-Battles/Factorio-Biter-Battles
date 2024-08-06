@@ -3,6 +3,7 @@ local ai = require "maps.biter_battles_v2.ai"
 local event = require 'utils.event'
 local Server = require 'utils.server'
 local Tables = require "maps.biter_battles_v2.tables"
+local Gui = require 'utils.gui'
 local gui_style = require 'utils.utils'.gui_style
 local closable_frame = require "utils.ui.closable_frame"
 local Public = {}
@@ -32,7 +33,7 @@ function Public.difficulty_print_color()
 end
 
 local function difficulty_gui(player)
-	local b = player.gui.top["difficulty_gui"]
+	local b = Gui.get_top_element(player, "difficulty_gui")
 	if not b then return end
 	b.style.font_color = Public.difficulty_print_color()
 	local value = math.floor(global.difficulty_vote_value*100)
@@ -50,12 +51,8 @@ end
 
 ---@param player LuaPlayer
 local function add_difficulty_gui_top_button(player)
-	local b = player.gui.top["difficulty_gui"]
-	if not b then
-		b = player.gui.top.add { type = "sprite-button", name = "difficulty_gui" }
-		b.style.font = "heading-2"
-		gui_style(b, {width = 114, height = 38, padding = -2})
-	end
+	local button = Gui.add_top_element(player, { type = "sprite-button", name = "difficulty_gui" })
+	gui_style(button, { minimal_width = 114, maximal_width = 114 })
 	difficulty_gui(player)
 end
 

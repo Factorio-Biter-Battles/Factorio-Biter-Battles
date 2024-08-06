@@ -227,10 +227,11 @@ end
 local ResearchInfo = {}
 
 ---@param evt GuiEventData
-local function show_research_info_handler(evt)
+function ResearchInfo.show_research_info_handler(evt)
     local player = game.get_player(evt.player_index)
     ResearchInfo.show_research_info(player)
 end
+local show_research_info_handler = ResearchInfo.show_research_info_handler
 
 flui.add_handlers {
     research_info_button_click = show_research_info_handler
@@ -240,17 +241,19 @@ function ResearchInfo.create_research_info_button(element)
     ---@type GuiElemDef
     local template = {
         type = "sprite-button",
-        sprite = "item/space-science-pack",
+        sprite = "item/lab",
         name = "research_info_button",
         tooltip = "Science Info",
+        style = "transparent_slot",
         style_mods = {
-            width = 18,
-            height = 18,
-            padding = -2
+            width = 26,
+            height = 26,
+            padding = 2
         },
         handler = show_research_info_handler
     }
-    flui.add(element, template)
+    local _, button = flui.add(element, template)
+    return button
 end
 
 ---@param force string
@@ -484,12 +487,14 @@ end
 ---@param player LuaPlayer
 function ResearchInfo.show_research_info(player)
     local all_technologies = game.forces.spectator.technologies
-    if player.gui.screen["research_info_frame"] then
-        player.gui.screen["research_info_frame"].bring_to_front()
-        player.gui.screen["research_info_frame"].force_auto_center()
+    local frame = player.gui.screen["research_info_frame"]
+
+    if frame and frame.valid then
+        frame.destroy()
         return
     end
-    local frame = closable_frame.create_main_closable_frame(player, "research_info_frame", "Research summary for both teams")
+
+    frame = closable_frame.create_main_closable_frame(player, "research_info_frame", "Research summary for both teams")
     local scroll = frame.add({ type = "scroll-pane", horizontal_scroll_policy = "never", vertical_scroll_policy = "always", name = "scroll" })
     local named_elements = flui.add(scroll, UI)
     named_elements["team_name_south"].caption = Functions.team_name_with_color("south")

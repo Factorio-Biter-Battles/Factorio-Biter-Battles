@@ -11,6 +11,7 @@ draw_map_scores would be a function with the player and the frame as arguments
 ]]
 require "utils.profiler"
 local event = require 'utils.event'
+local Gui = require 'utils.gui'
 local gui_style = require 'utils.utils'.gui_style
 local closable_frame = require "utils.ui.closable_frame"
 comfy_panel_tabs = {}
@@ -41,19 +42,65 @@ function Public.comfy_panel_refresh_active_tab(player)
 end
 
 ---@param player LuaPlayer
-function Public.comfy_panel_add_top_button(player)
-    if player.gui.top['comfy_panel_top_button'] then
+function Public.comfy_panel_add_top_element(player)
+    if Gui.get_top_element(player, 'comfy_panel_top_button') then
         return
     end
-    local button = player.gui.top.add({type = 'sprite-button', name = 'comfy_panel_top_button', sprite = 'item/raw-fish'})
-    gui_style(button, {width = 38, height = 38, padding = -2})
+
+    Gui.init_gui_style(player)
+
+    local toggle = Gui.add_top_element(player, {
+        type = 'sprite-button',
+        name = 'main_toggle_button_name',
+        sprite = 'utility/preset',
+        tooltip = 'Click to hide top buttons!',
+        index = 1,
+    })
+    gui_style(toggle, { minimal_width = 15, maximal_width = 15 })
+
+    local button = Gui.add_top_element(player, {
+        type = 'sprite-button',
+        name = 'comfy_panel_top_button',
+        sprite = 'utility/favourite_server_icon',
+        tooltip = {'gui.comfy_panel_top_button'}
+    })
 end
+
+local gui_toggle_blacklist = {
+    ['reroll_frame'] = true,
+    ['bb_frame_statistics'] = true,
+    ['suspend_frame'] = true,
+    ['main_toggle_button_name'] = true,
+}
+
+Gui.on_click('main_toggle_button_name', function (event)
+    local button = event.element
+    local player = event.player
+    local mod_gui_inner_frame = Gui.get_top_element(player, 'main_toggle_button_name').parent
+
+    local default = button.sprite == 'utility/preset'
+    button.sprite = default and 'utility/expand_dots_white' or 'utility/preset' 
+    button.tooltip = default and 'Click to show top buttons!' or 'Click to hide top buttons!'
+
+    for _, ele in pairs(mod_gui_inner_frame.children) do
+        if ele and ele.valid and not gui_toggle_blacklist[ele.name] then
+            ele.visible = not default
+        end
+    end
+    for _, position in pairs({'screen', 'left', 'center'}) do
+        for _, ele in pairs(player.gui[position].children) do
+            if ele and ele.valid and ele.name ~= 'bb_floating_shortcuts' then
+                ele.visible = not default
+            end
+        end
+    end
+end)
 
 local function main_frame(player)
     local tabs = comfy_panel_tabs
 
-    local frame_ = closable_frame.create_main_closable_frame(player, 'comfy_panel', "Comfy Panel")
-    local frame = frame_.add({type = "frame", name = "comfy_panel_inside", style = "inside_deep_frame_for_tabs"})
+    local frame_ = closable_frame.create_main_closable_frame(player, 'comfy_panel', {'gui.comfy_panel_top_button'})
+    local frame = frame_.add({type = 'frame', name = 'comfy_panel_inside', style = 'inside_deep_frame_for_tabs'})
 
     local tabbed_pane = frame.add({type = 'tabbed-pane', name = 'tabbed_pane'})
 

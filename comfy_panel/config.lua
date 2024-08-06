@@ -4,6 +4,9 @@ local Antigrief = require 'antigrief'
 local Color = require 'utils.color_presets'
 local SessionData = require 'utils.datastore.session_data'
 local Utils = require 'utils.core'
+local Gui = require 'utils.gui'
+local gui_themes = require 'utils.utils'.gui_themes
+local index_of = table.index_of
 
 local spaghett_entity_blacklist = {
     ['logistic-chest-requester'] = true,
@@ -91,6 +94,16 @@ local function trust_connected_players()
     end
 end
 
+local function theme_names()
+    local keys, values = {}, {}
+    for _, v in pairs(gui_themes) do
+        keys[#keys + 1] = v.type
+        values[#values + 1] = v.name
+    end
+    return { keys = keys, values = values }
+end
+local themes = theme_names()
+
 local functions = {
     ['comfy_panel_spectator_switch'] = function(event)
         if event.element.switch_state == 'left' then
@@ -107,15 +120,6 @@ local functions = {
         else
             global.want_pings[player.name] = false
             global.ping_gui_locations[player.name] = nil
-        end
-    end,
-    ['comfy_panel_want_notification_sounds_switch'] = function(event)
-        local player = game.get_player(event.player_index)
-        if not player then return end
-        if event.element.switch_state == 'left' then
-            global.want_notification_sounds[player.name] = true
-        else
-            global.want_notification_sounds[player.name] = false
         end
     end,
     ['comfy_panel_auto_hotbar_switch'] = function(event)
@@ -181,6 +185,7 @@ local functions = {
 			get_actor(event, '{New Year Island}', "New Year island has been disabled!", true)
 		end
 	end,
+
 	["bb_map_reveal_toggle"] = function(event)
 		if event.element.switch_state == "left" then
 			global.bb_settings['bb_map_reveal_toggle'] = true
@@ -190,6 +195,7 @@ local functions = {
 			game.print("Reveal map at start has been disabled!")
 		end
 	end,
+
 	["bb_map_reroll_toggle"] = function(event)
 		if event.element.switch_state == "left" then
 			global.bb_settings.map_reroll = true
@@ -326,16 +332,35 @@ local fortress_functions = {
     end
 }
 
+local selection_functions = {
+    ['comfy_panel_theme_dropdown'] = function(event)
+        local player = game.get_player(event.player_index)
+        if not player then return end
+        local selected_index = event.element.selected_index
+        local selected_style = gui_themes[selected_index].type
+        local previous_style = global.gui_theme[player.name] or gui_themes[1].type
+        if previous_style ~= selected_style then
+            local label = event.element.parent.comfy_panel_theme_label
+            label.caption = gui_themes[selected_index].name
+            Gui.restyle_top_elements(player, selected_style)
+        end
+        global.gui_theme[player.name] = selected_style
+    end
+}
+
 local function add_switch(element, switch_state, name, description_main, description, tooltip)
     local t = element.add({type = 'table', column_count = 5})
+    
     local label = t.add({type = 'label', caption = 'ON'})
     label.style.padding = 0
     label.style.left_padding = 10
     label.style.font_color = {0.77, 0.77, 0.77}
+
     local switch = t.add({type = 'switch', name = name})
     switch.switch_state = switch_state
     switch.style.padding = 0
     switch.style.margin = 0
+    
     local label = t.add({type = 'label', caption = 'OFF'})
     label.style.padding = 0
     label.style.font_color = {0.70, 0.70, 0.70}
@@ -362,13 +387,6 @@ function player_wants_pings(name)
         return global.want_pings[name]
     end
     return global.want_pings_default_value
-end
-
-function player_wants_sounds(name)
-    if global.want_notification_sounds[name] ~= nil then
-        return global.want_notification_sounds[name]
-    end
-    return global.want_notification_sounds_default_value
 end
 
 local build_config_gui = (function(player, frame)
@@ -423,17 +441,6 @@ local build_config_gui = (function(player, frame)
 
     scroll_pane.add({type = 'line'})
 
-    switch_state = player_wants_sounds(player.name) and 'left' or 'right'
-    add_switch(
-        scroll_pane,
-        switch_state,
-        'comfy_panel_want_notification_sounds_switch',
-        'Enhanced sound FX',
-        'Enable specific sound effects on player actions',
-        'i.e. closing polls, picking phase, map rerolls, assigned/leaving team, @ and whispers, player commands'
-    )
-    scroll_pane.add({type = 'line'})
-
     if global.auto_hotbar_enabled then
         switch_state = 'right'
         if global.auto_hotbar_enabled[player.index] then
@@ -463,6 +470,34 @@ local build_config_gui = (function(player, frame)
             'Notify on polls',
             'Receive a message when new polls are created and popup the poll.'
         )
+        scroll_pane.add({type = 'line'})
+    end
+
+    if global.gui_theme ~= nil then
+        local theme_idx = index_of(themes.keys, global.gui_theme[player.name]) or 1
+        local theme_name = gui_themes[theme_idx].name
+
+        local t = scroll_pane.add {type = 'table', column_count = 3}
+
+        local label = t.add {type = 'label', name = 'comfy_panel_theme_label', ignored_by_interaction = true, caption = theme_name }
+        label.style.padding = 0
+        label.style.left_padding = 10
+        label.style.font_color = {0.77, 0.77, 0.77}
+        label.style.minimal_width = 100
+
+        local label = t.add({type = 'label', caption = 'Top UI theme'})
+        label.style.padding = 2
+        label.style.left_padding = 10
+        label.style.minimal_width = 140
+        label.style.font = 'heading-2'
+        label.style.font_color = {0.88, 0.88, 0.99}
+
+        local dropdown = t.add { type = 'drop-down', style = 'dropdown', name = 'comfy_panel_theme_dropdown', items = themes.values, selected_index = theme_idx }
+        dropdown.style.height = 24
+        dropdown.style.natural_width = 200
+        dropdown.style.left_margin = 10
+        dropdown.style.vertical_align = 'center'
+
         scroll_pane.add({type = 'line'})
     end
 
@@ -744,6 +779,17 @@ local function on_gui_switch_state_changed(event)
     end
 end
 
+local function on_gui_selection_state_changed(event)
+    local ele = event.element
+    if not (ele and ele.valid) then
+        return
+    end
+    if selection_functions[ele.name] then
+        selection_functions[ele.name](event)
+        return
+    end
+end
+
 local function on_force_created()
     spaghett()
 end
@@ -771,6 +817,7 @@ comfy_panel_tabs['Config'] = {gui = build_config_gui, admin = false}
 local Event = require 'utils.event'
 Event.on_init(on_init)
 Event.add(defines.events.on_gui_switch_state_changed, on_gui_switch_state_changed)
+Event.add(defines.events.on_gui_selection_state_changed, on_gui_selection_state_changed)
 Event.add(defines.events.on_force_created, on_force_created)
 Event.add(defines.events.on_built_entity, on_built_entity)
 Event.add(defines.events.on_robot_built_entity, on_robot_built_entity)

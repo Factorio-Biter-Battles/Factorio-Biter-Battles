@@ -1,6 +1,13 @@
 local Token = require 'utils.token'
 local Event = require 'utils.event'
 local Global = require 'utils.global'
+local mod_gui = require '__core__/lualib/mod-gui'
+
+local _utils = require 'utils.utils'
+local gui_style = _utils.gui_style
+local gui_themes = _utils.gui_themes
+local top_button_style = _utils.top_button_style
+local left_frame_style = _utils.left_frame_style
 
 local tostring = tostring
 local next = next
@@ -115,6 +122,113 @@ function Gui.clear(element)
     element.clear()
 end
 
+---@param player LuaPlayer
+function Gui.init_gui_style(player)
+    local mod_gui_top_frame = player.gui.top.mod_gui_top_frame
+    gui_style(mod_gui_top_frame, { padding = 2 })
+
+    --local mod_gui_inner_frame = mod_gui_top_frame.mod_gui_inner_frame
+    --gui_style(mod_gui_inner_frame, { })
+end
+
+---@param player LuaPlayer
+function Gui.get_top_index(player)
+    local flow = mod_gui.get_button_flow(player)
+    if flow.bb_toggle_statistics then
+        return flow.bb_toggle_statistics.get_index_in_parent() 
+    end
+    return
+end
+
+---@param player LuaPlayer
+---@param element_name string
+---@return LuaGuiElement?
+function Gui.get_top_element(player, element_name)
+    -- player.gui.top.mod_gui_top_frame.mod_gui_inner_frame
+	return mod_gui.get_button_flow(player)[element_name]
+end
+
+---@param player LuaPlayer
+---@param frame LuaGuiElement|LuaGuiElement.add_param
+---@param style_name string
+---@return LuaGuiElement
+function Gui.add_top_element(player, frame, style_name)
+    local element = mod_gui.get_button_flow(player)[frame.name]
+	if element and element.valid then
+        return element
+	end
+	if (frame.type == 'button' or frame.type == 'sprite-button') and frame.style == nil then
+        frame.style = style_name or gui_themes[1].type
+	end
+	element = mod_gui.get_button_flow(player).add(frame)
+    if element.type == 'button' or element.type == 'sprite-button' then
+        gui_style(element, top_button_style())
+    end
+    return element
+end
+
+local backup_attributes = { 'minimal_width', 'maximal_width', 'font_color', 'font' }
+---@param player LuaPlayer
+---@param new_style string
+function Gui.restyle_top_elements(player, new_style)
+    for _, ele in pairs(mod_gui.get_button_flow(player).children) do
+        if ele.type == 'button' or ele.type == 'sprite-button' then
+            local custom_styles = {}
+            for _, attr in pairs(backup_attributes) do
+                custom_styles[attr] = ele.style[attr]
+            end
+            ele.style = new_style
+            gui_style(ele, top_button_style())
+            gui_style(ele, custom_styles)
+        end
+    end
+end
+
+---@param player LuaPlayer
+---@param element_name string
+---@return LuaGuiElement?
+function Gui.get_left_element(player, element_name)
+    return mod_gui.get_frame_flow(player)[element_name]
+end
+
+---@param player LuaPlayer
+---@param frame LuaGuiElement|LuaGuiElement.add_param
+---@return LuaGuiElement
+function Gui.add_left_element(player, frame)
+    local element = mod_gui.get_frame_flow(player)[frame.name]
+    if element and element.valid then
+        return element
+    end
+    element = mod_gui.get_frame_flow(player).add(frame)
+    if element.type == 'frame' then
+        gui_style(element, left_frame_style())
+    end
+    return element
+end
+
+---@param parent LuaGuiElement
+---@param direction? string, default: horizontal
+---@return LuaGuiElement
+function Gui.add_pusher(parent, direction)
+    if not (parent and parent.valid) then
+        return
+    end
+    local pusher = parent.add { type = 'empty-widget' }
+    pusher.ignored_by_interaction = true
+    gui_style(pusher, { 
+        top_margin = 0,
+        bottom_margin = 0,
+        left_margin = 0,
+        right_margin = 0,
+    })
+    if direction == 'vertical' then
+        pusher.style.vertically_stretchable = true
+    else
+        pusher.style.horizontally_stretchable = true
+    end
+    return pusher
+end
+
 local function clear_invalid_data()
     for _, player in pairs(game.connected_players) do
         local player_index = player.index
@@ -225,6 +339,12 @@ Gui.on_text_changed = handler_factory(defines.events.on_gui_text_changed)
 -- Guarantees that the element and the player are valid when calling the handler.
 -- Adds a player field to the event table.
 Gui.on_value_changed = handler_factory(defines.events.on_gui_value_changed)
+
+-- Register a handler for the on_gui_switch_state_changed event for LuaGuiElements with element_name.
+-- Can only have one handler per element name.
+-- Guarantees that the element and the player are valid when calling the handler.
+-- Adds a player field to the event table.
+Gui.on_gui_switch_state_changed = handler_factory(defines.events.on_gui_switch_state_changed)
 
 -- Register a handler for when the player shows the top LuaGuiElements with element_name.
 -- Assuming the element_name has been added with Gui.allow_player_to_toggle_top_element_visibility.

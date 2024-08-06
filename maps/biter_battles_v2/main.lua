@@ -11,8 +11,9 @@ local Init = require "maps.biter_battles_v2.init"
 local Mirror_terrain = require "maps.biter_battles_v2.mirror_terrain"
 local Muted = require "utils.muted"
 ---Disabled according to discord poll https://discord.com/channels/823696400797138974/823771211421974579/1241772236268896276
--- require 'modules.simple_tags'
+-- local SimpleTags = require 'modules.simple_tags'
 local Team_manager = require "maps.biter_battles_v2.team_manager"
+local Shortcuts = require 'maps.biter_battles_v2.shortcuts'
 local Terrain = require "maps.biter_battles_v2.terrain"
 local Session = require 'utils.datastore.session_data'
 local Server = require 'utils.server'
@@ -42,13 +43,18 @@ local function on_player_joined_game(event)
 		Functions.init_player(player)
 	end
 	Gui.clear_copy_history(player)
-	ComfyMain.comfy_panel_add_top_button(player)
+
+	-- GUIs
+	ComfyMain.comfy_panel_add_top_element(player)
 	ComfyPoll.create_top_button(player)
 	DifficultyVote.add_difficulty_gui_top_button(player)
-	Gui.create_biter_button(player)
+	Gui.create_biter_gui_button(player)
 	Functions.create_map_intro_button(player)
+	--SimpleTags.create_simple_tags_button(player)
 	--ResearchInfo.create_research_info_button(player)
 	Team_manager.draw_top_toggle_button(player)
+	Gui.create_statistics_gui_button(player)
+	Shortcuts.get_main_frame(player)
 
 	local ping_messages = player.gui.screen.ping_messages
 	if ping_messages then ping_messages.destroy() end
@@ -429,6 +435,7 @@ local function on_tick()
 
 	if (tick+5) % 180 == 0 then
 		Gui.refresh()
+		Shortcuts.refresh()
 		ResearchInfo.update_research_info_ui()
 	end
 
