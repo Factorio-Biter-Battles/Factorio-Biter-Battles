@@ -2,6 +2,7 @@ local Server = require 'utils.server'
 local Color = require 'utils.color_presets'
 local tables = require 'maps.biter_battles_v2.tables'
 local difficulty_vote = require 'maps.biter_battles_v2.difficulty_vote'
+local Functions = require "maps.biter_battles_v2.functions"
 
 local function revote()
     local player = game.player
@@ -12,7 +13,10 @@ local function revote()
             return
 
         else
-            local tick = game.ticks_played
+            local tick = Functions.get_ticks_since_game_start()
+            if global.active_special_games["captain_mode"] then
+                 tick = game.ticks_played 
+            end
             global.difficulty_votes_timeout = tick + 10800
             global.difficulty_player_votes = {}
             local msg = player.name .. " opened difficulty voting. Voting enabled for 3 mins"
@@ -46,7 +50,11 @@ local function close_difficulty_votes(cmd)
         game.print(message, difficulty_vote.difficulty_print_color())
         Server.to_discord_embed(message)
     end
-    global.difficulty_votes_timeout = game.ticks_played
+	local tick = Functions.get_ticks_since_game_start()
+	if global.active_special_games["captain_mode"] then
+		 tick = game.ticks_played 
+	end
+    global.difficulty_votes_timeout = tick
     local msg = player.name .. " closed difficulty voting"
     game.print(msg)
     Server.to_discord_embed(msg)
