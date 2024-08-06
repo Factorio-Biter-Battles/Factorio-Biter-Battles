@@ -206,9 +206,7 @@ function Functions.maybe_set_game_start_tick(event)
   if player.force.name ~= 'north' and player.force.name ~= 'south' then
     return
   end
-  global.bb_game_start_tick = game.ticks_played
-  local message = 'The match has started! '
-  Server.to_discord_bold(table.concat { '*** ', message, ' ***' })
+  Functions.set_game_start_tick(event)
 end
 
 function Functions.set_game_start_tick()
