@@ -2,6 +2,7 @@ local ClosableFrame = require 'utils.ui.closable_frame'
 local Config = require 'maps.biter_battles_v2.config'
 local Gui = require 'utils.gui'
 local Tables = require 'maps.biter_battles_v2.tables'
+local Server = require 'utils.server'
 
 local simplex_noise = require'utils.simplex_noise'.d2
 local gui_style = require'utils.utils'.gui_style
@@ -205,7 +206,7 @@ function Functions.maybe_set_game_start_tick(event)
   if player.force.name ~= 'north' and player.force.name ~= 'south' then
     return
   end
-  global.bb_game_start_tick = game.ticks_played
+  Functions.set_game_start_tick(event)
 end
 
 function Functions.set_game_start_tick()
@@ -213,6 +214,8 @@ function Functions.set_game_start_tick()
     return
   end
   global.bb_game_start_tick = game.ticks_played
+  local message = 'The match has started! '
+  Server.to_discord_bold(table.concat { '*** ', message, ' ***' })
 end
 
 function Functions.biters_landfill(entity)
