@@ -241,7 +241,7 @@ function ResearchInfo.create_research_info_button(element)
     ---@type GuiElemDef
     local template = {
         type = "sprite-button",
-        sprite = "item/lab",
+        sprite = "utility/technology_white",
         name = "research_info_button",
         tooltip = "Science Info",
         style = "transparent_slot",

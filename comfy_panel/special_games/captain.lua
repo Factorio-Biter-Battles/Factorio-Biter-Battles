@@ -64,7 +64,7 @@ local tournament_pages = {
   { name = 'captain_join_info',        sprite = 'utility/custom_tag_icon',          caption = 'Event info',         tooltip = 'Toggle introductory window to captains event' },
   { name = 'captain_player_gui',       sprite = 'entity/big-biter',                 caption = 'Join captain event', tooltip = 'Toggle join window for captain event' },
   { name = 'captain_referee_gui',      sprite = 'achievement/lazy-bastard',         caption = 'Referee',            tooltip = 'Toggle the referee window' },
-  { name = 'captain_manager_gui',      sprite = 'utility/technology_white',         caption = 'Team Permissions',   tooltip = 'Toggle the captain\'s team manager window' },
+  { name = 'captain_manager_gui',      sprite = 'utility/hand',                     caption = 'Team Permissions',   tooltip = 'Toggle the captain\'s team manager window' },
   { name = 'captain_organization_gui', sprite = 'utility/slot_icon_robot_material', caption = 'Team Organization',  tooltip = 'Toggle your team organization window' },
 }
 
