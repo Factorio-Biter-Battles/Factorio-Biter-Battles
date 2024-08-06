@@ -171,6 +171,12 @@ local function update_teamstats()
             end
         end
     end
+
+    local last_print = global.last_teamstats_print_at or 0
+    if tick - last_print > 5 * 60 * 60 then
+        log({'', '[TEAMSTATS-PERIODIC]', game.table_to_json(team_stats)})
+        global.last_teamstats_print_at = tick
+    end
 end
 
 ---@param max number
