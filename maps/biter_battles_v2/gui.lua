@@ -665,6 +665,10 @@ end
 function join_team(player, force_name, forced_join, auto_join)
 	if not player.character then return end
 	if not player.spectator then return end
+	if not forced_join and global.reroll_time_left and global.reroll_time_left > 0 then 
+		player.print(" Wait until reroll ends. ",{ r = 0.98, g = 0.66, b = 0.22 })
+		return
+	end
 	if not forced_join then
 		if (global.tournament_mode and not global.active_special_games.captain_mode) or (global.active_special_games.captain_mode and not global.chosen_team[player.name]) then
 			player.print('The game is set to tournament mode. Teams can only be changed via team manager.',
