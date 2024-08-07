@@ -105,6 +105,13 @@ end
 local themes = theme_names()
 
 local functions = {
+    ['comfy_panel_flashlight'] = function(event)
+        if event.element.switch_state == 'left' then            
+            game.get_player(event.player_index).enable_flashlight() 
+        else            
+            game.get_player(event.player_index).disable_flashlight() 
+        end
+    end,
     ['comfy_panel_spectator_switch'] = function(event)
         if event.element.switch_state == 'left' then
             game.get_player(event.player_index).spectator = true
@@ -472,6 +479,19 @@ local build_config_gui = (function(player, frame)
         )
         scroll_pane.add({type = 'line'})
     end
+
+    switch_state = 'right'
+    if player.is_flashlight_enabled() then
+        switch_state = 'left'
+    end    
+    add_switch(
+        scroll_pane,
+        switch_state,
+        'comfy_panel_flashlight',
+        'FlashLight',
+        'let you turn off flashlight'
+    )
+    scroll_pane.add({type = 'line'})
 
     if global.gui_theme ~= nil then
         local theme_idx = index_of(themes.keys, global.gui_theme[player.name]) or 1
