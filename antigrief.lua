@@ -22,6 +22,7 @@ local this = {
     enabled = true,
     histories = {
         landfill = pool.malloc(size),
+        landfill2 = pool.malloc(size),
         capsule = pool.malloc(size),
         friendly_fire = pool.malloc(size),
         mining = pool.malloc(size),
