@@ -142,7 +142,7 @@ function Public.initial_setup()
 	global.gui_theme = {}
 	global.want_pings = {}
 	global.want_pings_default_value = true
-
+	global.default_clear_corpses_radius = 160
 	global.total_time_online_players = {}
 	global.already_logged_current_session_time_online_players = {}
 	---@type table<string, {show_hidden: boolean?}>

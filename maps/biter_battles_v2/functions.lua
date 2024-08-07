@@ -1,5 +1,6 @@
 local ClosableFrame = require 'utils.ui.closable_frame'
 local Config = require 'maps.biter_battles_v2.config'
+local Color = require 'utils.color_presets'
 local Gui = require 'utils.gui'
 local Tables = require 'maps.biter_battles_v2.tables'
 local Server = require 'utils.server'
@@ -600,6 +601,21 @@ function Functions.get_entity_contents(entity)
     end
   end
   return totals
+end
+
+function Functions.clear_corpses(player, param)
+  if not (player and player.valid) then
+    return
+  end
+  param = param or global.default_clear_corpses_radius
+  local pos = player.position
+  local radius = { { x = (pos.x + -param), y = (pos.y + -param) }, { x = (pos.x + param), y = (pos.y + param) } }
+  for _, entity in pairs(player.surface.find_entities_filtered { area = radius, type = 'corpse' }) do
+    if entity.corpse_expires then
+      entity.destroy()
+    end
+  end
+  player.print('Cleared biter-corpses.', Color.success)
 end
 
 return Functions

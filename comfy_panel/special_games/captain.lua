@@ -1096,7 +1096,7 @@ local function on_gui_click(event)
       forceToGo = 'south'
     end
     switch_team_of_player(playerPicked, forceToGo)
-    cpt_get_player(playerPicked).print({'captain.comms_reminder'}, Color.cyan)
+    cpt_get_player(playerPicked).print({"", {'captain.comms_reminder'}}, Color.cyan)
     for index, name in pairs(listPlayers) do
       if name == playerPicked then
         remove(listPlayers, index)
@@ -1154,7 +1154,7 @@ local function on_gui_click(event)
       special.northEnabledScienceThrow = not special.northEnabledScienceThrow
       game.forces.north.print('Can anyone throw science in your team ? ' .. tostring(special.northEnabledScienceThrow), Color.yellow)
     end
-    Public.draw_captain_manager_gui(player)
+    Public.update_all_captain_player_guis()
   elseif name == 'captain_favor_plus' then
     local force = element.parent.name
     special.nextAutoPicksFavor[force] = special.nextAutoPicksFavor[force] + 1
@@ -1191,8 +1191,9 @@ local function on_gui_click(event)
 	elseif name == 'captain_tournament_button' then
 		Public.toggle_captain_tournament_button(player)
   elseif name == 'captain_add_someone_to_throw_trustlist' then
-    local playerNameUpdateText = get_dropdown_value(player.gui.screen.captain_manager_gui.captain_manager_root_table.captain_add_trustlist_playerlist)
-    if playerNameUpdateText and playerNameUpdateText ~= '' then
+    local frame = Public.get_active_tournament_frame(player, 'captain_manager_gui')
+    local playerNameUpdateText = get_dropdown_value(frame.captain_manager_root_table.captain_add_trustlist_playerlist)
+    if playerNameUpdateText and playerNameUpdateText ~= '' and playerNameUpdateText ~= 'Select Player' then
       local tableToUpdate = special.northThrowPlayersListAllowed
       local forceForPrint = 'north'
       if player.name == special.captainList[2] then
@@ -1207,14 +1208,15 @@ local function on_gui_click(event)
         else
           player.print(playerNameUpdateText .. ' was already added to throw trustlist !', Color.red)
         end
-        Public.draw_captain_manager_gui(player)
+        Public.update_all_captain_player_guis()
       else
         player.print(playerNameUpdateText .. ' does not even exist or not even valid !', Color.red)
       end
     end
   elseif name == 'captain_remove_someone_to_throw_trustlist' then
-    local playerNameUpdateText = get_dropdown_value(player.gui.screen.captain_manager_gui.captain_manager_root_table.captain_remove_trustlist_playerlist)
-    if playerNameUpdateText and playerNameUpdateText ~= '' then
+    local frame = Public.get_active_tournament_frame(player, 'captain_manager_gui')
+    local playerNameUpdateText = get_dropdown_value(frame.captain_manager_root_table.captain_remove_trustlist_playerlist)
+    if playerNameUpdateText and playerNameUpdateText ~= '' and playerNameUpdateText ~= 'Select Player' then
       local tableToUpdate = special.northThrowPlayersListAllowed
       local forceForPrint = 'north'
       if player.name == special.captainList[2] then
@@ -1227,11 +1229,11 @@ local function on_gui_click(event)
       else
         player.print(playerNameUpdateText .. ' was not found in throw trustlist !', Color.red)
       end
-      Public.draw_captain_manager_gui(player)
+      Public.update_all_captain_player_guis()
     end
   elseif name == 'captain_eject_player' then
-    local dropdown =
-        player.gui.screen.captain_manager_gui.captain_manager_root_table_two.captain_eject_playerlist
+    local frame = Public.get_active_tournament_frame(player, 'captain_manager_gui')
+    local dropdown = frame.captain_manager_root_table_two.captain_eject_playerlist
     local victim = cpt_get_player(get_dropdown_value(dropdown))
     if victim and victim.valid then
       if victim.name == player.name then
@@ -2357,11 +2359,17 @@ function Public.update_captain_manager_gui(player, frame)
       insert(team_players, name)
     end
   end
+  local allowed_team_players = {}
+  for _, name in pairs(tablePlayerListThrowAllowed) do
+    insert(allowed_team_players, name)
+  end
   sort(team_players)
   insert(team_players, 1, 'Select Player')
+  sort(allowed_team_players)
+  insert(allowed_team_players, 1, 'Select Player')
   local t = frame.captain_manager_root_table
   update_dropdown(t.captain_add_trustlist_playerlist, team_players)
-  update_dropdown(t.captain_remove_trustlist_playerlist, tablePlayerListThrowAllowed)
+  update_dropdown(t.captain_remove_trustlist_playerlist, allowed_team_players)
   local t2 = frame.captain_manager_root_table_two
   local allow_kick = (not special.prepaPhase and special.captainKick)
   t2.visible = allow_kick
@@ -2390,7 +2398,7 @@ function Public.update_captain_tournament_gui(player)
     elseif not menu[gui_name] then
       error('Missing menu['..gui_name..']')
     else
-      error('Missing cpt_permission['..gui_name..']')
+      error('Missing cpt_ui_visibility['..gui_name..']')
     end
   end
 end
@@ -2409,7 +2417,7 @@ function Public.update_captain_tournament_frame(player)
     elseif not menu[gui_name] then
       error('Missing menu['..gui_name..']')
     else
-      error('Missing cpt_permission['..gui_name..']')
+      error('Missing cpt_ui_visibility['..gui_name..']')
     end
   end
 end

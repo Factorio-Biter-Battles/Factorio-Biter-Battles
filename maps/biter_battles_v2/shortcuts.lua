@@ -1,4 +1,3 @@
-local Color = require 'utils.color_presets'
 local Event = require 'utils.event'
 local Feeding = require 'maps.biter_battles_v2.feeding'
 local Functions = require 'maps.biter_battles_v2.functions'
@@ -27,18 +26,6 @@ local function handle_spectator(player)
     Sounds.notify_player(player, 'utility/cannot_build')
   end
   return is_spectator
-end
-
-local function clear_corpses(player)
-  local param = 160
-  local pos = player.position
-  local radius = { { x = (pos.x + -param), y = (pos.y + -param) }, { x = (pos.x + param), y = (pos.y + param) } }
-  for _, entity in pairs(player.surface.find_entities_filtered { area = radius, type = 'corpse' }) do
-    if entity.corpse_expires then
-      entity.destroy()
-    end
-  end
-  player.print('Cleared biter-corpses.', Color.success)
 end
 
 function get_player_preferences(player)
@@ -104,7 +91,7 @@ local main_frame_actions = {
     if handle_spectator(player) then
       return
     end
-    clear_corpses(player)
+    Functions.clear_corpses(player)
   end,
   [main_frame_name .. '_settings'] = function(player, event)
     toggle_shortcuts_settings(player)
@@ -128,7 +115,6 @@ local shortcut_buttons = {
     name = main_frame_name .. '_research_info',
     caption = 'Research info',
     sprite = 'item/lab',
-    hovered_sprite = '',
     tooltip = { 'gui.research_info' },
   },
   {
@@ -142,7 +128,6 @@ local shortcut_buttons = {
     name = main_frame_name .. '_clear_corpses',
     caption = 'Clear corpses',
     sprite = 'entity/behemoth-biter',
-    hovered_sprite = '',
     tooltip = { 'gui.clear_corpses' },
   },
 }
