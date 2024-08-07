@@ -16,7 +16,7 @@ function CaptainUtils.cpt_get_player(playerName)
   if special and special.test_players and special.test_players[playerName] then
     local res = table.deepcopy(special.test_players[playerName])
     res.print = function(msg, color)
-      game.print('to player ' .. playerName .. ':' .. msg, color)
+      game.print({'', {'info.dummy_print', playerName}, msg}, color)
     end
     res.force = { name = (global.chosen_team[playerName] or 'spectator') }
     return res

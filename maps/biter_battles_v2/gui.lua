@@ -160,7 +160,7 @@ local function get_evo_tooltip(force, verbose)
 	end
 	local biter_force = game.forces[gui_values[force].biter_force]
 	local damage, revive = (biter_force.get_ammo_damage_modifier('melee') + 1) * 100, global.reanim_chance[biter_force.index]
-	return prefix .. style.listbox('Damage: ') .. style.yellow(style.stat(damage)) .. style.listbox('%\nRevive: ') .. style.yellow(style.stat(revive)) .. style.listbox('%')
+	return prefix .. style.listbox('Evolution: ') .. style.yellow(style.stat(string_format('%.2f', (global.bb_evolution[biter_force.name] * 100)))) .. style.listbox('%\nDamage: ') .. style.yellow(style.stat(damage)) .. style.listbox('%\nRevive: ') .. style.yellow(style.stat(revive)) .. style.listbox('%')
 end
 
 ---@param force string
@@ -171,7 +171,7 @@ local function get_threat_tooltip(force, verbose)
 	if verbose then
 		prefix = style.bold('Threat') .. ' - ' .. gui_values[force].t2 .. '\n'
 	end
-	return prefix .. style.listbox('Passive feed:') .. style.yellow(style.stat(' +'..math_ceil(automation_feed * global.evo_raise_counter)))
+	return prefix .. style.listbox('Passive feed:') .. style.yellow(style.stat(' +'..math_ceil(automation_feed * global.evo_raise_counter * (global.threat_multiplier or 1)))) .. style.listbox(' threat/min')
 end
 
 ---@param force string
@@ -231,11 +231,11 @@ function Public.create_statistics_gui_button(player)
 		gui_style(label, { font = 'heading-2', right_padding = 4, left_padding = 4, font_color = gui_values.north.color1 })
 
 		label = frame.add { type = 'label', caption = ' ', name = 'north_players'}
-		gui_style(label, { font = 'heading-2', right_padding = 4, left_padding = 4, font_color = { 165, 165, 165 } })
+		gui_style(label, { font = 'heading-2', right_padding = 4, left_padding = 4, font_color = { 225, 225, 225 } })
 
 		line = frame.add { type = 'line', direction = 'vertical', style = 'dark_line' }
 
-		label = frame.add { type = 'label', caption = ' ', name = 'north_evolution', font_color = { 165, 165, 165 }}
+		label = frame.add { type = 'label', caption = ' ', name = 'north_evolution', font_color = { 225, 225, 225 }}
 		gui_style(label, { font = 'heading-2', right_padding = 4, left_padding = 4, font_color = gui_values.north.color1 })
 
 		line = frame.add { type = 'line', direction = 'vertical', style = 'dark_line' }
@@ -247,7 +247,7 @@ function Public.create_statistics_gui_button(player)
 	line = frame.add { type = 'line', direction = 'vertical' }
 
 	label = frame.add { type = 'label', caption = '00:00', name = 'clock'}
-	gui_style(label, { font = 'heading-2', right_padding = 4, left_padding = 4, font_color = { 165, 165, 165 } })
+	gui_style(label, { font = 'heading-2', right_padding = 4, left_padding = 4, font_color = { 225, 225, 225 } })
 
 	line = frame.add { type = 'line', direction = 'vertical' }
 
@@ -255,7 +255,7 @@ function Public.create_statistics_gui_button(player)
 		label = frame.add { type = 'label', caption = ' ', name = 'south_threat'}
 		gui_style(label, { font = 'heading-2', right_padding = 4, left_padding = 4, font_color = gui_values.south.color1 })
 
-		line = frame.add({ type = 'line', direction = 'vertical', style = 'dark_line', font_color = { 165, 165, 165 } })
+		line = frame.add({ type = 'line', direction = 'vertical', style = 'dark_line', font_color = { 225, 225, 225 } })
 
 		label = frame.add { type = 'label', caption = ' ', name = 'south_evolution'}
 		gui_style(label, { font = 'heading-2', right_padding = 4, left_padding = 4, font_color = gui_values.south.color1 })
@@ -263,7 +263,7 @@ function Public.create_statistics_gui_button(player)
 		line = frame.add { type = 'line', direction = 'vertical', style = 'dark_line' }
 
 		label = frame.add { type = 'label', caption = ' ', name = 'south_players'}
-		gui_style(label, { font = 'heading-2', right_padding = 4, left_padding = 4, font_color = { 165, 165, 165 } })
+		gui_style(label, { font = 'heading-2', right_padding = 4, left_padding = 4, font_color = { 225, 225, 225 } })
 
 		label = frame.add { type = 'label', caption = 'South', name = 'south_name'}
 		gui_style(label, { font = 'heading-2', right_padding = 4, left_padding = 4, font_color = gui_values.south.color1 })
@@ -294,14 +294,14 @@ function Public.create_main_gui(player)
 		gui_style(subheader, { horizontally_squashable = true, maximal_height = 40 })
 
 		local label = subheader.add { type = 'label', name = 'clock' }
-		gui_style(label, { font = 'heading-3', font_color = { 165, 165, 165 }, left_margin = 4 })
+		gui_style(label, { font = 'heading-3', font_color = { 225, 225, 225 }, left_margin = 4 })
 
 		Gui.add_pusher(subheader)
 		local line = subheader.add { type = 'line', direction = 'vertical' }
 		Gui.add_pusher(subheader)
 
 		local label = subheader.add{ type = 'label', name = 'game_speed' }
-		gui_style(label, { font = 'heading-3', font_color = { 165, 165, 165 }, right_margin = 4 })
+		gui_style(label, { font = 'heading-3', font_color = { 225, 225, 225 }, right_margin = 4 })
 	end
 	
 	-- == MAIN FRAME ================================================================
@@ -437,16 +437,25 @@ function Public.create_main_gui(player)
 
 		local button = ResearchInfo.create_research_info_button(subfooter)
 		button.tooltip = {'gui.research_info'}
-		gui_style(button, { left_margin = 4 })
+		gui_style(button, { size = 26, left_margin = 4 })
 
 		local button = subfooter.add {
 			type = 'sprite-button',
-			name = 'bb_team_statistics',
+			name = 'bb_floating_shortcuts_team_statistics',
 			style = 'transparent_slot', -- 'quick_bar_slot_button', 'frame_action_button',
 			sprite = 'utility/side_menu_production_icon',
 			tooltip = {'gui.team_statistics'}
 		}
 		gui_style(button, { size = 26, left_margin = 4 })
+
+		local button = subfooter.add {
+			type = 'sprite-button',
+			name = 'bb_floating_shortcuts_clear_corpses',
+			style = 'transparent_slot',
+			sprite = 'utility/trash_white',
+			tooltip = { 'gui.clear_corpses' },
+		}
+		gui_style(button, { size = 26, left_margin = 4, padding = 6 })
 
 		Gui.add_pusher(subfooter)
 	end
@@ -479,7 +488,7 @@ function Public.refresh_statistics(player)
 		frame[force_name..'_evolution'].caption = (math_floor(1000 * global.bb_evolution[biter_force.name]) * 0.1) .. '%'
 		frame[force_name..'_evolution'].tooltip = get_evo_tooltip(force_name, false)
 		
-		frame[force_name..'_threat'].caption = threat_to_pretty_string(global.bb_threat[biter_force.name])
+		frame[force_name..'_threat'].caption = threat_to_pretty_string(math_floor(global.bb_threat[biter_force.name]))
 		frame[force_name..'_threat'].tooltip = get_threat_tooltip(force_name, false)
 	end
 end
@@ -515,7 +524,7 @@ function Public.refresh_main_gui(player)
 			team_info.evolution.sprite = get_evo_sprite(evolution)
 			team_info.evolution.tooltip = get_evo_tooltip(force_name, true)
 			
-			team_info.threat.number = global.bb_threat[gui_value.biter_force]
+			team_info.threat.number = math_floor(global.bb_threat[gui_value.biter_force])
 			team_info.threat.tooltip = get_threat_tooltip(force_name, true)
 
 			if team.players.visible then
@@ -966,11 +975,6 @@ local function on_gui_click(event)
 			shortcuts_frame.visible = not shortcuts_frame.visible
 			shortcuts_frame.bring_to_front()
 		end
-		return
-	end
-
-	if name == 'bb_team_statistics' then
-		TeamStatsCompare.toggle_team_stats(player)
 		return
 	end
 
