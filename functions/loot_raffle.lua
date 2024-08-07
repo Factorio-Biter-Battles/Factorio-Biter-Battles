@@ -206,7 +206,7 @@ local item_worths = {
     ['flamethrower-turret'] = 2048,
     ['artillery-turret'] = 1024,
     ['radar'] = 32,
-    ['rocket-silo'] = 65536
+    ['rocket-silo'] = 65536,
 }
 
 local tech_tier_list = {
@@ -309,7 +309,7 @@ local tech_tier_list = {
     'grenade',
     'defender-capsule',
     'car',
-	'refined-concrete',
+    'refined-concrete',
     'refined-hazard-concrete',
     'modular-armor',
     'night-vision-equipment',
@@ -405,7 +405,7 @@ local tech_tier_list = {
     'atomic-bomb',
     'power-armor-mk2',
     'satellite',
-    'rocket-silo'
+    'rocket-silo',
 }
 
 local item_names = {}
@@ -451,7 +451,7 @@ function Public.roll_item_stack(remaining_budget, blacklist)
         end
     end
 
-    return {name = item_name, count = item_count}
+    return { name = item_name, count = item_count }
 end
 
 local function roll_item_stacks(remaining_budget, max_slots, blacklist)

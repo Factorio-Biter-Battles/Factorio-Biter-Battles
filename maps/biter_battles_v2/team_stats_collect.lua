@@ -1,10 +1,9 @@
-
 local TeamStatsCollect = {}
 
-local functions = require 'maps.biter_battles_v2.functions'
-local tables = require 'maps.biter_battles_v2.tables'
-local event = require 'utils.event'
-local difficulty_vote = require 'maps.biter_battles_v2.difficulty_vote'
+local functions = require('maps.biter_battles_v2.functions')
+local tables = require('maps.biter_battles_v2.tables')
+local event = require('utils.event')
+local difficulty_vote = require('maps.biter_battles_v2.difficulty_vote')
 
 ---@class ForceStats
 ---@field final_evo? number
@@ -27,44 +26,52 @@ local difficulty_vote = require 'maps.biter_battles_v2.difficulty_vote'
 
 ---@type {item: string, placed?: boolean, space_after?: boolean, hide_by_default?: boolean}[]
 TeamStatsCollect.items_to_show_summaries_of = {
-    {item = "coal"},
-    {item = "stone"},
-    {item = "iron-plate"},
-    {item = "copper-plate"},
-    {item = "steel-plate", space_after = true},
+    { item = 'coal' },
+    { item = 'stone' },
+    { item = 'iron-plate' },
+    { item = 'copper-plate' },
+    { item = 'steel-plate', space_after = true },
 
-    {item = "electronic-circuit", hide_by_default = true},
-    {item = "advanced-circuit", hide_by_default = true},
-    {item = "processing-unit", space_after = true, hide_by_default = true},
+    { item = 'electronic-circuit', hide_by_default = true },
+    { item = 'advanced-circuit', hide_by_default = true },
+    { item = 'processing-unit', space_after = true, hide_by_default = true },
 
-    {item = "rocket-control-unit", hide_by_default = true},
-    {item = "rocket-fuel", hide_by_default = true},
-    {item = "low-density-structure", space_after = true, hide_by_default = true},
+    { item = 'rocket-control-unit', hide_by_default = true },
+    { item = 'rocket-fuel', hide_by_default = true },
+    { item = 'low-density-structure', space_after = true, hide_by_default = true },
 
-    {item = "electric-mining-drill", placed = true},
-    {item = "boiler", placed = true, hide_by_default = true},
-    {item = "steam-engine", placed = true, hide_by_default = true},
-    {item = "fast-transport-belt", placed = true, hide_by_default = true},
-    {item = "transport-belt", placed = true, space_after = true},
+    { item = 'electric-mining-drill', placed = true },
+    { item = 'boiler', placed = true, hide_by_default = true },
+    { item = 'steam-engine', placed = true, hide_by_default = true },
+    { item = 'fast-transport-belt', placed = true, hide_by_default = true },
+    { item = 'transport-belt', placed = true, space_after = true },
 
-    {item = "roboport", placed = true},
-    {item = "construction-robot"},
-    {item = "nuclear-reactor", placed = true, space_after = true},
+    { item = 'roboport', placed = true },
+    { item = 'construction-robot' },
+    { item = 'nuclear-reactor', placed = true, space_after = true },
 
-    {item = "stone-wall", placed = true},
-    {item = "gun-turret", placed = true},
-    {item = "flamethrower-turret", placed = true},
-    {item = "laser-turret", placed = true},
+    { item = 'stone-wall', placed = true },
+    { item = 'gun-turret', placed = true },
+    { item = 'flamethrower-turret', placed = true },
+    { item = 'laser-turret', placed = true },
 }
 
 TeamStatsCollect.damage_render_info = {
-    {"physical", "Physical [item=gun-turret][item=submachine-gun][item=defender-capsule]", "Also [item=shotgun-shell][item=cannon-shell] etc"},
-    {"explosion", "Explosion [item=grenade]", "Also [item=explosive-cannon-shell][item=explosive-rocket][item=cluster-grenade] etc"},
-    {"laser", "Laser [item=laser-turret]"},
-    {"fire", "Fire [item=flamethrower-turret]", "Also [item=flamethrower]"},
-    {"electric", "Electric [item=discharge-defense-equipment][item=destroyer-capsule]"},
-    {"poison", "Poison [item=poison-capsule]"},
-    {"impact", "Impact [item=locomotive][item=car][item=tank]"},
+    {
+        'physical',
+        'Physical [item=gun-turret][item=submachine-gun][item=defender-capsule]',
+        'Also [item=shotgun-shell][item=cannon-shell] etc',
+    },
+    {
+        'explosion',
+        'Explosion [item=grenade]',
+        'Also [item=explosive-cannon-shell][item=explosive-rocket][item=cluster-grenade] etc',
+    },
+    { 'laser', 'Laser [item=laser-turret]' },
+    { 'fire', 'Fire [item=flamethrower-turret]', 'Also [item=flamethrower]' },
+    { 'electric', 'Electric [item=discharge-defense-equipment][item=destroyer-capsule]' },
+    { 'poison', 'Poison [item=poison-capsule]' },
+    { 'impact', 'Impact [item=locomotive][item=car][item=tank]' },
 }
 
 local tracked_inventories = {
@@ -103,25 +110,31 @@ local health_factor_map = {
 local function update_teamstats()
     local team_stats = global.team_stats
     local tick = functions.get_ticks_since_game_start()
-    if team_stats.won_by_team then return end
+    if team_stats.won_by_team then
+        return
+    end
     team_stats.won_by_team = global.bb_game_won_by_team
     team_stats.difficulty = difficulty_vote.short_difficulty_name()
     team_stats.difficulty_value = global.difficulty_vote_value
-    if tick == 0 then return end
+    if tick == 0 then
+        return
+    end
     local prev_ticks = team_stats.ticks or 0
     team_stats.ticks = tick
-    local total_players = {north = 0, south = 0}
+    local total_players = { north = 0, south = 0 }
     for _, force_name in pairs(global.chosen_team) do
         total_players[force_name] = (total_players[force_name] or 0) + 1
     end
-    for _, force_name in ipairs({"north", "south"}) do
+    for _, force_name in ipairs({ 'north', 'south' }) do
         local force = game.forces[force_name]
-        local biter_force_name = force_name .. "_biters"
+        local biter_force_name = force_name .. '_biters'
         local force_stats = team_stats.forces[force_name]
         local threat = global.bb_threat[biter_force_name]
         force_stats.final_evo = global.bb_evolution[biter_force_name]
         force_stats.peak_threat = (force_stats.peak_threat and math.max(threat, force_stats.peak_threat) or threat)
-        force_stats.lowest_threat = (force_stats.lowest_threat and math.min(threat, force_stats.lowest_threat) or threat)
+        force_stats.lowest_threat = (
+            force_stats.lowest_threat and math.min(threat, force_stats.lowest_threat) or threat
+        )
         force_stats.total_players = total_players[force_name]
         force_stats.player_ticks = (force_stats.player_ticks or 0) + #force.connected_players * (tick - prev_ticks)
         force_stats.max_players = math.max(force_stats.max_players or 0, #force.connected_players)
@@ -155,7 +168,7 @@ local function update_teamstats()
                 end
             end
         end
-        local science_logs = global["science_logs_total_" .. force_name]
+        local science_logs = global['science_logs_total_' .. force_name]
         for idx, info in ipairs(tables.food_long_and_short) do
             local item = info.long_name
             local food_stat = force_stats.food[item]
@@ -174,7 +187,7 @@ local function update_teamstats()
 
     local last_print = global.last_teamstats_print_at or 0
     if tick - last_print > 5 * 60 * 60 then
-        log({'', '[TEAMSTATS-PERIODIC]', game.table_to_json(team_stats)})
+        log({ '', '[TEAMSTATS-PERIODIC]', game.table_to_json(team_stats) })
         global.last_teamstats_print_at = tick
     end
 end
@@ -206,10 +219,10 @@ function TeamStatsCollect.compute_stats()
 
     -- In the (very uncommon) case of team_stats_use_fake_data being set, we will generate fake data for
     -- testing the UI.
-    local teams = {"north", "south"}
+    local teams = { 'north', 'south' }
     ---@type TeamStats
-    local stats = { ticks = 110*3600, won_by_team = teams[math.random(1, 3)], forces = {} }
-    for idx, force_name in ipairs({"north", "south"}) do
+    local stats = { ticks = 110 * 3600, won_by_team = teams[math.random(1, 3)], forces = {} }
+    for idx, force_name in ipairs({ 'north', 'south' }) do
         ---@type ForceStats
         local force_stats = {
             final_evo = idx * 0.55,
@@ -219,20 +232,55 @@ function TeamStatsCollect.compute_stats()
             max_players = idx * 10,
             player_ticks = math.random() * stats.ticks * 10,
             food = {
-                ["automation-science-pack"] = {first_at = idx * 10*3600, produced = idx * 1000, consumed = idx * 500, sent = idx * 200},
-                ["logistic-science-pack"] = {first_at = idx * 20*3600, produced = idx * 1000, consumed = idx * 500, sent = idx * 200},
-                ["military-science-pack"] = {first_at = idx * 30*3600, produced = idx * 1000, consumed = idx * 500, sent = idx * 200},
-                ["chemical-science-pack"] = {first_at = idx * 40*3600, produced = idx * 1000, consumed = idx * 500, sent = idx * 200},
-                ["production-science-pack"] = {first_at = idx * 50*3600, produced = idx * 1000, consumed = idx * 500, sent = idx * 200},
-                ["utility-science-pack"] = {first_at = idx * 60*3600, produced = idx * 1000, consumed = idx * 500, sent = idx * 200},
-                ["space-science-pack"] = {first_at = idx * 70*3600, produced = idx * 1000, consumed = idx * 500, sent = idx * 200},
+                ['automation-science-pack'] = {
+                    first_at = idx * 10 * 3600,
+                    produced = idx * 1000,
+                    consumed = idx * 500,
+                    sent = idx * 200,
+                },
+                ['logistic-science-pack'] = {
+                    first_at = idx * 20 * 3600,
+                    produced = idx * 1000,
+                    consumed = idx * 500,
+                    sent = idx * 200,
+                },
+                ['military-science-pack'] = {
+                    first_at = idx * 30 * 3600,
+                    produced = idx * 1000,
+                    consumed = idx * 500,
+                    sent = idx * 200,
+                },
+                ['chemical-science-pack'] = {
+                    first_at = idx * 40 * 3600,
+                    produced = idx * 1000,
+                    consumed = idx * 500,
+                    sent = idx * 200,
+                },
+                ['production-science-pack'] = {
+                    first_at = idx * 50 * 3600,
+                    produced = idx * 1000,
+                    consumed = idx * 500,
+                    sent = idx * 200,
+                },
+                ['utility-science-pack'] = {
+                    first_at = idx * 60 * 3600,
+                    produced = idx * 1000,
+                    consumed = idx * 500,
+                    sent = idx * 200,
+                },
+                ['space-science-pack'] = {
+                    first_at = idx * 70 * 3600,
+                    produced = idx * 1000,
+                    consumed = idx * 500,
+                    sent = idx * 200,
+                },
             },
             items = {},
             damage_types = {},
         }
         for _, item_info in ipairs(TeamStatsCollect.items_to_show_summaries_of) do
             local item_stat = {
-                first_at = math.floor(math.random() * 100*3600),
+                first_at = math.floor(math.random() * 100 * 3600),
                 produced = random_item_quantity(1000000),
             }
             force_stats.items[item_info.item] = item_stat
@@ -258,7 +306,9 @@ end
 ---@param event EventData.on_entity_died
 local function on_entity_died(event)
     local entity = event.entity
-    if not (entity and entity.valid) then return end
+    if not (entity and entity.valid) then
+        return
+    end
     local entity_force_name = (entity.force and entity.force.name) or ''
 
     -- North/South entities
@@ -282,10 +332,14 @@ local function on_entity_died(event)
     end
 
     -- North/South biters
-    if not event.damage_type then return end
+    if not event.damage_type then
+        return
+    end
     local health_factor = health_factor_map[entity_force_name]
     local force_name = force_name_map[entity_force_name]
-    if not health_factor or not force_name then return end
+    if not health_factor or not force_name then
+        return
+    end
 
     health_factor = health_factor / (1 - global.reanim_chance[game.forces[force_name .. '_biters'].index] / 100)
 

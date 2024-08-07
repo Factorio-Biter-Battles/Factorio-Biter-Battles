@@ -12,16 +12,16 @@ if #available_surfaces == 0 then
     end
 end
 
-local pos = {0, 0}
+local pos = { 0, 0 }
 for num = 1, 9 do
-    pos[1] = num * 12 - 12*5 --[[ make 4 or 5 appear at 0,0 ]]
+    pos[1] = num * 12 - 12 * 5 --[[ make 4 or 5 appear at 0,0 ]]
     for _, surface in pairs(available_surfaces) do
-        local id = rendering.draw_sprite{
+        local id = rendering.draw_sprite({
             --[[ path in comfy_panel/special_games/captain.lua ]]
-            sprite = string.format("file/png/%1d.png", num),
+            sprite = string.format('file/png/%1d.png', num),
             surface = surface,
             time_to_live = 1200, --[[ ticks ]]
-            target = pos
-        }
+            target = pos,
+        })
     end
 end

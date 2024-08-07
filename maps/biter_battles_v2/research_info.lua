@@ -1,9 +1,9 @@
-local gui_style = require 'utils.utils'.gui_style
-local flui = require 'utils.ui.gui-lite'
-local uic = require 'utils.ui.fcomponents'
-local Event = require 'utils.event'
-local Functions = require 'maps.biter_battles_v2.functions'
-local closable_frame = require "utils.ui.closable_frame"
+local gui_style = require('utils.utils').gui_style
+local flui = require('utils.ui.gui-lite')
+local uic = require('utils.ui.fcomponents')
+local Event = require('utils.event')
+local Functions = require('maps.biter_battles_v2.functions')
+local closable_frame = require('utils.ui.closable_frame')
 
 local MAXHEIGHT_PADDING = 50
 
@@ -13,16 +13,14 @@ local function ui_template()
             scroll
                 main
     ]]
-    local container = uic.blocks.vflow "main"
-    local teams = uic.add(container,
-        uic.blocks.hflow "teams"
-    )
+    local container = uic.blocks.vflow('main')
+    local teams = uic.add(container, uic.blocks.hflow('teams'))
     teams.style_mods = { vertically_stretchable = true }
-    for _, name in ipairs { "north", "south" } do
+    for _, name in ipairs({ 'north', 'south' }) do
         uic.add(teams, {
-            type = "frame",
-            style = "inside_shallow_frame_with_padding",
-            direction = "vertical",
+            type = 'frame',
+            style = 'inside_shallow_frame_with_padding',
+            direction = 'vertical',
             name = name,
             style_mods = {
                 natural_width = 365,
@@ -31,128 +29,127 @@ local function ui_template()
             },
             children = {
                 {
-                    type = "label",
-                    caption = "UPDATE ME",
-                    name = "team_name_"..name,
+                    type = 'label',
+                    caption = 'UPDATE ME',
+                    name = 'team_name_' .. name,
                     style_mods = {
-                        font = "heading-1"
-                    }
+                        font = 'heading-1',
+                    },
                 },
                 {
-                    type = "label",
-                    caption = "Current Queue",
+                    type = 'label',
+                    caption = 'Current Queue',
                     style_mods = {
-                        font = "heading-2"
-                    }
+                        font = 'heading-2',
+                    },
                 },
                 {
-                    type = "frame",
-                    direction = "vertical",
-                    name = "queue_frame",
-                    style = "deep_frame_in_shallow_frame",
+                    type = 'frame',
+                    direction = 'vertical',
+                    name = 'queue_frame',
+                    style = 'deep_frame_in_shallow_frame',
                     style_mods = {
                         padding = 4,
                         horizontally_stretchable = true,
-                        bottom_margin = 4
+                        bottom_margin = 4,
                     },
                     {
-                        type = "flow",
-                        name = "queue",
+                        type = 'flow',
+                        name = 'queue',
                         style_mods = {
-                            padding = 0
+                            padding = 0,
                         },
                         {
-                            type = "label",
-                            caption = "Loading..."
-                        }
-                    }
+                            type = 'label',
+                            caption = 'Loading...',
+                        },
+                    },
                 },
                 {
-                    type = "frame",
-                    direction = "vertical",
-                    name = "progress_frame",
-                    style = "deep_frame_in_shallow_frame",
+                    type = 'frame',
+                    direction = 'vertical',
+                    name = 'progress_frame',
+                    style = 'deep_frame_in_shallow_frame',
                     style_mods = {
                         padding = 4,
                         horizontally_stretchable = true,
-                        bottom_margin = 4
+                        bottom_margin = 4,
                     },
                     {
-                        type = "table",
-                        name = "progress",
+                        type = 'table',
+                        name = 'progress',
                         column_count = 15,
                         style_mods = {
-                            horizontally_stretchable = false
+                            horizontally_stretchable = false,
                         },
                         {
-                            type = "label",
-                            caption = "Loading..."
-                        }
-                    }
+                            type = 'label',
+                            caption = 'Loading...',
+                        },
+                    },
                 },
                 {
-                    type = "label",
-                    caption = "Researched (exclusive)",
+                    type = 'label',
+                    caption = 'Researched (exclusive)',
                     style_mods = {
-                        font = "heading-2"
-                    }
+                        font = 'heading-2',
+                    },
                 },
                 {
-                    type = "frame",
-                    direction = "vertical",
-                    name = "completed_frame",
-                    style = "deep_frame_in_shallow_frame",
+                    type = 'frame',
+                    direction = 'vertical',
+                    name = 'completed_frame',
+                    style = 'deep_frame_in_shallow_frame',
                     style_mods = {
                         padding = 4,
                         horizontally_stretchable = true,
-                        bottom_margin = 4
+                        bottom_margin = 4,
                     },
                     {
-                        type = "table",
-                        name = "completed",
+                        type = 'table',
+                        name = 'completed',
                         column_count = 8,
                         {
-                            type = "label",
-                            caption = "Loading..."
-                        }
-                    }
-
-                }
-            }
+                            type = 'label',
+                            caption = 'Loading...',
+                        },
+                    },
+                },
+            },
         })
     end
     local both_teams = uic.add(container, {
-        type = "frame",
-        style = "inside_shallow_frame_with_padding",
-        direction = "vertical",
-        name = "both_teams",
+        type = 'frame',
+        style = 'inside_shallow_frame_with_padding',
+        direction = 'vertical',
+        name = 'both_teams',
         {
-            type = "label",
-            caption = "Researched (both)",
+            type = 'label',
+            caption = 'Researched (both)',
             style_mods = {
-                font = "heading-1"
-            }
+                font = 'heading-1',
+            },
         },
         {
-            type = "frame",
-            direction = "vertical",
-            name = "completed_frame",
-            style = "deep_frame_in_shallow_frame",
+            type = 'frame',
+            direction = 'vertical',
+            name = 'completed_frame',
+            style = 'deep_frame_in_shallow_frame',
             style_mods = {
                 padding = 4,
                 horizontally_stretchable = true,
-                bottom_margin = 4
+                bottom_margin = 4,
             },
             {
-                type = "table",
-                name = "completed_both",
+                type = 'table',
+                name = 'completed_both',
                 column_count = 18,
                 {
-                    type = "label",
-                    caption = "Loading..."
-                }
-            }
-        }
+                    type = 'label',
+                    caption = 'Loading...',
+                },
+            },
+        },
     })
     return container
 end
@@ -164,26 +161,26 @@ local UI = ui_template()
 ---@return GuiElemDef
 local function research_item(tech_id, north_desc, south_desc)
     local tooltip_items = {}
-    table.insert(tooltip_items, "North: " .. (north_desc or "Not started"))
-    table.insert(tooltip_items, "South: " .. (south_desc or "Not started"))
+    table.insert(tooltip_items, 'North: ' .. (north_desc or 'Not started'))
+    table.insert(tooltip_items, 'South: ' .. (south_desc or 'Not started'))
     ---@type GuiElemDef
     return {
-        type = "sprite",
-        sprite = "technology/" .. tech_id,
-        tooltip = table.concat(tooltip_items, "\n"),
-        elem_tooltip = { type = "technology", name = tech_id },
-        name = "_" .. tech_id,
+        type = 'sprite',
+        sprite = 'technology/' .. tech_id,
+        tooltip = table.concat(tooltip_items, '\n'),
+        elem_tooltip = { type = 'technology', name = tech_id },
+        name = '_' .. tech_id,
         tags = {
             -- match compatibility with progress_research_item
             sort_by = tech_id,
-            tech_id = tech_id
+            tech_id = tech_id,
         },
         style_mods = {
             width = 38,
             height = 38,
             padding = 0,
-            stretch_image_to_widget_size = true
-        }
+            stretch_image_to_widget_size = true,
+        },
     }
 end
 
@@ -196,30 +193,30 @@ end
 ---@return GuiElemDef
 local function progress_research_item(tech_id, this_progress, is_active, north_desc, south_desc)
     local tooltip_items = {}
-    table.insert(tooltip_items, "North: " .. (north_desc or "Not started"))
-    table.insert(tooltip_items, "South: " .. (south_desc or "Not started"))
+    table.insert(tooltip_items, 'North: ' .. (north_desc or 'Not started'))
+    table.insert(tooltip_items, 'South: ' .. (south_desc or 'Not started'))
     ---@type GuiElemDef
     local el = {
-        type = "flow",
-        direction = "vertical",
-        name = "_" .. tech_id,
+        type = 'flow',
+        direction = 'vertical',
+        name = '_' .. tech_id,
         style_mods = {
             vertical_spacing = 0,
-            width = 38
+            width = 38,
         },
         tags = {
             sort_by = tech_id,
-            tech_id = tech_id
+            tech_id = tech_id,
         },
         research_item(tech_id, north_desc, south_desc),
         {
-            type = "progressbar",
+            type = 'progressbar',
             value = this_progress,
-            tooltip = table.concat(tooltip_items, "\n"),
+            tooltip = table.concat(tooltip_items, '\n'),
             style_mods = {
-                color = is_active and { 0, 1, 0 } or { 1, 1, 0 }
-            }
-        }
+                color = is_active and { 0, 1, 0 } or { 1, 1, 0 },
+            },
+        },
     }
     return el
 end
@@ -233,24 +230,24 @@ function ResearchInfo.show_research_info_handler(evt)
 end
 local show_research_info_handler = ResearchInfo.show_research_info_handler
 
-flui.add_handlers {
-    research_info_button_click = show_research_info_handler
-}
+flui.add_handlers({
+    research_info_button_click = show_research_info_handler,
+})
 
 function ResearchInfo.create_research_info_button(element)
     ---@type GuiElemDef
     local template = {
-        type = "sprite-button",
-        sprite = "item/lab",
-        name = "research_info_button",
-        tooltip = "Science Info",
-        style = "transparent_slot",
+        type = 'sprite-button',
+        sprite = 'item/lab',
+        name = 'research_info_button',
+        tooltip = 'Science Info',
+        style = 'transparent_slot',
         style_mods = {
             width = 26,
             height = 26,
-            padding = 2
+            padding = 2,
         },
-        handler = show_research_info_handler
+        handler = show_research_info_handler,
     }
     local _, button = flui.add(element, template)
     return button
@@ -260,7 +257,9 @@ end
 ---@param tech_name string
 function ResearchInfo.research_finished(tech_name, force)
     local force_name = force.name
-    if force_name ~= "north" and force_name ~= "south" then return end
+    if force_name ~= 'north' and force_name ~= 'south' then
+        return
+    end
     local tech_info = global.research_info.completed[tech_name]
     if not tech_info then
         tech_info = {}
@@ -276,7 +275,9 @@ end
 ---@param tech_name string
 function ResearchInfo.research_started(tech_name, force)
     local force_name = force.name
-    if force_name ~= "north" and force_name ~= "south" then return end
+    if force_name ~= 'north' and force_name ~= 'south' then
+        return
+    end
     global.research_info.current_progress[force_name][tech_name] = true
     ResearchInfo.update_research_info_ui()
 end
@@ -284,9 +285,13 @@ end
 ---@param force LuaForce
 ---@param tech_name string
 function ResearchInfo.research_reversed(tech_name, force)
-    if force.name ~= "north" and force.name ~= "south" then return end
+    if force.name ~= 'north' and force.name ~= 'south' then
+        return
+    end
     local tech_info = global.research_info.completed[tech_name]
-    if not tech_info then return end
+    if not tech_info then
+        return
+    end
     tech_info[force.name] = nil
     ResearchInfo.update_research_info_ui(true)
 end
@@ -312,15 +317,15 @@ local function get_research_info(tech_id)
             ---@type string?
             local type
             if current and current.name == tech_id then
-                type = "In progress - "
+                type = 'In progress - '
                 progress = force.research_progress
                 active = true
             else
-                type = "Paused - "
+                type = 'Paused - '
                 progress = force.get_saved_technology_progress(all_technologies[tech_id])
             end
             if progress then
-                result = type .. string.format("%.0f%% complete", progress * 100)
+                result = type .. string.format('%.0f%% complete', progress * 100)
             end
         end
         return result, progress, active
@@ -332,13 +337,13 @@ local function get_research_info(tech_id)
         north = {
             desc = north,
             pct = north_pct,
-            active = north_active
+            active = north_active,
         },
         south = {
             desc = south,
             pct = south_pct,
-            active = south_active
-        }
+            active = south_active,
+        },
     }
 end
 
@@ -353,9 +358,11 @@ local function construct_completed(filter)
             elements[#elements + 1] = research_item(tech_name, info.north.desc, info.south.desc)
         end
     end
-    table.sort(elements, function(a, b) return a.tags.sort_by < b.tags.sort_by end)
+    table.sort(elements, function(a, b)
+        return a.tags.sort_by < b.tags.sort_by
+    end)
     if #elements == 0 then
-        elements[#elements + 1] = uic.blocks.label "No results"
+        elements[#elements + 1] = uic.blocks.label('No results')
     end
     return elements
 end
@@ -364,18 +371,14 @@ end
 ---@return GuiElemDef
 local function construct_research_queue(force)
     local queue_data = force.research_queue
-    local queue_elem = uic.blocks.hflow "queue"
+    local queue_elem = uic.blocks.hflow('queue')
 
     if not queue_data or #queue_data == 0 then
-        uic.add(queue_elem, uic.blocks.label "Nothing queued")
+        uic.add(queue_elem, uic.blocks.label('Nothing queued'))
     else
         for _, tech in ipairs(queue_data) do
             local research_info = get_research_info(tech.name)
-            uic.add(queue_elem, research_item(
-                tech.name,
-                research_info.north.desc,
-                research_info.south.desc
-            ))
+            uic.add(queue_elem, research_item(tech.name, research_info.north.desc, research_info.south.desc))
         end
     end
     return queue_elem
@@ -385,7 +388,7 @@ end
 ---@return GuiElemDef
 local function construct_progress(force)
     local progress_info = global.research_info.current_progress[force.name]
-    local el = uic.blocks.table(15, "progress")
+    local el = uic.blocks.table(15, 'progress')
     local matches = 0
     for tech_name, _ in pairs(progress_info) do
         local tech_info = get_research_info(tech_name)
@@ -397,7 +400,7 @@ local function construct_progress(force)
         end
     end
     if matches == 0 then
-        uic.add(el, uic.blocks.label "No partially complete research")
+        uic.add(el, uic.blocks.label('No partially complete research'))
     end
     return el
 end
@@ -419,7 +422,7 @@ end
 ---@param completed_technologies_changed boolean?
 local function update_research_info_element(element, package, completed_technologies_changed)
     local frame_teams = element.teams
-    for _, force in pairs { "north", "south" } do
+    for _, force in pairs({ 'north', 'south' }) do
         local team_data = package[force] --[[@as research_info.ui_update_package.team]]
         local team_frame = frame_teams[force]
         team_frame.queue_frame.queue.destroy()
@@ -436,7 +439,9 @@ local function update_research_info_element(element, package, completed_technolo
     end
 
     local both = element.both_teams
-    if not both then return end
+    if not both then
+        return
+    end
 
     if completed_technologies_changed then
         both.completed_frame.completed_both.clear()
@@ -457,14 +462,14 @@ end
 local function calculate_ui()
     ---@type research_info.ui_update_package
     local data = {}
-    for team, opposition in pairs { north = "south", south = "north" } do
+    for team, opposition in pairs({ north = 'south', south = 'north' }) do
         local force = game.forces[team]
         data[team] = {
             queue = construct_research_queue(force),
             progress = construct_progress(force),
             excl_completed = construct_completed(function(_, info)
                 return info[team] and not info[opposition]
-            end)
+            end),
         }
     end
     data.both_completed = construct_completed(function(_, info)
@@ -478,8 +483,12 @@ end
 function ResearchInfo.update_research_info_ui(completed_technologies_changed)
     local data = calculate_ui()
     for _, player in pairs(game.connected_players) do
-        if player.gui.screen["research_info_frame"] then
-            update_research_info_element(player.gui.screen["research_info_frame"].scroll.main, data, completed_technologies_changed)
+        if player.gui.screen['research_info_frame'] then
+            update_research_info_element(
+                player.gui.screen['research_info_frame'].scroll.main,
+                data,
+                completed_technologies_changed
+            )
         end
     end
 end
@@ -487,19 +496,24 @@ end
 ---@param player LuaPlayer
 function ResearchInfo.show_research_info(player)
     local all_technologies = game.forces.spectator.technologies
-    local frame = player.gui.screen["research_info_frame"]
+    local frame = player.gui.screen['research_info_frame']
 
     if frame and frame.valid then
         frame.destroy()
         return
     end
 
-    frame = closable_frame.create_main_closable_frame(player, "research_info_frame", "Research summary for both teams")
-    local scroll = frame.add({ type = "scroll-pane", horizontal_scroll_policy = "never", vertical_scroll_policy = "always", name = "scroll" })
+    frame = closable_frame.create_main_closable_frame(player, 'research_info_frame', 'Research summary for both teams')
+    local scroll = frame.add({
+        type = 'scroll-pane',
+        horizontal_scroll_policy = 'never',
+        vertical_scroll_policy = 'always',
+        name = 'scroll',
+    })
     local named_elements = flui.add(scroll, UI)
-    named_elements["team_name_south"].caption = Functions.team_name_with_color("south")
-    named_elements["team_name_north"].caption = Functions.team_name_with_color("north")
-    local el = player.gui.screen["research_info_frame"]
+    named_elements['team_name_south'].caption = Functions.team_name_with_color('south')
+    named_elements['team_name_north'].caption = Functions.team_name_with_color('north')
+    local el = player.gui.screen['research_info_frame']
     update_research_info_size(player, el)
     local data = calculate_ui()
     -- full refresh needed to populate the UI
@@ -509,9 +523,13 @@ end
 ---@param evtd EventData.on_player_display_resolution_changed | EventData.on_player_display_scale_changed
 local function on_display_changed(evtd)
     local player = game.get_player(evtd.player_index)
-    if not player then return end
-    local el = player.gui.screen["research_info_frame"]
-    if not el then return end
+    if not player then
+        return
+    end
+    local el = player.gui.screen['research_info_frame']
+    if not el then
+        return
+    end
     update_research_info_size(player, el)
     el.force_auto_center()
 end

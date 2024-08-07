@@ -1,7 +1,7 @@
-local Token = require 'utils.token'
-local Task = require 'utils.task'
-local Global = require 'utils.global'
-local Event = require 'utils.event'
+local Token = require('utils.token')
+local Task = require('utils.task')
+local Global = require('utils.global')
+local Event = require('utils.event')
 local Print = require('utils.print_override')
 
 local serialize = serpent.serialize
@@ -10,26 +10,23 @@ local remove = table.remove
 local tostring = tostring
 local raw_print = Print.raw_print
 
-local serialize_options = {sparse = true, compact = true}
+local serialize_options = { sparse = true, compact = true }
 
 local Public = {}
 
-local server_time = {secs = nil, tick = 0}
-local server_ups = {ups = 60}
+local server_time = { secs = nil, tick = 0 }
+local server_ups = { ups = 60 }
 local requests = {}
 
-Global.register(
-    {
-        server_time = server_time,
-        server_ups = server_ups,
-        requests = requests
-    },
-    function(tbl)
-        server_time = tbl.server_time
-        server_ups = tbl.server_ups
-        requests = tbl.requests
-    end
-)
+Global.register({
+    server_time = server_time,
+    server_ups = server_ups,
+    requests = requests,
+}, function(tbl)
+    server_time = tbl.server_time
+    server_ups = tbl.server_ups
+    requests = tbl.requests
+end)
 
 local discord_tag = '[DISCORD]'
 local discord_raw_tag = '[DISCORD-RAW]'
@@ -41,7 +38,7 @@ local discord_suspend_tag = '[DISCORD-EMBED]'
 -- local discord_banned_tag = '[DISCORD-BANNED]'
 -- local discord_banned_embed_tag = '[DISCORD-BANNED-EMBED]'
 local discord_banned_tag = '[DISCORD-EMBED]'
-local discord_banned_embed_tag ='[DISCORD-EMBED]'
+local discord_banned_embed_tag = '[DISCORD-EMBED]'
 local discord_admin_raw_tag = '[DISCORD-ADMIN-RAW]'
 local discord_embed_tag = '[DISCORD-EMBED]'
 local discord_embed_raw_tag = '[DISCORD-EMBED-RAW]'
@@ -81,10 +78,10 @@ local data_set_handlers = {}
 -- function()
 --      Server.try_get_all_data('regulars', callback)
 -- end)
-Public.events = {on_server_started = Event.generate_event_name('on_server_started')}
+Public.events = { on_server_started = Event.generate_event_name('on_server_started') }
 
 function Public.send_special_game_state(message)
-	raw_print(special_game_end_tag .. message)
+    raw_print(special_game_end_tag .. message)
 end
 
 --- Sends a message to the linked discord channel. The message is sanitized of markdown server side.
@@ -190,22 +187,19 @@ function Public.stop_scenario()
     raw_print(message)
 end
 
-local default_ping_token =
-    Token.register(
-    function(sent_tick)
-        local now = game.tick
-        local diff = now - sent_tick
+local default_ping_token = Token.register(function(sent_tick)
+    local now = game.tick
+    local diff = now - sent_tick
 
-        local message = concat({'Pong in ', diff, ' tick(s) ', 'sent tick: ', sent_tick, ' received tick: ', now})
-        game.print(message)
-    end
-)
+    local message = concat({ 'Pong in ', diff, ' tick(s) ', 'sent tick: ', sent_tick, ' received tick: ', now })
+    game.print(message)
+end)
 
 --- Pings the web server.
 -- @param  func_token<token> The function that is called when the web server replies.
 -- The function is passed the tick that the ping was sent.
 function Public.ping(func_token)
-    local message = concat({ping_tag, func_token or default_ping_token, ' ', game.tick})
+    local message = concat({ ping_tag, func_token or default_ping_token, ' ', game.tick })
     raw_print(message)
 end
 
@@ -242,15 +236,15 @@ function Public.set_data(data_set, key, value)
     local message
     local vt = type(value)
     if vt == 'nil' then
-        message = concat({data_set_tag, '{data_set:"', data_set, '",key:"', key, '"}'})
+        message = concat({ data_set_tag, '{data_set:"', data_set, '",key:"', key, '"}' })
     elseif vt == 'string' then
         value = double_escape(value)
 
-        message = concat({data_set_tag, '{data_set:"', data_set, '",key:"', key, '",value:"\\"', value, '\\""}'})
+        message = concat({ data_set_tag, '{data_set:"', data_set, '",key:"', key, '",value:"\\"', value, '\\""}' })
     elseif vt == 'number' then
-        message = concat({data_set_tag, '{data_set:"', data_set, '",key:"', key, '",value:"', value, '"}'})
+        message = concat({ data_set_tag, '{data_set:"', data_set, '",key:"', key, '",value:"', value, '"}' })
     elseif vt == 'boolean' then
-        message = concat({data_set_tag, '{data_set:"', data_set, '",key:"', key, '",value:"', tostring(value), '"}'})
+        message = concat({ data_set_tag, '{data_set:"', data_set, '",key:"', key, '",value:"', tostring(value), '"}' })
     elseif vt == 'function' then
         error('value cannot be a function', 2)
     else -- table
@@ -260,7 +254,7 @@ function Public.set_data(data_set, key, value)
         -- Need to escape single quotes as serpent uses double quotes for strings.
         value = value:gsub('\\', '\\\\'):gsub("'", "\\'")
 
-        message = concat({data_set_tag, '{data_set:"', data_set, '",key:"', key, "\",value:'", value, "'}"})
+        message = concat({ data_set_tag, '{data_set:"', data_set, '",key:"', key, '",value:\'', value, "'}" })
     end
 
     raw_print(message)
@@ -282,33 +276,30 @@ local function send_try_get_data(data_set, key, callback_token)
     data_set = double_escape(data_set)
     key = double_escape(key)
 
-    local message = concat {data_get_tag, callback_token, ' {', 'data_set:"', data_set, '",key:"', key, '"}'}
+    local message = concat({ data_get_tag, callback_token, ' {', 'data_set:"', data_set, '",key:"', key, '"}' })
     raw_print(message)
 end
 
-local cancelable_callback_token =
-    Token.register(
-    function(data)
-        local data_set = data.data_set
-        local keys = requests[data_set]
-        if not keys then
-            return
-        end
-
-        local key = data.key
-        local callbacks = keys[key]
-        if not callbacks then
-            return
-        end
-
-        keys[key] = nil
-
-        for c, _ in next, callbacks do
-            local func = Token.get(c)
-            func(data)
-        end
+local cancelable_callback_token = Token.register(function(data)
+    local data_set = data.data_set
+    local keys = requests[data_set]
+    if not keys then
+        return
     end
-)
+
+    local key = data.key
+    local callbacks = keys[key]
+    if not callbacks then
+        return
+    end
+
+    keys[key] = nil
+
+    for c, _ in next, callbacks do
+        local func = Token.get(c)
+        func(data)
+    end
+end)
 
 --- Gets data from the web server's persistent data storage.
 -- The callback is passed a table {data_set: string, key: string, value: any}.
@@ -393,7 +384,7 @@ local function cancel_try_get_data(data_set, key, callback_token)
         callbacks[callback_token] = nil
 
         local func = Token.get(callback_token)
-        local data = {data_set = data_set, key = key, cancelled = true}
+        local data = { data_set = data_set, key = key, cancelled = true }
         func(data)
 
         return true
@@ -415,12 +406,9 @@ function Public.cancel_try_get_data(data_set, key, callback_token)
     return cancel_try_get_data(data_set, key, callback_token)
 end
 
-local timeout_token =
-    Token.register(
-    function(data)
-        cancel_try_get_data(data.data_set, data.key, data.callback_token)
-    end
-)
+local timeout_token = Token.register(function(data)
+    cancel_try_get_data(data.data_set, data.key, data.callback_token)
+end)
 
 --- Same as Server.try_get_data but the request is cancelled if the timeout expires before the request is complete.
 -- If the request is cancelled before it is complete the callback will be called with data.cancelled = true.
@@ -458,7 +446,11 @@ function Public.try_get_data_timeout(data_set, key, callback_token, timeout_tick
 
     try_get_data_cancelable(data_set, key, callback_token)
 
-    Task.set_timeout_in_ticks(timeout_ticks, timeout_token, {data_set = data_set, key = key, callback_token = callback_token})
+    Task.set_timeout_in_ticks(
+        timeout_ticks,
+        timeout_token,
+        { data_set = data_set, key = key, callback_token = callback_token }
+    )
 end
 
 --- Gets all the data for the data_set from the web server's persistent data storage.
@@ -491,7 +483,7 @@ function Public.try_get_all_data(data_set, callback_token)
 
     data_set = double_escape(data_set)
 
-    local message = concat {data_get_all_tag, callback_token, ' {', 'data_set:"', data_set, '"}'}
+    local message = concat({ data_get_all_tag, callback_token, ' {', 'data_set:"', data_set, '"}' })
     raw_print(message)
 end
 
@@ -538,7 +530,7 @@ function Public.on_data_set_changed(data_set, handler)
 
     local handlers = data_set_handlers[data_set]
     if handlers == nil then
-        handlers = {handler}
+        handlers = { handler }
         data_set_handlers[data_set] = handlers
     else
         handlers[#handlers + 1] = handler
@@ -550,7 +542,7 @@ Public.raise_data_set = data_set_changed
 
 --- Called by the web server to determine which data_sets are being tracked.
 function Public.get_tracked_data_sets()
-    local message = {data_tracked_tag, '['}
+    local message = { data_tracked_tag, '[' }
 
     for k, _ in pairs(data_set_handlers) do
         k = double_escape(k)
@@ -580,7 +572,7 @@ local statistics = {
     'item_production_statistics',
     'fluid_production_statistics',
     'kill_count_statistics',
-    'entity_build_count_statistics'
+    'entity_build_count_statistics',
 }
 function Public.export_stats()
     local table_to_json = game.table_to_json
@@ -590,18 +582,18 @@ function Public.export_stats()
         game_flow_statistics = {
             pollution_statistics = {
                 input = game.pollution_statistics.input_counts,
-                output = game.pollution_statistics.output_counts
-            }
+                output = game.pollution_statistics.output_counts,
+            },
         },
         rockets_launched = {},
-        force_flow_statistics = {}
+        force_flow_statistics = {},
     }
     for _, force in pairs(game.forces) do
         local flow_statistics = {}
         for _, statName in pairs(statistics) do
             flow_statistics[statName] = {
                 input = force[statName].input_counts,
-                output = force[statName].output_counts
+                output = force[statName].output_counts,
             }
         end
         stats.rockets_launched[force.name] = force.rockets_launched
@@ -645,7 +637,7 @@ function Public.ban_sync(username, reason, admin)
     reason = escape(reason)
     admin = escape(admin)
 
-    local message = concat({ban_sync_tag, '{username:"', username, '",reason:"', reason, '",admin:"', admin, '"}'})
+    local message = concat({ ban_sync_tag, '{username:"', username, '",reason:"', reason, '",admin:"', admin, '"}' })
     raw_print(message)
 end
 
@@ -683,7 +675,7 @@ function Public.unban_sync(username, admin)
     username = escape(username)
     admin = escape(admin)
 
-    local message = concat({unbanned_sync_tag, '{username:"', username, '",admin:"', admin, '"}'})
+    local message = concat({ unbanned_sync_tag, '{username:"', username, '",admin:"', admin, '"}' })
     raw_print(message)
 end
 
@@ -707,7 +699,6 @@ end
 function Public.get_time_data_raw()
     return server_time
 end
-
 
 -- have no wrapper
 --- Called by the web server to set the ups value.
@@ -736,22 +727,27 @@ function Public.get_current_time()
 end
 
 function Public.upload_time_played(player)
-	if not global.already_logged_current_session_time_online_players[player.name] then global.already_logged_current_session_time_online_players[player.name] = 0 end
-	if not global.total_time_online_players[player.name] then global.total_time_online_players[player.name] = 0 end
-	local time_to_add = player.online_time - global.already_logged_current_session_time_online_players[player.name]
-	
-	raw_print(data_add_onlinetime_tag .. '['..player.name..']'..time_to_add)
-	global.already_logged_current_session_time_online_players[player.name] = global.already_logged_current_session_time_online_players[player.name] + time_to_add
-	global.total_time_online_players[player.name] = global.total_time_online_players[player.name] + time_to_add
+    if not global.already_logged_current_session_time_online_players[player.name] then
+        global.already_logged_current_session_time_online_players[player.name] = 0
+    end
+    if not global.total_time_online_players[player.name] then
+        global.total_time_online_players[player.name] = 0
+    end
+    local time_to_add = player.online_time - global.already_logged_current_session_time_online_players[player.name]
+
+    raw_print(data_add_onlinetime_tag .. '[' .. player.name .. ']' .. time_to_add)
+    global.already_logged_current_session_time_online_players[player.name] = global.already_logged_current_session_time_online_players[player.name]
+        + time_to_add
+    global.total_time_online_players[player.name] = global.total_time_online_players[player.name] + time_to_add
 end
 
 function Public.set_total_time_played(player)
-	raw_print(data_set_total_onlinetime_tag .. "[".. player.name .. "]")
+    raw_print(data_set_total_onlinetime_tag .. '[' .. player.name .. ']')
 end
 
 --- Called be the web server to re sync which players are online.
 function Public.query_online_players()
-    local message = {query_players_tag, '['}
+    local message = { query_players_tag, '[' }
 
     for _, p in ipairs(game.connected_players) do
         message[#message + 1] = '"'
@@ -782,125 +778,109 @@ end
 
 --- The command 'cc' is only used by the server so it can communicate through the webpanel api to the instances that it starts.
 -- Doing this, enables achivements and the webpanel can communicate without any interruptions.
-commands.add_command(
-    'cc',
-    'Evaluate command',
-    function(cmd)
-        local player = game.player
-        if player then
-            return
-        end
+commands.add_command('cc', 'Evaluate command', function(cmd)
+    local player = game.player
+    if player then
+        return
+    end
 
-        local callback = cmd.parameter
-        if not callback then
-            return
-        end
-        if not string.find(callback, '%s') and not string.find(callback, 'return') then
-            callback = 'return ' .. callback
-        end
-        local success, err = command_handler(callback)
-        if not success and type(err) == 'string' then
-            local _end = string.find(err, 'stack traceback')
-            if _end then
-                err = string.sub(err, 0, _end - 2)
-            end
-        end
-        if err or err == false then
-            raw_print(err)
+    local callback = cmd.parameter
+    if not callback then
+        return
+    end
+    if not string.find(callback, '%s') and not string.find(callback, 'return') then
+        callback = 'return ' .. callback
+    end
+    local success, err = command_handler(callback)
+    if not success and type(err) == 'string' then
+        local _end = string.find(err, 'stack traceback')
+        if _end then
+            err = string.sub(err, 0, _end - 2)
         end
     end
-)
+    if err or err == false then
+        raw_print(err)
+    end
+end)
 
 --- The [JOIN] and [LEAVE] messages Factorio sends to stdout aren't sent in all cases of
 --  players joining or leaving. So we send our own [PLAYER-JOIN] and [PLAYER-LEAVE] tags.
-Event.add(
-    defines.events.on_player_joined_game,
-    function(event)
-        local player = game.get_player(event.player_index)
-        if not player or not player.valid then
-            return
-        end
-
-        raw_print(player_join_tag .. player.name)
+Event.add(defines.events.on_player_joined_game, function(event)
+    local player = game.get_player(event.player_index)
+    if not player or not player.valid then
+        return
     end
-)
 
-Event.add(
-    defines.events.on_player_left_game,
-    function(event)
-        local player = game.get_player(event.player_index)
-        if not player or not player.valid then
-            return
-        end
+    raw_print(player_join_tag .. player.name)
+end)
 
-        raw_print(player_leave_tag .. player.name)
+Event.add(defines.events.on_player_left_game, function(event)
+    local player = game.get_player(event.player_index)
+    if not player or not player.valid then
+        return
     end
-)
 
-Event.add(
-    defines.events.on_console_command,
-    function(event)
-        local cmd = event.command
-        if not event.player_index then
-            return
-        end
-        local player = game.get_player(event.player_index)
-        local reason = event.parameters
-        if not reason then
-            return
-        end
-        if not player.admin then
-            return
-        end
-        if cmd == 'ban' then
-            if player then
-                Public.to_banned_embed(table.concat {player.name .. ' banned ' .. reason})
-                return
-            else
-                Public.to_banned_embed(table.concat {'Server banned ' .. reason})
-                return
-            end
-        elseif cmd == 'unban' then
-            if player then
-                Public.to_banned_embed(table.concat {player.name .. ' unbanned ' .. reason})
-                return
-            else
-                Public.to_banned_embed(table.concat {'Server unbanned ' .. reason})
-                return
-            end
-        end
+    raw_print(player_leave_tag .. player.name)
+end)
+
+Event.add(defines.events.on_console_command, function(event)
+    local cmd = event.command
+    if not event.player_index then
+        return
     end
-)
-
-Event.add(
-    defines.events.on_player_died,
-    function(event)
-        local player = game.get_player(event.player_index)
-
-        if not player or not player.valid then
+    local player = game.get_player(event.player_index)
+    local reason = event.parameters
+    if not reason then
+        return
+    end
+    if not player.admin then
+        return
+    end
+    if cmd == 'ban' then
+        if player then
+            Public.to_banned_embed(table.concat({ player.name .. ' banned ' .. reason }))
             return
-        end
-
-        local cause = event.cause
-
-        local message = {discord_bold_tag, player.name}
-        if cause and cause.valid then
-            message[#message + 1] = ' was killed by '
-
-            local name = cause.name
-            if name == 'character' and cause.player then
-                name = cause.player.name
-            end
-
-            message[#message + 1] = name
-            message[#message + 1] = '.'
         else
-            message[#message + 1] = ' has died.'
+            Public.to_banned_embed(table.concat({ 'Server banned ' .. reason }))
+            return
+        end
+    elseif cmd == 'unban' then
+        if player then
+            Public.to_banned_embed(table.concat({ player.name .. ' unbanned ' .. reason }))
+            return
+        else
+            Public.to_banned_embed(table.concat({ 'Server unbanned ' .. reason }))
+            return
+        end
+    end
+end)
+
+Event.add(defines.events.on_player_died, function(event)
+    local player = game.get_player(event.player_index)
+
+    if not player or not player.valid then
+        return
+    end
+
+    local cause = event.cause
+
+    local message = { discord_bold_tag, player.name }
+    if cause and cause.valid then
+        message[#message + 1] = ' was killed by '
+
+        local name = cause.name
+        if name == 'character' and cause.player then
+            name = cause.player.name
         end
 
-        message = concat(message)
-        raw_print(message)
+        message[#message + 1] = name
+        message[#message + 1] = '.'
+    else
+        message[#message + 1] = ' has died.'
     end
-)
+
+    message = concat(message)
+    raw_print(message)
+end)
 
 return Public

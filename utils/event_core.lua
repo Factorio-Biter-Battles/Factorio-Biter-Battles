@@ -27,30 +27,30 @@ local script_on_event = script.on_event
 local script_on_nth_tick = script.on_nth_tick
 
 local function errorHandler(err)
-    log("Error caught: " .. err)
+    log('Error caught: ' .. err)
     -- Print the full stack trace
     log(debug.traceback())
 end
 
 local call_handlers
 function call_handlers(handlers, event)
-	if not handlers then
-		return log('Handlers was nil!')
-	end
-	local handlers_copy = table.deepcopy(handlers)
-	for i = 1, #handlers do
-		local handler = handlers[i]
-		if handler == nil and handlers_copy[i] ~= nil then
-			if table.contains(handlers, handlers_copy[i]) then
-				handler = handlers_copy[i]
-			end
-		end
-		if handler ~= nil then
-			xpcall(handler, errorHandler, event)
-		else
-			log('nil handler')
-		end
-	end
+    if not handlers then
+        return log('Handlers was nil!')
+    end
+    local handlers_copy = table.deepcopy(handlers)
+    for i = 1, #handlers do
+        local handler = handlers[i]
+        if handler == nil and handlers_copy[i] ~= nil then
+            if table.contains(handlers, handlers_copy[i]) then
+                handler = handlers_copy[i]
+            end
+        end
+        if handler ~= nil then
+            xpcall(handler, errorHandler, event)
+        else
+            log('nil handler')
+        end
+    end
 end
 
 local function on_event(event)
@@ -91,11 +91,11 @@ end
 --- Do not use this function, use Event.add instead as it has safety checks.
 function Public.add(event_name, handler)
     if event_name == defines.events.on_entity_damaged then
-        error("on_entity_damaged is managed outside of the event framework.")
+        error('on_entity_damaged is managed outside of the event framework.')
     end
     local handlers = event_handlers[event_name]
     if not handlers then
-        event_handlers[event_name] = {handler}
+        event_handlers[event_name] = { handler }
         script_on_event(event_name, on_event)
     else
         table.insert(handlers, handler)
@@ -109,7 +109,7 @@ end
 function Public.on_init(handler)
     local handlers = event_handlers[init_event_name]
     if not handlers then
-        event_handlers[init_event_name] = {handler}
+        event_handlers[init_event_name] = { handler }
         script.on_init(on_init)
     else
         table.insert(handlers, handler)
@@ -123,7 +123,7 @@ end
 function Public.on_load(handler)
     local handlers = event_handlers[load_event_name]
     if not handlers then
-        event_handlers[load_event_name] = {handler}
+        event_handlers[load_event_name] = { handler }
         script.on_load(on_load)
     else
         table.insert(handlers, handler)
@@ -137,7 +137,7 @@ end
 function Public.on_nth_tick(tick, handler)
     local handlers = on_nth_tick_event_handlers[tick]
     if not handlers then
-        on_nth_tick_event_handlers[tick] = {handler}
+        on_nth_tick_event_handlers[tick] = { handler }
         script_on_nth_tick(tick, on_nth_tick_event)
     else
         table.insert(handlers, handler)
