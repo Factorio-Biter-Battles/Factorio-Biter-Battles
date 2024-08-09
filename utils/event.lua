@@ -514,7 +514,7 @@ local function add_handlers()
             local func_string = func.func_string
             local handler = assert(load('return ' .. func_string))()
             func.handler = handler
-            core_on_nth_tick(tick, handler)
+            core_on_nth_tick(tick, handler, func.priority)
         end
     end
 
