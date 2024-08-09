@@ -25,29 +25,23 @@ local handlers_added = false -- set to true after the removable event handlers h
 
 ---@alias EventName defines.events | int
 
----@type { [EventName]: fun()[] }
+---@type { [EventName]: { handler: fun(), priority: number }[] }
 local event_handlers = EventCore.get_event_handlers()
 
----@type { [int]: fun()[] }
+---@type { [int]: { handler: fun(), priority: number }[] }
 local on_nth_tick_event_handlers = EventCore.get_on_nth_tick_event_handlers()
 
----@type { [EventName]: int[] }
+---@type { [EventName]: { token: int, priority: number }[] }
 local token_handlers = {}
 
----@type { [int]: int[] }
+---@type { [int]: { token: int, priority: number }[] }
 local token_nth_tick_handlers = {}
 
----@type { [string]: { event_name: EventName, handler: string }[] }
+---@type { [string]: { event_name: EventName, func_string: string, handler: fun(), priority: number }[] }
 local function_handlers = {}
----Do NOT register this table into the global module
----@type { [string]: { event_name: EventName, handler: fun() }[] }
-local function_table = {}
 
----@type { [string]: { tick: int, handler: string }[] }
+---@type { [string]: { tick: int, func_string: string, handler: fun(), priority: number }[] }
 local function_nth_tick_handlers = {}
----Do NOT register this table into the global module
----@type { [string]: { tick: int, handler: fun() }[] }
-local function_nth_tick_table = {}
 
 ---@type int
 local removable_function_uid = 0
@@ -69,14 +63,16 @@ Global.register(
     end
 )
 
-local function remove(tbl, handler)
+---@param tbl { handler: fun() }[] | { token: int }[]
+---@param v fun() | int
+local function remove(tbl, v)
     if tbl == nil then
         return
     end
 
-    -- the handler we are looking for is more likly to be at the back of the array.
+    -- the handler we are looking for is more likely to be at the back of the array.
     for i = #tbl, 1, -1 do
-        if tbl[i] == handler then
+        if tbl[i].handler == v or tbl[i].token == v then
             table_remove(tbl, i)
             break
         end
@@ -89,47 +85,51 @@ end
 ---For handlers that need to be removed or added at runtime use Event.add_removable.
 ---@param event_name EventName
 ---@param handler fun(event: EventData)
-function Event.add(event_name, handler)
+---@param priority number? -- Handlers with the hightest priority are always called first, can be negative. Defaults to 0.
+function Event.add(event_name, handler, priority)
     if _LIFECYCLE == 8 then -- Runtime
         error('Calling Event.add after on_init() or on_load() has run is a desync risk.', 2)
     end
 
-    core_add(event_name, handler)
+    core_add(event_name, handler, priority)
 end
 
 ---Register a handler for the on_init event, can only be used during control, init or load cycles.</br>
 ---Remember that for each player, on_init or on_load is run, never both. So if you can't add the handler in the
 ---control stage add the handler in both on_init and on_load.
 ---@param handler fun()
-function Event.on_init(handler)
+---@param priority number? -- Handlers with the hightest priority are always called first, can be negative. Defaults to 0.
+function Event.on_init(handler, priority)
     if _LIFECYCLE == 8 then -- Runtime
         error('Calling Event.on_init after on_init() or on_load() has run is a desync risk.', 2)
     end
 
-    core_on_init(handler)
+    core_on_init(handler, priority)
 end
 
 ---Register a handler for the on_load event, can only be used during control, init or load cycles.</br>
 ---Remember that for each player, on_init or on_load is run, never both. So if you can't add the handler in the
 ---control stage add the handler in both on_init and on_load.
 ---@param handler fun()
-function Event.on_load(handler)
+---@param priority number? -- Handlers with the hightest priority are always called first, can be negative. Defaults to 0.
+function Event.on_load(handler, priority)
     if _LIFECYCLE == 8 then -- Runtime
         error('Calling Event.on_load after on_init() or on_load() has run is a desync risk.', 2)
     end
 
-    core_on_load(handler)
+    core_on_load(handler, priority)
 end
 
 ---Register a handler for the on_nth_tick event, can only be used during control, init or load cycles.</br>
 ---@param tick int The handler will be called every nth tick
 ---@param handler fun(event: NthTickEventData)
-function Event.on_nth_tick(tick, handler)
+---@param priority number? -- Handlers with the hightest priority are always called first, can be negative. Defaults to 0.
+function Event.on_nth_tick(tick, handler, priority)
     if _LIFECYCLE == 8 then -- Runtime
         error('Calling Event.on_nth_tick after on_init() or on_load() has run is a desync risk.', 2)
     end
 
-    core_on_nth_tick(tick, handler)
+    core_on_nth_tick(tick, handler, priority)
 end
 
 ---For conditional event handlers. Event.add_removable can be safely called at runtime without desync risk.
@@ -162,7 +162,9 @@ end
 ---removing only the first occurrence is removed.
 ---@param event_name EventName
 ---@param token int
-function Event.add_removable(event_name, token)
+---@param priority number? -- Handlers with the hightest priority are always called first, can be negative. Defaults to 0.
+function Event.add_removable(event_name, token, priority)
+    if not priority then priority = 0 end
     if type(token) ~= 'number' then
         error('token must be a number', 2)
     end
@@ -172,14 +174,14 @@ function Event.add_removable(event_name, token)
 
     local tokens = token_handlers[event_name]
     if not tokens then
-        token_handlers[event_name] = {token}
+        token_handlers[event_name] = {{ token = token, priority = priority }}
     else
-        tokens[#tokens + 1] = token
+        tokens[#tokens + 1] = { token = token, priority = priority }
     end
 
     if handlers_added then
         local handler = Token.get(token)
-        core_add(event_name, handler)
+        core_add(event_name, handler, priority)
     end
 end
 
@@ -230,16 +232,18 @@ end
 ---@overload fun(event_name: EventName, func: string, name: string)
 ---@overload fun(event_name: EventName, func: string, remove_event_name: EventName)
 ---@param event_name EventName
----@param func string
+---@param func_string string
 ---@param remove_token string | EventName
-function Event.add_removable_function(event_name, func, remove_token)
+---@param priority number? -- Handlers with the hightest priority are always called first, can be negative. Defaults to 0.
+function Event.add_removable_function(event_name, func_string, remove_token, priority)
     if _LIFECYCLE == stage_load then
         error('cannot call during on_load', 2)
     end
 
-    if not event_name or not func or not remove_token then
+    if not event_name or not func_string or not remove_token then
         return
     end
+    if not priority then priority = 0 end
 
     local name = remove_token
     if type(remove_token) ~= "string" then
@@ -255,10 +259,11 @@ function Event.add_removable_function(event_name, func, remove_token)
         "end",
         name)
     end
+    ---@cast name string
 
-    local f = assert(load('return ' .. func))()
+    local handler = assert(load('return ' .. func_string))()
 
-    if type(f) ~= 'function' then
+    if type(handler) ~= 'function' then
         error('func must be a function contained in a string.', 2)
     end
 
@@ -268,18 +273,10 @@ function Event.add_removable_function(event_name, func, remove_token)
         funcs = function_handlers[name]
     end
 
-    funcs[#funcs + 1] = {event_name = event_name, handler = func}
-
-    local func_table = function_table[name]
-    if not func_table then
-        function_table[name] = {}
-        func_table = function_table[name]
-    end
-
-    func_table[#func_table + 1] = {event_name = event_name, handler = f}
+    funcs[#funcs + 1] = { event_name = event_name, func_string = func_string, handler = handler, priority = priority }
 
     if handlers_added then
-        core_add(event_name, f)
+        core_add(event_name, handler, priority)
     end
 end
 
@@ -304,12 +301,11 @@ function Event.remove_removable_function(event_name, name)
 
     local handlers = event_handlers[event_name]
 
-    for k, v in pairs(function_table[name]) do
+    for k, v in pairs(function_handlers[name]) do
         local n = v.event_name
         if n == event_name then
-            local f = v.handler
             function_handlers[name][k] = nil
-            remove(handlers, f)
+            remove(handlers, v.handler)
         end
     end
 
@@ -325,7 +321,9 @@ end
 ---See Event.add_removable comments
 ---@param tick int
 ---@param token int
-function Event.add_removable_nth_tick(tick, token)
+---@param priority number? -- Handlers with the hightest priority are always called first, can be negative. Defaults to 0.
+function Event.add_removable_nth_tick(tick, token, priority)
+    if not priority then priority = 0 end
     if _LIFECYCLE == stage_load then
         error('cannot call during on_load', 2)
     end
@@ -335,14 +333,14 @@ function Event.add_removable_nth_tick(tick, token)
 
     local tokens = token_nth_tick_handlers[tick]
     if not tokens then
-        token_nth_tick_handlers[tick] = {token}
+        token_nth_tick_handlers[tick] = {{ token = token, priority = priority }}
     else
-        tokens[#tokens + 1] = token
+        tokens[#tokens + 1] = { token = token, priority = priority }
     end
 
     if handlers_added then
         local handler = Token.get(token)
-        core_on_nth_tick(tick, handler)
+        core_on_nth_tick(tick, handler, priority)
     end
 end
 
@@ -371,19 +369,21 @@ function Event.remove_removable_nth_tick(tick, token)
 end
 
 ---see Event.add_removable_function comment.
----@overload fun(event_name: EventName, func: string, name: string)
----@overload fun(event_name: EventName, func: string, remove_event_name: EventName)
----@param tick EventName
----@param func string
+---@overload fun(tick: int, func: string, name: string)
+---@overload fun(tick: int, func: string, remove_event_name: EventName)
+---@param tick int
+---@param func_string string
 ---@param remove_token string | EventName
-function Event.add_removable_nth_tick_function(tick, func, remove_token)
+---@param priority number? -- Handlers with the hightest priority are always called first, can be negative. Defaults to 0.
+function Event.add_removable_nth_tick_function(tick, func_string, remove_token, priority)
     if _LIFECYCLE == stage_load then
         error('cannot call during on_load', 2)
     end
 
-    if not tick or not func or not remove_token then
+    if not tick or not func_string or not remove_token then
         return
     end
+    if not priority then priority = 0 end
 
     local name = remove_token
     if type(remove_token) ~= "string" then
@@ -399,10 +399,11 @@ function Event.add_removable_nth_tick_function(tick, func, remove_token)
         "end",
         name)
     end
+    ---@cast name string
 
-    local f = assert(load('return ' .. func))()
+    local handler = assert(load('return ' .. func_string))()
 
-    if type(f) ~= 'function' then
+    if type(handler) ~= 'function' then
         error('func must be a function contained in a string.', 2)
     end
 
@@ -412,18 +413,10 @@ function Event.add_removable_nth_tick_function(tick, func, remove_token)
         funcs = function_nth_tick_handlers[name]
     end
 
-    funcs[#funcs + 1] = {tick = tick, handler = func}
-
-    local func_table = function_nth_tick_table[name]
-    if not func_table then
-        function_nth_tick_table[name] = {}
-        func_table = function_nth_tick_table[name]
-    end
-
-    func_table[#func_table + 1] = {tick = tick, handler = f}
+    funcs[#funcs + 1] = { tick = tick, func_string = func_string, handler = handler, priority = priority }
 
     if handlers_added then
-        core_on_nth_tick(tick, f)
+        core_on_nth_tick(tick, handler, priority)
     end
 end
 
@@ -446,21 +439,12 @@ function Event.remove_removable_nth_tick_function(tick, name)
     end
 
     local handlers = on_nth_tick_event_handlers[tick]
-    local f = function_nth_tick_table[name]
-
-    for k, v in pairs(function_nth_tick_table[name]) do
-        local t = v.tick
-        if t == tick then
-            f = v.handler
-        end
-    end
-
-    remove(handlers, f)
 
     for k, v in pairs(function_nth_tick_handlers[name]) do
         local t = v.tick
         if t == tick then
             function_nth_tick_handlers[name][k] = nil
+            remove(handlers, v.handler)
         end
     end
 
@@ -502,46 +486,34 @@ end
 local function add_handlers()
     for event_name, tokens in pairs(token_handlers) do
         for i = 1, #tokens do
-            local handler = Token.get(tokens[i])
-            core_add(event_name, handler)
+            local handler = Token.get(tokens[i].token)
+            core_add(event_name, handler, tokens[i].priority)
         end
     end
 
     for name, funcs in pairs(function_handlers) do
         for i, func in pairs(funcs) do
             local e_name = func.event_name
-            local func_string = func.handler
+            local func_string = func.func_string
             local handler = assert(load('return ' .. func_string))()
-            local func_handler = function_table[name]
-            if not func_handler then
-                function_table[name] = {}
-                func_handler = function_table[name]
-            end
-
-            func_handler[#func_handler + 1] = {event_name = e_name, handler = handler}
-            core_add(e_name, handler)
+            func.handler = handler
+            core_add(e_name, handler, func.priority)
         end
     end
 
     for tick, tokens in pairs(token_nth_tick_handlers) do
         for i = 1, #tokens do
-            local handler = Token.get(tokens[i])
-            core_on_nth_tick(tick, handler)
+            local handler = Token.get(tokens[i].token)
+            core_on_nth_tick(tick, handler, tokens[i].priority)
         end
     end
 
     for name, funcs in pairs(function_nth_tick_handlers) do
         for i, func in pairs(funcs) do
             local tick = func.tick
-            local func_string = func.handler
+            local func_string = func.func_string
             local handler = assert(load('return ' .. func_string))()
-            local func_handler = function_nth_tick_table[name]
-            if not func_handler then
-                function_nth_tick_table[name] = {}
-                func_handler = function_nth_tick_table[name]
-            end
-
-            func_handler[#func_handler + 1] = {tick = tick, handler = handler}
+            func.handler = handler
             core_on_nth_tick(tick, handler)
         end
     end
