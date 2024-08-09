@@ -43,8 +43,7 @@ local function call_handlers(handlers, event)
 	for i = 1, #handlers_copy do
 		local handler = handlers_copy[i]
 		if handler ~= nil then
-            handler.handler(event)
-			--xpcall(handler.handler, errorHandler, event)
+			xpcall(handler.handler, errorHandler, event)
 		else
 			log('nil handler')
 		end
