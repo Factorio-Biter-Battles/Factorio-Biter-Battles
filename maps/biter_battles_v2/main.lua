@@ -293,7 +293,8 @@ local function on_console_command(event)
 		local to_player = game.get_player(to_player_name)
 		if to_player then
 			do_ping(player.name, to_player, player.name .. " (whisper): " .. rest_of_message)
-			global.reply_target[to_player_name] = player.name
+			-- to_player_name is case insensitive, so use to_player.name instead
+			global.reply_target[to_player.name] = player.name
 		end
 	elseif cmd == "r" or cmd == "reply" then
 		local to_player_name = global.reply_target[player.name]
