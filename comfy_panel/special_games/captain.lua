@@ -1679,7 +1679,8 @@ function Public.draw_captain_player_gui(player, main_frame)
     local special = global.special_games_variables.captain_mode
 
     do -- Title
-        local title = main_frame.add({ type = 'flow', direction = 'horizontal' })
+        local title_wrap = main_frame.add({ name = 'title_flow', type = 'flow', direction = 'vertical' })
+        local title = title_wrap.add({ name = 'inner_flow', type = 'flow', direction = 'horizontal' })
         gui_style(title, {
             horizontally_stretchable = true,
             vertically_stretchable = true,
@@ -1699,7 +1700,7 @@ function Public.draw_captain_player_gui(player, main_frame)
 
         Gui.add_pusher(title)
 
-        label = title.add({ type = 'label', caption = 'A CAPTAINS GAME WILL START SOON!' })
+        label = title.add({ name = 'title', type = 'label', caption = 'A CAPTAINS GAME WILL START SOON!' })
         gui_style(label, { font = 'heading-2' })
 
         Gui.add_pusher(title)
@@ -1713,9 +1714,8 @@ function Public.draw_captain_player_gui(player, main_frame)
         gui_style(button, { size = 40 })
 
         Gui.add_pusher(title)
+        title_wrap.add({ type = 'line' })
     end
-
-    main_frame.add({ type = 'line' })
 
     do -- Preparation flow
         local prepa_flow = main_frame.add({ type = 'flow', name = 'prepa_flow', direction = 'vertical' })
@@ -1743,9 +1743,8 @@ function Public.draw_captain_player_gui(player, main_frame)
             caption = 'remaining_players_list',
         })
         gui_style(label, { single_line = false })
+        prepa_flow.add({ type = 'line' })
     end
-
-    main_frame.add({ type = 'line' })
 
     do -- Status
         label = main_frame.add({
@@ -2216,6 +2215,11 @@ function Public.update_captain_player_gui(player, frame)
     local special = global.special_games_variables.captain_mode
     local waiting_to_be_picked = table_contains(special.listPlayers, player.name)
 
+    do -- title flow
+        if not special.prepaPhase then
+            frame.title_flow.inner_flow.title.caption = 'A CAPTAINS GAME IS CURRENTLY ACTIVE!'
+        end
+    end
     do -- Preparation flow
         local prepa_flow = frame.prepa_flow
         if special.prepaPhase then
