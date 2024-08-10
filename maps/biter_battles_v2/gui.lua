@@ -202,11 +202,12 @@ local function get_threat_tooltip(force, verbose)
     if verbose then
         prefix = style.bold('Threat') .. ' - ' .. gui_values[force].t2 .. '\n'
     end
+    local threat_income = global.bb_threat_income[force .. '_biters'] * 60
+    -- technically we could also include the threat-income-from-passive-feed here, but it is
+    -- generally much much lower than bb_threat_income's contribution
     return prefix
         .. style.listbox('Passive feed:')
-        .. style.yellow(
-            style.stat(' +' .. math_ceil(automation_feed * global.evo_raise_counter * (global.threat_multiplier or 1)))
-        )
+        .. style.yellow(style.stat(' +' .. math_ceil(threat_income)))
         .. style.listbox(' threat/min')
 end
 
