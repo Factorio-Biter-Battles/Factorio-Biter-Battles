@@ -5,9 +5,9 @@
 ---To create custom events, use script.generate_event_name and use its return value as an event name.
 ---To raise that event, use script.raise_event
 
-local EventCore = require 'utils.event_core'
-local Global = require 'utils.global'
-local Token = require 'utils.token'
+local EventCore = require('utils.event_core')
+local Global = require('utils.global')
+local Token = require('utils.token')
 
 local table_remove = table.remove
 local core_add = EventCore.add
@@ -52,22 +52,19 @@ local function_nth_tick_table = {}
 ---@type int
 local removable_function_uid = 0
 
-Global.register(
-    {
-        token_handlers = token_handlers,
-        token_nth_tick_handlers = token_nth_tick_handlers,
-        function_handlers = function_handlers,
-        function_nth_tick_handlers = function_nth_tick_handlers,
-        removable_function_uid = removable_function_uid
-    },
-    function(tbl)
-        token_handlers = tbl.token_handlers
-        token_nth_tick_handlers = tbl.token_nth_tick_handlers
-        function_handlers = tbl.function_handlers
-        function_nth_tick_handlers = tbl.function_nth_tick_handlers
-        removable_function_uid = tbl.removable_function_uid
-    end
-)
+Global.register({
+    token_handlers = token_handlers,
+    token_nth_tick_handlers = token_nth_tick_handlers,
+    function_handlers = function_handlers,
+    function_nth_tick_handlers = function_nth_tick_handlers,
+    removable_function_uid = removable_function_uid,
+}, function(tbl)
+    token_handlers = tbl.token_handlers
+    token_nth_tick_handlers = tbl.token_nth_tick_handlers
+    function_handlers = tbl.function_handlers
+    function_nth_tick_handlers = tbl.function_nth_tick_handlers
+    removable_function_uid = tbl.removable_function_uid
+end)
 
 local function remove(tbl, handler)
     if tbl == nil then
@@ -82,7 +79,6 @@ local function remove(tbl, handler)
         end
     end
 end
-
 
 ---Register a handler for the event_name event, can only be used during control, init or load cycles.</br>
 ---Handlers added with Event.add cannot be removed.</br>
@@ -172,7 +168,7 @@ function Event.add_removable(event_name, token)
 
     local tokens = token_handlers[event_name]
     if not tokens then
-        token_handlers[event_name] = {token}
+        token_handlers[event_name] = { token }
     else
         tokens[#tokens + 1] = token
     end
@@ -208,7 +204,6 @@ function Event.remove_removable(event_name, token)
     end
 end
 
-
 ---Only use this function if you can't use Event.add_removable. i.e you are registering the handler at the console.
 ---Register a handler that can be safely added and removed at runtime, cannot be used during on_load.
 -- The same restrictions that apply to Event.add_removable also apply to Event.add_removable_function.
@@ -242,18 +237,28 @@ function Event.add_removable_function(event_name, func, remove_token)
     end
 
     local name = remove_token
-    if type(remove_token) ~= "string" then
+    if type(remove_token) ~= 'string' then
         local remove_event_name = remove_token
         removable_function_uid = removable_function_uid + 1
         name = tostring(removable_function_uid)
 
-        Event.add_removable_function(remove_event_name,
-        "function()" ..
-            "local Event = require(\"utils.event\")" ..
-            "Event.remove_removable_function(" .. event_name .. ", \"" .. name .. "\")" ..
-            "Event.remove_removable_function(" .. remove_event_name .. ", \"" .. name .. "\")" ..
-        "end",
-        name)
+        Event.add_removable_function(
+            remove_event_name,
+            'function()'
+                .. 'local Event = require("utils.event")'
+                .. 'Event.remove_removable_function('
+                .. event_name
+                .. ', "'
+                .. name
+                .. '")'
+                .. 'Event.remove_removable_function('
+                .. remove_event_name
+                .. ', "'
+                .. name
+                .. '")'
+                .. 'end',
+            name
+        )
     end
 
     local f = assert(load('return ' .. func))()
@@ -268,7 +273,7 @@ function Event.add_removable_function(event_name, func, remove_token)
         funcs = function_handlers[name]
     end
 
-    funcs[#funcs + 1] = {event_name = event_name, handler = func}
+    funcs[#funcs + 1] = { event_name = event_name, handler = func }
 
     local func_table = function_table[name]
     if not func_table then
@@ -276,7 +281,7 @@ function Event.add_removable_function(event_name, func, remove_token)
         func_table = function_table[name]
     end
 
-    func_table[#func_table + 1] = {event_name = event_name, handler = f}
+    func_table[#func_table + 1] = { event_name = event_name, handler = f }
 
     if handlers_added then
         core_add(event_name, f)
@@ -335,7 +340,7 @@ function Event.add_removable_nth_tick(tick, token)
 
     local tokens = token_nth_tick_handlers[tick]
     if not tokens then
-        token_nth_tick_handlers[tick] = {token}
+        token_nth_tick_handlers[tick] = { token }
     else
         tokens[#tokens + 1] = token
     end
@@ -386,18 +391,28 @@ function Event.add_removable_nth_tick_function(tick, func, remove_token)
     end
 
     local name = remove_token
-    if type(remove_token) ~= "string" then
+    if type(remove_token) ~= 'string' then
         local remove_event_name = remove_token
         removable_function_uid = removable_function_uid + 1
         name = tostring(removable_function_uid)
 
-        Event.add_removable_function(remove_event_name,
-        "function()" ..
-            "local Event = require(\"utils.event\")" ..
-            "Event.remove_removable_nth_tick_function(" .. tick .. ", \"" .. name .. "\")" ..
-            "Event.remove_removable_function(" .. remove_event_name .. ", \"" .. name .. "\")" ..
-        "end",
-        name)
+        Event.add_removable_function(
+            remove_event_name,
+            'function()'
+                .. 'local Event = require("utils.event")'
+                .. 'Event.remove_removable_nth_tick_function('
+                .. tick
+                .. ', "'
+                .. name
+                .. '")'
+                .. 'Event.remove_removable_function('
+                .. remove_event_name
+                .. ', "'
+                .. name
+                .. '")'
+                .. 'end',
+            name
+        )
     end
 
     local f = assert(load('return ' .. func))()
@@ -412,7 +427,7 @@ function Event.add_removable_nth_tick_function(tick, func, remove_token)
         funcs = function_nth_tick_handlers[name]
     end
 
-    funcs[#funcs + 1] = {tick = tick, handler = func}
+    funcs[#funcs + 1] = { tick = tick, handler = func }
 
     local func_table = function_nth_tick_table[name]
     if not func_table then
@@ -420,7 +435,7 @@ function Event.add_removable_nth_tick_function(tick, func, remove_token)
         func_table = function_nth_tick_table[name]
     end
 
-    func_table[#func_table + 1] = {tick = tick, handler = f}
+    func_table[#func_table + 1] = { tick = tick, handler = f }
 
     if handlers_added then
         core_on_nth_tick(tick, f)
@@ -491,7 +506,7 @@ function Event.add_event_filter(event, filter)
     local current_filters = script.get_event_filter(event)
 
     if not current_filters then
-        current_filters = {filter}
+        current_filters = { filter }
     else
         table.insert(current_filters, filter)
     end
@@ -518,7 +533,7 @@ local function add_handlers()
                 func_handler = function_table[name]
             end
 
-            func_handler[#func_handler + 1] = {event_name = e_name, handler = handler}
+            func_handler[#func_handler + 1] = { event_name = e_name, handler = handler }
             core_add(e_name, handler)
         end
     end
@@ -541,7 +556,7 @@ local function add_handlers()
                 func_handler = function_nth_tick_table[name]
             end
 
-            func_handler[#func_handler + 1] = {tick = tick, handler = handler}
+            func_handler[#func_handler + 1] = { tick = tick, handler = handler }
             core_on_nth_tick(tick, handler)
         end
     end

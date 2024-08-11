@@ -1,6 +1,6 @@
-local Global = require 'utils.global'
-local Color = require 'utils.color_presets'
-local Event = require 'utils.event'
+local Global = require('utils.global')
+local Color = require('utils.color_presets')
+local Event = require('utils.event')
 
 local this = {
     data = {},
@@ -8,17 +8,14 @@ local this = {
 }
 local Public = {}
 
-Global.register(
-    this,
-    function(tbl)
-        this = tbl
-    end
-)
+Global.register(this, function(tbl)
+    this = tbl
+end)
 
 local space = {
     minimal_height = 10,
     top_padding = 0,
-    bottom_padding = 0
+    bottom_padding = 0,
 }
 
 local function get_player_data(player, remove)
@@ -39,7 +36,7 @@ local function addStyle(guiIn, styleIn)
 end
 
 local function adjustSpace(guiIn)
-    addStyle(guiIn.add {type = 'line', direction = 'horizontal'}, space)
+    addStyle(guiIn.add({ type = 'line', direction = 'horizontal' }), space)
 end
 
 local function validate_object(obj)
@@ -102,7 +99,6 @@ local function validate_player(player)
     return true
 end
 
-
 local function stop_watching_all(player_index)
     for _, watchers in pairs(this.tracking) do
         watchers[player_index] = nil
@@ -148,7 +144,7 @@ end
 local function redraw_inventory(gui, source, target, caption, panel_type)
     gui.clear()
 
-    local items_table = gui.add({type = 'table', column_count = 11})
+    local items_table = gui.add({ type = 'table', column_count = 11 })
     local types = game.item_prototypes
 
     local screen = source.gui.screen
@@ -162,37 +158,31 @@ local function redraw_inventory(gui, source, target, caption, panel_type)
     inventory_gui.caption = 'Inventory of ' .. target.name
 
     for name, opts in pairs(panel_type) do
-        local flow = items_table.add({type = 'flow'})
+        local flow = items_table.add({ type = 'flow' })
         flow.style.vertical_align = 'bottom'
 
-        local button =
-            flow.add(
-            {
-                type = 'sprite-button',
-                sprite = 'item/' .. name,
-                number = opts,
-                name = name,
-                tooltip = types[name].localised_name,
-                style = 'slot_button'
-            }
-        )
+        local button = flow.add({
+            type = 'sprite-button',
+            sprite = 'item/' .. name,
+            number = opts,
+            name = name,
+            tooltip = types[name].localised_name,
+            style = 'slot_button',
+        })
         button.enabled = false
 
         if caption == 'Armor' then
             if target.get_inventory(5)[1].grid then
                 local p_armor = target.get_inventory(5)[1].grid.get_contents()
                 for k, v in pairs(p_armor) do
-                    local armor_gui =
-                        flow.add(
-                        {
-                            type = 'sprite-button',
-                            sprite = 'item/' .. k,
-                            number = v,
-                            name = k,
-                            tooltip = types[name].localised_name,
-                            style = 'slot_button'
-                        }
-                    )
+                    local armor_gui = flow.add({
+                        type = 'sprite-button',
+                        sprite = 'item/' .. k,
+                        number = v,
+                        name = k,
+                        tooltip = types[name].localised_name,
+                        style = 'slot_button',
+                    })
                     armor_gui.enabled = false
                 end
             end
@@ -203,15 +193,14 @@ end
 local function add_inventory(panel, source, target, caption, panel_type)
     local data = get_player_data(source)
     data.panel_type = data.panel_type or {}
-    local pane_name = panel.add({type = 'tab', caption = caption, name = caption})
-    local scroll_pane =
-        panel.add {
+    local pane_name = panel.add({ type = 'tab', caption = caption, name = caption })
+    local scroll_pane = panel.add({
         type = 'scroll-pane',
         name = caption .. 'tab',
         direction = 'vertical',
         vertical_scroll_policy = 'always',
-        horizontal_scroll_policy = 'never'
-    }
+        horizontal_scroll_policy = 'never',
+    })
     scroll_pane.style.maximal_height = 200
     scroll_pane.style.horizontally_stretchable = true
     scroll_pane.style.minimal_height = 200
@@ -243,15 +232,12 @@ local function open_inventory(source, target)
         close_player_inventory(source)
     end
 
-    local frame =
-        screen.add(
-        {
-            type = 'frame',
-            caption = 'Inventory',
-            direction = 'vertical',
-            name = 'inventory_gui'
-        }
-    )
+    local frame = screen.add({
+        type = 'frame',
+        caption = 'Inventory',
+        direction = 'vertical',
+        name = 'inventory_gui',
+    })
 
     if not validate_object(frame) then
         return
@@ -264,12 +250,14 @@ local function open_inventory(source, target)
 
     adjustSpace(frame)
 
-    local panel = frame.add({type = 'tabbed-pane', name = 'tabbed_pane'})
+    local panel = frame.add({ type = 'tabbed-pane', name = 'tabbed_pane' })
     panel.selected_tab_index = 1
 
     local data = get_player_data(source)
 
-    if not this.tracking[target.index] then this.tracking[target.index] = {} end
+    if not this.tracking[target.index] then
+        this.tracking[target.index] = {}
+    end
     this.tracking[target.index][source.index] = true
 
     data.player_opened = target
@@ -286,7 +274,7 @@ local function open_inventory(source, target)
         ['Armor'] = armor,
         ['Guns'] = guns,
         ['Ammo'] = ammo,
-        ['Trash'] = trash
+        ['Trash'] = trash,
     }
 
     for k, v in pairs(types) do
@@ -297,7 +285,6 @@ local function open_inventory(source, target)
 end
 
 local function on_gui_click(event)
-
     local element = event.element
 
     if not element or not element.valid then
@@ -309,7 +296,7 @@ local function on_gui_click(event)
         ['Armor'] = true,
         ['Guns'] = true,
         ['Ammo'] = true,
-        ['Trash'] = true
+        ['Trash'] = true,
     }
 
     local name = element.name
@@ -344,7 +331,7 @@ local function on_gui_click(event)
             end,
             ['Trash'] = function()
                 return target.get_inventory(defines.inventory.character_trash).get_contents()
-            end
+            end,
         }
 
         local frame = Public.get_active_frame(player)
@@ -354,7 +341,6 @@ local function on_gui_click(event)
     end
 end
 local function gui_closed(event)
-
     local type = event.gui_type
 
     if type == defines.gui_type.custom then
@@ -382,7 +368,9 @@ local function close_watchers(player)
     for watcher_idx, _ in pairs(watchers) do
         local watcher = game.get_player(watcher_idx)
 
-        if not validate_object(watcher) then goto continue end
+        if not validate_object(watcher) then
+            goto continue
+        end
 
         close_player_inventory(watcher)
 
@@ -397,7 +385,7 @@ local function update_gui(event)
     if watchers == nil then
         return
     end
-    
+
     if table_size(watchers) <= 0 then
         this.tracking[event.player_index] = nil
         return
@@ -425,7 +413,7 @@ local function update_gui(event)
         end,
         ['Trash'] = function()
             return target.get_inventory(defines.inventory.character_trash).get_contents()
-        end
+        end,
     }
 
     local cache = {}
@@ -451,7 +439,6 @@ local function update_gui(event)
 
         local success, tab = last_tab(watcher)
         if success then
-
             local frame = Public.get_active_frame(watcher)
             local panel_type = cache_get(tab)
             if frame and frame.name == tab .. 'tab' then
@@ -462,44 +449,38 @@ local function update_gui(event)
     end
 end
 
-commands.add_command(
-    'inventory',
-    'Opens a players inventory!',
-    function(cmd)
-        local player = game.player
+commands.add_command('inventory', 'Opens a players inventory!', function(cmd)
+    local player = game.player
 
-        if validate_player(player) then
-            if not cmd.parameter then
-                return
-            end
-            local target_player = game.get_player(cmd.parameter)
-
-            local valid, opened = player_opened(player)
-            if valid then
-                if target_player == opened then
-                    return player.print('You are already viewing this players inventory.', Color.warning)
-                end
-            end
-
-            if validate_player(target_player) then
-                Sounds.notify_player(player, "utility/smart_pipette")
-                open_inventory(player, target_player)
-            else
-                player.print('Please type a name of a player who is connected.', Color.warning)
-            end
-        else
+    if validate_player(player) then
+        if not cmd.parameter then
             return
         end
+        local target_player = game.get_player(cmd.parameter)
+
+        local valid, opened = player_opened(player)
+        if valid then
+            if target_player == opened then
+                return player.print('You are already viewing this players inventory.', Color.warning)
+            end
+        end
+
+        if validate_player(target_player) then
+            Sounds.notify_player(player, 'utility/smart_pipette')
+            open_inventory(player, target_player)
+        else
+            player.print('Please type a name of a player who is connected.', Color.warning)
+        end
+    else
+        return
     end
-)
+end)
 
 function Public.get_active_frame(player)
     if not player.gui.screen.inventory_gui then
         return false
     end
-    return player.gui.screen.inventory_gui.tabbed_pane.tabs[
-        player.gui.screen.inventory_gui.tabbed_pane.selected_tab_index
-    ].content
+    return player.gui.screen.inventory_gui.tabbed_pane.tabs[player.gui.screen.inventory_gui.tabbed_pane.selected_tab_index].content
 end
 
 function Public.get(key)

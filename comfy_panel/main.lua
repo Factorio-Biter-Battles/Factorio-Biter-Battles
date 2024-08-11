@@ -9,11 +9,11 @@ if admin = true, then tab is visible only for admins (usable for map-specific se
 draw_map_scores would be a function with the player and the frame as arguments
 
 ]]
-require "utils.profiler"
-local event = require 'utils.event'
-local Gui = require 'utils.gui'
-local gui_style = require 'utils.utils'.gui_style
-local closable_frame = require "utils.ui.closable_frame"
+require('utils.profiler')
+local event = require('utils.event')
+local Gui = require('utils.gui')
+local gui_style = require('utils.utils').gui_style
+local closable_frame = require('utils.ui.closable_frame')
 comfy_panel_tabs = {}
 
 local Public = {}
@@ -62,7 +62,7 @@ function Public.comfy_panel_add_top_element(player)
         type = 'sprite-button',
         name = 'comfy_panel_top_button',
         sprite = 'utility/favourite_server_icon',
-        tooltip = {'gui.comfy_panel_top_button'}
+        tooltip = { 'gui.comfy_panel_top_button' },
     })
 end
 
@@ -73,13 +73,13 @@ local gui_toggle_blacklist = {
     ['main_toggle_button_name'] = true,
 }
 
-Gui.on_click('main_toggle_button_name', function (event)
+Gui.on_click('main_toggle_button_name', function(event)
     local button = event.element
     local player = event.player
     local mod_gui_inner_frame = Gui.get_top_element(player, 'main_toggle_button_name').parent
 
     local default = button.sprite == 'utility/preset'
-    button.sprite = default and 'utility/expand_dots_white' or 'utility/preset' 
+    button.sprite = default and 'utility/expand_dots_white' or 'utility/preset'
     button.tooltip = default and 'Click to show top buttons!' or 'Click to hide top buttons!'
 
     for _, ele in pairs(mod_gui_inner_frame.children) do
@@ -87,7 +87,7 @@ Gui.on_click('main_toggle_button_name', function (event)
             ele.visible = not default
         end
     end
-    for _, position in pairs({'screen', 'left', 'center'}) do
+    for _, position in pairs({ 'screen', 'left', 'center' }) do
         for _, ele in pairs(player.gui[position].children) do
             if ele and ele.valid and ele.name ~= 'bb_floating_shortcuts' then
                 ele.visible = not default
@@ -99,24 +99,24 @@ end)
 local function main_frame(player)
     local tabs = comfy_panel_tabs
 
-    local frame_ = closable_frame.create_main_closable_frame(player, 'comfy_panel', {'gui.comfy_panel_top_button'})
-    local frame = frame_.add({type = 'frame', name = 'comfy_panel_inside', style = 'inside_deep_frame_for_tabs'})
+    local frame_ = closable_frame.create_main_closable_frame(player, 'comfy_panel', { 'gui.comfy_panel_top_button' })
+    local frame = frame_.add({ type = 'frame', name = 'comfy_panel_inside', style = 'inside_deep_frame_for_tabs' })
 
-    local tabbed_pane = frame.add({type = 'tabbed-pane', name = 'tabbed_pane'})
+    local tabbed_pane = frame.add({ type = 'tabbed-pane', name = 'tabbed_pane' })
 
     for name, func in pairs(tabs) do
         if func.admin == true then
             if player.admin then
-                local tab = tabbed_pane.add({type = 'tab', caption = name})
-                local flow = tabbed_pane.add({type = 'flow', name = name, direction = 'vertical'})
+                local tab = tabbed_pane.add({ type = 'tab', caption = name })
+                local flow = tabbed_pane.add({ type = 'flow', name = name, direction = 'vertical' })
                 flow.style.horizontally_stretchable = true
                 flow.style.width = 863
                 flow.style.height = 480
                 tabbed_pane.add_tab(tab, flow)
             end
         else
-            local tab = tabbed_pane.add({type = 'tab', caption = name})
-            local flow = tabbed_pane.add({type = 'flow', name = name, direction = 'vertical'})
+            local tab = tabbed_pane.add({ type = 'tab', caption = name })
+            local flow = tabbed_pane.add({ type = 'flow', name = name, direction = 'vertical' })
             flow.style.horizontally_stretchable = true
             flow.style.width = 863
             flow.style.height = 480
@@ -151,7 +151,6 @@ local function on_gui_click(event)
             return
         end
     end
-
 
     if not event.element.caption then
         return

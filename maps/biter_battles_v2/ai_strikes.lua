@@ -1,7 +1,7 @@
 local Public = {}
 
-local bb_config = require "maps.biter_battles_v2.config"
-local Color = require 'utils.color_presets'
+local bb_config = require('maps.biter_battles_v2.config')
+local Color = require('utils.color_presets')
 
 local math_random = math.random
 local math_sqrt = math.sqrt
@@ -48,7 +48,7 @@ local function calculate_tangent_line(r, d)
     return {
         a = t / d,
         b = d - r2 / d,
-        c = -t
+        c = -t,
     }
 end
 
@@ -60,7 +60,13 @@ local function normalize_angle(angle)
     return angle
 end
 
-local function calculate_strike_range(source_target_dx, source_target_dy, source_target_distance, inner_radius, outer_radius)
+local function calculate_strike_range(
+    source_target_dx,
+    source_target_dy,
+    source_target_distance,
+    inner_radius,
+    outer_radius
+)
     local theta = math_atan2(source_target_dy, source_target_dx)
     local t = calculate_tangent_line(inner_radius, source_target_distance)
     local intersections = calculate_secant_intersections(outer_radius, t.a, t.b, t.c)
@@ -101,7 +107,13 @@ local function select_strike_position(source_position, target_position, boundary
         }
     end
     local strike_distance = math_random(min_strike_distance, math_min(source_target_distance, max_strike_distance))
-    local strike_angle_range = calculate_strike_range(source_target_dx, source_target_dy, source_target_distance, strike_target_clearance, strike_distance)
+    local strike_angle_range = calculate_strike_range(
+        source_target_dx,
+        source_target_dy,
+        source_target_distance,
+        strike_target_clearance,
+        strike_distance
+    )
     if boundary_offset > target_position.y - strike_distance then
         local boundary_angle_range = calculate_boundary_range(boundary_offset, target_position, strike_distance)
         strike_angle_range.start = math_max(strike_angle_range.start, boundary_angle_range.start)
@@ -109,7 +121,8 @@ local function select_strike_position(source_position, target_position, boundary
     end
     local strike_angle_magnitude = strike_angle_range.finish - strike_angle_range.start
     local strike_zone_arc_length = math_floor(strike_distance * strike_angle_magnitude)
-    local random_angle_offset = (math_random(0, strike_zone_arc_length) / strike_zone_arc_length) * strike_angle_magnitude
+    local random_angle_offset = (math_random(0, strike_zone_arc_length) / strike_zone_arc_length)
+        * strike_angle_magnitude
     local strike_angle = strike_angle_range.start + random_angle_offset
     local dx = strike_distance * math_cos(strike_angle)
     local dy = strike_distance * math_sin(strike_angle)
@@ -124,7 +137,7 @@ local function move(unit_group, position)
         type = defines.command.go_to_location,
         destination = position,
         radius = 32,
-        distraction = defines.distraction.by_enemy
+        distraction = defines.distraction.by_enemy,
     })
 end
 
@@ -133,7 +146,7 @@ local function attack(unit_group, position)
         type = defines.command.attack_area,
         destination = position,
         radius = 32,
-        distraction = defines.distraction.by_enemy
+        distraction = defines.distraction.by_enemy,
     })
 end
 
@@ -142,7 +155,7 @@ local function assassinate(strike, target)
     strike.unit_group.set_command({
         type = defines.command.attack,
         target = target,
-        distraction = defines.distraction.by_damage
+        distraction = defines.distraction.by_damage,
     })
 end
 
@@ -151,11 +164,12 @@ function Public.calculate_strike_position(unit_group, target_position)
     local normalized_source_position = { x = source_position.x, y = math_abs(source_position.y) }
     local normalized_target_position = { x = target_position.x, y = math_abs(target_position.y) }
     local boundary_offset = bb_config.border_river_width / 2
-    local nominal_strike_position = select_strike_position(normalized_source_position, normalized_target_position, boundary_offset)
+    local nominal_strike_position =
+        select_strike_position(normalized_source_position, normalized_target_position, boundary_offset)
     if source_position.y < 0 then
         nominal_strike_position.y = -nominal_strike_position.y
     end
-    return unit_group.surface.find_non_colliding_position("stone-furnace", nominal_strike_position, 96, 1);
+    return unit_group.surface.find_non_colliding_position('stone-furnace', nominal_strike_position, 96, 1)
 end
 
 function Public.initiate(unit_group, target_force_name, strike_position, target_position)
@@ -175,7 +189,9 @@ function Public.initiate(unit_group, target_force_name, strike_position, target_
 end
 
 function Public.step(group_number, result)
-    if global.bb_game_won_by_team then return end
+    if global.bb_game_won_by_team then
+        return
+    end
     local strike = global.ai_strikes[group_number]
     if strike ~= nil then
         if result == defines.behavior_result.success then
@@ -190,13 +206,20 @@ function Public.step(group_number, result)
             end
         elseif result == defines.behavior_result.fail or result == defines.behavior_result.deleted then
             local rocket_silo = global.rocket_silo[strike.target_force_name]
-            if not rocket_silo then return end  -- helps multi-silo special code
+            if not rocket_silo then
+                return
+            end -- helps multi-silo special code
             local unit_group = strike.unit_group
             if not unit_group.valid then
                 global.ai_strikes[group_number] = nil
             elseif strike.phase == 3 and strike.target == rocket_silo then
                 local position = unit_group.position
-                local message = string.format("Biter attack group failed to find a path to the silo! [gps=%d,%d,%s]", position.x, position.y, unit_group.surface.name)
+                local message = string.format(
+                    'Biter attack group failed to find a path to the silo! [gps=%d,%d,%s]',
+                    position.x,
+                    position.y,
+                    unit_group.surface.name
+                )
                 log(message)
                 game.print(message, Color.red)
                 global.ai_strikes[group_number] = nil

@@ -1,6 +1,6 @@
 local Public = {}
 
-local locale_string = {'', '[PRINT] ', nil}
+local locale_string = { '', '[PRINT] ', nil }
 
 function print(str)
     locale_string[3] = str

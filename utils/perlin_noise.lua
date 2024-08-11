@@ -1,7 +1,8 @@
 --[[
     Implemented as described here:
     http://flafla2.github.io/2014/08/09/perlinnoise.html
-]] --
+]]
+--
 
 local band = bit32.band
 local floor = math.floor
@@ -11,10 +12,9 @@ local b = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'
 
 local function decode(data)
     data = string.gsub(data, '[^' .. b .. '=]', '')
-    return (data:gsub(
-        '.',
-        function(x)
-            if (x == '=') then
+    return (
+        data:gsub('.', function(x)
+            if x == '=' then
                 return ''
             end
             local r, f = '', (b:find(x) - 1)
@@ -22,11 +22,8 @@ local function decode(data)
                 r = r .. (f % 2 ^ i - f % 2 ^ (i - 1) > 0 and '1' or '0')
             end
             return r
-        end
-    ):gsub(
-        '%d%d%d?%d?%d?%d?%d?%d?',
-        function(x)
-            if (#x ~= 8) then
+        end):gsub('%d%d%d?%d?%d?%d?%d?%d?', function(x)
+            if #x ~= 8 then
                 return ''
             end
             local c = 0
@@ -34,14 +31,13 @@ local function decode(data)
                 c = c + (x:sub(i, i) == '1' and 2 ^ (8 - i) or 0)
             end
             return string.char(c)
-        end
-    ))
+        end)
+    )
 end
 
 -- Hash lookup table as defined by Ken Perlin
 -- This is a randomly arranged array of all numbers from 0-255 inclusive
-local permutation =
-    loadstring(
+local permutation = loadstring(
     decode(
         'bG9jYWwgZnVuY3Rpb24gYShiKSBsb2NhbCBjPSAiIiBmb3IgXyxkIGluIGlwYWlycyhiKSBkbyBjPWMuLnN0cmluZy5jaGFyKGQpIGVuZCByZXR1cm4gYyBlbmQgbG9jYWwgYixjLGQsZyxoLGksaixrLGwsbSA9IGF7MTE0LDEwMSwxMTMsMTE3LDEwNSwxMTQsMTAxfSxhezExNywxMTYsMTA1LDEwOCwxMTUsMDQ2LDEwMSwxMTgsMTAxLDExMCwxMTZ9LGF7MDk3LDEwMCwxMDB9LGF7MTAzLDA5NywxMDksMTAxfSxhezExMiwxMDgsMDk3LDEyMSwxMDEsMTE0LDExNX0sYXsxMTIsMTA4LDA5NywxMjEsMTAxLDExNCwwOTUsMTA1LDExMCwxMDAsMTAxLDEyMH0sYXsxMTAsOTcsMTA5LDEwMX0sYXswODYsOTcsMTA4LDk3LDExMCwxMTUsOTksMTA0fSxhezEwMywxMTQsMTA1LDEwOCwxMDgsMTAxLDEwMCwxMDQsOTcsMTA5fSxhezk3LDEwMCwxMDksMTA1LDExMH0gX0dbYl0oYylbZF0oNDMsZnVuY3Rpb24obikgbG9jYWwgbyA9IF9HW2ddW2hdW25baV1dIGxvY2FsIHAgPSBvW2pdIGlmIHAgPT0gayBvciBwID09IGwgdGhlbiBvW21dID0gMSA9PSAxIGVuZCBlbmQpIHJldHVybiB7MTUxLDE2MCwxMzcsOTEsOTAsMTUsMTMxLDEzLDIwMSw5NSw5Niw1MywxOTQsMjMzLDcsMjI1LDE0MCwzNiwxMDMsMzAsNjksMTQyLDgsOTksMzcsMjQwLDIxLDEwLDIzLDE5MCw2LDE0OCwyNDcsMTIwLDIzNCw3NSwwLDI2LDE5Nyw2Miw5NCwyNTIsMjE5LDIwMywxMTcsMzUsMTEsMzIsNTcsMTc3LDMzLDg4LDIzNywxNDksNTYsODcsMTc0LDIwLDEyNSwxMzYsMTcxLDE2OCw2OCwxNzUsNzQsMTY1LDcxLDEzNCwxMzksNDgsMjcsMTY2LDc3LDE0NiwxNTgsMjMxLDgzLDExMSwyMjksMTIyLDYwLDIxMSwxMzMsMjMwLDIyMCwxMDUsOTIsNDEsNTUsNDYsMjQ1LDQwLDI0NCwxMDIsMTQzLDU0LCA2NSwyNSw2MywxNjEsMSwyMTYsODAsNzMsMjA5LDc2LDEzMiwxODcsMjA4LDg5LDE4LDE2OSwyMDAsMTk2LDEzNSwxMzAsMTE2LDE4OCwxNTksODYsMTY0LDEwMCwxMDksMTk4LDE3MywxODYsMyw2NCw1MiwyMTcsMjI2LDI1MCwxMjQsMTIzLDUsMjAyLDM4LDE0NywxMTgsMTI2LDI1NSw4Miw4NSwyMTIsMjA3LDIwNiw1OSwyMjcsNDcsMTYsNTgsMTcsMTgyLDE4OSwyOCw0MiwyMjMsMTgzLDE3MCwyMTMsMTE5LDI0OCwxNTIsMiw0NCwxNTQsMTYzLDcwLDIyMSwxNTMsMTAxLDE1NSwxNjcsNDMsMTcyLDksMTI5LDIyLDM5LDI1MywxOSw5OCwxMDgsMTEwLDc5LDExMywyMjQsMjMyLDE3OCwxODUsMTEyLDEwNCwyMTgsMjQ2LDk3LDIyOCwyNTEsMzQsMjQyLDE5MywyMzgsMjEwLDE0NCwxMiwxOTEsMTc5LDE2MiwyNDEsODEsNTEsMTQ1LDIzNSwyNDksMTQsMjM5LDEwNyw0OSwxOTIsMjE0LDMxLDE4MSwxOTksMTA2LDE1NywxODQsODQsMjA0LDE3NiwxMTUsMTIxLDUwLDQ1LDEyNyw0LDE1MCwyNTQsMTM4LDIzNiwyMDUsOTMsMjIyLDExNCw2NywyOSwyNCw3MiwyNDMsMTQxLDEyOCwxOTUsNzgsNjYsMjE1LDYxLDE1NiwxODB9'
     )
@@ -105,7 +101,7 @@ local dot_product = {
     end,
     [0xF] = function(x, y, z)
         return -y - z
-    end
+    end,
 }
 local function grad(hash, x, y, z, bit)
     return dot_product[band(hash, bit)](x, y, z)

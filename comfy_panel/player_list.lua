@@ -12,12 +12,12 @@ to your scenario control.lua.
 
 Minor changes by ~~~Gerkiz~~~
 --]]
-local Event = require 'utils.event'
-local Where = require 'commands.where'
-local Session = require 'utils.datastore.session_data'
-local Jailed = require 'utils.datastore.jail_data'
-local Tabs = require 'comfy_panel.main'
-local Global = require 'utils.global'
+local Event = require('utils.event')
+local Where = require('commands.where')
+local Session = require('utils.datastore.session_data')
+local Jailed = require('utils.datastore.jail_data')
+local Tabs = require('comfy_panel.main')
+local Global = require('utils.global')
 
 local Public = {}
 
@@ -25,17 +25,14 @@ local this = {
     player_list = {
         last_poke_tick = {},
         pokes = {},
-        sorting_method = {}
+        sorting_method = {},
     },
-    show_roles_in_list = false
+    show_roles_in_list = false,
 }
 
-Global.register(
-    this,
-    function(t)
-        this = t
-    end
-)
+Global.register(this, function(t)
+    this = t
+end)
 
 local symbol_asc = '▲'
 local symbol_desc = '▼'
@@ -175,28 +172,27 @@ local pokemessages = {
     'a copy of META MEME HUMOR for Dummies',
     'an abandoned, not-so-young-anymore puppy',
     'one of those useless items advertised on TV',
-    'a genetic blueprint of a Japanese teen idol'
+    'a genetic blueprint of a Japanese teen idol',
 }
 
 function Public.get_formatted_playtime_from_ticks(ticks)
-	local math_floor = math.floor
-	local seconds = math_floor(ticks / 60)
-	local minutes = math_floor(seconds / 60)
-	local hours = math_floor(minutes / 60)
-	local days = math_floor(hours / 24)
+    local math_floor = math.floor
+    local seconds = math_floor(ticks / 60)
+    local minutes = math_floor(seconds / 60)
+    local hours = math_floor(minutes / 60)
+    local days = math_floor(hours / 24)
 
-	minutes = minutes % 60
-	hours = hours % 24
+    minutes = minutes % 60
+    hours = hours % 24
 
-	if days >= 1 then
-		return string.format("%d days %d hours", days, hours)
-	elseif hours >= 1 then
-		return string.format("%d hours %d minutes", hours, minutes)
-	else
-		return string.format("%d minutes", minutes)
-	end
+    if days >= 1 then
+        return string.format('%d days %d hours', days, hours)
+    elseif hours >= 1 then
+        return string.format('%d hours %d minutes', hours, minutes)
+    else
+        return string.format('%d minutes', minutes)
+    end
 end
-
 
 local function get_rank(player)
     local t = 0
@@ -266,7 +262,7 @@ local function get_rank(player)
         'item/explosive-uranium-cannon-shell',
         'item/atomic-bomb',
         'achievement/so-long-and-thanks-for-all-the-fish',
-        'achievement/golem'
+        'achievement/golem',
     }
 
     --60? ranks
@@ -307,7 +303,7 @@ local comparators = {
     end,
     ['name_desc'] = function(a, b)
         return a.name:lower() > b.name:lower()
-    end
+    end,
 }
 
 local function get_comparator(sort_by)
@@ -351,25 +347,28 @@ local function player_list_show(player, frame, sort_by)
     local jailed = Jailed.get_jailed_table()
 
     -- Header management
-    local t = frame.add {type = 'table', name = 'player_list_panel_header_table', column_count = 5}
-    local column_widths = {tonumber(40), tonumber(218), tonumber(220), tonumber(222), tonumber(50)}
-    local header_column_widths = {tonumber(40), tonumber(210), tonumber(220), tonumber(226), tonumber(50)}
+    local t = frame.add({ type = 'table', name = 'player_list_panel_header_table', column_count = 5 })
+    local column_widths = { tonumber(40), tonumber(218), tonumber(220), tonumber(222), tonumber(50) }
+    local header_column_widths = { tonumber(40), tonumber(210), tonumber(220), tonumber(226), tonumber(50) }
     for _, w in ipairs(header_column_widths) do
-        local label = t.add {type = 'label', caption = ''}
+        local label = t.add({ type = 'label', caption = '' })
         label.style.minimal_width = w
         label.style.maximal_width = w
     end
 
     local headers = {
-        [1] = '[color=0.1,0.7,0.1]' .. -- green
-            tostring(#game.connected_players) .. '[/color]',
-        [2] = 'Online' ..
-            ' / ' ..
-                '[color=0.7,0.1,0.1]' .. -- red
-                    tostring(#game.players - #game.connected_players) .. '[/color]' .. ' Offline',
+        [1] = '[color=0.1,0.7,0.1]' -- green
+            .. tostring(#game.connected_players)
+            .. '[/color]',
+        [2] = 'Online'
+            .. ' / '
+            .. '[color=0.7,0.1,0.1]' -- red
+            .. tostring(#game.players - #game.connected_players)
+            .. '[/color]'
+            .. ' Offline',
         [3] = 'Total Time',
         [4] = 'Current Time',
-        [5] = 'Poke'
+        [5] = 'Poke',
     }
     local header_modifier = {
         ['name_asc'] = function(h)
@@ -395,7 +394,7 @@ local function player_list_show(player, frame, sort_by)
         end,
         ['pokes_desc'] = function(h)
             h[5] = symbol_desc .. h[5]
-        end
+        end,
     }
 
     if sort_by then
@@ -407,14 +406,13 @@ local function player_list_show(player, frame, sort_by)
     header_modifier[sort_by](headers)
 
     for k, v in ipairs(headers) do
-        local header_label =
-            t.add {
+        local header_label = t.add({
             type = 'label',
             name = 'player_list_panel_header_' .. k,
-            caption = v
-        }
+            caption = v,
+        })
         header_label.style.font = 'default-bold'
-        header_label.style.font_color = {r = 0.98, g = 0.66, b = 0.22}
+        header_label.style.font_color = { r = 0.98, g = 0.66, b = 0.22 }
     end
 
     -- special style on first header
@@ -424,28 +422,26 @@ local function player_list_show(player, frame, sort_by)
     label.style.horizontal_align = 'right'
 
     -- List management
-    local player_list_panel_table =
-        frame.add {
+    local player_list_panel_table = frame.add({
         type = 'scroll-pane',
         name = 'scroll_pane',
         direction = 'vertical',
         horizontal_scroll_policy = 'never',
-        vertical_scroll_policy = 'auto'
-    }
+        vertical_scroll_policy = 'auto',
+    })
     player_list_panel_table.style.maximal_height = 530
 
     player_list_panel_table =
-        player_list_panel_table.add {type = 'table', name = 'player_list_panel_table', column_count = 5}
+        player_list_panel_table.add({ type = 'table', name = 'player_list_panel_table', column_count = 5 })
 
     local player_list = get_sorted_list(sort_by)
     for i = 1, #player_list, 1 do
         -- Icon
-        local sprite =
-            player_list_panel_table.add {
+        local sprite = player_list_panel_table.add({
             type = 'sprite',
             name = 'player_rank_sprite_' .. i,
-            sprite = player_list[i].rank
-        }
+            sprite = player_list[i].rank,
+        })
         sprite.style.height = 32
         sprite.style.width = 32
         sprite.style.stretch_image_to_widget_size = true
@@ -475,51 +471,49 @@ local function player_list_show(player, frame, sort_by)
             caption = player_list[i].name
         end
 
-        local name_label =
-            player_list_panel_table.add {
+        local name_label = player_list_panel_table.add({
             type = 'label',
             name = 'where_player_' .. player.index,
             caption = caption,
-            tooltip = tooltip
-        }
+            tooltip = tooltip,
+        })
 
         name_label.style.font = 'default'
         name_label.style.font_color = {
-            r = .4 + player.color.r * 0.6,
-            g = .4 + player.color.g * 0.6,
-            b = .4 + player.color.b * 0.6
+            r = 0.4 + player.color.r * 0.6,
+            g = 0.4 + player.color.g * 0.6,
+            b = 0.4 + player.color.b * 0.6,
         }
         name_label.style.minimal_width = column_widths[2]
         name_label.style.maximal_width = column_widths[2]
 
         -- Total time
-        local total_label =
-            player_list_panel_table.add {
+        local total_label = player_list_panel_table.add({
             type = 'label',
             name = 'player_list_panel_player_total_time_played_' .. i,
-            caption = player_list[i].total_played_time
-        }
+            caption = player_list[i].total_played_time,
+        })
         total_label.style.minimal_width = column_widths[3]
         total_label.style.maximal_width = column_widths[3]
 
         -- Current time
-        local current_label =
-            player_list_panel_table.add {
+        local current_label = player_list_panel_table.add({
             type = 'label',
             name = 'player_list_panel_player_time_played_' .. i,
-            caption = player_list[i].played_time
-        }
+            caption = player_list[i].played_time,
+        })
         current_label.style.minimal_width = column_widths[4]
         current_label.style.maximal_width = column_widths[4]
 
         -- Poke
-        local flow = player_list_panel_table.add {type = 'flow', name = 'button_flow_' .. i, direction = 'horizontal'}
-        flow.add {type = 'label', name = 'button_spacer_' .. i, caption = ''}
+        local flow =
+            player_list_panel_table.add({ type = 'flow', name = 'button_flow_' .. i, direction = 'horizontal' })
+        flow.add({ type = 'label', name = 'button_spacer_' .. i, caption = '' })
         local button =
-            flow.add {type = 'button', name = 'poke_player_' .. player_list[i].name, caption = player_list[i].pokes}
+            flow.add({ type = 'button', name = 'poke_player_' .. player_list[i].name, caption = player_list[i].pokes })
         button.style.font = 'default'
         button.tooltip = 'Poke ' .. player_list[i].name .. ' with a random message!'
-        label.style.font_color = {r = 0.83, g = 0.83, b = 0.83}
+        label.style.font_color = { r = 0.83, g = 0.83, b = 0.83 }
         button.style.minimal_height = 30
         button.style.minimal_width = 30
         button.style.maximal_height = 30
@@ -583,7 +577,7 @@ local function on_gui_click(event)
             else
                 player_list_show(player, frame, 'pokes_desc')
             end
-        end
+        end,
     }
 
     if actions[name] then
@@ -663,7 +657,7 @@ function Public.show_roles_in_list(value)
     return this.show_roles_in_list
 end
 
-comfy_panel_tabs['Players'] = {gui = player_list_show, admin = false}
+comfy_panel_tabs['Players'] = { gui = player_list_show, admin = false }
 
 Event.add(defines.events.on_player_joined_game, on_player_joined_game)
 Event.add(defines.events.on_player_left_game, on_player_left_game)

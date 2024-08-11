@@ -1,9 +1,9 @@
-local Token = require 'utils.token'
-local Event = require 'utils.event'
-local Global = require 'utils.global'
-local mod_gui = require '__core__/lualib/mod-gui'
+local Token = require('utils.token')
+local Event = require('utils.event')
+local Global = require('utils.global')
+local mod_gui = require('__core__/lualib/mod-gui')
 
-local _utils = require 'utils.utils'
+local _utils = require('utils.utils')
 local gui_style = _utils.gui_style
 local gui_themes = _utils.gui_themes
 local top_button_style = _utils.top_button_style
@@ -17,14 +17,10 @@ local Gui = {}
 local data = {}
 local element_map = {}
 
-Gui.token =
-    Global.register(
-    {data = data, element_map = element_map},
-    function(tbl)
-        data = tbl.data
-        element_map = tbl.element_map
-    end
-)
+Gui.token = Global.register({ data = data, element_map = element_map }, function(tbl)
+    data = tbl.data
+    element_map = tbl.element_map
+end)
 
 local top_elements = {}
 local on_visible_handlers = {}
@@ -135,7 +131,7 @@ end
 function Gui.get_top_index(player)
     local flow = mod_gui.get_button_flow(player)
     if flow.bb_toggle_statistics then
-        return flow.bb_toggle_statistics.get_index_in_parent() 
+        return flow.bb_toggle_statistics.get_index_in_parent()
     end
     return
 end
@@ -145,7 +141,7 @@ end
 ---@return LuaGuiElement?
 function Gui.get_top_element(player, element_name)
     -- player.gui.top.mod_gui_top_frame.mod_gui_inner_frame
-	return mod_gui.get_button_flow(player)[element_name]
+    return mod_gui.get_button_flow(player)[element_name]
 end
 
 ---@param player LuaPlayer
@@ -154,13 +150,13 @@ end
 ---@return LuaGuiElement
 function Gui.add_top_element(player, frame, style_name)
     local element = mod_gui.get_button_flow(player)[frame.name]
-	if element and element.valid then
+    if element and element.valid then
         return element
-	end
-	if (frame.type == 'button' or frame.type == 'sprite-button') and frame.style == nil then
+    end
+    if (frame.type == 'button' or frame.type == 'sprite-button') and frame.style == nil then
         frame.style = style_name or gui_themes[1].type
-	end
-	element = mod_gui.get_button_flow(player).add(frame)
+    end
+    element = mod_gui.get_button_flow(player).add(frame)
     if element.type == 'button' or element.type == 'sprite-button' then
         gui_style(element, top_button_style())
     end
@@ -213,9 +209,9 @@ function Gui.add_pusher(parent, direction)
     if not (parent and parent.valid) then
         return
     end
-    local pusher = parent.add { type = 'empty-widget' }
+    local pusher = parent.add({ type = 'empty-widget' })
     pusher.ignored_by_interaction = true
-    gui_style(pusher, { 
+    gui_style(pusher, {
         top_margin = 0,
         bottom_margin = 0,
         left_margin = 0,
@@ -295,7 +291,7 @@ local function custom_raise(handlers, element, player)
         return
     end
 
-    handler({element = element, player = player})
+    handler({ element = element, player = player })
 end
 
 -- Register a handler for the on_gui_checked_state_changed event for LuaGuiElements with element_name.

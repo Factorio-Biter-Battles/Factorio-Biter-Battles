@@ -10,7 +10,7 @@ function Game.player_print(str)
 end
 
 function Game.get_player(mixed)
-    if type(mixed) == "table" then
+    if type(mixed) == 'table' then
         if mixed.__self then
             return mixed and mixed.valid and mixed
         elseif mixed.player_index then
@@ -34,12 +34,12 @@ end
 function Game.print_floating_text(surface, position, text, color)
     color = color
 
-    return surface.create_entity {
+    return surface.create_entity({
         name = 'tutorial-flying-text',
         color = color,
         text = text,
-        position = position
-    }
+        position = position,
+    })
 end
 
 --[[
@@ -58,7 +58,12 @@ function Game.print_player_floating_text_position(player_index, text, color, x_o
     end
 
     local position = player.position
-    return Game.print_floating_text(player.surface, {x = position.x + x_offset, y = position.y + y_offset}, text, color)
+    return Game.print_floating_text(
+        player.surface,
+        { x = position.x + x_offset, y = position.y + y_offset },
+        text,
+        color
+    )
 end
 
 function Game.print_player_floating_text(player_index, text, color)

@@ -7,5 +7,5 @@ _STAGE = {
     init = 5,
     load = 6,
     --config_change = 7,
-    runtime = 8
+    runtime = 8,
 }

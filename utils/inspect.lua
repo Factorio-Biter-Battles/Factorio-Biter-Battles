@@ -25,25 +25,21 @@ local inspect = {
     CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
     TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
     SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-  ]]
+  ]],
 }
 
 local tostring = tostring
 
-inspect.KEY =
-    setmetatable(
-    {},
-    {__tostring = function()
-            return 'inspect.KEY'
-        end}
-)
-inspect.METATABLE =
-    setmetatable(
-    {},
-    {__tostring = function()
-            return 'inspect.METATABLE'
-        end}
-)
+inspect.KEY = setmetatable({}, {
+    __tostring = function()
+        return 'inspect.KEY'
+    end,
+})
+inspect.METATABLE = setmetatable({}, {
+    __tostring = function()
+        return 'inspect.METATABLE'
+    end,
+})
 
 -- Apostrophizes the string if it has quotes, but not aphostrophes
 -- Otherwise, it returns a regular quoted string
@@ -62,7 +58,7 @@ local shortControlCharEscapes = {
     ['\n'] = '\\n',
     ['\r'] = '\\r',
     ['\t'] = '\\t',
-    ['\v'] = '\\v'
+    ['\v'] = '\\v',
 }
 local longControlCharEscapes = {} -- \a => nil, \0 => \000, 31 => \031
 for i = 0, 31 do
@@ -92,7 +88,7 @@ local defaultTypeOrders = {
     ['table'] = 4,
     ['function'] = 5,
     ['userdata'] = 6,
-    ['thread'] = 7
+    ['thread'] = 7,
 }
 
 local function sortKeys(a, b)
@@ -181,7 +177,7 @@ local copySequence = function(s)
 end
 
 local function makePath(path, ...)
-    local keys = {...}
+    local keys = { ... }
     local newPath, len = copySequence(path)
     for i = 1, #keys do
         newPath[len + i] = keys[i]
@@ -220,10 +216,10 @@ end
 -------------------------------------------------------------------
 
 local Inspector = {}
-local Inspector_mt = {__index = Inspector}
+local Inspector_mt = { __index = Inspector }
 
 function Inspector:puts(...)
-    local args = {...}
+    local args = { ... }
     local buffer = self.buffer
     local len = #buffer
     for i = 1, #args do
@@ -283,46 +279,44 @@ function Inspector:putTable(t)
         local toStringResult = getToStringResultSafely(t, mt)
 
         self:puts('{')
-        self:down(
-            function()
-                if toStringResult then
-                    self:puts(' -- ', escape(toStringResult))
-                    if sequenceLength >= 1 then
-                        self:tabify()
-                    end
-                end
-
-                local count = 0
-                for i = 1, sequenceLength do
-                    if count > 0 then
-                        self:puts(',')
-                    end
-                    self:puts(' ')
-                    self:putValue(t[i])
-                    count = count + 1
-                end
-
-                for _, k in ipairs(nonSequentialKeys) do
-                    if count > 0 then
-                        self:puts(',')
-                    end
+        self:down(function()
+            if toStringResult then
+                self:puts(' -- ', escape(toStringResult))
+                if sequenceLength >= 1 then
                     self:tabify()
-                    self:putKey(k)
-                    self:puts(' = ')
-                    self:putValue(t[k])
-                    count = count + 1
-                end
-
-                if mt then
-                    if count > 0 then
-                        self:puts(',')
-                    end
-                    self:tabify()
-                    self:puts('<metatable> = ')
-                    self:putValue(mt)
                 end
             end
-        )
+
+            local count = 0
+            for i = 1, sequenceLength do
+                if count > 0 then
+                    self:puts(',')
+                end
+                self:puts(' ')
+                self:putValue(t[i])
+                count = count + 1
+            end
+
+            for _, k in ipairs(nonSequentialKeys) do
+                if count > 0 then
+                    self:puts(',')
+                end
+                self:tabify()
+                self:putKey(k)
+                self:puts(' = ')
+                self:putValue(t[k])
+                count = count + 1
+            end
+
+            if mt then
+                if count > 0 then
+                    self:puts(',')
+                end
+                self:tabify()
+                self:puts('<metatable> = ')
+                self:putValue(mt)
+            end
+        end)
 
         if #nonSequentialKeys > 0 or mt then -- result is multi-lined. Justify closing }
             self:tabify()
@@ -362,31 +356,26 @@ function inspect.inspect(root, options)
         root = processRecursive(process, root, {}, {})
     end
 
-    local inspector =
-        setmetatable(
-        {
-            depth = depth,
-            level = 0,
-            buffer = {},
-            ids = {},
-            maxIds = {},
-            newline = newline,
-            indent = indent,
-            tableAppearances = countTableAppearances(root)
-        },
-        Inspector_mt
-    )
+    local inspector = setmetatable({
+        depth = depth,
+        level = 0,
+        buffer = {},
+        ids = {},
+        maxIds = {},
+        newline = newline,
+        indent = indent,
+        tableAppearances = countTableAppearances(root),
+    }, Inspector_mt)
 
     inspector:putValue(root)
 
     return table.concat(inspector.buffer)
 end
 
-setmetatable(
-    inspect,
-    {__call = function(_, ...)
-            return inspect.inspect(...)
-        end}
-)
+setmetatable(inspect, {
+    __call = function(_, ...)
+        return inspect.inspect(...)
+    end,
+})
 
 return inspect
