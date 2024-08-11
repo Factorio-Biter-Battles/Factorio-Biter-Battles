@@ -15,6 +15,7 @@ local Tables = require('maps.biter_battles_v2.tables')
 local Task = require('utils.task')
 local TeamManager = require('maps.biter_battles_v2.team_manager')
 local Token = require('utils.token')
+local safe_wrap_cmd = require('utils.utils').safe_wrap_cmd
 
 local gui_style = require('utils.utils').gui_style
 local frame_style = require('utils.utils').left_frame_style
@@ -1030,7 +1031,9 @@ local function get_dropdown_value(dropdown)
     end
 end
 
-local function change_captain(cmd, isItForNorth)
+---@param cmd CustomCommandData
+---@param force string
+local function change_captain(cmd, force)
     if not cmd.player_index then
         return
     end
@@ -1058,43 +1061,25 @@ local function change_captain(cmd, isItForNorth)
             if not victim.connected then
                 return playerOfCommand.print('You can only use this command on a connected player.', Color.red)
             end
-            if isItForNorth then
-                if victim.force.name ~= 'north' then
-                    return playerOfCommand.print({ 'captain.change_captain_wrong_member' }, Color.red)
-                end
-                game.print(
-                    { 'captain.change_captain_announcement', playerOfCommand.name, victim.name, special.captainList[1] },
-                    Color.cyan
-                )
-                local oldCaptain = cpt_get_player(special.captainList[1])
-                if oldCaptain.gui.screen.captain_manager_gui then
-                    oldCaptain.gui.screen.captain_manager_gui.destroy()
-                end
-                if Gui.get_top_element(oldCaptain, 'captain_manager_toggle_button') then
-                    Gui.get_top_element(oldCaptain, 'captain_manager_toggle_button').destroy()
-                end
-                special.captainList[1] = victim.name
-                Public.draw_captain_manager_button(cpt_get_player(victim.name))
-                generate_vs_text_rendering()
-            else
-                if victim.force.name ~= 'south' then
-                    return playerOfCommand.print({ 'captain.change_captain_wrong_member' }, Color.red)
-                end
-                game.print(
-                    { 'captain.change_captain_announcement', playerOfCommand.name, victim.name, special.captainList[2] },
-                    Color.cyan
-                )
-                local oldCaptain = cpt_get_player(special.captainList[2])
-                if oldCaptain.gui.screen.captain_manager_gui then
-                    oldCaptain.gui.screen.captain_manager_gui.destroy()
-                end
-                if Gui.get_top_element(oldCaptain, 'captain_manager_toggle_button') then
-                    Gui.get_top_element(oldCaptain, 'captain_manager_toggle_button').destroy()
-                end
-                special.captainList[2] = victim.name
-                Public.draw_captain_manager_button(cpt_get_player(victim.name))
-                generate_vs_text_rendering()
+            if victim.force.name ~= force then
+                return playerOfCommand.print({ 'captain.change_captain_wrong_member' }, Color.red)
             end
+            local captain_index = force == 'north' and 1 or 2
+            game.print({
+                'captain.change_captain_announcement',
+                playerOfCommand.name,
+                victim.name,
+                special.captainList[captain_index],
+            }, Color.cyan)
+            local oldCaptain = cpt_get_player(special.captainList[captain_index])
+            if oldCaptain.gui.screen.captain_manager_gui then
+                oldCaptain.gui.screen.captain_manager_gui.destroy()
+            end
+            if Gui.get_top_element(oldCaptain, 'captain_manager_toggle_button') then
+                Gui.get_top_element(oldCaptain, 'captain_manager_toggle_button').destroy()
+            end
+            special.captainList[captain_index] = victim.name
+            generate_vs_text_rendering()
         else
             playerOfCommand.print('Invalid name', Color.warning)
         end
@@ -2887,11 +2872,11 @@ end
 -- == COMMANDS ================================================================
 
 commands.add_command('replaceCaptainNorth', 'Referee can decide to change the captain of north team', function(cmd)
-    change_captain(cmd, true)
+    safe_wrap_cmd(cmd, change_captain, cmd, 'north')
 end)
 
 commands.add_command('replaceCaptainSouth', 'Referee can decide to change the captain of south team', function(cmd)
-    change_captain(cmd, false)
+    safe_wrap_cmd(cmd, change_captain, cmd, 'south')
 end)
 
 commands.add_command('replaceReferee', 'Admin or referee can decide to change the referee', function(cmd)
