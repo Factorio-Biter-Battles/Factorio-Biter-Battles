@@ -263,3 +263,4 @@ end
 Event.add(defines.events.on_player_created, on_player_created)
 Event.add(defines.events.on_console_chat, on_console_chat)
 Event.add(defines.events.on_console_command, on_console_command)
+aoeu = "aoeu"
