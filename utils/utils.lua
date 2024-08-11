@@ -115,6 +115,24 @@ function Module.safe_wrap_with_player_print(player, func, ...)
     return result
 end
 
+function Module.safe_wrap_cmd(cmd, func, ...)
+    local print_fn = game.print
+    if cmd.player_index then
+        local player = game.get_player(cmd.player_index)
+        if player then
+            print_fn = player.print
+        end
+    end
+    local function error_handler(err)
+        log('Error caught: ' .. err)
+        print_fn('Error caught: ' .. err)
+        -- Print the full stack trace to the log
+        log(debug.traceback())
+    end
+    local call_succeeded, result = xpcall(func, error_handler, ...)
+    return result
+end
+
 local minutes_to_ticks = 60 * 60
 local hours_to_ticks = 60 * 60 * 60
 local ticks_to_minutes = 1 / minutes_to_ticks
