@@ -3,6 +3,9 @@ on:
   push:
     paths:
       - "**.lua"
+  pull_request:
+    paths:
+      - "**.lua"
 jobs:
   check_code_format:
     runs-on: ubuntu-latest
