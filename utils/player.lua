@@ -6,6 +6,7 @@ local function get_or_create_dummy_player(playerName)
     local special = global.special_games_variables.captain_mode
     return game.get_player(playerName)
         or {
+            name = playerName,
             color = { r = 255, g = 255, b = 255, a = 1 },
             force = { name = (global.chosen_team[playerName] or 'spectator') },
             print = function(msg, color)
