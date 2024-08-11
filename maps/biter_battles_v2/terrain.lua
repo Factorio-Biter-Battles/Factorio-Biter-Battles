@@ -347,20 +347,16 @@ local function draw_biter_area(surface, left_top_x, left_top_y)
 	for x = 0, 31, 1 do
 		for y = 0, 31, 1 do
 			local position = { x = left_top_x + x, y = left_top_y + y }
-			if not Functions.is_biter_area(position, true) then
-				goto d_b_a
+			if Functions.is_biter_area(position, true) then
+				-- + 1, because lua has 1-based indices
+				local grid_p_x = ((position.x + seed) % biter_texture.width) + 1
+				local grid_p_y = ((position.y + seed) % biter_texture.height) + 1
+				local id = biter_texture.grid[grid_p_x][grid_p_y]
+				local name = biter_texture.map[id]
+				out_of_map[i] = {name = "out-of-map", position = position}
+				tiles[i] = {name = name, position = position}
+				i = i + 1; -- need semicolon to fix stylua formatting
 			end
-
-			-- + 1, because lua has 1-based indices
-			local grid_p_x = ((position.x + seed) % biter_texture.width) + 1
-			local grid_p_y = ((position.y + seed) % biter_texture.height) + 1
-			local id = biter_texture.grid[grid_p_x][grid_p_y]
-			local name = biter_texture.map[id]
-			out_of_map[i] = {name = "out-of-map", position = position}
-			tiles[i] = {name = name, position = position}
-			i = i + 1
-
-			::d_b_a::
 		end
 	end
 
@@ -532,13 +528,10 @@ local function _clear_resources(surface, area)
 
 	local i = 0
 	for _, res in pairs(resources) do
-		if not res.valid then
-			goto clear_resources_cont
+		if res.valid then
+			res.destroy()
+			i = i + 1
 		end
-		res.destroy()
-		i = i + 1
-
-		::clear_resources_cont::
 	end
 
 	return i

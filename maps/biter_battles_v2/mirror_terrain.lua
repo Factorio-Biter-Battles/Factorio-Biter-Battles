@@ -137,16 +137,14 @@ function Public.invert_tiles(event)
 
 	local tiles = {}
 	for i, tile in pairs(to_emplace) do
-		if not tile.valid then goto invert_tile_continue end
-
-		local pos = tile.position
-		pos.y = -pos.y - 1
-		tiles[i] = {
-			position = pos,
-			name = tile.name
-		}
-
-		::invert_tile_continue::
+		if tile.valid then
+			local pos = tile.position
+			pos.y = -pos.y - 1
+			tiles[i] = {
+				position = pos,
+				name = tile.name
+			}
+		end
 	end
 
 	surface.set_tiles(tiles)
