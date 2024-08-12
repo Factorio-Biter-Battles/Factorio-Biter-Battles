@@ -301,10 +301,10 @@ function Event.remove_removable_function(event_name, name)
 
     local handlers = event_handlers[event_name]
 
-    for k, v in pairs(function_handlers[name]) do
+    for k, v in pairs(funcs) do
         local n = v.event_name
         if n == event_name then
-            function_handlers[name][k] = nil
+            funcs[k] = nil
             remove(handlers, v.handler)
         end
     end
@@ -313,7 +313,7 @@ function Event.remove_removable_function(event_name, name)
         script_on_event(event_name, nil)
     end
 
-    if #function_handlers[name] == 0 then
+    if #funcs == 0 then
         function_handlers[name] = nil
     end
 end
@@ -440,15 +440,15 @@ function Event.remove_removable_nth_tick_function(tick, name)
 
     local handlers = on_nth_tick_event_handlers[tick]
 
-    for k, v in pairs(function_nth_tick_handlers[name]) do
+    for k, v in pairs(funcs) do
         local t = v.tick
         if t == tick then
-            function_nth_tick_handlers[name][k] = nil
+            funcs[k] = nil
             remove(handlers, v.handler)
         end
     end
 
-    if #function_nth_tick_handlers[name] == 0 then
+    if #funcs == 0 then
         function_nth_tick_handlers[name] = nil
     end
 

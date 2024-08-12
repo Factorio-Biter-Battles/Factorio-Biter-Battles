@@ -86,7 +86,7 @@ local function on_nth_tick_event(event)
 end
 
 ---A binary search that sorts in reversed order (highest first, lower last).
----It also doesn't stop when the index is found to unsure that
+---It also doesn't stop when the index is found to ensure that
 ---handlers with the same priority will be called in order of insertion.
 ---@param handlers { priority: number }[]
 ---@param target number
@@ -118,13 +118,12 @@ function Public.add(event_name, handler, priority)
     end
     local handlers = event_handlers[event_name]
     if not handlers then
-        event_handlers[event_name] = {{ handler = handler, priority = priority }}
+        event_handlers[event_name] = {}
+    end
+
+    table.insert(handlers, priority_binary_search(handlers, priority), { handler = handler, priority = priority })
+    if #handlers == 1 then
         script_on_event(event_name, on_event)
-    else
-        table.insert(handlers, priority_binary_search(handlers, priority), { handler = handler, priority = priority })
-        if #handlers == 1 then
-            script_on_event(event_name, on_event)
-        end
     end
 end
 
@@ -135,13 +134,12 @@ function Public.on_init(handler, priority)
     if not priority then priority = 0 end
     local handlers = event_handlers[init_event_name]
     if not handlers then
-        event_handlers[init_event_name] = {{ handler = handler, priority = priority }}
+        event_handlers[init_event_name] = {}
+    end
+
+    table.insert(handlers, priority_binary_search(handlers, priority), { handler = handler, priority = priority })
+    if #handlers == 1 then
         script.on_init(on_init)
-    else
-        table.insert(handlers, priority_binary_search(handlers, priority), { handler = handler, priority = priority })
-        if #handlers == 1 then
-            script.on_init(on_init)
-        end
     end
 end
 
@@ -152,13 +150,12 @@ function Public.on_load(handler, priority)
     if not priority then priority = 0 end
     local handlers = event_handlers[load_event_name]
     if not handlers then
-        event_handlers[load_event_name] = {{ handler = handler, priority = priority }}
+        event_handlers[load_event_name] = {}
+    end
+
+    table.insert(handlers, priority_binary_search(handlers, priority), { handler = handler, priority = priority })
+    if #handlers == 1 then
         script.on_load(on_load)
-    else
-        table.insert(handlers, priority_binary_search(handlers, priority), { handler = handler, priority = priority })
-        if #handlers == 1 then
-            script.on_load(on_load)
-        end
     end
 end
 
@@ -171,12 +168,11 @@ function Public.on_nth_tick(tick, handler, priority)
     local handlers = on_nth_tick_event_handlers[tick]
     if not handlers then
         on_nth_tick_event_handlers[tick] = {{ handler = handler, priority = priority }}
+    end
+
+    table.insert(handlers, priority_binary_search(handlers, priority), { handler = handler, priority = priority })
+    if #handlers == 1 then
         script_on_nth_tick(tick, on_nth_tick_event)
-    else
-        table.insert(handlers, priority_binary_search(handlers, priority), { handler = handler, priority = priority })
-        if #handlers == 1 then
-            script_on_nth_tick(tick, on_nth_tick_event)
-        end
     end
 end
 
