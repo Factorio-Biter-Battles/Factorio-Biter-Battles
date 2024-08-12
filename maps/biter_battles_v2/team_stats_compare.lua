@@ -4,6 +4,7 @@ local Tables = require('maps.biter_battles_v2.tables')
 local closable_frame = require('utils.ui.closable_frame')
 local TeamStatsCollect = require('maps.biter_battles_v2.team_stats_collect')
 local safe_wrap_with_player_print = require('utils.utils').safe_wrap_with_player_print
+local safe_wrap_cmd = require('utils.utils').safe_wrap_cmd
 local Event = require('utils.event')
 
 local math_floor = math.floor
@@ -11,6 +12,19 @@ local math_max = math.max
 local string_format = string.format
 
 local TeamStatsCompare = {}
+
+---@alias TeamstatsPreferences {show_hidden: boolean?, show_prev: boolean?}
+
+---@param player
+---@return TeamstatsPreferences
+local function get_preferences(player)
+    local res = global.teamstats_preferences[player.name]
+    if not res then
+        res = {}
+        global.teamstats_preferences[player.name] = res
+    end
+    return res
+end
 
 ---@param parent LuaGuiElement
 ---@param a LuaGuiElement.add_param
@@ -52,14 +66,48 @@ local function format_one_sig_fig(num)
 end
 
 ---@param player LuaPlayer
----@param stats TeamStats
-function TeamStatsCompare.show_stats(player, stats)
-    if stats == nil then
-        stats = TeamStatsCollect.compute_stats()
+function TeamStatsCompare.show_stats(player)
+    local preferences = get_preferences(player)
+    local show_hidden = preferences.show_hidden and true or false
+    local show_prev = preferences.show_prev and true or false
+    ---@type table<string, boolean>
+    local exclude_forces = {}
+    ---@type TeamStats
+    local stats
+    if not global.prev_game_team_stats then
+        show_prev = false
     end
-    local show_hidden = global.teamstats_preferences[player.name]
-            and global.teamstats_preferences[player.name].show_hidden
-        or false
+    if show_prev then
+        stats = global.prev_game_team_stats
+    else
+        stats = TeamStatsCollect.compute_stats()
+        -- allow it always in single player, or if the game is over
+        local other_force = nil
+        if global.chosen_team[player.name] == 'north' then
+            other_force = 'south'
+        elseif global.chosen_team[player.name] == 'south' then
+            other_force = 'north'
+        end
+        if not global.bb_game_won_by_team then
+            if global.allow_teamstats == 'spectators' then
+                if other_force and player.force.name ~= 'spectator' then
+                    exclude_forces[other_force] = true
+                end
+            elseif global.allow_teamstats == 'pure-spectators' then
+                if other_force then
+                    exclude_forces[other_force] = true
+                end
+            elseif global.allow_teamstats ~= 'always' then
+                if other_force then
+                    exclude_forces[other_force] = true
+                else
+                    exclude_forces['north'] = true
+                    exclude_forces['south'] = true
+                end
+            end
+        end
+    end
+
     ---@type LuaGuiElement
     local frame = player.gui.screen['teamstats_frame']
     if frame then
@@ -168,16 +216,21 @@ function TeamStatsCompare.show_stats(player, stats)
                 science_table,
                 { caption = (food_stats.first_at and ticks_to_hh_mm(food_stats.first_at) or '') }
             )
-            add_small_label(science_table, {
-                caption = format_with_thousands_sep(produced),
-                tooltip = '[item=space-science-pack] equivalent: '
-                    .. format_one_sig_fig(produced * food_mutagen / space_sci_mutagen),
-            })
-            add_small_label(science_table, {
-                caption = format_with_thousands_sep(consumed),
-                tooltip = '[item=space-science-pack] equivalent: '
-                    .. format_one_sig_fig(consumed * food_mutagen / space_sci_mutagen),
-            })
+            if not exclude_forces[force_name] then
+                add_small_label(science_table, {
+                    caption = format_with_thousands_sep(produced),
+                    tooltip = '[item=space-science-pack] equivalent: '
+                        .. format_one_sig_fig(produced * food_mutagen / space_sci_mutagen),
+                })
+                add_small_label(science_table, {
+                    caption = format_with_thousands_sep(consumed),
+                    tooltip = '[item=space-science-pack] equivalent: '
+                        .. format_one_sig_fig(consumed * food_mutagen / space_sci_mutagen),
+                })
+            else
+                add_small_label(science_table, { caption = '' })
+                add_small_label(science_table, { caption = '' })
+            end
             add_small_label(science_table, {
                 caption = format_with_thousands_sep(sent),
                 tooltip = '[item=space-science-pack] equivalent: '
@@ -186,10 +239,14 @@ function TeamStatsCompare.show_stats(player, stats)
             total_sent_mutagen = total_sent_mutagen + (food_stats.sent or 0) * food_mutagen
             total_produced_mutagen = total_produced_mutagen + (food_stats.produced or 0) * food_mutagen
         end
+        local produced_info = ''
+        if not exclude_forces[force_name] then
+            produced_info = string_format(' produced: %s', format_with_thousands_sep(total_produced_mutagen))
+        end
         add_small_label(science_flow, {
             caption = string_format(
-                '[item=space-science-pack] equivalent produced: %s sent: %s',
-                format_one_sig_fig(total_produced_mutagen / space_sci_mutagen),
+                '[item=space-science-pack] equivalent%s sent: %s',
+                produced_info,
                 format_one_sig_fig(total_sent_mutagen / space_sci_mutagen)
             ),
         })
@@ -219,13 +276,15 @@ function TeamStatsCompare.show_stats(player, stats)
             vertical_centering = false,
         })
         gui_style(item_table, { left_cell_padding = 3, right_cell_padding = 3, vertical_spacing = 0 })
-        for idx, col_info in ipairs(cols) do
-            item_table.style.column_alignments[idx] = 'right'
-            add_small_label(item_table, { caption = col_info[1], tooltip = col_info[2] })
+        if not exclude_forces[force_name] then
+            for idx, col_info in ipairs(cols) do
+                item_table.style.column_alignments[idx] = 'right'
+                add_small_label(item_table, { caption = col_info[1], tooltip = col_info[2] })
+            end
         end
 
         for _, item_info in ipairs(TeamStatsCollect.items_to_show_summaries_of) do
-            if show_hidden or not item_info.hide_by_default then
+            if not exclude_forces[force_name] and (show_hidden or not item_info.hide_by_default) then
                 local item_stats = force_stats.items[item_info.item] or {}
                 ---@type number?
                 local killed_or_lost = (item_stats.kill_count or 0) + (item_stats.lost or 0)
@@ -323,11 +382,18 @@ function TeamStatsCompare.show_stats(player, stats)
         end
     end
     top_centering_table.add({ type = 'line' })
-    top_centering_table.add({
+    local checkbox_flow = top_centering_table.add({ type = 'flow', name = 'checkbox_flow', direction = 'horizontal' })
+    checkbox_flow.add({
         type = 'checkbox',
         name = 'teamstats_show_hidden',
         caption = 'Show more items',
         state = show_hidden,
+    })
+    checkbox_flow.add({
+        type = 'checkbox',
+        name = 'teamstats_show_prev',
+        caption = 'Show previous game',
+        state = show_prev,
     })
 end
 
@@ -338,7 +404,7 @@ function TeamStatsCompare.game_over()
     global.prev_game_team_stats = global.team_stats
 end
 
-function TeamStatsCompare.toggle_team_stats(player, stats)
+function TeamStatsCompare.toggle_team_stats(player)
     local frame = player.gui.screen.teamstats_frame
 
     if frame and frame.valid then
@@ -346,32 +412,10 @@ function TeamStatsCompare.toggle_team_stats(player, stats)
         return
     end
 
-    local deny_reason = false
-    -- allow it always in single player, or if the game is over
-    if not stats and not global.bb_game_won_by_team and game.is_multiplayer() then
-        if global.allow_teamstats == 'spectators' then
-            if player.force.name ~= 'spectator' then
-                deny_reason = 'spectators only'
-            end
-        elseif global.allow_teamstats == 'pure-spectators' then
-            if global.chosen_team[player.name] then
-                deny_reason = 'pure spectators only (you have joined a team)'
-            end
-        else
-            if global.allow_teamstats ~= 'always' then
-                deny_reason = 'only allowed at end of game'
-            end
-        end
-    end
-    if deny_reason then
-        player.print('Team stats for current game is unavailable: ' .. deny_reason)
-        Sounds.notify_player(player, 'utility/cannot_build')
-        return
-    end
-    TeamStatsCompare.show_stats(player, stats)
+    TeamStatsCompare.show_stats(player)
 end
 
-commands.add_command('teamstats', 'Show team stats', function(cmd)
+local function teamstats_cmd(cmd)
     if not cmd.player_index then
         return
     end
@@ -379,19 +423,15 @@ commands.add_command('teamstats', 'Show team stats', function(cmd)
     if not player then
         return
     end
-    local deny_reason
-    local stats
-    if cmd.parameter == 'prev' then
-        stats = global.prev_game_team_stats
-        if not stats then
-            player.print('No previous game stats available.')
-            return
-        end
-    elseif cmd.parameter and cmd.parameter ~= '' then
-        player.print("Unsupported argument to /teamstats. Run either just '/teamstats' or '/teamstats prev'")
+    if cmd.parameter and cmd.parameter ~= '' then
+        player.print("Unsupported argument to /teamstats. Run just '/teamstats'")
         return
     end
-    TeamStatsCompare.toggle_team_stats(player, stats)
+    TeamStatsCompare.toggle_team_stats(player)
+end
+
+commands.add_command('teamstats', 'Show team stats', function(cmd)
+    safe_wrap_cmd(cmd, teamstats_cmd, cmd)
 end)
 
 ---@param event EventData.on_gui_checked_state_changed
@@ -404,8 +444,11 @@ local function on_gui_checked_state_changed(event)
         return
     end
     if event.element.name == 'teamstats_show_hidden' then
-        global.teamstats_preferences[player.name] = global.teamstats_preferences[player.name] or {}
-        global.teamstats_preferences[player.name].show_hidden = event.element.state
+        get_preferences(player).show_hidden = event.element.state
+        safe_wrap_with_player_print(player, TeamStatsCompare.show_stats, player)
+    end
+    if event.element.name == 'teamstats_show_prev' then
+        get_preferences(player).show_prev = event.element.state
         safe_wrap_with_player_print(player, TeamStatsCompare.show_stats, player)
     end
 end
