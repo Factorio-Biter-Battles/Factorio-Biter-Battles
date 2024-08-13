@@ -353,6 +353,10 @@ local selection_functions = {
         end
         global.gui_theme[player.name] = selected_style
     end,
+    ['comfy_panel_teamstats_visibility_dropdown'] = function(event)
+        local selected_index = event.element.selected_index
+        global.allow_teamstats = event.element.items[selected_index]
+    end,
 }
 
 local function add_switch(element, switch_state, name, description_main, description, tooltip)
@@ -387,6 +391,41 @@ local function add_switch(element, switch_state, name, description_main, descrip
     label.style.font_color = { 0.85, 0.85, 0.85 }
 
     return switch
+end
+
+local function add_dropdown(element, caption, selected_item, name, items)
+    local t = element.add({ type = 'table', column_count = 3 })
+    local label = t.add({
+        type = 'label',
+        name = 'comfy_panel_theme_label',
+        ignored_by_interaction = true,
+        caption = '',
+    })
+    label.style.padding = 0
+    label.style.left_padding = 10
+    label.style.font_color = { 0.77, 0.77, 0.77 }
+    label.style.minimal_width = 100
+
+    label = t.add({ type = 'label', caption = caption })
+    label.style.padding = 2
+    label.style.left_padding = 10
+    label.style.minimal_width = 140
+    label.style.font = 'heading-2'
+    label.style.font_color = { 0.88, 0.88, 0.99 }
+
+    local selected_index = index_of(items, selected_item) or 1
+    local dropdown = t.add({
+        type = 'drop-down',
+        style = 'dropdown',
+        name = name,
+        items = items,
+        selected_index = selected_index,
+    })
+    dropdown.style.height = 24
+    dropdown.style.natural_width = 200
+    dropdown.style.left_margin = 10
+    dropdown.style.vertical_align = 'center'
+    return dropdown
 end
 
 function player_wants_pings(name)
@@ -487,40 +526,13 @@ local build_config_gui = function(player, frame)
     scroll_pane.add({ type = 'line' })
 
     if global.gui_theme ~= nil then
-        local theme_idx = index_of(themes.keys, global.gui_theme[player.name]) or 1
-        local theme_name = gui_themes[theme_idx].name
-
-        local t = scroll_pane.add({ type = 'table', column_count = 3 })
-
-        local label = t.add({
-            type = 'label',
-            name = 'comfy_panel_theme_label',
-            ignored_by_interaction = true,
-            caption = theme_name,
-        })
-        label.style.padding = 0
-        label.style.left_padding = 10
-        label.style.font_color = { 0.77, 0.77, 0.77 }
-        label.style.minimal_width = 100
-
-        local label = t.add({ type = 'label', caption = 'Top UI theme' })
-        label.style.padding = 2
-        label.style.left_padding = 10
-        label.style.minimal_width = 140
-        label.style.font = 'heading-2'
-        label.style.font_color = { 0.88, 0.88, 0.99 }
-
-        local dropdown = t.add({
-            type = 'drop-down',
-            style = 'dropdown',
-            name = 'comfy_panel_theme_dropdown',
-            items = themes.values,
-            selected_index = theme_idx,
-        })
-        dropdown.style.height = 24
-        dropdown.style.natural_width = 200
-        dropdown.style.left_margin = 10
-        dropdown.style.vertical_align = 'center'
+        add_dropdown(
+            scroll_pane,
+            'Top UI theme',
+            global.gui_theme[player.name],
+            'comfy_panel_theme_dropdown',
+            themes.values
+        )
 
         scroll_pane.add({ type = 'line' })
     end
@@ -535,6 +547,20 @@ local build_config_gui = function(player, frame)
         label.style.vertical_align = 'bottom'
         label.style.font_color = { 0.77, 0.11, 0.11 }
 
+        scroll_pane.add({ type = 'line' })
+
+        add_dropdown(
+            scroll_pane,
+            'teamstats visibility',
+            global.allow_teamstats,
+            'comfy_panel_teamstats_visibility_dropdown',
+            {
+                'always',
+                'spectator',
+                'pure-spectator',
+                'never',
+            }
+        )
         scroll_pane.add({ type = 'line' })
 
         switch_state = 'right'

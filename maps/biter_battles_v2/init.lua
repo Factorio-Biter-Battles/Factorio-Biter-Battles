@@ -150,7 +150,7 @@ function Public.initial_setup()
     global.default_clear_corpses_radius = 160
     global.total_time_online_players = {}
     global.already_logged_current_session_time_online_players = {}
-    ---@type table<string, {show_hidden: boolean?}>
+    ---@type table<string, TeamstatsPreferences>
     global.teamstats_preferences = {}
     global.allow_teamstats = 'always'
     --Disable Nauvis
