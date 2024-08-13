@@ -2,14 +2,14 @@
 --rewritten by gerkiz--
 --as an admin, write either /trust or /untrust and the players name in the chat to grant/revoke immunity from protection
 
-local Event = require 'utils.event'
-local session = require 'utils.datastore.session_data'
-local Global = require 'utils.global'
-local Utils = require 'utils.core'
-local Color = require 'utils.color_presets'
-local Server = require 'utils.server'
-local Jail = require 'utils.datastore.jail_data'
-local pool = require 'maps.biter_battles_v2.pool'
+local Event = require('utils.event')
+local session = require('utils.datastore.session_data')
+local Global = require('utils.global')
+local Utils = require('utils.core')
+local Color = require('utils.color_presets')
+local Server = require('utils.server')
+local Jail = require('utils.datastore.jail_data')
+local pool = require('maps.biter_battles_v2.pool')
 
 local Public = {}
 local match = string.match
@@ -36,7 +36,7 @@ local this = {
         mining = 0,
         belt_mining = 0,
         corpse = 0,
-        cancel_crafting = 0
+        cancel_crafting = 0,
     },
     whitelist_types = {},
     permission_group_editing = {},
@@ -52,7 +52,7 @@ local this = {
     enable_capsule_cursor_warning = false,
     required_playtime = 2592000,
     damage_entity_threshold = 20,
-    explosive_threshold = 16
+    explosive_threshold = 16,
 }
 
 local blacklisted_types = {
@@ -66,7 +66,7 @@ local blacklisted_types = {
     ['mining-drill'] = true,
     ['splitter'] = true,
     ['tree'] = true,
-    ['fish'] = true
+    ['fish'] = true,
 }
 
 local ammo_names = {
@@ -76,26 +76,23 @@ local ammo_names = {
     ['grenade'] = true,
     ['atomic-bomb'] = true,
     ['cliff-explosives'] = true,
-    ['rocket'] = true
+    ['rocket'] = true,
 }
 
 local belt_types = {
-    ["transport-belt"] = true,
-    ["underground-belt"] = true,
-    ["splitter"] = true
+    ['transport-belt'] = true,
+    ['underground-belt'] = true,
+    ['splitter'] = true,
 }
 
 local chests = {
     ['container'] = true,
-    ['logistic-container'] = true
+    ['logistic-container'] = true,
 }
 
-Global.register(
-    this,
-    function(t)
-        this = t
-    end
-)
+Global.register(this, function(t)
+    this = t
+end)
 
 --[[
     local function increment_key(t, k, v)
@@ -150,11 +147,11 @@ local function damage_player(player, kill, print_to_all)
             return
         end
         player.character.health = player.character.health - math.random(50, 100)
-        player.character.surface.create_entity({name = 'water-splash', position = player.position})
+        player.character.surface.create_entity({ name = 'water-splash', position = player.position })
         local messages = {
             'Ouch.. That hurt! Better be careful now.',
             'Just a fleshwound.',
-            'Better keep those hands to yourself or you might loose them.'
+            'Better keep those hands to yourself or you might loose them.',
         }
         player.print(messages[math.random(1, #messages)], Color.yellow)
         if player.character.health <= 0 then
@@ -213,7 +210,7 @@ local function on_marked_for_deconstruction(event)
     end
     if playtime < this.required_playtime then
         event.entity.cancel_deconstruction(game.get_player(event.player_index).force.name)
-        player.print('You have not grown accustomed to this technology yet.', {r = 0.22, g = 0.99, b = 0.99})
+        player.print('You have not grown accustomed to this technology yet.', { r = 0.22, g = 0.99, b = 0.99 })
     end
 end
 
@@ -237,7 +234,7 @@ local function on_player_ammo_inventory_changed(event)
     end
     if playtime < this.required_playtime then
         if this.enable_capsule_cursor_warning then
-            local nukes = player.remove_item({name = 'atomic-bomb', count = 1000})
+            local nukes = player.remove_item({ name = 'atomic-bomb', count = 1000 })
             if nukes > 0 then
                 Utils.action_warning('{Nuke}', player.name .. ' tried to equip nukes but was not trusted.')
                 damage_player(player)
@@ -267,9 +264,10 @@ local function on_player_built_tile(event)
     end
     local placed_tiles = event.tiles
     if
-        placed_tiles[1].old_tile.name ~= 'deepwater' and placed_tiles[1].old_tile.name ~= 'water' and
-            placed_tiles[1].old_tile.name ~= 'water-green'
-     then
+        placed_tiles[1].old_tile.name ~= 'deepwater'
+        and placed_tiles[1].old_tile.name ~= 'water'
+        and placed_tiles[1].old_tile.name ~= 'water-green'
+    then
         return
     end
     local player = game.get_player(event.player_index)
@@ -280,12 +278,12 @@ local function on_player_built_tile(event)
 
     local data = {
         player_name = player.name,
-        event = "landfilled",
-        position = {x = math.floor(placed_tiles[1].position.x), y = math.floor(placed_tiles[1].position.y)},
+        event = 'landfilled',
+        position = { x = math.floor(placed_tiles[1].position.x), y = math.floor(placed_tiles[1].position.y) },
         time = game.ticks_played,
         server_time = game.tick,
     }
-    this.histories_idx.landfill = this.histories_idx.landfill % size + 1 
+    this.histories_idx.landfill = this.histories_idx.landfill % size + 1
     this.histories.landfill[this.histories_idx.landfill] = data
 end
 
@@ -312,7 +310,7 @@ local function on_built_entity(event)
 
         if playtime < this.required_playtime then
             event.created_entity.destroy()
-            player.print('You have not grown accustomed to this technology yet.', {r = 0.22, g = 0.99, b = 0.99})
+            player.print('You have not grown accustomed to this technology yet.', { r = 0.22, g = 0.99, b = 0.99 })
         end
     end
 end
@@ -323,20 +321,30 @@ local function on_player_used_capsule(event)
         return
     end
     local player = game.get_player(event.player_index)
-    if not player or not player.valid then return end
+    if not player or not player.valid then
+        return
+    end
     local item = event.item
     if not item then
         return
     end
     local x, y = event.position.x, event.position.y
-    local position = {x = math.floor(x), y = math.floor(y)} 
-    if ammo_names[item.name] and player.surface.count_entities_filtered({force = player.force.name .. "_biters", area = {{x - 10, y - 10}, {x + 10, y + 10}}, limit = 1}) <= 0 then
+    local position = { x = math.floor(x), y = math.floor(y) }
+    if
+        ammo_names[item.name]
+        and player.surface.count_entities_filtered({
+                force = player.force.name .. '_biters',
+                area = { { x - 10, y - 10 }, { x + 10, y + 10 } },
+                limit = 1,
+            })
+            <= 0
+    then
         local data = {
             player_name = player.name,
             event = item.name,
             position = position,
             time = game.ticks_played,
-            server_time = game.tick
+            server_time = game.tick,
         }
         this.histories_idx.capsule = this.histories_idx.capsule % size + 1
         this.histories.capsule[this.histories_idx.capsule] = data
@@ -350,22 +358,27 @@ local function on_entity_died(event)
     end
     local cause = event.cause
     if
-        (cause and cause.name == 'character' and cause.player and cause.force.name == event.entity.force.name and
-            not blacklisted_types[event.entity.type])
-     then
+        cause
+        and cause.name == 'character'
+        and cause.player
+        and cause.force.name == event.entity.force.name
+        and not blacklisted_types[event.entity.type]
+    then
         local player = cause.player
-        if blacklisted_types[event.entity.type] and not this.whitelist_types[event.entity.type] then return end
+        if blacklisted_types[event.entity.type] and not this.whitelist_types[event.entity.type] then
+            return
+        end
         local data = {
             player_name = player.name,
-            event = "destroyed " .. event.entity.name,
-            position = {x = math.floor(event.entity.position.x), y = math.floor(event.entity.position.y)},            
+            event = 'destroyed ' .. event.entity.name,
+            position = { x = math.floor(event.entity.position.x), y = math.floor(event.entity.position.y) },
             time = game.ticks_played,
-            server_time = game.tick
+            server_time = game.tick,
         }
         if chests[event.entity.type] then
             local inv = event.entity.get_inventory(1)
             local contents = inv.get_contents()
-            data.event = table.concat({data.event, " with ", inv.get_item_count(), " items"})
+            data.event = table.concat({ data.event, ' with ', inv.get_item_count(), ' items' })
         end
         this.histories_idx.friendly_fire = this.histories_idx.friendly_fire % size + 1
         this.histories.friendly_fire[this.histories_idx.friendly_fire] = data
@@ -382,21 +395,34 @@ function Public.on_player_mined_entity(entity, player)
 
     if entity.type == 'offshore-pump' then
         Utils.print_admins(
-            player.name .. ' mined an offshore pump at' ..
-            '[gps=' .. entity.position.x .. ',' .. entity.position.y .. ',' .. entity.surface.name .. ']',
+            player.name
+                .. ' mined an offshore pump at'
+                .. '[gps='
+                .. entity.position.x
+                .. ','
+                .. entity.position.y
+                .. ','
+                .. entity.surface.name
+                .. ']',
             nil
         )
     end
 
-    if not entity.force.name == player.force.name then return end
-    if not entity.last_user then return end
-    if entity.last_user.name == player.name then return end
+    if not entity.force.name == player.force.name then
+        return
+    end
+    if not entity.last_user then
+        return
+    end
+    if entity.last_user.name == player.name then
+        return
+    end
     local data = {
         player_name = player.name,
         event = entity.name,
-        position = {x = math.floor(entity.position.x), y = math.floor(entity.position.y)},
+        position = { x = math.floor(entity.position.x), y = math.floor(entity.position.y) },
         time = game.ticks_played,
-        server_time = game.tick
+        server_time = game.tick,
     }
     if belt_types[entity.type] then
         this.histories_idx.belt_mining = this.histories_idx.belt_mining % size + 1
@@ -438,13 +464,13 @@ local function on_gui_opened(event)
         Utils.action_warning('{Corpse}', player.name .. ' is looting ' .. corpse_owner.name .. '´s body.')
         local data = {
             player_name = player.name,
-            event = table.concat({"opened ", corpse_owner.name, " body"}),
-            position = {x = math.floor(event.entity.position.x), y = math.floor(event.entity.position.y)},
+            event = table.concat({ 'opened ', corpse_owner.name, ' body' }),
+            position = { x = math.floor(event.entity.position.x), y = math.floor(event.entity.position.y) },
             time = game.ticks_played,
-            server_time = game.tick
+            server_time = game.tick,
         }
         this.histories_idx.corpse = this.histories_idx.corpse % size + 1
-        this.histories.corpse[this.histories_idx.corpse] = data    
+        this.histories.corpse[this.histories_idx.corpse] = data
     end
 end
 
@@ -483,10 +509,10 @@ local function on_pre_player_mined_item(event)
         Utils.action_warning('{Corpse}', player.name .. ' has looted ' .. corpse_owner.name .. '´s body.')
         local data = {
             player_name = player.name,
-            event = table.concat({"looted ", corpse_owner.name, " body"}),
-            position = {x = math.floor(event.entity.position.x), y = math.floor(event.entity.position.y)},
+            event = table.concat({ 'looted ', corpse_owner.name, ' body' }),
+            position = { x = math.floor(event.entity.position.x), y = math.floor(event.entity.position.y) },
             time = game.ticks_played,
-            server_time = game.tick
+            server_time = game.tick,
         }
         this.histories_idx.corpse = this.histories_idx.corpse % size + 1
         this.histories.corpse[this.histories_idx.corpse] = data
@@ -527,7 +553,7 @@ local function on_player_cursor_stack_changed(event)
     if playtime < this.required_playtime then
         if this.enable_capsule_cursor_warning then
             if ammo_names[name] then
-                local item_to_remove = player.remove_item({name = name, count = 1000})
+                local item_to_remove = player.remove_item({ name = name, count = 1000 })
                 if item_to_remove > 0 then
                     Utils.action_warning('{Capsule}', player.name .. ' equipped ' .. name .. ' but was not trusted.')
                     damage_player(player)
@@ -558,18 +584,21 @@ local function on_player_cancelled_crafting(event)
 
             Utils.action_warning(
                 '{Crafting}',
-                player.name ..
-                    ' canceled their craft of item ' ..
-                        event.recipe.name ..
-                            ' of total count ' ..
-                                crafting_queue_item_count .. ' in raw items (' .. crafted_items .. ' slots) but had no inventory left.'
+                player.name
+                    .. ' canceled their craft of item '
+                    .. event.recipe.name
+                    .. ' of total count '
+                    .. crafting_queue_item_count
+                    .. ' in raw items ('
+                    .. crafted_items
+                    .. ' slots) but had no inventory left.'
             )
         end
 
         local data = {
             player_name = player.name,
-            event = crafting_queue_item_count .. " " .. event.recipe.name,
-            position = {x = math.floor(player.position.x), y = math.floor(player.position.y)},
+            event = crafting_queue_item_count .. ' ' .. event.recipe.name,
+            position = { x = math.floor(player.position.x), y = math.floor(player.position.y) },
             time = game.ticks_played,
             server_time = game.tick,
         }
@@ -657,7 +686,13 @@ local function on_permission_group_edited(event)
         if other_player and other_player.valid then
             Utils.log_msg(
                 '{Permission_Group}',
-                player.name .. ' moved ' .. other_player.name .. ' with type: ' .. event.type .. ' to group: ' .. group.name
+                player.name
+                    .. ' moved '
+                    .. other_player.name
+                    .. ' with type: '
+                    .. event.type
+                    .. ' to group: '
+                    .. group.name
             )
         end
     end
@@ -701,7 +736,7 @@ function Public.reset_tables()
         mining = 0,
         belt_mining = 0,
         corpse = 0,
-        cancel_crafting = 0
+        cancel_crafting = 0,
     }
 end
 
@@ -805,7 +840,7 @@ function Public.insert_into_capsule_history(player, position, msg)
     if #this.capsule_history > 1000 then
         this.capsule_history = {}
     end
-    local t = math.abs(math.floor((game.tick) / 3600))
+    local t = math.abs(math.floor(game.tick / 3600))
     local str = '[' .. t .. '] '
     str = str .. '[color=yellow]' .. msg .. '[/color]'
     str = str .. ' at X:'

@@ -1,5 +1,5 @@
 --luacheck: globals table
-local Stats = require 'utils.stats'
+local Stats = require('utils.stats')
 local random = math.random
 local floor = math.floor
 local remove = table.remove
@@ -178,11 +178,11 @@ function table.get_random_weighted_chances(weighted_table, item_index, weight_in
     for _, v in pairs(weighted_table) do
         total_weight = total_weight + v[weight_index]
     end
-	local chance_table = {}
-	for k, v in pairs(weighted_table) do
+    local chance_table = {}
+    for k, v in pairs(weighted_table) do
         chance_table[k] = v[weight_index] / total_weight
     end
-	return chance_table
+    return chance_table
 end
 
 --- Creates a fisher-yates shuffle of a sequential number-indexed table
@@ -261,7 +261,7 @@ function table.binary_search(t, target)
 end
 
 -- add table-related functions that exist in base factorio/util to the 'table' table
-require 'util'
+require('util')
 
 --- Similar to serpent.block, returns a string with a pretty representation of a table.
 -- Notice: This method is not appropriate for saving/restoring tables. It is meant to be used by the programmer mainly while debugging a program.
@@ -271,7 +271,7 @@ require 'util'
 -- process is a function which allow altering the passed object before transforming it into a string.
 -- A typical way to use it would be to remove certain values so that they don't appear at all.
 -- return <string> the prettied table
-table.inspect = require 'utils.inspect'
+table.inspect = require('utils.inspect')
 
 --- Takes a table and returns the number of entries in the table. (Slower than #table, faster than iterating via pairs)
 table.size = table_size

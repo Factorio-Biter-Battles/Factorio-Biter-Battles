@@ -1,5 +1,5 @@
-local Global = require 'utils.global'
-local Event = require 'utils.event'
+local Global = require('utils.global')
+local Event = require('utils.event')
 
 local this = {
     created_items = {},
@@ -8,15 +8,12 @@ local this = {
     chart_distance = 0,
     disable_crashsite = true,
     crashed_ship_items = {},
-    crashed_debris_items = {}
+    crashed_debris_items = {},
 }
 
-Global.register(
-    this,
-    function(t)
-        this = t
-    end
-)
+Global.register(this, function(t)
+    this = t
+end)
 
 local function is_game_modded()
     local i = 0
@@ -39,26 +36,26 @@ local created_items = function()
         ['pistol'] = 1,
         ['firearm-magazine'] = 10,
         ['burner-mining-drill'] = 1,
-        ['stone-furnace'] = 1
+        ['stone-furnace'] = 1,
     }
 end
 
 local respawn_items = function()
     return {
         ['pistol'] = 1,
-        ['firearm-magazine'] = 10
+        ['firearm-magazine'] = 10,
     }
 end
 
 local ship_items = function()
     return {
-        ['firearm-magazine'] = 8
+        ['firearm-magazine'] = 8,
     }
 end
 
 local debris_items = function()
     return {
-        ['iron-plate'] = 8
+        ['iron-plate'] = 8,
     }
 end
 
@@ -67,7 +64,7 @@ local chart_starting_area = function()
     local force = game.forces.player
     local surface = game.surfaces[1]
     local origin = force.get_spawn_position(surface)
-    force.chart(surface, {{origin.x - r, origin.y - r}, {origin.x + r, origin.y + r}})
+    force.chart(surface, { { origin.x - r, origin.y - r }, { origin.x + r, origin.y + r } })
 end
 
 local on_player_created = function(event)
@@ -88,7 +85,7 @@ local on_player_created = function(event)
             surface.daytime = 0.7
             crash_site.create_crash_site(
                 surface,
-                {-5, -6},
+                { -5, -6 },
                 util.copy(this.crashed_ship_items),
                 util.copy(this.crashed_debris_items)
             )
@@ -98,7 +95,7 @@ local on_player_created = function(event)
             if player.character then
                 player.character.destructible = false
             end
-            crash_site.create_cutscene(player, {-5, -4})
+            crash_site.create_cutscene(player, { -5, -4 })
             return
         end
     end
@@ -175,8 +172,8 @@ local freeplay_interface = {
         this.skip_intro = bool
     end,
     set_chart_distance = function(value)
-        this.chart_distance =
-            tonumber(value) or error('Remote call parameter to freeplay set chart distance must be a number')
+        this.chart_distance = tonumber(value)
+            or error('Remote call parameter to freeplay set chart distance must be a number')
     end,
     set_disable_crashsite = function(bool)
         this.disable_crashsite = bool
@@ -192,27 +189,25 @@ local freeplay_interface = {
     end,
     set_debris_items = function(map)
         this.crashed_debris_items = map or error("Remote call parameter to freeplay set respawn items can't be nil.")
-    end
+    end,
 }
 
 if not remote.interfaces['freeplay'] then
     remote.add_interface('freeplay', freeplay_interface)
 end
 
-Event.on_init(
-    function()
-        local i = 0
-        local game_has_mods = is_game_modded()
-        if game_has_mods then
-            this.modded = true
-            this.disable_crashsite = false
-            this.created_items = created_items()
-            this.respawn_items = respawn_items()
-            this.crashed_ship_items = ship_items()
-            this.crashed_debris_items = debris_items()
-        end
+Event.on_init(function()
+    local i = 0
+    local game_has_mods = is_game_modded()
+    if game_has_mods then
+        this.modded = true
+        this.disable_crashsite = false
+        this.created_items = created_items()
+        this.respawn_items = respawn_items()
+        this.crashed_ship_items = ship_items()
+        this.crashed_debris_items = debris_items()
     end
-)
+end)
 
 Event.on_configuration_changed = function()
     this.created_items = this.created_items or created_items()

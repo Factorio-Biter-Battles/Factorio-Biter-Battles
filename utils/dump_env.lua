@@ -2,8 +2,8 @@
 -- Useful for ensuring you get the same information when loading
 -- the reference and desync levels in desync reports.
 -- dependencies
-local table = require 'utils.table'
-local Event = require 'utils.event'
+local table = require('utils.table')
+local Event = require('utils.event')
 
 -- localized functions
 local inspect = table.inspect
@@ -20,7 +20,7 @@ end
 
 local function player_joined(event)
     game.tick_paused = true
-    local dump_string = inspect(_ENV, {process = filter})
+    local dump_string = inspect(_ENV, { process = filter })
     if dump_string then
         local s = string.format('tick on join: %s\n%s', event.tick, dump_string)
         game.write_file(filename, s)

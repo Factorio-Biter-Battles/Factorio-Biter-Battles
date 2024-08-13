@@ -28,7 +28,7 @@ function PriorityQueue.new(comparator)
         comparator = default_comparator
     end
 
-    local mt = {comparator = comparator}
+    local mt = { comparator = comparator }
 
     return setmetatable({}, mt)
 end
@@ -38,7 +38,7 @@ function PriorityQueue.load(self, comparator)
         comparator = default_comparator
     end
 
-    local mt = {comparator = comparator}
+    local mt = { comparator = comparator }
 
     return setmetatable(self or {}, mt)
 end

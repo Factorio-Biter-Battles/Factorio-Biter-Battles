@@ -1,11 +1,11 @@
-local Gui = require 'utils.gui'
-local Global = require 'utils.global'
-local Event = require 'utils.event'
-local Server = require 'utils.server'
-local Tabs = require 'comfy_panel.main'
-local session = require 'utils.datastore.session_data'
-local gui_style = require 'utils.utils'.gui_style
-local frame_style = require 'utils.utils'.left_frame_style
+local Gui = require('utils.gui')
+local Global = require('utils.global')
+local Event = require('utils.event')
+local Server = require('utils.server')
+local Tabs = require('comfy_panel.main')
+local session = require('utils.datastore.session_data')
+local gui_style = require('utils.utils').gui_style
+local frame_style = require('utils.utils').left_frame_style
 local Class = {}
 
 local insert = table.insert
@@ -22,27 +22,24 @@ local inv_tick_duration_step = 1 / tick_duration_step
 --local focus_color = {r = 255, g = 165, b = 0}
 
 local polls = {}
-local polls_counter = {0}
+local polls_counter = { 0 }
 local no_notify_players = {}
 local player_poll_index = {}
 local player_create_poll_data = {}
 
-Global.register(
-    {
-        polls = polls,
-        polls_counter = polls_counter,
-        no_notify_players = no_notify_players,
-        player_poll_index = player_poll_index,
-        player_create_poll_data = player_create_poll_data
-    },
-    function(tbl)
-        polls = tbl.polls
-        polls_counter = tbl.polls_counter
-        no_notify_players = tbl.no_notify_players
-        player_poll_index = tbl.player_poll_index
-        player_create_poll_data = tbl.player_create_poll_data
-    end
-)
+Global.register({
+    polls = polls,
+    polls_counter = polls_counter,
+    no_notify_players = no_notify_players,
+    player_poll_index = player_poll_index,
+    player_create_poll_data = player_create_poll_data,
+}, function(tbl)
+    polls = tbl.polls
+    polls_counter = tbl.polls_counter
+    no_notify_players = tbl.no_notify_players
+    player_poll_index = tbl.player_poll_index
+    player_create_poll_data = tbl.player_create_poll_data
+end)
 
 local poll_flow_name = Gui.uid_name()
 local main_button_name = Gui.uid_name()
@@ -123,7 +120,7 @@ local function do_remaining_time(poll, remaining_time_label)
 end
 
 local function send_poll_result_to_discord(poll)
-    local result = {'Poll #', poll.id}
+    local result = { 'Poll #', poll.id }
 
     local created_by_player = poll.created_by
     if created_by_player and created_by_player.valid then
@@ -209,12 +206,12 @@ local function redraw_poll_viewer_content(data)
         created_by_text = ''
     end
 
-    local top_flow = poll_viewer_content.add {type = 'flow', direction = 'vertical'}
-    top_flow.add {type = 'label', caption = table.concat {'Poll #', poll.id, created_by_text}}
+    local top_flow = poll_viewer_content.add({ type = 'flow', direction = 'vertical' })
+    top_flow.add({ type = 'label', caption = table.concat({ 'Poll #', poll.id, created_by_text }) })
 
     local edited_by_players = poll.edited_by
     if next(edited_by_players) then
-        local edit_names = {'Edited by '}
+        local edit_names = { 'Edited by ' }
         for pi, _ in pairs(edited_by_players) do
             local p = game.get_player(pi)
             if p and p.valid then
@@ -226,52 +223,50 @@ local function redraw_poll_viewer_content(data)
         table.remove(edit_names)
         local edit_text = table.concat(edit_names)
 
-        local top_flow_label = top_flow.add { type = 'label', caption = edit_text, tooltip = edit_text }
+        local top_flow_label = top_flow.add({ type = 'label', caption = edit_text, tooltip = edit_text })
         gui_style(top_flow_label, { single_line = false, horizontally_stretchable = false })
     end
 
     local poll_enabled = do_remaining_time(poll, remaining_time_label)
 
-    local question_flow = poll_viewer_content.add {type = 'table', column_count = 2}
+    local question_flow = poll_viewer_content.add({ type = 'table', column_count = 2 })
     if player.admin then
-        local edit_button =
-            question_flow.add {
+        local edit_button = question_flow.add({
             type = 'sprite-button',
             name = poll_view_edit_name,
             sprite = 'utility/rename_icon_normal',
             tooltip = 'Edit Poll.',
             style = 'button',
-        }
+        })
         gui_style(edit_button, { width = 26, height = 26, padding = 0 })
     end
 
-    local question_label = question_flow.add {type = 'label', caption = poll.question}
+    local question_label = question_flow.add({ type = 'label', caption = poll.question })
     gui_style(question_label, {
         minimal_height = 32,
         single_line = false,
         --font_color = focus_color,
         --font = 'default-listbox',
         font = 'heading-2',
-        font_color = {r = 0.98, g = 0.66, b = 0.22},
+        font_color = { r = 0.98, g = 0.66, b = 0.22 },
         top_padding = 4,
         left_padding = 4,
         right_padding = 4,
         bottom_padding = 4,
     })
 
-    local grid = poll_viewer_content.add {type = 'table', column_count = 2}
+    local grid = poll_viewer_content.add({ type = 'table', column_count = 2 })
 
     --local answer = voters[player.index]
     local vote_buttons = {}
     for i, a in pairs(answers) do
-        local vote_button_flow = grid.add {type = 'flow'}
-        local vote_button =
-            vote_button_flow.add {
+        local vote_button_flow = grid.add({ type = 'flow' })
+        local vote_button = vote_button_flow.add({
             type = 'button',
             name = poll_view_vote_name,
             caption = a.voted_count,
-            enabled = poll_enabled
-        }
+            enabled = poll_enabled,
+        })
 
         local tooltip = tooltips[a]
         if tooltip ~= '' then
@@ -288,15 +283,15 @@ local function redraw_poll_viewer_content(data)
             right_padding = 0,
         })
 
-        Gui.set_data(vote_button, {answer = a, data = data})
+        Gui.set_data(vote_button, { answer = a, data = data })
         vote_buttons[i] = vote_button
 
-        local label = grid.add { type = 'label', caption = a.text }
+        local label = grid.add({ type = 'label', caption = a.text })
         gui_style(label, {
             single_line = false,
             minimal_height = 24,
             font = 'heading-3',
-            font_color = {r = 0.95, g = 0.95, b = 0.95},
+            font_color = { r = 0.95, g = 0.95, b = 0.95 },
             --top_padding = 2,
             left_padding = 4,
             right_padding = 4,
@@ -324,7 +319,7 @@ local function update_poll_viewer(data)
     if poll_index == 0 then
         poll_index_label.caption = 'No Polls'
     else
-        poll_index_label.caption = table.concat {'Poll ', poll_index, ' / ', #polls}
+        poll_index_label.caption = table.concat({ 'Poll ', poll_index, ' / ', #polls })
     end
 
     back_button.enabled = poll_index > 1
@@ -338,48 +333,61 @@ local function draw_main_frame(player)
     local poll_flow = Gui.add_left_element(player, { type = 'flow', name = poll_flow_name, direction = 'vertical' })
     gui_style(poll_flow, flow_style)
 
-    local frame = poll_flow.add{ type = 'frame', name = main_frame_name, direction = 'vertical' }
+    local frame = poll_flow.add({ type = 'frame', name = main_frame_name, direction = 'vertical' })
     gui_style(frame, frame_style())
 
-    local flow = frame.add { type = 'flow', name = 'flow', style = 'vertical_flow', direction = 'vertical' }
-	local inner_frame = flow.add { type = 'frame', name = 'inner_frame', style = 'window_content_frame_packed', direction = 'vertical' }
+    local flow = frame.add({ type = 'flow', name = 'flow', style = 'vertical_flow', direction = 'vertical' })
+    local inner_frame = flow.add({
+        type = 'frame',
+        name = 'inner_frame',
+        style = 'window_content_frame_packed',
+        direction = 'vertical',
+    })
 
     -- == SUBHEADER =================================================================
-	local subheader = inner_frame.add { type = 'frame', name = 'subheader', style = 'subheader_frame' }
-	gui_style(subheader, { horizontally_stretchable = true, horizontally_squashable = true, maximal_height = 40 })
+    local subheader = inner_frame.add({ type = 'frame', name = 'subheader', style = 'subheader_frame' })
+    gui_style(subheader, { horizontally_stretchable = true, horizontally_squashable = true, maximal_height = 40 })
 
-	local label = subheader.add { type = 'label', caption = 'Polls' }
-	gui_style(label, { font = 'heading-3', font_color = { 165, 165, 165 }, left_margin = 4 })
+    local label = subheader.add({ type = 'label', caption = 'Polls' })
+    gui_style(label, { font = 'heading-3', font_color = { 165, 165, 165 }, left_margin = 4 })
 
-	Gui.add_pusher(subheader)
+    Gui.add_pusher(subheader)
 
-	subheader.add({
-        type = "sprite-button", name = main_button_name,
-        sprite = "utility/close_white", clicked_sprite = "utility/close_black",
-        style = "close_button", tooltip = {"gui.close"}
+    subheader.add({
+        type = 'sprite-button',
+        name = main_button_name,
+        sprite = 'utility/close_white',
+        clicked_sprite = 'utility/close_black',
+        style = 'close_button',
+        tooltip = { 'gui.close' },
     })
 
     -- == MAIN FRAME ================================================================
-    local sp = inner_frame.add { type = 'scroll-pane', name = 'scroll_pane', style = 'scroll_pane_under_subheader', direction = 'vertical' }
+    local sp = inner_frame.add({
+        type = 'scroll-pane',
+        name = 'scroll_pane',
+        style = 'scroll_pane_under_subheader',
+        direction = 'vertical',
+    })
 
-    local poll_viewer_top_flow = sp.add {type = 'table', column_count = 5}
+    local poll_viewer_top_flow = sp.add({ type = 'table', column_count = 5 })
     poll_viewer_top_flow.style.horizontal_spacing = 0
 
-    local back_button = poll_viewer_top_flow.add {type = 'button', name = poll_view_back_name, caption = '◀'}
+    local back_button = poll_viewer_top_flow.add({ type = 'button', name = poll_view_back_name, caption = '◀' })
     apply_direction_button_style(back_button)
 
-    local forward_button = poll_viewer_top_flow.add {type = 'button', name = poll_view_forward_name, caption = '▶'}
+    local forward_button = poll_viewer_top_flow.add({ type = 'button', name = poll_view_forward_name, caption = '▶' })
     apply_direction_button_style(forward_button)
 
-    local poll_index_label = poll_viewer_top_flow.add {type = 'label'}
+    local poll_index_label = poll_viewer_top_flow.add({ type = 'label' })
     poll_index_label.style.left_padding = 8
 
-    local spacer = poll_viewer_top_flow.add {type = 'flow'}
+    local spacer = poll_viewer_top_flow.add({ type = 'flow' })
     spacer.style.horizontally_stretchable = true
 
-    local remaining_time_label = poll_viewer_top_flow.add {type = 'label'}
+    local remaining_time_label = poll_viewer_top_flow.add({ type = 'label' })
 
-    local poll_viewer_content = sp.add { type = 'scroll-pane' }
+    local poll_viewer_content = sp.add({ type = 'scroll-pane' })
     gui_style(poll_viewer_content, {
         maximal_height = 480,
         minimal_width = 232,
@@ -396,7 +404,7 @@ local function draw_main_frame(player)
         poll_index_label = poll_index_label,
         poll_viewer_content = poll_viewer_content,
         remaining_time_label = remaining_time_label,
-        poll_index = poll_index
+        poll_index = poll_index,
     }
 
     Gui.set_data(frame, data)
@@ -417,15 +425,17 @@ local function draw_main_frame(player)
     ]]
 
     -- == SUBFOOTER ===============================================================
-	local subfooter = inner_frame.add { type = 'frame', name = 'subfooter', style = 'subfooter_frame', direction = 'horizontal' }
-	gui_style(subfooter, { horizontally_stretchable = true, horizontally_squashable = true, maximal_height = 36 })
+    local subfooter =
+        inner_frame.add({ type = 'frame', name = 'subfooter', style = 'subfooter_frame', direction = 'horizontal' })
+    gui_style(subfooter, { horizontally_stretchable = true, horizontally_squashable = true, maximal_height = 36 })
 
     Gui.add_pusher(subfooter)
 
-    local create_poll_button = subfooter.add{type = 'button', name = create_poll_button_name, caption = 'Create Poll'}
+    local create_poll_button =
+        subfooter.add({ type = 'button', name = create_poll_button_name, caption = 'Create Poll' })
     if not player.admin then
         create_poll_button.enabled = false
-        create_poll_button.tooltip = "Poll creation is disabled"
+        create_poll_button.tooltip = 'Poll creation is disabled'
     end
     apply_button_style(create_poll_button)
 end
@@ -490,76 +500,78 @@ local function redraw_create_poll_content(data)
     Gui.remove_data_recursively(grid)
     grid.clear()
 
-    grid.add {type = 'flow'}
-    grid.add {
+    grid.add({ type = 'flow' })
+    grid.add({
         type = 'label',
         caption = 'Duration:',
-        tooltip = 'Pro tip: Use mouse wheel or arrow keys for more fine control.'
-    }
+        tooltip = 'Pro tip: Use mouse wheel or arrow keys for more fine control.',
+    })
 
-    local duration_flow = grid.add {type = 'flow', direction = 'horizontal'}
-    local duration_slider =
-        duration_flow.add {
+    local duration_flow = grid.add({ type = 'flow', direction = 'horizontal' })
+    local duration_slider = duration_flow.add({
         type = 'slider',
         name = create_poll_duration_name,
         minimum_value = 0,
         maximum_value = duration_slider_max,
-        value = math.floor(data.duration * inv_tick_duration_step)
-    }
+        value = math.floor(data.duration * inv_tick_duration_step),
+    })
     gui_style(duration_slider, { minimal_width = 100, horizontally_stretchable = true })
 
     data.duration_slider = duration_slider
 
-    local duration_label = duration_flow.add { type = 'label' }
+    local duration_label = duration_flow.add({ type = 'label' })
 
-    Gui.set_data(duration_slider, {duration_label = duration_label, data = data})
+    Gui.set_data(duration_slider, { duration_label = duration_label, data = data })
 
     update_duration(duration_slider)
 
-    grid.add {type = 'flow'}
-    local question_label = grid.add({type = 'flow'}).add { type = 'label', name = create_poll_label_name, caption = 'Question:' }
-    local question_textfield = grid.add({ type = 'flow' }).add { type = 'textfield', name = create_poll_question_name, text = data.question }
-    gui_style(question_textfield, { natural_width = 0, width = 0, minimal_width = 170, horizontally_stretchable = true })
+    grid.add({ type = 'flow' })
+    local question_label = grid.add({ type = 'flow' })
+        .add({ type = 'label', name = create_poll_label_name, caption = 'Question:' })
+    local question_textfield = grid.add({ type = 'flow' })
+        .add({ type = 'textfield', name = create_poll_question_name, text = data.question })
+    gui_style(
+        question_textfield,
+        { natural_width = 0, width = 0, minimal_width = 170, horizontally_stretchable = true }
+    )
 
     Gui.set_data(question_label, question_textfield)
     Gui.set_data(question_textfield, data)
 
     local edit_mode = data.edit_mode
     for count, answer in pairs(answers) do
-        local delete_flow = grid.add {type = 'flow'}
+        local delete_flow = grid.add({ type = 'flow' })
 
         local delete_button
         if edit_mode or count ~= 1 then
-            delete_button =
-                delete_flow.add {
+            delete_button = delete_flow.add({
                 type = 'sprite-button',
                 name = create_poll_delete_answer_name,
                 sprite = 'utility/trash_white',
                 tooltip = 'Delete answer field.',
                 style = 'red_logistic_slot_button',
-            }
+            })
             gui_style(delete_button, { height = 26, width = 26 })
         else
             gui_style(delete_flow, { height = 26, width = 26 })
         end
 
-        local label_flow = grid.add {type = 'flow'}
-        local label =
-            label_flow.add {
+        local label_flow = grid.add({ type = 'flow' })
+        local label = label_flow.add({
             type = 'label',
             name = create_poll_label_name,
-            caption = table.concat { 'Answer #', count, ':' }
-        }
+            caption = table.concat({ 'Answer #', count, ':' }),
+        })
 
-        local textfield_flow = grid.add { type = 'flow' }
+        local textfield_flow = grid.add({ type = 'flow' })
 
-        local textfield = textfield_flow.add { type = 'textfield', name = create_poll_answer_name, text = answer.text }
+        local textfield = textfield_flow.add({ type = 'textfield', name = create_poll_answer_name, text = answer.text })
         gui_style(textfield, { natural_width = 0, width = 0, minimal_width = 170, horizontally_stretchable = true })
 
-        Gui.set_data(textfield, {answers = answers, count = count})
+        Gui.set_data(textfield, { answers = answers, count = count })
 
         if delete_button then
-            Gui.set_data(delete_button, {data = data, count = count})
+            Gui.set_data(delete_button, { data = data, count = count })
         end
 
         Gui.set_data(label, textfield)
@@ -583,13 +595,13 @@ local function draw_create_poll_frame(player, previous_data)
 
         answers = {}
         for i, a in pairs(previous_data.answers) do
-            answers[i] = {text = a.text, source = a}
+            answers[i] = { text = a.text, source = a }
         end
 
         duration = previous_data.duration
     else
         question = ''
-        answers = {{text = ''}, {text = ''}, {text = ''}}
+        answers = { { text = '' }, { text = '' }, { text = '' } }
         duration = default_poll_duration * 60
     end
 
@@ -603,25 +615,35 @@ local function draw_create_poll_frame(player, previous_data)
         confirm_name = create_poll_confirm_name
     end
 
-    local frame = Gui.get_left_element(player, poll_flow_name).add{ type = 'frame', name = create_poll_frame_name, direction = 'vertical' }
+    local frame = Gui.get_left_element(player, poll_flow_name)
+        .add({ type = 'frame', name = create_poll_frame_name, direction = 'vertical' })
     gui_style(frame, frame_style())
     gui_style(frame, { minimal_width = 320, horizontally_stretchable = true })
 
-    local flow = frame.add { type = 'flow', name = 'flow', style = 'vertical_flow', direction = 'vertical' }
-	local inner_frame = flow.add { type = 'frame', name = 'inner_frame', style = 'window_content_frame_packed', direction = 'vertical' }
+    local flow = frame.add({ type = 'flow', name = 'flow', style = 'vertical_flow', direction = 'vertical' })
+    local inner_frame = flow.add({
+        type = 'frame',
+        name = 'inner_frame',
+        style = 'window_content_frame_packed',
+        direction = 'vertical',
+    })
 
     -- == SUBHEADER =================================================================
-	local subheader = inner_frame.add { type = 'frame', name = 'subheader', style = 'subheader_frame' }
-	gui_style(subheader, { horizontally_stretchable = true, horizontally_squashable = true, maximal_height = 40 })
+    local subheader = inner_frame.add({ type = 'frame', name = 'subheader', style = 'subheader_frame' })
+    gui_style(subheader, { horizontally_stretchable = true, horizontally_squashable = true, maximal_height = 40 })
 
-	local label = subheader.add { type = 'label', caption = title_text }
-	gui_style(label, { font = 'heading-3', font_color = { 165, 165, 165 }, left_margin = 4 })
+    local label = subheader.add({ type = 'label', caption = title_text })
+    gui_style(label, { font = 'heading-3', font_color = { 165, 165, 165 }, left_margin = 4 })
 
     -- == MAIN FRAME ================================================================
-    local scroll_pane = inner_frame.add {type = 'scroll-pane', style = 'scroll_pane_under_subheader', vertical_scroll_policy = 'always'}
+    local scroll_pane = inner_frame.add({
+        type = 'scroll-pane',
+        style = 'scroll_pane_under_subheader',
+        vertical_scroll_policy = 'always',
+    })
     gui_style(scroll_pane, { maximal_height = 250, horizontally_stretchable = true, padding = 4, margin = 6 })
 
-    local grid = scroll_pane.add { type = 'table', column_count = 3 }
+    local grid = scroll_pane.add({ type = 'table', column_count = 3 })
 
     local data = {
         frame = frame,
@@ -630,46 +652,53 @@ local function draw_create_poll_frame(player, previous_data)
         answers = answers,
         duration = duration,
         previous_data = previous_data,
-        edit_mode = edit_mode
+        edit_mode = edit_mode,
     }
 
     Gui.set_data(frame, data)
 
     redraw_create_poll_content(data)
 
-    local add_answer_button =
-        scroll_pane.add {
+    local add_answer_button = scroll_pane.add({
         type = 'button',
         name = create_poll_add_answer_name,
-        caption = 'Add Answer'
-    }
+        caption = 'Add Answer',
+    })
     apply_button_style(add_answer_button)
     Gui.set_data(add_answer_button, data)
 
-    local bottom_flow = frame.add {type = 'flow', direction = 'horizontal'}
+    local bottom_flow = frame.add({ type = 'flow', direction = 'horizontal' })
 
     -- == SUBFOOTER ===============================================================
-	local subfooter = inner_frame.add { type = 'frame', name = 'subfooter', style = 'subfooter_frame', direction = 'horizontal' }
-	gui_style(subfooter, { horizontally_stretchable = true, horizontally_squashable = true, maximal_height = 36 })
+    local subfooter =
+        inner_frame.add({ type = 'frame', name = 'subfooter', style = 'subfooter_frame', direction = 'horizontal' })
+    gui_style(subfooter, { horizontally_stretchable = true, horizontally_squashable = true, maximal_height = 36 })
 
-    local close_button = subfooter.add {type = 'button', name = create_poll_close_name, caption = 'Close', style = 'back_button' }
+    local close_button =
+        subfooter.add({ type = 'button', name = create_poll_close_name, caption = 'Close', style = 'back_button' })
     apply_button_style(close_button)
     close_button.style.left_margin = 4
     Gui.set_data(close_button, frame)
 
-    local clear_button = subfooter.add {type = 'button', name = create_poll_clear_name, caption = 'Clear' }
+    local clear_button = subfooter.add({ type = 'button', name = create_poll_clear_name, caption = 'Clear' })
     apply_button_style(clear_button)
     Gui.set_data(clear_button, data)
 
     Gui.add_pusher(subfooter)
 
     if edit_mode then
-        local delete_button = subfooter.add {type = 'button', name = create_poll_delete_name, caption = 'Delete', style = 'red_button' }
+        local delete_button =
+            subfooter.add({ type = 'button', name = create_poll_delete_name, caption = 'Delete', style = 'red_button' })
         apply_button_style(delete_button)
         Gui.set_data(delete_button, data)
     end
 
-    local confirm_button = subfooter.add {type = 'button', name = confirm_name, caption = confirm_text, style = 'confirm_button_without_tooltip' }
+    local confirm_button = subfooter.add({
+        type = 'button',
+        name = confirm_name,
+        caption = confirm_text,
+        style = 'confirm_button_without_tooltip',
+    })
     apply_button_style(confirm_button)
     confirm_button.style.right_margin = 4
     Gui.set_data(confirm_button, data)
@@ -677,7 +706,7 @@ end
 
 local function show_new_poll(poll_data)
     local message =
-        table.concat {poll_data.created_by.name, ' has created a new Poll #', poll_data.id, ': ', poll_data.question}
+        table.concat({ poll_data.created_by.name, ' has created a new Poll #', poll_data.id, ': ', poll_data.question })
 
     for _, p in pairs(game.connected_players) do
         local poll_flow = Gui.get_left_element(p, poll_flow_name)
@@ -719,7 +748,7 @@ local function create_poll(event)
         local text = a.text
         if text:find('%S') then
             local index = #answers + 1
-            answers[index] = {text = text, index = index, voted_count = 0}
+            answers[index] = { text = text, index = index, voted_count = 0 }
         end
     end
 
@@ -749,7 +778,7 @@ local function create_poll(event)
         end_tick = end_tick,
         duration = duration,
         created_by = event.player,
-        edited_by = {}
+        edited_by = {},
     }
 
     insert(polls, poll_data)
@@ -821,21 +850,21 @@ local function vote(event)
                     vote_button.caption = previous_vote_button_count
                     vote_button.tooltip = previous_vote_button_tooltip
 
-                --if p.index == player_index then
-                --    local vote_button_style = vote_button.style
-                --    vote_button_style.font_color = normal_color
-                --    vote_button_style.disabled_font_color = normal_color
-                --end
+                    --if p.index == player_index then
+                    --    local vote_button_style = vote_button.style
+                    --    vote_button_style.font_color = normal_color
+                    --    vote_button_style.disabled_font_color = normal_color
+                    --end
                 end
 
                 local vote_button = vote_buttons[vote_index]
                 vote_button.caption = vote_button_count
                 vote_button.tooltip = vote_button_tooltip
-            -- if p.index == player_index then -- block commented to avoid desync risk
-            --     local vote_button_style = vote_button.style
-            --     vote_button_style.font_color = focus_color
-            --     vote_button_style.disabled_font_color = focus_color
-            -- end
+                -- if p.index == player_index then -- block commented to avoid desync risk
+                --     local vote_button_style = vote_button.style
+                --     vote_button_style.font_color = focus_color
+                --     vote_button_style.disabled_font_color = focus_color
+                -- end
             end
         end
     end
@@ -846,7 +875,7 @@ function Class.create_top_button(player)
         type = 'sprite-button',
         name = main_button_name,
         sprite = 'item/programmable-speaker',
-        tooltip = {'gui.polls_top_button'}
+        tooltip = { 'gui.polls_top_button' },
     })
 end
 
@@ -895,310 +924,271 @@ Event.on_nth_tick(60, tick)
 
 Gui.on_click(main_button_name, toggle)
 
-Gui.on_click(
-    create_poll_button_name,
-    function(event)
-        local player = event.player
-        local poll_flow = Gui.get_left_element(player, poll_flow_name)
-        local frame = poll_flow and poll_flow[create_poll_frame_name]
-        if frame and frame.valid then
-            remove_create_poll_frame(frame, player.index)
-        else
-            draw_create_poll_frame(player)
-        end
+Gui.on_click(create_poll_button_name, function(event)
+    local player = event.player
+    local poll_flow = Gui.get_left_element(player, poll_flow_name)
+    local frame = poll_flow and poll_flow[create_poll_frame_name]
+    if frame and frame.valid then
+        remove_create_poll_frame(frame, player.index)
+    else
+        draw_create_poll_frame(player)
     end
-)
+end)
 
-Gui.on_click(
-    poll_view_edit_name,
-    function(event)
-        local player = event.player
-        local poll_flow = Gui.get_left_element(player, poll_flow_name)
-        local frame = poll_flow and poll_flow[create_poll_frame_name]
+Gui.on_click(poll_view_edit_name, function(event)
+    local player = event.player
+    local poll_flow = Gui.get_left_element(player, poll_flow_name)
+    local frame = poll_flow and poll_flow[create_poll_frame_name]
 
-        if frame and frame.valid then
-            Gui.remove_data_recursively(frame)
-            frame.destroy()
-        end
-
-        local main_frame = poll_flow and poll_flow[main_frame_name]
-        local frame_data = Gui.get_data(main_frame)
-        local poll = polls[frame_data.poll_index]
-
-        poll.edit_mode = true
-        draw_create_poll_frame(player, poll)
+    if frame and frame.valid then
+        Gui.remove_data_recursively(frame)
+        frame.destroy()
     end
-)
 
-Gui.on_value_changed(
-    create_poll_duration_name,
-    function(event)
-        update_duration(event.element)
+    local main_frame = poll_flow and poll_flow[main_frame_name]
+    local frame_data = Gui.get_data(main_frame)
+    local poll = polls[frame_data.poll_index]
+
+    poll.edit_mode = true
+    draw_create_poll_frame(player, poll)
+end)
+
+Gui.on_value_changed(create_poll_duration_name, function(event)
+    update_duration(event.element)
+end)
+
+Gui.on_click(create_poll_delete_answer_name, function(event)
+    local button_data = Gui.get_data(event.element)
+    local data = button_data.data
+
+    table.remove(data.answers, button_data.count)
+    redraw_create_poll_content(data)
+end)
+
+Gui.on_click(create_poll_label_name, function(event)
+    local textfield = Gui.get_data(event.element)
+    textfield.focus()
+end)
+
+Gui.on_text_changed(create_poll_question_name, function(event)
+    local textfield = event.element
+    local data = Gui.get_data(textfield)
+
+    data.question = textfield.text
+end)
+
+Gui.on_text_changed(create_poll_answer_name, function(event)
+    local textfield = event.element
+    local data = Gui.get_data(textfield)
+
+    data.answers[data.count].text = textfield.text
+end)
+
+Gui.on_click(create_poll_add_answer_name, function(event)
+    local data = Gui.get_data(event.element)
+
+    if not data then
+        return
     end
-)
 
-Gui.on_click(
-    create_poll_delete_answer_name,
-    function(event)
-        local button_data = Gui.get_data(event.element)
-        local data = button_data.data
-
-        table.remove(data.answers, button_data.count)
-        redraw_create_poll_content(data)
+    if data and #data.answers > 10 then
+        return
     end
-)
 
-Gui.on_click(
-    create_poll_label_name,
-    function(event)
-        local textfield = Gui.get_data(event.element)
-        textfield.focus()
+    insert(data.answers, { text = '' })
+    redraw_create_poll_content(data)
+end)
+
+Gui.on_click(create_poll_close_name, function(event)
+    local frame = Gui.get_data(event.element)
+    remove_create_poll_frame(frame, event.player_index)
+end)
+
+Gui.on_click(create_poll_clear_name, function(event)
+    local data = Gui.get_data(event.element)
+
+    local slider = data.duration_slider
+    slider.slider_value = math.floor(default_poll_duration * 60 * inv_tick_duration_step)
+    update_duration(slider)
+
+    data.question = ''
+
+    local answers = data.answers
+    for i = 1, #answers do
+        answers[i].text = ''
     end
-)
 
-Gui.on_text_changed(
-    create_poll_question_name,
-    function(event)
-        local textfield = event.element
-        local data = Gui.get_data(textfield)
-
-        data.question = textfield.text
-    end
-)
-
-Gui.on_text_changed(
-    create_poll_answer_name,
-    function(event)
-        local textfield = event.element
-        local data = Gui.get_data(textfield)
-
-        data.answers[data.count].text = textfield.text
-    end
-)
-
-Gui.on_click(
-    create_poll_add_answer_name,
-    function(event)
-        local data = Gui.get_data(event.element)
-
-        if not data then
-            return
-        end
-
-        if data and #data.answers > 10 then
-            return
-        end
-
-        insert(data.answers, {text = ''})
-        redraw_create_poll_content(data)
-    end
-)
-
-Gui.on_click(
-    create_poll_close_name,
-    function(event)
-        local frame = Gui.get_data(event.element)
-        remove_create_poll_frame(frame, event.player_index)
-    end
-)
-
-Gui.on_click(
-    create_poll_clear_name,
-    function(event)
-        local data = Gui.get_data(event.element)
-
-        local slider = data.duration_slider
-        slider.slider_value = math.floor(default_poll_duration * 60 * inv_tick_duration_step)
-        update_duration(slider)
-
-        data.question = ''
-
-        local answers = data.answers
-        for i = 1, #answers do
-            answers[i].text = ''
-        end
-
-        redraw_create_poll_content(data)
-    end
-)
+    redraw_create_poll_content(data)
+end)
 
 Gui.on_click(create_poll_confirm_name, create_poll)
 
-Gui.on_click(
-    create_poll_delete_name,
-    function(event)
-        local player = event.player
-        local data = Gui.get_data(event.element)
-        local frame = data.frame
-        local poll = data.previous_data
+Gui.on_click(create_poll_delete_name, function(event)
+    local player = event.player
+    local data = Gui.get_data(event.element)
+    local frame = data.frame
+    local poll = data.previous_data
 
-        Gui.remove_data_recursively(frame)
-        frame.destroy()
+    Gui.remove_data_recursively(frame)
+    frame.destroy()
 
-        player_create_poll_data[player.index] = nil
+    player_create_poll_data[player.index] = nil
 
-        local removed_index
-        for i, p in pairs(polls) do
-            if p == poll then
-                table.remove(polls, i)
-                removed_index = i
-                break
-            end
+    local removed_index
+    for i, p in pairs(polls) do
+        if p == poll then
+            table.remove(polls, i)
+            removed_index = i
+            break
+        end
+    end
+
+    if not removed_index then
+        return
+    end
+
+    local message = table.concat({ player.name, ' has deleted Poll #', poll.id, ': ', poll.question })
+
+    for _, p in pairs(game.connected_players) do
+        if not no_notify_players[p.index] then
+            p.print(message)
         end
 
-        if not removed_index then
-            return
-        end
+        local main_frame = Gui.get_left_element(p, main_frame_name)
+        if main_frame and main_frame.valid then
+            local main_frame_data = Gui.get_data(main_frame)
+            local poll_index = main_frame_data.poll_index
 
-        local message = table.concat {player.name, ' has deleted Poll #', poll.id, ': ', poll.question}
-
-        for _, p in pairs(game.connected_players) do
-            if not no_notify_players[p.index] then
-                p.print(message)
+            if removed_index < poll_index then
+                main_frame_data.poll_index = poll_index - 1
             end
 
-            local main_frame = Gui.get_left_element(p, main_frame_name)
+            update_poll_viewer(main_frame_data)
+            toggle(event)
+        end
+    end
+end)
+
+Gui.on_click(create_poll_edit_name, function(event)
+    local player = event.player
+    local data = Gui.get_data(event.element)
+    local frame = data.frame
+    local poll = data.previous_data
+
+    local new_question = data.question
+    if not new_question:find('%S') then
+        player.print('Sorry, the poll needs a question.')
+        return
+    end
+
+    local new_answer_set = {}
+    local new_answers = {}
+    for _, a in pairs(data.answers) do
+        if a.text:find('%S') then
+            local source = a.source
+            local index = #new_answers + 1
+            if source then
+                new_answer_set[source] = a
+                source.text = a.text
+                source.index = index
+                new_answers[index] = source
+            else
+                new_answers[index] = { text = a.text, index = index, voted_count = 0 }
+            end
+        end
+    end
+
+    if not next(new_answers) then
+        player.print('Sorry, the poll needs at least one answer.')
+        return
+    end
+
+    Gui.remove_data_recursively(frame)
+    frame.destroy()
+
+    local player_index = player.index
+
+    player_create_poll_data[player_index] = nil
+
+    local old_answers = poll.answers
+    local voters = poll.voters
+    for _, a in pairs(old_answers) do
+        if not new_answer_set[a] then
+            for pi, a2 in pairs(voters) do
+                if a == a2 then
+                    voters[pi] = nil
+                end
+            end
+        end
+    end
+
+    poll.question = new_question
+    poll.answers = new_answers
+    poll.edited_by[player_index] = true
+
+    local start_tick = game.tick
+    local duration = data.duration
+    local end_tick
+
+    if duration == 0 then
+        end_tick = -1
+    else
+        end_tick = start_tick + duration
+    end
+
+    poll.start_tick = start_tick
+    poll.end_tick = end_tick
+    poll.duration = duration
+
+    local poll_index
+    for i, p in pairs(polls) do
+        if poll == p then
+            poll_index = i
+            break
+        end
+    end
+
+    if not poll_index then
+        insert(polls, poll)
+        poll_index = #polls
+    end
+
+    local message = table.concat({ player.name, ' has edited Poll #', poll.id, ': ', poll.question })
+
+    for _, p in pairs(game.connected_players) do
+        local main_frame = Gui.get_left_element(p, main_frame_name)
+
+        if no_notify_players[p.index] then
             if main_frame and main_frame.valid then
                 local main_frame_data = Gui.get_data(main_frame)
-                local poll_index = main_frame_data.poll_index
-
-                if removed_index < poll_index then
-                    main_frame_data.poll_index = poll_index - 1
-                end
-
                 update_poll_viewer(main_frame_data)
-                toggle(event)
             end
-        end
-    end
-)
-
-Gui.on_click(
-    create_poll_edit_name,
-    function(event)
-        local player = event.player
-        local data = Gui.get_data(event.element)
-        local frame = data.frame
-        local poll = data.previous_data
-
-        local new_question = data.question
-        if not new_question:find('%S') then
-            player.print('Sorry, the poll needs a question.')
-            return
-        end
-
-        local new_answer_set = {}
-        local new_answers = {}
-        for _, a in pairs(data.answers) do
-            if a.text:find('%S') then
-                local source = a.source
-                local index = #new_answers + 1
-                if source then
-                    new_answer_set[source] = a
-                    source.text = a.text
-                    source.index = index
-                    new_answers[index] = source
-                else
-                    new_answers[index] = {text = a.text, index = index, voted_count = 0}
-                end
-            end
-        end
-
-        if not next(new_answers) then
-            player.print('Sorry, the poll needs at least one answer.')
-            return
-        end
-
-        Gui.remove_data_recursively(frame)
-        frame.destroy()
-
-        local player_index = player.index
-
-        player_create_poll_data[player_index] = nil
-
-        local old_answers = poll.answers
-        local voters = poll.voters
-        for _, a in pairs(old_answers) do
-            if not new_answer_set[a] then
-                for pi, a2 in pairs(voters) do
-                    if a == a2 then
-                        voters[pi] = nil
-                    end
-                end
-            end
-        end
-
-        poll.question = new_question
-        poll.answers = new_answers
-        poll.edited_by[player_index] = true
-
-        local start_tick = game.tick
-        local duration = data.duration
-        local end_tick
-
-        if duration == 0 then
-            end_tick = -1
         else
-            end_tick = start_tick + duration
-        end
-
-        poll.start_tick = start_tick
-        poll.end_tick = end_tick
-        poll.duration = duration
-
-        local poll_index
-        for i, p in pairs(polls) do
-            if poll == p then
-                poll_index = i
-                break
-            end
-        end
-
-        if not poll_index then
-            insert(polls, poll)
-            poll_index = #polls
-        end
-
-        local message = table.concat {player.name, ' has edited Poll #', poll.id, ': ', poll.question}
-
-        for _, p in pairs(game.connected_players) do
-            local main_frame = Gui.get_left_element(p, main_frame_name)
-
-            if no_notify_players[p.index] then
-                if main_frame and main_frame.valid then
-                    local main_frame_data = Gui.get_data(main_frame)
-                    update_poll_viewer(main_frame_data)
-                end
+            p.print(message)
+            if main_frame and main_frame.valid then
+                local main_frame_data = Gui.get_data(main_frame)
+                main_frame_data.poll_index = poll_index
+                update_poll_viewer(main_frame_data)
             else
-                p.print(message)
-                if main_frame and main_frame.valid then
-                    local main_frame_data = Gui.get_data(main_frame)
-                    main_frame_data.poll_index = poll_index
-                    update_poll_viewer(main_frame_data)
-                else
-                    draw_main_frame(p)
-                end
+                draw_main_frame(p)
             end
         end
     end
-)
+end)
 
-Gui.on_checked_state_changed(
-    notify_checkbox_name,
-    function(event)
-        local player_index = event.player_index
-        local checkbox = event.element
+Gui.on_checked_state_changed(notify_checkbox_name, function(event)
+    local player_index = event.player_index
+    local checkbox = event.element
 
-        local new_state
-        if checkbox.state then
-            new_state = nil
-        else
-            new_state = true
-        end
-
-        no_notify_players[player_index] = new_state
+    local new_state
+    if checkbox.state then
+        new_state = nil
+    else
+        new_state = true
     end
-)
+
+    no_notify_players[player_index] = new_state
+end)
 
 local function do_direction(event, sign)
     local count
@@ -1220,19 +1210,13 @@ local function do_direction(event, sign)
     update_poll_viewer(data)
 end
 
-Gui.on_click(
-    poll_view_back_name,
-    function(event)
-        do_direction(event, -1)
-    end
-)
+Gui.on_click(poll_view_back_name, function(event)
+    do_direction(event, -1)
+end)
 
-Gui.on_click(
-    poll_view_forward_name,
-    function(event)
-        do_direction(event, 1)
-    end
-)
+Gui.on_click(poll_view_forward_name, function(event)
+    do_direction(event, 1)
+end)
 
 Gui.on_click(poll_view_vote_name, vote)
 
@@ -1308,7 +1292,7 @@ function Class.poll(data)
     local answers = {}
     for index, a in pairs(data.answers) do
         if a ~= '' then
-            insert(answers, {text = a, index = index, voted_count = 0})
+            insert(answers, { text = a, index = index, voted_count = 0 })
         end
     end
 
@@ -1337,8 +1321,8 @@ function Class.poll(data)
         start_tick = start_tick,
         end_tick = end_tick,
         duration = duration,
-        created_by = game.player or {name = '<server>', valid = true},
-        edited_by = {}
+        created_by = game.player or { name = '<server>', valid = true },
+        edited_by = {},
     }
 
     insert(polls, poll_data)
@@ -1356,7 +1340,7 @@ function Class.poll_result(id)
 
     for _, poll_data in pairs(polls) do
         if poll_data.id == id then
-            local result = {'Question: ', poll_data.question, ' Answers: '}
+            local result = { 'Question: ', poll_data.question, ' Answers: ' }
             local answers = poll_data.answers
             local answers_count = #answers
             for i, a in pairs(answers) do
@@ -1374,7 +1358,7 @@ function Class.poll_result(id)
         end
     end
 
-    return table.concat {'poll #', id, ' not found'}
+    return table.concat({ 'poll #', id, ' not found' })
 end
 
 function Class.send_poll_result_to_discord(id)
@@ -1390,7 +1374,7 @@ function Class.send_poll_result_to_discord(id)
         end
     end
 
-    local message = table.concat {'poll #', id, ' not found'}
+    local message = table.concat({ 'poll #', id, ' not found' })
     Server.to_discord_embed(message)
 end
 

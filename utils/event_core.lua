@@ -28,7 +28,7 @@ local script_on_event = script.on_event
 local script_on_nth_tick = script.on_nth_tick
 
 local function errorHandler(err)
-    log("Error caught: " .. err)
+    log('Error caught: ' .. err)
     -- Print the full stack trace
     log(debug.traceback())
 end
@@ -114,7 +114,7 @@ end
 function Public.add(event_name, handler, priority)
     if not priority then priority = 0 end
     if event_name == defines.events.on_entity_damaged then
-        error("on_entity_damaged is managed outside of the event framework.")
+        error('on_entity_damaged is managed outside of the event framework.')
     end
     local handlers = event_handlers[event_name]
     if not handlers then

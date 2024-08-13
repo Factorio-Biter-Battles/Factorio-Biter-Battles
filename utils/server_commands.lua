@@ -1,9 +1,8 @@
 local Poll = {
-    send_poll_result_to_discord = function()
-    end
+    send_poll_result_to_discord = function() end,
 }
-local Token = require 'utils.token'
-local Server = require 'utils.server'
+local Token = require('utils.token')
+local Server = require('utils.server')
 
 --- This module is for the web server to call functions and raise events.
 -- Not intended to be called by scripts.
@@ -40,7 +39,7 @@ local SC_Interface = {
         else
             error("Remote call parameter to ServerCommands set_ups can't be nil.")
         end
-    end
+    end,
 }
 
 if not remote.interfaces['ServerCommands'] then

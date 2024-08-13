@@ -1,7 +1,7 @@
 -- Dependencies
-local Game = require 'utils.game'
-local Color = require 'utils.color_presets'
-local Server = require 'utils.server'
+local Game = require('utils.game')
+local Color = require('utils.color_presets')
+local Server = require('utils.server')
 
 -- localized functions
 local random = math.random
@@ -114,16 +114,22 @@ end
 function Public.find_entities_by_last_user(player, surface, filters)
     if type(player) == 'string' or not player then
         error(
-            "bad argument #1 to '" ..
-                debug.getinfo(1, 'n').name .. "' (number or LuaPlayer expected, got " .. type(player) .. ')',
+            "bad argument #1 to '"
+                .. debug.getinfo(1, 'n').name
+                .. "' (number or LuaPlayer expected, got "
+                .. type(player)
+                .. ')',
             1
         )
         return
     end
     if type(surface) ~= 'table' and type(surface) ~= 'number' then
         error(
-            "bad argument #2 to '" ..
-                debug.getinfo(1, 'n').name .. "' (number or LuaSurface expected, got " .. type(surface) .. ')',
+            "bad argument #2 to '"
+                .. debug.getinfo(1, 'n').name
+                .. "' (number or LuaSurface expected, got "
+                .. type(surface)
+                .. ')',
             1
         )
         return
@@ -190,9 +196,9 @@ end
 -- @param command the command's name as table element
 -- @param parameters the command's parameters as a table (optional)
 function Public.log_command(actor, command, parameters)
-    local action = concat {'[Admin-Command] ', actor, ' used: ', command}
+    local action = concat({ '[Admin-Command] ', actor, ' used: ', command })
     if parameters then
-        action = concat {action, ' ', parameters}
+        action = concat({ action, ' ', parameters })
     end
     print(action)
 end
@@ -217,7 +223,7 @@ end
 
 --- Returns a random RGB color as a table
 function Public.random_RGB()
-    return {r = random(0, 255), g = random(0, 255), b = random(0, 255)}
+    return { r = random(0, 255), g = random(0, 255), b = random(0, 255) }
 end
 
 --- Sets a table element to value while also returning value.
@@ -305,7 +311,7 @@ function Public.validate_player(player_ident)
 end
 
 -- add utility functions that exist in base factorio/util
-require 'util'
+require('util')
 
 --- Moves a position according to the parameters given
 -- Notice: only accepts cardinal directions as direction

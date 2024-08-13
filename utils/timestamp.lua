@@ -34,10 +34,10 @@ local function is_leap(y)
     end
 end
 
-local mon_lengths = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31}
+local mon_lengths = { 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 }
 
 -- Number of days in year until start of month; not corrected for leap years
-local months_to_days_cumulative = {0}
+local months_to_days_cumulative = { 0 }
 for i = 2, 12 do
     months_to_days_cumulative[i] = months_to_days_cumulative[i - 1] + mon_lengths[i - 1]
 end
@@ -115,7 +115,7 @@ local function normalise(year, month, day, hour, min, sec)
     -- e.g. month as 1-12 instead of 0-11
     month, day = month + 1, day + 1
 
-    return {year = year, month = month, day = day, hour = hour, min = min, sec = sec}
+    return { year = year, month = month, day = day, hour = hour, min = min, sec = sec }
 end
 
 --- Converts unix epoch timestamp into table {year: number, month: number, day: number, hour: number, min: number, sec: number}
@@ -133,10 +133,10 @@ function Public.from_timetable(timetable)
 
     local year, month, day, hour, min, sec = tt.year, tt.month, tt.day, tt.hour, tt.min, tt.sec
 
-    local days_since_epoch =
-        day_of_year(day, month, year) + 365 * (year - 1970) + -- Each leap year adds one day
-        (leap_years_since(year - 1) - leap_years_since_1970) -
-        1
+    local days_since_epoch = day_of_year(day, month, year)
+        + 365 * (year - 1970) -- Each leap year adds one day
+        + (leap_years_since(year - 1) - leap_years_since_1970)
+        - 1
 
     return days_since_epoch * (60 * 60 * 24) + hour * (60 * 60) + min * 60 + sec
 end

@@ -53,20 +53,25 @@ Module.cast_bool = function(var)
     end
 end
 
-Module.find_entities_by_last_user =
-    function(player, surface, filters)
+Module.find_entities_by_last_user = function(player, surface, filters)
     if type(player) == 'string' or not player then
         error(
-            "bad argument #1 to '" ..
-                debug.getinfo(1, 'n').name .. "' (number or LuaPlayer expected, got " .. type(player) .. ')',
+            "bad argument #1 to '"
+                .. debug.getinfo(1, 'n').name
+                .. "' (number or LuaPlayer expected, got "
+                .. type(player)
+                .. ')',
             1
         )
         return
     end
     if type(surface) ~= 'table' and type(surface) ~= 'number' then
         error(
-            "bad argument #2 to '" ..
-                debug.getinfo(1, 'n').name .. "' (number or LuaSurface expected, got " .. type(surface) .. ')',
+            "bad argument #2 to '"
+                .. debug.getinfo(1, 'n').name
+                .. "' (number or LuaSurface expected, got "
+                .. type(surface)
+                .. ')',
             1
         )
         return
@@ -99,17 +104,34 @@ Module.ternary = function(c, t, f)
 end
 
 function Module.safe_wrap_with_player_print(player, func, ...)
-	local function error_handler(err)
-		local print_target = player or game
-		log("Error caught: " .. err)
-		print_target.print("Error caught: " .. err)
-		-- Print the full stack trace to the log
-		log(debug.traceback())
-	end
-	local call_succeeded, result = xpcall(func, error_handler, ...)
-	return result
+    local function error_handler(err)
+        local print_target = player or game
+        log('Error caught: ' .. err)
+        print_target.print('Error caught: ' .. err)
+        -- Print the full stack trace to the log
+        log(debug.traceback())
+    end
+    local call_succeeded, result = xpcall(func, error_handler, ...)
+    return result
 end
 
+function Module.safe_wrap_cmd(cmd, func, ...)
+    local print_fn = game.print
+    if cmd.player_index then
+        local player = game.get_player(cmd.player_index)
+        if player then
+            print_fn = player.print
+        end
+    end
+    local function error_handler(err)
+        log('Error caught: ' .. err)
+        print_fn('Error caught: ' .. err)
+        -- Print the full stack trace to the log
+        log(debug.traceback())
+    end
+    local call_succeeded, result = xpcall(func, error_handler, ...)
+    return result
+end
 
 local minutes_to_ticks = 60 * 60
 local hours_to_ticks = 60 * 60 * 60
@@ -148,9 +170,9 @@ end
 
 Module.gui_themes = {
     { type = 'side_menu_button', name = 'Dark squared' },
-    { type = 'slot_button',      name = 'Dark rounded' },
-    { type = 'mod_gui_button',   name = 'Light squared' },
-    { type = 'rounded_button',   name = 'Light rounded' },
+    { type = 'slot_button', name = 'Dark rounded' },
+    { type = 'mod_gui_button', name = 'Light squared' },
+    { type = 'rounded_button', name = 'Light rounded' },
 }
 
 Module.top_button_style = function()
@@ -160,7 +182,7 @@ Module.top_button_style = function()
         minimal_height = 36,
         maximal_height = 36,
         minimal_width = 40,
-        padding = -2
+        padding = -2,
     }
 end
 
@@ -169,7 +191,7 @@ Module.left_frame_style = function()
         padding = 2,
         font_color = { 165, 165, 165 },
         font = 'heading-3',
-        use_header_filler = false
+        use_header_filler = false,
     }
 end
 

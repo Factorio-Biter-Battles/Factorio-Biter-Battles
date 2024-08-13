@@ -9,18 +9,18 @@ local math_floor = math.floor
 -- 2D simplex noise
 
 local grad3 = {
-    {1, 1, 0},
-    {-1, 1, 0},
-    {1, -1, 0},
-    {-1, -1, 0},
-    {1, 0, 1},
-    {-1, 0, 1},
-    {1, 0, -1},
-    {-1, 0, -1},
-    {0, 1, 1},
-    {0, -1, 1},
-    {0, 1, -1},
-    {0, -1, -1}
+    { 1, 1, 0 },
+    { -1, 1, 0 },
+    { 1, -1, 0 },
+    { -1, -1, 0 },
+    { 1, 0, 1 },
+    { -1, 0, 1 },
+    { 1, 0, -1 },
+    { -1, 0, -1 },
+    { 0, 1, 1 },
+    { 0, -1, 1 },
+    { 0, 1, -1 },
+    { 0, -1, -1 },
 }
 
 local p = {
@@ -279,7 +279,7 @@ local p = {
     215,
     61,
     156,
-    180
+    180,
 }
 local perm = {}
 for i = 0, 511 do
@@ -292,7 +292,7 @@ local function dot2(g, x, y)
 end
 
 local function dot(g, ...)
-    local v = {...}
+    local v = { ... }
     local sum = 0
     for i = 1, #v do
         sum = sum + v[i] * g[i]
@@ -306,7 +306,7 @@ local G2 = (3.0 - math.sqrt(3.0)) / 6.0
 function Simplex.d2(xin, yin, seed)
     xin = xin + seed
     yin = yin + seed
-    local n0, n1, n2  -- Noise contributions from the three corners
+    local n0, n1, n2 -- Noise contributions from the three corners
     -- Skew the input space to determine which simplex cell we're in
     local s = (xin + yin) * F2 -- Hairy factor for 2D
     local i = math_floor(xin + s)
@@ -318,7 +318,7 @@ function Simplex.d2(xin, yin, seed)
     local y0 = yin - Y0
     -- For the 2D case, the simplex shape is an equilateral triangle.
     -- Determine which simplex we are in.
-    local i1, j1  -- Offsets for second (middle) corner of simplex in (i,j) coords
+    local i1, j1 -- Offsets for second (middle) corner of simplex in (i,j) coords
     if x0 > y0 then
         i1 = 1
         j1 = 0 -- lower triangle, XY order: (0,0)->(1,0)->(1,1)
@@ -326,7 +326,7 @@ function Simplex.d2(xin, yin, seed)
         i1 = 0
         j1 = 1
     end
-     -- upper triangle, YX order: (0,0)->(0,1)->(1,1)
+    -- upper triangle, YX order: (0,0)->(0,1)->(1,1)
     -- A step of (1,0) in (i,j) means a step of (1-c,-c) in (x,y), and
     -- a step of (0,1) in (i,j) means a step of (-c,1-c) in (x,y), where
     -- c = (3-sqrt(3))/6

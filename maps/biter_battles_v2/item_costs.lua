@@ -1,23 +1,23 @@
 -- feed values tab --
 
-local Tables = require "maps.biter_battles_v2.tables"
+local Tables = require('maps.biter_battles_v2.tables')
 local food_values = Tables.food_values
 local food_long_and_short = Tables.food_long_and_short
-local Tabs = require 'comfy_panel.main'
+local Tabs = require('comfy_panel.main')
 
 local debug = false
 
 local ItemCosts = {}
 
 ItemCosts.raw_costs = {
-    ["iron-ore"] = {cost = 10, crafting_time = 2, icon = "[item=iron-ore]"},
-    ["copper-ore"] = {cost = 10, crafting_time = 2, icon = "[item=copper-ore]"},
-    ["stone"] = {cost = 10, crafting_time = 2, icon = "[item=stone]"},
-    ["coal"] = {cost = 10, crafting_time = 2, icon = "[item=coal]"},
+    ['iron-ore'] = { cost = 10, crafting_time = 2, icon = '[item=iron-ore]' },
+    ['copper-ore'] = { cost = 10, crafting_time = 2, icon = '[item=copper-ore]' },
+    ['stone'] = { cost = 10, crafting_time = 2, icon = '[item=stone]' },
+    ['coal'] = { cost = 10, crafting_time = 2, icon = '[item=coal]' },
 
     -- I am making uranium cost more, both because of the sulfuric acid, and
     -- because the mining time is longer and the patches are rare.
-    ["uranium-ore"] = {cost = 20, crafting_time = 4, icon = "[item=uranium-ore]"},
+    ['uranium-ore'] = { cost = 20, crafting_time = 4, icon = '[item=uranium-ore]' },
     -- Crafting time here is difficult. I am assuming a pumpjack on a 80%
     -- yield oil spot.
     -- The "cost" is even trickier. How to value one oil vs one ore? Most
@@ -31,18 +31,18 @@ ItemCosts.raw_costs = {
     -- pumpjacks, 8 refineries + 9 chem plants doing cracking) as cost
     -- equivalent to 2 lanes of ore (30 miners, 48 steel furnaces).
     -- So that is 150 oil/sec == 30 ore/sec.
-    ["crude-oil"] = {cost = 2, crafting_time = 0.1/0.8, icon = "[fluid=crude-oil]"},
-    ["water"] = {cost = 0, crafting_time = 1/1200, icon = "[fluid=water]"},
+    ['crude-oil'] = { cost = 2, crafting_time = 0.1 / 0.8, icon = '[fluid=crude-oil]' },
+    ['water'] = { cost = 0, crafting_time = 1 / 1200, icon = '[fluid=water]' },
 }
 
 local raw_costs = ItemCosts.raw_costs
 
 local recipe_productivity = {
-    ["rocket-part"] = 1.4,
-    ["processing-unit"] = 1.08,
-    ["rocket-control-unit"] = 1.08,
-    ["production-science-pack"] = 1.08,
-    ["utility-science-pack"] = 1.08,
+    ['rocket-part'] = 1.4,
+    ['processing-unit'] = 1.08,
+    ['rocket-control-unit'] = 1.08,
+    ['production-science-pack'] = 1.08,
+    ['utility-science-pack'] = 1.08,
 }
 
 ---@class ProductInfo
@@ -52,7 +52,7 @@ local recipe_productivity = {
 
 ---@return ProductInfo
 local function empty_product_info()
-    return {raw_ingredients = {}, intermediates_union = {}, total_crafting_time = 0}
+    return { raw_ingredients = {}, intermediates_union = {}, total_crafting_time = 0 }
 end
 
 ---@param a ProductInfo
@@ -95,7 +95,7 @@ local scale_product_info = ItemCosts.scale_product_info
 
 ---@return table<string, ProductInfo>
 local function initial_product_infos()
-    local crude_craft_time = raw_costs["crude-oil"].crafting_time
+    local crude_craft_time = raw_costs['crude-oil'].crafting_time
     local result = {
         -- This is a bit of a hack, but for oil processing recipes, I sortof
         -- assume that advanced oil processing is used, and that all of the
@@ -103,20 +103,52 @@ local function initial_product_infos()
         -- Technically, the costs for each one depend on how much cracking is
         -- needed/etc, but this is a reasonable approximation.
         -- The total_crafting_time field is even more of a joke.
-        ["light-oil"] = {raw_ingredients = {["crude-oil"] = 1, ["water"] = 0.5}, intermediates_union = {}, total_crafting_time = 5/100 + crude_craft_time},
-        ["heavy-oil"] = {raw_ingredients = {["crude-oil"] = 1, ["water"] = 0.5}, intermediates_union = {}, total_crafting_time = 5/100 + crude_craft_time},
-        ["petroleum-gas"] = {raw_ingredients = {["crude-oil"] = 1, ["water"] = 0.5}, intermediates_union = {}, total_crafting_time = 5/100 + crude_craft_time},
-        ["steam"] = {raw_ingredients = {["water"] = 1}, intermediates_union = {}, total_crafting_time = 1/60 + raw_costs["water"].crafting_time},
+        ['light-oil'] = {
+            raw_ingredients = { ['crude-oil'] = 1, ['water'] = 0.5 },
+            intermediates_union = {},
+            total_crafting_time = 5 / 100 + crude_craft_time,
+        },
+        ['heavy-oil'] = {
+            raw_ingredients = { ['crude-oil'] = 1, ['water'] = 0.5 },
+            intermediates_union = {},
+            total_crafting_time = 5 / 100 + crude_craft_time,
+        },
+        ['petroleum-gas'] = {
+            raw_ingredients = { ['crude-oil'] = 1, ['water'] = 0.5 },
+            intermediates_union = {},
+            total_crafting_time = 5 / 100 + crude_craft_time,
+        },
+        ['steam'] = {
+            raw_ingredients = { ['water'] = 1 },
+            intermediates_union = {},
+            total_crafting_time = 1 / 60 + raw_costs['water'].crafting_time,
+        },
 
         -- This is assuming that light oil cracking can be used and that there
         -- is a use for the petro.
-        ["solid-fuel"] = {raw_ingredients = {["crude-oil"] = 10}, intermediates_union = {}, total_crafting_time = 2 + 10 * crude_craft_time},
+        ['solid-fuel'] = {
+            raw_ingredients = { ['crude-oil'] = 10 },
+            intermediates_union = {},
+            total_crafting_time = 2 + 10 * crude_craft_time,
+        },
 
-        ["uranium-235"] = {raw_ingredients = {["uranium-ore"] = 30}, intermediates_union = {}, total_crafting_time = 60 + 30 * raw_costs["uranium-ore"].crafting_time},
-        ["uranium-238"] = {raw_ingredients = {["uranium-ore"] = 10}, intermediates_union = {}, total_crafting_time = 12 + 10 * raw_costs["uranium-ore"].crafting_time},
+        ['uranium-235'] = {
+            raw_ingredients = { ['uranium-ore'] = 30 },
+            intermediates_union = {},
+            total_crafting_time = 60 + 30 * raw_costs['uranium-ore'].crafting_time,
+        },
+        ['uranium-238'] = {
+            raw_ingredients = { ['uranium-ore'] = 10 },
+            intermediates_union = {},
+            total_crafting_time = 12 + 10 * raw_costs['uranium-ore'].crafting_time,
+        },
     }
     for raw_thing, info in pairs(raw_costs) do
-        result[raw_thing] = {raw_ingredients = {[raw_thing] = 1}, intermediates_union = {}, total_crafting_time = info.crafting_time}
+        result[raw_thing] = {
+            raw_ingredients = { [raw_thing] = 1 },
+            intermediates_union = {},
+            total_crafting_time = info.crafting_time,
+        }
     end
     return result
 end
@@ -146,15 +178,18 @@ function get_product_info_uncached(product, recipes, cache)
     end
     local recipe = recipes[product]
     if not recipe then
-        if product ~= "wood" and product ~= "raw-fish" then
-            game.print("No simple recipe for " .. product .. " assuming zero cost")
-            log("No simple recipe for " .. product .. " assuming zero cost")
+        if product ~= 'wood' and product ~= 'raw-fish' then
+            game.print('No simple recipe for ' .. product .. ' assuming zero cost')
+            log('No simple recipe for ' .. product .. ' assuming zero cost')
         end
         return empty_product_info()
     end
     local info = empty_product_info()
     for _, ingredient in pairs(recipe.ingredients) do
-        info = add_product_infos(info, scale_product_info(get_product_info(ingredient.name, recipes, cache), ingredient.amount))
+        info = add_product_infos(
+            info,
+            scale_product_info(get_product_info(ingredient.name, recipes, cache), ingredient.amount)
+        )
         if not raw_costs[ingredient.name] then
             info.intermediates_union[ingredient.name] = true
         end
@@ -162,14 +197,19 @@ function get_product_info_uncached(product, recipes, cache)
     local productivity = recipe_productivity[product]
     local crafting_speed = 1
     local category = recipe.category
-    if category == "crafting" or category == "basic-crafting" or category == "crafting-with-fluid" or category == "advanced-crafting" then
+    if
+        category == 'crafting'
+        or category == 'basic-crafting'
+        or category == 'crafting-with-fluid'
+        or category == 'advanced-crafting'
+    then
         -- Assume Asm2
         crafting_speed = 0.75
-    elseif category == "smelting" then
+    elseif category == 'smelting' then
         -- Assume steel furnaces
         crafting_speed = 2
         -- Assuming using coal to power the furnaces
-        info.raw_ingredients["coal"] = (info.raw_ingredients["coal"] or 0) + 0.036
+        info.raw_ingredients['coal'] = (info.raw_ingredients['coal'] or 0) + 0.036
     end
     if productivity then
         -- Assume 2x prod1 is slowing it down
@@ -181,14 +221,14 @@ function get_product_info_uncached(product, recipes, cache)
         info = scale_product_info(info, 1 / recipe.products[1].amount)
     end
     if debug then
-        log("Cost of " .. product .. " is " .. serpent.block(info))
+        log('Cost of ' .. product .. ' is ' .. serpent.block(info))
     end
     return info
 end
 
 ---@return table<string, ProductInfo>
 local function find_all_costs()
-    local force = game.forces["spectator"]
+    local force = game.forces['spectator']
     local recipes = force.recipes
     local simple_recipes = {}
     local all_items = {}
@@ -201,16 +241,20 @@ local function find_all_costs()
             all_items[product.name] = true
         end
     end
-    simple_recipes["space-science-pack"] = {
-        ingredients = {{name = "rocket-part", amount = 100}, {name = "satellite", amount = 1}},
-        products = {{name = "space-science-pack", amount = 1000}},
-        energy = 14.833 + 19.367 + 6.133 -- Time to launch rocket
+    simple_recipes['space-science-pack'] = {
+        ingredients = { { name = 'rocket-part', amount = 100 }, { name = 'satellite', amount = 1 } },
+        products = { { name = 'space-science-pack', amount = 1000 } },
+        energy = 14.833 + 19.367 + 6.133, -- Time to launch rocket
     }
-    all_items["space-science-pack"] = true
-    simple_recipes["rocket-part"] = {
-        ingredients = {{name = "low-density-structure", amount = 10}, {name = "rocket-fuel", amount = 10}, {name = "rocket-control-unit", amount = 10}},
-        products = {{name = "rocket-part", amount = 1}},
-        energy = 3  -- Time to craft one rocket part
+    all_items['space-science-pack'] = true
+    simple_recipes['rocket-part'] = {
+        ingredients = {
+            { name = 'low-density-structure', amount = 10 },
+            { name = 'rocket-fuel', amount = 10 },
+            { name = 'rocket-control-unit', amount = 10 },
+        },
+        products = { { name = 'rocket-part', amount = 1 } },
+        energy = 3, -- Time to craft one rocket part
     }
     local result = {}
     local cache = initial_product_infos()
@@ -218,7 +262,8 @@ local function find_all_costs()
         result[item] = get_product_info(item, simple_recipes, cache)
     end
     for item, raw_cost in pairs(raw_costs) do
-        result[item] = {raw_ingredients = {[item] = 1}, intermediates_union = {}, total_crafting_time = raw_cost.crafting_time}
+        result[item] =
+            { raw_ingredients = { [item] = 1 }, intermediates_union = {}, total_crafting_time = raw_cost.crafting_time }
     end
     return result
 end

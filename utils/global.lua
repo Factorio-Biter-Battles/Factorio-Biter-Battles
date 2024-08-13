@@ -1,5 +1,5 @@
-local Event = require 'utils.event_core'
-local Token = require 'utils.token'
+local Event = require('utils.event_core')
+local Token = require('utils.token')
 
 local Global = {}
 local concat = table.concat
@@ -15,13 +15,11 @@ function Global.register(tbl, callback)
     local filepath = debug.getinfo(2, 'S').source:match('^.+/currently%-playing/(.+)$'):sub(1, -5)
     local token = Token.register_global(tbl)
 
-    names[token] = concat {token, ' - ', filepath}
+    names[token] = concat({ token, ' - ', filepath })
 
-    Event.on_load(
-        function()
-            callback(Token.get_global(token))
-        end
-    )
+    Event.on_load(function()
+        callback(Token.get_global(token))
+    end)
 
     return token
 end
@@ -33,20 +31,16 @@ function Global.register_init(tbl, init_handler, callback)
     local filepath = debug.getinfo(2, 'S').source:match('^.+/currently%-playing/(.+)$'):sub(1, -5)
     local token = Token.register_global(tbl)
 
-    names[token] = concat {token, ' - ', filepath}
+    names[token] = concat({ token, ' - ', filepath })
 
-    Event.on_init(
-        function()
-            init_handler(tbl)
-            callback(tbl)
-        end
-    )
+    Event.on_init(function()
+        init_handler(tbl)
+        callback(tbl)
+    end)
 
-    Event.on_load(
-        function()
-            callback(Token.get_global(token))
-        end
-    )
+    Event.on_load(function()
+        callback(Token.get_global(token))
+    end)
 
     return token
 end

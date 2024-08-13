@@ -1,4 +1,4 @@
-local flui = require "utils.ui.gui-lite"
+local flui = require('utils.ui.gui-lite')
 
 local blocks = {}
 
@@ -12,7 +12,6 @@ local blocks = {}
 ---@field hovered SpritePath
 ---@field clicked SpritePath
 
-
 ---Turn a partial IconSet into a completed IconSet.
 ---@param base ui.IconSetPartial | ui.IconSet
 ---@return ui.IconSet
@@ -21,7 +20,7 @@ local function fill_icon_set(base)
     return {
         default = base.default,
         hovered = base.hovered or base.default,
-        clicked = base.clicked or base.hovered or base.default
+        clicked = base.clicked or base.hovered or base.default,
     }
 end
 
@@ -47,10 +46,10 @@ end
 function blocks.label(text, style, name)
     ---@type GuiElemDef
     return {
-        type = "label",
+        type = 'label',
         caption = text,
         style = style,
-        name = name
+        name = name,
     }
 end
 
@@ -61,10 +60,10 @@ end
 function blocks.vframe(style_name, name)
     ---@type GuiElemDef
     return {
-        type = "frame",
+        type = 'frame',
         style = style_name,
-        direction = "vertical",
-        name = name
+        direction = 'vertical',
+        name = name,
     }
 end
 
@@ -75,10 +74,10 @@ end
 function blocks.hframe(style_name, name)
     ---@type GuiElemDef
     return {
-        type = "frame",
+        type = 'frame',
         style = style_name,
-        direction = "horizontal",
-        name = name
+        direction = 'horizontal',
+        name = name,
     }
 end
 
@@ -88,9 +87,9 @@ end
 function blocks.vflow(name)
     ---@type GuiElemDef
     return {
-        type = "flow",
-        direction = "vertical",
-        name = name
+        type = 'flow',
+        direction = 'vertical',
+        name = name,
     }
 end
 
@@ -100,9 +99,9 @@ end
 function blocks.hflow(name)
     ---@type GuiElemDef
     return {
-        type = "flow",
-        direction = "horizontal",
-        name = name
+        type = 'flow',
+        direction = 'horizontal',
+        name = name,
     }
 end
 
@@ -112,10 +111,10 @@ end
 function blocks.scroll(options)
     ---@type GuiElemDef
     return {
-        type = "scroll-pane",
+        type = 'scroll-pane',
         name = options.name,
         horizontal_scroll_policy = options.h,
-        vertical_scroll_policy = options.v
+        vertical_scroll_policy = options.v,
     }
 end
 
@@ -126,9 +125,9 @@ end
 function blocks.table(columns, name)
     ---@type GuiElemDef
     return {
-        type = "table",
+        type = 'table',
         column_count = columns,
-        name = name
+        name = name,
     }
 end
 
@@ -139,22 +138,22 @@ end
 function blocks.frame_action_button(name, icon)
     ---@type ui.IconSet
     local icon_set
-    if type(icon) == "table" then
+    if type(icon) == 'table' then
         icon_set = fill_icon_set(icon)
     else
         icon_set = {
-            default = icon
+            default = icon,
         }
     end
 
     ---@type GuiElemDef
     return {
-        type = "sprite-button",
-        style = "frame_action_button",
+        type = 'sprite-button',
+        style = 'frame_action_button',
         name = name,
         sprite = icon_set.default,
         hovered_sprite = icon_set.hovered,
-        clicked_sprite = icon_set.clicked
+        clicked_sprite = icon_set.clicked,
     }
 end
 
@@ -163,39 +162,41 @@ function blocks.GenericWindow(name, caption, fabs)
     ---@type GuiElemDef[]
     local titlebar = {
         {
-            type = "label",
-            style = "frame_title",
+            type = 'label',
+            style = 'frame_title',
             caption = caption,
             ignored_by_interaction = true,
             style_mods = {
                 vertically_stretchable = true,
-                horizontally_squashable = true
-            }
+                horizontally_squashable = true,
+            },
         },
         {
-            type = "empty-widget",
-            style = "draggable_space_header",
+            type = 'empty-widget',
+            style = 'draggable_space_header',
             ignored_by_interaction = true,
             style_mods = {
                 horizontally_stretchable = true,
                 vertically_stretchable = true,
                 height = 24,
-                natural_height = 24
-            }
-        }
+                natural_height = 24,
+            },
+        },
     }
-    for _, v in ipairs(fabs) do titlebar[#titlebar + 1] = v end
+    for _, v in ipairs(fabs) do
+        titlebar[#titlebar + 1] = v
+    end
 
     ---@type GuiElemDef
     return {
-        type = "frame",
+        type = 'frame',
         name = name,
-        direction = "vertical",
+        direction = 'vertical',
         children = {
             {
-                type = "flow",
-                name = "titlebar",
-                direction = "horizontal",
+                type = 'flow',
+                name = 'titlebar',
+                direction = 'horizontal',
                 style_mods = {
                     horizontally_stretchable = true,
                     horizontal_spacing = 8,
@@ -203,33 +204,35 @@ function blocks.GenericWindow(name, caption, fabs)
                 },
                 children = titlebar,
                 -- drag_target is resolved by flib, not vanilla.
-                drag_target = name
-            }
+                drag_target = name,
+            },
         },
         extra = {
             auto_center = true,
-        }
+        },
     }
 end
 
 ---@param evt GuiEventData
 local function close_button_handler(evt)
     local parent = evt.element and evt.element.parent and evt.element.parent.parent
-    if parent and parent.valid then parent.destroy() end
+    if parent and parent.valid then
+        parent.destroy()
+    end
 end
 
-flui.add_handlers {
-    generic_close_button = close_button_handler
-}
+flui.add_handlers({
+    generic_close_button = close_button_handler,
+})
 
 ---Window with a close button.
 ---@param name string
 ---@param caption string
 ---@return GuiElemDef
 function blocks.ClosableWindow(name, caption)
-    local button = blocks.frame_action_button("close", {
-        default = "utility/close_white",
-        hovered = "utility/close_black"
+    local button = blocks.frame_action_button('close', {
+        default = 'utility/close_white',
+        hovered = 'utility/close_black',
     })
     button.handler = close_button_handler
     local base = blocks.GenericWindow(name, caption, { button })
@@ -239,5 +242,5 @@ end
 ---@class ui.fcomponents
 return {
     blocks = blocks,
-    add = add
+    add = add,
 }
