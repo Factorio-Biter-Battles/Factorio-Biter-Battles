@@ -341,7 +341,7 @@ local function on_entity_died(event)
         return
     end
 
-    health_factor = health_factor / (1 - global.reanim_chance[game.forces[force_name .. '_biters'].index] / 100)
+    health_factor = health_factor * global.biter_health_factor[game.forces[force_name .. '_biters'].index]
 
     local force_stats = global.team_stats.forces[force_name]
     local damage_stats = force_stats.damage_types[event.damage_type.name]
@@ -350,7 +350,7 @@ local function on_entity_died(event)
         force_stats.damage_types[event.damage_type.name] = damage_stats
     end
     damage_stats.kills = damage_stats.kills + 1
-    -- This is somewhat inaccurate, because revive% might be different
+    -- This is somewhat inaccurate, because biter_health_factor might be different
     -- now than when the biter was spawned, but it is close enough for me.
     damage_stats.damage = damage_stats.damage + entity.prototype.max_health * health_factor
 end

@@ -32,18 +32,6 @@ local function set_biter_endgame_modifiers(force)
         return
     end
 
-    -- Calculates reanimation chance. This value is normalized onto
-    -- maximum re-animation threshold. For example if real evolution is 150
-    -- and max is 350, then 150 / 350 = 42% chance.
-    local threshold = global.bb_evolution[force.name]
-    threshold = math_floor((threshold - 1.0) * 100.0)
-    threshold = threshold / global.max_reanim_thresh * 100
-    threshold = math_floor(threshold)
-    if threshold > 90.0 then
-        threshold = 90.0
-    end
-    global.reanim_chance[force.index] = threshold
-
     local damage_mod = math_round((global.bb_evolution[force.name] - 1) * 1.0, 3)
     force.set_ammo_damage_modifier('melee', damage_mod)
     force.set_ammo_damage_modifier('biological', damage_mod)
@@ -259,7 +247,7 @@ function Public.do_raw_feed(flask_amount, food, biter_force_name)
     evo = evo + effects.evo_increase
     threat = threat + effects.threat_increase * (global.threat_multiplier or 1)
     evo = math_round(evo, decimals)
-    global.reanim_chance[force_index] = effects.reanim_chance
+    global.biter_health_factor[force_index] = effects.biter_health_factor
 
     --SET THREAT INCOME
     global.bb_threat_income[biter_force_name] = evo * 25
