@@ -120,7 +120,8 @@ function Public.add(event_name, handler, priority)
     end
     local handlers = event_handlers[event_name]
     if not handlers then
-        event_handlers[event_name] = {}
+        handlers = {}
+        event_handlers[event_name] = handlers
     end
 
     table.insert(handlers, priority_binary_search(handlers, priority), { handler = handler, priority = priority })
@@ -138,7 +139,8 @@ function Public.on_init(handler, priority)
     end
     local handlers = event_handlers[init_event_name]
     if not handlers then
-        event_handlers[init_event_name] = {}
+        handlers = {}
+        event_handlers[init_event_name] = handlers
     end
 
     table.insert(handlers, priority_binary_search(handlers, priority), { handler = handler, priority = priority })
@@ -156,7 +158,8 @@ function Public.on_load(handler, priority)
     end
     local handlers = event_handlers[load_event_name]
     if not handlers then
-        event_handlers[load_event_name] = {}
+        handlers = {}
+        event_handlers[load_event_name] = handlers
     end
 
     table.insert(handlers, priority_binary_search(handlers, priority), { handler = handler, priority = priority })
@@ -175,7 +178,8 @@ function Public.on_nth_tick(tick, handler, priority)
     end
     local handlers = on_nth_tick_event_handlers[tick]
     if not handlers then
-        on_nth_tick_event_handlers[tick] = { { handler = handler, priority = priority } }
+        handlers = { { handler = handler, priority = priority } }
+        on_nth_tick_event_handlers[tick] = handlers
     end
 
     table.insert(handlers, priority_binary_search(handlers, priority), { handler = handler, priority = priority })
