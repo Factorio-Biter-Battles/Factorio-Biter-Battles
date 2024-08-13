@@ -160,7 +160,9 @@ end
 ---@param token int
 ---@param priority number? -- Handlers with the hightest priority are always called first, can be negative. Defaults to 0.
 function Event.add_removable(event_name, token, priority)
-    if not priority then priority = 0 end
+    if not priority then
+        priority = 0
+    end
     if type(token) ~= 'number' then
         error('token must be a number', 2)
     end
@@ -170,7 +172,7 @@ function Event.add_removable(event_name, token, priority)
 
     local tokens = token_handlers[event_name]
     if not tokens then
-        token_handlers[event_name] = {{ token = token, priority = priority }}
+        token_handlers[event_name] = { { token = token, priority = priority } }
     else
         tokens[#tokens + 1] = { token = token, priority = priority }
     end
@@ -238,7 +240,9 @@ function Event.add_removable_function(event_name, func_string, remove_token, pri
     if not event_name or not func_string or not remove_token then
         return
     end
-    if not priority then priority = 0 end
+    if not priority then
+        priority = 0
+    end
 
     local name = remove_token
     if type(remove_token) ~= 'string' then
@@ -328,7 +332,9 @@ end
 ---@param token int
 ---@param priority number? -- Handlers with the hightest priority are always called first, can be negative. Defaults to 0.
 function Event.add_removable_nth_tick(tick, token, priority)
-    if not priority then priority = 0 end
+    if not priority then
+        priority = 0
+    end
     if _LIFECYCLE == stage_load then
         error('cannot call during on_load', 2)
     end
@@ -338,7 +344,7 @@ function Event.add_removable_nth_tick(tick, token, priority)
 
     local tokens = token_nth_tick_handlers[tick]
     if not tokens then
-        token_nth_tick_handlers[tick] = {{ token = token, priority = priority }}
+        token_nth_tick_handlers[tick] = { { token = token, priority = priority } }
     else
         tokens[#tokens + 1] = { token = token, priority = priority }
     end
@@ -388,7 +394,9 @@ function Event.add_removable_nth_tick_function(tick, func_string, remove_token, 
     if not tick or not func_string or not remove_token then
         return
     end
-    if not priority then priority = 0 end
+    if not priority then
+        priority = 0
+    end
 
     local name = remove_token
     if type(remove_token) ~= 'string' then

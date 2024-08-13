@@ -36,18 +36,18 @@ end
 ---@param handlers { handler: fun(...: any), priority: number }[]
 ---@param event any
 local function call_handlers(handlers, event)
-	if not handlers then
-		return log('Handlers was nil!')
-	end
-	local handlers_copy = table.deepcopy(handlers)
-	for i = 1, #handlers_copy do
-		local handler = handlers_copy[i]
-		if handler ~= nil then
-			xpcall(handler.handler, errorHandler, event)
-		else
-			log('nil handler')
-		end
-	end
+    if not handlers then
+        return log('Handlers was nil!')
+    end
+    local handlers_copy = table.deepcopy(handlers)
+    for i = 1, #handlers_copy do
+        local handler = handlers_copy[i]
+        if handler ~= nil then
+            xpcall(handler.handler, errorHandler, event)
+        else
+            log('nil handler')
+        end
+    end
 end
 
 local function on_event(event)
@@ -112,7 +112,9 @@ end
 ---@param handler fun(event: EventData)
 ---@param priority number?
 function Public.add(event_name, handler, priority)
-    if not priority then priority = 0 end
+    if not priority then
+        priority = 0
+    end
     if event_name == defines.events.on_entity_damaged then
         error('on_entity_damaged is managed outside of the event framework.')
     end
@@ -131,7 +133,9 @@ end
 ---@param handler fun(event: EventData)
 ---@param priority number?
 function Public.on_init(handler, priority)
-    if not priority then priority = 0 end
+    if not priority then
+        priority = 0
+    end
     local handlers = event_handlers[init_event_name]
     if not handlers then
         event_handlers[init_event_name] = {}
@@ -147,7 +151,9 @@ end
 ---@param handler fun(event: EventData)
 ---@param priority number?
 function Public.on_load(handler, priority)
-    if not priority then priority = 0 end
+    if not priority then
+        priority = 0
+    end
     local handlers = event_handlers[load_event_name]
     if not handlers then
         event_handlers[load_event_name] = {}
@@ -164,10 +170,12 @@ end
 ---@param handler fun(event: EventData)
 ---@param priority number?
 function Public.on_nth_tick(tick, handler, priority)
-    if not priority then priority = 0 end
+    if not priority then
+        priority = 0
+    end
     local handlers = on_nth_tick_event_handlers[tick]
     if not handlers then
-        on_nth_tick_event_handlers[tick] = {{ handler = handler, priority = priority }}
+        on_nth_tick_event_handlers[tick] = { { handler = handler, priority = priority } }
     end
 
     table.insert(handlers, priority_binary_search(handlers, priority), { handler = handler, priority = priority })
