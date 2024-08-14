@@ -123,7 +123,7 @@ local function spawn_biters(
     -- *1.5 because we add 50% health bonus as it's just one unit.
     -- *20 because one boss is equal of 20 biters in theory
     -- formula because 90% revive chance is 1/(1-0.9) = 10, which means biters needs to be killed 10 times, so *10 . easy fast-check : 50% revive is 2 biters worth, formula matches. 0% revive -> 1 biter worth
-    local health_buff_equivalent_revive = 1.0 / (1.0 - global.reanim_chance[game.forces[biter_force_name].index] / 100)
+    local health_buff_equivalent_revive = global.biter_health_factor[game.forces[biter_force_name].index]
     if not isItnormalBiters then
         health_buff_equivalent_revive = health_buff_equivalent_revive * 20
     end
@@ -191,7 +191,7 @@ local function on_entity_spawned(event)
         return
     end
     if entity.force.name == 'north_biters' or entity.force.name == 'south_biters' then
-        local health_factor = 1 / (1 - global.reanim_chance[entity.force.index] / 100)
+        local health_factor = global.biter_health_factor[entity.force.index]
         if health_factor > 1 then
             BossUnit.add_high_health_unit(entity, health_factor, false)
         end
@@ -446,8 +446,7 @@ function Public.subtract_threat(entity)
         is_boss = true
     end
     if is_boss == true then
-        local health_buff_equivalent_revive = 1.0
-            / (1.0 - global.reanim_chance[game.forces[biter_not_boss_force].index] / 100)
+        local health_buff_equivalent_revive = global.biter_health_factor[game.forces[biter_not_boss_force].index]
         factor = bb_config.health_multiplier_boss * health_buff_equivalent_revive
     end
     global.bb_threat[biter_not_boss_force] = global.bb_threat[biter_not_boss_force]

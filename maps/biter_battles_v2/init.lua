@@ -377,11 +377,12 @@ function Public.tables()
     -- 100, so this value starts having an effect only at that point.
     -- To reach 100% reanimation chance at 200% evolution, set it to 100.
     -- To reach 100% reanimation chance at 350% evolution, set it to 250.
+    -- This is used to calculate biter_health_factor.
     global.max_reanim_thresh = 250
 
-    -- Container for storing chance of reanimation. The stored value
-    -- is a range between [0, 100], accessed by key with force's index.
-    global.reanim_chance = {}
+    -- Container for storing health factor, accessed by key with force's index.
+    ---@type table<integer, number>
+    global.biter_health_factor = {}
 
     global.next_attack = 'north'
     if global.random_generator(1, 2) == 1 then
@@ -520,7 +521,7 @@ function Public.forces()
         global.ai_target_destroyed_map = {}
         global.spy_fish_timeout[force.name] = 0
         global.bb_evolution[force.name] = 0
-        global.reanim_chance[force.index] = 0
+        global.biter_health_factor[force.index] = 1.0
         global.bb_threat_income[force.name] = 0
         global.bb_threat[force.name] = 0
     end

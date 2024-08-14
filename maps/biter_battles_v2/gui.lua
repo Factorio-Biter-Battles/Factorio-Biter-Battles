@@ -182,15 +182,14 @@ local function get_evo_tooltip(force, verbose)
         prefix = style.bold('Evolution') .. ' - ' .. gui_values[force].t1 .. '\n'
     end
     local biter_force = game.forces[gui_values[force].biter_force]
-    local damage, revive =
-        (biter_force.get_ammo_damage_modifier('melee') + 1) * 100, global.reanim_chance[biter_force.index]
+    local damage = (biter_force.get_ammo_damage_modifier('melee') + 1) * 100
     return prefix
         .. style.listbox('Evolution: ')
         .. style.yellow(style.stat(string_format('%.2f', (global.bb_evolution[biter_force.name] * 100))))
         .. style.listbox('%\nDamage: ')
         .. style.yellow(style.stat(damage))
-        .. style.listbox('%\nRevive: ')
-        .. style.yellow(style.stat(revive))
+        .. style.listbox('%\nHealth: ')
+        .. style.yellow(style.stat(string_format('%.0f', (global.biter_health_factor[biter_force.index] * 100))))
         .. style.listbox('%')
 end
 

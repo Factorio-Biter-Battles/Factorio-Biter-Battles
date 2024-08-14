@@ -333,6 +333,10 @@ local function draw_main_frame(player)
     local poll_flow = Gui.add_left_element(player, { type = 'flow', name = poll_flow_name, direction = 'vertical' })
     gui_style(poll_flow, flow_style)
 
+    local old_frame = poll_flow[main_frame_name]
+    if old_frame then
+        old_frame.destroy()
+    end
     local frame = poll_flow.add({ type = 'frame', name = main_frame_name, direction = 'vertical' })
     gui_style(frame, frame_style())
 

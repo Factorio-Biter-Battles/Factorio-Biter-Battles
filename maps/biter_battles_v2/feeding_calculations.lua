@@ -20,8 +20,8 @@ end
 ---@param food_value number
 ---@param num_flasks integer
 ---@param current_player_count integer
----@param max_reanim_thresh number
----@return { evo_increase: number, threat_increase: number, reanim_chance: number }
+---@param max_reanim_thresh number Long ago, we used reanim_chance rather than health_factor, and this is the evo value at which it would sortof be 100% reanim_chance
+---@return { evo_increase: number, threat_increase: number, biter_health_factor: number }
 function Public.calc_feed_effects(initial_evo, food_value, num_flasks, current_player_count, max_reanim_thresh)
     local threat = 0
     local evo = initial_evo
@@ -68,7 +68,7 @@ function Public.calc_feed_effects(initial_evo, food_value, num_flasks, current_p
     return {
         evo_increase = evo - initial_evo,
         threat_increase = threat,
-        reanim_chance = reanim_chance,
+        biter_health_factor = 1 / (1 - reanim_chance / 100),
     }
 end
 
