@@ -89,11 +89,11 @@ function TeamStatsCompare.show_stats(player)
             other_force = 'north'
         end
         if not global.bb_game_won_by_team then
-            if global.allow_teamstats == 'spectators' then
+            if global.allow_teamstats == 'spectator' then
                 if other_force and player.force.name ~= 'spectator' then
                     exclude_forces[other_force] = true
                 end
-            elseif global.allow_teamstats == 'pure-spectators' then
+            elseif global.allow_teamstats == 'pure-spectator' then
                 if other_force then
                     exclude_forces[other_force] = true
                 end
