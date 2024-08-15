@@ -37,11 +37,17 @@ local token_handlers = {}
 ---@type { [int]: { token: int, priority: number }[] }
 local token_nth_tick_handlers = {}
 
----@type { [string]: { event_name: EventName, func_string: string, handler: fun(), priority: number }[] }
+---@type { [string]: { event_name: EventName, func_string: string, priority: number }[] }
 local function_handlers = {}
+---Do NOT register is table in global module.
+---@type { [string]: { event_name: EventName, handler: fun() }[] }
+local compiled_function_handlers = {}
 
----@type { [string]: { tick: int, func_string: string, handler: fun(), priority: number }[] }
+---@type { [string]: { tick: int, func_string: string, priority: number }[] }
 local function_nth_tick_handlers = {}
+---Do NOT register is table in global module.
+---@type { [string]: { tick: int, handler: fun() }[] }
+local compiled_function_nth_tick_handlers = {}
 
 ---@type int
 local removable_function_uid = 0
@@ -282,7 +288,15 @@ function Event.add_removable_function(event_name, func_string, remove_token, pri
         funcs = function_handlers[name]
     end
 
-    funcs[#funcs + 1] = { event_name = event_name, func_string = func_string, handler = handler, priority = priority }
+    funcs[#funcs + 1] = { event_name = event_name, func_string = func_string, priority = priority }
+
+    local compiled_funcs = compiled_function_handlers[name]
+    if not compiled_funcs then
+        compiled_function_handlers[name] = {}
+        compiled_funcs = compiled_function_handlers[name]
+    end
+
+    compiled_funcs[#compiled_funcs + 1] = { event_name = event_name, handler = handler }
 
     if handlers_added then
         core_add(event_name, handler, priority)
@@ -308,12 +322,20 @@ function Event.remove_removable_function(event_name, name)
         return
     end
 
-    local handlers = event_handlers[event_name]
-
     for k, v in pairs(funcs) do
         local n = v.event_name
         if n == event_name then
             funcs[k] = nil
+        end
+    end
+
+    local compiled_funcs = compiled_function_handlers[name]
+    local handlers = event_handlers[event_name]
+
+    for k, v in pairs(compiled_funcs) do
+        local n = v.event_name
+        if n == event_name then
+            compiled_funcs[k] = nil
             remove(handlers, v.handler)
         end
     end
@@ -324,6 +346,10 @@ function Event.remove_removable_function(event_name, name)
 
     if #funcs == 0 then
         function_handlers[name] = nil
+    end
+
+    if #compiled_funcs == 0 then
+        compiled_function_handlers[name] = nil
     end
 end
 
@@ -436,7 +462,15 @@ function Event.add_removable_nth_tick_function(tick, func_string, remove_token, 
         funcs = function_nth_tick_handlers[name]
     end
 
-    funcs[#funcs + 1] = { tick = tick, func_string = func_string, handler = handler, priority = priority }
+    funcs[#funcs + 1] = { tick = tick, func_string = func_string, priority = priority }
+
+    local compiled_funcs = compiled_function_nth_tick_handlers[name]
+    if not compiled_funcs then
+        compiled_function_nth_tick_handlers[name] = {}
+        compiled_funcs = compiled_function_nth_tick_handlers[name]
+    end
+
+    compiled_funcs[#compiled_funcs + 1] = { tick = tick, handler = handler }
 
     if handlers_added then
         core_on_nth_tick(tick, handler, priority)
@@ -461,22 +495,34 @@ function Event.remove_removable_nth_tick_function(tick, name)
         return
     end
 
-    local handlers = on_nth_tick_event_handlers[tick]
-
     for k, v in pairs(funcs) do
         local t = v.tick
         if t == tick then
             funcs[k] = nil
+        end
+    end
+
+    local compiled_funcs = compiled_function_nth_tick_handlers[name]
+    local handlers = on_nth_tick_event_handlers[tick]
+
+    for k, v in pairs(compiled_funcs) do
+        local t = v.tick
+        if t == tick then
+            compiled_funcs[k] = nil
             remove(handlers, v.handler)
         end
+    end
+
+    if #handlers == 0 then
+        script_on_nth_tick(tick, nil)
     end
 
     if #funcs == 0 then
         function_nth_tick_handlers[name] = nil
     end
 
-    if #handlers == 0 then
-        script_on_nth_tick(tick, nil)
+    if #compiled_funcs == 0 then
+        compiled_function_nth_tick_handlers[name] = nil
     end
 end
 
@@ -519,7 +565,7 @@ local function add_handlers()
             local e_name = func.event_name
             local func_string = func.func_string
             local handler = assert(load('return ' .. func_string))()
-            func.handler = handler
+            table.insert(compiled_function_handlers, { event_name = e_name, handler = handler })
             core_add(e_name, handler, func.priority)
         end
     end
@@ -536,7 +582,7 @@ local function add_handlers()
             local tick = func.tick
             local func_string = func.func_string
             local handler = assert(load('return ' .. func_string))()
-            func.handler = handler
+            table.insert(compiled_function_nth_tick_handlers, { tick = tick, handler = handler })
             core_on_nth_tick(tick, handler, func.priority)
         end
     end
