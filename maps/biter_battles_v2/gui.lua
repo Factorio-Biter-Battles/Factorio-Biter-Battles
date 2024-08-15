@@ -1151,32 +1151,15 @@ local function on_gui_click(event)
     end
 
     if name == 'join_random' then
-        local teams_equal = true
-        local a = #game.forces.north.connected_players -- Idk how to choose the 1st force without calling 'north'
-
-        -- checking if teams are equal
-        for force_name, gui_values in pairs(gui_values) do
-            if a ~= #game.forces[force_name].connected_players then
-                teams_equal = false
-                break
-            end
-        end
+        local north_connected_players = #game.forces.north.connected_players
+        local south_connected_players = #game.forces.south.connected_players
 
         -- choosing a team at random if teams are equal
-        if teams_equal then
-            local teams = {}
-            for force_name, gui_values in pairs(gui_values) do
-                table.insert(teams, force_name)
-            end
+        if north_connected_players == south_connected_players then
+            local teams = { 'north', 'south' }
             join_gui_click(teams[math_random(#teams)], player, true)
         else -- checking which team is smaller and joining it
-            local smallest_team = gui_values.north.force -- Idk how to choose the 1st force without calling 'north'
-            for force_name, gui_values in pairs(gui_values) do
-                if a > #game.forces[force_name].connected_players then
-                    smallest_team = force_name
-                    a = #game.forces[force_name].connected_players
-                end
-            end
+            local smallest_team = north_connected_players < south_connected_players and 'north' or 'south'
             join_gui_click(smallest_team, player, true)
         end
         return
