@@ -446,8 +446,7 @@ local function on_gui_checked_state_changed(event)
     if event.element.name == 'teamstats_show_hidden' then
         get_preferences(player).show_hidden = event.element.state
         safe_wrap_with_player_print(player, TeamStatsCompare.show_stats, player)
-    end
-    if event.element.name == 'teamstats_show_prev' then
+    elseif event.element.name == 'teamstats_show_prev' then
         get_preferences(player).show_prev = event.element.state
         safe_wrap_with_player_print(player, TeamStatsCompare.show_stats, player)
     end
