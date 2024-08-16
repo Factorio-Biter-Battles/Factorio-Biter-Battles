@@ -605,6 +605,7 @@ local function generate_captain_mode(refereeName, autoTrust, captainKick, specia
             game.print(
                 'Event captain aborted, referee is not a player connected. Provided referee name was: '
                 .. special.refereeName
+            )
             global.special_games_variables.captain_mode = nil
             global.active_special_games.captain_mode = false
             return
