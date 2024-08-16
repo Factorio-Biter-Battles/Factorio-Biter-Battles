@@ -604,7 +604,7 @@ local function generate_captain_mode(refereeName, autoTrust, captainKick, specia
         if referee == nil then
             game.print(
                 'Event captain aborted, referee is not a player connected. Provided referee name was: '
-                .. special.refereeName
+                    .. special.refereeName
             )
             global.special_games_variables.captain_mode = nil
             global.active_special_games.captain_mode = false
@@ -929,19 +929,19 @@ decrement_timer_captain_prepa_token = Token.register(function()
         return
     end
     if global.automatic_captain_prepa_time_remaining_for_start % (2 * 60 * 60) == 0 then
-        game.print('[font=default-large-bold]Time remaining for prepa for captains before forced start : ' ..
-        global.automatic_captain_prepa_time_remaining_for_start / 60 / 60 .. ' minutes[/font]')
+        game.print(
+            '[font=default-large-bold]Time remaining for prepa for captains before forced start : '
+                .. global.automatic_captain_prepa_time_remaining_for_start / 60 / 60
+                .. ' minutes[/font]'
+        )
     end
-    global.automatic_captain_prepa_time_remaining_for_start = global.automatic_captain_prepa_time_remaining_for_start -
-    1 * 60
+    global.automatic_captain_prepa_time_remaining_for_start = global.automatic_captain_prepa_time_remaining_for_start
+        - 1 * 60
     if global.automatic_captain_prepa_time_remaining_for_start > 0 then
         Task.set_timeout_in_ticks(60, decrement_timer_captain_prepa_token)
     else
         if #special.listTeamReadyToPlay < 2 then
-            game.print(
-                '[font=default-large-bold]Game was automatically started[/font]',
-                Color.cyan
-            )
+            game.print('[font=default-large-bold]Game was automatically started[/font]', Color.cyan)
             prepare_start_captain_event()
             Public.update_all_captain_player_guis()
         end
@@ -1541,7 +1541,7 @@ function Public.pick_player_with_most_playtime(player)
     for _, pl in ipairs(game.forces[forceOfCaptain].connected_players) do
         table.insert(playerTimes, {
             name = pl.name,
-            playtime = global.total_time_online_players[pl] or 0
+            playtime = global.total_time_online_players[pl] or 0,
         })
     end
     table.sort(playerTimes, sortByPlaytime)
@@ -1556,14 +1556,25 @@ local function on_player_left_game(event)
         return
     end
     DifficultyVote.remove_player_from_difficulty_vote(player)
-	
+
     if is_it_automatic_captain() and table_contains(special.captainList, player.name) then
         if special.initialPickingPhaseStarted and special.prepaPhase then
-            game.print("[font=default-large-bold]The captain " .. player.name .. " left during the initial picking or prepa phase, event canceled[/font]")
+            game.print(
+                '[font=default-large-bold]The captain '
+                    .. player.name
+                    .. ' left during the initial picking or prepa phase, event canceled[/font]'
+            )
             force_end_captain_event()
-		elseif not special.prepaPhase then
-			local playerNameChosen = Public.pick_player_with_most_playtime(player)
-			game.print("[font=default-large-bold]The captain " .. player.name .. " left. New captain elected automatically, congratulations " .. playerNameChosen .. "[/font]",Color.cyan)
+        elseif not special.prepaPhase then
+            local playerNameChosen = Public.pick_player_with_most_playtime(player)
+            game.print(
+                '[font=default-large-bold]The captain '
+                    .. player.name
+                    .. ' left. New captain elected automatically, congratulations '
+                    .. playerNameChosen
+                    .. '[/font]',
+                Color.cyan
+            )
             local forceOfCaptain = 'north'
             if player.name == special.captainList[2] then
                 forceOfCaptain = 'south'
@@ -1571,9 +1582,9 @@ local function on_player_left_game(event)
             local captain_index = forceOfCaptain == 'north' and 1 or 2
             special.captainList[captain_index] = playerNameChosen
             generate_vs_text_rendering()
-		end
+        end
     end
-	
+
     if not special.pickingPhase then
         table_remove_element(special.listPlayers, player.name)
         if special.prepaPhase then
@@ -1797,8 +1808,9 @@ function Public.draw_captain_player_gui(player, main_frame)
             type = 'label',
             name = 'remaining_time_automatic_captain',
             style = 'label_with_left_padding',
-            caption = '[color=red]Time remaining before automatic start :' ..
-            global.automatic_captain_time_remaining_for_start .. 's[/color]',
+            caption = '[color=red]Time remaining before automatic start :'
+                .. global.automatic_captain_time_remaining_for_start
+                .. 's[/color]',
         })
 
         label = prepa_flow.add({
@@ -2313,8 +2325,9 @@ function Public.update_captain_player_gui(player, frame)
 
                 if is_it_automatic_captain() then
                     remaining_time_before_autostart.visible = true
-                    remaining_time_before_autostart.caption = '[color=red]Time remaining before automatic start : ' ..
-                    global.automatic_captain_time_remaining_for_start / 60 .. 's[/color]'
+                    remaining_time_before_autostart.caption = '[color=red]Time remaining before automatic start : '
+                        .. global.automatic_captain_time_remaining_for_start / 60
+                        .. 's[/color]'
                 else
                     remaining_time_before_autostart.visible = false
                 end
@@ -2924,13 +2937,13 @@ function Public.keep_only_the_captain_with_most_playtime()
     for _, playerName in ipairs(special.captainList) do
         table.insert(playerTimes, {
             name = playerName,
-            playtime = global.total_time_online_players[playerName] or 0
+            playtime = global.total_time_online_players[playerName] or 0,
         })
     end
     table.sort(playerTimes, sortByPlaytime)
     special.captainList = {
         playerTimes[1].name,
-        playerTimes[2].name
+        playerTimes[2].name,
     }
     game.print('The captains will be (debug) : ' .. special.captainList[1] .. ',' .. special.captainList[2])
 end
@@ -2950,17 +2963,17 @@ decrement_timer_captain_start_token = Token.register(function()
     else
         local special = global.special_games_variables.captain_mode
         if #special.captainList < 2 then
-            game.print("Not enough captains to automatically start captain event...", { r = 1, g = 0, b = 0 })
+            game.print('Not enough captains to automatically start captain event...', { r = 1, g = 0, b = 0 })
             force_end_captain_event()
         elseif #special.captainList == 2 then
             if #special.listPlayers < 2 then
-                game.print("Not enough players to automatically start captain event...", { r = 1, g = 0, b = 0 })
+                game.print('Not enough players to automatically start captain event...', { r = 1, g = 0, b = 0 })
                 force_end_captain_event()
             else
                 prepare_and_start_picking_for_captain()
             end
         else
-            game.print("Too many captains, picking the 2 captains who have most playtime as captains")
+            game.print('Too many captains, picking the 2 captains who have most playtime as captains')
             Public.keep_only_the_captain_with_most_playtime()
             prepare_and_start_picking_for_captain()
         end

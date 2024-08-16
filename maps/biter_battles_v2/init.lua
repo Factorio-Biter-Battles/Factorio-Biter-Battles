@@ -126,11 +126,11 @@ function Public.initial_setup()
     end
 
     global.suspend_time_limit = 3600
-    global.reroll_time_limit = 45 * 60                                  -- 45 seconds
-    global.automatic_captain_time_limit = 45 * 60                       -- 45 seconds
-    global.automatic_captain_time_to_start_it = 5 * 60 * 60             -- 5 minutes
-    global.automatic_captain_time_remaining_for_start = 5 * 60 * 60     -- 5 minutes
-    global.automatic_captain_prepa_time_to_start_it = 10 * 60 * 60      -- 10 minutes
+    global.reroll_time_limit = 45 * 60 -- 45 seconds
+    global.automatic_captain_time_limit = 45 * 60 -- 45 seconds
+    global.automatic_captain_time_to_start_it = 5 * 60 * 60 -- 5 minutes
+    global.automatic_captain_time_remaining_for_start = 5 * 60 * 60 -- 5 minutes
+    global.automatic_captain_prepa_time_to_start_it = 10 * 60 * 60 -- 10 minutes
     global.automatic_captain_prepa_time_remaining_for_start = 10 * 60 * 60 -- 10 minutes
 
     global.chart_queue = Queue.new()

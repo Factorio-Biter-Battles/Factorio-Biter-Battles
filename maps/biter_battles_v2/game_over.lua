@@ -654,19 +654,22 @@ local function draw_automatic_captain_poll_gui(player)
         return
     end
 
-    local frame =
-        Gui.add_top_element(player,
-            { type = 'frame', name = 'automatic_captain_frame', style = 'finished_game_subheader_frame' })
+    local frame = Gui.add_top_element(
+        player,
+        { type = 'frame', name = 'automatic_captain_frame', style = 'finished_game_subheader_frame' }
+    )
     gui_style(frame, { minimal_height = 36, maximal_height = 36, padding = 0, vertical_align = 'center' })
 
     local f = frame.add({ type = 'flow', name = 'flow', direction = 'horizontal' })
     local line = f.add({ type = 'line', direction = 'vertical' })
 
     do -- buttons
-        local t = f.add({ type = 'table', name = 'automatic_captain_table', column_count = 3, vertical_centering = true })
+        local t =
+            f.add({ type = 'table', name = 'automatic_captain_table', column_count = 3, vertical_centering = true })
         gui_style(t, { top_margin = 2, left_margin = 8, right_margin = 8 })
 
-        local l = t.add({ type = 'label', caption = { 'gui.automatic_captain_caption', global.automatic_captain_time_left } })
+        local l =
+            t.add({ type = 'label', caption = { 'gui.automatic_captain_caption', global.automatic_captain_time_left } })
         gui_style(l, {
             font = 'heading-2',
             font_color = { r = 0.88, g = 0.55, b = 0.11 },
@@ -678,14 +681,12 @@ local function draw_automatic_captain_poll_gui(player)
         local b = t.add({ type = 'button', caption = 'No', name = 'automatic_captain_no', style = 'red_back_button' })
         gui_style(b, { minimal_width = 56, maximal_width = 56, font = 'heading-2' })
 
-        local b =
-            t.add({
-                type = 'button',
-                caption = 'Yes',
-                name = 'automatic_captain_yes',
-                style =
-                'confirm_button_without_tooltip'
-            })
+        local b = t.add({
+            type = 'button',
+            caption = 'Yes',
+            name = 'automatic_captain_yes',
+            style = 'confirm_button_without_tooltip',
+        })
         gui_style(b, { minimal_width = 56, maximal_width = 56, font = 'heading-2' })
     end
 
@@ -707,7 +708,7 @@ local function draw_automatic_captain_poll_gui(player)
 end
 
 local automatic_captain_buttons_token = Token.register(
--- create buttons for joining players
+    -- create buttons for joining players
     function(event)
         local player = game.get_player(event.player_index)
         draw_automatic_captain_poll_gui(player)
@@ -739,11 +740,11 @@ decrement_timer_automatic_captain_token = Token.register(function()
         for _, player in pairs(game.connected_players) do
             local frame = Gui.get_top_element(player, 'automatic_captain_frame')
             if frame and frame.valid then
-                frame.flow.automatic_captain_table.children[1].caption = { 'gui.automatic_captain_caption', global
-                    .automatic_captain_time_left }
+                frame.flow.automatic_captain_table.children[1].caption =
+                    { 'gui.automatic_captain_caption', global.automatic_captain_time_left }
                 local percent, yes_votes, no_votes = get_automatic_captain_stats()
-                frame.flow.automatic_captain_stats.caption = { 'gui.automatic_captain_stats', no_votes, yes_votes,
-                    percent }
+                frame.flow.automatic_captain_stats.caption =
+                    { 'gui.automatic_captain_stats', no_votes, yes_votes, percent }
             end
         end
 
@@ -754,8 +755,7 @@ decrement_timer_automatic_captain_token = Token.register(function()
         -- count votes
         local result, yes_votes, _ = get_automatic_captain_stats()
         if result >= 66 and yes_votes > 13 then
-            game.print('Vote to start captain event has succeeded (' ..
-                result .. '%)')
+            game.print('Vote to start captain event has succeeded (' .. result .. '%)')
             Captain_special.generate_automatic_captain()
         else
             game.print('Vote to start captain event has failed (' .. result .. '%)')
@@ -768,7 +768,8 @@ local function start_auto_captain_vote()
     if global.bb_settings.automatic_captain and #game.connected_players > 25 then
         game.print(
             'You can now vote to start or not a captain game, top of screen! You wont be able to play until the poll is over',
-            { r = 0.22, g = 0.88, b = 0.22 })
+            { r = 0.22, g = 0.88, b = 0.22 }
+        )
         global.tournament_mode = true
         global.automatic_captain_time_left = global.automatic_captain_time_limit / 60
         Task.set_timeout_in_ticks(60, decrement_timer_automatic_captain_token)
