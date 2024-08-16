@@ -210,6 +210,16 @@ local functions = {
             game.print('Map Reroll is disabled!')
         end
     end,
+
+    ['bb_automatic_captain_toggle'] = function(event)
+        if event.element.switch_state == 'left' then
+            global.bb_settings.automatic_captain = true
+            game.print('Automatic captain is enabled!')
+        else
+            global.bb_settings.automatic_captain = false
+            game.print('Automatic captain is disabled!')
+        end
+    end,
     ['bb_burners_balance_toggle'] = function(event)
         if event.element.switch_state == 'left' then
             global.bb_settings.burners_balance = true
@@ -696,6 +706,23 @@ local build_config_gui = function(player, frame)
                 'bb_map_reroll_toggle',
                 'Map Reroll',
                 'Enables map reroll feature.'
+            )
+            if not admin then
+                switch.ignored_by_interaction = true
+            end
+
+            scroll_pane.add({ type = 'line' })
+
+            local switch_state = 'right'
+            if global.bb_settings.automatic_captain then
+                switch_state = 'left'
+            end
+            local switch = add_switch(
+                scroll_pane,
+                switch_state,
+                'bb_automatic_captain_toggle',
+                'Automatic captain',
+                'Enables automatic captain feature.'
             )
             if not admin then
                 switch.ignored_by_interaction = true

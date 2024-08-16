@@ -126,7 +126,13 @@ function Public.initial_setup()
     end
 
     global.suspend_time_limit = 3600
-    global.reroll_time_limit = 45 * 60 -- 45 seconds
+    global.reroll_time_limit = 45 * 60                                  -- 45 seconds
+    global.automatic_captain_time_limit = 45 * 60                       -- 45 seconds
+    global.automatic_captain_time_to_start_it = 5 * 60 * 60             -- 5 minutes
+    global.automatic_captain_time_remaining_for_start = 5 * 60 * 60     -- 5 minutes
+    global.automatic_captain_prepa_time_to_start_it = 10 * 60 * 60      -- 10 minutes
+    global.automatic_captain_prepa_time_remaining_for_start = 10 * 60 * 60 -- 10 minutes
+
     global.chart_queue = Queue.new()
     global.gui_refresh_delay = 0
     global.bb_debug = false
@@ -141,6 +147,7 @@ function Public.initial_setup()
         --MAP SETTINGS--
         ['new_year_island'] = false,
         ['bb_map_reveal_toggle'] = true,
+        ['automatic_captain'] = true,
         ['map_reroll'] = true,
         ['burners_balance'] = true,
     }
@@ -301,6 +308,7 @@ function Public.tables()
     -- Our terrain gen seed IS the map seed
     global.random_generator.re_seed(global.next_map_seed)
     global.reroll_map_voting = {}
+    global.automatic_captain_voting = {}
     global.bb_evolution = {}
     global.benchmark_mode = false
     global.bb_game_won_by_team = nil
