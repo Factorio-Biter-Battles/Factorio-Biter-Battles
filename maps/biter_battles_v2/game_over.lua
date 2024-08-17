@@ -765,7 +765,10 @@ decrement_timer_automatic_captain_token = Token.register(function()
 end)
 
 local function start_auto_captain_vote()
-    if global.bb_settings.automatic_captain and #game.connected_players > 25 then
+    if
+        global.bb_settings.automatic_captain
+        and #game.connected_players > global.automatic_captain_min_connected_players_for_vote
+    then
         game.print(
             'You can now vote to start or not a captain game, top of screen! You wont be able to play until the poll is over',
             { r = 0.22, g = 0.88, b = 0.22 }

@@ -132,6 +132,7 @@ function Public.initial_setup()
     global.automatic_captain_time_remaining_for_start = 5 * 60 * 60 -- 5 minutes
     global.automatic_captain_prepa_time_to_start_it = 10 * 60 * 60 -- 10 minutes
     global.automatic_captain_prepa_time_remaining_for_start = 10 * 60 * 60 -- 10 minutes
+    global.automatic_captain_min_connected_players_for_vote = 25
 
     global.chart_queue = Queue.new()
     global.gui_refresh_delay = 0
