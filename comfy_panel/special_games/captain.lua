@@ -1540,15 +1540,18 @@ end
 
 function Public.pick_player_with_most_playtime(forceOfCaptain)
     local special = global.special_games_variables.captain_mode
-    local playerTimes = {}
+    local maxPlaytime = -1
+    local maxPlayer = nil
+
     for _, pl in ipairs(game.forces[forceOfCaptain].connected_players) do
-        table.insert(playerTimes, {
-            name = pl.name,
-            playtime = global.total_time_online_players[pl] or 0,
-        })
+        local playtime = global.total_time_online_players[pl] or 0
+        if playtime > maxPlaytime then
+            maxPlaytime = playtime
+            maxPlayer = pl
+        end
     end
-    table.sort(playerTimes, sortByPlaytime)
-    return playerTimes[1].name
+
+    return maxPlayer and maxPlayer.name
 end
 
 local function on_player_left_game(event)
