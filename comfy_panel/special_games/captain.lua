@@ -1577,21 +1577,23 @@ local function on_player_left_game(event)
                 forceOfCaptain = 'south'
             end
             local playerNameChosen = Public.pick_player_with_most_playtime(forceOfCaptain)
-            game.print(
-                '[font=default-large-bold]The captain '
-                    .. player.name
-                    .. ' left. New captain elected automatically, congratulations '
-                    .. playerNameChosen
-                    .. '[/font]',
-                Color.cyan
-            )
-            local forceOfCaptain = 'north'
-            if player.name == special.captainList[2] then
-                forceOfCaptain = 'south'
+            if playerNameChosen ~= nil then
+                game.print(
+                    '[font=default-large-bold]The captain '
+                        .. player.name
+                        .. ' left. New captain elected automatically, congratulations '
+                        .. playerNameChosen
+                        .. '[/font]',
+                    Color.cyan
+                )
+                local forceOfCaptain = 'north'
+                if player.name == special.captainList[2] then
+                    forceOfCaptain = 'south'
+                end
+                local captain_index = forceOfCaptain == 'north' and 1 or 2
+                special.captainList[captain_index] = playerNameChosen
+                generate_vs_text_rendering()
             end
-            local captain_index = forceOfCaptain == 'north' and 1 or 2
-            special.captainList[captain_index] = playerNameChosen
-            generate_vs_text_rendering()
         end
     end
 
