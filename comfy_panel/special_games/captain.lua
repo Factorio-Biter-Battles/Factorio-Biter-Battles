@@ -1059,6 +1059,13 @@ local function prepare_and_start_picking_for_captain()
             table_remove_element(special.listPlayers, captainName)
         end
     end
+
+    if is_it_automatic_captain() then
+        game.print(
+            '[font=default-large-bold]Beware that captains are not allowed to leave before the first picking phase is over and the preparation is over, they must stay online at least until the game starts, otherwise the event will be automatically canceled[/font]',
+            Color.cyan
+        )
+    end
     start_picking_phase()
 end
 
