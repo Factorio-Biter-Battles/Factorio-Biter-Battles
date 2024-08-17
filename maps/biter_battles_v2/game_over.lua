@@ -744,16 +744,24 @@ decrement_timer_automatic_captain_token = Token.register(function()
         stop_automatic_captain()
         -- count votes
         local result, yes_votes, _ = get_automatic_captain_stats()
-        if result >= 66 and yes_votes > 13 then
+        local amountVotesRequired = 13
+        local percentRequired = 66
+        if result >= percentRequired and yes_votes > amountVotesRequired then
             game.print('Vote to start captain event has succeeded (' .. result .. '%)')
             Captain_special.generate_automatic_captain()
         else
             game.print('Vote to start captain event has failed (' .. result .. '%)')
-            if yes_votes <= 13 then
-                game.print('At least 13 votes voting yes are required, there were only ' .. yes_votes .. ' yes votes')
+            if yes_votes <= amountVotesRequired then
+                game.print(
+                    'At least '
+                        .. amountVotesRequired
+                        .. ' votes voting yes are required, there were only '
+                        .. yes_votes
+                        .. ' yes votes'
+                )
             end
-            if result < 66 then
-                game.print('At least 66% of yes are required')
+            if result < percentRequired then
+                game.print('At least ' .. percentRequired .. '% of yes are required')
             end
             global.tournament_mode = false
         end

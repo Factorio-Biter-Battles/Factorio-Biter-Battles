@@ -1538,13 +1538,9 @@ local function sortByPlaytime(a, b)
     return a.playtime > b.playtime
 end
 
-function Public.pick_player_with_most_playtime(player)
+function Public.pick_player_with_most_playtime(forceOfCaptain)
     local special = global.special_games_variables.captain_mode
     local playerTimes = {}
-    local forceOfCaptain = 'north'
-    if player.name == special.captainList[2] then
-        forceOfCaptain = 'south'
-    end
     for _, pl in ipairs(game.forces[forceOfCaptain].connected_players) do
         table.insert(playerTimes, {
             name = pl.name,
@@ -1573,7 +1569,11 @@ local function on_player_left_game(event)
             )
             force_end_captain_event()
         elseif not special.prepaPhase then
-            local playerNameChosen = Public.pick_player_with_most_playtime(player)
+            local forceOfCaptain = 'north'
+            if player.name == special.captainList[2] then
+                forceOfCaptain = 'south'
+            end
+            local playerNameChosen = Public.pick_player_with_most_playtime(forceOfCaptain)
             game.print(
                 '[font=default-large-bold]The captain '
                     .. player.name
