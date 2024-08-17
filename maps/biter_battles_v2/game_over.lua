@@ -707,18 +707,8 @@ local function draw_automatic_captain_poll_gui(player)
     end
 end
 
-local automatic_captain_buttons_token = Token.register(
-    -- create buttons for joining players
-    function(event)
-        local player = game.get_player(event.player_index)
-        draw_automatic_captain_poll_gui(player)
-    end
-)
-
 local function stop_automatic_captain()
-    global.reroll_time_left = 0
-    -- disable automatic captain buttons creation for joining players
-    Event.remove_removable(defines.events.on_player_joined_game, automatic_captain_buttons_token)
+    global.automatic_captain_time_left = 0
     -- remove existing buttons
     for _, player in pairs(game.players) do
         local frame = Gui.get_top_element(player, 'automatic_captain_poll_frame')
@@ -759,6 +749,12 @@ decrement_timer_automatic_captain_token = Token.register(function()
             Captain_special.generate_automatic_captain()
         else
             game.print('Vote to start captain event has failed (' .. result .. '%)')
+            if yes_votes <= 13 then
+                game.print('At least 13 votes voting yes are required, there were only ' .. yes_votes .. ' yes votes')
+            end
+            if result < 66 then
+                game.print('At least 66% of yes are required')
+            end
             global.tournament_mode = false
         end
     end
@@ -776,7 +772,6 @@ local function start_auto_captain_vote()
         global.tournament_mode = true
         global.automatic_captain_time_left = global.automatic_captain_time_limit / 60
         Task.set_timeout_in_ticks(60, decrement_timer_automatic_captain_token)
-        Event.add_removable(defines.events.on_player_joined_game, automatic_captain_buttons_token)
         for _, player in pairs(game.connected_players) do
             draw_automatic_captain_poll_gui(player)
         end
@@ -883,5 +878,17 @@ function Public.generate_new_map()
     start_map_reroll()
 end
 
+function Public.automatic_captain_draw_buttons(event)
+    if not global.bb_settings.automatic_captain then
+        return
+    end
+
+    if global.automatic_captain_time_left > 0 then
+        local player = game.get_player(event.player_index)
+        draw_automatic_captain_poll_gui(player)
+    end
+end
+
 Event.add(defines.events.on_console_chat, chat_with_everyone)
+Event.add(defines.events.on_player_joined_game, Public.automatic_captain_draw_buttons)
 return Public

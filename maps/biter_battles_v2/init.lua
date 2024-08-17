@@ -126,6 +126,7 @@ function Public.initial_setup()
     end
 
     global.suspend_time_limit = 3600
+    global.automatic_captain_time_left = 0
     global.reroll_time_limit = 45 * 60 -- 45 seconds
     global.automatic_captain_time_limit = 45 * 60 -- 45 seconds
     global.automatic_captain_time_to_start_it = 5 * 60 * 60 -- 5 minutes
