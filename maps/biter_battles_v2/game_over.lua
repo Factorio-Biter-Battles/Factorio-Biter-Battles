@@ -650,13 +650,13 @@ local function get_automatic_captain_stats()
 end
 
 local function draw_automatic_captain_poll_gui(player)
-    if Gui.get_top_element(player, 'automatic_captain_frame') then
+    if Gui.get_top_element(player, 'automatic_captain_poll_frame') then
         return
     end
 
     local frame = Gui.add_top_element(
         player,
-        { type = 'frame', name = 'automatic_captain_frame', style = 'finished_game_subheader_frame' }
+        { type = 'frame', name = 'automatic_captain_poll_frame', style = 'finished_game_subheader_frame' }
     )
     gui_style(frame, { minimal_height = 36, maximal_height = 36, padding = 0, vertical_align = 'center' })
 
@@ -721,7 +721,7 @@ local function stop_automatic_captain()
     Event.remove_removable(defines.events.on_player_joined_game, automatic_captain_buttons_token)
     -- remove existing buttons
     for _, player in pairs(game.players) do
-        local frame = Gui.get_top_element(player, 'automatic_captain_frame')
+        local frame = Gui.get_top_element(player, 'automatic_captain_poll_frame')
         if frame then
             frame.destroy()
         end
@@ -738,7 +738,7 @@ decrement_timer_automatic_captain_token = Token.register(function()
     global.automatic_captain_time_left = global.automatic_captain_time_left - 1
     if global.automatic_captain_time_left > 0 then
         for _, player in pairs(game.connected_players) do
-            local frame = Gui.get_top_element(player, 'automatic_captain_frame')
+            local frame = Gui.get_top_element(player, 'automatic_captain_poll_frame')
             if frame and frame.valid then
                 frame.flow.automatic_captain_table.children[1].caption =
                     { 'gui.automatic_captain_caption', global.automatic_captain_time_left }
