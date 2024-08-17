@@ -2953,15 +2953,34 @@ decrement_timer_captain_start_token = Token.register(function()
     if not global.active_special_games.captain_mode then
         return
     end
+    local special = global.special_games_variables.captain_mode
 
     global.automatic_captain_time_remaining_for_start = global.automatic_captain_time_remaining_for_start - 1 * 60
+
+    if (global.automatic_captain_time_remaining_for_start % (30 * 60)) == 0 then
+        local textToPrint = '[font=default-large-bold]Remaining time before the automatic start of captain event : '
+            .. global.automatic_captain_time_remaining_for_start / 60
+            .. ' seconds.[/font]'
+        if #special.captainList < 2 then
+            local captainText = ' captain '
+            if #special.captainList == 0 then
+                captainText = ' captains '
+            end
+            textToPrint = textToPrint
+                .. ' [color=red]Missing '
+                .. 2 - #special.captainList
+                .. captainText
+                .. 'or the event wont start at the end of this remaining time ![/color]'
+        end
+        game.print(textToPrint)
+    end
+
     if global.automatic_captain_time_remaining_for_start > 0 then
         for _, player in pairs(game.connected_players) do
             Public.update_captain_player_gui(player)
         end
         Task.set_timeout_in_ticks(60, decrement_timer_captain_start_token)
     else
-        local special = global.special_games_variables.captain_mode
         if #special.captainList < 2 then
             game.print('Not enough captains to automatically start captain event...', { r = 1, g = 0, b = 0 })
             force_end_captain_event()
