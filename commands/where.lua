@@ -1,8 +1,8 @@
 -- simply use /where ::LuaPlayerName to locate them
 
 local Color = require('utils.color_presets')
-local Event = require('utils.event')
 local closable_frame = require('utils.ui.closable_frame')
+local safe_wrap_cmd = require('utils.utils').safe_wrap_cmd
 
 local Public = {}
 
@@ -45,13 +45,13 @@ end
 commands.add_command('where', 'Locates a player', function(cmd)
     local player = game.player
 
-    if validate_player(player) then
+    if player and validate_player(player) then
         if not cmd.parameter then
             return
         end
         local target_player = game.get_player(cmd.parameter)
 
-        if validate_player(target_player) then
+        if target_player and validate_player(target_player) then
             Sounds.notify_player(player, 'utility/smart_pipette')
             create_mini_camera_gui(player, target_player.name, target_player.position, target_player.surface.index)
         else
@@ -60,6 +60,31 @@ commands.add_command('where', 'Locates a player', function(cmd)
     else
         return
     end
+end)
+
+local function do_spectator_follow(cmd)
+    local player = game.player
+    if not player or not validate_player(player) then
+        return
+    end
+    if player.force.name ~= 'spectator' then
+        player.print('You must be a spectator to use this command.', Color.warning)
+        return
+    end
+
+    if not cmd.parameter then
+        return
+    end
+    local target_player = game.get_player(cmd.parameter)
+
+    if not target_player or not validate_player(target_player) then
+        return
+    end
+    player.zoom_to_world(target_player.position, nil, target_player.character)
+end
+
+commands.add_command('spectator-follow', 'Follows a player', function(cmd)
+    safe_wrap_cmd(cmd, do_spectator_follow, cmd)
 end)
 
 Public.create_mini_camera_gui = create_mini_camera_gui
