@@ -1039,10 +1039,8 @@ local function check_if_right_number_of_captains(referee)
         for index, force_name in pairs({ 'north', 'south' }) do
             local captainName = special.captainList[index]
             add_to_trust(captainName)
-            if not special.communityPickingMode then
-                switch_team_of_player(captainName, force_name)
-                table_remove_element(special.listPlayers, captainName)
-            end
+            switch_team_of_player(captainName, force_name)
+            table_remove_element(special.listPlayers, captainName)
         end
         return true
     else
