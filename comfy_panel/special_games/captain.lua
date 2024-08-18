@@ -2282,9 +2282,8 @@ function Public.update_captain_player_gui(player, frame)
     do -- Community pick UI
         local flow = frame.community_pick_flow
         local scroll = flow.community_pick_scroll
-        flow.visible = special.communityPickingMode
-        if special.communityPickingMode then
-            flow.visible = true
+        flow.visible = special.communityPickingMode and not special.initialPickingPhaseStarted
+        if flow.visible then
             scroll.clear()
 
             local cols = { '', 'Player', 'Playtime', 'Notes' }
