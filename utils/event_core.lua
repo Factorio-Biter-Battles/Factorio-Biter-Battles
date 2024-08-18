@@ -178,7 +178,7 @@ function Public.on_nth_tick(tick, handler, priority)
     end
     local handlers = on_nth_tick_event_handlers[tick]
     if not handlers then
-        handlers = {}
+        handlers = { { handler = handler, priority = priority } }
         on_nth_tick_event_handlers[tick] = handlers
     end
 
