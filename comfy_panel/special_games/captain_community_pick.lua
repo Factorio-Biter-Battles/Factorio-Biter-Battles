@@ -16,6 +16,12 @@ local function remove_player_from_picks(player, community_picks)
     end
 end
 
+-- This finds the top pick by running a ranked choice vote using "instant runoff" policies.
+-- I wanted an algorithm that ignores the impact of outliers (like if a small number of
+-- players ranked one player very highly or very low, it shouldn't matter exactly how high
+-- or how low those players ranked one player).
+-- This algorithm is somewhat similar to looking at each player's median rank, and sorting
+-- based on that.
 ---@param community_picks table<string, string[]>
 ---@param num_votes_required_for_win integer
 ---@return string?
