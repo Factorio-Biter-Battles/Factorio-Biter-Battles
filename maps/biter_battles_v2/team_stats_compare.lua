@@ -241,7 +241,8 @@ function TeamStatsCompare.show_stats(player)
         end
         local produced_info = ''
         if not exclude_forces[force_name] then
-            produced_info = string_format(' produced: %s', format_with_thousands_sep(total_produced_mutagen))
+            produced_info =
+                string_format(' produced: %s', format_one_sig_fig(total_produced_mutagen / space_sci_mutagen))
         end
         add_small_label(science_flow, {
             caption = string_format(
