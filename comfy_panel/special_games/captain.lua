@@ -982,7 +982,7 @@ local function start_picking_phase()
                 ),
                 Color.cyan
             )
-            table.insert(special.captainList, team[1])
+            insert(special.captainList, team[1])
             for _, player in ipairs(team) do
                 switch_team_of_player(player, force_name)
                 table_remove_element(special.listPlayers, player)
@@ -1028,12 +1028,10 @@ local function start_picking_phase()
     Public.update_all_captain_player_guis()
 end
 
----@param referee LuaPlayer
 ---@return boolean
-local function check_if_right_number_of_captains(referee)
+local function check_if_right_number_of_captains()
     local special = global.special_games_variables.captain_mode
     if #special.captainList < 2 then
-        referee.print('Not enough captains! Ask people to volunteer!', Color.cyan)
         return false
     elseif #special.captainList == 2 then
         for index, force_name in pairs({ 'north', 'south' }) do
@@ -1044,7 +1042,6 @@ local function check_if_right_number_of_captains(referee)
         end
         return true
     else
-        referee.print('Too many captains! Remove some first!', Color.cyan)
         return false
     end
 end
@@ -1052,7 +1049,7 @@ end
 ---@return boolean
 local function have_enough_community_picks()
     local special = global.special_games_variables.captain_mode
-    local num_confirmed = table.size(special.communityPicksConfirmed)
+    local num_confirmed = table_size(special.communityPicksConfirmed)
     return num_confirmed >= 5 and num_confirmed >= #special.listPlayers * 0.3
 end
 
@@ -1165,12 +1162,12 @@ local function on_gui_switch_state_changed(event)
         special.captainGroupAllowed = false
         if special.test_mode then
             for _, player in pairs(special.listPlayers) do
-                if math.random() < 0.5 then
+                if math_random() < 0.5 then
                     special.communityPicksConfirmed[player] = true
                     local pick_order = table.deepcopy(special.listPlayers)
                     -- randomize "pick_order"
                     for i = #pick_order, 2, -1 do
-                        local j = math.random(i)
+                        local j = math_random(i)
                         pick_order[i], pick_order[j] = pick_order[j], pick_order[i]
                     end
                     special.communityPickOrder[player] = pick_order
@@ -1300,6 +1297,8 @@ local function on_gui_click(event)
             else
                 if check_if_right_number_of_captains(player) then
                     start_picking_phase()
+                else
+                    player.print('Need exactly 2 captains!', Color.cyan)
                 end
             end
         end
@@ -2166,7 +2165,7 @@ function Public.update_captain_player_gui(player, frame)
                     confirmed_picks_label.visible = true
                     local confirmed_pick_players = {}
                     for player, _ in pairs(special.communityPicksConfirmed) do
-                        table.insert(confirmed_pick_players, player)
+                        insert(confirmed_pick_players, player)
                     end
                     confirmed_picks_label.caption = 'Players that have confirmed pick orders ('
                         .. #confirmed_pick_players
@@ -2363,8 +2362,6 @@ function Public.update_captain_player_gui(player, frame)
             end
             flow.captain_community_pick_confirm.enabled = not any_unpicked_players
             flow.captain_community_pick_confirm.visible = not special.communityPicksConfirmed[player.name]
-        else
-            flow.visible = false
         end
     end
 
