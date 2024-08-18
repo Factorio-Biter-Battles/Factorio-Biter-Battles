@@ -1,4 +1,4 @@
-local CaptainRandomPick = require('comfy_panel.special_games.captain_random_pick')
+local CaptainCommunityPick = require('comfy_panel.special_games.captain_community_pick')
 local CaptainTaskGroup = require('comfy_panel.special_games.captain_task_group')
 local CaptainUtils = require('comfy_panel.special_games.captain_utils')
 local ClosableFrame = require('utils.ui.closable_frame')
@@ -169,7 +169,6 @@ local function clear_gui_captain_mode()
             screen.captain_referee_gui,
             screen.captain_manager_gui,
             screen.captain_organization_gui,
-            screen.captain_tournament_frame,
             screen.captain_poll_alternate_pick_choice_frame,
         }) do
             if element then
@@ -553,10 +552,19 @@ local function generate_captain_mode(refereeName, autoTrust, captainKick, specia
 
     local auto_pick_interval_ticks = 5 * 60 * 60 -- 5 minutes
     local special = {
+        ---@type string[]
         captainList = {},
         refereeName = refereeName,
+        ---@type string[]
         listPlayers = {},
+        ---@type table<string, string[]>
+        communityPickOrder = {},
+        ---@type table<string, boolean>
+        communityPicksConfirmed = {},
+        communityPickingMode = false,
+        ---@type table<string, string>
         player_info = {},
+        ---@type table<string, boolean>
         kickedPlayers = {},
         listTeamReadyToPlay = {},
         prepaPhase = true,
@@ -622,11 +630,11 @@ local function generate_captain_mode(refereeName, autoTrust, captainKick, specia
             TeamManager.switch_force(player.name, 'spectator')
         end
         global.captain_ui[player.name] = global.captain_ui[player.name] or {}
-        global.captain_ui[player.name].captain_tournament_gui = false
         global.captain_ui[player.name].captain_player_gui = true
         global.captain_ui[player.name].captain_referee_gui = true
         Public.draw_captain_tournament_button(player)
-        Public.draw_captain_tournament_frame(player)
+        Public.draw_captain_tournament_gui(player)
+        Public.draw_captain_player_gui(player)
         Sounds.notify_player(player, 'utility/new_objective')
     end
     global.chosen_team = {}
@@ -902,10 +910,6 @@ local function insert_player_by_playtime(playerName)
         end
     end
     insert(listPlayers, insertionPosition, playerName)
-    if special.balancedRandomTeamsMode and not special.initialPickingPhaseStarted then
-        local playerBuckets = special.playerBuckets
-        insert(playerBuckets[#playerBuckets], playerName)
-    end
 end
 
 local function end_of_picking_phase()
@@ -944,33 +948,51 @@ local function start_picking_phase()
     local special = global.special_games_variables.captain_mode
     local is_initial_picking_phase = not special.initialPickingPhaseStarted
     special.pickingPhase = true
-    special.initialPickingPhaseStarted = true
-    if special.balancedRandomTeamsMode and is_initial_picking_phase then
+    if not special.initialPickingPhaseStarted then
+        close_difficulty_vote()
         special.initialPickingPhaseStarted = true
-        local groups = generate_groups(special.listPlayers)
-        local forced_assignments = {}
-        for team = 1, 2 do
-            forced_assignments[special.captainList[team]] = team
+    end
+    if special.communityPickingMode and is_initial_picking_phase then
+        -- Take only the picks that were "confirmed"
+        local final_community_picks = {}
+        for player, _ in pairs(special.communityPicksConfirmed) do
+            filtered_picks = {}
+            for _, pick in pairs(special.communityPickOrder[player]) do
+                insert(filtered_picks, pick)
+            end
+            if #filtered_picks ~= #special.listPlayers then
+                game.print(string_format('Error: bad picks for player "%s"', player), Color.red)
+                force_end_captain_event()
+                return
+            end
+            final_community_picks[player] = filtered_picks
         end
-        local result = CaptainRandomPick.assign_teams_from_buckets(
-            special.playerBuckets,
-            forced_assignments,
-            groups,
-            special.teamAssignmentSeed
-        )
-        for i, team in ipairs(result) do
-            for _, player in pairs(team) do
-                switch_team_of_player(player, i == 1 and 'north' or 'south')
+        local picks = CaptainCommunityPick.assign_teams(final_community_picks)
+        if not picks then
+            force_end_captain_event()
+            return
+        end
+        for i, team in ipairs(picks) do
+            local force_name = i == 1 and 'north' or 'south'
+            game.print(
+                string_format(
+                    'Player %s is assigned captain of team %s - this is just for latejoiner picking purposes. Change captain with /replaceCaptain* commands.',
+                    team[1],
+                    force_name
+                ),
+                Color.cyan
+            )
+            table.insert(special.captainList, team[1])
+            for _, player in ipairs(team) do
+                switch_team_of_player(player, force_name)
                 table_remove_element(special.listPlayers, player)
             end
         end
         assert(#special.listPlayers == 0)
-        special.playerBuckets = { {} }
         end_of_picking_phase()
         return
     end
-    if special.prepaPhase then
-        close_difficulty_vote()
+    if is_initial_picking_phase then
         game.print(
             '[font=default-large-bold]Picking phase started, captains will pick their team members[/font]',
             Color.cyan
@@ -1006,23 +1028,34 @@ local function start_picking_phase()
     Public.update_all_captain_player_guis()
 end
 
-local function check_if_right_number_of_captains(firstRun, referee)
+---@param referee LuaPlayer
+---@return boolean
+local function check_if_right_number_of_captains(referee)
     local special = global.special_games_variables.captain_mode
     if #special.captainList < 2 then
         referee.print('Not enough captains! Ask people to volunteer!', Color.cyan)
+        return false
     elseif #special.captainList == 2 then
         for index, force_name in pairs({ 'north', 'south' }) do
             local captainName = special.captainList[index]
             add_to_trust(captainName)
-            if not special.balancedRandomTeamsMode then
+            if not special.communityPickingMode then
                 switch_team_of_player(captainName, force_name)
                 table_remove_element(special.listPlayers, captainName)
             end
         end
-        start_picking_phase()
+        return true
     else
         referee.print('Too many captains! Remove some first!', Color.cyan)
+        return false
     end
+end
+
+---@return boolean
+local function have_enough_community_picks()
+    local special = global.special_games_variables.captain_mode
+    local num_confirmed = table.size(special.communityPicksConfirmed)
+    return num_confirmed >= 5 and num_confirmed >= #special.listPlayers * 0.3
 end
 
 local function get_dropdown_value(dropdown)
@@ -1126,25 +1159,32 @@ local function on_gui_switch_state_changed(event)
     end
     local special = global.special_games_variables.captain_mode
     local name = element.name
-    if name == 'captain_balanced_random_teams_mode' then
-        special.balancedRandomTeamsMode = element.switch_state == 'left'
-        special.playerBuckets = { {} }
-        for _, player in ipairs(special.listPlayers) do
-            insert(special.playerBuckets[1], player)
+    if name == 'captain_community_picking_mode' then
+        special.communityPickingMode = element.switch_state == 'left'
+        special.communityPicksConfirmed = {}
+        special.communityPickOrder = {}
+        special.captainList = {}
+        special.captainGroupAllowed = false
+        if special.test_mode then
+            for _, player in pairs(special.listPlayers) do
+                if math.random() < 0.5 then
+                    special.communityPicksConfirmed[player] = true
+                    local pick_order = table.deepcopy(special.listPlayers)
+                    -- randomize "pick_order"
+                    for i = #pick_order, 2, -1 do
+                        local j = math.random(i)
+                        pick_order[i], pick_order[j] = pick_order[j], pick_order[i]
+                    end
+                    special.communityPickOrder[player] = pick_order
+                end
+            end
         end
         Public.update_all_captain_player_guis()
-    elseif name == 'captain_peek_at_assigned_teams' then
-        special.peekAtRandomTeams = element.switch_state == 'left'
-        Public.update_all_captain_player_guis()
     elseif name == 'captain_enable_groups_switch' then
-        special.captainGroupAllowed = element.switch_state == 'left'
-        Public.update_all_captain_player_guis()
-    elseif name == 'comfy_panel_tournament_gui' then
-        local player = game.get_player(event.player_index)
-        global.captain_ui[player.name].captain_tournament_gui =
-            not global.captain_ui[player.name].captain_tournament_gui
-        Public.toggle_captain_tournament_gui(player)
-        Public.toggle_captain_tournament_frame(player)
+        if not special.communityPickingMode then
+            special.captainGroupAllowed = element.switch_state == 'left'
+            Public.update_all_captain_player_guis()
+        end
     end
 end
 
@@ -1163,6 +1203,7 @@ local function on_gui_value_changed(event)
     end
 end
 
+---@param event EventData.on_gui_click
 local function on_gui_click(event)
     local element = event.element
     if not (element and element.valid) then
@@ -1182,6 +1223,8 @@ local function on_gui_click(event)
         if not special.pickingPhase then
             if check_if_enough_playtime_to_play(player) then
                 insert_player_by_playtime(player.name)
+                -- make everyone re-confirm their pick order
+                special.communityPicksConfirmed = {}
                 Public.update_all_captain_player_guis()
             else
                 player.print(
@@ -1195,6 +1238,9 @@ local function on_gui_click(event)
             DifficultyVote.remove_player_from_difficulty_vote(player)
             table_remove_element(special.listPlayers, player.name)
             table_remove_element(special.captainList, player.name)
+            for _, picks in pairs(special.communityPickOrder) do
+                table_remove_element(picks, player.name)
+            end
             Public.update_all_captain_player_guis()
         end
     elseif name == 'captain_player_want_to_be_captain' then
@@ -1202,6 +1248,7 @@ local function on_gui_click(event)
             not special.initialPickingPhaseStarted
             and not table_contains(special.captainList, player.name)
             and table_contains(special.listPlayers, player.name)
+            and not special.communityPickingMode
         then
             insert(special.captainList, player.name)
             Public.update_all_captain_player_guis()
@@ -1227,25 +1274,38 @@ local function on_gui_click(event)
         local frame = Public.get_active_tournament_frame(player, 'captain_player_gui')
         if frame then
             local textbox = frame.info_flow.insert.captain_player_info
-            if #textbox.text > 200 then
+            local text = textbox.text
+            text = text:gsub('[%(%)%[%]%=]', '')
+            if #text > 200 then
                 player.print('Player info must not exceed 200 characters', Color.warning)
-                textbox.text = string_sub(textbox.text, 1, 200)
-            else
-                local button = frame.info_flow.display.captain_player_info
-                button.caption = textbox.text
-                frame.info_flow.display.visible = #textbox.text > 0
-                special.player_info[player.name] = textbox.text
+                text = string_sub(text, 1, 200)
+            end
+            textbox.text = text
+            local button = frame.info_flow.display.captain_player_info
+            button.caption = text
+            frame.info_flow.display.visible = #text > 0
+            special.player_info[player.name] = text
+            if special.communityPickingMode then
+                Public.update_all_captain_player_guis()
             end
         end
     elseif name == 'captain_force_end_event' then
         force_end_captain_event()
-    elseif name == 'captain_end_captain_choice' then
+    elseif name == 'captain_start_initial_picking' then
         -- This marks the start of a picking phase, so players can no longer volunteer to become captain or play
         if not special.initialPickingPhaseStarted then
-            game.print('The referee ended the poll to get the list of captains and players playing', Color.cyan)
-            check_if_right_number_of_captains(true, player)
+            game.print('The referee has started the initial picking phase', Color.cyan)
+            if special.communityPickingMode then
+                if have_enough_community_picks() then
+                    start_picking_phase()
+                end
+            else
+                if check_if_right_number_of_captains(player) then
+                    start_picking_phase()
+                end
+            end
         end
-    elseif string_find(name, 'captain_remove_captain_') == 1 then
+    elseif starts_with(name, 'captain_remove_captain_') then
         local captain = element.tags.captain
         table_remove_element(special.captainList, captain)
         Public.update_all_captain_player_guis()
@@ -1267,7 +1327,7 @@ local function on_gui_click(event)
                 Color.cyan
             )
         end
-    elseif string_find(name, 'captain_player_picked_') == 1 then
+    elseif starts_with(name, 'captain_player_picked_') then
         local playerPicked = name:gsub('^captain_player_picked_', '')
         local location
         if player.gui.screen.captain_poll_alternate_pick_choice_frame then
@@ -1316,7 +1376,7 @@ local function on_gui_click(event)
             poll_alternate_picking(cpt_get_player(special.captainList[captain_to_pick_next]), location)
         end
         Public.update_all_captain_player_guis()
-    elseif string_find(name, 'captain_is_ready') then
+    elseif name == 'captain_is_ready' then
         if not table_contains(special.listTeamReadyToPlay, player.force.name) then
             game.print('[font=default-large-bold]Team of captain ' .. player.name .. ' is ready ![/font]', Color.cyan)
             insert(special.listTeamReadyToPlay, player.force.name)
@@ -1356,28 +1416,6 @@ local function on_gui_click(event)
     elseif name == 'captain_favor_minus' then
         local force = element.parent.name
         special.nextAutoPicksFavor[force] = math.max(0, special.nextAutoPicksFavor[force] - 1)
-        Public.update_all_captain_player_guis()
-    elseif string_find(name, 'captain_bucket_player_') == 1 then
-        local player_to_move = element.tags.player
-        local bucket = element.tags.bucket
-        local playerBuckets = special.playerBuckets
-        local playerBucket = playerBuckets[bucket]
-        if not table_contains(playerBucket, player_to_move) then
-            return
-        end
-        table_remove_element(playerBucket, player_to_move)
-        local direction = (event.button == defines.mouse_button_type.right) and 1 or -1
-        if bucket + direction < 1 then
-            insert(playerBuckets, 1, { player_to_move })
-            bucket = bucket + 1
-        elseif bucket + direction > #playerBuckets then
-            insert(playerBuckets, { player_to_move })
-        else
-            insert(playerBuckets[bucket + direction], player_to_move)
-        end
-        if #playerBucket == 0 then
-            remove(playerBuckets, bucket)
-        end
         Public.update_all_captain_player_guis()
     elseif name == 'captain_change_assignment_seed' then
         special.teamAssignmentSeed = math_random(10000, 100000)
@@ -1466,6 +1504,43 @@ local function on_gui_click(event)
         if body.visible and Public['update_' .. body.parent.parent.name] then
             Public['update_' .. body.parent.parent.name](player)
         end
+    elseif starts_with(name, 'captains_community_pick_add_player_') then
+        local pick_order = special.communityPickOrder[player.name]
+        if not pick_order then
+            pick_order = {}
+            special.communityPickOrder[player.name] = pick_order
+        end
+        local player_to_add = element.tags.player_name
+        if table_contains(pick_order, player_to_add) then
+            return
+        end
+        insert(pick_order, player_to_add)
+        Public.update_captain_player_gui(player)
+    elseif starts_with(name, 'captains_community_pick_move_') then
+        local move_by = starts_with(name, 'captains_community_pick_move_up_') and -1 or 1
+        local pick_order = special.communityPickOrder[player.name] or {}
+        if event.shift then
+            move_by = move_by * #pick_order
+        elseif event.button == defines.mouse_button_type.right then
+            move_by = move_by * 5
+        end
+        local tags = element.tags
+        local old_position = tags.old_position --[[@as integer]]
+        if pick_order[old_position] == tags.player_name then
+            local new_position = math.clamp(old_position + move_by, 1, #pick_order)
+            remove(pick_order, old_position)
+            insert(pick_order, new_position, tags.player_name)
+        end
+        Public.update_captain_player_gui(player)
+    elseif name == 'captain_community_pick_confirm' then
+        local pick_order = special.communityPickOrder[player.name] or {}
+        for _, player_to_add in pairs(pick_order) do
+            if not table_contains(special.listPlayers, player_to_add) then
+                return
+            end
+        end
+        special.communityPicksConfirmed[player.name] = true
+        Public.update_all_captain_player_guis()
     end
 end
 
@@ -1506,11 +1581,11 @@ local function on_player_joined_game(event)
     captain_log_start_time_player(player)
     if global.special_games_variables.captain_mode then
         global.captain_ui[player.name] = global.captain_ui[player.name] or {}
-        global.captain_ui[player.name].captain_tournament_gui = false
         global.captain_ui[player.name].captain_player_gui = true
 
         Public.draw_captain_tournament_button(player)
-        Public.draw_captain_tournament_frame(player)
+        Public.draw_captain_tournament_gui(player)
+        Public.draw_captain_player_gui(player)
         Sounds.notify_player(player, 'utility/new_objective')
     end
     Public.update_all_captain_player_guis()
@@ -1588,11 +1663,7 @@ function Public.toggle_captain_organization_gui(player)
 end
 
 function Public.toggle_captain_tournament_button(player)
-    if global.captain_ui[player.name].captain_tournament_gui then
-        Public.toggle_captain_tournament_gui(player)
-    else
-        Public.toggle_captain_tournament_frame(player)
-    end
+    Public.toggle_captain_tournament_gui(player)
 end
 
 function Public.toggle_captain_tournament_gui(player)
@@ -1601,21 +1672,6 @@ function Public.toggle_captain_tournament_gui(player)
         main_frame.destroy()
     else
         Public.draw_captain_tournament_gui(player)
-    end
-end
-
-function Public.toggle_captain_tournament_frame(player)
-    local main_frame = player.gui.screen.captain_tournament_frame
-    if main_frame then
-        main_frame.destroy()
-    else
-        for _, page in pairs(tournament_pages) do
-            local frame = player.gui.screen[page.name]
-            if frame then
-                frame.destroy()
-            end
-        end
-        Public.draw_captain_tournament_frame(player)
     end
 end
 
@@ -1646,6 +1702,50 @@ function Public.draw_captain_join_info(player, main_frame)
     })
 end
 
+---@param parent LuaGuiElement
+---@param flow_name string
+---@param sprite string
+---@param caption LocalisedString
+---@return LuaGuiElement
+local function captain_player_gui_header(parent, flow_name, sprite, caption)
+    local title_wrap = parent.add({ name = flow_name, type = 'flow', direction = 'vertical' })
+    local title = title_wrap.add({ name = 'inner_flow', type = 'flow', direction = 'horizontal' })
+    gui_style(title, {
+        horizontally_stretchable = true,
+        vertically_stretchable = true,
+        vertical_align = 'center',
+        horizontal_align = 'center',
+    })
+
+    Gui.add_pusher(title)
+
+    button = title.add({
+        type = 'sprite-button',
+        sprite = sprite,
+        style = 'transparent_slot',
+    })
+    button.ignored_by_interaction = true
+    gui_style(button, { size = 40 })
+
+    Gui.add_pusher(title)
+
+    label = title.add({ name = 'title', type = 'label', caption = caption })
+    gui_style(label, { font = 'heading-2' })
+
+    Gui.add_pusher(title)
+
+    button = title.add({
+        type = 'sprite-button',
+        sprite = sprite,
+        style = 'transparent_slot',
+    })
+    button.ignored_by_interaction = true
+    gui_style(button, { size = 40 })
+
+    Gui.add_pusher(title)
+    return title_wrap
+end
+
 function Public.draw_captain_player_gui(player, main_frame)
     if is_test_player(player) then
         return
@@ -1657,50 +1757,19 @@ function Public.draw_captain_player_gui(player, main_frame)
         end
 
         main_frame = ClosableFrame.create_draggable_frame(player, 'captain_player_gui', 'Join Tournament')
-        main_frame.style.maximal_width = 500
+        main_frame.style.maximal_width = 800
     end
 
     local label, button, line
     local special = global.special_games_variables.captain_mode
 
-    do -- Title
-        local title_wrap = main_frame.add({ name = 'title_flow', type = 'flow', direction = 'vertical' })
-        local title = title_wrap.add({ name = 'inner_flow', type = 'flow', direction = 'horizontal' })
-        gui_style(title, {
-            horizontally_stretchable = true,
-            vertically_stretchable = true,
-            vertical_align = 'center',
-            horizontal_align = 'center',
-        })
-
-        Gui.add_pusher(title)
-
-        button = title.add({
-            type = 'sprite-button',
-            sprite = 'utility/side_menu_achievements_icon',
-            style = 'transparent_slot',
-        })
-        button.ignored_by_interaction = true
-        gui_style(button, { size = 40 })
-
-        Gui.add_pusher(title)
-
-        label = title.add({ name = 'title', type = 'label', caption = 'A CAPTAINS GAME WILL START SOON!' })
-        gui_style(label, { font = 'heading-2' })
-
-        Gui.add_pusher(title)
-
-        button = title.add({
-            type = 'sprite-button',
-            sprite = 'utility/side_menu_achievements_icon',
-            style = 'transparent_slot',
-        })
-        button.ignored_by_interaction = true
-        gui_style(button, { size = 40 })
-
-        Gui.add_pusher(title)
-        title_wrap.add({ type = 'line' })
-    end
+    local title_flow = captain_player_gui_header(
+        main_frame,
+        'title_flow',
+        'utility/side_menu_achievements_icon',
+        'A CAPTAINS GAME WILL START SOON!'
+    )
+    title_flow.add({ type = 'line' })
 
     do -- Preparation flow
         local prepa_flow = main_frame.add({ type = 'flow', name = 'prepa_flow', direction = 'vertical' })
@@ -1710,22 +1779,26 @@ function Public.draw_captain_player_gui(player, main_frame)
             type = 'label',
             name = 'want_to_play_players_list',
             style = 'label_with_left_padding',
-            caption = 'want_to_play_players_list',
         })
-        gui_style(label, { single_line = false })
+        gui_style(label, { single_line = false, maximal_width = 400 })
 
         label = prepa_flow.add({
             type = 'label',
             name = 'captain_volunteers_list',
             style = 'label_with_left_padding',
-            caption = 'captain_volunteers_list',
         })
+
+        label = prepa_flow.add({
+            type = 'label',
+            name = 'confirmed_picks_label',
+            style = 'label_with_left_padding',
+        })
+        gui_style(label, { single_line = false })
 
         label = prepa_flow.add({
             type = 'label',
             name = 'remaining_players_list',
             style = 'label_with_left_padding',
-            caption = 'remaining_players_list',
         })
         gui_style(label, { single_line = false })
         prepa_flow.add({ type = 'line' })
@@ -1762,7 +1835,7 @@ function Public.draw_captain_player_gui(player, main_frame)
         button = join_table.add({
             type = 'button',
             name = 'captain_player_want_to_play',
-            caption = 'I want to be a PLAYER!',
+            caption = 'I want to play!',
             style = 'confirm_button',
             tooltip = 'Yay',
         })
@@ -1854,43 +1927,41 @@ function Public.draw_captain_player_gui(player, main_frame)
 
     line = main_frame.add({ type = 'line' })
 
-    do -- PLayer table
+    do -- Community pick UI
+        local flow = main_frame.add({ type = 'flow', name = 'community_pick_flow', direction = 'vertical' })
+        captain_player_gui_header(flow, 'community_pick_title', 'utility/slot_icon_inserter_hand', 'COMMUNITY PICK')
+        local label = flow.add({
+            type = 'label',
+            name = 'community_pick_label',
+            caption = 'Please choose a pick order for all players.',
+        })
+        button = flow.add({
+            type = 'button',
+            name = 'captain_community_pick_confirm',
+            caption = "I'm happy with the pick order below",
+            style = 'confirm_button',
+            tooltip = 'Pick all players below before confirming',
+        })
+        gui_style(button, { natural_width = 200, height = 28, horizontal_align = 'left', font = 'heading-3' })
+
+        label.style.single_line = false
+        local scroll = flow.add({
+            type = 'scroll-pane',
+            name = 'community_pick_scroll',
+            direction = 'vertical',
+            style = 'scroll_pane_under_subheader',
+        })
+        gui_style(scroll, { maximal_height = 600, vertically_squashable = false })
+    end
+
+    do -- Player table
         local pick_flow = main_frame.add({ type = 'flow', name = 'pick_flow', direction = 'vertical' })
-
-        local title = pick_flow.add({ type = 'flow', name = 'player_table_title', direction = 'horizontal' })
-        gui_style(title, {
-            horizontally_stretchable = true,
-            vertically_stretchable = true,
-            vertical_align = 'center',
-            horizontal_align = 'center',
-        })
-
-        Gui.add_pusher(title)
-
-        button = title.add({
-            type = 'sprite-button',
-            sprite = 'utility/slot_icon_inserter_hand',
-            style = 'transparent_slot',
-        })
-        button.ignored_by_interaction = true
-        gui_style(button, { size = 40 })
-
-        Gui.add_pusher(title)
-
-        label = title.add({ type = 'label', caption = 'CAPTAINS PICK LIST' })
-        gui_style(label, { font = 'heading-2', left_margin = 55, right_margin = 55 })
-
-        Gui.add_pusher(title)
-
-        button = title.add({
-            type = 'sprite-button',
-            sprite = 'utility/slot_icon_inserter_hand',
-            style = 'transparent_slot',
-        })
-        button.ignored_by_interaction = true
-        gui_style(button, { size = 40 })
-
-        Gui.add_pusher(title)
+        captain_player_gui_header(
+            pick_flow,
+            'player_table_title',
+            'utility/slot_icon_inserter_hand',
+            'CAPTAINS PICK LIST'
+        )
 
         local scroll = pick_flow.add({
             type = 'scroll-pane',
@@ -2061,132 +2132,7 @@ function Public.draw_captain_tournament_gui(player)
 
     Gui.add_pusher(subfooter)
 
-    local label = subfooter.add({ type = 'label', caption = 'COLLAPSE' })
-    gui_style(label, { font_color = { 165, 165, 165 }, font = 'default-small' })
-
-    local switch = subfooter.add({
-        type = 'switch',
-        name = 'comfy_panel_tournament_gui',
-        switch_state = 'left',
-        tooltip = { 'gui.tournament_bottom_switch' },
-    })
-
-    local label = subfooter.add({ type = 'label', caption = 'EXPAND' })
-    gui_style(label, { font_color = { 165, 165, 165 }, font = 'default-small' })
-
-    Gui.add_pusher(subfooter)
-
     Public.update_captain_tournament_gui(player)
-end
-
-function Public.draw_captain_tournament_frame(player)
-    if is_test_player(player) then
-        return
-    end
-
-    local main_frame = player.gui.screen.captain_tournament_frame
-    if main_frame then
-        main_frame.destroy()
-    end
-
-    local main_frame = ClosableFrame.create_main_closable_frame(player, 'captain_tournament_frame', 'Tournament Menu')
-    gui_style(main_frame, {
-        horizontally_stretchable = true,
-        natural_width = 800,
-        natural_height = 640,
-        maximal_height = 900,
-        top_padding = 8,
-        bottom_padding = 2,
-    })
-
-    local frame =
-        main_frame.add({ type = 'frame', name = 'frame', style = 'inside_deep_frame', direction = 'vertical' })
-    local sp = frame.add({ type = 'scroll-pane', name = 'sp', style = 'text_holding_scroll_pane' })
-    gui_style(sp, {
-        horizontally_stretchable = true,
-        vertically_stretchable = true,
-        vertically_squashable = false,
-        maximal_height = 860,
-    })
-    sp.vertical_scroll_policy = 'always'
-
-    local function add_frame_row(parent, p)
-        local frame = parent.add({ type = 'frame', name = p.name, direction = 'vertical' })
-        gui_style(frame, { horizontally_stretchable = true })
-        frame.tags = { name = p.name }
-
-        local head = frame.add({ type = 'flow', direction = 'horizontal', name = 'head' })
-        gui_style(head, { horizontal_spacing = 10, vertical_align = 'center' })
-
-        local visible = global.captain_ui[player.name][p.name]
-
-        do
-            local icon =
-                head.add({ type = 'sprite-button', name = 'icon', sprite = p.sprite, style = 'transparent_slot' })
-            gui_style(icon, { padding = -2 })
-
-            local label = head.add({ type = 'label', name = 'title', caption = p.caption })
-            gui_style(label, { font_color = { 165, 165, 165 }, font = 'heading-2' })
-
-            Gui.add_pusher(head)
-
-            local button = head.add({
-                type = 'sprite-button',
-                sprite = visible and 'utility/expand_dots_white' or 'utility/collapse',
-                hovered_sprite = visible and 'utility/expand_dots' or 'utility/collapse_dark',
-                name = 'tournament_frame_row_toggle',
-                style = 'frame_action_button',
-                tooltip = p.tooltip,
-            })
-        end
-
-        local inner_flow = frame.add({ type = 'flow', name = 'flow', direction = 'vertical' })
-        gui_style(inner_flow, { top_margin = 5, vertical_spacing = 10 })
-
-        local body =
-            inner_flow.add({ type = 'frame', name = 'frame', style = 'inside_deep_frame', direction = 'vertical' })
-        gui_style(body, {
-            top_padding = 5,
-            bottom_padding = 5,
-            left_padding = 10,
-            right_padding = 10,
-            horizontally_stretchable = true,
-        })
-        gui_style(body, { minimal_width = 300, minimal_height = 70 })
-        body.visible = visible
-
-        return { head = head, body = body }
-    end
-
-    for _, params in pairs(tournament_pages) do
-        global.captain_ui[player.name][params.name] = global.captain_ui[player.name][params.name] or false
-        local row = add_frame_row(sp, params)
-        local draw_method = 'draw_' .. params.name
-        if Public[draw_method] then
-            Public[draw_method](player, row.body)
-        else
-            error('Missing Public.' .. draw_method)
-        end
-    end
-
-    local subfooter = main_frame.add({ type = 'flow', direction = 'horizontal' })
-    gui_style(subfooter, { horizontally_stretchable = true, horizontal_align = 'center', vertical_align = 'center' })
-
-    local label = subfooter.add({ type = 'label', caption = 'COLLAPSE' })
-    gui_style(label, { font_color = { 165, 165, 165 }, font = 'default-small' })
-
-    local switch = subfooter.add({
-        type = 'switch',
-        name = 'comfy_panel_tournament_gui',
-        switch_state = 'right',
-        tooltip = { 'gui.tournament_bottom_switch' },
-    })
-
-    local label = subfooter.add({ type = 'label', caption = 'EXPAND' })
-    gui_style(label, { font_color = { 165, 165, 165 }, font = 'default-small' })
-
-    main_frame.force_auto_center()
-    Public.update_captain_tournament_frame(player)
 end
 
 -- == UPDATE GUI ===============================================================
@@ -2210,19 +2156,33 @@ function Public.update_captain_player_gui(player, frame)
         if special.prepaPhase then
             local want_to_play = prepa_flow.want_to_play_players_list
             local cpt_volunteers = prepa_flow.captain_volunteers_list
+            cpt_volunteers.visible = false
+            local confirmed_picks_label = prepa_flow.confirmed_picks_label
+            confirmed_picks_label.visible = false
             local rem = prepa_flow.remaining_players_list
             if not special.initialPickingPhaseStarted then
                 want_to_play.visible = true
                 want_to_play.caption = 'Players (' .. #special.listPlayers .. '): ' .. get_player_list_with_groups()
-                cpt_volunteers.visible = true
-                cpt_volunteers.caption = 'Captain volunteers ('
-                    .. #special.captainList
-                    .. '): '
-                    .. pretty_print_player_list(special.captainList)
                 rem.visible = false
+                if special.communityPickingMode then
+                    confirmed_picks_label.visible = true
+                    local confirmed_pick_players = {}
+                    for player, _ in pairs(special.communityPicksConfirmed) do
+                        table.insert(confirmed_pick_players, player)
+                    end
+                    confirmed_picks_label.caption = 'Players that have confirmed pick orders ('
+                        .. #confirmed_pick_players
+                        .. '): '
+                        .. pretty_print_player_list(confirmed_pick_players)
+                else
+                    cpt_volunteers.visible = true
+                    cpt_volunteers.caption = 'Captain volunteers ('
+                        .. #special.captainList
+                        .. '): '
+                        .. pretty_print_player_list(special.captainList)
+                end
             else
                 want_to_play.visible = false
-                cpt_volunteers.visible = false
                 rem.visible = true
                 rem.caption = 'Players remaining to be picked ('
                     .. #special.listPlayers
@@ -2273,6 +2233,7 @@ function Public.update_captain_player_gui(player, frame)
             join_table.captain_player_want_to_play.enabled = not waiting_to_be_picked
             join_table.captain_player_do_not_want_to_play.visible = true
             join_table.captain_player_do_not_want_to_play.enabled = waiting_to_be_picked
+                and not special.communityPickingMode
             if special.prepaPhase and not special.initialPickingPhaseStarted then
                 if special.captainGroupAllowed then
                     insert(
@@ -2286,16 +2247,18 @@ function Public.update_captain_player_gui(player, frame)
                 else
                     insert(status_strings, 'Groups of players: DISABLED')
                 end
-                join_table.captain_player_want_to_be_captain.visible = true
-                join_table.captain_player_do_not_want_to_be_captain.visible = true
-                if table_contains(special.captainList, player.name) then
-                    insert(status_strings, 'You are willing to be a captain! Thank you!')
-                    join_table.captain_player_want_to_be_captain.enabled = false
-                    join_table.captain_player_do_not_want_to_be_captain.enabled = true
-                else
-                    insert(status_strings, 'You are not currently willing to be captain.')
-                    join_table.captain_player_want_to_be_captain.enabled = waiting_to_be_picked
-                    join_table.captain_player_do_not_want_to_be_captain.enabled = false
+                if not special.communityPickingMode then
+                    join_table.captain_player_want_to_be_captain.visible = true
+                    join_table.captain_player_do_not_want_to_be_captain.visible = true
+                    if table_contains(special.captainList, player.name) then
+                        insert(status_strings, 'You are willing to be a captain! Thank you!')
+                        join_table.captain_player_want_to_be_captain.enabled = false
+                        join_table.captain_player_do_not_want_to_be_captain.enabled = true
+                    else
+                        insert(status_strings, 'You are not currently willing to be captain.')
+                        join_table.captain_player_want_to_be_captain.enabled = waiting_to_be_picked
+                        join_table.captain_player_do_not_want_to_be_captain.enabled = false
+                    end
                 end
             end
         end
@@ -2314,6 +2277,98 @@ function Public.update_captain_player_gui(player, frame)
         local info_flow = frame.info_flow
         info_flow.visible = (waiting_to_be_picked and not special.pickingPhase)
         info_flow.display.visible = special.player_info[player.name] and #special.player_info[player.name] > 0
+    end
+
+    do -- Community pick UI
+        local flow = frame.community_pick_flow
+        local scroll = flow.community_pick_scroll
+        flow.visible = special.communityPickingMode
+        if special.communityPickingMode then
+            flow.visible = true
+            scroll.clear()
+
+            local cols = { '', 'Player', 'Playtime', 'Notes' }
+            local tab = scroll.add({
+                type = 'table',
+                name = 'player_table',
+                column_count = #cols,
+                draw_horizontal_line_after_headers = true,
+                style = 'mods_table',
+            })
+            gui_style(tab, { horizontally_stretchable = true })
+
+            for i, col in pairs(cols) do
+                local label = tab.add({ type = 'label', caption = col, style = 'heading_3_label' })
+                gui_style(label, { top_margin = 4, bottom_margin = 4 })
+            end
+            local function add_common_cols(tab, player_name)
+                tab.add({
+                    type = 'label',
+                    caption = player_name,
+                    style = 'valid_mod_label',
+                })
+                tab.add({
+                    type = 'label',
+                    caption = Functions.format_ticks_as_time(Public.get_total_playtime_of_player(player_name)),
+                    style = 'valid_mod_label',
+                })
+                tab.add({
+                    type = 'label',
+                    caption = special.player_info[player_name] or '',
+                    style = 'valid_mod_label',
+                })
+            end
+            local pick_order = special.communityPickOrder[player.name] or {}
+            ---@type table<string, boolean>
+            local included_players = {}
+            for position, player_name in ipairs(pick_order) do
+                included_players[player_name] = true
+                local buttons_flow = tab.add({ type = 'flow', direction = 'horizontal' })
+                -- add a small up-arrow button
+                local up_button = buttons_flow.add({
+                    type = 'button',
+                    name = 'captains_community_pick_move_up_' .. player_name,
+                    tags = { player_name = player_name, old_position = position },
+                    caption = '↑',
+                    style = 'tool_button',
+                    tooltip = 'Move player up in the pick order, shift-click to move to top, right-click to move 5',
+                })
+                if position == 1 then
+                    up_button.enabled = false
+                end
+                local down_button = buttons_flow.add({
+                    type = 'button',
+                    name = 'captains_community_pick_move_down_' .. player_name,
+                    tags = { player_name = player_name, old_position = position },
+                    caption = '↓',
+                    style = 'tool_button',
+                    tooltip = 'Move player down in the pick order, shift-click to move to bottom, right-click to move 5',
+                })
+                if position == #pick_order then
+                    down_button.enabled = false
+                end
+                buttons_flow.add({ type = 'label', caption = tostring(position) })
+                add_common_cols(tab, player_name)
+            end
+            local any_unpicked_players = false
+            for _, player_name in ipairs(special.listPlayers) do
+                if not included_players[player_name] then
+                    any_unpicked_players = true
+                    tab.add({
+                        type = 'button',
+                        name = 'captains_community_pick_add_player_' .. player_name,
+                        tags = { player_name = player_name },
+                        caption = 'Pick Next',
+                        tooltip = 'Add player to the pick order',
+                    })
+                    add_common_cols(tab, player_name)
+                end
+            end
+            flow.captain_community_pick_confirm.enabled = not any_unpicked_players
+            flow.captain_community_pick_confirm.visible = not special.communityPicksConfirmed[player.name]
+        else
+            flow.visible = false
+        end
     end
 
     do -- Player table
@@ -2527,16 +2582,18 @@ function Public.update_captain_referee_gui(player, frame)
         })
         b.style.font = 'heading-2'
         caption = 'Confirm captains and start the picking phase'
-        if special.balancedRandomTeamsMode then
-            caption = 'Confirm captains and instantly assign players to teams (balanced random teams mode)'
+        local tooltip = ''
+        if special.communityPickingMode then
+            caption = 'Instantly assign players to teams (community pick mode)'
+            tooltip = 'Requires enough players to have confirmed their community picks'
         end
         b = scroll.add({
             type = 'button',
-            name = 'captain_end_captain_choice',
+            name = 'captain_start_initial_picking',
             caption = caption,
             style = 'confirm_button',
-            enabled = #special.captainList == 2,
-            tooltip = 'People can add themselves to the first round of picking right up until you press this button',
+            enabled = ternary(special.communityPickingMode, have_enough_community_picks(), #special.captainList == 2),
+            tooltip = tooltip,
         })
         b.style.font = 'heading-2'
         b.style.minimal_width = 540
@@ -2557,6 +2614,7 @@ function Public.update_captain_referee_gui(player, frame)
             switch_state = special.captainGroupAllowed and 'left' or 'right',
             left_label_caption = 'Groups allowed',
             right_label_caption = 'Groups not allowed',
+            enabled = not special.communityPickingMode,
         })
 
         local flow = scroll.add({ type = 'flow', direction = 'horizontal' })
@@ -2596,78 +2654,11 @@ function Public.update_captain_referee_gui(player, frame)
     if not special.initialPickingPhaseStarted then
         scroll.add({
             type = 'switch',
-            name = 'captain_balanced_random_teams_mode',
-            switch_state = special.balancedRandomTeamsMode and 'left' or 'right',
-            left_label_caption = 'Balanced random teams',
-            right_label_caption = 'Traditional picking',
+            name = 'captain_community_picking_mode',
+            switch_state = special.communityPickingMode and 'left' or 'right',
+            left_label_caption = 'Community picking',
+            right_label_caption = 'Captain picking',
         })
-        if special.balancedRandomTeamsMode then
-            l = scroll.add({ type = 'label', caption = { 'captain.random_teams_caption' } })
-            l.style.single_line = false
-            scroll.add({ type = 'line' })
-            scroll.add({ type = 'label', caption = 'Best' })
-            scroll.add({ type = 'line' })
-            for i = 1, #special.playerBuckets do
-                local bucket = special.playerBuckets[i]
-                local players = {}
-                for _, player in pairs(bucket) do
-                    insert(players, player)
-                end
-                sort(players)
-                local flow = scroll.add({ type = 'flow', direction = 'horizontal' })
-                for _, player in pairs(players) do
-                    if #flow.children >= 6 then
-                        flow = scroll.add({ type = 'flow', direction = 'horizontal' })
-                    end
-                    local b = flow.add({
-                        type = 'button',
-                        name = 'captain_bucket_player_' .. player,
-                        caption = player,
-                        tags = { bucket = i, player = player },
-                    })
-                    b.style.minimal_width = 40
-                end
-                scroll.add({ type = 'line' })
-            end
-            scroll.add({ type = 'label', caption = 'Worst' })
-            scroll.add({ type = 'line' })
-            scroll.add({
-                type = 'switch',
-                name = 'captain_peek_at_assigned_teams',
-                switch_state = special.peekAtRandomTeams and 'left' or 'right',
-                left_label_caption = 'Peek',
-                right_label_caption = 'No Peeking',
-            })
-            local flow = scroll.add({ type = 'flow', direction = 'horizontal' })
-            flow.add({ type = 'label', caption = 'Random seed: ' .. special.teamAssignmentSeed })
-            local button =
-                flow.add({ type = 'button', name = 'captain_change_assignment_seed', caption = 'Change seed' })
-            if special.peekAtRandomTeams then
-                local forced_assignments = {}
-                for team, captain in ipairs(special.captainList) do
-                    if not global.chosen_team[captain] then
-                        forced_assignments[captain] = team
-                    end
-                end
-                local groups = generate_groups(special.listPlayers)
-                local result = CaptainRandomPick.assign_teams_from_buckets(
-                    special.playerBuckets,
-                    forced_assignments,
-                    groups,
-                    special.teamAssignmentSeed
-                )
-                local flow = scroll.add({ type = 'flow', direction = 'horizontal' })
-                for i, team in ipairs(result) do
-                    local l = flow.add({
-                        type = 'label',
-                        caption = Functions.team_name_with_color(i == 1 and 'north' or 'south')
-                            .. '\n'
-                            .. concat(team, '\n'),
-                    })
-                    gui_style(l, { minimal_width = 220, single_line = false })
-                end
-            end
-        end
     end
 end
 
@@ -2763,25 +2754,6 @@ function Public.update_captain_tournament_gui(player)
     end
 end
 
-function Public.update_captain_tournament_frame(player)
-    local frame = player.gui.screen.captain_tournament_frame
-    if not frame then
-        return
-    end
-    local menu = frame.frame.sp
-    for _, data in pairs(tournament_pages) do
-        local gui_name = data.name
-        local action = cpt_ui_visibility[gui_name]
-        if menu[gui_name] and action then
-            menu[gui_name].visible = action(player)
-        elseif not menu[gui_name] then
-            error('Missing menu[' .. gui_name .. ']')
-        else
-            error('Missing cpt_ui_visibility[' .. gui_name .. ']')
-        end
-    end
-end
-
 function Public.update_all_captain_player_guis()
     if not global.special_games_variables.captain_mode then
         return
@@ -2791,17 +2763,12 @@ function Public.update_all_captain_player_guis()
         Public.update_captain_referee_gui(player)
         Public.update_captain_manager_gui(player)
         Public.update_captain_tournament_gui(player)
-        Public.update_captain_tournament_frame(player)
     end
 end
 
 -- == MISC ====================================================================
 function Public.get_active_tournament_frame(player, frame_name)
-    local gui = player.gui.screen
-    if gui.captain_tournament_frame and gui.captain_tournament_frame.frame.sp[frame_name] then
-        return gui.captain_tournament_frame.frame.sp[frame_name].flow.frame
-    end
-    return gui[frame_name]
+    return player.gui.screen[frame_name]
 end
 
 function Public.generate(config, player)
@@ -2984,6 +2951,7 @@ commands.add_command('cpt-test-func', 'Run some test-only code for captains game
     generate_captain_mode(refereeName, autoTrustSystem, captainCanKick, specialEnabled)
     local special = global.special_games_variables.captain_mode
     special.test_players = {}
+    special.test_mode = true
     for _, playerName in pairs({
         'alice',
         'bob',
@@ -3030,6 +2998,7 @@ commands.add_command('cpt-test-func', 'Run some test-only code for captains game
 
     insert(special.captainList, game.player.name)
     insert(special.captainList, game.player.name)
+    Public.update_all_captain_player_guis()
 end)
 
 -- == HANDLERS ================================================================
