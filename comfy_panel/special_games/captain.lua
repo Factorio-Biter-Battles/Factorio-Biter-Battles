@@ -956,7 +956,7 @@ local function start_picking_phase()
         -- Take only the picks that were "confirmed"
         local final_community_picks = {}
         for player, _ in pairs(special.communityPicksConfirmed) do
-            filtered_picks = {}
+            local filtered_picks = {}
             for _, pick in pairs(special.communityPickOrder[player]) do
                 insert(filtered_picks, pick)
             end
