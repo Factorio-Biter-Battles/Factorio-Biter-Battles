@@ -108,7 +108,7 @@ function CaptainCommunityPick.assign_teams(community_picks)
 
     local result = { {}, {} }
     local next_team_to_pick = math.random(#result)
-    local num_votes_required_for_win = math.ceil(num_players / 2)
+    local num_votes_required_for_win = math.ceil(table_size(community_picks) / 2)
     while num_players > 0 do
         local top_pick = find_top_pick(community_picks, num_votes_required_for_win)
         if not top_pick then
