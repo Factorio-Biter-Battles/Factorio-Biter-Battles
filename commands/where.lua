@@ -62,7 +62,7 @@ commands.add_command('where', 'Locates a player', function(cmd)
     end
 end)
 
-local function do_spectator_follow(cmd)
+local function do_follow(cmd)
     local player = game.player
     if not player or not validate_player(player) then
         return
@@ -83,8 +83,8 @@ local function do_spectator_follow(cmd)
     player.zoom_to_world(target_player.position, nil, target_player.character)
 end
 
-commands.add_command('spectator-follow', 'Follows a player', function(cmd)
-    safe_wrap_cmd(cmd, do_spectator_follow, cmd)
+commands.add_command('follow', 'Follows a player', function(cmd)
+    safe_wrap_cmd(cmd, do_follow, cmd)
 end)
 
 Public.create_mini_camera_gui = create_mini_camera_gui
