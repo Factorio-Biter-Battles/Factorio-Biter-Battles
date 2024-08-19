@@ -514,6 +514,7 @@ function Public.silo_death(event)
         local special = global.special_games_variables.captain_mode
         if global.active_special_games.captain_mode and not special.prepaPhase then
             global.tournament_mode = false
+            game.print('Tournament mode is now disabled')
             game.print('Updating logs for the game')
             Server.send_special_game_state('[CAPTAIN-SPECIAL]')
             log_to_db('>Game has ended\n', false)
