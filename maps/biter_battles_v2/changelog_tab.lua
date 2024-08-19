@@ -13,6 +13,11 @@ local function add_changelog(player, element)
 		table.insert(changelog_change, who)
 	end
 	
+	add_entry("2024-08-19", "cliff_build", "rename /spectator-follow to /follow for better tab-completion")
+	add_entry("2024-08-18", "cliff_build", "captains games: add 'community picked teams' mode")
+	add_entry("2024-08-18", "cliff_build", "teamstats: fix space-sci-equiv-produced number")
+	add_entry("2024-08-18", "cliff_build", "add /spectator-follow command")
+	add_entry("2024-08-15", "ness056", "Fix desync")
 	add_entry("2024-08-15", "cliff_build", "fix join-random")
 	add_entry("2024-08-14", "cliff_build", "Replace 'reanim_chance' with 'biter_health_factor'")
 	add_entry("2024-08-13", "cliff_build", "Teamstats improvements")
