@@ -2966,7 +2966,7 @@ decrement_timer_captain_start_token = Token.register(function()
             game.print('Too many captains, picking the 2 captains who have most playtime as captains')
             Public.keep_only_the_captain_with_most_playtime()
             prepare_for_captain()
-            start_picking_phase()            
+            start_picking_phase()
         end
     end
 end)
