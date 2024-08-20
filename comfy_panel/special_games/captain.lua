@@ -2392,9 +2392,8 @@ function Public.update_captain_player_gui(player, frame)
         then
             join_table.captain_player_want_to_play.visible = true
             join_table.captain_player_want_to_play.enabled = not waiting_to_be_picked
-            join_table.captain_player_do_not_want_to_play.visible = true
+            join_table.captain_player_do_not_want_to_play.visible = not special.communityPickingMode
             join_table.captain_player_do_not_want_to_play.enabled = waiting_to_be_picked
-                and not special.communityPickingMode
             if special.prepaPhase and not special.initialPickingPhaseStarted then
                 if special.captainGroupAllowed then
                     insert(
