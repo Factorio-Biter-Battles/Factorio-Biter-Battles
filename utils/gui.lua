@@ -146,7 +146,7 @@ end
 
 ---@param player LuaPlayer
 ---@param frame LuaGuiElement|LuaGuiElement.add_param
----@param style_name string
+---@param style_name string?
 ---@return LuaGuiElement
 function Gui.add_top_element(player, frame, style_name)
     local element = mod_gui.get_button_flow(player)[frame.name]

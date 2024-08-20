@@ -104,15 +104,6 @@ local function is_test_player_name(player_name)
     return special.test_players and special.test_players[player_name]
 end
 
-local function table_contains(tab, str)
-    for _, entry in ipairs(tab) do
-        if entry == str then
-            return true
-        end
-    end
-    return false
-end
-
 local function table_remove_element(tab, str)
     for i, entry in ipairs(tab) do
         if entry == str then
@@ -143,7 +134,7 @@ local function switch_team_of_player(playerName, playerForceName)
     end
     local special = global.special_games_variables.captain_mode
     local player = cpt_get_player(playerName)
-    if is_test_player_name(playerName) or not player.connected then
+    if not player or is_test_player(player) or not player.connected then
         global.chosen_team[playerName] = playerForceName
     else
         TeamManager.switch_force(playerName, playerForceName)
@@ -170,6 +161,7 @@ local function clear_gui_captain_mode()
             screen.captain_manager_gui,
             screen.captain_organization_gui,
             screen.captain_poll_alternate_pick_choice_frame,
+            screen.captain_willingness_vote_frame,
         }) do
             if element then
                 element.destroy()
@@ -212,7 +204,24 @@ local function starts_with(text, prefix)
     return text:find(prefix, 1, true) == 1
 end
 
-local function pick_player_generator(player, tableBeingLooped, name, caption, button1Text, button1Name, location)
+---@param player LuaPlayer
+---@param force_name string
+---@param tableBeingLooped string[]
+---@param name string
+---@param caption string
+---@param button1Text string
+---@param button1Name string
+---@param location GuiLocation?
+local function pick_player_generator(
+    player,
+    force_name,
+    tableBeingLooped,
+    name,
+    caption,
+    button1Text,
+    button1Name,
+    location
+)
     if player.gui.screen[name] then
         player.gui.screen[name].destroy()
         return
@@ -226,6 +235,7 @@ local function pick_player_generator(player, tableBeingLooped, name, caption, bu
             caption = caption:gsub('Magical1@StringHere', wordToPutInstead),
             style = 'green_button',
             tooltip = 'Click to select',
+            tags = { force = force_name },
         })
         gui_style(button, { font = 'default-bold', height = 24, minimal_width = 100, horizontally_stretchable = true })
     end
@@ -309,13 +319,17 @@ local function pick_player_generator(player, tableBeingLooped, name, caption, bu
                     local groupName = ''
                     local playerIterated = cpt_get_player(pl)
                     local playtimePlayer = '0 minutes'
-                    if global.total_time_online_players[playerIterated.name] then
+                    if playerIterated and global.total_time_online_players[playerIterated.name] then
                         playtimePlayer = PlayerList.get_formatted_playtime_from_ticks(
                             global.total_time_online_players[playerIterated.name]
                         )
                     end
                     if
-                        starts_with(playerIterated.tag, ComfyPanelGroup.COMFY_PANEL_CAPTAINS_GROUP_PLAYER_TAG_PREFIX)
+                        playerIterated
+                        and starts_with(
+                            playerIterated.tag,
+                            ComfyPanelGroup.COMFY_PANEL_CAPTAINS_GROUP_PLAYER_TAG_PREFIX
+                        )
                     then
                         if not listGroupAlreadyDone[playerIterated.tag] then
                             groupName = playerIterated.tag
@@ -353,9 +367,18 @@ local function pick_player_generator(player, tableBeingLooped, name, caption, bu
     end
 end
 
-local function poll_alternate_picking(player, location)
+---@param player LuaPlayer?
+---@param force_name string
+---@param location GuiLocation?
+local function poll_alternate_picking(player, force_name, location)
+    if not player then
+        game.print('Unable to find player to make a picking choice!', Color.red)
+        Public.end_of_picking_phase()
+        return
+    end
     pick_player_generator(
         player,
+        force_name,
         global.special_games_variables.captain_mode.listPlayers,
         'captain_poll_alternate_pick_choice_frame',
         'Who do you want to pick ?',
@@ -444,12 +467,16 @@ local function auto_pick_all_of_group(cptPlayer, playerName)
     local special = global.special_games_variables.captain_mode
     if special.captainGroupAllowed and not special.initialPickingPhaseFinished then
         local playerChecked = cpt_get_player(playerName)
+        if not playerChecked then
+            return
+        end
         local amountPlayersSwitchedForGroup = 0
         local playersToSwitch = {}
         for _, playerName in ipairs(special.listPlayers) do
             local player = cpt_get_player(playerName)
             if
-                global.chosen_team[playerName] == nil
+                player
+                and global.chosen_team[playerName] == nil
                 and player.tag == playerChecked.tag
                 and player.force.name == 'spectator'
             then -- only pick player without a team within the same group
@@ -466,10 +493,12 @@ local function auto_pick_all_of_group(cptPlayer, playerName)
         end
         for _, playerName in ipairs(playersToSwitch) do
             local player = cpt_get_player(playerName)
-            game.print(playerName .. ' was automatically picked with group system', Color.cyan)
-            switch_team_of_player(playerName, playerChecked.force.name)
-            player.print({ 'captain.comms_reminder' }, Color.cyan)
-            table_remove_element(special.listPlayers, playerName)
+            if player then
+                game.print(playerName .. ' was automatically picked with group system', Color.cyan)
+                switch_team_of_player(playerName, playerChecked.force.name)
+                player.print({ 'captain.comms_reminder' }, Color.cyan)
+                table_remove_element(special.listPlayers, playerName)
+            end
         end
     end
 end
@@ -544,6 +573,13 @@ local function is_it_automatic_captain()
     return special.refereeName == '$@BotReferee'
 end
 
+---@param player string
+---@return boolean
+local function is_player_a_captain(player)
+    local special = global.special_games_variables.captain_mode
+    return special.captainList[1] == player or special.captainList[2] == player
+end
+
 local function generate_captain_mode(refereeName, autoTrust, captainKick, specialEnabled)
     if Functions.get_ticks_since_game_start() > 0 then
         game.print(
@@ -559,6 +595,8 @@ local function generate_captain_mode(refereeName, autoTrust, captainKick, specia
     local special = {
         ---@type string[]
         captainList = {},
+        ---@type table<string, {stop_tick: integer, players: table<LuaPlayer, string>}>
+        captainWillingness = {},
         refereeName = refereeName,
         ---@type string[]
         listPlayers = {},
@@ -592,7 +630,9 @@ local function generate_captain_mode(refereeName, autoTrust, captainKick, specia
         teamAssignmentSeed = math_random(10000, 100000),
         playerPickedAtTicks = {},
         stats = {
+            ---@type string[]
             northPicks = {},
+            ---@type string[]
             southPicks = {},
             tickGameStarting = 0,
             playerPlaytimes = {},
@@ -648,7 +688,7 @@ local function generate_captain_mode(refereeName, autoTrust, captainKick, specia
     clear_character_corpses()
     if is_it_automatic_captain() then
         game.print('Captain mode started !! Have fun ! No referee')
-    else
+    elseif referee then
         game.print('Captain mode started !! Have fun ! Referee will be ' .. referee.name)
     end
     if special.autoTrust then
@@ -659,7 +699,7 @@ local function generate_captain_mode(refereeName, autoTrust, captainKick, specia
     end
     game.print('Picking system : 1-2-2-2-2...', Color.cyan)
 
-    if not is_it_automatic_captain() then
+    if referee and not is_it_automatic_captain() then
         referee.print(
             'Command only allowed for referee to change a captain : /replaceCaptainNorth <playerName> or /replaceCaptainSouth <playerName>',
             Color.cyan
@@ -702,7 +742,7 @@ local function generate_captain_mode(refereeName, autoTrust, captainKick, specia
         'heading-1'
     )
     render_text(
-        'captainLineEleven',
+        'captainLineVersus',
         'team xx vs team yy. Referee: ' .. refereeName .. '. Teams on VC',
         { 0, 10 },
         Color.captain_versus_float,
@@ -712,18 +752,153 @@ local function generate_captain_mode(refereeName, autoTrust, captainKick, specia
     generate_generic_rendering_captain()
 end
 
+---@param force_name string
+---@param allow_everyone boolean
+---@return LuaPlayer[]
+function Public.get_captain_candidates(force_name, allow_everyone)
+    local special = global.special_games_variables.captain_mode
+    local force = game.forces[force_name]
+    local picks = special.stats.southPicks
+    if force_name == 'north' then
+        picks = special.stats.northPicks
+    end
+
+    local connected_players = {}
+    for _, playername in pairs(picks) do
+        local player = cpt_get_player(playername)
+        if player and player.connected then
+            insert(connected_players, player)
+        end
+    end
+    -- target at least 3 people always. target 30% of team
+    local target_number_of_candidates = math.max(3, math.ceil(#connected_players * 0.3))
+    if allow_everyone then
+        target_number_of_candidates = #connected_players
+    end
+    ---@type LuaPlayer[]
+    local candidates = {}
+    for _, player in pairs(connected_players) do
+        if player and player.connected then
+            insert(candidates, player)
+        end
+        if #candidates >= target_number_of_candidates then
+            break
+        end
+    end
+    return candidates
+end
+
+---@param force_name string
+---@param candidates LuaPlayer[]
+function Public.trigger_captain_vote(force_name, candidates)
+    local special = global.special_games_variables.captain_mode
+    -- make the team captainless for now
+    Public.change_captain(nil, force_name)
+
+    special.captainWillingness[force_name] = {
+        stop_tick = game.tick + 60 * 30, -- 30 sec
+        players = {},
+    }
+    local willingness = special.captainWillingness[force_name]
+    for _, player in pairs(candidates) do
+        Public.draw_willingness_to_captain_gui(player)
+        willingness.players[player] = 'no'
+    end
+end
+
+---@param player LuaPlayer
+function Public.draw_willingness_to_captain_gui(player)
+    if is_test_player(player) then
+        return
+    end
+    local special = global.special_games_variables.captain_mode
+    local ui = player.gui.screen.captain_willingness_vote_frame
+    if ui then
+        ui.destroy()
+    end
+    ui = player.gui.screen.add({ type = 'frame', name = 'captain_willingness_vote_frame', direction = 'vertical' })
+    ui.auto_center = true
+    ui.bring_to_front()
+    ui.add({ type = 'label', name = 'time_remaining_label' })
+    local label = ui.add({
+        type = 'label',
+        caption = 'If anyone answers "Yes", someone at random who answers "Yes" will be chosen to be captain. Else, someone is randomly chosen among those who are willing. Else, there will be no captain.',
+    })
+    gui_style(label, { maximal_width = 400, single_line = false })
+    local flow = ui.add({ type = 'flow', name = 'confirm_flow', direction = 'horizontal' })
+    flow.add({
+        type = 'list-box',
+        name = 'captain_willingness_listbox',
+        items = {
+            "Yes, I'd like to be captain",
+            "Maybe, I'm reluctantly willing to be captain",
+            'No, I will not captain',
+        },
+    })
+    flow.add({ type = 'button', name = 'captain_willingness_confirm', caption = 'Confirm', style = 'confirm_button' })
+end
+
+---@param force_name string
+---@return LuaPlayer?
+function Public.get_player_to_make_pick(force_name)
+    -- If the force has a captain, choose them, otherwise choose a random one from captain_candidate
+    local special = global.special_games_variables.captain_mode
+    local captain = special.captainList[force_name == 'north' and 1 or 2]
+    if captain then
+        return cpt_get_player(captain)
+    end
+    local candidates = Public.get_captain_candidates(force_name, false)
+    if #candidates > 0 then
+        return candidates[math_random(1, #candidates)]
+    end
+    return nil
+end
+
+function Public.end_captain_willingness_vote(force_name)
+    local special = global.special_games_variables.captain_mode
+    local willingness = special.captainWillingness[force_name]
+    if not willingness then
+        return
+    end
+    ---@type table<string, LuaPlayer[]>
+    local players_by_willingness = {}
+    for player, vote in pairs(willingness.players) do
+        if vote == 'yes' or vote == 'maybe' then
+            list = players_by_willingness[vote]
+            if not list then
+                list = {}
+                players_by_willingness[vote] = list
+            end
+            insert(list, player)
+        end
+        if not is_test_player(player) then
+            local ui = player.gui.screen.captain_willingness_vote_frame
+            if ui then
+                ui.destroy()
+            end
+        end
+    end
+    local captain = nil
+    if players_by_willingness['yes'] then
+        captain = players_by_willingness['yes'][math_random(1, #players_by_willingness['yes'])]
+    elseif players_by_willingness['maybe'] then
+        captain = players_by_willingness['maybe'][math_random(1, #players_by_willingness['maybe'])]
+    end
+    if captain then
+        Public.change_captain(captain, force_name)
+    else
+        game.print('There were no eligible volunteers to be captain for ' .. force_name)
+    end
+    special.captainWillingness[force_name] = nil
+end
+
 local function delete_player_from_playersList(playerName, isNorthPlayerBoolean)
     local special = global.special_games_variables.captain_mode
     local tableChosen = special.stats.southPicks
     if isNorthPlayerBoolean then
         tableChosen = special.stats.northPicks
     end
-    local index = {}
-    for k, v in pairs(tableChosen) do
-        index[v] = k
-    end
-    local indexPlayer = index[playerName]
-    remove(tableChosen, indexPlayer)
+    table_remove_element(tableChosen, playerName)
 end
 
 local function generate_vs_text_rendering()
@@ -737,9 +912,9 @@ local function generate_vs_text_rendering()
 
     local special = global.special_games_variables.captain_mode
     local text = string_format(
-        'Team %s (North) vs (South) Team %s. Referee: %s. Teams on Voice Chat',
-        special.captainList[1],
-        special.captainList[2],
+        '%s vs %s. Referee: %s. Teams on Voice Chat',
+        ternary(special.captainList[1], 'Team ' .. tostring(special.captainList[1]) .. ' (North)', 'Team North'),
+        ternary(special.captainList[2], '(South) Team ' .. tostring(special.captainList[2]), 'Team South'),
         special.refereeName
     )
 
@@ -953,7 +1128,7 @@ decrement_timer_captain_prepa_token = Token.register(function()
     end
 end)
 
-local function end_of_picking_phase()
+function Public.end_of_picking_phase()
     local special = global.special_games_variables.captain_mode
     special.pickingPhase = false
     if not special.initialPickingPhaseFinished then
@@ -972,9 +1147,9 @@ local function end_of_picking_phase()
             Color.cyan
         )
         for _, captain_name in pairs(global.special_games_variables.captain_mode.captainList) do
-            local captain = cpt_get_player(captain_name)
+            local captain = cpt_get_player(captain_name) --[[@as LuaPlayer]]
             captain.print(
-                'As a captain, you can handle your team by accessing "Team Permissions" in your Tournament menu',
+                'As a captain, you can handle your team by accessing "Team Captain" in your Tournament menu',
                 Color.yellow
             )
             if not is_test_player(captain) then
@@ -999,10 +1174,18 @@ local function start_picking_phase()
     if special.communityPickingMode and is_initial_picking_phase then
         -- Take only the picks that were "confirmed"
         local final_community_picks = {}
+        -- If people disconnect from the game or change their mine about wanting to play,
+        -- they are removed from listPlayers, but might still be in people's stackranks
+        local valid_players = {}
+        for _, player in pairs(special.listPlayers) do
+            valid_players[player] = true
+        end
         for player, _ in pairs(special.communityPicksConfirmed) do
             local filtered_picks = {}
             for _, pick in pairs(special.communityPickOrder[player]) do
-                insert(filtered_picks, pick)
+                if valid_players[pick] then
+                    insert(filtered_picks, pick)
+                end
             end
             if #filtered_picks ~= #special.listPlayers then
                 game.print(string_format('Error: bad picks for player "%s"', player), Color.red)
@@ -1018,22 +1201,14 @@ local function start_picking_phase()
         end
         for i, team in ipairs(picks) do
             local force_name = i == 1 and 'north' or 'south'
-            game.print(
-                string_format(
-                    'Player %s is assigned captain of team %s - this is just for latejoiner picking purposes. Change captain with /replaceCaptain* commands.',
-                    team[1],
-                    force_name
-                ),
-                Color.cyan
-            )
-            insert(special.captainList, team[1])
             for _, player in ipairs(team) do
                 switch_team_of_player(player, force_name)
                 table_remove_element(special.listPlayers, player)
             end
+            Public.trigger_captain_vote(force_name, Public.get_captain_candidates(force_name, true))
         end
         assert(#special.listPlayers == 0)
-        end_of_picking_phase()
+        Public.end_of_picking_phase()
         return
     end
     if is_initial_picking_phase then
@@ -1043,19 +1218,19 @@ local function start_picking_phase()
         )
     end
     if #special.listPlayers == 0 then
-        end_of_picking_phase()
+        Public.end_of_picking_phase()
     else
         special.pickingPhase = true
-        local captainChosen
+        local next_pick_force
         local favor = special.nextAutoPicksFavor
-        for index, force in ipairs({ 'north', 'south' }) do
+        for _, force in ipairs({ 'north', 'south' }) do
             if favor[force] > 0 then
                 favor[force] = favor[force] - 1
-                captainChosen = index
+                next_pick_force = force
                 break
             end
         end
-        if captainChosen == nil then
+        if next_pick_force == nil then
             local counts = { north = 0, south = 0 }
             for _, player in pairs(game.connected_players) do
                 local force = player.force.name
@@ -1064,10 +1239,10 @@ local function start_picking_phase()
                 end
             end
             local northThreshold = 0.5 - 0.1 * (counts.north - counts.south)
-            captainChosen = math_random() < northThreshold and 1 or 2
-            log('Captain chosen: ' .. captainChosen)
+            next_pick_force = math_random() < northThreshold and 'north' or 'south'
+            log('Next force to pick: ' .. next_pick_force)
         end
-        poll_alternate_picking(cpt_get_player(special.captainList[captainChosen]))
+        poll_alternate_picking(Public.get_player_to_make_pick(next_pick_force), next_pick_force)
     end
     Public.update_all_captain_player_guis()
 end
@@ -1105,7 +1280,7 @@ end
 local function have_enough_community_picks()
     local special = global.special_games_variables.captain_mode
     local num_confirmed = table_size(special.communityPicksConfirmed)
-    return num_confirmed >= 5 and num_confirmed >= #special.listPlayers * 0.3
+    return num_confirmed >= 2 and num_confirmed >= #special.listPlayers * 0.3
 end
 
 local function get_dropdown_value(dropdown)
@@ -1114,26 +1289,51 @@ local function get_dropdown_value(dropdown)
     end
 end
 
-local function change_captain(player, force)
+---@param player LuaPlayer?
+---@param force string
+---@param decider string?
+function Public.change_captain(player, force, decider)
     local special = global.special_games_variables.captain_mode
     local captain_index = force == 'north' and 1 or 2
+    local decider_text = ''
+    if decider then
+        decider_text = '[color=blue]' .. decider .. '[/color] has decided that '
+    end
     game.print(
         string_format(
-            '[font=default-large-bold][color=green]%s[/color][/font] will be the new captain of %s instead of [color=orange]%s[/color]',
-            player.name,
-            Functions.team_name_with_color(force.name),
-            special.captainList[captain_index]
+            '[font=default-large-bold]%s[color=green]%s[/color][/font] will be the new captain of %s',
+            decider_text,
+            player and player.name or '(nobody)',
+            Functions.team_name_with_color(force)
         )
     )
     local oldCaptain = cpt_get_player(special.captainList[captain_index])
-    if not is_test_player(oldCaptain) and oldCaptain.gui.screen.captain_manager_gui then
+    if oldCaptain and not is_test_player(oldCaptain) and oldCaptain.gui.screen.captain_manager_gui then
         oldCaptain.gui.screen.captain_manager_gui.destroy()
     end
-    special.captainList[captain_index] = player.name
+    if player then
+        special.captainList[captain_index] = player.name
+        if force == 'north' then
+            if not special.stats.NorthInitialCaptain then
+                special.stats.NorthInitialCaptain = player.name
+            end
+        else
+            if not special.stats.SouthInitialCaptain then
+                special.stats.SouthInitialCaptain = player.name
+            end
+        end
+        Public.draw_captain_tournament_gui(player)
+        Public.draw_captain_manager_gui(player)
+    else
+        special.captainList[captain_index] = nil
+        if force == 'north' then
+            special.northEnabledScienceThrow = true
+        else
+            special.southEnabledScienceThrow = true
+        end
+    end
     generate_vs_text_rendering()
     Public.update_all_captain_player_guis()
-    Public.draw_captain_tournament_gui(player)
-    Public.draw_captain_manager_gui(player)
 end
 
 ---@param cmd CustomCommandData
@@ -1150,16 +1350,15 @@ local function change_captain_cmd(cmd, force)
         return playerOfCommand.print({ 'captain.cmd_only_captain_mode' }, Color.red)
     end
     local special = global.special_games_variables.captain_mode
-    if special.prepaPhase then
-        return playerOfCommand.print({ 'captain.cmd_only_after_prepa_phase' }, Color.red)
+    if special.pickingPhase then
+        return playerOfCommand.print('Cannot change captain when a picking phase is active', Color.red)
+    elseif not special.initialPickingPhaseFinished then
+        return playerOfCommand.print('Cannot change captain before the initial picking phase is over', Color.red)
     end
-    if special.refereeName ~= playerOfCommand.name then
-        return playerOfCommand.print('Only referee have license to use that command', Color.red)
+    if special.refereeName ~= playerOfCommand.name and not playerOfCommand.admin then
+        return playerOfCommand.print('Only referee and admins have license to use that command', Color.red)
     end
 
-    if special.captainList[1] == nil or special.captainList[2] == nil then
-        return playerOfCommand.print('Something broke, no captain in the captain variable..', Color.red)
-    end
     if cmd.parameter then
         local victim = cpt_get_player(cmd.parameter)
         if victim and victim.valid then
@@ -1169,12 +1368,18 @@ local function change_captain_cmd(cmd, force)
             if victim.force.name ~= force then
                 return playerOfCommand.print({ 'captain.change_captain_wrong_member' }, Color.red)
             end
-            change_captain(victim, force)
+            Public.change_captain(victim, force, playerOfCommand.name .. ' (referee)')
+        elseif cmd.parameter == '!nobody!' then
+            Public.change_captain(nil, force, playerOfCommand.name .. ' (referee)')
+        elseif cmd.parameter == '!vote!' then
+            Public.trigger_captain_vote(force, Public.get_captain_candidates(force, false))
+        elseif cmd.parameter == '!voteall!' then
+            Public.trigger_captain_vote(force, Public.get_captain_candidates(force, true))
         else
             playerOfCommand.print('Invalid name', Color.warning)
         end
     else
-        playerOfCommand.print('Usage: /replaceCaptainNorth <playerName>', Color.warning)
+        playerOfCommand.print('Usage: /replaceCaptainNorth <playerName|!nobody!>', Color.warning)
     end
 end
 
@@ -1200,7 +1405,7 @@ local cpt_ui_visibility = {
     captain_manager_gui = function(player)
         -- only to captains
         local special = global.special_games_variables.captain_mode
-        return global.chosen_team[player.name] and table_contains(special.captainList, player.name)
+        return global.chosen_team[player.name] and is_player_a_captain(player.name)
     end,
     captain_organization_gui = function(player)
         -- only to picked players
@@ -1246,6 +1451,7 @@ local function on_gui_switch_state_changed(event)
     end
 end
 
+---@param event EventData.on_gui_value_changed
 local function on_gui_value_changed(event)
     local element = event.element
     if not (element and element.valid) then
@@ -1258,6 +1464,38 @@ local function on_gui_value_changed(event)
     if element.name == 'captain_group_limit_slider' then
         special.groupLimit = element.slider_value
         Public.update_all_captain_player_guis()
+    end
+end
+
+---@param event EventData.on_gui_selection_state_changed
+local function on_gui_selection_state_changed(event)
+    local element = event.element
+    if not (element and element.valid) then
+        return
+    end
+    local special = global.special_games_variables.captain_mode
+    if not special then
+        return
+    end
+    local player = cpt_get_player(event.player_index)
+    if not player then
+        return
+    end
+    local name = element.name
+    if name == 'captain_willingness_listbox' then
+        local willingness = special.captainWillingness[player.force.name]
+        local dropdown_value = get_dropdown_value(element.parent.captain_willingness_listbox)
+        local chosen_option
+        if starts_with(dropdown_value, 'Yes') then
+            chosen_option = 'yes'
+        elseif starts_with(dropdown_value, 'Maybe') then
+            chosen_option = 'maybe'
+        elseif starts_with(dropdown_value, 'No') then
+            chosen_option = 'no'
+        end
+        if chosen_option and willingness then
+            willingness.players[player] = chosen_option
+        end
     end
 end
 
@@ -1281,7 +1519,13 @@ local function on_gui_click(event)
         if not special.pickingPhase then
             if check_if_enough_playtime_to_play(player) then
                 insert_player_by_playtime(player.name)
-                -- make everyone re-confirm their pick order
+                -- make players that don't have this player in their pick order already re-confirm their pick order
+                for player_name, _ in pairs(special.communityPicksConfirmed) do
+                    local pick_order = special.communityPickOrder[player_name]
+                    if not table_contains(pick_order, player.name) then
+                        special.communityPicksConfirmed[player_name] = nil
+                    end
+                end
                 special.communityPicksConfirmed = {}
                 Public.update_all_captain_player_guis()
             else
@@ -1296,9 +1540,6 @@ local function on_gui_click(event)
             DifficultyVote.remove_player_from_difficulty_vote(player)
             table_remove_element(special.listPlayers, player.name)
             table_remove_element(special.captainList, player.name)
-            for _, picks in pairs(special.communityPickOrder) do
-                table_remove_element(picks, player.name)
-            end
             Public.update_all_captain_player_guis()
         end
     elseif name == 'captain_player_want_to_be_captain' then
@@ -1358,7 +1599,7 @@ local function on_gui_click(event)
                     start_picking_phase()
                 end
             else
-                if check_if_right_number_of_captains(player) then
+                if check_if_right_number_of_captains() then
                     start_picking_phase()
                 else
                     player.print('Need exactly 2 captains!', Color.cyan)
@@ -1375,7 +1616,7 @@ local function on_gui_click(event)
         end
     elseif name == 'referee_force_picking_to_stop' then
         if special.pickingPhase then
-            end_of_picking_phase()
+            Public.end_of_picking_phase()
             -- destroy any open picking UIs
             for _, player in pairs(game.connected_players) do
                 if player.gui.screen.captain_poll_alternate_pick_choice_frame then
@@ -1389,6 +1630,7 @@ local function on_gui_click(event)
         end
     elseif starts_with(name, 'captain_player_picked_') then
         local playerPicked = name:gsub('^captain_player_picked_', '')
+        local forceToGo = element.tags.force --[[@as string]]
         local location
         if player.gui.screen.captain_poll_alternate_pick_choice_frame then
             location = player.gui.screen.captain_poll_alternate_pick_choice_frame.location
@@ -1396,10 +1638,6 @@ local function on_gui_click(event)
         end
         game.print(playerPicked .. ' was picked by Captain ' .. player.name)
         local listPlayers = special.listPlayers
-        local forceToGo = 'north'
-        if player.name == special.captainList[2] then
-            forceToGo = 'south'
-        end
         switch_team_of_player(playerPicked, forceToGo)
         cpt_get_player(playerPicked).print({ '', { 'captain.comms_reminder' } }, Color.cyan)
         for index, name in pairs(listPlayers) do
@@ -1413,27 +1651,27 @@ local function on_gui_click(event)
         end
         if #global.special_games_variables.captain_mode.listPlayers == 0 then
             special.pickingPhase = false
-            end_of_picking_phase()
+            Public.end_of_picking_phase()
         else
-            local captain_to_pick_next
+            local force_to_pick_next
             if not special.initialPickingPhaseFinished then
                 -- The logic below defaults to a 1-2-2-2-2-... picking system. However, if large groups
                 -- are picked, then whatever captain is picking gets to keep picking until they have more
                 -- players than the other team, so if there is one group of 3 that is picked first, then
                 -- the picking would go 3-4-2-2-2-...
                 if #special.stats.southPicks > #special.stats.northPicks then
-                    captain_to_pick_next = 1
+                    force_to_pick_next = 'north'
                 elseif #special.stats.northPicks > #special.stats.southPicks then
-                    captain_to_pick_next = 2
+                    force_to_pick_next = 'south'
                 else
-                    -- default to the same captain continuing to pick
-                    captain_to_pick_next = (player.name == special.captainList[1] and 1 or 2)
+                    -- default to the same force continuing to pick
+                    force_to_pick_next = forceToGo
                 end
             else
                 -- just alternate picking
-                captain_to_pick_next = (player.name == special.captainList[1] and 2 or 1)
+                force_to_pick_next = forceToGo == 'south' and 'north' or 'south'
             end
-            poll_alternate_picking(cpt_get_player(special.captainList[captain_to_pick_next]), location)
+            poll_alternate_picking(Public.get_player_to_make_pick(force_to_pick_next), force_to_pick_next, location)
         end
         Public.update_all_captain_player_guis()
     elseif name == 'captain_is_ready' then
@@ -1455,16 +1693,16 @@ local function on_gui_click(event)
             Public.update_all_captain_player_guis()
         end
     elseif name == 'captain_toggle_throw_science' then
-        if special.captainList[2] == player.name then
-            special.southEnabledScienceThrow = not special.southEnabledScienceThrow
-            game.forces.south.print(
-                'Can anyone throw science in your team ? ' .. tostring(special.southEnabledScienceThrow),
-                Color.yellow
-            )
-        else
+        if special.captainList[1] == player.name then
             special.northEnabledScienceThrow = not special.northEnabledScienceThrow
             game.forces.north.print(
                 'Can anyone throw science in your team ? ' .. tostring(special.northEnabledScienceThrow),
+                Color.yellow
+            )
+        elseif special.captainList[2] == player.name then
+            special.southEnabledScienceThrow = not special.southEnabledScienceThrow
+            game.forces.south.print(
+                'Can anyone throw science in your team ? ' .. tostring(special.southEnabledScienceThrow),
                 Color.yellow
             )
         end
@@ -1484,7 +1722,7 @@ local function on_gui_click(event)
         Public.toggle_captain_tournament_button(player)
     elseif name == 'captain_replace_captain' then
         local frame = Public.get_active_tournament_frame(player, 'captain_manager_gui')
-        if table_contains(special.captainList, player.name) then
+        if special.captainList[player.force.name == 'north' and 1 or 2] == player.name then
             local newCaptainPlayerName =
                 get_dropdown_value(frame.captain_manager_replace_captain_table.captain_replace_captain_playerlist)
             local newCaptain = cpt_get_player(newCaptainPlayerName)
@@ -1494,12 +1732,12 @@ local function on_gui_click(event)
                 and newCaptain.connected
                 and newCaptain.force.name == player.force.name
             then
-                change_captain(newCaptain, player.force.name)
+                Public.change_captain(newCaptain, player.force.name, player.name .. ' (existing captain)')
             else
                 player.print('Invalid name', Color.red)
             end
         else
-            player.print('You are not a captain', Color.red)
+            player.print('You are not a captain and currently on north/south', Color.red)
         end
     elseif name == 'captain_add_someone_to_throw_trustlist' then
         local frame = Public.get_active_tournament_frame(player, 'captain_manager_gui')
@@ -1511,6 +1749,9 @@ local function on_gui_click(event)
             if player.name == special.captainList[2] then
                 tableToUpdate = special.southThrowPlayersListAllowed
                 forceForPrint = 'south'
+            elseif player.name ~= special.captainList[1] then
+                player.print('You are not a captain', Color.red)
+                return
             end
             local playerToAdd = cpt_get_player(playerNameUpdateText)
             if playerToAdd ~= nil and playerToAdd.valid then
@@ -1535,6 +1776,9 @@ local function on_gui_click(event)
             if player.name == special.captainList[2] then
                 tableToUpdate = special.southThrowPlayersListAllowed
                 forceForPrint = 'south'
+            elseif player.name ~= special.captainList[1] then
+                player.print('You are not a captain', Color.red)
+                return
             end
             if table_contains(tableToUpdate, playerNameUpdateText) then
                 table_remove_element(tableToUpdate, playerNameUpdateText)
@@ -1620,11 +1864,16 @@ local function on_gui_click(event)
         end
         special.communityPicksConfirmed[player.name] = true
         Public.update_all_captain_player_guis()
+    elseif name == 'captain_willingness_confirm' then
+        element.parent.parent.destroy()
     end
 end
 
 local function on_player_changed_force(event)
     local player = game.get_player(event.player_index)
+    if not player or not player.valid then
+        return
+    end
     if player.force.name == 'spectator' then
         Public.captain_log_end_time_player(player)
     else
@@ -1637,22 +1886,6 @@ local function sortByPlaytime(a, b)
     return a.playtime > b.playtime
 end
 
-function Public.pick_player_with_most_playtime(forceOfCaptain)
-    local special = global.special_games_variables.captain_mode
-    local maxPlaytime = -1
-    local maxPlayer = nil
-
-    for _, pl in ipairs(game.forces[forceOfCaptain].connected_players) do
-        local playtime = global.total_time_online_players[pl] or 0
-        if playtime > maxPlaytime then
-            maxPlaytime = playtime
-            maxPlayer = pl
-        end
-    end
-
-    return maxPlayer and maxPlayer.name
-end
-
 local function on_player_left_game(event)
     local player = game.get_player(event.player_index)
 
@@ -1662,43 +1895,32 @@ local function on_player_left_game(event)
     end
     DifficultyVote.remove_player_from_difficulty_vote(player)
 
-    if is_it_automatic_captain() and table_contains(special.captainList, player.name) then
-        if special.initialPickingPhaseStarted and special.prepaPhase then
+    if is_player_a_captain(player.name) then
+        if is_it_automatic_captain() and special.initialPickingPhaseStarted and special.prepaPhase then
             game.print(
                 '[font=default-large-bold]The captain '
                     .. player.name
                     .. ' left during the initial picking or prepa phase, event canceled[/font]'
             )
             force_end_captain_event()
+            return
         elseif not special.prepaPhase then
             local forceOfCaptain = 'north'
             if player.name == special.captainList[2] then
                 forceOfCaptain = 'south'
             end
-            local playerNameChosen = Public.pick_player_with_most_playtime(forceOfCaptain)
-            if playerNameChosen ~= nil then
-                game.print(
-                    '[font=default-large-bold]The captain '
-                        .. player.name
-                        .. ' left. New captain elected automatically, congratulations '
-                        .. playerNameChosen
-                        .. '[/font]',
-                    Color.cyan
-                )
-                local forceOfCaptain = 'north'
-                if player.name == special.captainList[2] then
-                    forceOfCaptain = 'south'
-                end
-                local captain_index = forceOfCaptain == 'north' and 1 or 2
-                special.captainList[captain_index] = playerNameChosen
-                generate_vs_text_rendering()
+
+            -- This will be the "first pick" that is currently online
+            local playerChosen = Public.get_captain_candidates(forceOfCaptain, false)[1]
+            if playerChosen ~= nil then
+                Public.change_captain(playerChosen, forceOfCaptain, 'New captain automatic selection')
             end
         end
     end
 
     if not special.pickingPhase then
         table_remove_element(special.listPlayers, player.name)
-        if special.prepaPhase then
+        if not special.initialPickingPhaseStarted then
             table_remove_element(special.captainList, player.name)
         end
     end
@@ -1709,6 +1931,9 @@ end
 
 local function on_player_joined_game(event)
     local player = game.get_player(event.player_index)
+    if not player or not player.valid then
+        return
+    end
     if global.special_games_variables.captain_mode ~= nil and player.gui.center.bb_captain_countdown then
         player.gui.center.bb_captain_countdown.destroy()
     end
@@ -1726,11 +1951,39 @@ local function on_player_joined_game(event)
 end
 
 local function every_5sec(event)
-    if global.special_games_variables.captain_mode then
+    local special = global.special_games_variables.captain_mode
+    if special then
         Public.update_all_captain_player_guis()
-        if Functions.get_ticks_since_game_start() >= global.special_games_variables.captain_mode.nextAutoPickTicks then
-            if not global.special_games_variables.captain_mode.pickingPhase then
+        if Functions.get_ticks_since_game_start() >= special.nextAutoPickTicks then
+            if not special.pickingPhase then
                 start_picking_phase()
+            end
+        end
+    end
+end
+
+---@param event EventData.on_tick
+local function every_1sec(event)
+    local special = global.special_games_variables.captain_mode
+    if special then
+        for _, force_name in pairs({ 'north', 'south' }) do
+            local willingness = special.captainWillingness[force_name]
+            if willingness then
+                if willingness.stop_tick <= event.tick then
+                    Public.end_captain_willingness_vote(force_name)
+                else
+                    local time_remaining = 'Time remaining: '
+                        .. tostring(math.ceil((willingness.stop_tick - event.tick) / 60))
+                        .. 's'
+                    for player, _ in pairs(willingness.players) do
+                        if not is_test_player(player) then
+                            local frame = player.gui.screen.captain_willingness_vote_frame
+                            if frame then
+                                frame.time_remaining_label.caption = time_remaining
+                            end
+                        end
+                    end
+                end
             end
         end
     end
@@ -1741,14 +1994,14 @@ function Public.draw_captain_tournament_button(player)
     if is_test_player(player) then
         return
     end
-    local button = Gui.add_top_element(player, {
+    Gui.add_top_element(player, {
         type = 'sprite-button',
         sprite = 'utility/side_menu_achievements_icon',
         hovered_sprite = 'utility/side_menu_achievements_hover_icon',
         name = 'captain_tournament_button',
         tooltip = { 'gui.tournament_top_button' },
         index = Gui.get_top_index(player),
-    })
+    }, nil)
 end
 
 -- == TOGGLES =================================================================
@@ -2094,7 +2347,7 @@ function Public.draw_captain_player_gui(player, main_frame)
             direction = 'vertical',
             style = 'scroll_pane_under_subheader',
         })
-        gui_style(scroll, { maximal_height = 600, vertically_squashable = false })
+        gui_style(scroll, { maximal_height = 500, vertically_squashable = false })
     end
 
     do -- Player table
@@ -2392,7 +2645,7 @@ function Public.update_captain_player_gui(player, frame)
         then
             join_table.captain_player_want_to_play.visible = true
             join_table.captain_player_want_to_play.enabled = not waiting_to_be_picked
-            join_table.captain_player_do_not_want_to_play.visible = not special.communityPickingMode
+            join_table.captain_player_do_not_want_to_play.visible = true
             join_table.captain_player_do_not_want_to_play.enabled = waiting_to_be_picked
             if special.prepaPhase and not special.initialPickingPhaseStarted then
                 if special.captainGroupAllowed then
@@ -2542,7 +2795,7 @@ function Public.update_captain_player_gui(player, frame)
             if player_name == special.refereeName then
                 insert(info.status, 'Referee')
             end
-            if table_contains(special.captainList, player_name) then
+            if is_player_a_captain(player_name) then
                 insert(info.status, 'Captain')
             end
             if player and not player.connected then
@@ -3079,19 +3332,15 @@ commands.add_command('replaceReferee', 'Admin or referee can decide to change th
     if not playerOfCommand then
         return
     end
-    if not global.active_special_games.captain_mode then
+    local special = global.special_games_variables.captain_mode
+    if not special then
         return playerOfCommand.print({ 'captain.cmd_only_captain_mode' }, Color.red)
     end
-    if global.special_games_variables.captain_mode.prepaPhase then
-        return playerOfCommand.print({ 'captain.cmd_only_after_prepa_phase' }, Color.red)
-    end
-    if
-        global.special_games_variables.captain_mode.refereeName ~= playerOfCommand.name and not playerOfCommand.admin
-    then
+    if special.refereeName ~= playerOfCommand.name and not playerOfCommand.admin then
         return playerOfCommand.print({ 'captain.cmd_only_admin' }, Color.red)
     end
 
-    if global.special_games_variables.captain_mode.refereeName == nil then
+    if special.refereeName == nil then
         return playerOfCommand.print('Something broke, no refereeName in the refereeName variable..', Color.red)
     end
     if cmd.parameter then
@@ -3101,10 +3350,9 @@ commands.add_command('replaceReferee', 'Admin or referee can decide to change th
                 return playerOfCommand.print('You can only use this command on a connected player.', Color.red)
             end
 
-            local special = global.special_games_variables.captain_mode
             local refPlayer = cpt_get_player(special.refereeName)
 
-            if refPlayer.gui.screen.captain_referee_gui then
+            if refPlayer and refPlayer.gui.screen.captain_referee_gui then
                 refPlayer.gui.screen.captain_referee_gui.destroy()
             end
             game.print({
@@ -3222,6 +3470,7 @@ commands.add_command('cpt-test-func', 'Run some test-only code for captains game
     special.player_info.charlie = string.rep('This is a really long description. ', 5)
     special.minTotalPlaytimeToPlay = 0
 
+    insert(special.listPlayers, game.player.name)
     insert(special.captainList, game.player.name)
     insert(special.captainList, game.player.name)
     Public.update_all_captain_player_guis()
@@ -3229,9 +3478,11 @@ end)
 
 -- == HANDLERS ================================================================
 Event.on_nth_tick(300, every_5sec)
+Event.on_nth_tick(60, every_1sec)
 Event.add(defines.events.on_gui_click, on_gui_click)
 Event.add(defines.events.on_gui_switch_state_changed, on_gui_switch_state_changed)
 Event.add(defines.events.on_gui_value_changed, on_gui_value_changed)
+Event.add(defines.events.on_gui_selection_state_changed, on_gui_selection_state_changed)
 Event.add(defines.events.on_player_joined_game, on_player_joined_game)
 Event.add(defines.events.on_player_left_game, on_player_left_game)
 Event.add(defines.events.on_player_changed_force, on_player_changed_force)
