@@ -83,7 +83,7 @@ local tournament_pages = {
     {
         name = 'captain_manager_gui',
         sprite = 'utility/hand',
-        caption = 'Team Permissions',
+        caption = 'Team Captain',
         tooltip = "Toggle the captain's team manager window",
     },
     {
@@ -1114,9 +1114,31 @@ local function get_dropdown_value(dropdown)
     end
 end
 
+local function change_captain(player, force)
+    local special = global.special_games_variables.captain_mode
+    local captain_index = force == 'north' and 1 or 2
+    game.print(
+        string_format(
+            '[font=default-large-bold][color=green]%s[/color][/font] will be the new captain of %s instead of [color=orange]%s[/color]',
+            player.name,
+            Functions.team_name_with_color(force.name),
+            special.captainList[captain_index]
+        )
+    )
+    local oldCaptain = cpt_get_player(special.captainList[captain_index])
+    if not is_test_player(oldCaptain) and oldCaptain.gui.screen.captain_manager_gui then
+        oldCaptain.gui.screen.captain_manager_gui.destroy()
+    end
+    special.captainList[captain_index] = player.name
+    generate_vs_text_rendering()
+    Public.update_all_captain_player_guis()
+    Public.draw_captain_tournament_gui(player)
+    Public.draw_captain_manager_gui(player)
+end
+
 ---@param cmd CustomCommandData
 ---@param force string
-local function change_captain(cmd, force)
+local function change_captain_cmd(cmd, force)
     if not cmd.player_index then
         return
     end
@@ -1147,22 +1169,7 @@ local function change_captain(cmd, force)
             if victim.force.name ~= force then
                 return playerOfCommand.print({ 'captain.change_captain_wrong_member' }, Color.red)
             end
-            local captain_index = force == 'north' and 1 or 2
-            game.print({
-                'captain.change_captain_announcement',
-                playerOfCommand.name,
-                victim.name,
-                special.captainList[captain_index],
-            }, Color.cyan)
-            local oldCaptain = cpt_get_player(special.captainList[captain_index])
-            if oldCaptain.gui.screen.captain_manager_gui then
-                oldCaptain.gui.screen.captain_manager_gui.destroy()
-            end
-            if Gui.get_top_element(oldCaptain, 'captain_manager_toggle_button') then
-                Gui.get_top_element(oldCaptain, 'captain_manager_toggle_button').destroy()
-            end
-            special.captainList[captain_index] = victim.name
-            generate_vs_text_rendering()
+            change_captain(victim, force)
         else
             playerOfCommand.print('Invalid name', Color.warning)
         end
@@ -1202,6 +1209,7 @@ local cpt_ui_visibility = {
 }
 
 -- == EVENTS ==================================================================
+---@param event EventData.on_gui_switch_state_changed
 local function on_gui_switch_state_changed(event)
     local element = event.element
     if not (element and element.valid) then
@@ -1474,10 +1482,29 @@ local function on_gui_click(event)
         Public.update_all_captain_player_guis()
     elseif name == 'captain_tournament_button' then
         Public.toggle_captain_tournament_button(player)
+    elseif name == 'captain_replace_captain' then
+        local frame = Public.get_active_tournament_frame(player, 'captain_manager_gui')
+        if table_contains(special.captainList, player.name) then
+            local newCaptainPlayerName =
+                get_dropdown_value(frame.captain_manager_replace_captain_table.captain_replace_captain_playerlist)
+            local newCaptain = cpt_get_player(newCaptainPlayerName)
+            if
+                newCaptain
+                and newCaptain.valid
+                and newCaptain.connected
+                and newCaptain.force.name == player.force.name
+            then
+                change_captain(newCaptain, player.force.name)
+            else
+                player.print('Invalid name', Color.red)
+            end
+        else
+            player.print('You are not a captain', Color.red)
+        end
     elseif name == 'captain_add_someone_to_throw_trustlist' then
         local frame = Public.get_active_tournament_frame(player, 'captain_manager_gui')
         local playerNameUpdateText =
-            get_dropdown_value(frame.captain_manager_root_table.captain_add_trustlist_playerlist)
+            get_dropdown_value(frame.captain_manager_trustlist_table.captain_add_trustlist_playerlist)
         if playerNameUpdateText and playerNameUpdateText ~= '' and playerNameUpdateText ~= 'Select Player' then
             local tableToUpdate = special.northThrowPlayersListAllowed
             local forceForPrint = 'north'
@@ -1501,7 +1528,7 @@ local function on_gui_click(event)
     elseif name == 'captain_remove_someone_to_throw_trustlist' then
         local frame = Public.get_active_tournament_frame(player, 'captain_manager_gui')
         local playerNameUpdateText =
-            get_dropdown_value(frame.captain_manager_root_table.captain_remove_trustlist_playerlist)
+            get_dropdown_value(frame.captain_manager_trustlist_table.captain_remove_trustlist_playerlist)
         if playerNameUpdateText and playerNameUpdateText ~= '' and playerNameUpdateText ~= 'Select Player' then
             local tableToUpdate = special.northThrowPlayersListAllowed
             local forceForPrint = 'north'
@@ -1522,7 +1549,7 @@ local function on_gui_click(event)
         end
     elseif name == 'captain_eject_player' then
         local frame = Public.get_active_tournament_frame(player, 'captain_manager_gui')
-        local dropdown = frame.captain_manager_root_table_two.captain_eject_playerlist
+        local dropdown = frame.captain_manager_eject_table.captain_eject_playerlist
         local victim = cpt_get_player(get_dropdown_value(dropdown))
         if victim and victim.valid then
             if victim.name == player.name then
@@ -2117,13 +2144,23 @@ function Public.draw_captain_manager_gui(player, main_frame)
         main_frame = ClosableFrame.create_draggable_frame(player, 'captain_manager_gui', 'Team Permissions')
     end
 
+    local replace_t =
+        main_frame.add({ type = 'table', name = 'captain_manager_replace_captain_table', column_count = 2 })
+    replace_t.add({
+        type = 'button',
+        name = 'captain_replace_captain',
+        caption = 'Replace Yourself as Captain',
+        tooltip = 'Make this player captain instead of you',
+    })
+    replace_t.add({ name = 'captain_replace_captain_playerlist', type = 'drop-down', width = 140 })
+
     main_frame.add({ type = 'button', name = 'captain_is_ready' })
     main_frame.add({
         type = 'label',
         caption = '[font=heading-1][color=purple]Management for science throwing[/color][/font]',
     })
     main_frame.add({ type = 'button', name = 'captain_toggle_throw_science' })
-    local t = main_frame.add({ type = 'table', name = 'captain_manager_root_table', column_count = 2 })
+    local t = main_frame.add({ type = 'table', name = 'captain_manager_trustlist_table', column_count = 2 })
     t.add({
         type = 'button',
         name = 'captain_add_someone_to_throw_trustlist',
@@ -2138,7 +2175,6 @@ function Public.draw_captain_manager_gui(player, main_frame)
         tooltip = 'Remove someone to be able to throw science when captain disabled throwing science from their team',
     })
     t.add({ name = 'captain_remove_trustlist_playerlist', type = 'drop-down', width = 140 })
-
     main_frame.add({ type = 'label', name = 'throw_science_label' })
 
     main_frame.add({ type = 'label', name = 'trusted_to_throw_list_label' })
@@ -2147,7 +2183,7 @@ function Public.draw_captain_manager_gui(player, main_frame)
         type = 'label',
         caption = '[font=heading-1][color=purple]Management for your players[/color][/font]',
     })
-    local t2 = main_frame.add({ type = 'table', name = 'captain_manager_root_table_two', column_count = 3 })
+    local t2 = main_frame.add({ type = 'table', name = 'captain_manager_eject_table', column_count = 3 })
     t2.add({
         type = 'button',
         name = 'captain_eject_player',
@@ -2830,10 +2866,11 @@ function Public.update_captain_manager_gui(player, frame)
     insert(team_players, 1, 'Select Player')
     sort(allowed_team_players)
     insert(allowed_team_players, 1, 'Select Player')
-    local t = frame.captain_manager_root_table
+    local t = frame.captain_manager_trustlist_table
     update_dropdown(t.captain_add_trustlist_playerlist, team_players)
     update_dropdown(t.captain_remove_trustlist_playerlist, allowed_team_players)
-    local t2 = frame.captain_manager_root_table_two
+    update_dropdown(frame.captain_manager_replace_captain_table.captain_replace_captain_playerlist, team_players)
+    local t2 = frame.captain_manager_eject_table
     local allow_kick = (not special.prepaPhase and special.captainKick)
     t2.visible = allow_kick
 
@@ -3028,11 +3065,11 @@ end
 -- == COMMANDS ================================================================
 
 commands.add_command('replaceCaptainNorth', 'Referee can decide to change the captain of north team', function(cmd)
-    safe_wrap_cmd(cmd, change_captain, cmd, 'north')
+    safe_wrap_cmd(cmd, change_captain_cmd, cmd, 'north')
 end)
 
 commands.add_command('replaceCaptainSouth', 'Referee can decide to change the captain of south team', function(cmd)
-    safe_wrap_cmd(cmd, change_captain, cmd, 'south')
+    safe_wrap_cmd(cmd, change_captain_cmd, cmd, 'south')
 end)
 
 commands.add_command('replaceReferee', 'Admin or referee can decide to change the referee', function(cmd)
@@ -3178,7 +3215,8 @@ commands.add_command('cpt-test-func', 'Run some test-only code for captains game
         if starts_with(playerName, 'greg') then
             group_name = '[cpt_greg]'
         end
-        special.test_players[playerName] = { name = playerName, tag = group_name, color = Color.white }
+        special.test_players[playerName] =
+            { name = playerName, tag = group_name, color = Color.white, valid = true, connected = true }
         insert(special.listPlayers, playerName)
     end
     special.player_info.alice = 'I am a test player'
