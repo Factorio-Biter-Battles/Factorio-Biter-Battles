@@ -513,6 +513,8 @@ function Public.silo_death(event)
         freeze_all_biters(entity.surface)
         local special = global.special_games_variables.captain_mode
         if global.active_special_games.captain_mode and not special.prepaPhase then
+            global.tournament_mode = false
+            game.print('Tournament mode is now disabled')
             game.print('Updating logs for the game')
             Server.send_special_game_state('[CAPTAIN-SPECIAL]')
             log_to_db('>Game has ended\n', false)
@@ -633,6 +635,160 @@ local function draw_reroll_gui(player)
     end
 end
 
+---@return success_percent number [0-1] yes/total
+---@return yes_count number
+---@return no_count number
+local function get_automatic_captain_stats()
+    local total_votes = table.size(global.automatic_captain_voting)
+    if total_votes == 0 then
+        return 0, 0, 0
+    end
+
+    local yes_votes = 0
+    for _, vote in pairs(global.automatic_captain_voting) do
+        yes_votes = yes_votes + vote
+    end
+    return math.floor(100 * yes_votes / total_votes), yes_votes, total_votes - yes_votes
+end
+
+local function draw_automatic_captain_poll_gui(player)
+    if Gui.get_top_element(player, 'automatic_captain_poll_frame') then
+        return
+    end
+
+    local frame = Gui.add_top_element(
+        player,
+        { type = 'frame', name = 'automatic_captain_poll_frame', style = 'finished_game_subheader_frame' }
+    )
+    gui_style(frame, { minimal_height = 36, maximal_height = 36, padding = 0, vertical_align = 'center' })
+
+    local f = frame.add({ type = 'flow', name = 'flow', direction = 'horizontal' })
+    local line = f.add({ type = 'line', direction = 'vertical' })
+
+    do -- buttons
+        local t =
+            f.add({ type = 'table', name = 'automatic_captain_table', column_count = 3, vertical_centering = true })
+        gui_style(t, { top_margin = 2, left_margin = 8, right_margin = 8 })
+
+        local l =
+            t.add({ type = 'label', caption = { 'gui.automatic_captain_caption', global.automatic_captain_time_left } })
+        gui_style(l, {
+            font = 'heading-2',
+            font_color = { r = 0.88, g = 0.55, b = 0.11 },
+            minimal_width = 120,
+            maximal_width = 120,
+            right_padding = 2,
+        })
+
+        local b = t.add({ type = 'button', caption = 'No', name = 'automatic_captain_no', style = 'red_back_button' })
+        gui_style(b, { minimal_width = 56, maximal_width = 56, font = 'heading-2' })
+
+        local b = t.add({
+            type = 'button',
+            caption = 'Yes',
+            name = 'automatic_captain_yes',
+            style = 'confirm_button_without_tooltip',
+        })
+        gui_style(b, { minimal_width = 56, maximal_width = 56, font = 'heading-2' })
+    end
+
+    local line = f.add({ type = 'line', direction = 'vertical' })
+
+    do -- stats
+        local percent, yes_votes, no_votes = get_automatic_captain_stats()
+
+        local l = f.add({
+            type = 'label',
+            name = 'automatic_captain_stats',
+            caption = { 'gui.automatic_captain_stats', no_votes, yes_votes, percent },
+        })
+        gui_style(
+            l,
+            { font = 'heading-2', right_padding = 4, left_padding = 4, top_margin = 6, font_color = { 165, 165, 165 } }
+        )
+    end
+end
+
+local function stop_automatic_captain()
+    global.automatic_captain_time_left = 0
+    -- remove existing buttons
+    for _, player in pairs(game.players) do
+        local frame = Gui.get_top_element(player, 'automatic_captain_poll_frame')
+        if frame then
+            frame.destroy()
+        end
+    end
+end
+
+local decrement_timer_automatic_captain_token = Token.get_counter() + 1 -- predict what the token will look like
+decrement_timer_automatic_captain_token = Token.register(function()
+    if not global.bb_settings.automatic_captain then
+        stop_automatic_captain()
+        return
+    end
+
+    global.automatic_captain_time_left = global.automatic_captain_time_left - 1
+    if global.automatic_captain_time_left > 0 then
+        for _, player in pairs(game.connected_players) do
+            local frame = Gui.get_top_element(player, 'automatic_captain_poll_frame')
+            if frame and frame.valid then
+                frame.flow.automatic_captain_table.children[1].caption =
+                    { 'gui.automatic_captain_caption', global.automatic_captain_time_left }
+                local percent, yes_votes, no_votes = get_automatic_captain_stats()
+                frame.flow.automatic_captain_stats.caption =
+                    { 'gui.automatic_captain_stats', no_votes, yes_votes, percent }
+            end
+        end
+
+        Sounds.notify_all('utility/armor_insert')
+        Task.set_timeout_in_ticks(60, decrement_timer_automatic_captain_token)
+    else
+        stop_automatic_captain()
+        -- count votes
+        local result, yes_votes, _ = get_automatic_captain_stats()
+        local amountVotesRequired = 13
+        local percentRequired = 66
+        if result >= percentRequired and yes_votes > amountVotesRequired then
+            game.print('Vote to start captain event has succeeded (' .. result .. '%)')
+            Captain_special.generate_automatic_captain()
+        else
+            game.print('Vote to start captain event has failed (' .. result .. '%)')
+            if yes_votes <= amountVotesRequired then
+                game.print(
+                    'At least '
+                        .. amountVotesRequired
+                        .. ' votes voting yes are required, there were only '
+                        .. yes_votes
+                        .. ' yes votes'
+                )
+            end
+            if result < percentRequired then
+                game.print('At least ' .. percentRequired .. '% of yes are required')
+            end
+            global.tournament_mode = false
+        end
+    end
+end)
+
+local function start_auto_captain_vote()
+    if
+        global.bb_settings.automatic_captain
+        and #game.connected_players > global.automatic_captain_min_connected_players_for_vote
+    then
+        game.print(
+            'You can now vote to start or not a captain game, top of screen! You wont be able to play until the poll is over',
+            { r = 0.22, g = 0.88, b = 0.22 }
+        )
+        global.tournament_mode = true
+        global.automatic_captain_time_left = global.automatic_captain_time_limit / 60
+        Task.set_timeout_in_ticks(60, decrement_timer_automatic_captain_token)
+        for _, player in pairs(game.connected_players) do
+            draw_automatic_captain_poll_gui(player)
+        end
+        Sounds.notify_all('utility/scenario_message')
+    end
+end
+
 local reroll_buttons_token = Token.register(
     -- create buttons for joining players
     function(event)
@@ -685,6 +841,7 @@ decrement_timer_token = Token.register(function()
             Public.generate_new_map()
         else
             game.print('Vote to reload the map has failed (' .. result .. '%)')
+            start_auto_captain_vote()
         end
     end
 end)
@@ -731,5 +888,17 @@ function Public.generate_new_map()
     start_map_reroll()
 end
 
+function Public.automatic_captain_draw_buttons(event)
+    if not global.bb_settings.automatic_captain then
+        return
+    end
+
+    if global.automatic_captain_time_left > 0 then
+        local player = game.get_player(event.player_index)
+        draw_automatic_captain_poll_gui(player)
+    end
+end
+
 Event.add(defines.events.on_console_chat, chat_with_everyone)
+Event.add(defines.events.on_player_joined_game, Public.automatic_captain_draw_buttons)
 return Public

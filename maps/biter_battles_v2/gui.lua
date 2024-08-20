@@ -1235,6 +1235,20 @@ local function on_gui_click(event)
             game.print(player.name .. ' wants to keep this map', { r = 0.9, g = 0.1, b = 0.1 })
         end
     end
+
+    if name == 'automatic_captain_yes' then
+        if global.automatic_captain_voting[player.name] ~= 1 then
+            global.automatic_captain_voting[player.name] = 1
+            game.print(player.name .. ' wants to play a captain game', { r = 0.1, g = 0.9, b = 0.0 })
+        end
+    end
+
+    if name == 'automatic_captain_no' then
+        if global.automatic_captain_voting[player.name] ~= 0 then
+            global.automatic_captain_voting[player.name] = 0
+            game.print(player.name .. ' does not want to play a captain game', { r = 0.9, g = 0.1, b = 0.1 })
+        end
+    end
 end
 
 local function on_player_joined_game(event)
