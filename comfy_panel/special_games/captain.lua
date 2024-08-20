@@ -2116,7 +2116,6 @@ function Public.draw_captain_manager_gui(player, main_frame)
         main_frame = ClosableFrame.create_draggable_frame(player, 'captain_manager_gui', 'Team Permissions')
     end
 
-    main_frame.add({ type = 'label', name = 'diff_vote_duration' })
     main_frame.add({ type = 'button', name = 'captain_is_ready' })
     main_frame.add({
         type = 'label',
@@ -2794,21 +2793,11 @@ function Public.update_captain_manager_gui(player, frame)
     local special = global.special_games_variables.captain_mode
     local force_name = global.chosen_team[player.name]
     local button = nil
-    frame.diff_vote_duration.visible = false
     frame.captain_is_ready.visible = false
     if special.prepaPhase and not table_contains(special.listTeamReadyToPlay, force_name) then
         frame.captain_is_ready.visible = true
         frame.captain_is_ready.caption = 'Team is Ready!'
         frame.captain_is_ready.style = 'green_button'
-        if game.ticks_played < global.difficulty_votes_timeout then
-            frame.diff_vote_duration.visible = true
-            frame.diff_vote_duration.caption = {
-                'captain.difficulty_vote_duration',
-                math_floor((global.difficulty_votes_timeout - game.ticks_played) / 60),
-            }
-            frame.captain_is_ready.caption = 'Mark team as ready even though difficulty vote is ongoing!'
-            frame.captain_is_ready.style = 'red_button'
-        end
     end
     local throwScienceSetting = special.northEnabledScienceThrow
     if special.captainList[2] == player.name then
