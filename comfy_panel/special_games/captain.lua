@@ -798,6 +798,7 @@ local function start_captain_event()
             special.stats.playerSessionStartTimes[player.name] = Functions.get_ticks_since_game_start()
         end
     end
+    Public.update_all_captain_player_guis()
 end
 
 local countdown_captain_start_token = Token.register(function()
