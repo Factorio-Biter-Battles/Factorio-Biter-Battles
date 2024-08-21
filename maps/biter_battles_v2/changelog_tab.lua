@@ -13,6 +13,9 @@ local function add_changelog(player, element)
 		table.insert(changelog_change, who)
 	end
 	
+	add_entry("2024-08-21", "cliff_build", "Community pick captain improvements")
+	add_entry("2024-08-21", "cliff_build", "afk_kick: only kick once game starts")
+	add_entry("2024-08-20", "Ragnarok77", "Automatic captain system without referee")
 	add_entry("2024-08-19", "cliff_build", "rename /spectator-follow to /follow for better tab-completion")
 	add_entry("2024-08-18", "cliff_build", "captains games: add 'community picked teams' mode")
 	add_entry("2024-08-18", "cliff_build", "teamstats: fix space-sci-equiv-produced number")
