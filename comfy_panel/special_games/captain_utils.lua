@@ -2,6 +2,9 @@ local player_utils = require('utils.player')
 
 local CaptainUtils = {}
 
+---@param tab table
+---@param str any
+---@return boolean
 function CaptainUtils.table_contains(tab, str)
     for _, entry in ipairs(tab) do
         if entry == str then
@@ -11,7 +14,12 @@ function CaptainUtils.table_contains(tab, str)
     return false
 end
 
+---@param playerName string|integer
+---@return LuaPlayer?
 function CaptainUtils.cpt_get_player(playerName)
+    if not playerName then
+        return nil
+    end
     local special = global.special_games_variables.captain_mode
     if special and special.test_players and special.test_players[playerName] then
         local res = table.deepcopy(special.test_players[playerName])
