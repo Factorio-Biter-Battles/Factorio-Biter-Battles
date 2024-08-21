@@ -2721,7 +2721,7 @@ function Public.update_captain_player_gui(player, frame)
                 })
                 tab.add({
                     type = 'label',
-                    caption = Functions.format_ticks_as_time(Public.get_total_playtime_of_player(player_name)),
+                    caption = Functions.format_ticks_as_time(global.total_time_online_players[player_name] or 0),
                     style = 'valid_mod_label',
                 })
                 tab.add({
