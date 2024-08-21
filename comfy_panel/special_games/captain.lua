@@ -766,7 +766,7 @@ function Public.get_captain_candidates(force_name, allow_everyone)
     local connected_players = {}
     for _, playername in pairs(picks) do
         local player = cpt_get_player(playername)
-        if player and player.connected then
+        if player and player.connected and player.force.name == force_name then
             insert(connected_players, player)
         end
     end
