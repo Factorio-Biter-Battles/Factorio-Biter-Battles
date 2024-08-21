@@ -435,12 +435,13 @@ local function autotagging_outposters()
 end
 
 local function afk_kick(player)
-    if player.afk_time > antiAfkTimeBeforeWarning and player.afk_time < antiAfkTimeBeforeEnabled then
+    local afk_time = math.min(player.afk_time, Functions.get_ticks_since_game_start())
+    if afk_time > antiAfkTimeBeforeWarning and afk_time < antiAfkTimeBeforeEnabled then
         player.print(
             'Please move within the next minute or you will be sent back to spectator island ! But even if you keep staying afk and sent back to spectator island, you will be able to join back to your position with your equipment'
         )
     end
-    if player.afk_time > antiAfkTimeBeforeEnabled then
+    if afk_time > antiAfkTimeBeforeEnabled then
         player.print(
             'You were sent back to spectator island as you were afk for too long, you can still join to come back at your position with all your equipment'
         )
