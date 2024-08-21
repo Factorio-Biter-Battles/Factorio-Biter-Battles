@@ -1856,8 +1856,8 @@ local function on_gui_click(event)
         Public.update_captain_player_gui(player)
     elseif name == 'captain_community_pick_confirm' then
         local pick_order = special.communityPickOrder[player.name] or {}
-        for _, player_to_add in pairs(pick_order) do
-            if not table_contains(special.listPlayers, player_to_add) then
+        for _, player_to_add in pairs(special.listPlayers) do
+            if not table_contains(pick_order, player_to_add) then
                 return
             end
         end
