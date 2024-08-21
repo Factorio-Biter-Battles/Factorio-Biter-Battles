@@ -1526,7 +1526,6 @@ local function on_gui_click(event)
                         special.communityPicksConfirmed[player_name] = nil
                     end
                 end
-                special.communityPicksConfirmed = {}
                 Public.update_all_captain_player_guis()
             else
                 player.print(
