@@ -1143,7 +1143,7 @@ function Public.end_of_picking_phase()
     special.nextAutoPickTicks = Functions.get_ticks_since_game_start() + special.autoPickIntervalTicks
     if special.prepaPhase then
         game.print(
-            '[font=default-large-bold]All players were picked by captains, time to start preparation for each team ! Once your team is ready, captain, click on yes on top popup[/font]',
+            '[font=default-large-bold]Time to start preparation for each team ! Once your team is ready, captain, click on yes on top popup[/font]',
             Color.cyan
         )
         for _, captain_name in pairs(global.special_games_variables.captain_mode.captainList) do
@@ -1635,7 +1635,14 @@ local function on_gui_click(event)
             location = player.gui.screen.captain_poll_alternate_pick_choice_frame.location
             player.gui.screen.captain_poll_alternate_pick_choice_frame.destroy()
         end
-        game.print(playerPicked .. ' was picked by Captain ' .. player.name)
+        game.print(
+            string_format(
+                '%s was picked by%s %s',
+                playerPicked,
+                is_player_a_captain(player.name) and ' Captain' or '',
+                player.name
+            )
+        )
         local listPlayers = special.listPlayers
         switch_team_of_player(playerPicked, forceToGo)
         cpt_get_player(playerPicked).print({ '', { 'captain.comms_reminder' } }, Color.cyan)
@@ -2629,7 +2636,7 @@ function Public.update_captain_player_gui(player, frame)
                 'You were kicked from a team, talk to the Referee about joining if you want to play.'
             )
         elseif special.pickingPhase and waiting_to_be_picked then
-            insert(status_strings, 'Currently waiting to be picked by a captain.')
+            insert(status_strings, 'Currently waiting to be picked.')
         elseif special.pickingPhase then
             insert(
                 status_strings,
