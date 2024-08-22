@@ -13,6 +13,7 @@ local function add_changelog(player, element)
 		table.insert(changelog_change, who)
 	end
 	
+	add_entry("2024-08-22", "Ragnarok77", "Add back missing text for automatic captain poll that got removed ")
 	add_entry("2024-08-21", "cliff_build", "Community pick captain improvements")
 	add_entry("2024-08-21", "cliff_build", "afk_kick: only kick once game starts")
 	add_entry("2024-08-20", "Ragnarok77", "Automatic captain system without referee")
