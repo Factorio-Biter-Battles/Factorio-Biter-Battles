@@ -519,8 +519,12 @@ function Public.silo_death(event)
             Server.send_special_game_state('[CAPTAIN-SPECIAL]')
             log_to_db('>Game has ended\n', false)
             log_to_db('[RefereeName]' .. special.stats.InitialReferee .. '\n', true)
-            log_to_db('[CaptainNorth]' .. special.stats.NorthInitialCaptain .. '\n', true)
-            log_to_db('[CaptainSouth]' .. special.stats.SouthInitialCaptain .. '\n', true)
+            if special.stats.NorthInitialCaptain then
+                log_to_db('[CaptainNorth]' .. special.stats.NorthInitialCaptain .. '\n', true)
+            end
+            if special.stats.SouthInitialCaptain then
+                log_to_db('[CaptainSouth]' .. special.stats.SouthInitialCaptain .. '\n', true)
+            end
             local listPicks = table.concat(special.stats.northPicks, ';')
             log_to_db('[NorthTeam]' .. listPicks .. '\n', true)
             listPicks = table.concat(special.stats.southPicks, ';')
