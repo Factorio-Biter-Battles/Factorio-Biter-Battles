@@ -1194,11 +1194,13 @@ local function start_picking_phase()
             end
             final_community_picks[player] = filtered_picks
         end
-        local picks = CaptainCommunityPick.assign_teams(final_community_picks)
-        if not picks then
+        local pick_order = CaptainCommunityPick.pick_order(final_community_picks)
+        if not pick_order then
             force_end_captain_event()
             return
         end
+        local picks = CaptainCommunityPick.assign_teams(pick_order)
+        special.stats.communityPickInfo = { votes = final_community_picks, pick_order = pick_order }
         for i, team in ipairs(picks) do
             local force_name = i == 1 and 'north' or 'south'
             for _, player in ipairs(team) do

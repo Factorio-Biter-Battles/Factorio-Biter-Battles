@@ -512,7 +512,7 @@ function Public.silo_death(event)
 
         freeze_all_biters(entity.surface)
         local special = global.special_games_variables.captain_mode
-        if global.active_special_games.captain_mode and not special.prepaPhase then
+        if special and not special.prepaPhase then
             global.tournament_mode = false
             game.print('Tournament mode is now disabled')
             game.print('Updating logs for the game')
@@ -540,6 +540,9 @@ function Public.silo_death(event)
                         true
                     )
                 end
+            end
+            if special.stats.communityPickInfo then
+                log_to_db('[CommunityPickInfo]' .. game.table_to_json(special.stats.communityPickInfo) .. '\n', true)
             end
             log_to_db('[TeamStats]' .. game.table_to_json(global.team_stats) .. '\n', true)
             log_to_db('>End of log', true)
