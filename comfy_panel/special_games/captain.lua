@@ -2937,7 +2937,7 @@ function Public.update_captain_referee_gui(player, frame)
             local b = scroll.add({
                 type = 'button',
                 name = 'captain_force_captains_ready',
-                caption = 'Force all captains to be ready',
+                caption = 'Force both teams to be ready',
                 style = 'red_button',
             })
         end
