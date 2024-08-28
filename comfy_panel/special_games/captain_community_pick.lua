@@ -62,6 +62,18 @@ local function find_top_pick(community_picks, num_votes_required_for_win)
     end
 end
 
+---@param list string[]
+---@param item string
+function move_to_front_of_list(list, item)
+    for i, list_item in ipairs(list) do
+        if list_item == item then
+            table.remove(list, i)
+            table.insert(list, 1, item)
+            return
+        end
+    end
+end
+
 ---@param community_picks table<string, string[]>
 ---@return string[][]?
 function CaptainCommunityPick.assign_teams(community_picks)
@@ -75,6 +87,8 @@ function CaptainCommunityPick.assign_teams(community_picks)
     local num_players = nil
     local players = {}
     for picking_player, player_list in pairs(community_picks) do
+        -- ignore the position that the player put themselves in (always put themselves first)
+        move_to_front_of_list(player_list, picking_player)
         if num_players == nil then
             num_players = #player_list
             for _, player in ipairs(player_list) do
