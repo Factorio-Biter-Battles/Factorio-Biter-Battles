@@ -2,6 +2,9 @@ local Color = require('utils.color_presets')
 
 local CaptainCommunityPick = {}
 
+local table_insert = table.insert
+local math_random = math.random
+
 ---@param player string
 ---@param community_picks table<string, string[]>
 ---@return nil
@@ -114,7 +117,7 @@ function CaptainCommunityPick.pick_order(community_picks)
             return nil
         end
 
-        table.insert(result, top_pick)
+        table_insert(result, top_pick)
         remove_player_from_picks(top_pick, community_picks)
         num_players = num_players - 1
     end
@@ -125,10 +128,10 @@ end
 ---@return string[][]
 function CaptainCommunityPick.assign_teams(pick_order)
     local result = { {}, {} }
-    local next_team_to_pick = math.random(#result)
+    local next_team_to_pick = math_random(#result)
     for _, pick in ipairs(pick_order) do
         -- game.print(string.format('picked %s for %s', pick, next_team_to_pick == 1 and 'North' or 'South'))
-        table.insert(result[next_team_to_pick], pick)
+        table_insert(result[next_team_to_pick], pick)
         local other_possible_next_team_to_pick = 3 - next_team_to_pick
         -- do 1, 2, 2, 2, ... picking
         if #result[next_team_to_pick] > #result[other_possible_next_team_to_pick] then
