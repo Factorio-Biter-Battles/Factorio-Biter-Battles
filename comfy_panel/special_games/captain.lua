@@ -95,10 +95,14 @@ local tournament_pages = {
 }
 
 -- == UTILS ===================================================================
+---@param player LuaPlayer
+---@return boolean
 local function is_test_player(player)
     return not player.gui
 end
 
+---@param player_name string
+---@return boolean
 local function is_test_player_name(player_name)
     local special = global.special_games_variables.captain_mode
     return special.test_players and special.test_players[player_name]
@@ -1430,7 +1434,7 @@ local function on_gui_switch_state_changed(event)
         special.captainGroupAllowed = false
         if special.test_mode then
             for _, player in pairs(special.listPlayers) do
-                if math_random() < 0.5 then
+                if is_test_player_name(player) and math_random() < 0.5 then
                     special.communityPicksConfirmed[player] = true
                     local pick_order = table.deepcopy(special.listPlayers)
                     -- randomize "pick_order"
@@ -1539,6 +1543,7 @@ local function on_gui_click(event)
             DifficultyVote.remove_player_from_difficulty_vote(player)
             table_remove_element(special.listPlayers, player.name)
             table_remove_element(special.captainList, player.name)
+            special.communityPicksConfirmed[player.name] = nil
             Public.update_all_captain_player_guis()
         end
     elseif name == 'captain_player_want_to_be_captain' then
@@ -1863,6 +1868,9 @@ local function on_gui_click(event)
         Public.update_captain_player_gui(player)
     elseif name == 'captain_community_pick_confirm' then
         local pick_order = special.communityPickOrder[player.name] or {}
+        if not table_contains(special.listPlayers, player.name) then
+            return
+        end
         for _, player_to_add in pairs(special.listPlayers) do
             if not table_contains(pick_order, player_to_add) then
                 return
@@ -2342,7 +2350,7 @@ function Public.draw_captain_player_gui(player, main_frame)
             name = 'captain_community_pick_confirm',
             caption = "I'm happy with the pick order below",
             style = 'confirm_button',
-            tooltip = 'Pick all players below before confirming',
+            tooltip = 'Pick all players below before confirming, must be a player in the game as well',
         })
         gui_style(button, { natural_width = 200, height = 28, horizontal_align = 'left', font = 'heading-3' })
 
@@ -2782,7 +2790,7 @@ function Public.update_captain_player_gui(player, frame)
                     add_common_cols(tab, player_name)
                 end
             end
-            flow.captain_community_pick_confirm.enabled = not any_unpicked_players
+            flow.captain_community_pick_confirm.enabled = not any_unpicked_players and waiting_to_be_picked
             flow.captain_community_pick_confirm.visible = not special.communityPicksConfirmed[player.name]
         end
     end
