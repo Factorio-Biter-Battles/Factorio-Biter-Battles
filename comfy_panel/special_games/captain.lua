@@ -3306,14 +3306,15 @@ function Public.clear_gui_special()
 end
 
 function Public.captain_is_player_prohibited_to_throw(player)
-    if global.active_special_games.captain_mode then
-        local throwScienceSetting = global.special_games_variables.captain_mode.northEnabledScienceThrow
-        local throwList = global.special_games_variables.captain_mode.northThrowPlayersListAllowed
+    local special = global.special_games_variables.captain_mode
+    if special then
+        local throwScienceSetting = special.northEnabledScienceThrow
+        local throwList = special.northThrowPlayersListAllowed
         if player.force.name == 'south' then
-            throwScienceSetting = global.special_games_variables.captain_mode.southEnabledScienceThrow
-            throwList = global.special_games_variables.captain_mode.southThrowPlayersListAllowed
+            throwScienceSetting = special.southEnabledScienceThrow
+            throwList = special.southThrowPlayersListAllowed
         end
-        if throwScienceSetting == false and table_contains(throwList, player.name) == false then
+        if not throwScienceSetting and not table_contains(throwList, player.name) then
             return true
         end
     end

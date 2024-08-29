@@ -1131,12 +1131,16 @@ local function on_gui_click(event)
     end
 
     if food_names[name] then
-        Feeding.feed_biters_from_inventory(player, name)
+        if not Captain_event.captain_is_player_prohibited_to_throw(player) then
+            Feeding.feed_biters_from_inventory(player, name)
+        end
         return
     end
 
     if name == 'send_all' then
-        Feeding.feed_biters_mixed_from_inventory(player, event.button)
+        if not Captain_event.captain_is_player_prohibited_to_throw(player) then
+            Feeding.feed_biters_mixed_from_inventory(player, event.button)
+        end
         return
     end
 
