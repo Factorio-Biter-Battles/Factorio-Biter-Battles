@@ -516,7 +516,11 @@ function Public.silo_death(event)
             global.tournament_mode = false
             game.print('Tournament mode is now disabled')
             game.print('Updating logs for the game')
-            Server.send_special_game_state('[CAPTAIN-SPECIAL]')
+            if special.communityPickingMode then
+                Server.send_special_game_state('[COMMUNITY-PICK]')
+            else
+                Server.send_special_game_state('[CAPTAIN-SPECIAL]')
+            end
             log_to_db('>Game has ended\n', false)
             log_to_db('[RefereeName]' .. special.stats.InitialReferee .. '\n', true)
             if special.stats.NorthInitialCaptain then
@@ -534,6 +538,7 @@ function Public.silo_death(event)
             log_to_db('[WinnerTeam]' .. global.bb_game_won_by_team .. '\n', true)
             log_to_db('[ExtraInfo]' .. special.stats.extrainfo .. '\n', true)
             log_to_db('[SpecialEnabled]' .. special.stats.specialEnabled .. '\n', true)
+            log_to_db('[CommunityPickMode]' .. tostring(special.communityPickingMode) .. '\n', true)
             for _, player in pairs(game.players) do
                 if player.connected and (player.force.name == 'north' or player.force.name == 'south') then
                     Captain_special.captain_log_end_time_player(player)
