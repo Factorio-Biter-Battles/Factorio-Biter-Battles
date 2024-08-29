@@ -605,6 +605,7 @@ local function generate_captain_mode(refereeName, autoTrust, captainKick, specia
         ---@type table<string, boolean>
         communityPicksConfirmed = {},
         communityPickingMode = false,
+        communityPickingModeCaptainVolunteers = false,
         ---@type table<string, string>
         player_info = {},
         ---@type table<string, boolean>
@@ -1205,7 +1206,9 @@ local function start_picking_phase()
                 switch_team_of_player(player, force_name)
                 table_remove_element(special.listPlayers, player)
             end
-            Public.trigger_captain_vote(force_name, Public.get_captain_candidates(force_name, true))
+            if special.communityPickingModeCaptainVolunteers then
+                Public.trigger_captain_vote(force_name, Public.get_captain_candidates(force_name, true))
+            end
         end
         assert(#special.listPlayers == 0)
         Public.end_of_picking_phase()
@@ -1443,6 +1446,8 @@ local function on_gui_switch_state_changed(event)
             end
         end
         Public.update_all_captain_player_guis()
+    elseif name == 'captain_community_picking_mode_captains' then
+        special.communityPickingModeCaptainVolunteers = element.switch_state == 'right'
     elseif name == 'captain_enable_groups_switch' then
         if not special.communityPickingMode then
             special.captainGroupAllowed = element.switch_state == 'left'
@@ -3075,6 +3080,15 @@ function Public.update_captain_referee_gui(player, frame)
             left_label_caption = 'Community picking',
             right_label_caption = 'Captain picking',
         })
+        if special.communityPickingMode then
+            scroll.add({
+                type = 'switch',
+                name = 'captain_community_picking_mode_captains',
+                switch_state = special.communityPickingModeCaptainVolunteers and 'right' or 'left',
+                left_label_caption = 'Captainless Teams',
+                right_label_caption = 'Allow top picks to volunteer to be captain',
+            })
+        end
     end
 end
 
