@@ -2,6 +2,9 @@ local Color = require('utils.color_presets')
 
 local CaptainCommunityPick = {}
 
+local table_insert = table.insert
+local math_random = math.random
+
 ---@param player string
 ---@param community_picks table<string, string[]>
 ---@return nil
@@ -75,8 +78,8 @@ function move_to_front_of_list(list, item)
 end
 
 ---@param community_picks table<string, string[]>
----@return string[][]?
-function CaptainCommunityPick.assign_teams(community_picks)
+---@return string[]?
+function CaptainCommunityPick.pick_order(community_picks)
     -- do not modify the argument
     community_picks = table.deepcopy(community_picks)
 
@@ -120,18 +123,29 @@ function CaptainCommunityPick.assign_teams(community_picks)
         end
     end
 
-    local result = { {}, {} }
-    local next_team_to_pick = math.random(#result)
+    local result = {}
     local num_votes_required_for_win = math.ceil(table_size(community_picks) / 2)
     while num_players > 0 do
         local top_pick = find_top_pick(community_picks, num_votes_required_for_win)
         if not top_pick then
             return nil
         end
-        -- game.print(string.format('picked %s for %s', top_pick, next_team_to_pick == 1 and 'North' or 'South'))
-        table.insert(result[next_team_to_pick], top_pick)
+
+        table_insert(result, top_pick)
         remove_player_from_picks(top_pick, community_picks)
         num_players = num_players - 1
+    end
+    return result
+end
+
+---@param pick_order string[]
+---@return string[][]
+function CaptainCommunityPick.assign_teams(pick_order)
+    local result = { {}, {} }
+    local next_team_to_pick = math_random(#result)
+    for _, pick in ipairs(pick_order) do
+        -- game.print(string.format('picked %s for %s', pick, next_team_to_pick == 1 and 'North' or 'South'))
+        table_insert(result[next_team_to_pick], pick)
         local other_possible_next_team_to_pick = 3 - next_team_to_pick
         -- do 1, 2, 2, 2, ... picking
         if #result[next_team_to_pick] > #result[other_possible_next_team_to_pick] then

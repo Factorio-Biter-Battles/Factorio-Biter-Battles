@@ -512,15 +512,19 @@ function Public.silo_death(event)
 
         freeze_all_biters(entity.surface)
         local special = global.special_games_variables.captain_mode
-        if global.active_special_games.captain_mode and not special.prepaPhase then
+        if special and not special.prepaPhase then
             global.tournament_mode = false
             game.print('Tournament mode is now disabled')
             game.print('Updating logs for the game')
             Server.send_special_game_state('[CAPTAIN-SPECIAL]')
             log_to_db('>Game has ended\n', false)
             log_to_db('[RefereeName]' .. special.stats.InitialReferee .. '\n', true)
-            log_to_db('[CaptainNorth]' .. special.stats.NorthInitialCaptain .. '\n', true)
-            log_to_db('[CaptainSouth]' .. special.stats.SouthInitialCaptain .. '\n', true)
+            if special.stats.NorthInitialCaptain then
+                log_to_db('[CaptainNorth]' .. special.stats.NorthInitialCaptain .. '\n', true)
+            end
+            if special.stats.SouthInitialCaptain then
+                log_to_db('[CaptainSouth]' .. special.stats.SouthInitialCaptain .. '\n', true)
+            end
             local listPicks = table.concat(special.stats.northPicks, ';')
             log_to_db('[NorthTeam]' .. listPicks .. '\n', true)
             listPicks = table.concat(special.stats.southPicks, ';')
@@ -540,6 +544,9 @@ function Public.silo_death(event)
                         true
                     )
                 end
+            end
+            if special.stats.communityPickInfo then
+                log_to_db('[CommunityPickInfo]' .. game.table_to_json(special.stats.communityPickInfo) .. '\n', true)
             end
             log_to_db('[TeamStats]' .. game.table_to_json(global.team_stats) .. '\n', true)
             log_to_db('>End of log', true)

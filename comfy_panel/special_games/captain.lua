@@ -1199,11 +1199,13 @@ local function start_picking_phase()
             end
             final_community_picks[player] = filtered_picks
         end
-        local picks = CaptainCommunityPick.assign_teams(final_community_picks)
-        if not picks then
+        local pick_order = CaptainCommunityPick.pick_order(final_community_picks)
+        if not pick_order then
             force_end_captain_event()
             return
         end
+        local picks = CaptainCommunityPick.assign_teams(pick_order)
+        special.stats.communityPickInfo = { votes = final_community_picks, pick_order = pick_order }
         for i, team in ipairs(picks) do
             local force_name = i == 1 and 'north' or 'south'
             for _, player in ipairs(team) do
@@ -1528,11 +1530,13 @@ local function on_gui_click(event)
         if not special.pickingPhase then
             if check_if_enough_playtime_to_play(player) then
                 insert_player_by_playtime(player.name)
-                -- make players that don't have this player in their pick order already re-confirm their pick order
-                for player_name, _ in pairs(special.communityPicksConfirmed) do
-                    local pick_order = special.communityPickOrder[player_name]
-                    if not table_contains(pick_order, player.name) then
-                        special.communityPicksConfirmed[player_name] = nil
+                if not special.initialPickingPhaseStarted then
+                    -- make players that don't have this player in their pick order already re-confirm their pick order
+                    for player_name, _ in pairs(special.communityPicksConfirmed) do
+                        local pick_order = special.communityPickOrder[player_name]
+                        if not table_contains(pick_order, player.name) then
+                            special.communityPicksConfirmed[player_name] = nil
+                        end
                     end
                 end
                 Public.update_all_captain_player_guis()
@@ -2946,7 +2950,7 @@ function Public.update_captain_referee_gui(player, frame)
             local b = scroll.add({
                 type = 'button',
                 name = 'captain_force_captains_ready',
-                caption = 'Force all captains to be ready',
+                caption = 'Force both teams to be ready',
                 style = 'red_button',
             })
         end
