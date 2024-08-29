@@ -13,6 +13,11 @@ local function add_changelog(player, element)
 		table.insert(changelog_change, who)
 	end
 	
+	add_entry("2024-08-29", "cliff_build", "Add message to logging to differentiate community-picks from captain")
+	add_entry("2024-08-29", "cliff_build", "Community pick fixes/logging")
+	add_entry("2024-08-29", "cliff_build", "captain community pick: ignore where people place themselves in the list")
+	add_entry("2024-08-29", "cliff_build", "community pick: default to no captains, allow ref to decide")
+	add_entry("2024-08-29", "cliff_build", "Fix bug with send-science permission")
 	add_entry("2024-08-22", "Ragnarok77", "Add back missing text for automatic captain poll that got removed ")
 	add_entry("2024-08-21", "cliff_build", "Community pick captain improvements")
 	add_entry("2024-08-21", "cliff_build", "afk_kick: only kick once game starts")
