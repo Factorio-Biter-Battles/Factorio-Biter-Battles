@@ -584,6 +584,19 @@ local function is_player_a_captain(player)
     return special.captainList[1] == player or special.captainList[2] == player
 end
 
+---@param player string
+---@return boolean
+local function player_has_captain_authority(player)
+    local special = global.special_games_variables.captain_mode
+    local force_name = global.chosen_team[player]
+    if force_name ~= 'north' and force_name ~= 'south' then
+        return false
+    end
+    return special.captainList[1] == player
+        or special.captainList[2] == player
+        or special.viceCaptains[force_name][player]
+end
+
 local function generate_captain_mode(refereeName, autoTrust, captainKick, specialEnabled)
     if Functions.get_ticks_since_game_start() > 0 then
         game.print(
@@ -599,6 +612,8 @@ local function generate_captain_mode(refereeName, autoTrust, captainKick, specia
     local special = {
         ---@type string[]
         captainList = {},
+        ---@type table<string, table<string, boolean>>
+        viceCaptains = { north = {}, south = {} },
         ---@type table<string, {stop_tick: integer, players: table<LuaPlayer, string>}>
         captainWillingness = {},
         refereeName = refereeName,
@@ -1414,7 +1429,7 @@ local cpt_ui_visibility = {
     captain_manager_gui = function(player)
         -- only to captains
         local special = global.special_games_variables.captain_mode
-        return global.chosen_team[player.name] and is_player_a_captain(player.name)
+        return global.chosen_team[player.name] and player_has_captain_authority(player.name)
     end,
     captain_organization_gui = function(player)
         -- only to picked players
@@ -1810,6 +1825,26 @@ local function on_gui_click(event)
                 player.print(playerNameUpdateText .. ' was not found in throw trustlist !', Color.red)
             end
             Public.update_all_captain_player_guis()
+        end
+    elseif name == 'captain_add_vice_captain' then
+        if is_player_a_captain(player.name) then
+            local frame = Public.get_active_tournament_frame(player, 'captain_manager_gui')
+            local playerNameUpdateText =
+                get_dropdown_value(frame.captain_manager_vice_captain_table.captain_add_vice_captain_playerlist)
+            if playerNameUpdateText and playerNameUpdateText ~= '' and playerNameUpdateText ~= 'Select Player' then
+                special.viceCaptains[player.force.name][playerNameUpdateText] = true
+                Public.update_all_captain_player_guis()
+            end
+        end
+    elseif name == 'captain_remove_vice_captain' then
+        if is_player_a_captain(player.name) then
+            local frame = Public.get_active_tournament_frame(player, 'captain_manager_gui')
+            local playerNameUpdateText =
+                get_dropdown_value(frame.captain_manager_vice_captain_table.captain_remove_vice_captain_playerlist)
+            if playerNameUpdateText and playerNameUpdateText ~= '' and playerNameUpdateText ~= 'Select Player' then
+                special.viceCaptains[player.force.name][playerNameUpdateText] = nil
+                Public.update_all_captain_player_guis()
+            end
         end
     elseif name == 'captain_eject_player' then
         local frame = Public.get_active_tournament_frame(player, 'captain_manager_gui')
@@ -2430,6 +2465,23 @@ function Public.draw_captain_manager_gui(player, main_frame)
     })
     replace_t.add({ name = 'captain_replace_captain_playerlist', type = 'drop-down', width = 140 })
 
+    local vice_captain_t =
+        main_frame.add({ type = 'table', name = 'captain_manager_vice_captain_table', column_count = 2 })
+    vice_captain_t.add({
+        type = 'button',
+        name = 'captain_add_vice_captain',
+        caption = 'Add Vice-Captain',
+        tooltip = 'Add a player as a Vice-Captain',
+    })
+    vice_captain_t.add({ name = 'captain_add_vice_captain_playerlist', type = 'drop-down', width = 140 })
+    vice_captain_t.add({
+        type = 'button',
+        name = 'captain_remove_vice_captain',
+        caption = 'Remove Vice-Captain',
+        tooltip = 'Remove a player from the Vice-Captains',
+    })
+    vice_captain_t.add({ name = 'captain_remove_vice_captain_playerlist', type = 'drop-down', width = 140 })
+
     main_frame.add({ type = 'button', name = 'captain_is_ready' })
     main_frame.add({
         type = 'label',
@@ -2820,6 +2872,8 @@ function Public.update_captain_player_gui(player, frame)
             end
             if is_player_a_captain(player_name) then
                 insert(info.status, 'Captain')
+            elseif player_has_captain_authority(player_name) then
+                insert(info.status, 'Vice Captain')
             end
             if player and not player.connected then
                 insert(info.status, 'Disconnected')
@@ -3113,12 +3167,39 @@ function Public.update_captain_manager_gui(player, frame)
     end
     local special = global.special_games_variables.captain_mode
     local force_name = global.chosen_team[player.name]
+    local player_name = player.name
     local button = nil
     frame.captain_is_ready.visible = false
     if special.prepaPhase and not table_contains(special.listTeamReadyToPlay, force_name) then
         frame.captain_is_ready.visible = true
         frame.captain_is_ready.caption = 'Team is Ready!'
         frame.captain_is_ready.style = 'green_button'
+    end
+    local is_captain = is_player_a_captain(player.name)
+    frame.captain_manager_replace_captain_table.visible = is_captain
+    frame.captain_manager_vice_captain_table.visible = is_captain
+    if is_captain then
+        local possible_vice_captains = {}
+        local current_vice_captains = {}
+        for name, force in pairs(global.chosen_team) do
+            if special.viceCaptains[force_name][name] then
+                insert(current_vice_captains, name)
+            elseif force == force_name and name ~= player_name then
+                insert(possible_vice_captains, name)
+            end
+        end
+        sort(possible_vice_captains)
+        sort(current_vice_captains)
+        insert(possible_vice_captains, 1, 'Select Player')
+        insert(current_vice_captains, 1, 'Select Player')
+        update_dropdown(
+            frame.captain_manager_vice_captain_table.captain_add_vice_captain_playerlist,
+            possible_vice_captains
+        )
+        update_dropdown(
+            frame.captain_manager_vice_captain_table.captain_remove_vice_captain_playerlist,
+            current_vice_captains
+        )
     end
     local throwScienceSetting = special.northEnabledScienceThrow
     if special.captainList[2] == player.name then
