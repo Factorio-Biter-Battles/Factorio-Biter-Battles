@@ -13,6 +13,7 @@ local function add_changelog(player, element)
 		table.insert(changelog_change, who)
 	end
 	
+	add_entry("2024-09-02", "cliff_build", "Add vice-captain support")
 	add_entry("2024-08-29", "cliff_build", "Add message to logging to differentiate community-picks from captain")
 	add_entry("2024-08-29", "cliff_build", "Community pick fixes/logging")
 	add_entry("2024-08-29", "cliff_build", "captain community pick: ignore where people place themselves in the list")
