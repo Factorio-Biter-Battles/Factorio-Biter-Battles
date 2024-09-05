@@ -13,7 +13,7 @@ local Public = {
             type = 'textfield',
             numeric = true,
             allow_negative = true,
-            width = 40,
+            width = 80,
             text = 0,
         },
         [3] = { name = 'l2', type = 'label', caption = 'fraction of excess threat, send to enemy' },
@@ -26,27 +26,28 @@ local Public = {
             width = 40,
             text = 0.5,
         },
-        [5] = { name = 'l3', type = 'label', caption = 'hide message' },
-        [6] = { name = 'hide message', type = 'checkbox', state = false },
     },
     button = { name = 'apply', type = 'button', caption = 'Apply' },
     generate = function(config, player)
         local variables = {
-            threat_threshold = config['threat_threshold'].text,
-            excess_threat_send_fraction = config['excess_threat_send_fraction'].text,
+            threat_threshold = tonumber(config['threat_threshold'].text),
+            excess_threat_send_fraction = tonumber(config['excess_threat_send_fraction'].text),
         }
 
+        if not (variables.threat_threshold and variables.excess_threat_send_fraction) then
+            game.print('invalid configuration, only numbers allowed', color_presets.warning)
+            return
+        end
         global.active_special_games['threat_farm_threshold'] = true
         global.special_games_variables['threat_farm_threshold'] = variables
-        if not config['hide message'].state then
-            game.print(
-                'Threat threshold enabled! Excess threat below '
-                    .. variables.threat_threshold
-                    .. ' will be added to opponent with a factor of '
-                    .. variables.excess_threat_send_fraction,
-                color_presets.warning
-            )
-        end
+
+        game.print(
+            'Threat threshold enabled! Excess threat below '
+                .. variables.threat_threshold
+                .. ' will be added to opponent with a factor of '
+                .. variables.excess_threat_send_fraction,
+            color_presets.warning
+        )
     end,
 }
 return Public
