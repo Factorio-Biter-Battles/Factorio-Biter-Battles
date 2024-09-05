@@ -463,7 +463,7 @@ function Public.subtract_threat(entity)
                 enemy_force = 'south_biters'
             end
             global.bb_threat[enemy_force] = global.bb_threat[enemy_force]
-            + threat_below_threshold
+                + threat_below_threshold
                     * global.special_games_variables['threat_farm_threshold'].excess_threat_send_fraction
         else
             global.bb_threat[biter_not_boss_force] = global.bb_threat[biter_not_boss_force] - threat_value
