@@ -449,9 +449,20 @@ function Public.subtract_threat(entity)
         local health_buff_equivalent_revive = global.biter_health_factor[game.forces[biter_not_boss_force].index]
         factor = bb_config.health_multiplier_boss * health_buff_equivalent_revive
     end
-    global.bb_threat[biter_not_boss_force] = global.bb_threat[biter_not_boss_force]
-        - threat_values[entity.name] * factor
-    return true
+	if((global.active_special_games["threat_farm_threshold"])) then
+		local threat_value = threat_values[entity.name] * factor;
+		local threat_below_threshold = global.special_games_variables["threat_farm_threshold"] - (global.bb_threat[biter_not_boss_force] - threat_value)
+		local enemy_force
+		if(threat_below_threshold > 0) then
+			global.bb_threat[biter_not_boss_force] = global.special_games_variables["threat_farm_threshold"]
+			if biter_not_boss_force ==  "south_biters" then enemy_force = "north_biters" else enemy_force = "south_biters" end
+			global.bb_threat[enemy_force] = global.bb_threat[enemy_force] + threat_below_threshold * global.special_games_variables["threat_farm_send_fraction"]
+		else global.bb_threat[biter_not_boss_force] = global.bb_threat[biter_not_boss_force] - threat_value
+		end
+        return true
+	end
+	global.bb_threat[biter_not_boss_force] = global.bb_threat[biter_not_boss_force] - threat_values[entity.name] * factor
+	return true
 end
 
 return Public
