@@ -451,20 +451,19 @@ function Public.subtract_threat(entity)
     end
     if global.active_special_games['threat_farm_threshold'] then
         local threat_value = threat_values[entity.name] * factor
-        local threat_below_threshold = global.special_games_variables['threat_farm_threshold'].threat_threshold
+        local special_variables = global.special_games_variables['threat_farm_threshold']
+        local threat_below_threshold = special_variables.threat_threshold
             - (global.bb_threat[biter_not_boss_force] - threat_value)
         local enemy_force
         if threat_below_threshold > 0 then
-            global.bb_threat[biter_not_boss_force] =
-                global.special_games_variables['threat_farm_threshold'].threat_threshold
+            global.bb_threat[biter_not_boss_force] = special_variables.threat_threshold
             if biter_not_boss_force == 'south_biters' then
                 enemy_force = 'north_biters'
             else
                 enemy_force = 'south_biters'
             end
             global.bb_threat[enemy_force] = global.bb_threat[enemy_force]
-                + threat_below_threshold
-                    * global.special_games_variables['threat_farm_threshold'].excess_threat_send_fraction
+                + threat_below_threshold * special_variables.excess_threat_send_fraction
         else
             global.bb_threat[biter_not_boss_force] = global.bb_threat[biter_not_boss_force] - threat_value
         end
