@@ -1069,10 +1069,15 @@ function Public.spy_fish()
         if global.spy_fish_timeout[f[1]] - game.tick > 0 then
             local r = 96
             local surface = game.surfaces[global.bb_surface_name]
-            for _, player in pairs(game.forces[f[2]].connected_players) do
+            local entities = table.deep_copy(game.forces[f[2]].connected_players)
+            --reveal silos, if multi-silo special is active
+            if global.multi_silo then
+                table.add_all(entities, global.multi_silo[f[2]])
+            end
+            for _, entity in pairs(entities) do
                 game.forces[f[1]].chart(surface, {
-                    { player.position.x - r, player.position.y - r },
-                    { player.position.x + r, player.position.y + r },
+                    { entity.position.x - r, entity.position.y - r },
+                    { entity.position.x + r, entity.position.y + r },
                 })
             end
         else
