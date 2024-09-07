@@ -1073,20 +1073,15 @@ function Public.spy_fish()
         if global.multi_silo then
             for _, silo in pairs(global.multi_silo[f[1]]) do
                 if silo.valid then
-                    --reveal own silos
+                    --reveal own silos, will also reveal to spectator
                     game.forces[f[1]].chart(surface, {
-                        { silo.position.x - r, silo.position.y - r },
-                        { silo.position.x + r, silo.position.y + r },
-                    })
-                    --reveal silos to spectator
-                    game.forces.spectator.chart(surface, {
                         { silo.position.x - r, silo.position.y - r },
                         { silo.position.x + r, silo.position.y + r },
                     })
                 end
             end
             --add enemy silos to list to reveal later if fish is active
-            table.insert(entities, global.multi_silo[f[2]])
+            table.add_all(entities, global.multi_silo[f[2]])
         end
 
         if global.spy_fish_timeout[f[1]] - game.tick > 0 then
