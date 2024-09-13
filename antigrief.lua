@@ -10,6 +10,7 @@ local Color = require('utils.color_presets')
 local Server = require('utils.server')
 local Jail = require('utils.datastore.jail_data')
 local pool = require('maps.biter_battles_v2.pool')
+local Functions = require('maps.biter_battles_v2.functions')
 
 local Public = {}
 local match = string.match
@@ -187,6 +188,26 @@ local function do_action(player, prefix, msg, ban_msg, kill)
     end
 end
 
+---returns missing trust warning and chat color
+---@param player LuaPlayer can be null
+---@return string, {r: integer, g: integer, b: integer}
+local function get_not_trusted_warning(player)
+    local color = { r = 0.22, g = 0.99, b = 0.99 }
+    local generic_part = 'You need to be trusted to do that! Ask an admin for temporary trust or play for '
+        .. math.floor(this.required_playtime / (60 * 60 * 60))
+        .. 'h. '
+    if not player or not player.online_time then
+        return generic_part, color
+    end
+    local tracker = session.get_session_table()
+    local playtime = player.online_time
+    if tracker[player.name] then
+        playtime = player.online_time + tracker[player.name]
+    end
+    return generic_part .. 'Time remaining: ' .. Functions.format_ticks_as_time(this.required_playtime - playtime),
+        color
+end
+
 local function on_marked_for_deconstruction(event)
     if not this.enabled then
         return
@@ -210,7 +231,7 @@ local function on_marked_for_deconstruction(event)
     end
     if playtime < this.required_playtime then
         event.entity.cancel_deconstruction(game.get_player(event.player_index).force.name)
-        player.print('You have not grown accustomed to this technology yet.', { r = 0.22, g = 0.99, b = 0.99 })
+        player.print(get_not_trusted_warning(player))
     end
 end
 
@@ -310,7 +331,7 @@ local function on_built_entity(event)
 
         if playtime < this.required_playtime then
             event.created_entity.destroy()
-            player.print('You have not grown accustomed to this technology yet.', { r = 0.22, g = 0.99, b = 0.99 })
+            player.print(get_not_trusted_warning(player))
         end
     end
 end
