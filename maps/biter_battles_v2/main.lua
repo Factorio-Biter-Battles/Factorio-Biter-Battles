@@ -298,7 +298,7 @@ local function on_console_command(event)
     end
     local player = game.get_player(event.player_index)
     local param = event.parameters
-    if cmd == 'ignore' then
+    if cmd == 'ignore' and player then
         -- verify in argument of command that there is no space, quote, semicolon, backtick, and that it's not just whitespace
         if param and not string.match(param, '[ \'";`]') and not param:match('^%s*$') then
             if not global.ignore_lists[player.name] then
@@ -316,7 +316,7 @@ local function on_console_command(event)
                 { r = 1, g = 0, b = 0 }
             )
         end
-    elseif cmd == 'unignore' then
+    elseif cmd == 'unignore' and player then
         -- verify in argument of command that there is no space, quote, semicolon, backtick, and that it's not just whitespace, and that the player was someone ignored
         if
             param
@@ -336,7 +336,7 @@ local function on_console_command(event)
                 { r = 1, g = 0, b = 0 }
             )
         end
-    elseif cmd == 'w' or cmd == 'whisper' then
+    elseif (cmd == 'w' or cmd == 'whisper') and player then
         -- split param into first word and rest of the message
         local to_player_name, rest_of_message = string.match(param, '^%s*(%S+)%s*(.*)')
         local to_player = game.get_player(to_player_name)
@@ -345,7 +345,7 @@ local function on_console_command(event)
             -- to_player_name is case insensitive, so use to_player.name instead
             global.reply_target[to_player.name] = player.name
         end
-    elseif cmd == 'r' or cmd == 'reply' then
+    elseif (cmd == 'r' or cmd == 'reply') and player then
         local to_player_name = global.reply_target[player.name]
         if to_player_name then
             global.reply_target[to_player_name] = player.name
@@ -354,7 +354,10 @@ local function on_console_command(event)
                 do_ping(player.name, to_player, player.name .. ' (whisper): ' .. param)
             end
         end
-    elseif cmd == 's' or cmd == 'shout' then
+    elseif cmd == 'c' or cmd == 'sc' then
+        local name = player and player.name or '(server)'
+        log('Command run by ' .. name .. ': ' .. cmd .. ' ' .. param)
+    elseif (cmd == 's' or cmd == 'shout') and player then
         chatmsg = '[shout] ' .. player.name .. ' (' .. player.force.name .. '): ' .. param
         possibly_do_pings(chatmsg, player.name, function(ping_player)
             return true
