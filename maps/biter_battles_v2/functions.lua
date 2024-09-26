@@ -339,8 +339,7 @@ end
 
 function Functions.is_biter_area(position, noise_Enabled)
     local bitera_area_distance = Config.bitera_area_distance * -1
-    local biter_area_angle = 0.45
-    local a = bitera_area_distance - (math_abs(position.x) * biter_area_angle)
+    local a = bitera_area_distance - (math_abs(position.x) * Config.biter_area_slope)
     if position.y - 70 > a then
         return false
     end
