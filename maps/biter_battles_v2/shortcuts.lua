@@ -81,7 +81,9 @@ local main_frame_actions = {
         if handle_spectator(player) then
             return
         end
-        if Captain_event.captain_is_player_prohibited_to_throw(player) then
+        if global.active_special_games.disable_sciences then
+            player.print('Disabled by special game', Color.red)
+        elseif Captain_event.captain_is_player_prohibited_to_throw(player) then
             player.print('You are not allowed to send science, ask your captain', Color.red)
         else
             Feeding.feed_biters_mixed_from_inventory(player, event.button)
