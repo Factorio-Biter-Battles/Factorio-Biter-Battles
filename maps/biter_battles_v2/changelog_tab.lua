@@ -13,6 +13,12 @@ local function add_changelog(player, element)
 		table.insert(changelog_change, who)
 	end
 	
+	add_entry("2024-09-28", "developer-8", "Fix send science when disabled")
+	add_entry("2024-09-26", "developer-8", "move biter area slope to config")
+	add_entry("2024-09-14", "Arktischer", "added a more specific warning for untrusted players")
+	add_entry("2024-09-14", "outstanding-factorio", "Create test-readme.md")
+	add_entry("2024-09-09", "outstanding-factorio", "Added instalation guide")
+	add_entry("2024-09-05", "Arktischer", "added threat farm special")
 	add_entry("2024-09-02", "cliff_build", "Add vice-captain support")
 	add_entry("2024-08-29", "cliff_build", "Add message to logging to differentiate community-picks from captain")
 	add_entry("2024-08-29", "cliff_build", "Community pick fixes/logging")
