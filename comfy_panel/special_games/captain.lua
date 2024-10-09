@@ -153,11 +153,11 @@ end
 
 local function clear_captain_rendering()
     if not global.special_games_variables.rendering then return end
-    for _, textId in pairs(global.special_games_variables.rendering) do
-        if rendering.is_valid(textId) then
-            rendering.destroy(textId)
+    for textId, render in pairs(global.special_games_variables.rendering) do
+        if rendering.is_valid(render) then
+            rendering.destroy(render)
         end
-        textId = nil
+        global.special_games_variables[textId] = nil
     end
 end
 
