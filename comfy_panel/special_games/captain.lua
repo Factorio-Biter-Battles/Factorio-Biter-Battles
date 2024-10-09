@@ -151,6 +151,16 @@ local function switch_team_of_player(playerName, playerForceName)
     add_to_trust(playerName)
 end
 
+local function clear_captain_rendering()
+    if not global.special_games_variables.rendering then return end
+    for _, textId in pairs(global.special_games_variables.rendering) do
+        if rendering.is_valid(textId) then
+            rendering.destroy(textId)
+        end
+        textId = nil
+    end
+end
+
 local function clear_gui_captain_mode()
     for _, player in pairs(game.players) do
         local gui = player.gui
@@ -193,7 +203,7 @@ local function force_end_captain_event()
     global.active_special_games.captain_mode = false
     global.bb_threat.north_biters = 0
     global.bb_threat.south_biters = 0
-    rendering.clear()
+    clear_captain_rendering()
     clear_gui_captain_mode()
     for _, pl in pairs(game.connected_players) do
         if pl.force.name ~= 'spectator' then
@@ -752,7 +762,7 @@ local function generate_captain_mode(refereeName, autoTrust, captainKick, specia
     if global.special_games_variables.rendering == nil then
         global.special_games_variables.rendering = {}
     end
-    rendering.clear()
+    clear_captain_rendering()
     render_text(
         'captainLineTen',
         "Special Captain's tournament mode enabled",
@@ -968,7 +978,7 @@ local function start_captain_event()
     global.bb_threat.north_biters = 0
     global.bb_threat.south_biters = 0
 
-    rendering.clear()
+    clear_captain_rendering()
     render_text(
         'captainLineSeventeen',
         "Special Captain's tournament mode enabled",
