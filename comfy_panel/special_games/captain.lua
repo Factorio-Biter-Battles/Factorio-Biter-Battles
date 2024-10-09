@@ -157,7 +157,7 @@ local function clear_captain_rendering()
         if rendering.is_valid(render) then
             rendering.destroy(render)
         end
-        global.special_games_variables[textId] = nil
+        global.special_games_variables.rendering[textId] = nil
     end
 end
 
