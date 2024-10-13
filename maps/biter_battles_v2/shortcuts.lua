@@ -72,13 +72,13 @@ end
 
 local main_frame_actions = {
     [main_frame_name .. '_send_fish'] = function(player, event)
-        if handle_spectator(player) then
+        if handle_spectator(player) or global.bb_game_won_by_team then
             return
         end
         Functions.spy_fish(player, event)
     end,
     [main_frame_name .. '_send_science'] = function(player, event)
-        if handle_spectator(player) then
+        if handle_spectator(player) or global.bb_game_won_by_team then
             return
         end
         if global.active_special_games.disable_sciences then
