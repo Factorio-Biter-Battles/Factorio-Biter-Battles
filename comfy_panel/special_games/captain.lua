@@ -152,7 +152,9 @@ local function switch_team_of_player(playerName, playerForceName)
 end
 
 local function clear_captain_rendering()
-    if not global.special_games_variables.rendering then return end
+    if not global.special_games_variables or not global.special_games_variables.rendering then
+        return
+    end
     for textId, render in pairs(global.special_games_variables.rendering) do
         if rendering.is_valid(render) then
             rendering.destroy(render)
