@@ -13,6 +13,8 @@ local function add_changelog(player, element)
 		table.insert(changelog_change, who)
 	end
 	
+	add_entry("2024-10-14", "direwolfclaw", "Fix captain text render")
+	add_entry("2024-10-13", "developer-8", "Fix send science after game over")
 	add_entry("2024-09-28", "developer-8", "Fix send science when disabled")
 	add_entry("2024-09-26", "developer-8", "move biter area slope to config")
 	add_entry("2024-09-14", "Arktischer", "added a more specific warning for untrusted players")
