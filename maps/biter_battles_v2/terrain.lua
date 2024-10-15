@@ -804,9 +804,10 @@ function Public.generate_spawn_goodies(surface)
 end
 ]]
 
----@param entity LuaEntity
----@param player LuaPlayer
-function Public.minable_wrecks(entity, player)
+---@param event defines.events.on_player_mined_entity
+function Public.minable_wrecks(event)
+    local entity = event.entity
+    local player = game.get_player(event.player_index)
     if not valid_wrecks[entity.name] then
         return
     end
@@ -824,7 +825,7 @@ function Public.minable_wrecks(entity, player)
         local amount = stack.count
         local name = stack.name
 
-        local inserted_count = player.insert({ name = name, count = amount })
+        local inserted_count = event.buffer.insert({ name = name, count = amount })
         if inserted_count ~= amount then
             local amount_to_spill = amount - inserted_count
             surface.spill_item_stack(entity.position, { name = name, count = amount_to_spill }, true)
