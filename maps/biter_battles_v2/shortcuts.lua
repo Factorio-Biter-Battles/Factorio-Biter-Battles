@@ -167,7 +167,7 @@ function Public.get_main_frame(player)
             style = 'frame_title',
             ignored_by_interaction = true,
         })
-        gui_style(title, { top_padding = 2, font = 'heading-3', font_color = { 165, 165, 165 } })
+        gui_style(title, { top_padding = 2, font = 'default-semibold', font_color = { 165, 165, 165 } })
 
         local widget =
             title_bar.add({ type = 'empty-widget', style = 'draggable_space', ignored_by_interaction = true })

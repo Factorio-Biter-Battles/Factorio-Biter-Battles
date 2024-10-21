@@ -206,7 +206,7 @@ local function show_endgame_gui(player)
         Gui.add_pusher(subheader)
 
         local label = subheader.add({ type = 'label', caption = 'MVPs' })
-        gui_style(label, { font = 'heading-3', font_color = { 165, 165, 165 }, left_margin = 4 })
+        gui_style(label, { font = 'default-semibold', font_color = { 165, 165, 165 }, left_margin = 4 })
 
         Gui.add_pusher(subheader)
         local icon =

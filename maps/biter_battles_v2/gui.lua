@@ -373,14 +373,14 @@ function Public.create_main_gui(player)
         gui_style(subheader, { horizontally_squashable = true, maximal_height = 40 })
 
         local label = subheader.add({ type = 'label', name = 'clock' })
-        gui_style(label, { font = 'heading-3', font_color = { 225, 225, 225 }, left_margin = 4 })
+        gui_style(label, { font = 'default-semibold', font_color = { 225, 225, 225 }, left_margin = 4 })
 
         Gui.add_pusher(subheader)
         local line = subheader.add({ type = 'line', direction = 'vertical' })
         Gui.add_pusher(subheader)
 
         local label = subheader.add({ type = 'label', name = 'game_speed' })
-        gui_style(label, { font = 'heading-3', font_color = { 225, 225, 225 }, right_margin = 4 })
+        gui_style(label, { font = 'default-semibold', font_color = { 225, 225, 225 }, right_margin = 4 })
     end
 
     -- == MAIN FRAME ================================================================

@@ -2296,7 +2296,7 @@ function Public.draw_captain_player_gui(player, main_frame)
             style = 'red_back_button',
             tooltip = 'Boo',
         })
-        gui_style(button, { natural_width = 240, height = 28, horizontal_align = 'center', font = 'heading-3' })
+        gui_style(button, { natural_width = 240, height = 28, horizontal_align = 'center', font = 'default-semibold' })
 
         button = join_table.add({
             type = 'button',
@@ -2305,7 +2305,7 @@ function Public.draw_captain_player_gui(player, main_frame)
             style = 'confirm_button',
             tooltip = 'Yay',
         })
-        gui_style(button, { natural_width = 200, height = 28, horizontal_align = 'left', font = 'heading-3' })
+        gui_style(button, { natural_width = 200, height = 28, horizontal_align = 'left', font = 'default-semibold' })
 
         button = join_table.add({
             type = 'button',
@@ -2314,7 +2314,7 @@ function Public.draw_captain_player_gui(player, main_frame)
             style = 'red_back_button',
             tooltip = 'The weight of responsibility is too great',
         })
-        gui_style(button, { natural_width = 240, height = 28, horizontal_align = 'center', font = 'heading-3' })
+        gui_style(button, { natural_width = 240, height = 28, horizontal_align = 'center', font = 'default-semibold' })
 
         button = join_table.add({
             type = 'button',
@@ -2323,7 +2323,7 @@ function Public.draw_captain_player_gui(player, main_frame)
             style = 'confirm_button',
             tooltip = 'The community needs you',
         })
-        gui_style(button, { natural_width = 200, height = 28, horizontal_align = 'left', font = 'heading-3' })
+        gui_style(button, { natural_width = 200, height = 28, horizontal_align = 'left', font = 'default-semibold' })
 
         Gui.add_pusher(flow)
     end
@@ -2408,7 +2408,7 @@ function Public.draw_captain_player_gui(player, main_frame)
             style = 'confirm_button',
             tooltip = 'Pick all players below before confirming, must be a player in the game as well',
         })
-        gui_style(button, { natural_width = 200, height = 28, horizontal_align = 'left', font = 'heading-3' })
+        gui_style(button, { natural_width = 200, height = 28, horizontal_align = 'left', font = 'default-semibold' })
 
         label.style.single_line = false
         local scroll = flow.add({
@@ -2569,7 +2569,7 @@ function Public.draw_captain_tournament_gui(player)
     gui_style(subheader, { horizontally_stretchable = true, horizontally_squashable = true, maximal_height = 40 })
 
     local label = subheader.add({ type = 'label', caption = 'Tournament Menu' })
-    gui_style(label, { font = 'heading-3', font_color = { 165, 165, 165 }, left_margin = 4 })
+    gui_style(label, { font = 'default-semibold', font_color = { 165, 165, 165 }, left_margin = 4 })
 
     -- == MAIN FRAME ================================================================
     local sp = inner_frame

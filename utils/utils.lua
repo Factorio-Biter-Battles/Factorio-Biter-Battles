@@ -178,7 +178,7 @@ Module.gui_themes = {
 Module.top_button_style = function()
     return {
         font_color = { 165, 165, 165 },
-        font = 'heading-3',
+        font = 'default-semibold',
         minimal_height = 36,
         maximal_height = 36,
         minimal_width = 40,
@@ -190,7 +190,7 @@ Module.left_frame_style = function()
     return {
         padding = 2,
         font_color = { 165, 165, 165 },
-        font = 'heading-3',
+        font = 'default-semibold',
         use_header_filler = false,
     }
 end
