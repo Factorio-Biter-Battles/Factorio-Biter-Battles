@@ -274,8 +274,7 @@ function Public.create_statistics_gui_button(player)
         tooltip = 'Show game status!',
     })
 
-    local frame =
-        summary.parent.add({ type = 'frame', name = 'bb_frame_statistics', style = 'subheader_frame' })
+    local frame = summary.parent.add({ type = 'frame', name = 'bb_frame_statistics', style = 'subheader_frame' })
     frame.location = { x = 1, y = 38 }
     gui_style(frame, { minimal_height = 36, maximal_height = 36 })
 
@@ -648,7 +647,8 @@ function Public.refresh_statistics(player)
             .. '%'
         frame[force_name .. '_evolution'].tooltip = get_evo_tooltip(force_name, false)
 
-        frame[force_name .. '_threat'].caption = threat_to_pretty_string(math_floor(storage.bb_threat[biter_force.name]))
+        frame[force_name .. '_threat'].caption =
+            threat_to_pretty_string(math_floor(storage.bb_threat[biter_force.name]))
         frame[force_name .. '_threat'].tooltip = get_threat_tooltip(force_name, false)
     end
 end

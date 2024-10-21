@@ -705,12 +705,10 @@ function Public.generate_additional_rocks(surface)
     local position = { x = -96 + storage.random_generator(0, 192), y = -40 - storage.random_generator(0, 96) }
     for _ = 1, storage.random_generator(6, 10) do
         local name = rocks[storage.random_generator(1, 5)]
-        local p = surface.find_non_colliding_position(
-            name,
-            { position.x + (-10 + storage.random_generator(0, 20)), position.y + (-10 + storage.random_generator(0, 20)) },
-            16,
-            1
-        )
+        local p = surface.find_non_colliding_position(name, {
+            position.x + (-10 + storage.random_generator(0, 20)),
+            position.y + (-10 + storage.random_generator(0, 20)),
+        }, 16, 1)
         if p and p.y < -16 then
             surface.create_entity({ name = name, position = p })
         end

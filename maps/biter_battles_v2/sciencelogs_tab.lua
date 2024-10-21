@@ -229,7 +229,8 @@ local function add_science_logs(player, element)
                         or (dropdown_evofilter.selected_index == 6 and (storage.science_logs_evo_jump_difference[i] >= 3))
                         or (dropdown_evofilter.selected_index == 7 and (storage.science_logs_evo_jump_difference[i] >= 2))
                         or (
-                            dropdown_evofilter.selected_index == 8 and (storage.science_logs_evo_jump_difference[i] >= 1)
+                            dropdown_evofilter.selected_index == 8
+                            and (storage.science_logs_evo_jump_difference[i] >= 1)
                         )
                     then
                         science_panel_table = science_scrollpanel.add({ type = 'table', column_count = 4 })

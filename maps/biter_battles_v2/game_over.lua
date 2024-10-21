@@ -602,8 +602,7 @@ local function draw_reroll_gui(player)
         return
     end
 
-    local frame =
-        Gui.add_top_element(player, { type = 'frame', name = 'reroll_frame', style = 'subheader_frame' })
+    local frame = Gui.add_top_element(player, { type = 'frame', name = 'reroll_frame', style = 'subheader_frame' })
     gui_style(frame, { minimal_height = 36, maximal_height = 36, padding = 0, vertical_align = 'center' })
 
     local f = frame.add({ type = 'flow', name = 'flow', direction = 'horizontal' })
@@ -682,8 +681,10 @@ local function draw_automatic_captain_poll_gui(player)
             f.add({ type = 'table', name = 'automatic_captain_table', column_count = 3, vertical_centering = true })
         gui_style(t, { top_margin = 2, left_margin = 8, right_margin = 8 })
 
-        local l =
-            t.add({ type = 'label', caption = { 'gui.automatic_captain_caption', storage.automatic_captain_time_left } })
+        local l = t.add({
+            type = 'label',
+            caption = { 'gui.automatic_captain_caption', storage.automatic_captain_time_left },
+        })
         gui_style(l, {
             font = 'heading-2',
             font_color = { r = 0.88, g = 0.55, b = 0.11 },
