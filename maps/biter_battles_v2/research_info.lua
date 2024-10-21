@@ -322,7 +322,7 @@ local function get_research_info(tech_id)
                 active = true
             else
                 type = 'Paused - '
-                progress = force.get_saved_technology_progress(all_technologies[tech_id])
+                progress = all_technologies[tech_id].saved_progress
             end
             if progress then
                 result = type .. string.format('%.0f%% complete', progress * 100)
