@@ -168,7 +168,7 @@ local function update_teamstats()
                 end
             end
         end
-        local science_logs = global['science_logs_total_' .. force_name]
+        local science_logs = storage['science_logs_total_' .. force_name]
         for idx, info in ipairs(tables.food_long_and_short) do
             local item = info.long_name
             local food_stat = force_stats.food[item]
