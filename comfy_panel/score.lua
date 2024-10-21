@@ -89,7 +89,7 @@ local biters = {
 local function get_total_biter_killcount(force)
     local count = 0
     for _, biter in pairs(biters) do
-        count = count + force.kill_count_statistics.get_input_count(biter)
+        count = count + force.get_kill_count_statistics(storage.bb_surface_name).get_input_count(biter)
     end
     return count
 end
