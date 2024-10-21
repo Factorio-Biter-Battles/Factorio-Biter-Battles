@@ -682,6 +682,11 @@ local function on_permission_group_edited(event)
     if not this.enabled then
         return
     end
+
+    if not event.player_index then
+      return
+    end
+
     local player = game.get_player(event.player_index)
     if not player or not player.valid then
         return
