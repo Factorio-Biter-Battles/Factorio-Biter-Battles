@@ -187,7 +187,7 @@ local function update_teamstats()
 
     local last_print = storage.last_teamstats_print_at or 0
     if tick - last_print > 5 * 60 * 60 then
-        log({ '', '[TEAMSTATS-PERIODIC]', game.table_to_json(team_stats) })
+        log({ '', '[TEAMSTATS-PERIODIC]', helpers.table_to_json(team_stats) })
         storage.last_teamstats_print_at = tick
     end
 end
