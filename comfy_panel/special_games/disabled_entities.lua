@@ -42,7 +42,7 @@ local function on_built_entity(event)
     if not storage.active_special_games['disabled_entities'] then
         return
     end
-    local entity = event.created_entity
+    local entity = event.entity
     if not entity then
         return
     end

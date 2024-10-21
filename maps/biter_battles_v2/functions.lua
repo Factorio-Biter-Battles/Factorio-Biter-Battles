@@ -359,11 +359,11 @@ function Functions.is_biter_area(position, noise_Enabled)
 end
 
 function Functions.no_turret_creep(event)
-    local entity = event.created_entity
+    local entity = event.entity
     if not entity.valid then
         return
     end
-    if not no_turret_blacklist[event.created_entity.type] then
+    if not no_turret_blacklist[event.entity.type] then
         return
     end
 
@@ -378,7 +378,7 @@ function Functions.no_turret_creep(event)
         return
     end
 
-    local surface = event.created_entity.surface
+    local surface = event.entity.surface
     local spawners = surface.find_entities_filtered({
         type = 'unit-spawner',
         area = {
@@ -421,7 +421,7 @@ function Functions.no_turret_creep(event)
 end
 
 function Functions.no_landfill_by_untrusted_user(event, trusted_table)
-    local entity = event.created_entity
+    local entity = event.entity
     if not entity.valid or not event.player_index or entity.name ~= 'tile-ghost' or entity.ghost_name ~= 'landfill' then
         return
     end
