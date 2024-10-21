@@ -61,7 +61,7 @@ function Public.comfy_panel_add_top_element(player)
     local button = Gui.add_top_element(player, {
         type = 'sprite-button',
         name = 'comfy_panel_top_button',
-        sprite = 'utility/favourite_server_icon',
+        sprite = 'utility/change_recipe',
         tooltip = { 'gui.comfy_panel_top_button' },
     })
 end
@@ -79,7 +79,7 @@ Gui.on_click('main_toggle_button_name', function(event)
     local mod_gui_inner_frame = Gui.get_top_element(player, 'main_toggle_button_name').parent
 
     local default = button.sprite == 'utility/preset'
-    button.sprite = default and 'utility/expand_dots_white' or 'utility/preset'
+    button.sprite = default and 'utility/expand_dots' or 'utility/preset'
     button.tooltip = default and 'Click to show top buttons!' or 'Click to hide top buttons!'
 
     for _, ele in pairs(mod_gui_inner_frame.children) do

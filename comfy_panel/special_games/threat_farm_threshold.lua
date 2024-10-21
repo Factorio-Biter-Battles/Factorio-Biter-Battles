@@ -38,8 +38,8 @@ local Public = {
             game.print('invalid configuration, only numbers allowed', color_presets.warning)
             return
         end
-        global.active_special_games['threat_farm_threshold'] = true
-        global.special_games_variables['threat_farm_threshold'] = variables
+        storage.active_special_games['threat_farm_threshold'] = true
+        storage.special_games_variables['threat_farm_threshold'] = variables
 
         game.print(
             'Threat threshold enabled! Excess threat below '

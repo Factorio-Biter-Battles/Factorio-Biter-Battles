@@ -290,7 +290,7 @@ local function redraw_poll_viewer_content(data)
         gui_style(label, {
             single_line = false,
             minimal_height = 24,
-            font = 'heading-3',
+            font = 'default-semibold',
             font_color = { r = 0.95, g = 0.95, b = 0.95 },
             --top_padding = 2,
             left_padding = 4,
@@ -344,7 +344,7 @@ local function draw_main_frame(player)
     local inner_frame = flow.add({
         type = 'frame',
         name = 'inner_frame',
-        style = 'window_content_frame_packed',
+        style = 'inside_shallow_frame_packed',
         direction = 'vertical',
     })
 
@@ -353,14 +353,14 @@ local function draw_main_frame(player)
     gui_style(subheader, { horizontally_stretchable = true, horizontally_squashable = true, maximal_height = 40 })
 
     local label = subheader.add({ type = 'label', caption = 'Polls' })
-    gui_style(label, { font = 'heading-3', font_color = { 165, 165, 165 }, left_margin = 4 })
+    gui_style(label, { font = 'default-semibold', font_color = { 165, 165, 165 }, left_margin = 4 })
 
     Gui.add_pusher(subheader)
 
     subheader.add({
         type = 'sprite-button',
         name = main_button_name,
-        sprite = 'utility/close_white',
+        sprite = 'utility/close',
         clicked_sprite = 'utility/close_black',
         style = 'close_button',
         tooltip = { 'gui.close' },
@@ -628,7 +628,7 @@ local function draw_create_poll_frame(player, previous_data)
     local inner_frame = flow.add({
         type = 'frame',
         name = 'inner_frame',
-        style = 'window_content_frame_packed',
+        style = 'inside_shallow_frame_packed',
         direction = 'vertical',
     })
 
@@ -637,7 +637,7 @@ local function draw_create_poll_frame(player, previous_data)
     gui_style(subheader, { horizontally_stretchable = true, horizontally_squashable = true, maximal_height = 40 })
 
     local label = subheader.add({ type = 'label', caption = title_text })
-    gui_style(label, { font = 'heading-3', font_color = { 165, 165, 165 }, left_margin = 4 })
+    gui_style(label, { font = 'default-semibold', font_color = { 165, 165, 165 }, left_margin = 4 })
 
     -- == MAIN FRAME ================================================================
     local scroll_pane = inner_frame.add({

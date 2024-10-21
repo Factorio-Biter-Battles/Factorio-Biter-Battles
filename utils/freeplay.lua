@@ -17,7 +17,7 @@ end)
 
 local function is_game_modded()
     local i = 0
-    for k, _ in pairs(game.active_mods) do
+    for k, _ in pairs(script.active_mods) do
         i = i + 1
         if i > 1 then
             return true

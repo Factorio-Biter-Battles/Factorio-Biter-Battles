@@ -635,13 +635,11 @@ local function on_init()
     local branch_version = '0.18.35'
     local sub = string.sub
     local is_branch_18 = sub(branch_version, 3, 4)
-    local get_active_version = sub(game.active_mods.base, 3, 4)
+    local get_active_version = sub(script.active_mods.base, 3, 4)
     local default = game.permissions.get_group('Default')
 
-    game.forces.player.research_queue_enabled = true
-
     is_branch_18 = is_branch_18 .. sub(branch_version, 6, 7)
-    get_active_version = get_active_version .. sub(game.active_mods.base, 6, 7)
+    get_active_version = get_active_version .. sub(script.active_mods.base, 6, 7)
     if get_active_version >= is_branch_18 then
         default.set_allows_action(defines.input_action.flush_opened_entity_fluid, false)
         default.set_allows_action(defines.input_action.flush_opened_entity_specific_fluid, false)
@@ -684,6 +682,11 @@ local function on_permission_group_edited(event)
     if not this.enabled then
         return
     end
+
+    if not event.player_index then
+        return
+    end
+
     local player = game.get_player(event.player_index)
     if not player or not player.valid then
         return

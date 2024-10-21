@@ -36,7 +36,7 @@ require('maps.biter_battles_v2.commands')
 require('modules.spawners_contain_biters')
 
 local function on_player_joined_game(event)
-    local surface = game.surfaces[global.bb_surface_name]
+    local surface = game.surfaces[storage.bb_surface_name]
     local player = game.get_player(event.player_index)
     if not player then
         return
@@ -120,8 +120,8 @@ end
 
 local clear_pings_token = Token.register(function()
     local tick = game.tick
-    while #global.pings_to_remove > 0 do
-        local ping = global.pings_to_remove[1]
+    while #storage.pings_to_remove > 0 do
+        local ping = storage.pings_to_remove[1]
         if ping.tick <= tick then
             if ping.label.valid then
                 if #ping.label.parent.children == 1 then
@@ -131,7 +131,7 @@ local clear_pings_token = Token.register(function()
                     ping.label.destroy()
                 end
             end
-            table.remove(global.pings_to_remove, 1)
+            table.remove(storage.pings_to_remove, 1)
         else
             break
         end
@@ -142,7 +142,7 @@ end)
 ---@param to_player_name string
 ---@return boolean
 local function ignore_message(from_player_name, to_player_name)
-    local ignore_list = global.ignore_lists[to_player_name]
+    local ignore_list = storage.ignore_lists[to_player_name]
     return ignore_list and ignore_list[from_player_name]
 end
 
@@ -181,8 +181,8 @@ function do_ping(from_player_name, to_player, message)
         line.style.left_margin = -12
         line.style.top_margin = -5
 
-        if global.ping_gui_locations[to_player.name] then
-            local saved_location = global.ping_gui_locations[to_player.name]
+        if storage.ping_gui_locations[to_player.name] then
+            local saved_location = storage.ping_gui_locations[to_player.name]
             saved_location.x = math.min(saved_location.x, to_player.display_resolution.width - 200 * uis)
             saved_location.y = math.min(saved_location.y, to_player.display_resolution.height - 100 * uis)
             ping_header.location = saved_location
@@ -206,7 +206,7 @@ function do_ping(from_player_name, to_player, message)
     label.style.font = 'default-large-semibold'
 
     local remove_delay = 600
-    table.insert(global.pings_to_remove, { player = to_player, label = label, tick = game.tick + remove_delay })
+    table.insert(storage.pings_to_remove, { player = to_player, label = label, tick = game.tick + remove_delay })
     Task.set_timeout_in_ticks(remove_delay, clear_pings_token)
 end
 
@@ -220,7 +220,7 @@ local function on_gui_location_changed(event)
         if not player then
             return
         end
-        global.ping_gui_locations[player.name] = element.location
+        storage.ping_gui_locations[player.name] = element.location
 
         player.gui.screen['ping_messages'].location =
             { x = element.location.x, y = element.location.y + 42 * player.display_scale }
@@ -267,7 +267,7 @@ local function on_console_chat(event)
         Functions.print_message_to_players(game.forces.spectator.players, player_name, msg, color, do_ping)
     end
 
-    if global.tournament_mode then
+    if storage.tournament_mode then
         return
     end
 
@@ -301,11 +301,11 @@ local function on_console_command(event)
     if cmd == 'ignore' then
         -- verify in argument of command that there is no space, quote, semicolon, backtick, and that it's not just whitespace
         if param and not string.match(param, '[ \'";`]') and not param:match('^%s*$') then
-            if not global.ignore_lists[player.name] then
-                global.ignore_lists[player.name] = {}
+            if not storage.ignore_lists[player.name] then
+                storage.ignore_lists[player.name] = {}
             end
-            if not global.ignore_lists[player.name][param] then
-                global.ignore_lists[player.name][param] = true
+            if not storage.ignore_lists[player.name][param] then
+                storage.ignore_lists[player.name][param] = true
                 player.print('You have ignored ' .. param, { r = 0, g = 1, b = 1 })
             else
                 player.print('You are already ignoring ' .. param, { r = 0, g = 1, b = 1 })
@@ -322,10 +322,10 @@ local function on_console_command(event)
             param
             and not string.match(param, '[ \'";`]')
             and not param:match('^%s*$')
-            and global.ignore_lists[player.name]
+            and storage.ignore_lists[player.name]
         then
-            if global.ignore_lists[player.name][param] then
-                global.ignore_lists[player.name][param] = nil
+            if storage.ignore_lists[player.name][param] then
+                storage.ignore_lists[player.name][param] = nil
                 player.print('You have unignored ' .. param, { r = 0, g = 1, b = 1 })
             else
                 player.print('You are not currently ignoring ' .. param, { r = 0, g = 1, b = 1 })
@@ -343,12 +343,12 @@ local function on_console_command(event)
         if to_player then
             do_ping(player.name, to_player, player.name .. ' (whisper): ' .. rest_of_message)
             -- to_player_name is case insensitive, so use to_player.name instead
-            global.reply_target[to_player.name] = player.name
+            storage.reply_target[to_player.name] = player.name
         end
     elseif cmd == 'r' or cmd == 'reply' then
-        local to_player_name = global.reply_target[player.name]
+        local to_player_name = storage.reply_target[player.name]
         if to_player_name then
-            global.reply_target[to_player_name] = player.name
+            storage.reply_target[to_player_name] = player.name
             local to_player = game.get_player(to_player_name)
             if to_player then
                 do_ping(player.name, to_player, player.name .. ' (whisper): ' .. param)
@@ -478,14 +478,14 @@ local function on_tick()
     local tick = game.tick
 
     if tick % 60 == 0 then
-        global.bb_threat['north_biters'] = global.bb_threat['north_biters'] + global.bb_threat_income['north_biters']
-        global.bb_threat['south_biters'] = global.bb_threat['south_biters'] + global.bb_threat_income['south_biters']
+        storage.bb_threat['north_biters'] = storage.bb_threat['north_biters'] + storage.bb_threat_income['north_biters']
+        storage.bb_threat['south_biters'] = storage.bb_threat['south_biters'] + storage.bb_threat_income['south_biters']
     end
 
     if (tick + 11) % 300 == 0 then
         Gui.spy_fish()
 
-        if global.bb_game_won_by_team then
+        if storage.bb_game_won_by_team then
             Game_over.reveal_map()
             Game_over.server_restart()
         end
@@ -556,7 +556,7 @@ local function on_chunk_generated(event)
     end
 
     -- Necessary check to ignore nauvis surface.
-    if surface.name ~= global.bb_surface_name then
+    if surface.name ~= storage.bb_surface_name then
         return
     end
 
@@ -597,7 +597,7 @@ local function on_chunk_generated(event)
     end
 
     -- add decorations only after the south part of the island is generated
-    if event.position.y == 0 and event.position.x == 1 and global.bb_settings['new_year_island'] then
+    if event.position.y == 0 and event.position.x == 1 and storage.bb_settings['new_year_island'] then
         Terrain.add_new_year_island_decorations(surface)
     end
 end

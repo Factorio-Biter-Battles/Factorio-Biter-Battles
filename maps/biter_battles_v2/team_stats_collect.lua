@@ -108,29 +108,29 @@ local health_factor_map = {
 }
 
 local function update_teamstats()
-    local team_stats = global.team_stats
+    local team_stats = storage.team_stats
     local tick = functions.get_ticks_since_game_start()
     if team_stats.won_by_team then
         return
     end
-    team_stats.won_by_team = global.bb_game_won_by_team
+    team_stats.won_by_team = storage.bb_game_won_by_team
     team_stats.difficulty = difficulty_vote.short_difficulty_name()
-    team_stats.difficulty_value = global.difficulty_vote_value
+    team_stats.difficulty_value = storage.difficulty_vote_value
     if tick == 0 then
         return
     end
     local prev_ticks = team_stats.ticks or 0
     team_stats.ticks = tick
     local total_players = { north = 0, south = 0 }
-    for _, force_name in pairs(global.chosen_team) do
+    for _, force_name in pairs(storage.chosen_team) do
         total_players[force_name] = (total_players[force_name] or 0) + 1
     end
     for _, force_name in ipairs({ 'north', 'south' }) do
         local force = game.forces[force_name]
         local biter_force_name = force_name .. '_biters'
         local force_stats = team_stats.forces[force_name]
-        local threat = global.bb_threat[biter_force_name]
-        force_stats.final_evo = global.bb_evolution[biter_force_name]
+        local threat = storage.bb_threat[biter_force_name]
+        force_stats.final_evo = storage.bb_evolution[biter_force_name]
         force_stats.peak_threat = (force_stats.peak_threat and math.max(threat, force_stats.peak_threat) or threat)
         force_stats.lowest_threat = (
             force_stats.lowest_threat and math.min(threat, force_stats.lowest_threat) or threat
@@ -185,10 +185,10 @@ local function update_teamstats()
         end
     end
 
-    local last_print = global.last_teamstats_print_at or 0
+    local last_print = storage.last_teamstats_print_at or 0
     if tick - last_print > 5 * 60 * 60 then
         log({ '', '[TEAMSTATS-PERIODIC]', game.table_to_json(team_stats) })
-        global.last_teamstats_print_at = tick
+        storage.last_teamstats_print_at = tick
     end
 end
 
@@ -212,9 +212,9 @@ end
 
 ---@return TeamStats
 function TeamStatsCollect.compute_stats()
-    if not global.team_stats_use_fake_data then
+    if not storage.team_stats_use_fake_data then
         update_teamstats()
-        return global.team_stats
+        return storage.team_stats
     end
 
     -- In the (very uncommon) case of team_stats_use_fake_data being set, we will generate fake data for
@@ -313,10 +313,10 @@ local function on_entity_died(event)
 
     -- North/South entities
     if entity_force_name == 'north' or entity_force_name == 'south' then
-        local item_stats = global.team_stats.forces[entity_force_name].items
+        local item_stats = storage.team_stats.forces[entity_force_name].items
         if not item_stats then
             item_stats = {}
-            global.team_stats.forces[entity_force_name].items = item_stats
+            storage.team_stats.forces[entity_force_name].items = item_stats
         end
         if entity.type == 'construction-robot' or entity.type == 'logistic-robot' then
             item_stats[entity.name] = item_stats[entity.name] or {}
@@ -341,9 +341,9 @@ local function on_entity_died(event)
         return
     end
 
-    health_factor = health_factor * global.biter_health_factor[game.forces[force_name .. '_biters'].index]
+    health_factor = health_factor * storage.biter_health_factor[game.forces[force_name .. '_biters'].index]
 
-    local force_stats = global.team_stats.forces[force_name]
+    local force_stats = storage.team_stats.forces[force_name]
     local damage_stats = force_stats.damage_types[event.damage_type.name]
     if not damage_stats then
         damage_stats = { kills = 0, damage = 0 }

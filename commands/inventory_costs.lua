@@ -8,8 +8,8 @@ local function inventory_cost(player)
     end
     local cost = 0
     local freebies
-    if global.special_games_variables['infinity_chest'] then
-        freebies = global.special_games_variables['infinity_chest'].freebies
+    if storage.special_games_variables['infinity_chest'] then
+        freebies = storage.special_games_variables['infinity_chest'].freebies
     end
     for name, count in pairs(inventory.get_contents()) do
         local item_cost

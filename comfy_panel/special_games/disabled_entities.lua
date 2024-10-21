@@ -2,8 +2,8 @@ local Event = require('utils.event')
 local Color = require('utils.color_presets')
 
 local function generate_disabled_entities(team, eq)
-    if not global.special_games_variables['disabled_entities'] then
-        global.special_games_variables['disabled_entities'] = { ['north'] = {}, ['south'] = {} }
+    if not storage.special_games_variables['disabled_entities'] then
+        storage.special_games_variables['disabled_entities'] = { ['north'] = {}, ['south'] = {} }
     end
     local tab = {}
     for k, v in pairs(eq) do
@@ -16,30 +16,30 @@ local function generate_disabled_entities(team, eq)
         end
     end
     if team == 'left' then
-        global.special_games_variables['disabled_entities']['north'] = tab
+        storage.special_games_variables['disabled_entities']['north'] = tab
         game.print(
             'Special game Disabled entities: ' .. table.concat(eq, ', ') .. ' for team North is being generated!',
             Color.warning
         )
     elseif team == 'right' then
-        global.special_games_variables['disabled_entities']['south'] = tab
+        storage.special_games_variables['disabled_entities']['south'] = tab
         game.print(
             'Special game Disabled entities: ' .. table.concat(eq, ', ') .. ' for team South is being generated!',
             Color.warning
         )
     else
-        global.special_games_variables['disabled_entities']['south'] = tab
-        global.special_games_variables['disabled_entities']['north'] = tab
+        storage.special_games_variables['disabled_entities']['south'] = tab
+        storage.special_games_variables['disabled_entities']['north'] = tab
         game.print(
             'Special game Disabled entities: ' .. table.concat(eq, ', ') .. ' for both teams is being generated!',
             Color.warning
         )
     end
-    global.active_special_games['disabled_entities'] = true
+    storage.active_special_games['disabled_entities'] = true
 end
 
 local function on_built_entity(event)
-    if not global.active_special_games['disabled_entities'] then
+    if not storage.active_special_games['disabled_entities'] then
         return
     end
     local entity = event.created_entity
@@ -52,7 +52,7 @@ local function on_built_entity(event)
 
     local player = game.get_player(event.player_index)
     local force = player.force
-    if global.special_games_variables['disabled_entities'][force.name][entity.name] then
+    if storage.special_games_variables['disabled_entities'][force.name][entity.name] then
         player.create_local_flying_text({ text = 'Disabled by special game', position = entity.position })
         if entity.name == 'straight-rail' or entity.name == 'curved-rail' then
             player.get_inventory(defines.inventory.character_main).insert({ name = 'rail', count = 1 })
@@ -62,7 +62,7 @@ local function on_built_entity(event)
         entity.destroy()
     elseif
         entity.name == 'entity-ghost'
-        and global.special_games_variables['disabled_entities'][force.name][entity.ghost_name]
+        and storage.special_games_variables['disabled_entities'][force.name][entity.ghost_name]
     then
         player.create_local_flying_text({ text = 'Disabled by special game', position = entity.position })
         entity.destroy()
@@ -70,7 +70,7 @@ local function on_built_entity(event)
 end
 
 local function on_marked_for_upgrade(event)
-    if not global.active_special_games['disabled_entities'] then
+    if not storage.active_special_games['disabled_entities'] then
         return
     end
     local entity = event.entity
@@ -82,14 +82,14 @@ local function on_marked_for_upgrade(event)
     end
     local player = game.get_player(event.player_index)
 
-    if global.special_games_variables['disabled_entities'][player.force.name][entity.get_upgrade_target().name] then
+    if storage.special_games_variables['disabled_entities'][player.force.name][entity.get_upgrade_target().name] then
         entity.cancel_upgrade(player.force)
         player.create_local_flying_text({ text = 'Disabled by special game', position = entity.position })
     end
 end
 
 local function on_pre_ghost_upgraded(event)
-    if not global.active_special_games['disabled_entities'] then
+    if not storage.active_special_games['disabled_entities'] then
         return
     end
     local entity = event.ghost
@@ -98,7 +98,7 @@ local function on_pre_ghost_upgraded(event)
     end
     local player = game.get_player(event.player_index)
 
-    if global.special_games_variables['disabled_entities'][player.force.name][event.target.name] then
+    if storage.special_games_variables['disabled_entities'][player.force.name][event.target.name] then
         local entityName = entity.ghost_name
         local entitySurface = entity.surface
         local entityPosition = entity.position

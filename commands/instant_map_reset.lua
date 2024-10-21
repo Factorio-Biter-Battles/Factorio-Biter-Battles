@@ -27,7 +27,7 @@ function Public.instant_map_reset(cmd)
     local next_map_seed
     local seed_source
     if param == 'current' then
-        next_map_seed = game.surfaces[global.bb_surface_name].map_gen_settings.seed
+        next_map_seed = game.surfaces[storage.bb_surface_name].map_gen_settings.seed
         seed_source = 'current'
     elseif param then
         next_map_seed = (tonumber(param) or -1)
@@ -37,13 +37,13 @@ function Public.instant_map_reset(cmd)
         end
         seed_source = 'specified'
     else
-        next_map_seed = global.random_generator(341, 4294967294)
+        next_map_seed = storage.random_generator(341, 4294967294)
         seed_source = 'autopicked'
     end
-    global.next_map_seed = next_map_seed
+    storage.next_map_seed = next_map_seed
     game.print('Restarting with ' .. seed_source .. ' map seed: ' .. next_map_seed, Color.warning)
     Server.to_discord_bold('[Map Reset] ' .. player.name .. ' has reset the map! seed: ' .. next_map_seed)
-    global.server_restart_timer = 0
+    storage.server_restart_timer = 0
     require('maps.biter_battles_v2.game_over').server_restart()
 end
 

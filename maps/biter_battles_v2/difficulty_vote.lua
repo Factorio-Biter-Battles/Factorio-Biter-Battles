@@ -12,25 +12,25 @@ local Public = {}
 local difficulties = Tables.difficulties
 
 function Public.difficulty_name()
-    local index = global.difficulty_vote_index
+    local index = storage.difficulty_vote_index
     if index then
-        return difficulties[global.difficulty_vote_index].name
+        return difficulties[storage.difficulty_vote_index].name
     else
-        return string.format('Custom (%d%%)', global.difficulty_vote_value * 100)
+        return string.format('Custom (%d%%)', storage.difficulty_vote_value * 100)
     end
 end
 
 function Public.short_difficulty_name()
-    local index = global.difficulty_vote_index
+    local index = storage.difficulty_vote_index
     if index then
-        return difficulties[global.difficulty_vote_index].short_name
+        return difficulties[storage.difficulty_vote_index].short_name
     else
         return 'Custom'
     end
 end
 
 function Public.difficulty_print_color()
-    return difficulties[global.difficulty_vote_index or 3].print_color
+    return difficulties[storage.difficulty_vote_index or 3].print_color
 end
 
 local function difficulty_gui(player)
@@ -39,7 +39,7 @@ local function difficulty_gui(player)
         return
     end
     b.style.font_color = Public.difficulty_print_color()
-    local value = math.floor(global.difficulty_vote_value * 100)
+    local value = math.floor(storage.difficulty_vote_value * 100)
     local name = Public.difficulty_name()
     local str = table.concat({ 'Global map difficulty is ', name, '. Mutagen has ', value, '% effectiveness.' })
     b.caption = name
@@ -60,7 +60,7 @@ local function add_difficulty_gui_top_button(player)
 end
 
 local function is_captain_enabled()
-    return global.special_games_variables['captain_mode'] ~= nil
+    return storage.special_games_variables['captain_mode'] ~= nil
 end
 
 local function isStringInTable(tab, str)
@@ -73,7 +73,7 @@ local function isStringInTable(tab, str)
 end
 
 local function is_vote_allowed_in_captain(playerName)
-    local special = global.special_games_variables['captain_mode']
+    local special = storage.special_games_variables['captain_mode']
     return special
         and special['prepaPhase']
         and (isStringInTable(special['listPlayers'], playerName) or isStringInTable(special['captainList'], playerName))
@@ -84,19 +84,19 @@ local function poll_difficulty(player)
         player.gui.screen['difficulty_poll'].destroy()
         return
     end
-    if global.bb_settings.only_admins_vote or global.tournament_mode then
-        if global.active_special_games['captain_mode'] then
-            if global.bb_settings.only_admins_vote and not player.admin then
+    if storage.bb_settings.only_admins_vote or storage.tournament_mode then
+        if storage.active_special_games['captain_mode'] then
+            if storage.bb_settings.only_admins_vote and not player.admin then
                 return
             end
             if
                 is_captain_enabled()
-                and not global.bb_settings.only_admins_vote
+                and not storage.bb_settings.only_admins_vote
                 and not is_vote_allowed_in_captain(player.name)
             then
                 return
             end
-            if not is_captain_enabled() and player.spectator and not global.bb_settings.only_admins_vote then
+            if not is_captain_enabled() and player.spectator and not storage.bb_settings.only_admins_vote then
                 return
             end
         else
@@ -107,12 +107,12 @@ local function poll_difficulty(player)
     end
 
     local tick = Functions.get_ticks_since_game_start()
-    if global.active_special_games['captain_mode'] then
+    if storage.active_special_games['captain_mode'] then
         tick = game.ticks_played
     end
-    if tick >= global.difficulty_votes_timeout then
+    if tick >= storage.difficulty_votes_timeout then
         if player.online_time ~= 0 then
-            local t = math.abs(math.floor((global.difficulty_votes_timeout - tick) / 3600))
+            local t = math.abs(math.floor((storage.difficulty_votes_timeout - tick) / 3600))
             local str = 'Votes have closed ' .. t
             str = str .. ' minute'
             if t > 1 then
@@ -130,14 +130,14 @@ local function poll_difficulty(player)
 
     local time_left = frame.add({
         type = 'label',
-        caption = math.floor((global.difficulty_votes_timeout - tick) / 3600) .. ' minutes left.',
+        caption = math.floor((storage.difficulty_votes_timeout - tick) / 3600) .. ' minutes left.',
     })
     time_left.style.font = 'heading-2'
     local separator = frame.add({ type = 'line', direction = 'horizontal' })
     separator.style.bottom_margin = 6
 
     local vote_amounts = {}
-    for k, v in pairs(global.difficulty_player_votes) do
+    for k, v in pairs(storage.difficulty_player_votes) do
         vote_amounts[v] = (vote_amounts[v] or 0) + 1
     end
 
@@ -155,7 +155,7 @@ local function set_difficulty()
     local vote_count = 0
     local c = 0
     local v = 0
-    for _, d in pairs(global.difficulty_player_votes) do
+    for _, d in pairs(storage.difficulty_player_votes) do
         c = c + 1
         a[c] = d
         vote_count = vote_count + 1
@@ -166,29 +166,29 @@ local function set_difficulty()
     v = math.floor(vote_count / 2) + 1
     table.sort(a)
     local new_index = a[v]
-    if global.difficulty_vote_index ~= new_index then
+    if storage.difficulty_vote_index ~= new_index then
         local message =
             table.concat({ '>> Map difficulty has changed to ', difficulties[new_index].name, ' difficulty!' })
         game.print(message, difficulties[new_index].print_color)
         Server.to_discord_embed(message)
     end
-    global.difficulty_vote_index = new_index
-    global.difficulty_vote_value = difficulties[new_index].value
+    storage.difficulty_vote_index = new_index
+    storage.difficulty_vote_value = difficulties[new_index].value
     ai.reset_evo()
 end
 
 local function on_player_joined_game(event)
     local player = game.get_player(event.player_index)
-    if game.ticks_played < global.difficulty_votes_timeout then
-        if not global.difficulty_player_votes[player.name] then
-            if global.bb_settings.only_admins_vote or global.tournament_mode then
-                if global.active_special_games['captain_mode'] then
+    if game.ticks_played < storage.difficulty_votes_timeout then
+        if not storage.difficulty_player_votes[player.name] then
+            if storage.bb_settings.only_admins_vote or storage.tournament_mode then
+                if storage.active_special_games['captain_mode'] then
                     if player.admin then
-                        if global.bb_settings.only_admins_vote then
+                        if storage.bb_settings.only_admins_vote then
                             poll_difficulty(player)
                         end
                     else
-                        if not global.bb_settings.only_admins_vote and not player.spectator then
+                        if not storage.bb_settings.only_admins_vote and not player.spectator then
                             poll_difficulty(player)
                         end
                     end
@@ -209,13 +209,13 @@ local function on_player_joined_game(event)
 end
 
 function Public.remove_player_from_difficulty_vote(player)
-    if game.ticks_played > global.difficulty_votes_timeout then
+    if game.ticks_played > storage.difficulty_votes_timeout then
         return
     end
-    if not global.difficulty_player_votes[player.name] then
+    if not storage.difficulty_player_votes[player.name] then
         return
     end
-    global.difficulty_player_votes[player.name] = nil
+    storage.difficulty_player_votes[player.name] = nil
     set_difficulty()
 end
 
@@ -224,12 +224,12 @@ local function on_player_left_game(event)
 end
 
 local function difficulty_voted(player, i)
-    if global.difficulty_player_votes[player.name] ~= i then
+    if storage.difficulty_player_votes[player.name] ~= i then
         game.print(
             player.name .. ' has voted for ' .. difficulties[i].name .. ' difficulty!',
             difficulties[i].print_color
         )
-        global.difficulty_player_votes[player.name] = i
+        storage.difficulty_player_votes[player.name] = i
         set_difficulty()
         difficulty_gui_all()
     else
@@ -261,19 +261,19 @@ local function on_gui_click(event)
         return
     end
     local tick = Functions.get_ticks_since_game_start()
-    if global.active_special_games['captain_mode'] then
+    if storage.active_special_games['captain_mode'] then
         tick = game.ticks_played
     end
-    if tick >= global.difficulty_votes_timeout then
+    if tick >= storage.difficulty_votes_timeout then
         event.element.parent.destroy()
         return
     end
     local i = tonumber(event.element.name)
 
-    if global.bb_settings.only_admins_vote or global.tournament_mode then
-        if global.bb_settings.only_admins_vote or global.tournament_mode then
-            if global.active_special_games['captain_mode'] then
-                if global.bb_settings.only_admins_vote then
+    if storage.bb_settings.only_admins_vote or storage.tournament_mode then
+        if storage.bb_settings.only_admins_vote or storage.tournament_mode then
+            if storage.active_special_games['captain_mode'] then
+                if storage.bb_settings.only_admins_vote then
                     if player.admin then
                         difficulty_voted(player, i)
                     end
@@ -303,10 +303,10 @@ local function on_gui_click(event)
         return
     end
 
-    if game.tick - global.spectator_rejoin_delay[player.name] < 3600 then
+    if game.tick - storage.spectator_rejoin_delay[player.name] < 3600 then
         player.print(
             'Not ready to vote. Please wait '
-                .. 60 - (math.floor((game.tick - global.spectator_rejoin_delay[player.name]) / 60))
+                .. 60 - (math.floor((game.tick - storage.spectator_rejoin_delay[player.name]) / 60))
                 .. ' seconds.',
             { r = 0.98, g = 0.66, b = 0.22 }
         )

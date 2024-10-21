@@ -28,7 +28,7 @@ local math_floor = math.floor
 local string_format = string.format
 
 local Public = {}
-global.player_data_afk = {}
+storage.player_data_afk = {}
 
 local gui_values = {
     ['north'] = {
@@ -103,22 +103,22 @@ local function get_format_time()
 end
 
 local function get_player_data(player, remove)
-    if remove and global.player_data_afk[player.name] then
-        global.player_data_afk[player.name] = nil
+    if remove and storage.player_data_afk[player.name] then
+        storage.player_data_afk[player.name] = nil
         return
     end
-    if not global.player_data_afk[player.name] then
-        global.player_data_afk[player.name] = {}
+    if not storage.player_data_afk[player.name] then
+        storage.player_data_afk[player.name] = {}
     end
-    return global.player_data_afk[player.name]
+    return storage.player_data_afk[player.name]
 end
 
 local function drop_burners(player, forced_join)
     if forced_join then
-        global.got_burners[player.name] = nil
+        storage.got_burners[player.name] = nil
         return
     end
-    if global.training_mode or not global.bb_settings.burners_balance then
+    if storage.training_mode or not storage.bb_settings.burners_balance then
         return
     end
     local burners_to_drop = player.get_item_count('burner-mining-drill')
@@ -185,11 +185,11 @@ local function get_evo_tooltip(force, verbose)
     local damage = (biter_force.get_ammo_damage_modifier('melee') + 1) * 100
     return prefix
         .. style.listbox('Evolution: ')
-        .. style.yellow(style.stat(string_format('%.2f', (global.bb_evolution[biter_force.name] * 100))))
+        .. style.yellow(style.stat(string_format('%.2f', (storage.bb_evolution[biter_force.name] * 100))))
         .. style.listbox('%\nDamage: ')
         .. style.yellow(style.stat(damage))
         .. style.listbox('%\nHealth: ')
-        .. style.yellow(style.stat(string_format('%.0f', (global.biter_health_factor[biter_force.index] * 100))))
+        .. style.yellow(style.stat(string_format('%.0f', (storage.biter_health_factor[biter_force.index] * 100))))
         .. style.listbox('%')
 end
 
@@ -201,7 +201,7 @@ local function get_threat_tooltip(force, verbose)
     if verbose then
         prefix = style.bold('Threat') .. ' - ' .. gui_values[force].t2 .. '\n'
     end
-    local threat_income = global.bb_threat_income[force .. '_biters'] * 60
+    local threat_income = storage.bb_threat_income[force .. '_biters'] * 60
     -- technically we could also include the threat-income-from-passive-feed here, but it is
     -- generally much much lower than bb_threat_income's contribution
     return prefix
@@ -213,11 +213,11 @@ end
 ---@param force string
 ---@return string
 local function get_captain_caption(force)
-    local is_cpt = global.active_special_games.captain_mode
+    local is_cpt = storage.active_special_games.captain_mode
     if is_cpt then
         local cpt_name = '---'
-        local p_name = global.special_games_variables.captain_mode.captainList[gui_values[force].cpt_idx]
-        if p_name and global.chosen_team[p_name] then
+        local p_name = storage.special_games_variables.captain_mode.captainList[gui_values[force].cpt_idx]
+        if p_name and storage.chosen_team[p_name] then
             local p = game.players[p_name]
             cpt_name = string_format(
                 '[color=%.2f,%.2f,%.2f]%s[/color]',
@@ -247,7 +247,7 @@ function Public.clear_copy_history(player)
 end
 
 function Public.reset_tables_gui()
-    global.player_data_afk = {}
+    storage.player_data_afk = {}
 end
 
 ---@param player LuaPlayer
@@ -270,12 +270,11 @@ function Public.create_statistics_gui_button(player)
         type = 'sprite-button',
         name = 'bb_toggle_statistics',
         sprite = 'utility/expand',
-        hovered_sprite = 'utility/expand_dark',
+        -- hovered_sprite = 'utility/expand_dark',
         tooltip = 'Show game status!',
     })
 
-    local frame =
-        summary.parent.add({ type = 'frame', name = 'bb_frame_statistics', style = 'finished_game_subheader_frame' })
+    local frame = summary.parent.add({ type = 'frame', name = 'bb_frame_statistics', style = 'subheader_frame' })
     frame.location = { x = 1, y = 38 }
     gui_style(frame, { minimal_height = 36, maximal_height = 36 })
 
@@ -348,7 +347,7 @@ end
 
 ---@param player LuaPlayer
 function Public.create_main_gui(player)
-    local is_spec = player.force.name == 'spectator' or not global.chosen_team[player.name]
+    local is_spec = player.force.name == 'spectator' or not storage.chosen_team[player.name]
 
     local main_frame = Gui.get_left_element(player, 'bb_main_gui')
     if main_frame and main_frame.valid then
@@ -363,7 +362,7 @@ function Public.create_main_gui(player)
     local inner_frame = flow.add({
         type = 'frame',
         name = 'inner_frame',
-        style = 'window_content_frame_packed',
+        style = 'inside_shallow_frame_packed',
         direction = 'vertical',
     })
 
@@ -373,14 +372,14 @@ function Public.create_main_gui(player)
         gui_style(subheader, { horizontally_squashable = true, maximal_height = 40 })
 
         local label = subheader.add({ type = 'label', name = 'clock' })
-        gui_style(label, { font = 'heading-3', font_color = { 225, 225, 225 }, left_margin = 4 })
+        gui_style(label, { font = 'default-semibold', font_color = { 225, 225, 225 }, left_margin = 4 })
 
         Gui.add_pusher(subheader)
         local line = subheader.add({ type = 'line', direction = 'vertical' })
         Gui.add_pusher(subheader)
 
         local label = subheader.add({ type = 'label', name = 'game_speed' })
-        gui_style(label, { font = 'heading-3', font_color = { 225, 225, 225 }, right_margin = 4 })
+        gui_style(label, { font = 'default-semibold', font_color = { 225, 225, 225 }, right_margin = 4 })
     end
 
     -- == MAIN FRAME ================================================================
@@ -477,7 +476,7 @@ function Public.create_main_gui(player)
             type = 'frame',
             name = 'table_frame',
             direction = 'horizontal',
-            style = 'filter_scroll_pane_background_frame',
+            style = 'filter_frame',
         }) --slot_button_deep_frame, quick_bar_window_frame, quick_bar_inner_panel
         gui_style(table_frame, { minimal_height = 40 })
 
@@ -490,7 +489,7 @@ function Public.create_main_gui(player)
                 type = 'sprite-button',
                 name = food_name,
                 sprite = 'item/' .. food_name,
-                style = 'recipe_slot_button',
+                style = 'slot_button',
                 tooltip = tooltip,
             })
             gui_style(f, { padding = 0 })
@@ -499,14 +498,14 @@ function Public.create_main_gui(player)
             type = 'sprite-button',
             name = 'send_all',
             caption = 'All',
-            style = 'recipe_slot_button',
+            style = 'slot_button',
             tooltip = 'LMB - low to high, RMB - high to low',
         })
         gui_style(f, { padding = 0, font_color = { r = 0.9, g = 0.9, b = 0.9 } })
         local f = t.add({
             type = 'sprite-button',
             name = 'info',
-            style = 'recipe_slot_button',
+            style = 'slot_button',
             sprite = 'utility/warning_white',
             tooltip = "If you don't see a food, it may have been disabled by special game mode, or you have not been authorized by your captain.",
         })
@@ -569,7 +568,7 @@ function Public.create_main_gui(player)
         local button = flow.add({
             type = 'sprite-button',
             name = 'bb_spectate',
-            sprite = 'utility/ghost_time_to_live_modifier_icon',
+            sprite = 'utility/create_ghost_on_entity_death_modifier_icon',
             tooltip = style.bold('Spectate'),
             style = 'forward_button',
         })
@@ -588,7 +587,7 @@ function Public.create_main_gui(player)
             type = 'sprite-button',
             name = 'bb_floating_shortcut_button',
             style = 'transparent_slot', -- 'quick_bar_slot_button', 'frame_action_button',
-            sprite = 'utility/slot_icon_module',
+            sprite = 'utility/empty_module_slot',
             tooltip = { 'gui.floating_shortcuts' },
         })
         gui_style(button, { size = 26 })
@@ -644,11 +643,12 @@ function Public.refresh_statistics(player)
         frame[force_name .. '_players'].caption = '(' .. style.green(#game.forces[force_name].connected_players) .. ')'
         frame[force_name .. '_players'].tooltip = get_captain_caption(force_name) .. get_player_list_caption(force_name)
 
-        frame[force_name .. '_evolution'].caption = (math_floor(1000 * global.bb_evolution[biter_force.name]) * 0.1)
+        frame[force_name .. '_evolution'].caption = (math_floor(1000 * storage.bb_evolution[biter_force.name]) * 0.1)
             .. '%'
         frame[force_name .. '_evolution'].tooltip = get_evo_tooltip(force_name, false)
 
-        frame[force_name .. '_threat'].caption = threat_to_pretty_string(math_floor(global.bb_threat[biter_force.name]))
+        frame[force_name .. '_threat'].caption =
+            threat_to_pretty_string(math_floor(storage.bb_threat[biter_force.name]))
         frame[force_name .. '_threat'].tooltip = get_threat_tooltip(force_name, false)
     end
 end
@@ -661,7 +661,7 @@ function Public.refresh_main_gui(player)
 
     frame = frame.flow.inner_frame
     local header, main, footer = frame.subheader, frame.scroll_pane, frame.subfooter
-    local is_spec = player.force.name == 'spectator' or not global.chosen_team[player.name]
+    local is_spec = player.force.name == 'spectator' or not storage.chosen_team[player.name]
 
     -- == SUBHEADER =================================================================
     header.clock.caption = string_format('Time: %s', get_format_time())
@@ -669,13 +669,13 @@ function Public.refresh_main_gui(player)
 
     -- == MAIN FRAME ================================================================
     do -- North & South overview
-        local is_cpt = global.active_special_games.captain_mode
+        local is_cpt = storage.active_special_games.captain_mode
         for force_name, gui_value in pairs(gui_values) do
             local team = main[force_name]
             team.flow.caption_flow.team_name.caption = Functions.team_name(force_name)
 
             local team_info = team.flow.table
-            local evolution = math_floor(1000 * global.bb_evolution[gui_value.biter_force]) * 0.1
+            local evolution = math_floor(1000 * storage.bb_evolution[gui_value.biter_force]) * 0.1
 
             team_info.bb_toggle_player_list.number = #game.forces[force_name].connected_players
             team_info.bb_toggle_player_list.tooltip = style.bold('Player list')
@@ -685,7 +685,7 @@ function Public.refresh_main_gui(player)
             team_info.evolution.sprite = get_evo_sprite(evolution)
             team_info.evolution.tooltip = get_evo_tooltip(force_name, true)
 
-            team_info.threat.number = math_floor(global.bb_threat[gui_value.biter_force])
+            team_info.threat.number = math_floor(storage.bb_threat[gui_value.biter_force])
             team_info.threat.tooltip = get_threat_tooltip(force_name, true)
 
             if team.players.visible then
@@ -697,7 +697,7 @@ function Public.refresh_main_gui(player)
     end
 
     do -- Science sending
-        if is_spec or global.bb_game_won_by_team then
+        if is_spec or storage.bb_game_won_by_team then
             main.science_frame.visible = _DEBUG or false
         else
             main.science_frame.visible = true
@@ -709,8 +709,8 @@ function Public.refresh_main_gui(player)
                 button.visible = true
                 button.tooltip = tooltip
                 if
-                    global.active_special_games.disable_sciences
-                    and global.special_games_variables.disabled_food[food_name]
+                    storage.active_special_games.disable_sciences
+                    and storage.special_games_variables.disabled_food[food_name]
                 then
                     button.visible = false
                 end
@@ -721,7 +721,7 @@ function Public.refresh_main_gui(player)
             end
             button = table.send_all
             button.visible = true
-            if global.active_special_games.disable_sciences then
+            if storage.active_special_games.disable_sciences then
                 button.visible = false
             end
             if Captain_event.captain_is_player_prohibited_to_throw(player) then
@@ -734,8 +734,8 @@ function Public.refresh_main_gui(player)
 
     do -- Join/Resume
         local assign, resume = main.join_frame.assign, main.join_frame.resume
-        assign.visible = _DEBUG or (not global.bb_game_won_by_team and not global.chosen_team[player.name])
-        resume.visible = _DEBUG or (not global.bb_game_won_by_team and global.chosen_team[player.name])
+        assign.visible = _DEBUG or (storage.bb_game_won_by_team == nil and storage.chosen_team[player.name] == nil)
+        resume.visible = _DEBUG or (storage.bb_game_won_by_team == nil and storage.chosen_team[player.name] ~= nil)
         resume.bb_resume.visible = _DEBUG or is_spec
         resume.bb_spectate.visible = _DEBUG or not is_spec
         main.join_frame.visible = assign.visible or resume.visible
@@ -744,9 +744,9 @@ function Public.refresh_main_gui(player)
     -- == SUBFOOTER ===============================================================
     do
         footer.research_info_button.visible = _DEBUG
-            or global.bb_show_research_info == 'always'
-            or (global.bb_show_research_info == 'spec' and player.force.name == 'spectator')
-            or (global.bb_show_research_info == 'pure-spec' and not global.chosen_team[player.name])
+            or storage.bb_show_research_info == 'always'
+            or (storage.bb_show_research_info == 'spec' and player.force.name == 'spectator')
+            or (storage.bb_show_research_info == 'pure-spec' and not storage.chosen_team[player.name])
     end
 end
 
@@ -756,20 +756,20 @@ function Public.refresh()
         Public.refresh_main_gui(player)
         DifficultyVote.difficulty_gui(player)
     end
-    global.gui_refresh_delay = game.tick + 30
+    storage.gui_refresh_delay = game.tick + 30
 end
 
 function Public.refresh_threat()
-    if global.gui_refresh_delay > game.tick then
+    if storage.gui_refresh_delay > game.tick then
         return
     end
     local updates = {
         north = {
-            number = global.bb_threat.north_biters,
+            number = storage.bb_threat.north_biters,
             tooltip = get_threat_tooltip('north', true),
         },
         south = {
-            number = global.bb_threat.south_biters,
+            number = storage.bb_threat.south_biters,
             tooltip = get_threat_tooltip('south', true),
         },
     }
@@ -784,7 +784,7 @@ function Public.refresh_threat()
             end
         end
     end
-    global.gui_refresh_delay = game.tick + 30
+    storage.gui_refresh_delay = game.tick + 30
 end
 
 ---@param player LuaPlayer
@@ -792,11 +792,11 @@ function Public.burners_balance(player)
     if player.force.name == 'spectator' then
         return
     end
-    if global.got_burners[player.name] then
+    if storage.got_burners[player.name] then
         return
     end
-    if global.training_mode or not global.bb_settings.burners_balance then
-        global.got_burners[player.name] = true
+    if storage.training_mode or not storage.bb_settings.burners_balance then
+        storage.got_burners[player.name] = true
         player.insert({ name = 'burner-mining-drill', count = 10 })
         return
     end
@@ -806,9 +806,9 @@ function Public.burners_balance(player)
     end
     local player2
     -- factorio Lua promises that pairs() iterates in insertion order
-    for enemy_player_name, _ in pairs(global.got_burners) do
+    for enemy_player_name, _ in pairs(storage.got_burners) do
         if
-            not global.got_burners[enemy_player_name]
+            not storage.got_burners[enemy_player_name]
             and (game.get_player(enemy_player_name).force.name == enemy_force)
             and game.get_player(enemy_player_name).connected
         then
@@ -817,13 +817,13 @@ function Public.burners_balance(player)
         end
     end
     if not player2 then
-        global.got_burners[player.name] = false
+        storage.got_burners[player.name] = false
         return
     end
     local burners_to_insert = 10
     for i = 1, 0, -1 do
         local inserted
-        global.got_burners[player.name] = true
+        storage.got_burners[player.name] = true
         inserted = player.insert({ name = 'burner-mining-drill', count = burners_to_insert })
         if inserted < burners_to_insert then
             local items = player.surface.spill_item_stack(
@@ -855,14 +855,14 @@ function join_team(player, force_name, forced_join, auto_join)
     if not player.spectator then
         return
     end
-    if not forced_join and global.reroll_time_left and global.reroll_time_left > 0 then
+    if not forced_join and storage.reroll_time_left and storage.reroll_time_left > 0 then
         player.print(' Wait until reroll ends. ', { r = 0.98, g = 0.66, b = 0.22 })
         return
     end
     if not forced_join then
         if
-            (global.tournament_mode and not global.active_special_games.captain_mode)
-            or (global.active_special_games.captain_mode and not global.chosen_team[player.name])
+            (storage.tournament_mode and not storage.active_special_games.captain_mode)
+            or (storage.active_special_games.captain_mode and not storage.chosen_team[player.name])
         then
             player.print(
                 'The game is set to tournament mode. Teams can only be changed via team manager.',
@@ -880,10 +880,10 @@ function join_team(player, force_name, forced_join, auto_join)
         enemy_team = 'north'
     end
 
-    if not global.training_mode and global.bb_settings.team_balancing then
+    if not storage.training_mode and storage.bb_settings.team_balancing then
         if not forced_join then
             if #game.forces[force_name].connected_players > #game.forces[enemy_team].connected_players then
-                if not global.chosen_team[player.name] then
+                if not storage.chosen_team[player.name] then
                     player.print(
                         Functions.team_name_with_color(force_name) .. ' has too many players currently.',
                         { r = 0.98, g = 0.66, b = 0.22 }
@@ -894,9 +894,9 @@ function join_team(player, force_name, forced_join, auto_join)
         end
     end
 
-    if global.chosen_team[player.name] then
+    if storage.chosen_team[player.name] then
         if not forced_join then
-            if global.active_special_games.limited_lives and not has_life(player.name) then
+            if storage.active_special_games.limited_lives and not has_life(player.name) then
                 player.print(
                     'Special game in progress. You have no lives left until the end of the game.',
                     { r = 0.98, g = 0.66, b = 0.22 }
@@ -904,15 +904,15 @@ function join_team(player, force_name, forced_join, auto_join)
                 return
             end
             if
-                global.suspended_players[player.name]
-                and (game.ticks_played - global.suspended_players[player.name]) < global.suspended_time
+                storage.suspended_players[player.name]
+                and (game.ticks_played - storage.suspended_players[player.name]) < storage.suspended_time
             then
                 player.print(
                     'Not ready to return to your team yet as you are still suspended. Please wait '
                         .. math_ceil(
                             (
-                                global.suspended_time
-                                - (math_floor((game.ticks_played - global.suspended_players[player.name])))
+                                storage.suspended_time
+                                - (math_floor((game.ticks_played - storage.suspended_players[player.name])))
                             ) / 60
                         )
                         .. ' seconds.',
@@ -921,12 +921,12 @@ function join_team(player, force_name, forced_join, auto_join)
                 return
             end
             if
-                global.spectator_rejoin_delay[player.name]
-                and game.tick - global.spectator_rejoin_delay[player.name] < 3600
+                storage.spectator_rejoin_delay[player.name]
+                and game.tick - storage.spectator_rejoin_delay[player.name] < 3600
             then
                 player.print(
                     'Not ready to return to your team yet. Please wait '
-                        .. 60 - (math_floor((game.tick - global.spectator_rejoin_delay[player.name]) / 60))
+                        .. 60 - (math_floor((game.tick - storage.spectator_rejoin_delay[player.name]) / 60))
                         .. ' seconds.',
                     { r = 0.98, g = 0.66, b = 0.22 }
                 )
@@ -959,7 +959,7 @@ function join_team(player, force_name, forced_join, auto_join)
         game.print(msg, { r = 0.98, g = 0.66, b = 0.22 })
         Sounds.notify_allies(player.force, 'utility/build_blueprint_large')
         Server.to_discord_bold(msg)
-        global.spectator_rejoin_delay[player.name] = game.tick
+        storage.spectator_rejoin_delay[player.name] = game.tick
         player.spectator = false
         Public.burners_balance(player)
         return
@@ -992,8 +992,8 @@ function join_team(player, force_name, forced_join, auto_join)
     player.insert({ name = 'iron-gear-wheel', count = 8 })
     player.insert({ name = 'iron-plate', count = 16 })
     player.insert({ name = 'wood', count = 2 })
-    global.chosen_team[player.name] = force_name
-    global.spectator_rejoin_delay[player.name] = game.tick
+    storage.chosen_team[player.name] = force_name
+    storage.spectator_rejoin_delay[player.name] = game.tick
     player.spectator = false
     Public.burners_balance(player)
     Public.clear_copy_history(player)
@@ -1012,14 +1012,14 @@ function spectate(player, forced_join, stored_position)
         return
     end
     if not forced_join then
-        if global.tournament_mode and not global.active_special_games.captain_mode then
+        if storage.tournament_mode and not storage.active_special_games.captain_mode then
             player.print(
                 'The game is set to tournament mode. Teams can only be changed via team manager.',
                 { r = 0.98, g = 0.66, b = 0.22 }
             )
             return
         end
-        if global.active_special_games.captain_mode and global.special_games_variables.captain_mode.prepaPhase then
+        if storage.active_special_games.captain_mode and storage.special_games_variables.captain_mode.prepaPhase then
             player.print(
                 'The game is in preparation phase of captain event, no spectating allowed until the captain game started',
                 { r = 0.98, g = 0.66, b = 0.22 }
@@ -1050,7 +1050,7 @@ function spectate(player, forced_join, stored_position)
         Server.to_discord_bold(msg)
     end
     game.permissions.get_group('spectator').add_player(player)
-    global.spectator_rejoin_delay[player.name] = game.tick
+    storage.spectator_rejoin_delay[player.name] = game.tick
     Public.create_main_gui(player)
     player.spectator = true
 end
@@ -1066,9 +1066,9 @@ end
 local spy_forces = { { 'north', 'south' }, { 'south', 'north' } }
 function Public.spy_fish()
     for _, f in pairs(spy_forces) do
-        if global.spy_fish_timeout[f[1]] - game.tick > 0 then
+        if storage.spy_fish_timeout[f[1]] - game.tick > 0 then
             local r = 96
-            local surface = game.surfaces[global.bb_surface_name]
+            local surface = game.surfaces[storage.bb_surface_name]
             for _, player in pairs(game.forces[f[2]].connected_players) do
                 game.forces[f[1]].chart(surface, {
                     { player.position.x - r, player.position.y - r },
@@ -1076,7 +1076,7 @@ function Public.spy_fish()
                 })
             end
         else
-            global.spy_fish_timeout[f[1]] = 0
+            storage.spy_fish_timeout[f[1]] = 0
         end
     end
 end
@@ -1107,7 +1107,7 @@ local function on_gui_click(event)
     if name == 'bb_toggle_statistics' then
         local default = element.sprite == 'utility/expand'
         element.sprite = default and 'utility/collapse' or 'utility/expand'
-        element.hovered_sprite = default and 'utility/collapse_dark' or 'utility/expand_dark'
+        -- element.hovered_sprite = default and 'utility/collapse_dark' or 'utility/expand_dark'
         element.tooltip = default and 'Hide game status!' or 'Show game status!'
 
         local frame = Gui.get_top_element(player, 'bb_frame_statistics')
@@ -1170,7 +1170,7 @@ local function on_gui_click(event)
     end
 
     if name == 'bb_resume' then
-        join_team(player, global.chosen_team[player.name])
+        join_team(player, storage.chosen_team[player.name])
         return
     end
 
@@ -1193,7 +1193,7 @@ local function on_gui_click(event)
     end
 
     if name == 'suspend_yes' then
-        local suspend_info = global.suspend_target_info
+        local suspend_info = storage.suspend_target_info
         if suspend_info then
             if player.force.name == suspend_info.target_force_name then
                 if suspend_info.suspend_votes_by_player[player.name] ~= 1 then
@@ -1210,7 +1210,7 @@ local function on_gui_click(event)
     end
 
     if name == 'suspend_no' then
-        local suspend_info = global.suspend_target_info
+        local suspend_info = storage.suspend_target_info
         if suspend_info then
             if player.force.name == suspend_info.target_force_name then
                 if suspend_info.suspend_votes_by_player[player.name] ~= 0 then
@@ -1227,29 +1227,29 @@ local function on_gui_click(event)
     end
 
     if name == 'reroll_yes' then
-        if global.reroll_map_voting[player.name] ~= 1 then
-            global.reroll_map_voting[player.name] = 1
+        if storage.reroll_map_voting[player.name] ~= 1 then
+            storage.reroll_map_voting[player.name] = 1
             game.print(player.name .. ' wants to reroll map ', { r = 0.1, g = 0.9, b = 0.0 })
         end
     end
 
     if name == 'reroll_no' then
-        if global.reroll_map_voting[player.name] ~= 0 then
-            global.reroll_map_voting[player.name] = 0
+        if storage.reroll_map_voting[player.name] ~= 0 then
+            storage.reroll_map_voting[player.name] = 0
             game.print(player.name .. ' wants to keep this map', { r = 0.9, g = 0.1, b = 0.1 })
         end
     end
 
     if name == 'automatic_captain_yes' then
-        if global.automatic_captain_voting[player.name] ~= 1 then
-            global.automatic_captain_voting[player.name] = 1
+        if storage.automatic_captain_voting[player.name] ~= 1 then
+            storage.automatic_captain_voting[player.name] = 1
             game.print(player.name .. ' wants to play a captain game', { r = 0.1, g = 0.9, b = 0.0 })
         end
     end
 
     if name == 'automatic_captain_no' then
-        if global.automatic_captain_voting[player.name] ~= 0 then
-            global.automatic_captain_voting[player.name] = 0
+        if storage.automatic_captain_voting[player.name] ~= 0 then
+            storage.automatic_captain_voting[player.name] = 0
             game.print(player.name .. ' does not want to play a captain game', { r = 0.9, g = 0.1, b = 0.1 })
         end
     end

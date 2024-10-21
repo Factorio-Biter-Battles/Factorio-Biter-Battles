@@ -46,6 +46,7 @@ end
 
 local loaded = _G.package.loaded
 function require(path)
+    local path = '__level__/' .. path:gsub('%.', '/') .. '.lua'
     return loaded[path] or error('Can only require files at runtime that have been required in the control stage.', 2)
 end
 

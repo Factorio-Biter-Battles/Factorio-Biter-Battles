@@ -5,7 +5,7 @@ Go to your surface's 0,0 point to see them.
 You can run this as in-game command /c ... all this code ]]
 
 local available_surfaces = {}
-table.insert(available_surfaces, global.bb_surface_name and game.get_surface(global.bb_surface_name))
+table.insert(available_surfaces, storage.bb_surface_name and game.get_surface(storage.bb_surface_name))
 if #available_surfaces == 0 then
     for _, surface in pairs(game.surfaces) do
         table.insert(available_surfaces, surface)

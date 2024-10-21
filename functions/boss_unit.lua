@@ -72,10 +72,10 @@ function Public.add_high_health_unit(entity, health_factor, is_boss)
         unit.healthbar_id = create_healthbar(entity, 0.55)
         unit.original_health_factor = health_factor
     end
-    if global.bb_draw_health_factor_text then
+    if storage.bb_draw_health_factor_text then
         unit.text_id = add_health_factor_text(entity, health_factor)
     end
-    global.high_health_units[entity.unit_number] = unit
+    storage.high_health_units[entity.unit_number] = unit
 end
 
 ---@param event EventData.on_entity_damaged
@@ -85,7 +85,7 @@ local function on_entity_damaged(event)
         return
     end
     ---@type HighHealthUnit
-    local unit = global.high_health_units[entity.unit_number]
+    local unit = storage.high_health_units[entity.unit_number]
     if not unit then
         return
     end
@@ -98,7 +98,7 @@ local function on_entity_damaged(event)
         end
         -- Slightly over 1 just to deal with weird floating point math possibilities
         if unit.health_factor <= 1.0000001 then
-            global.high_health_units[entity.unit_number] = nil
+            storage.high_health_units[entity.unit_number] = nil
             -- We do not destroy unit.healthbar_id here because we want it to
             -- remain visible for the units "last life". It will automatically
             -- be destroyed when "entity" is destroyed.

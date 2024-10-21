@@ -231,7 +231,7 @@ flui.add_handlers({
 ---@return GuiElemDef
 function blocks.ClosableWindow(name, caption)
     local button = blocks.frame_action_button('close', {
-        default = 'utility/close_white',
+        default = 'utility/close',
         hovered = 'utility/close_black',
     })
     button.handler = close_button_handler

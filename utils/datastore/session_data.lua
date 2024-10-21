@@ -57,8 +57,8 @@ function Public.autotrust_player(playerName)
     local playtimeRequiredForAutoTrust = 5184000 -- 24h
     if
         not trusted[playerName]
-        and global.total_time_online_players[playerName] ~= nil
-        and global.total_time_online_players[playerName] >= playtimeRequiredForAutoTrust
+        and storage.total_time_online_players[playerName] ~= nil
+        and storage.total_time_online_players[playerName] >= playtimeRequiredForAutoTrust
     then
         trusted[playerName] = true
     end

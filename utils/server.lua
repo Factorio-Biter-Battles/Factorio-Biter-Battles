@@ -727,18 +727,18 @@ function Public.get_current_time()
 end
 
 function Public.upload_time_played(player)
-    if not global.already_logged_current_session_time_online_players[player.name] then
-        global.already_logged_current_session_time_online_players[player.name] = 0
+    if not storage.already_logged_current_session_time_online_players[player.name] then
+        storage.already_logged_current_session_time_online_players[player.name] = 0
     end
-    if not global.total_time_online_players[player.name] then
-        global.total_time_online_players[player.name] = 0
+    if not storage.total_time_online_players[player.name] then
+        storage.total_time_online_players[player.name] = 0
     end
-    local time_to_add = player.online_time - global.already_logged_current_session_time_online_players[player.name]
+    local time_to_add = player.online_time - storage.already_logged_current_session_time_online_players[player.name]
 
     raw_print(data_add_onlinetime_tag .. '[' .. player.name .. ']' .. time_to_add)
-    global.already_logged_current_session_time_online_players[player.name] = global.already_logged_current_session_time_online_players[player.name]
+    storage.already_logged_current_session_time_online_players[player.name] = storage.already_logged_current_session_time_online_players[player.name]
         + time_to_add
-    global.total_time_online_players[player.name] = global.total_time_online_players[player.name] + time_to_add
+    storage.total_time_online_players[player.name] = storage.total_time_online_players[player.name] + time_to_add
 end
 
 function Public.set_total_time_played(player)
