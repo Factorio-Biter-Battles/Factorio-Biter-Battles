@@ -734,8 +734,8 @@ function Public.refresh_main_gui(player)
 
     do -- Join/Resume
         local assign, resume = main.join_frame.assign, main.join_frame.resume
-        assign.visible = _DEBUG or (not storage.bb_game_won_by_team and not storage.chosen_team[player.name])
-        resume.visible = _DEBUG or (not storage.bb_game_won_by_team and storage.chosen_team[player.name])
+        assign.visible = _DEBUG or (storage.bb_game_won_by_team == nil and storage.chosen_team[player.name] == nil)
+        resume.visible = _DEBUG or (storage.bb_game_won_by_team == nil and storage.chosen_team[player.name] ~= nil)
         resume.bb_resume.visible = _DEBUG or is_spec
         resume.bb_spectate.visible = _DEBUG or not is_spec
         main.join_frame.visible = assign.visible or resume.visible
