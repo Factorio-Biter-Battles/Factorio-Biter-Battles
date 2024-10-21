@@ -638,8 +638,6 @@ local function on_init()
     local get_active_version = sub(game.active_mods.base, 3, 4)
     local default = game.permissions.get_group('Default')
 
-    game.forces.player.research_queue_enabled = true
-
     is_branch_18 = is_branch_18 .. sub(branch_version, 6, 7)
     get_active_version = get_active_version .. sub(game.active_mods.base, 6, 7)
     if get_active_version >= is_branch_18 then

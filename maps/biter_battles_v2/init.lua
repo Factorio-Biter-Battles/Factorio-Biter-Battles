@@ -526,7 +526,6 @@ function Public.forces()
         game.forces[force.name].technologies['atomic-bomb'].enabled = false
         game.forces[force.name].technologies['cliff-explosives'].enabled = false
         game.forces[force.name].technologies['land-mine'].enabled = false
-        game.forces[force.name].research_queue_enabled = true
         storage.ai_targets[force.name] = { available = {}, available_list = {} }
         storage.ai_target_destroyed_map = {}
         storage.spy_fish_timeout[force.name] = 0
