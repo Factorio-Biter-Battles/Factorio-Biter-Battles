@@ -138,11 +138,11 @@ local function update_teamstats()
         force_stats.total_players = total_players[force_name]
         force_stats.player_ticks = (force_stats.player_ticks or 0) + #force.connected_players * (tick - prev_ticks)
         force_stats.max_players = math.max(force_stats.max_players or 0, #force.connected_players)
-        local item_prod = force.item_production_statistics
+        local item_prod = force.get_item_production_statistics(storage.bb_surface_name)
         --local item_prod_inputs = item_prod.input_counts
         --log(serpent.line(item_prod_inputs))
-        local build_stat = force.entity_build_count_statistics
-        local kill_stat = force.kill_count_statistics
+        local build_stat = force.get_entity_build_count_statistics(storage.bb_surface_name)
+        local kill_stat = force.get_kill_count_statistics(storage.bb_surface_name)
         for _, item_info in ipairs(TeamStatsCollect.items_to_show_summaries_of) do
             local item = item_info.item
             local item_stat = force_stats.items[item]
