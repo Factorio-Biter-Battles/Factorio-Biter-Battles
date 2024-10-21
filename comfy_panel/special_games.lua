@@ -1,10 +1,10 @@
 local Event = require('utils.event')
 local Color = require('utils.color_presets')
 local Public = {}
-global.active_special_games = {}
-global.special_games_variables = {}
-global.next_special_games = {}
-global.next_special_games_variables = {}
+storage.active_special_games = {}
+storage.special_games_variables = {}
+storage.next_special_games = {}
+storage.next_special_games_variables = {}
 
 local valid_special_games = {
     turtle = require('comfy_panel.special_games.turtle'),
@@ -34,10 +34,10 @@ function clear_gui_specials()
 end
 
 function Public.reset_special_games()
-    global.active_special_games = global.next_special_games
-    global.special_games_variables = global.next_special_games_variables
-    global.next_special_games = {}
-    global.next_special_games_variables = {}
+    storage.active_special_games = storage.next_special_games
+    storage.special_games_variables = storage.next_special_games_variables
+    storage.next_special_games = {}
+    storage.next_special_games_variables = {}
     clear_gui_specials()
     local captain_event = require('comfy_panel.special_games.captain')
     captain_event.reset_special_games()

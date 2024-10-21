@@ -2,7 +2,7 @@ local Color = require('utils.color_presets')
 
 local function generate_turtle(moat_width, entrance_width, size_x, size_y)
     game.print('Special game turtle is being generated!', Color.warning)
-    local surface = game.surfaces[global.bb_surface_name]
+    local surface = game.surfaces[storage.bb_surface_name]
     local water_positions = {}
     local concrete_positions = {}
     local landfill_positions = {}
@@ -52,7 +52,7 @@ local function generate_turtle(moat_width, entrance_width, size_x, size_y)
     surface.set_tiles(water_positions)
     surface.set_tiles(landfill_positions)
     surface.set_tiles(concrete_positions)
-    global.active_special_games['turtle'] = true
+    storage.active_special_games['turtle'] = true
 end
 
 local Public = {
@@ -83,7 +83,7 @@ local Public = {
             local size_x = config['size_x'].text
             local size_y = config['size_y'].text
 
-            game.forces['spectator'].chart(game.surfaces[global.bb_surface_name], {
+            game.forces['spectator'].chart(game.surfaces[storage.bb_surface_name], {
                 { -size_x / 2 - moat_width, -size_y - moat_width },
                 { size_x / 2 + moat_width, size_y + moat_width },
             })

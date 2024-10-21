@@ -3,7 +3,7 @@ local Event = require('utils.event')
 local Token = require('utils.token')
 
 local send_to_external_server_handler = Token.register(function(event)
-    game.get_player(event.player_index).connect_to_server(global.special_games_variables.send_to_external_server)
+    game.get_player(event.player_index).connect_to_server(storage.special_games_variables.send_to_external_server)
 end)
 
 local function generate_send_to_external_server(player, address, name, description)
@@ -21,7 +21,7 @@ local function generate_send_to_external_server(player, address, name, descripti
             description = description,
         })
     end
-    global.special_games_variables.send_to_external_server =
+    storage.special_games_variables.send_to_external_server =
         { address = address, name = name, description = description }
     Event.add_removable(defines.events.on_player_joined_game, send_to_external_server_handler)
 end

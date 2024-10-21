@@ -185,33 +185,33 @@ function Public.initiate(unit_group, target_force_name, strike_position, target_
         strike_info.phase = 2
         attack(unit_group, target_position)
     end
-    global.ai_strikes[unit_group.group_number] = strike_info
+    storage.ai_strikes[unit_group.group_number] = strike_info
 end
 
 function Public.step(group_number, result)
-    if global.bb_game_won_by_team then
+    if storage.bb_game_won_by_team then
         return
     end
-    local strike = global.ai_strikes[group_number]
+    local strike = storage.ai_strikes[group_number]
     if strike ~= nil then
         if result == defines.behavior_result.success then
             strike.phase = strike.phase + 1
             if strike.phase == 2 then
                 attack(strike.unit_group, strike.target_position)
             elseif strike.phase == 3 then
-                local rocket_silo = global.rocket_silo[strike.target_force_name]
+                local rocket_silo = storage.rocket_silo[strike.target_force_name]
                 assassinate(strike, rocket_silo)
             else
-                global.ai_strikes[group_number] = nil
+                storage.ai_strikes[group_number] = nil
             end
         elseif result == defines.behavior_result.fail or result == defines.behavior_result.deleted then
-            local rocket_silo = global.rocket_silo[strike.target_force_name]
+            local rocket_silo = storage.rocket_silo[strike.target_force_name]
             if not rocket_silo then
                 return
             end -- helps multi-silo special code
             local unit_group = strike.unit_group
             if not unit_group.valid then
-                global.ai_strikes[group_number] = nil
+                storage.ai_strikes[group_number] = nil
             elseif strike.phase == 3 and strike.target == rocket_silo then
                 local position = unit_group.position
                 local message = string.format(
@@ -222,7 +222,7 @@ function Public.step(group_number, result)
                 )
                 log(message)
                 game.print(message, Color.red)
-                global.ai_strikes[group_number] = nil
+                storage.ai_strikes[group_number] = nil
             else
                 strike.phase = 3
                 assassinate(strike, rocket_silo)

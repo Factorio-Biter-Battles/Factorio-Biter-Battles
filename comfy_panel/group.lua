@@ -327,13 +327,13 @@ local function on_gui_click(event)
                 local group_name = Public.convert_from_safe_group_name(safe_group_name)
                 if
                     (
-                        global.active_special_games['captain_mode']
-                        and global.special_games_variables['captain_mode']['pickingPhase']
+                        storage.active_special_games['captain_mode']
+                        and storage.special_games_variables['captain_mode']['pickingPhase']
                         and startswith(group_name, Public.COMFY_PANEL_CAPTAINS_GROUP_PREFIX)
                     )
                     or (
-                        global.active_special_games['captain_mode']
-                        and global.special_games_variables['captain_mode']['pickingPhase']
+                        storage.active_special_games['captain_mode']
+                        and storage.special_games_variables['captain_mode']['pickingPhase']
                         and startswith(player.tag, Public.COMFY_PANEL_CAPTAINS_GROUP_PLAYER_TAG_PREFIX)
                     )
                 then
@@ -361,8 +361,8 @@ local function on_gui_click(event)
                 local safe_group_name = event.element.parent.name
                 local group_name = Public.convert_from_safe_group_name(safe_group_name)
                 if
-                    global.active_special_games['captain_mode']
-                    and global.special_games_variables['captain_mode']['pickingPhase']
+                    storage.active_special_games['captain_mode']
+                    and storage.special_games_variables['captain_mode']['pickingPhase']
                     and startswith(group_name, Public.COMFY_PANEL_CAPTAINS_GROUP_PREFIX)
                 then
                     player.print('You cant delete a picking group during picking phase..', Color.red)
@@ -384,8 +384,8 @@ local function on_gui_click(event)
 
             if event.element.type == 'button' and event.element.caption == 'Leave' then
                 if
-                    global.active_special_games['captain_mode']
-                    and global.special_games_variables['captain_mode']['pickingPhase']
+                    storage.active_special_games['captain_mode']
+                    and storage.special_games_variables['captain_mode']['pickingPhase']
                     and startswith(player.tag, Public.COMFY_PANEL_CAPTAINS_GROUP_PLAYER_TAG_PREFIX)
                 then
                     player.print('You cant leave a picking group during picking phase..', Color.red)

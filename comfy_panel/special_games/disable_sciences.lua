@@ -18,12 +18,12 @@ local function generate_disable_sciences(packs)
         end
     end
     if table_size(message) > 1 then
-        global.active_special_games['disable_sciences'] = true
-        global.special_games_variables['disabled_food'] = disabled_food
+        storage.active_special_games['disable_sciences'] = true
+        storage.special_games_variables['disabled_food'] = disabled_food
         game.print(table.concat(message, ' '), Color.warning)
     else
-        global.active_special_games['disable_sciences'] = false
-        global.special_games_variables['disabled_food'] = nil
+        storage.active_special_games['disable_sciences'] = false
+        storage.special_games_variables['disabled_food'] = nil
         game.print('Special game ended. All science enabled', Color.warning)
     end
 end

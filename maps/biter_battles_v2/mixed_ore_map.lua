@@ -28,8 +28,8 @@ local function mixed_ore(surface, left_top_x, left_top_y)
     end
 
     clear_ores(surface, left_top_x, left_top_y, ores)
-    local seed = game.surfaces[global.bb_surface_name].map_gen_settings.seed
-    local size = 1 + global.special_games_variables['mixed_ore_map']['size']
+    local seed = game.surfaces[storage.bb_surface_name].map_gen_settings.seed
+    local size = 1 + storage.special_games_variables['mixed_ore_map']['size']
     for x = 0, 31, 1 do
         for y = 0, 31, 1 do
             local pos = { x = left_top_x + x, y = left_top_y + y }
@@ -53,7 +53,7 @@ end
 local function dots(surface, left_top_x, left_top_y)
     local ores = { 'uranium-ore', 'stone', 'copper-ore', 'iron-ore', 'coal' }
     clear_ores(surface, left_top_x, left_top_y, ores)
-    local space = global.special_games_variables['mixed_ore_map']['size']
+    local space = storage.special_games_variables['mixed_ore_map']['size']
     for x = 0, 31, 1 do
         for y = 0, 31, 1 do
             local pos = { x = left_top_x + x, y = left_top_y + y }
@@ -85,11 +85,11 @@ local function checkerboard(surface, left_top_x, left_top_y)
     local ores = { 'uranium-ore', 'stone', 'copper-ore', 'iron-ore', 'coal' }
     clear_ores(surface, left_top_x, left_top_y, ores)
     local uranium_cells = {}
-    local cell_size = global.special_games_variables['mixed_ore_map']['size']
+    local cell_size = storage.special_games_variables['mixed_ore_map']['size']
     if cell_size == 0 then
         cell_size = 1
     end
-    local seed = game.surfaces[global.bb_surface_name].map_gen_settings.seed
+    local seed = game.surfaces[storage.bb_surface_name].map_gen_settings.seed
     for x = 0, 31, 1 do
         for y = 0, 31, 1 do
             local pos = { x = left_top_x + x, y = left_top_y + y }
@@ -154,7 +154,7 @@ local function vertical_lines(surface, left_top_x, left_top_y)
         'iron-ore',
     }
     clear_ores(surface, left_top_x, left_top_y, { 'coal', 'stone', 'copper-ore', 'iron-ore' })
-    local seed = game.surfaces[global.bb_surface_name].map_gen_settings.seed
+    local seed = game.surfaces[storage.bb_surface_name].map_gen_settings.seed
 
     for x = 0, 31, 1 do
         for y = 0, 31, 1 do
@@ -170,7 +170,7 @@ local function vertical_lines(surface, left_top_x, left_top_y)
 end
 
 local function mixed_patches(surface, left_top_x, left_top_y)
-    local size = 10 - global.special_games_variables['mixed_ore_map']['size']
+    local size = 10 - storage.special_games_variables['mixed_ore_map']['size']
     local ores = {
         'iron-ore',
         'copper-ore',
@@ -189,7 +189,7 @@ local function mixed_patches(surface, left_top_x, left_top_y)
         'coal',
     }
     local mixed_ore_multiplier = { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 }
-    local seed = game.surfaces[global.bb_surface_name].map_gen_settings.seed
+    local seed = game.surfaces[storage.bb_surface_name].map_gen_settings.seed
     clear_ores(surface, left_top_x, left_top_y, { 'coal', 'stone', 'copper-ore', 'iron-ore' })
     for x = 0, 31, 1 do
         for y = 0, 31, 1 do
@@ -198,7 +198,7 @@ local function mixed_patches(surface, left_top_x, left_top_y)
                 local noise = GetNoise('bb_ore', pos, seed)
                 if noise > 0.1 * size or noise < -0.1 * size then
                     local i = math_floor(noise * 25 + math_abs(pos.x) * 0.05) % 15 + 1
-                    local amount = (global.random_generator(800, 1000) + math_sqrt(pos.x ^ 2 + pos.y ^ 2) * 3)
+                    local amount = (storage.random_generator(800, 1000) + math_sqrt(pos.x ^ 2 + pos.y ^ 2) * 3)
                         * mixed_ore_multiplier[i]
                     surface.create_entity({ name = ores[i], position = pos, amount = amount })
                 end
@@ -213,7 +213,7 @@ local function mixed_ore_map(surface, left_top_x, left_top_y)
         return
     end
 
-    local type = global.special_games_variables['mixed_ore_map']['type']
+    local type = storage.special_games_variables['mixed_ore_map']['type']
     if type == 1 then
         mixed_ore(surface, left_top_x, left_top_y)
     elseif type == 2 then

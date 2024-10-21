@@ -10,13 +10,13 @@ local gui_style = require('utils.utils').gui_style
 ---@return yes_count number
 ---@return no_count number
 local function get_suspend_stats()
-    local total_votes = table.size(global.suspend_target_info.suspend_votes_by_player)
+    local total_votes = table.size(storage.suspend_target_info.suspend_votes_by_player)
     if total_votes == 0 then
         return 0, 0, 0
     end
 
     local yes_votes = 0
-    for _, vote in pairs(global.suspend_target_info.suspend_votes_by_player) do
+    for _, vote in pairs(storage.suspend_target_info.suspend_votes_by_player) do
         yes_votes = yes_votes + vote
     end
     return math.floor(100 * yes_votes / total_votes), yes_votes, total_votes - yes_votes
@@ -27,7 +27,7 @@ local function draw_suspend_gui(player)
     if Gui.get_top_element(player, 'suspend_frame') then
         return
     end
-    if global.suspend_target_info == nil or global.suspend_target_info.suspendee_player_name == player.name then
+    if storage.suspend_target_info == nil or storage.suspend_target_info.suspendee_player_name == player.name then
         return
     end
 
@@ -46,12 +46,12 @@ local function draw_suspend_gui(player)
             type = 'label',
             caption = {
                 'gui.suspend_caption',
-                global.suspend_target_info.suspendee_player_name,
-                global.suspend_time_left,
+                storage.suspend_target_info.suspendee_player_name,
+                storage.suspend_time_left,
             },
         })
         gui_style(l, {
-            minimal_width = 120 + 6 * string.len(global.suspend_target_info.suspendee_player_name),
+            minimal_width = 120 + 6 * string.len(storage.suspend_target_info.suspendee_player_name),
             font_color = { r = 0.88, g = 0.55, b = 0.11 },
             font = 'heading-2',
         })
@@ -149,7 +149,7 @@ local function punish_player(playerSuspended)
 end
 
 local suspend_token = Token.register(function()
-    global.suspend_token_running = false
+    storage.suspend_token_running = false
     -- disable suspend buttons creation for joining players
     Event.remove_removable(defines.events.on_player_joined_game, suspend_buttons_token)
     -- remove existing buttons
@@ -160,7 +160,7 @@ local suspend_token = Token.register(function()
         end
     end
     -- count votes
-    local suspend_info = global.suspend_target_info
+    local suspend_info = storage.suspend_target_info
     local result = 0
     if suspend_info ~= nil then
         local total_votes = table.size(suspend_info.suspend_votes_by_player)
@@ -179,9 +179,9 @@ local suspend_token = Token.register(function()
                         .. ', vote started by '
                         .. suspend_info.suspender_player_name,
                 }))
-                global.suspended_players[suspend_info.suspendee_player_name] = game.ticks_played
+                storage.suspended_players[suspend_info.suspendee_player_name] = game.ticks_played
                 local playerSuspended = game.get_player(suspend_info.suspendee_player_name)
-                global.suspend_target_info = nil
+                storage.suspend_target_info = nil
                 if playerSuspended and playerSuspended.valid and playerSuspended.surface.name ~= 'gulag' then
                     punish_player(playerSuspended)
                 end
@@ -210,26 +210,26 @@ local suspend_token = Token.register(function()
                     .. suspend_info.suspender_player_name,
             }))
         end
-        global.suspend_target_info = nil
+        storage.suspend_target_info = nil
     end
 end)
 
 local decrement_timer_token = Token.get_counter() + 1 -- predict what the token will look like
 decrement_timer_token = Token.register(function()
-    local suspend_time_left = global.suspend_time_left - 1
+    local suspend_time_left = storage.suspend_time_left - 1
     for _, player in pairs(game.connected_players) do
         local frame = Gui.get_top_element(player, 'suspend_frame')
-        if frame and frame.valid and global.suspend_target_info ~= nil then
+        if frame and frame.valid and storage.suspend_target_info ~= nil then
             frame.flow.suspend_table.children[1].caption =
-                { 'gui.suspend_caption', global.suspend_target_info.suspendee_player_name, global.suspend_time_left }
+                { 'gui.suspend_caption', storage.suspend_target_info.suspendee_player_name, storage.suspend_time_left }
 
             local percent, yes_votes, no_votes = get_suspend_stats()
             frame.flow.suspend_stats.caption = { 'gui.suspend_stats', no_votes, yes_votes, percent }
         end
     end
-    if suspend_time_left > 0 and global.suspend_target_info ~= nil then
+    if suspend_time_left > 0 and storage.suspend_target_info ~= nil then
         Task.set_timeout_in_ticks(60, decrement_timer_token)
-        global.suspend_time_left = suspend_time_left
+        storage.suspend_time_left = suspend_time_left
     end
 end)
 
@@ -242,7 +242,7 @@ local function suspend_player(cmd)
     if not killer then
         return
     end
-    if global.suspend_target_info then
+    if storage.suspend_target_info then
         killer.print('You cant suspend 2 players at same time, wait for previous vote to end', Color.warning)
         return
     end
@@ -261,7 +261,7 @@ local function suspend_player(cmd)
                 killer.print('You cant suspend a player while you are in jail', Color.warning)
                 return
             end
-            if global.suspend_token_running then
+            if storage.suspend_token_running then
                 killer.print(
                     'A suspend was just started before restart, please wait 60s maximum to avoid bugs',
                     Color.warning
@@ -270,7 +270,7 @@ local function suspend_player(cmd)
             end
             local victim_name = victim.name
             local killer_name = killer.name
-            global.suspend_target_info = {
+            storage.suspend_target_info = {
                 suspendee_player_name = victim_name,
                 suspendee_force_name = victim.force.name,
                 suspender_player_name = killer_name,
@@ -278,10 +278,10 @@ local function suspend_player(cmd)
                 suspend_votes_by_player = { [killer_name] = 1 },
             }
             game.print(killer.name .. ' has started a vote to suspend ' .. victim_name .. ' , vote in top of screen')
-            global.suspend_token_running = true
-            Task.set_timeout_in_ticks(global.suspend_time_limit, suspend_token)
+            storage.suspend_token_running = true
+            Task.set_timeout_in_ticks(storage.suspend_time_limit, suspend_token)
             Event.add_removable(defines.events.on_player_joined_game, suspend_buttons_token)
-            global.suspend_time_left = global.suspend_time_limit / 60
+            storage.suspend_time_left = storage.suspend_time_limit / 60
             for _, player in pairs(game.connected_players) do
                 draw_suspend_gui(player)
                 Sounds.notify_all('utility/new_objective')
@@ -306,8 +306,8 @@ commands.add_command(
 local function on_player_joined_game(event)
     local player = game.get_player(event.player_index)
     if
-        global.suspended_players[player.name]
-        and (game.ticks_played - global.suspended_players[player.name]) < global.suspended_time
+        storage.suspended_players[player.name]
+        and (game.ticks_played - storage.suspended_players[player.name]) < storage.suspended_time
     then
         punish_player(player)
     end

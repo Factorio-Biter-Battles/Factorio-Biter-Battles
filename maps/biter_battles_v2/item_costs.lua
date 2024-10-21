@@ -271,10 +271,10 @@ end
 ---@param item_name string
 ---@return ProductInfo
 function ItemCosts.get_info(item_name)
-    local item_costs = global.bb_item_costs
+    local item_costs = storage.bb_item_costs
     if not item_costs then
         item_costs = find_all_costs()
-        global.bb_item_costs = item_costs
+        storage.bb_item_costs = item_costs
     end
 
     return item_costs[item_name]

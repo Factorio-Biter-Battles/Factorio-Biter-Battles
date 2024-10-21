@@ -266,10 +266,10 @@ local create_admin_panel = function(player, frame)
     table.insert(player_names, 'Select Player')
 
     local selected_index = #player_names
-    if global.admin_panel_selected_player_index then
-        if global.admin_panel_selected_player_index[player.name] then
-            if player_names[global.admin_panel_selected_player_index[player.name]] then
-                selected_index = global.admin_panel_selected_player_index[player.name]
+    if storage.admin_panel_selected_player_index then
+        if storage.admin_panel_selected_player_index[player.name] then
+            if player_names[storage.admin_panel_selected_player_index[player.name]] then
+                selected_index = storage.admin_panel_selected_player_index[player.name]
             end
         end
     end
@@ -536,10 +536,10 @@ local function on_gui_selection_state_changed(event)
     local player = game.get_player(event.player_index)
     local name = event.element.name
     if name == 'admin_player_select' then
-        if not global.admin_panel_selected_player_index then
-            global.admin_panel_selected_player_index = {}
+        if not storage.admin_panel_selected_player_index then
+            storage.admin_panel_selected_player_index = {}
         end
-        global.admin_panel_selected_player_index[player.name] = event.element.selected_index
+        storage.admin_panel_selected_player_index[player.name] = event.element.selected_index
 
         local frame = Tabs.comfy_panel_get_active_frame(player)
         if not frame then
@@ -600,7 +600,7 @@ commands.add_command('punish', 'Kill and ban a player. Usage: /punish <name> <re
             )
             message = message .. ' Appeal on discord. Link on biterbattles.org', Color.warning
             if offender.force.name == 'spectator' then
-                join_team(offender, global.chosen_team[offender.name], true)
+                join_team(offender, storage.chosen_team[offender.name], true)
             end -- switches offender to their team if he's spectating
             kill(offender, punisher)
             game.ban_player(offender, message)

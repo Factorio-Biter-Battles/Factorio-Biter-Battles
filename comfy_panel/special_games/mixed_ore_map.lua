@@ -17,8 +17,8 @@ local function generate_mixed_ore_map(type, size)
         if type == 1 and size > 10 then
             size = 10
         end
-        global.next_special_games['mixed_ore_map'] = true
-        global.next_special_games_variables['mixed_ore_map'] = {
+        storage.next_special_games['mixed_ore_map'] = true
+        storage.next_special_games_variables['mixed_ore_map'] = {
             type = type,
             size = size,
         }

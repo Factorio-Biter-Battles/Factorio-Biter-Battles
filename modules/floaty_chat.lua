@@ -19,9 +19,9 @@ local function on_console_chat(event)
         y_offset = -4.5
     end
 
-    if global.player_floaty_chat[player.index] then
-        rendering.destroy(global.player_floaty_chat[player.index])
-        global.player_floaty_chat[player.index] = nil
+    if storage.player_floaty_chat[player.index] then
+        rendering.destroy(storage.player_floaty_chat[player.index])
+        storage.player_floaty_chat[player.index] = nil
     end
 
     local players = {}
@@ -34,7 +34,7 @@ local function on_console_chat(event)
         return
     end
 
-    global.player_floaty_chat[player.index] = rendering.draw_text({
+    storage.player_floaty_chat[player.index] = rendering.draw_text({
         text = event.message,
         surface = player.surface,
         target = player.character,
@@ -55,7 +55,7 @@ local function on_console_chat(event)
 end
 
 local function on_init(event)
-    global.player_floaty_chat = {}
+    storage.player_floaty_chat = {}
 end
 
 event.on_init(on_init)

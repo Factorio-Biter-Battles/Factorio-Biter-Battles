@@ -1,7 +1,7 @@
 local Color = require('utils.color_presets')
 
 local function generate_infinity_chest(separate_chests, operable, gap, eq)
-    local surface = game.surfaces[global.bb_surface_name]
+    local surface = game.surfaces[storage.bb_surface_name]
     local position_0 = { x = 0, y = -42 }
 
     local objects = surface.find_entities_filtered({ name = 'infinity-chest' })
@@ -48,11 +48,11 @@ local function generate_infinity_chest(separate_chests, operable, gap, eq)
             k = k * -1
         end
     end
-    global.active_special_games['infinity_chest'] = true
-    local special = global.special_games_variables['infinity_chest']
+    storage.active_special_games['infinity_chest'] = true
+    local special = storage.special_games_variables['infinity_chest']
     if not special then
         special = { freebies = {} }
-        global.special_games_variables['infinity_chest'] = special
+        storage.special_games_variables['infinity_chest'] = special
     end
     for i, v in ipairs(eq) do
         special.freebies[v] = true

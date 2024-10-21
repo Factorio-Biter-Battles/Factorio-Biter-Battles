@@ -58,9 +58,9 @@ function Public.start_tracking(entity)
         return
     end
     if target_entity_type[entity.type] and entity.unit_number then
-        local targets = global.ai_targets[entity.force.name]
+        local targets = storage.ai_targets[entity.force.name]
         if targets ~= nil then
-            global.ai_target_destroyed_map[script.register_on_entity_destroyed(entity)] = entity.force.name
+            storage.ai_target_destroyed_map[script.register_on_entity_destroyed(entity)] = entity.force.name
             table_insert(targets.available_list, { unit_number = entity.unit_number, position = entity.position })
             targets.available[entity.unit_number] = #targets.available_list
         end
@@ -68,11 +68,11 @@ function Public.start_tracking(entity)
 end
 
 local function on_entity_destroyed(event)
-    local map = global.ai_target_destroyed_map
+    local map = storage.ai_target_destroyed_map
     local unit_number = event.unit_number
     local force = map[event.registration_number]
     map[event.registration_number] = nil
-    local targets = global.ai_targets[force]
+    local targets = storage.ai_targets[force]
     if targets ~= nil then
         local target_list_index = targets.available[unit_number]
         if target_list_index ~= nil then
@@ -91,7 +91,7 @@ end
 script.on_event(defines.events.on_entity_destroyed, on_entity_destroyed)
 
 function Public.get_random_target(force_name)
-    local targets = global.ai_targets[force_name]
+    local targets = storage.ai_targets[force_name]
     local available_list = targets.available_list
     local first_entity = simple_random_sample(available_list)
     local second_entity = simple_random_sample(available_list)

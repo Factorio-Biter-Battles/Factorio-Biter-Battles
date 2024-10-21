@@ -196,8 +196,8 @@ end
 
 local function get_rank(player)
     local t = 0
-    if global.total_time_online_players[player.name] then
-        t = global.total_time_online_players[player.name]
+    if storage.total_time_online_players[player.name] then
+        t = storage.total_time_online_players[player.name]
     end
 
     local m = t / 3600
@@ -319,8 +319,8 @@ local function get_sorted_list(sort_by)
         player_list[i].name = player.name
 
         local t = 0
-        if global.total_time_online_players[player.name] then
-            t = global.total_time_online_players[player.name]
+        if storage.total_time_online_players[player.name] then
+            t = storage.total_time_online_players[player.name]
         end
 
         player_list[i].total_played_time = Public.get_formatted_playtime_from_ticks(t)

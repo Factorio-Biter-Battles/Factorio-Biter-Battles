@@ -260,13 +260,13 @@ function ResearchInfo.research_finished(tech_name, force)
     if force_name ~= 'north' and force_name ~= 'south' then
         return
     end
-    local tech_info = global.research_info.completed[tech_name]
+    local tech_info = storage.research_info.completed[tech_name]
     if not tech_info then
         tech_info = {}
-        global.research_info.completed[tech_name] = tech_info
+        storage.research_info.completed[tech_name] = tech_info
     end
     tech_info[force_name] = Functions.get_ticks_since_game_start()
-    global.research_info.current_progress[force_name][tech_name] = nil
+    storage.research_info.current_progress[force_name][tech_name] = nil
 
     ResearchInfo.update_research_info_ui(true)
 end
@@ -278,7 +278,7 @@ function ResearchInfo.research_started(tech_name, force)
     if force_name ~= 'north' and force_name ~= 'south' then
         return
     end
-    global.research_info.current_progress[force_name][tech_name] = true
+    storage.research_info.current_progress[force_name][tech_name] = true
     ResearchInfo.update_research_info_ui()
 end
 
@@ -288,7 +288,7 @@ function ResearchInfo.research_reversed(tech_name, force)
     if force.name ~= 'north' and force.name ~= 'south' then
         return
     end
-    local tech_info = global.research_info.completed[tech_name]
+    local tech_info = storage.research_info.completed[tech_name]
     if not tech_info then
         return
     end
@@ -297,8 +297,8 @@ function ResearchInfo.research_reversed(tech_name, force)
 end
 
 local function get_research_info(tech_id)
-    local tech_info = global.research_info.completed[tech_id]
-    local progress = global.research_info.current_progress
+    local tech_info = storage.research_info.completed[tech_id]
+    local progress = storage.research_info.current_progress
 
     ---@param force LuaForce
     ---@return string?, number?, boolean
@@ -352,7 +352,7 @@ end
 local function construct_completed(filter)
     ---@type GuiElemDef[]
     local elements = {}
-    for tech_name, tech_info in pairs(global.research_info.completed) do
+    for tech_name, tech_info in pairs(storage.research_info.completed) do
         if filter(tech_name, tech_info) then
             local info = get_research_info(tech_name)
             elements[#elements + 1] = research_item(tech_name, info.north.desc, info.south.desc)
@@ -387,7 +387,7 @@ end
 ---@param force LuaForce
 ---@return GuiElemDef
 local function construct_progress(force)
-    local progress_info = global.research_info.current_progress[force.name]
+    local progress_info = storage.research_info.current_progress[force.name]
     local el = uic.blocks.table(15, 'progress')
     local matches = 0
     for tech_name, _ in pairs(progress_info) do

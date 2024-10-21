@@ -27,7 +27,7 @@ local function get_actor(event, prefix, msg, admins_only)
 end
 
 local function spaghett_deny_building(event)
-    local spaghett = global.comfy_panel_config.spaghett
+    local spaghett = storage.comfy_panel_config.spaghett
     if not spaghett.enabled then
         return
     end
@@ -57,7 +57,7 @@ local function spaghett_deny_building(event)
 end
 
 local function spaghett()
-    local spaghett = global.comfy_panel_config.spaghett
+    local spaghett = storage.comfy_panel_config.spaghett
     if spaghett.enabled then
         for _, f in pairs(game.forces) do
             if f.technologies['logistic-system'].researched then
@@ -123,17 +123,17 @@ local functions = {
             return
         end
         if event.element.switch_state == 'left' then
-            global.want_pings[player.name] = true
+            storage.want_pings[player.name] = true
         else
-            global.want_pings[player.name] = false
-            global.ping_gui_locations[player.name] = nil
+            storage.want_pings[player.name] = false
+            storage.ping_gui_locations[player.name] = nil
         end
     end,
     ['comfy_panel_auto_hotbar_switch'] = function(event)
         if event.element.switch_state == 'left' then
-            global.auto_hotbar_enabled[event.player_index] = true
+            storage.auto_hotbar_enabled[event.player_index] = true
         else
-            global.auto_hotbar_enabled[event.player_index] = false
+            storage.auto_hotbar_enabled[event.player_index] = false
         end
     end,
     ['comfy_panel_blueprint_toggle'] = function(event)
@@ -153,79 +153,79 @@ local functions = {
     end,
     ['comfy_panel_spaghett_toggle'] = function(event)
         if event.element.switch_state == 'left' then
-            global.comfy_panel_config.spaghett.enabled = true
+            storage.comfy_panel_config.spaghett.enabled = true
             get_actor(event, '{Spaghett}', 'has enabled spaghett mode!')
         else
-            global.comfy_panel_config.spaghett.enabled = nil
+            storage.comfy_panel_config.spaghett.enabled = nil
             get_actor(event, '{Spaghett}', 'has disabled spaghett mode!')
         end
         spaghett()
     end,
     ['bb_team_balancing_toggle'] = function(event)
         if event.element.switch_state == 'left' then
-            global.bb_settings.team_balancing = true
+            storage.bb_settings.team_balancing = true
             game.print('Team balancing has been enabled!')
         else
-            global.bb_settings.team_balancing = false
+            storage.bb_settings.team_balancing = false
             game.print('Team balancing has been disabled!')
         end
     end,
 
     ['bb_only_admins_vote'] = function(event)
         if event.element.switch_state == 'left' then
-            global.bb_settings.only_admins_vote = true
-            global.difficulty_player_votes = {}
+            storage.bb_settings.only_admins_vote = true
+            storage.difficulty_player_votes = {}
             game.print('Admin-only difficulty voting has been enabled!')
         else
-            global.bb_settings.only_admins_vote = false
+            storage.bb_settings.only_admins_vote = false
             game.print('Admin-only difficulty voting has been disabled!')
         end
     end,
     ['comfy_panel_new_year_island'] = function(event)
         if event.element.switch_state == 'left' then
-            global.bb_settings['new_year_island'] = true
+            storage.bb_settings['new_year_island'] = true
             get_actor(event, '{New Year Island}', 'New Year island has been enabled!', true)
         else
-            global.bb_settings['new_year_island'] = false
+            storage.bb_settings['new_year_island'] = false
             get_actor(event, '{New Year Island}', 'New Year island has been disabled!', true)
         end
     end,
 
     ['bb_map_reveal_toggle'] = function(event)
         if event.element.switch_state == 'left' then
-            global.bb_settings['bb_map_reveal_toggle'] = true
+            storage.bb_settings['bb_map_reveal_toggle'] = true
             game.print('Reveal map at start has been enabled!')
         else
-            global.bb_settings['bb_map_reveal_toggle'] = false
+            storage.bb_settings['bb_map_reveal_toggle'] = false
             game.print('Reveal map at start has been disabled!')
         end
     end,
 
     ['bb_map_reroll_toggle'] = function(event)
         if event.element.switch_state == 'left' then
-            global.bb_settings.map_reroll = true
+            storage.bb_settings.map_reroll = true
             game.print('Map Reroll is enabled!')
         else
-            global.bb_settings.map_reroll = false
+            storage.bb_settings.map_reroll = false
             game.print('Map Reroll is disabled!')
         end
     end,
 
     ['bb_automatic_captain_toggle'] = function(event)
         if event.element.switch_state == 'left' then
-            global.bb_settings.automatic_captain = true
+            storage.bb_settings.automatic_captain = true
             game.print('Automatic captain is enabled!')
         else
-            global.bb_settings.automatic_captain = false
+            storage.bb_settings.automatic_captain = false
             game.print('Automatic captain is disabled!')
         end
     end,
     ['bb_burners_balance_toggle'] = function(event)
         if event.element.switch_state == 'left' then
-            global.bb_settings.burners_balance = true
+            storage.bb_settings.burners_balance = true
             game.print('Burners balance is enabled!')
         else
-            global.bb_settings.burners_balance = false
+            storage.bb_settings.burners_balance = false
             game.print('Burners balance is disabled!')
         end
     end,
@@ -234,10 +234,10 @@ local functions = {
 local poll_function = {
     ['comfy_panel_poll_trusted_toggle'] = function(event)
         if event.element.switch_state == 'left' then
-            global.comfy_panel_config.poll_trusted = true
+            storage.comfy_panel_config.poll_trusted = true
             get_actor(event, '{Poll Mode}', 'has disabled non-trusted people to do polls.')
         else
-            global.comfy_panel_config.poll_trusted = false
+            storage.comfy_panel_config.poll_trusted = false
             get_actor(event, '{Poll Mode}', 'has allowed non-trusted people to do polls.')
         end
     end,
@@ -355,17 +355,17 @@ local selection_functions = {
         end
         local selected_index = event.element.selected_index
         local selected_style = gui_themes[selected_index].type
-        local previous_style = global.gui_theme[player.name] or gui_themes[1].type
+        local previous_style = storage.gui_theme[player.name] or gui_themes[1].type
         if previous_style ~= selected_style then
             local label = event.element.parent.comfy_panel_theme_label
             label.caption = gui_themes[selected_index].name
             Gui.restyle_top_elements(player, selected_style)
         end
-        global.gui_theme[player.name] = selected_style
+        storage.gui_theme[player.name] = selected_style
     end,
     ['comfy_panel_teamstats_visibility_dropdown'] = function(event)
         local selected_index = event.element.selected_index
-        global.allow_teamstats = event.element.items[selected_index]
+        storage.allow_teamstats = event.element.items[selected_index]
     end,
 }
 
@@ -439,10 +439,10 @@ local function add_dropdown(element, caption, selected_item, name, items)
 end
 
 function player_wants_pings(name)
-    if global.want_pings[name] ~= nil then
-        return global.want_pings[name]
+    if storage.want_pings[name] ~= nil then
+        return storage.want_pings[name]
     end
-    return global.want_pings_default_value
+    return storage.want_pings_default_value
 end
 
 local build_config_gui = function(player, frame)
@@ -496,9 +496,9 @@ local build_config_gui = function(player, frame)
 
     scroll_pane.add({ type = 'line' })
 
-    if global.auto_hotbar_enabled then
+    if storage.auto_hotbar_enabled then
         switch_state = 'right'
-        if global.auto_hotbar_enabled[player.index] then
+        if storage.auto_hotbar_enabled[player.index] then
             switch_state = 'left'
         end
         add_switch(
@@ -535,11 +535,11 @@ local build_config_gui = function(player, frame)
     add_switch(scroll_pane, switch_state, 'comfy_panel_flashlight', 'FlashLight', 'let you turn off flashlight')
     scroll_pane.add({ type = 'line' })
 
-    if global.gui_theme ~= nil then
+    if storage.gui_theme ~= nil then
         add_dropdown(
             scroll_pane,
             'Top UI theme',
-            global.gui_theme[player.name],
+            storage.gui_theme[player.name],
             'comfy_panel_theme_dropdown',
             themes.values
         )
@@ -562,7 +562,7 @@ local build_config_gui = function(player, frame)
         add_dropdown(
             scroll_pane,
             'teamstats visibility',
-            global.allow_teamstats,
+            storage.allow_teamstats,
             'comfy_panel_teamstats_visibility_dropdown',
             {
                 'always',
@@ -588,7 +588,7 @@ local build_config_gui = function(player, frame)
         scroll_pane.add({ type = 'line' })
 
         switch_state = 'right'
-        if global.comfy_panel_config.spaghett.enabled then
+        if storage.comfy_panel_config.spaghett.enabled then
             switch_state = 'left'
         end
         add_switch(
@@ -602,7 +602,7 @@ local build_config_gui = function(player, frame)
         if package.loaded['comfy_panel.poll'] then
             scroll_pane.add({ type = 'line' })
             switch_state = 'right'
-            if global.comfy_panel_config.poll_trusted then
+            if storage.comfy_panel_config.poll_trusted then
                 switch_state = 'left'
             end
             add_switch(
@@ -651,7 +651,7 @@ local build_config_gui = function(player, frame)
             scroll_pane.add({ type = 'line' })
 
             local switch_state = 'right'
-            if global.bb_settings.team_balancing then
+            if storage.bb_settings.team_balancing then
                 switch_state = 'left'
             end
             local switch = add_switch(
@@ -668,7 +668,7 @@ local build_config_gui = function(player, frame)
             scroll_pane.add({ type = 'line' })
 
             local switch_state = 'right'
-            if global.bb_settings['bb_map_reveal_toggle'] then
+            if storage.bb_settings['bb_map_reveal_toggle'] then
                 switch_state = 'left'
             end
             local switch =
@@ -680,7 +680,7 @@ local build_config_gui = function(player, frame)
             scroll_pane.add({ type = 'line' })
 
             local switch_state = 'right'
-            if global.bb_settings.only_admins_vote then
+            if storage.bb_settings.only_admins_vote then
                 switch_state = 'left'
             end
             local switch = add_switch(
@@ -697,7 +697,7 @@ local build_config_gui = function(player, frame)
             scroll_pane.add({ type = 'line' })
 
             local switch_state = 'right'
-            if global.bb_settings.map_reroll then
+            if storage.bb_settings.map_reroll then
                 switch_state = 'left'
             end
             local switch = add_switch(
@@ -714,7 +714,7 @@ local build_config_gui = function(player, frame)
             scroll_pane.add({ type = 'line' })
 
             local switch_state = 'right'
-            if global.bb_settings.automatic_captain then
+            if storage.bb_settings.automatic_captain then
                 switch_state = 'left'
             end
             local switch = add_switch(
@@ -731,7 +731,7 @@ local build_config_gui = function(player, frame)
             scroll_pane.add({ type = 'line' })
 
             local switch_state = 'right'
-            if global.bb_settings.burners_balance then
+            if storage.bb_settings.burners_balance then
                 switch_state = 'left'
             end
             local switch = add_switch(
@@ -854,7 +854,7 @@ local build_config_gui = function(player, frame)
         label.style.font_color = Color.hot_pink
 
         switch_state = 'right'
-        if global.bb_settings['new_year_island'] then
+        if storage.bb_settings['new_year_island'] then
             switch_state = 'left'
         end
         add_switch(
@@ -922,13 +922,13 @@ local function on_robot_built_entity(event)
 end
 
 local function on_init()
-    global.comfy_panel_config = {}
-    global.comfy_panel_config.spaghett = {}
-    global.comfy_panel_config.spaghett.undo = {}
-    global.comfy_panel_config.poll_trusted = false
-    global.comfy_panel_disable_antigrief = false
-    global.want_pings = {}
-    global.ping_gui_locations = {}
+    storage.comfy_panel_config = {}
+    storage.comfy_panel_config.spaghett = {}
+    storage.comfy_panel_config.spaghett.undo = {}
+    storage.comfy_panel_config.poll_trusted = false
+    storage.comfy_panel_disable_antigrief = false
+    storage.want_pings = {}
+    storage.ping_gui_locations = {}
 end
 
 comfy_panel_tabs['Config'] = { gui = build_config_gui, admin = false }

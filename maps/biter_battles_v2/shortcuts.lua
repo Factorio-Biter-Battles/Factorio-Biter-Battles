@@ -14,9 +14,9 @@ local safe_wrap_with_player_print = require('utils.utils').safe_wrap_with_player
 
 local Public = {}
 
--- Saves the preferences for each players, i.e. global.shortcuts_ui['Alice'] = { ['send-fish'] = true, ['research_info'] = false }
+-- Saves the preferences for each players, i.e. storage.shortcuts_ui['Alice'] = { ['send-fish'] = true, ['research_info'] = false }
 ---@type table<string, table<string, boolean>>
-global.shortcuts_ui = global.shortcuts_ui or {}
+storage.shortcuts_ui = storage.shortcuts_ui or {}
 
 Public.main_frame_name = 'bb_floating_shortcuts'
 local main_frame_name = Public.main_frame_name
@@ -31,10 +31,10 @@ local function handle_spectator(player)
 end
 
 function get_player_preferences(player)
-    local player_preferences = global.shortcuts_ui[player.name]
+    local player_preferences = storage.shortcuts_ui[player.name]
     if not player_preferences then
         player_preferences = { enabled = false }
-        global.shortcuts_ui[player.name] = player_preferences
+        storage.shortcuts_ui[player.name] = player_preferences
     end
     return player_preferences
 end
@@ -72,16 +72,16 @@ end
 
 local main_frame_actions = {
     [main_frame_name .. '_send_fish'] = function(player, event)
-        if handle_spectator(player) or global.bb_game_won_by_team then
+        if handle_spectator(player) or storage.bb_game_won_by_team then
             return
         end
         Functions.spy_fish(player, event)
     end,
     [main_frame_name .. '_send_science'] = function(player, event)
-        if handle_spectator(player) or global.bb_game_won_by_team then
+        if handle_spectator(player) or storage.bb_game_won_by_team then
             return
         end
-        if global.active_special_games.disable_sciences then
+        if storage.active_special_games.disable_sciences then
             player.print('Disabled by special game', Color.red)
         elseif Captain_event.captain_is_player_prohibited_to_throw(player) then
             player.print('You are not allowed to send science, ask your captain', Color.red)
@@ -287,7 +287,7 @@ end)
 
 function Public.refresh()
     for _, force in pairs(game.forces) do
-        local rocket_silo = global.rocket_silo[force.name]
+        local rocket_silo = storage.rocket_silo[force.name]
         if rocket_silo and rocket_silo.valid then
             local health = rocket_silo.get_health_ratio()
             local HP = math_floor(rocket_silo.health)

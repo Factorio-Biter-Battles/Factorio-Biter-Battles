@@ -7,10 +7,10 @@ local closable_frame = {}
 ---@return boolean
 function closable_frame.any_main_closable_frame(player)
     if
-        global.closable_frame.closable_frames
-        and global.closable_frame.closable_frames[player.index]
-        and global.closable_frame.closable_frames[player.index].main
-        and global.closable_frame.closable_frames[player.index].main.valid
+        storage.closable_frame.closable_frames
+        and storage.closable_frame.closable_frames[player.index]
+        and storage.closable_frame.closable_frames[player.index].main
+        and storage.closable_frame.closable_frames[player.index].main.valid
     then
         return true
     end
@@ -22,14 +22,14 @@ end
 ---@return LuaGuiElement?
 function closable_frame.get_main_closable_frame(player)
     if closable_frame.any_main_closable_frame(player) then
-        return global.closable_frame.closable_frames[player.index].main
+        return storage.closable_frame.closable_frames[player.index].main
     end
     return nil
 end
 
 ---@param player LuaPlayer
 function closable_frame.close_all(player)
-    local frames = global.closable_frame.closable_frames[player.index]
+    local frames = storage.closable_frame.closable_frames[player.index]
 
     if not frames then
         return
@@ -46,7 +46,7 @@ end
 
 ---@param player LuaPlayer
 function closable_frame.close_secondary(player)
-    local frames = global.closable_frame.closable_frames[player.index]
+    local frames = storage.closable_frame.closable_frames[player.index]
 
     if not frames then
         return
@@ -122,10 +122,10 @@ function closable_frame.create_secondary_closable_frame(player, name, caption, o
 
     local frame = closable_frame.create_draggable_frame(player, name, caption, options)
 
-    global.closable_frame.dont_close = true
+    storage.closable_frame.dont_close = true
     player.opened = frame
-    global.closable_frame.dont_close = false
-    global.closable_frame.closable_frames[player.index].secondary = frame
+    storage.closable_frame.dont_close = false
+    storage.closable_frame.closable_frames[player.index].secondary = frame
 
     return frame
 end
@@ -149,14 +149,14 @@ function closable_frame.create_main_closable_frame(player, name, caption, option
     local frame = closable_frame.create_draggable_frame(player, name, caption, options)
 
     player.opened = frame
-    global.closable_frame.closable_frames[player.index].main = frame
+    storage.closable_frame.closable_frames[player.index].main = frame
 
     return frame
 end
 
 ---@param event EventData.on_gui_closed
 local function on_gui_closed(event)
-    if global.closable_frame.dont_close == true then
+    if storage.closable_frame.dont_close == true then
         return
     end
 
@@ -166,7 +166,7 @@ local function on_gui_closed(event)
     end
 
     local element = event.element
-    local frames = global.closable_frame.closable_frames[event.player_index]
+    local frames = storage.closable_frame.closable_frames[event.player_index]
     if element == frames.main then
         closable_frame.close_all(player)
         return
@@ -198,24 +198,24 @@ end
 
 ---@param event EventData.on_player_joined_game
 local function on_player_joined_game(event)
-    global.closable_frame.closable_frames[event.player_index] = {}
+    storage.closable_frame.closable_frames[event.player_index] = {}
 end
 
 ---@param event EventData.on_player_left_game
 local function on_player_left_game(event)
     closable_frame.close_all(game.get_player(event.player_index) --[[@as LuaPlayer]])
-    global.closable_frame.closable_frames[event.player_index] = nil
+    storage.closable_frame.closable_frames[event.player_index] = nil
 end
 
 local function on_init()
-    global.closable_frame = {}
+    storage.closable_frame = {}
 
     ---If set to true, the next on_gui_closed will set it back to true and do nothing.
     ---@type boolean
-    global.closable_frame.dont_close = false
+    storage.closable_frame.dont_close = false
 
     ---@type { [int]: { main: LuaGuiElement?, secondary: LuaGuiElement? } }
-    global.closable_frame.closable_frames = {}
+    storage.closable_frame.closable_frames = {}
 end
 
 Event.add(defines.events.on_gui_closed, on_gui_closed)
