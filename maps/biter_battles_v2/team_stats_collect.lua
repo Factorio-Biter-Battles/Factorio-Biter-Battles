@@ -36,7 +36,7 @@ TeamStatsCollect.items_to_show_summaries_of = {
     { item = 'advanced-circuit', hide_by_default = true },
     { item = 'processing-unit', space_after = true, hide_by_default = true },
 
-    { item = 'rocket-control-unit', hide_by_default = true },
+    { item = 'rocket-part', hide_by_default = true },
     { item = 'rocket-fuel', hide_by_default = true },
     { item = 'low-density-structure', space_after = true, hide_by_default = true },
 
