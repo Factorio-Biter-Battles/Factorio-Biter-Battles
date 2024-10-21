@@ -60,14 +60,15 @@ function Public.start_tracking(entity)
     if target_entity_type[entity.type] and entity.unit_number then
         local targets = storage.ai_targets[entity.force.name]
         if targets ~= nil then
-            storage.ai_target_destroyed_map[script.register_on_entity_destroyed(entity)] = entity.force.name
+            storage.ai_target_destroyed_map[script.register_on_object_destroyed(entity)] = entity.force.name
             table_insert(targets.available_list, { unit_number = entity.unit_number, position = entity.position })
             targets.available[entity.unit_number] = #targets.available_list
+            script.register_on_object_destroyed(entity)
         end
     end
 end
 
-local function on_entity_destroyed(event)
+local function on_object_destroyed(event)
     local map = storage.ai_target_destroyed_map
     local unit_number = event.unit_number
     local force = map[event.registration_number]
@@ -88,7 +89,7 @@ local function on_entity_destroyed(event)
     end
 end
 
-script.on_event(defines.events.on_entity_destroyed, on_entity_destroyed)
+script.on_event(defines.events.on_object_destroyed, on_object_destroyed)
 
 function Public.get_random_target(force_name)
     local targets = storage.ai_targets[force_name]
