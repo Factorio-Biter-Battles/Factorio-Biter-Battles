@@ -150,7 +150,7 @@ local function show_endgame_gui(player)
 
     local main_frame = Gui.add_left_element(player, { type = 'frame', name = 'mvps', direction = 'vertical' })
     local flow = main_frame.add({ type = 'flow', style = 'vertical_flow', direction = 'vertical' })
-    local inner_frame = flow.add({ type = 'frame', style = 'window_content_frame_packed', direction = 'vertical' })
+    local inner_frame = flow.add({ type = 'frame', style = 'inside_shallow_frame_packed', direction = 'vertical' })
 
     do -- Game overview
         local subheader = inner_frame.add({ type = 'frame', style = 'subheader_frame' })
@@ -603,7 +603,7 @@ local function draw_reroll_gui(player)
     end
 
     local frame =
-        Gui.add_top_element(player, { type = 'frame', name = 'reroll_frame', style = 'finished_game_subheader_frame' })
+        Gui.add_top_element(player, { type = 'frame', name = 'reroll_frame', style = 'subheader_frame' })
     gui_style(frame, { minimal_height = 36, maximal_height = 36, padding = 0, vertical_align = 'center' })
 
     local f = frame.add({ type = 'flow', name = 'flow', direction = 'horizontal' })
@@ -670,7 +670,7 @@ local function draw_automatic_captain_poll_gui(player)
 
     local frame = Gui.add_top_element(
         player,
-        { type = 'frame', name = 'automatic_captain_poll_frame', style = 'finished_game_subheader_frame' }
+        { type = 'frame', name = 'automatic_captain_poll_frame', style = 'subheader_frame' }
     )
     gui_style(frame, { minimal_height = 36, maximal_height = 36, padding = 0, vertical_align = 'center' })
 

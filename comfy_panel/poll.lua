@@ -344,7 +344,7 @@ local function draw_main_frame(player)
     local inner_frame = flow.add({
         type = 'frame',
         name = 'inner_frame',
-        style = 'window_content_frame_packed',
+        style = 'inside_shallow_frame_packed',
         direction = 'vertical',
     })
 
@@ -360,7 +360,7 @@ local function draw_main_frame(player)
     subheader.add({
         type = 'sprite-button',
         name = main_button_name,
-        sprite = 'utility/close_white',
+        sprite = 'utility/close',
         clicked_sprite = 'utility/close_black',
         style = 'close_button',
         tooltip = { 'gui.close' },
@@ -628,7 +628,7 @@ local function draw_create_poll_frame(player, previous_data)
     local inner_frame = flow.add({
         type = 'frame',
         name = 'inner_frame',
-        style = 'window_content_frame_packed',
+        style = 'inside_shallow_frame_packed',
         direction = 'vertical',
     })
 

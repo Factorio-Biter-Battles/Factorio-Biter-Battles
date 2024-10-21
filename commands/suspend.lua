@@ -32,7 +32,7 @@ local function draw_suspend_gui(player)
     end
 
     local frame =
-        Gui.add_top_element(player, { type = 'frame', name = 'suspend_frame', style = 'finished_game_subheader_frame' })
+        Gui.add_top_element(player, { type = 'frame', name = 'suspend_frame', style = 'subheader_frame' })
     gui_style(frame, { minimal_height = 36, maximal_height = 36, padding = 0, vertical_align = 'center' })
 
     local f = frame.add({ type = 'flow', name = 'flow', direction = 'horizontal' })

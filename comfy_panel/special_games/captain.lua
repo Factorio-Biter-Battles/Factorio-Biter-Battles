@@ -1886,7 +1886,7 @@ local function on_gui_click(event)
         end
     elseif name == 'tournament_frame_row_toggle' then
         local default = element.sprite == 'utility/collapse'
-        element.sprite = default and 'utility/expand_dots_white' or 'utility/collapse'
+        element.sprite = default and 'utility/expand_dots' or 'utility/collapse'
         element.hovered_sprite = default and 'utility/expand_dots' or 'utility/collapse_dark'
         local body = element.parent.parent.flow.frame
         body.visible = not body.visible
@@ -2560,7 +2560,7 @@ function Public.draw_captain_tournament_gui(player)
     local inner_frame = flow.add({
         type = 'frame',
         name = 'inner_frame',
-        style = 'window_content_frame_packed',
+        style = 'inside_shallow_frame_packed',
         direction = 'vertical',
     })
 
@@ -2606,7 +2606,7 @@ function Public.draw_captain_tournament_gui(player)
             name = 'tournament_subheader_toggle',
             style = 'slot_button',
             sprite = 'utility/expand',
-            hovered_sprite = 'utility/expand_dark',
+            hovered_sprite = 'utility/expand',
             tooltip = '[font=default-bold]' .. p.caption .. '[/font]\n' .. p.tooltip,
         })
         gui_style(button, { size = 22, padding = -2, left_margin = 6 })

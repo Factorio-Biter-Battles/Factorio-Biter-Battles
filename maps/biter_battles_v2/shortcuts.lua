@@ -129,7 +129,7 @@ local shortcut_buttons = {
         name = main_frame_name .. '_team_statistics',
         caption = 'Team statistics',
         sprite = 'utility/side_menu_production_icon',
-        hovered_sprite = 'utility/side_menu_production_hover_icon',
+        -- hovered_sprite = 'utility/side_menu_production_hover_icon',
         tooltip = { 'gui.team_statistics' },
     },
     {
@@ -147,7 +147,7 @@ function Public.get_main_frame(player)
             type = 'frame',
             name = main_frame_name,
             direction = 'vertical',
-            style = 'quick_bar_window_frame',
+            style = 'quick_bar_slot_window_frame',
         })
         main_frame.auto_center = true
         main_frame.visible = false
@@ -177,7 +177,7 @@ function Public.get_main_frame(player)
             type = 'sprite-button',
             name = main_frame_name .. '_settings',
             style = 'shortcut_bar_expand_button',
-            sprite = 'utility/expand_dots_white',
+            sprite = 'utility/expand_dots',
             hovered_sprite = 'utility/expand_dots',
             clicked_sprite = 'utility/expand_dots',
             tooltip = { 'gui.shortcut_settings' },
@@ -226,7 +226,7 @@ function Public.get_main_frame(player)
         for _, s in pairs(shortcut_buttons) do
             button = table.add({
                 type = 'sprite-button',
-                style = 'quick_bar_slot_button',
+                style = 'quick_bar_page_button',
                 sprite = s.sprite,
                 hovered_sprite = s.hovered_sprite,
                 name = s.name,

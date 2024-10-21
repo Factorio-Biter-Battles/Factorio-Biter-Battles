@@ -270,12 +270,12 @@ function Public.create_statistics_gui_button(player)
         type = 'sprite-button',
         name = 'bb_toggle_statistics',
         sprite = 'utility/expand',
-        hovered_sprite = 'utility/expand_dark',
+        -- hovered_sprite = 'utility/expand_dark',
         tooltip = 'Show game status!',
     })
 
     local frame =
-        summary.parent.add({ type = 'frame', name = 'bb_frame_statistics', style = 'finished_game_subheader_frame' })
+        summary.parent.add({ type = 'frame', name = 'bb_frame_statistics', style = 'subheader_frame' })
     frame.location = { x = 1, y = 38 }
     gui_style(frame, { minimal_height = 36, maximal_height = 36 })
 
@@ -363,7 +363,7 @@ function Public.create_main_gui(player)
     local inner_frame = flow.add({
         type = 'frame',
         name = 'inner_frame',
-        style = 'window_content_frame_packed',
+        style = 'inside_shallow_frame_packed',
         direction = 'vertical',
     })
 
@@ -477,7 +477,7 @@ function Public.create_main_gui(player)
             type = 'frame',
             name = 'table_frame',
             direction = 'horizontal',
-            style = 'filter_scroll_pane_background_frame',
+            style = 'filter_frame',
         }) --slot_button_deep_frame, quick_bar_window_frame, quick_bar_inner_panel
         gui_style(table_frame, { minimal_height = 40 })
 
@@ -490,7 +490,7 @@ function Public.create_main_gui(player)
                 type = 'sprite-button',
                 name = food_name,
                 sprite = 'item/' .. food_name,
-                style = 'recipe_slot_button',
+                style = 'slot_button',
                 tooltip = tooltip,
             })
             gui_style(f, { padding = 0 })
@@ -499,14 +499,14 @@ function Public.create_main_gui(player)
             type = 'sprite-button',
             name = 'send_all',
             caption = 'All',
-            style = 'recipe_slot_button',
+            style = 'slot_button',
             tooltip = 'LMB - low to high, RMB - high to low',
         })
         gui_style(f, { padding = 0, font_color = { r = 0.9, g = 0.9, b = 0.9 } })
         local f = t.add({
             type = 'sprite-button',
             name = 'info',
-            style = 'recipe_slot_button',
+            style = 'slot_button',
             sprite = 'utility/warning_white',
             tooltip = "If you don't see a food, it may have been disabled by special game mode, or you have not been authorized by your captain.",
         })
@@ -569,7 +569,7 @@ function Public.create_main_gui(player)
         local button = flow.add({
             type = 'sprite-button',
             name = 'bb_spectate',
-            sprite = 'utility/ghost_time_to_live_modifier_icon',
+            sprite = 'utility/create_ghost_on_entity_death_modifier_icon',
             tooltip = style.bold('Spectate'),
             style = 'forward_button',
         })
@@ -588,7 +588,7 @@ function Public.create_main_gui(player)
             type = 'sprite-button',
             name = 'bb_floating_shortcut_button',
             style = 'transparent_slot', -- 'quick_bar_slot_button', 'frame_action_button',
-            sprite = 'utility/slot_icon_module',
+            sprite = 'utility/empty_module_slot',
             tooltip = { 'gui.floating_shortcuts' },
         })
         gui_style(button, { size = 26 })
@@ -1107,7 +1107,7 @@ local function on_gui_click(event)
     if name == 'bb_toggle_statistics' then
         local default = element.sprite == 'utility/expand'
         element.sprite = default and 'utility/collapse' or 'utility/expand'
-        element.hovered_sprite = default and 'utility/collapse_dark' or 'utility/expand_dark'
+        -- element.hovered_sprite = default and 'utility/collapse_dark' or 'utility/expand_dark'
         element.tooltip = default and 'Hide game status!' or 'Show game status!'
 
         local frame = Gui.get_top_element(player, 'bb_frame_statistics')
