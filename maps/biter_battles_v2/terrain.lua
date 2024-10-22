@@ -40,7 +40,7 @@ local ores = {
 }
 -- mixed_ore_multiplier order is based on the ores variable
 local mixed_ore_multiplier = { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 }
-local rocks = { 'rock-huge', 'rock-big', 'rock-big', 'rock-big', 'sand-rock-big' }
+local rocks = { 'huge-rock', 'big-rock', 'big-rock', 'big-rock', 'big-sand-rock' }
 
 local chunk_tile_vectors = {}
 for x = 0, 31, 1 do
