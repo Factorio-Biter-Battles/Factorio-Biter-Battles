@@ -185,14 +185,14 @@ function Public.initiate(unit_group, target_force_name, strike_position, target_
         strike_info.phase = 2
         attack(unit_group, target_position)
     end
-    storage.ai_strikes[unit_group.group_number] = strike_info
+    storage.ai_strikes[unit_group.unique_id] = strike_info
 end
 
-function Public.step(group_number, result)
+function Public.step(id, result)
     if storage.bb_game_won_by_team then
         return
     end
-    local strike = storage.ai_strikes[group_number]
+    local strike = storage.ai_strikes[id]
     if strike ~= nil then
         if result == defines.behavior_result.success then
             strike.phase = strike.phase + 1
@@ -202,7 +202,7 @@ function Public.step(group_number, result)
                 local rocket_silo = storage.rocket_silo[strike.target_force_name]
                 assassinate(strike, rocket_silo)
             else
-                storage.ai_strikes[group_number] = nil
+                storage.ai_strikes[id] = nil
             end
         elseif result == defines.behavior_result.fail or result == defines.behavior_result.deleted then
             local rocket_silo = storage.rocket_silo[strike.target_force_name]
@@ -211,7 +211,7 @@ function Public.step(group_number, result)
             end -- helps multi-silo special code
             local unit_group = strike.unit_group
             if not unit_group.valid then
-                storage.ai_strikes[group_number] = nil
+                storage.ai_strikes[id] = nil
             elseif strike.phase == 3 and strike.target == rocket_silo then
                 local position = unit_group.position
                 local message = string.format(
@@ -222,7 +222,7 @@ function Public.step(group_number, result)
                 )
                 log(message)
                 game.print(message, Color.red)
-                storage.ai_strikes[group_number] = nil
+                storage.ai_strikes[id] = nil
             else
                 strike.phase = 3
                 assassinate(strike, rocket_silo)
