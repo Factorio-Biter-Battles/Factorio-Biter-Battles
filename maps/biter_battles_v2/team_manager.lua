@@ -31,7 +31,9 @@ function Public.freeze_players()
         p.set_allows_action(defines.input_action[action_name], false)
     end
     local defs = {
-        defines.input_action.write_to_console,
+        defines.input_action.delete_custom_tag,
+        defines.input_action.edit_custom_tag,
+        defines.input_action.edit_permission_group,
         defines.input_action.gui_checked_state_changed,
         defines.input_action.gui_click,
         defines.input_action.gui_confirmed,
@@ -42,9 +44,7 @@ function Public.freeze_players()
         defines.input_action.gui_switch_state_changed,
         defines.input_action.gui_text_changed,
         defines.input_action.gui_value_changed,
-        defines.input_action.edit_permission_group,
-        defines.input_action.delete_custom_tag,
-        defines.input_action.edit_custom_tag,
+        defines.input_action.write_to_console,
     }
     for _, d in pairs(defs) do
         p.set_allows_action(d, true)

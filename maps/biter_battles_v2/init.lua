@@ -75,9 +75,9 @@ function Public.initial_setup()
 
     game.forces.spectator.research_all_technologies()
     local defs = {
-        defines.input_action.open_blueprint_library_gui,
         defines.input_action.import_blueprint_string,
         defines.input_action.launch_rocket,
+        defines.input_action.open_blueprint_library_gui,
     }
     local p = game.permissions.get_group('Default')
     for k, v in pairs(defs) do
@@ -93,8 +93,10 @@ function Public.initial_setup()
         defines.input_action.activate_copy,
         defines.input_action.activate_cut,
         defines.input_action.activate_paste,
-        defines.input_action.change_active_quick_bar,
+        defines.input_action.admin_action,
         defines.input_action.change_active_item_group_for_filters,
+        defines.input_action.change_active_quick_bar,
+        defines.input_action.change_multiplayer_config,
         defines.input_action.clear_cursor,
         defines.input_action.edit_permission_group,
         defines.input_action.gui_checked_state_changed,
@@ -107,6 +109,7 @@ function Public.initial_setup()
         defines.input_action.gui_switch_state_changed,
         defines.input_action.gui_text_changed,
         defines.input_action.gui_value_changed,
+        defines.input_action.map_editor_action,
         defines.input_action.open_character_gui,
         defines.input_action.open_kills_gui,
         defines.input_action.quick_bar_set_selected_page,
@@ -114,12 +117,9 @@ function Public.initial_setup()
         defines.input_action.set_filter,
         defines.input_action.set_player_color,
         defines.input_action.start_walking,
+        defines.input_action.toggle_map_editor,
         defines.input_action.toggle_show_entity_info,
         defines.input_action.write_to_console,
-        defines.input_action.map_editor_action,
-        defines.input_action.toggle_map_editor,
-        defines.input_action.change_multiplayer_config,
-        defines.input_action.admin_action,
     }
     for _, d in pairs(defs) do
         p.set_allows_action(d, true)
