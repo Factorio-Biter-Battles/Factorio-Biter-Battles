@@ -119,7 +119,7 @@ function Public.roll(entity_type, evolution_factor)
     end
     local evo = evolution_factor
     if not evo then
-        evo = game.forces.enemy.evolution_factor
+        evo = game.forces.enemy.get_evolution_factor(storage.bb_surface_name)
     end
     return type_functions[entity_type](evo)
 end

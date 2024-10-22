@@ -28,7 +28,7 @@ local function update_boss_modifiers(force_name_biter, damage_mod_mult, speed_mo
 end
 
 local function set_biter_endgame_modifiers(force)
-    if force.evolution_factor ~= 1 then
+    if force.get_evolution_factor(storage.bb_surface_name) ~= 1 then
         return
     end
 
@@ -233,7 +233,7 @@ function Public.do_raw_feed(flask_amount, food, biter_force_name)
     local food_value = food_values[food].value * storage.difficulty_vote_value
 
     local evo = storage.bb_evolution[biter_force_name]
-    local biter_evo = game.forces[biter_force_name].evolution_factor
+    local biter_evo = game.forces[biter_force_name].get_evolution_factor(storage.bb_surface_name)
     local threat = 0.0
 
     local current_player_count = #game.forces.north.connected_players + #game.forces.south.connected_players
@@ -252,7 +252,7 @@ function Public.do_raw_feed(flask_amount, food, biter_force_name)
     --SET THREAT INCOME
     storage.bb_threat_income[biter_force_name] = evo * 25
 
-    game.forces[biter_force_name].evolution_factor = math.min(evo, 1)
+    game.forces[biter_force_name].set_evolution_factor(math.min(evo, 1), storage.bb_surface_name)
     storage.bb_evolution[biter_force_name] = evo
     set_biter_endgame_modifiers(game.forces[biter_force_name])
 
@@ -273,7 +273,10 @@ function Public.do_raw_feed(flask_amount, food, biter_force_name)
 
     if storage.active_special_games['shared_science_throw'] then
         local enemyBitersForceName = enemy_team_of[force_translation[biter_force_name]] .. '_biters'
-        game.forces[enemyBitersForceName].evolution_factor = game.forces[biter_force_name].evolution_factor
+        game.forces[enemyBitersForceName].set_evolution_factor(
+            game.forces[biter_force_name].get_evolution_factor(storage.bb_surface_name),
+            storage.bb_surface_name
+        )
         storage.bb_evolution[enemyBitersForceName] = storage.bb_evolution[biter_force_name]
         storage.bb_threat_income[enemyBitersForceName] = storage.bb_threat_income[biter_force_name]
         storage.bb_threat[enemyBitersForceName] = math_round(storage.bb_threat[enemyBitersForceName] + threat, decimals)

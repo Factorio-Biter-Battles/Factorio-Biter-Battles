@@ -23,7 +23,7 @@ local function on_entity_died(event)
     if event.entity.type ~= 'unit-spawner' then
         return
     end
-    local e = math.ceil(event.entity.force.evolution_factor * 10)
+    local e = math.ceil(event.entity.force.get_evolution_factor(storage.bb_surface_name) * 10)
     if e < 1 then
         e = 1
     end

@@ -26,10 +26,13 @@ local function generate_shared_science_throw()
         alignment = 'center',
         scale_with_zoom = false,
     })
-    local maxEvoFactor =
-        math.max(game.forces['north_biters'].evolution_factor, game.forces['south_biters'].evolution_factor)
-    game.forces['north_biters'].evolution_factor = maxEvoFactor
-    game.forces['south_biters'].evolution_factor = maxEvoFactor
+    local surf = storage.bb_surface_name
+    local maxEvoFactor = math.max(
+        game.forces['north_biters'].get_evolution_factor(surf),
+        game.forces['south_biters'].get_evolution_factor(surf)
+    )
+    game.forces['north_biters'].set_evolution_factor(maxEvoFactor, surf)
+    game.forces['south_biters'].set_evolution_factor(maxEvoFactor, surf)
     local maxBbEvo = math.max(storage.bb_evolution['north_biters'], storage.bb_evolution['south_biters'])
     storage.bb_evolution['north_biters'] = maxBbEvo
     storage.bb_evolution['south_biters'] = maxBbEvo
