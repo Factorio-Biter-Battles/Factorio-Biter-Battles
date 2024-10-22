@@ -90,9 +90,6 @@ function Public.initial_setup()
     end
 
     defs = {
-        defines.input_action.activate_copy,
-        defines.input_action.activate_cut,
-        defines.input_action.activate_paste,
         defines.input_action.admin_action,
         defines.input_action.change_active_item_group_for_filters,
         defines.input_action.change_active_quick_bar,
@@ -111,9 +108,9 @@ function Public.initial_setup()
         defines.input_action.gui_value_changed,
         defines.input_action.map_editor_action,
         defines.input_action.open_character_gui,
-        defines.input_action.open_kills_gui,
         defines.input_action.quick_bar_set_selected_page,
         defines.input_action.quick_bar_set_slot,
+        defines.input_action.remote_view_surface,
         defines.input_action.set_filter,
         defines.input_action.set_player_color,
         defines.input_action.start_walking,

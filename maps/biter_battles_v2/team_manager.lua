@@ -44,6 +44,7 @@ function Public.freeze_players()
         defines.input_action.gui_switch_state_changed,
         defines.input_action.gui_text_changed,
         defines.input_action.gui_value_changed,
+        defines.input_action.remote_view_surface,
         defines.input_action.write_to_console,
     }
     for _, d in pairs(defs) do
