@@ -404,18 +404,18 @@ function Functions.no_turret_creep(event)
     end
 
     if event.player_index then
-        game.get_player(event.player_index).insert({ name = entity.name, count = 1 })
+        local player = game.get_player(event.player_index)
+        player.insert({ name = entity.name, count = 1 })
+        player.create_local_flying_text({
+            position = entity.position,
+            text = 'Turret too close to spawner!',
+            color = { r = 0.98, g = 0.66, b = 0.22 },
+        })
     else
+        -- TODO: Create flying text differently for bots
         local inventory = event.robot.get_inventory(defines.inventory.robot_cargo)
         inventory.insert({ name = entity.name, count = 1 })
     end
-
-    surface.create_entity({
-        name = 'flying-text',
-        position = entity.position,
-        text = 'Turret too close to spawner!',
-        color = { r = 0.98, g = 0.66, b = 0.22 },
-    })
 
     entity.destroy()
 end

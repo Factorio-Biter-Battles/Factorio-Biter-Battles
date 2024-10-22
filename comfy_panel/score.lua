@@ -400,8 +400,7 @@ local function on_entity_died(event)
         local score = this.score_table[player.force.name].players[player.name]
         score.killscore = score.killscore + entity_score_values[event.entity.name]
         if storage.show_floating_killscore[player.name] then
-            event.entity.surface.create_entity({
-                name = 'flying-text',
+            event.entity.create_local_flying_text({
                 position = event.entity.position,
                 text = tostring(entity_score_values[event.entity.name]),
                 color = player.chat_color,

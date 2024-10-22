@@ -46,8 +46,7 @@ local function spaghett_deny_building(event)
         inventory.insert({ name = entity.name, count = 1 })
     end
 
-    event.entity.surface.create_entity({
-        name = 'flying-text',
+    event.entity.create_local_flying_text({
         position = entity.position,
         text = 'Spaghett Mode Active!',
         color = { r = 0.98, g = 0.66, b = 0.22 },

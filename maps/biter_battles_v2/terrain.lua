@@ -828,8 +828,7 @@ function Public.minable_wrecks(entity, player)
             surface.spill_item_stack(entity.position, { name = name, count = amount_to_spill }, true)
         end
 
-        surface.create_entity({
-            name = 'flying-text',
+        player.create_local_flying_text({
             position = { entity.position.x, entity.position.y - 0.5 * k },
             text = '+' .. amount .. ' [img=item/' .. name .. ']',
             color = { r = 0.98, g = 0.66, b = 0.22 },
