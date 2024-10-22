@@ -21,6 +21,7 @@ local math_atan2 = math.atan2
 local max_strike_distance = 512
 local min_strike_distance = 256
 local strike_target_clearance = 255
+local debug = false
 
 local function calculate_secant_intersections(r, a, b, c)
     local t = a * a + b * b
@@ -133,6 +134,10 @@ local function select_strike_position(source_position, target_position, boundary
 end
 
 local function move(unit_group, position)
+    if debug then
+        log('ai: ' .. unit_group.unique_id .. ' move to [' .. position.x .. ',' .. position.y .. ']')
+    end
+
     unit_group.set_command({
         type = defines.command.go_to_location,
         destination = position,
@@ -142,6 +147,9 @@ local function move(unit_group, position)
 end
 
 local function attack(unit_group, position)
+    if debug then
+        log('ai: ' .. unit_group.unique_id .. ' attack [' .. position.x .. ',' .. position.y .. ']')
+    end
     unit_group.set_command({
         type = defines.command.attack_area,
         destination = position,
@@ -151,6 +159,18 @@ local function attack(unit_group, position)
 end
 
 local function assassinate(strike, target)
+    if debug then
+        log(
+            'ai: '
+                .. strike.unit_group.unique_id
+                .. ' assasinate ['
+                .. target.position.x
+                .. ','
+                .. target.position.y
+                .. ']'
+        )
+    end
+
     strike.target = target
     strike.unit_group.set_command({
         type = defines.command.attack,
@@ -188,12 +208,29 @@ function Public.initiate(unit_group, target_force_name, strike_position, target_
     storage.ai_strikes[unit_group.unique_id] = strike_info
 end
 
+local function behaviour_result_str(result)
+    if result == defines.behavior_result.success then
+        return 'success'
+    elseif result == defines.behavior_result.fail then
+        return 'fail'
+    elseif result == defines.behavior_result.deleted then
+        return 'deleted'
+    elseif result == defines.behavior_result.in_progress then
+        return 'in_progress'
+    else
+        return 'unknown'
+    end
+end
+
 function Public.step(id, result)
     if storage.bb_game_won_by_team then
         return
     end
     local strike = storage.ai_strikes[id]
     if strike ~= nil then
+        if debug then
+            log('ai: ' .. id .. ' ' .. behaviour_result_str(result))
+        end
         if result == defines.behavior_result.success then
             strike.phase = strike.phase + 1
             if strike.phase == 2 then
