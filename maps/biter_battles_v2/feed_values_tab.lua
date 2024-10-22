@@ -158,19 +158,20 @@ local function add_feed_values(player, element, food_product_info)
     end
 end
 
+-- TODO: Fix stack overflow in FeedValues
 local function build_config_gui(player, frame)
-    local frame_feed_values = Tabs.comfy_panel_get_active_frame(player)
-    if not frame_feed_values then
-        return
-    end
-    frame_feed_values.clear()
+    -- local frame_feed_values = Tabs.comfy_panel_get_active_frame(player)
+    -- if not frame_feed_values then
+    --     return
+    -- end
+    -- frame_feed_values.clear()
 
-    local food_product_info = {}
-    for food, _ in pairs(Tables.food_names) do
-        food_product_info[food] = ItemCosts.get_info(food)
-    end
+    -- local food_product_info = {}
+    -- for food, _ in pairs(Tables.food_names) do
+    --     food_product_info[food] = ItemCosts.get_info(food)
+    -- end
 
-    add_feed_values(player, frame_feed_values, food_product_info)
+    -- add_feed_values(player, frame_feed_values, food_product_info)
 end
 
 comfy_panel_tabs['FeedValues'] = { gui = build_config_gui, admin = false }
