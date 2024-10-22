@@ -367,13 +367,13 @@ local function on_built_entity(event)
     Functions.no_landfill_by_untrusted_user(event, Session.get_trusted_table())
     Functions.no_turret_creep(event)
     Terrain.deny_enemy_side_ghosts(event)
-    AiTargets.start_tracking(event.created_entity)
+    AiTargets.start_tracking(event.entity)
 end
 
 local function on_robot_built_entity(event)
     Functions.no_turret_creep(event)
     Terrain.deny_construction_bots(event)
-    AiTargets.start_tracking(event.created_entity)
+    AiTargets.start_tracking(event.entity)
 end
 
 local function on_robot_built_tile(event)

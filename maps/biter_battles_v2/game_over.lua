@@ -428,7 +428,7 @@ local function respawn_silo(event)
 end
 
 function log_to_db(message, appendBool)
-    game.write_file('logToDBgameResult', message, appendBool, 0)
+    helpers.write_file('logToDBgameResult', message, appendBool, 0)
 end
 
 function Public.silo_death(event)
@@ -504,7 +504,7 @@ function Public.silo_death(event)
             .. south_players
 
         Server.to_discord_embed(discord_message)
-        log({ '', '[TEAMSTATS-FINAL]', game.table_to_json(storage.team_stats) })
+        log({ '', '[TEAMSTATS-FINAL]', helpers.table_to_json(storage.team_stats) })
 
         storage.results_sent_south = false
         storage.results_sent_north = false
@@ -551,9 +551,9 @@ function Public.silo_death(event)
                 end
             end
             if special.stats.communityPickInfo then
-                log_to_db('[CommunityPickInfo]' .. game.table_to_json(special.stats.communityPickInfo) .. '\n', true)
+                log_to_db('[CommunityPickInfo]' .. helpers.table_to_json(special.stats.communityPickInfo) .. '\n', true)
             end
-            log_to_db('[TeamStats]' .. game.table_to_json(storage.team_stats) .. '\n', true)
+            log_to_db('[TeamStats]' .. helpers.table_to_json(storage.team_stats) .. '\n', true)
             log_to_db('>End of log', true)
         end
     end

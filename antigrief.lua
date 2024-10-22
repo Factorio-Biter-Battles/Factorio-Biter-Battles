@@ -314,7 +314,7 @@ local function on_built_entity(event)
     end
     local tracker = session.get_session_table()
     local trusted = session.get_trusted_table()
-    if event.created_entity.type == 'entity-ghost' then
+    if event.entity.type == 'entity-ghost' then
         local player = game.get_player(event.player_index)
 
         if player.admin then
@@ -330,7 +330,7 @@ local function on_built_entity(event)
         end
 
         if playtime < this.required_playtime then
-            event.created_entity.destroy()
+            event.entity.destroy()
             player.print(get_not_trusted_warning(player))
         end
     end

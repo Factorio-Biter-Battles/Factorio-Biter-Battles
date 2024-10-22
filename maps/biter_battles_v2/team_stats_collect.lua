@@ -36,7 +36,7 @@ TeamStatsCollect.items_to_show_summaries_of = {
     { item = 'advanced-circuit', hide_by_default = true },
     { item = 'processing-unit', space_after = true, hide_by_default = true },
 
-    { item = 'rocket-control-unit', hide_by_default = true },
+    { item = 'rocket-part', hide_by_default = true },
     { item = 'rocket-fuel', hide_by_default = true },
     { item = 'low-density-structure', space_after = true, hide_by_default = true },
 
@@ -138,11 +138,11 @@ local function update_teamstats()
         force_stats.total_players = total_players[force_name]
         force_stats.player_ticks = (force_stats.player_ticks or 0) + #force.connected_players * (tick - prev_ticks)
         force_stats.max_players = math.max(force_stats.max_players or 0, #force.connected_players)
-        local item_prod = force.item_production_statistics
+        local item_prod = force.get_item_production_statistics(storage.bb_surface_name)
         --local item_prod_inputs = item_prod.input_counts
         --log(serpent.line(item_prod_inputs))
-        local build_stat = force.entity_build_count_statistics
-        local kill_stat = force.kill_count_statistics
+        local build_stat = force.get_entity_build_count_statistics(storage.bb_surface_name)
+        local kill_stat = force.get_kill_count_statistics(storage.bb_surface_name)
         for _, item_info in ipairs(TeamStatsCollect.items_to_show_summaries_of) do
             local item = item_info.item
             local item_stat = force_stats.items[item]
@@ -168,7 +168,7 @@ local function update_teamstats()
                 end
             end
         end
-        local science_logs = global['science_logs_total_' .. force_name]
+        local science_logs = storage['science_logs_total_' .. force_name]
         for idx, info in ipairs(tables.food_long_and_short) do
             local item = info.long_name
             local food_stat = force_stats.food[item]
@@ -187,7 +187,7 @@ local function update_teamstats()
 
     local last_print = storage.last_teamstats_print_at or 0
     if tick - last_print > 5 * 60 * 60 then
-        log({ '', '[TEAMSTATS-PERIODIC]', game.table_to_json(team_stats) })
+        log({ '', '[TEAMSTATS-PERIODIC]', helpers.table_to_json(team_stats) })
         storage.last_teamstats_print_at = tick
     end
 end

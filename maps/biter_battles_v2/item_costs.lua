@@ -40,7 +40,7 @@ local raw_costs = ItemCosts.raw_costs
 local recipe_productivity = {
     ['rocket-part'] = 1.4,
     ['processing-unit'] = 1.08,
-    ['rocket-control-unit'] = 1.08,
+    ['rocket-part'] = 1.08,
     ['production-science-pack'] = 1.08,
     ['utility-science-pack'] = 1.08,
 }
@@ -251,7 +251,7 @@ local function find_all_costs()
         ingredients = {
             { name = 'low-density-structure', amount = 10 },
             { name = 'rocket-fuel', amount = 10 },
-            { name = 'rocket-control-unit', amount = 10 },
+            { name = 'rocket-part', amount = 10 },
         },
         products = { { name = 'rocket-part', amount = 1 } },
         energy = 3, -- Time to craft one rocket part

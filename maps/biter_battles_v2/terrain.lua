@@ -879,38 +879,38 @@ local robot_build_restriction = {
 }
 
 function Public.deny_construction_bots(event)
-    if not event.created_entity.valid then
+    if not event.entity.valid then
         return
     end
     if not robot_build_restriction[event.robot.force.name] then
         return
     end
-    if not robot_build_restriction[event.robot.force.name](event.created_entity.position.y) then
+    if not robot_build_restriction[event.robot.force.name](event.entity.position.y) then
         return
     end
     local inventory = event.robot.get_inventory(defines.inventory.robot_cargo)
-    inventory.insert({ name = event.created_entity.name, count = 1 })
-    event.robot.surface.create_entity({ name = 'explosion', position = event.created_entity.position })
+    inventory.insert({ name = event.entity.name, count = 1 })
+    event.robot.surface.create_entity({ name = 'explosion', position = event.entity.position })
     game.print(
         'Team ' .. event.robot.force.name .. "'s construction drone had an accident.",
         { r = 200, g = 50, b = 100 }
     )
-    event.created_entity.destroy()
+    event.entity.destroy()
 end
 
 function Public.deny_enemy_side_ghosts(event)
-    if not event.created_entity.valid then
+    if not event.entity.valid then
         return
     end
-    if event.created_entity.type == 'entity-ghost' or event.created_entity.type == 'tile-ghost' then
+    if event.entity.type == 'entity-ghost' or event.entity.type == 'tile-ghost' then
         local force = game.get_player(event.player_index).force.name
         if not robot_build_restriction[force] then
             return
         end
-        if not robot_build_restriction[force](event.created_entity.position.y) then
+        if not robot_build_restriction[force](event.entity.position.y) then
             return
         end
-        event.created_entity.destroy()
+        event.entity.destroy()
     end
 end
 

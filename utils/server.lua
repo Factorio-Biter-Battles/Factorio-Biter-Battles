@@ -575,7 +575,7 @@ local statistics = {
     'entity_build_count_statistics',
 }
 function Public.export_stats()
-    local table_to_json = game.table_to_json
+    local table_to_json = helpers.table_to_json
     local stats = {
         game_tick = game.tick,
         player_count = #game.connected_players,
