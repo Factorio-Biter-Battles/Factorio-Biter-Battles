@@ -25,7 +25,7 @@ local function generate_mixed_ore_map(type, size)
 
         game.print(
             'Special game Mixed ore map is being scheduled. The special game will start after restarting the map!',
-            Color.warning
+            { color = Color.warning }
         )
     end
 end

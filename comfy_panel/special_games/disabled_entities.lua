@@ -19,20 +19,20 @@ local function generate_disabled_entities(team, eq)
         storage.special_games_variables['disabled_entities']['north'] = tab
         game.print(
             'Special game Disabled entities: ' .. table.concat(eq, ', ') .. ' for team North is being generated!',
-            Color.warning
+            { color = Color.warning }
         )
     elseif team == 'right' then
         storage.special_games_variables['disabled_entities']['south'] = tab
         game.print(
             'Special game Disabled entities: ' .. table.concat(eq, ', ') .. ' for team South is being generated!',
-            Color.warning
+            { color = Color.warning }
         )
     else
         storage.special_games_variables['disabled_entities']['south'] = tab
         storage.special_games_variables['disabled_entities']['north'] = tab
         game.print(
             'Special game Disabled entities: ' .. table.concat(eq, ', ') .. ' for both teams is being generated!',
-            Color.warning
+            { color = Color.warning }
         )
     end
     storage.active_special_games['disabled_entities'] = true

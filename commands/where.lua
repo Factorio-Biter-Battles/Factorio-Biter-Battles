@@ -55,7 +55,7 @@ commands.add_command('where', 'Locates a player', function(cmd)
             Sounds.notify_player(player, 'utility/smart_pipette')
             create_mini_camera_gui(player, target_player.name, target_player.position, target_player.surface.index)
         else
-            player.print('Please type a name of a player who is connected.', Color.warning)
+            player.print('Please type a name of a player who is connected.', { color = Color.warning })
         end
     else
         return
@@ -68,7 +68,7 @@ local function do_follow(cmd)
         return
     end
     if player.force.name ~= 'spectator' then
-        player.print('You must be a spectator to use this command.', Color.warning)
+        player.print('You must be a spectator to use this command.', { color = Color.warning })
         return
     end
 

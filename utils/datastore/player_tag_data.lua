@@ -52,24 +52,24 @@ commands.add_command('save-tag', 'Sets your custom tag that is persistent.', fun
 
     if param then
         if alphanumeric(param) then
-            player.print('Tag is not valid.', { r = 0.90, g = 0.0, b = 0.0 })
+            player.print('Tag is not valid.', { color = { r = 0.90, g = 0.0, b = 0.0 } })
             return
         end
 
         if param == '' or param == 'Name' then
-            return player.print('You did not specify a tag.', Color.warning)
+            return player.print('You did not specify a tag.', { color = Color.warning })
         end
 
         if string.len(param) > 32 then
-            player.print('Tag is too long. 64 characters maximum.', { r = 0.90, g = 0.0, b = 0.0 })
+            player.print('Tag is too long. 64 characters maximum.', { color = { r = 0.90, g = 0.0, b = 0.0 } })
             return
         end
 
         set_data(tag_dataset, player.name, param)
         player.tag = '[' .. param .. ']'
-        player.print('Your tag has been saved.', Color.success)
+        player.print('Your tag has been saved.', { color = Color.success })
     else
-        player.print('You did not specify a tag.', Color.warning)
+        player.print('You did not specify a tag.', { color = Color.warning })
     end
 end)
 
@@ -80,7 +80,7 @@ commands.add_command('remove-tag', 'Removes your custom tag.', function()
     end
 
     set_data(tag_dataset, player.name, nil)
-    player.print('Your tag has been removed.', Color.success)
+    player.print('Your tag has been removed.', { color = Color.success })
 end)
 
 Event.add(defines.events.on_player_joined_game, function(event)

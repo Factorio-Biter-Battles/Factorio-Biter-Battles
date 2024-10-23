@@ -9,7 +9,7 @@ local function generate_infinity_chest(separate_chests, operable, gap, eq)
         object.destroy()
     end
 
-    game.print('Special game Infinity chest is being generated!', Color.warning)
+    game.print('Special game Infinity chest is being generated!', { color = Color.warning })
     if operable == 'left' then
         operable = true
     else

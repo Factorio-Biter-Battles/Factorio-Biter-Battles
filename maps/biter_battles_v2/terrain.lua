@@ -848,11 +848,14 @@ function Public.restrict_landfill(surface, user, tiles)
         if is_horizontal_border_river(check_position, seed) then
             surface.set_tiles({ { name = t.old_tile.name, position = t.position } }, true)
             if user ~= nil then
-                user.print('You can not landfill the river', { r = 0.22, g = 0.99, b = 0.99 })
+                user.print('You can not landfill the river', { color = { r = 0.22, g = 0.99, b = 0.99 } })
             end
         elseif user ~= nil and not trusted[user.name] then
             surface.set_tiles({ { name = t.old_tile.name, position = t.position } }, true)
-            user.print('You have not grown accustomed to this technology yet.', { r = 0.22, g = 0.99, b = 0.99 })
+            user.print(
+                'You have not grown accustomed to this technology yet.',
+                { color = { r = 0.22, g = 0.99, b = 0.99 } }
+            )
         end
     end
 end
@@ -892,7 +895,7 @@ function Public.deny_construction_bots(event)
     event.robot.surface.create_entity({ name = 'explosion', position = event.entity.position })
     game.print(
         'Team ' .. event.robot.force.name .. "'s construction drone had an accident.",
-        { r = 200, g = 50, b = 100 }
+        { color = { r = 200, g = 50, b = 100 } }
     )
     event.entity.destroy()
 end

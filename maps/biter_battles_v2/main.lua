@@ -306,14 +306,14 @@ local function on_console_command(event)
             end
             if not storage.ignore_lists[player.name][param] then
                 storage.ignore_lists[player.name][param] = true
-                player.print('You have ignored ' .. param, { r = 0, g = 1, b = 1 })
+                player.print('You have ignored ' .. param, { color = { r = 0, g = 1, b = 1 } })
             else
-                player.print('You are already ignoring ' .. param, { r = 0, g = 1, b = 1 })
+                player.print('You are already ignoring ' .. param, { color = { r = 0, g = 1, b = 1 } })
             end
         else
             player.print(
                 'Invalid input. Make sure the name contains no spaces, quotes, semicolons, backticks, or any spaces.',
-                { r = 1, g = 0, b = 0 }
+                { color = { r = 1, g = 0, b = 0 } }
             )
         end
     elseif cmd == 'unignore' then
@@ -326,14 +326,14 @@ local function on_console_command(event)
         then
             if storage.ignore_lists[player.name][param] then
                 storage.ignore_lists[player.name][param] = nil
-                player.print('You have unignored ' .. param, { r = 0, g = 1, b = 1 })
+                player.print('You have unignored ' .. param, { color = { r = 0, g = 1, b = 1 } })
             else
-                player.print('You are not currently ignoring ' .. param, { r = 0, g = 1, b = 1 })
+                player.print('You are not currently ignoring ' .. param, { color = { r = 0, g = 1, b = 1 } })
             end
         else
             player.print(
                 'Invalid input. Make sure the name contains no spaces, quotes, semicolons, backticks, or any spaces.',
-                { r = 1, g = 0, b = 0 }
+                { color = { r = 1, g = 0, b = 0 } }
             )
         end
     elseif cmd == 'w' or cmd == 'whisper' then
@@ -668,19 +668,19 @@ local function clear_corpses(cmd)
         return
     end
     if param == nil then
-        player.print('[ERROR] Must specify radius!', Color.fail)
+        player.print('[ERROR] Must specify radius!', { color = Color.fail })
         return
     end
     if not trusted[player.name] and not player.admin and param > 100 then
-        player.print('[ERROR] Value is too big. Max radius is 100', Color.fail)
+        player.print('[ERROR] Value is too big. Max radius is 100', { color = Color.fail })
         return
     end
     if param < 0 then
-        player.print('[ERROR] Value is too low.', Color.fail)
+        player.print('[ERROR] Value is too low.', { color = Color.fail })
         return
     end
     if param > 500 then
-        player.print('[ERROR] Value is too big.', Color.fail)
+        player.print('[ERROR] Value is too big.', { color = Color.fail })
         return
     end
 

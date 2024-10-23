@@ -16,7 +16,7 @@ function Public.print_muted_message(player)
     player.print(
         'Did you spam pings or verbally grief? You seem to have been muted.'
             .. '\nAppeal on Discord, link at biterbattles.org\nHave a break, have a KitKat.',
-        Color.warning
+        { color = Color.warning }
     )
 end
 
@@ -25,7 +25,7 @@ local function on_player_muted(event)
         local player = game.get_player(event.player_index)
         this.muted[player.name] = true
         local message = '[MUTED] ' .. player.name .. ' has been muted'
-        game.print(message, Color.white)
+        game.print(message, { color = Color.white })
         Server.to_discord_embed(message)
     end
 end
@@ -35,7 +35,7 @@ local function on_player_unmuted(event)
         local player = game.get_player(event.player_index)
         this.muted[player.name] = nil
         local message = '[UNMUTED] ' .. player.name .. ' has been unmuted'
-        game.print(message, Color.white)
+        game.print(message, { color = Color.white })
         Server.to_discord_embed(message)
     end
 end

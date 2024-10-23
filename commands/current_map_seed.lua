@@ -6,7 +6,10 @@ local Public = {}
 function Public.current_map_seed(cmd)
     local player = cmd.player_index and game.get_player(cmd.player_index)
     if player then
-        player.print('Current seed: ' .. game.surfaces[storage.bb_surface_name].map_gen_settings.seed, Color.warning)
+        player.print(
+            'Current seed: ' .. game.surfaces[storage.bb_surface_name].map_gen_settings.seed,
+            { color = Color.warning }
+        )
     end
 end
 

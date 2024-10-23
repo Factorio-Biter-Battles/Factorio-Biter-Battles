@@ -85,7 +85,7 @@ Event.add(defines.events.on_console_command, function(event)
         for word in param:gmatch('%S+') do
             if color_table[word] then
                 set_data(color_data_set, player.name, { color = { color }, chat = { chat } })
-                player.print('Your color has been saved.', Color.success)
+                player.print('Your color has been saved.', { color = Color.success })
                 return true
             end
         end

@@ -10,7 +10,7 @@ local function get_or_create_dummy_player(playerName)
             color = { r = 255, g = 255, b = 255, a = 1 },
             force = { name = (storage.chosen_team[playerName] or 'spectator') },
             print = function(msg, color)
-                game.print('to player ' .. playerName .. ':' .. msg, color)
+                game.print('to player ' .. playerName .. ':' .. msg, { color = color })
             end,
             tag = special and special.test_players[playerName],
         }

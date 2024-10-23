@@ -89,7 +89,7 @@ local function print_feeding_msg(player, food, flask_amount)
                 Functions.team_name_with_color(enemy),
                 "'s biters!",
             }),
-            { r = 0.9, g = 0.9, b = 0.9 }
+            { color = { r = 0.9, g = 0.9, b = 0.9 } }
         )
         Server.to_discord_bold(table.concat({
             player.name,
@@ -109,7 +109,7 @@ local function print_feeding_msg(player, food, flask_amount)
         if flask_amount == 1 then
             player.print(
                 'You fed one flask of ' .. formatted_food .. ' to ' .. target_team_text .. " team's biters.",
-                { r = 0.98, g = 0.66, b = 0.22 }
+                { color = { r = 0.98, g = 0.66, b = 0.22 } }
             )
         else
             player.print(
@@ -120,7 +120,7 @@ local function print_feeding_msg(player, food, flask_amount)
                     .. ' to '
                     .. target_team_text
                     .. " team's biters.",
-                { r = 0.98, g = 0.66, b = 0.22 }
+                { color = { r = 0.98, g = 0.66, b = 0.22 } }
             )
         end
     end
@@ -308,7 +308,7 @@ function Public.feed_biters_from_inventory(player, food)
     if flask_amount == 0 then
         player.print(
             'You have no ' .. food_values[food].name .. ' flask in your inventory.',
-            { r = 0.98, g = 0.66, b = 0.22 }
+            { color = { r = 0.98, g = 0.66, b = 0.22 } }
         )
         return
     end
@@ -421,11 +421,11 @@ function Public.feed_biters_mixed_from_inventory(player, button)
         end
     end
     if #message == 2 then
-        player.print('You have no flasks in your inventory', { r = 0.98, g = 0.66, b = 0.22 })
+        player.print('You have no flasks in your inventory', { color = { r = 0.98, g = 0.66, b = 0.22 } })
         return
     end
     table.insert(message, 'to ' .. Functions.team_name_with_color(enemy_force_name) .. "'s biters!")
-    game.print(table.concat(message), { r = 0.9, g = 0.9, b = 0.9 })
+    game.print(table.concat(message), { color = { r = 0.9, g = 0.9, b = 0.9 } })
 end
 
 local function calc_send(cmd)

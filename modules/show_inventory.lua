@@ -461,7 +461,7 @@ commands.add_command('inventory', 'Opens a players inventory!', function(cmd)
         local valid, opened = player_opened(player)
         if valid then
             if target_player == opened then
-                return player.print('You are already viewing this players inventory.', Color.warning)
+                return player.print('You are already viewing this players inventory.', { color = Color.warning })
             end
         end
 
@@ -469,7 +469,7 @@ commands.add_command('inventory', 'Opens a players inventory!', function(cmd)
             Sounds.notify_player(player, 'utility/smart_pipette')
             open_inventory(player, target_player)
         else
-            player.print('Please type a name of a player who is connected.', Color.warning)
+            player.print('Please type a name of a player who is connected.', { color = Color.warning })
         end
     else
         return

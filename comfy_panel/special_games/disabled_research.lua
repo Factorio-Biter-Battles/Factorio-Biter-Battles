@@ -20,7 +20,7 @@ local function generate_disabled_research(team, eq)
                 .. ' for team '
                 .. tab[team]
                 .. ' is being generated!',
-            Color.warning
+            { color = Color.warning }
         )
         return
     end
@@ -33,7 +33,7 @@ local function generate_disabled_research(team, eq)
     end
     game.print(
         'Special game Disabled research: ' .. table.concat(eq, ', ') .. ' for both teams is being generated!',
-        Color.warning
+        { color = Color.warning }
     )
 end
 
@@ -50,7 +50,7 @@ local function reset_disabled_research(team)
             game.forces[tab[team]].technologies[v].enabled = true
         end
         storage.special_games_variables['disabled_research'][tab[team]] = {}
-        game.print('All disabled research has been enabled again for team ' .. tab[team], Color.warning)
+        game.print('All disabled research has been enabled again for team ' .. tab[team], { color = Color.warning })
         return
     else
         for k, v in pairs(storage.special_games_variables['disabled_research']['north']) do
@@ -61,7 +61,7 @@ local function reset_disabled_research(team)
         end
         storage.special_games_variables['disabled_research']['north'] = {}
         storage.special_games_variables['disabled_research']['south'] = {}
-        game.print('All disabled research has been enabled again for both teams', Color.warning)
+        game.print('All disabled research has been enabled again for both teams', { color = Color.warning })
     end
 end
 

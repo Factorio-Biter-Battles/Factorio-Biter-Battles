@@ -11,21 +11,21 @@ local closable_frame = require('utils.ui.closable_frame')
 local function admin_only_message(str)
     for _, player in pairs(game.connected_players) do
         if player.admin == true then
-            player.print('Admins-only-message: ' .. str, { r = 0.88, g = 0.88, b = 0.88 })
+            player.print('Admins-only-message: ' .. str, { color = { r = 0.88, g = 0.88, b = 0.88 } })
         end
     end
 end
 
 local function jail(player, source_player)
     if player.name == source_player.name then
-        return player.print("You can't select yourself!", { r = 1, g = 0.5, b = 0.1 })
+        return player.print("You can't select yourself!", { color = { r = 1, g = 0.5, b = 0.1 } })
     end
     Jailed.try_ul_data(player.name, true, source_player.name)
 end
 
 local function free(player, source_player)
     if player.name == source_player.name then
-        return player.print("You can't select yourself!", { r = 1, g = 0.5, b = 0.1 })
+        return player.print("You can't select yourself!", { color = { r = 1, g = 0.5, b = 0.1 } })
     end
     Jailed.try_ul_data(player.name, false, source_player.name)
 end
@@ -49,10 +49,13 @@ end
 
 local function bring_player(player, source_player)
     if player.name == source_player.name then
-        return player.print("You can't select yourself!", { r = 1, g = 0.5, b = 0.1 })
+        return player.print("You can't select yourself!", { color = { r = 1, g = 0.5, b = 0.1 } })
     end
     if not teleport_player_to_position(player, source_player.position, source_player.surface) then
-        return source_player.print('Could not teleport player to your position.', { r = 1, g = 0.5, b = 0.1 })
+        return source_player.print(
+            'Could not teleport player to your position.',
+            { color = { r = 1, g = 0.5, b = 0.1 } }
+        )
     end
     game.print(
         player.name
@@ -60,19 +63,22 @@ local function bring_player(player, source_player)
             .. source_player.name
             .. '. '
             .. bring_player_messages[math.random(1, #bring_player_messages)],
-        { r = 0.98, g = 0.66, b = 0.22 }
+        { color = { r = 0.98, g = 0.66, b = 0.22 } }
     )
 end
 
 local function bring_player_to_spawn(player, source_player)
     local spawn_position = player.force.get_spawn_position(player.surface)
     if not spawn_position then
-        return source_player.print('Spawn position not found.', { r = 1, g = 0.5, b = 0.1 })
+        return source_player.print('Spawn position not found.', { color = { r = 1, g = 0.5, b = 0.1 } })
     end
     if not teleport_player_to_position(player, spawn_position, player.surface) then
-        return source_player.print('Could not teleport player to spawn position.', { r = 1, g = 0.5, b = 0.1 })
+        return source_player.print(
+            'Could not teleport player to spawn position.',
+            { color = { r = 1, g = 0.5, b = 0.1 } }
+        )
     end
-    game.print(player.name .. ' has been brought to spawn.', { r = 0.98, g = 0.66, b = 0.22 })
+    game.print(player.name .. ' has been brought to spawn.', { color = { r = 0.98, g = 0.66, b = 0.22 } })
 end
 
 local go_to_player_messages = {
@@ -81,7 +87,7 @@ local go_to_player_messages = {
 }
 local function go_to_player(player, source_player)
     if player.name == source_player.name then
-        return player.print("You can't select yourself!", { r = 1, g = 0.5, b = 0.1 })
+        return player.print("You can't select yourself!", { color = { r = 1, g = 0.5, b = 0.1 } })
     end
     local pos = player.surface.find_non_colliding_position('character', player.position, 50, 1)
     if pos then
@@ -92,7 +98,7 @@ local function go_to_player(player, source_player)
                 .. player.name
                 .. '. '
                 .. go_to_player_messages[math.random(1, #go_to_player_messages)],
-            { r = 0.98, g = 0.66, b = 0.22 }
+            { color = { r = 0.98, g = 0.66, b = 0.22 } }
         )
     end
 end
@@ -104,7 +110,7 @@ local function spank(player, source_player)
         end
         player.character.health = player.character.health - 5
         player.surface.create_entity({ name = 'water-splash', position = player.position })
-        game.print(source_player.name .. ' spanked ' .. player.name, { r = 0.98, g = 0.66, b = 0.22 })
+        game.print(source_player.name .. ' spanked ' .. player.name, { color = { r = 0.98, g = 0.66, b = 0.22 } })
     end
 end
 
@@ -114,7 +120,7 @@ local damage_messages = {
 }
 local function damage(player, source_player)
     if player.name == source_player.name then
-        return player.print("You can't select yourself!", { r = 1, g = 0.5, b = 0.1 })
+        return player.print("You can't select yourself!", { color = { r = 1, g = 0.5, b = 0.1 } })
     end
     if player.character then
         if player.character.health > 1 then
@@ -124,7 +130,7 @@ local function damage(player, source_player)
         player.surface.create_entity({ name = 'big-explosion', position = player.position })
         game.print(
             player.name .. damage_messages[math.random(1, #damage_messages)] .. source_player.name,
-            { r = 0.98, g = 0.66, b = 0.22 }
+            { color = { r = 0.98, g = 0.66, b = 0.22 } }
         )
     end
 end
@@ -138,11 +144,14 @@ local kill_messages = {
 }
 local function kill(player, source_player)
     if player.name == source_player.name then
-        return player.print("You can't select yourself!", { r = 1, g = 0.5, b = 0.1 })
+        return player.print("You can't select yourself!", { color = { r = 1, g = 0.5, b = 0.1 } })
     end
     if player.character then
         player.character.die('player')
-        game.print(player.name .. kill_messages[math.random(1, #kill_messages)], { r = 0.98, g = 0.66, b = 0.22 })
+        game.print(
+            player.name .. kill_messages[math.random(1, #kill_messages)],
+            { color = { r = 0.98, g = 0.66, b = 0.22 } }
+        )
         admin_only_message(source_player.name .. ' killed ' .. player.name)
     end
 end
@@ -153,7 +162,7 @@ local enemy_messages = {
 }
 local function enemy(player, source_player)
     if player.name == source_player.name then
-        return player.print("You can't select yourself!", { r = 1, g = 0.5, b = 0.1 })
+        return player.print("You can't select yourself!", { color = { r = 1, g = 0.5, b = 0.1 } })
     end
     if not game.forces.enemy_players then
         game.create_force('enemy_players')
@@ -161,17 +170,17 @@ local function enemy(player, source_player)
     player.force = game.forces.enemy_players
     game.print(
         player.name .. ' is now an enemy! ' .. enemy_messages[math.random(1, #enemy_messages)],
-        { r = 0.95, g = 0.15, b = 0.15 }
+        { color = { r = 0.95, g = 0.15, b = 0.15 } }
     )
     admin_only_message(source_player.name .. ' has turned ' .. player.name .. ' into an enemy')
 end
 
 local function ally(player, source_player)
     if player.name == source_player.name then
-        return player.print("You can't select yourself!", { r = 1, g = 0.5, b = 0.1 })
+        return player.print("You can't select yourself!", { color = { r = 1, g = 0.5, b = 0.1 } })
     end
     player.force = game.forces.player
-    game.print(player.name .. ' is our ally again!', { r = 0.98, g = 0.66, b = 0.22 })
+    game.print(player.name .. ' is our ally again!', { color = { r = 0.98, g = 0.66, b = 0.22 } })
     admin_only_message(source_player.name .. ' made ' .. player.name .. ' our ally')
 end
 
@@ -193,9 +202,15 @@ local function turn_off_global_speakers(player)
         return
     end
     if counter == 1 then
-        game.print(player.name .. ' has nuked ' .. counter .. ' global speaker.', { r = 0.98, g = 0.66, b = 0.22 })
+        game.print(
+            player.name .. ' has nuked ' .. counter .. ' global speaker.',
+            { color = { r = 0.98, g = 0.66, b = 0.22 } }
+        )
     else
-        game.print(player.name .. ' has nuked ' .. counter .. ' global speakers.', { r = 0.98, g = 0.66, b = 0.22 })
+        game.print(
+            player.name .. ' has nuked ' .. counter .. ' global speakers.',
+            { color = { r = 0.98, g = 0.66, b = 0.22 } }
+        )
     end
 end
 
@@ -211,9 +226,9 @@ local function delete_all_blueprints(player)
         return
     end
     if counter == 1 then
-        game.print(counter .. ' blueprint has been cleared!', { r = 0.98, g = 0.66, b = 0.22 })
+        game.print(counter .. ' blueprint has been cleared!', { color = { r = 0.98, g = 0.66, b = 0.22 } })
     else
-        game.print(counter .. ' blueprints have been cleared!', { r = 0.98, g = 0.66, b = 0.22 })
+        game.print(counter .. ' blueprints have been cleared!', { color = { r = 0.98, g = 0.66, b = 0.22 } })
     end
     admin_only_message(player.name .. ' has cleared all blueprints.')
 end
@@ -491,7 +506,7 @@ local function on_gui_click(event)
             return
         end
         if target_player_name == 'Select Player' then
-            player.print('No target player selected.', { r = 0.88, g = 0.88, b = 0.88 })
+            player.print('No target player selected.', { color = { r = 0.88, g = 0.88, b = 0.88 } })
             return
         end
         local target_player = game.get_player(target_player_name)
@@ -568,12 +583,12 @@ commands.add_command('kill', 'Kill a player. Usage: /kill <name>', function(cmd)
         if killer.admin and victim and victim.valid then
             kill(victim, killer)
         elseif not victim or not victim.valid then
-            killer.print('Invalid name', Color.warning)
+            killer.print('Invalid name', { color = Color.warning })
         else
-            killer.print('Only admins have licence for killing!', Color.warning)
+            killer.print('Only admins have licence for killing!', { color = Color.warning })
         end
     else
-        killer.print('Usage: /kill <name>', Color.warning)
+        killer.print('Usage: /kill <name>', { color = Color.warning })
     end
 end)
 
@@ -605,14 +620,14 @@ commands.add_command('punish', 'Kill and ban a player. Usage: /punish <name> <re
             kill(offender, punisher)
             game.ban_player(offender, message)
         elseif not offender.valid then
-            punisher.print('Invalid name', Color.warning)
+            punisher.print('Invalid name', { color = Color.warning })
         else
-            punisher.print('No valid reason given, or reason is too short', Color.warning)
+            punisher.print('No valid reason given, or reason is too short', { color = Color.warning })
         end
     elseif not punisher.admin then
-        punisher.print('This is admin only command', Color.warning)
+        punisher.print('This is admin only command', { color = Color.warning })
     else
-        punisher.print('Usage: /punish <name> <reason>', Color.warning)
+        punisher.print('Usage: /punish <name> <reason>', { color = Color.warning })
     end
 end)
 

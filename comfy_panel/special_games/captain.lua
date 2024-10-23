@@ -131,7 +131,7 @@ local function switch_team_of_player(playerName, playerForceName)
         if storage.chosen_team[playerName] ~= playerForceName then
             game.print(
                 { 'captain.change_player_team_err', playerName, storage.chosen_team[playerName], playerForceName },
-                Color.red
+                { color = Color.red }
             )
         end
         return
@@ -200,7 +200,7 @@ local function force_end_captain_event()
     if storage.freeze_players == true then
         storage.freeze_players = false
         TeamManager.unfreeze_players()
-        game.print('>>> Players have been unfrozen!', { r = 255, g = 77, b = 77 })
+        game.print('>>> Players have been unfrozen!', { color = { r = 255, g = 77, b = 77 } })
     end
     storage.active_special_games.captain_mode = false
     storage.bb_threat.north_biters = 0
@@ -388,7 +388,7 @@ end
 ---@param location GuiLocation?
 local function poll_alternate_picking(player, force_name, location)
     if not player then
-        game.print('Unable to find player to make a picking choice!', Color.red)
+        game.print('Unable to find player to make a picking choice!', { color = Color.red })
         Public.end_of_picking_phase()
         return
     end
@@ -502,7 +502,7 @@ local function auto_pick_all_of_group(cptPlayer, playerName)
                 else
                     game.print(
                         playerName .. ' was not picked automatically with group system, as the group limit was reached',
-                        Color.red
+                        { color = Color.red }
                     )
                 end
             end
@@ -510,9 +510,9 @@ local function auto_pick_all_of_group(cptPlayer, playerName)
         for _, playerName in ipairs(playersToSwitch) do
             local player = cpt_get_player(playerName)
             if player then
-                game.print(playerName .. ' was automatically picked with group system', Color.cyan)
+                game.print(playerName .. ' was automatically picked with group system', { color = Color.cyan })
                 switch_team_of_player(playerName, playerChecked.force.name)
-                player.print({ 'captain.comms_reminder' }, Color.cyan)
+                player.print({ 'captain.comms_reminder' }, { color = Color.cyan })
                 table_remove_element(special.listPlayers, playerName)
             end
         end
@@ -580,7 +580,7 @@ local function allow_vote()
     storage.difficulty_player_votes = {}
     game.print(
         '[font=default-large-bold]Difficulty voting is opened until the referee starts the picking phase ![/font]',
-        Color.cyan
+        { color = Color.cyan }
     )
 end
 
@@ -613,7 +613,7 @@ local function generate_captain_mode(refereeName, autoTrust, captainKick, specia
     if Functions.get_ticks_since_game_start() > 0 then
         game.print(
             "Must start the captain event on a fresh map. Enable tournament_mode and do '/instant_map_reset current' to reset to current seed.",
-            Color.red
+            { color = Color.red }
         )
         return
     end
@@ -693,7 +693,7 @@ local function generate_captain_mode(refereeName, autoTrust, captainKick, specia
         if not check_if_enough_playtime_to_play(referee) then
             game.print(
                 'Referee does not seem to have enough playtime (which is odd), so disabling min playtime requirement',
-                Color.red
+                { color = Color.red }
             )
             special.minTotalPlaytimeToPlay = 0
         end
@@ -724,24 +724,24 @@ local function generate_captain_mode(refereeName, autoTrust, captainKick, specia
         game.print('Captain mode started !! Have fun ! Referee will be ' .. referee.name)
     end
     if special.autoTrust then
-        game.print('Option was enabled : All players will be trusted once they join a team', Color.cyan)
+        game.print('Option was enabled : All players will be trusted once they join a team', { color = Color.cyan })
     end
     if special.captainKick then
-        game.print('Option was enabled : Captains can eject players of their team', Color.cyan)
+        game.print('Option was enabled : Captains can eject players of their team', { color = Color.cyan })
     end
-    game.print('Picking system : 1-2-2-2-2...', Color.cyan)
+    game.print('Picking system : 1-2-2-2-2...', { color = Color.cyan })
 
     if referee and not is_it_automatic_captain() then
         referee.print(
             'Command only allowed for referee to change a captain : /replaceCaptainNorth <playerName> or /replaceCaptainSouth <playerName>',
-            Color.cyan
+            { color = Color.cyan }
         )
     end
     for _, player in pairs(game.connected_players) do
         if player.admin then
             game.print(
                 'Command only allowed for referee or admins to change the current referee : /replaceReferee <playerName>',
-                Color.cyan
+                { color = Color.cyan }
             )
         end
     end
@@ -756,7 +756,7 @@ local function generate_captain_mode(refereeName, autoTrust, captainKick, specia
     if storage.freeze_players == false or storage.freeze_players == nil then
         storage.freeze_players = true
         TeamManager.freeze_players()
-        game.print('>>> Players have been frozen!', { r = 111, g = 111, b = 255 })
+        game.print('>>> Players have been frozen!', { color = { r = 111, g = 111, b = 255 } })
     end
     allow_vote()
 
@@ -955,11 +955,14 @@ end
 
 local function start_captain_event()
     Functions.set_game_start_tick()
-    game.print('[font=default-large-bold]Time to start the game!! Good luck and have fun everyone ![/font]', Color.cyan)
+    game.print(
+        '[font=default-large-bold]Time to start the game!! Good luck and have fun everyone ![/font]',
+        { color = Color.cyan }
+    )
     if storage.freeze_players == true then
         storage.freeze_players = false
         TeamManager.unfreeze_players()
-        game.print('>>> Players have been unfrozen!', { r = 255, g = 77, b = 77 })
+        game.print('>>> Players have been unfrozen!', { color = { r = 255, g = 77, b = 77 } })
         log('Players have been unfrozen! Game starts now!')
     end
     local special = storage.special_games_variables.captain_mode
@@ -1049,7 +1052,7 @@ end
 
 local function close_difficulty_vote()
     storage.difficulty_votes_timeout = game.ticks_played
-    game.print('[font=default-large-bold]Difficulty voting is now closed ![/font]', Color.cyan)
+    game.print('[font=default-large-bold]Difficulty voting is now closed ![/font]', { color = Color.cyan })
 end
 
 local function captain_log_start_time_player(player)
@@ -1153,7 +1156,7 @@ decrement_timer_captain_prepa_token = Token.register(function()
         Task.set_timeout_in_ticks(60, decrement_timer_captain_prepa_token)
     else
         if #special.listTeamReadyToPlay < 2 then
-            game.print('[font=default-large-bold]Game was automatically started[/font]', Color.cyan)
+            game.print('[font=default-large-bold]Game was automatically started[/font]', { color = Color.cyan })
             prepare_start_captain_event()
             Public.update_all_captain_player_guis()
         end
@@ -1168,7 +1171,7 @@ function Public.end_of_picking_phase()
         if special.captainGroupAllowed then
             game.print(
                 '[font=default-large-bold]Initial Picking Phase done - group picking is now disabled[/font]',
-                Color.cyan
+                { color = Color.cyan }
             )
         end
     end
@@ -1176,13 +1179,13 @@ function Public.end_of_picking_phase()
     if special.prepaPhase then
         game.print(
             '[font=default-large-bold]Time to start preparation for each team ! Once your team is ready, captain, click on yes on top popup[/font]',
-            Color.cyan
+            { color = Color.cyan }
         )
         for _, captain_name in pairs(storage.special_games_variables.captain_mode.captainList) do
             local captain = cpt_get_player(captain_name) --[[@as LuaPlayer]]
             captain.print(
                 'As a captain, you can handle your team by accessing "Team Captain" in your Tournament menu',
-                Color.yellow
+                { color = Color.yellow }
             )
             if not is_test_player(captain) then
                 TeamManager.custom_team_name_gui(captain, captain.force.name)
@@ -1220,7 +1223,7 @@ local function start_picking_phase()
                 end
             end
             if #filtered_picks ~= #special.listPlayers then
-                game.print(string_format('Error: bad picks for player "%s"', player), Color.red)
+                game.print(string_format('Error: bad picks for player "%s"', player), { color = Color.red })
                 force_end_captain_event()
                 return
             end
@@ -1250,7 +1253,7 @@ local function start_picking_phase()
     if is_initial_picking_phase then
         game.print(
             '[font=default-large-bold]Picking phase started, captains will pick their team members[/font]',
-            Color.cyan
+            { color = Color.cyan }
         )
     end
     if #special.listPlayers == 0 then
@@ -1295,7 +1298,7 @@ local function prepare_for_captain()
     if is_it_automatic_captain() then
         game.print(
             '[font=default-large-bold]Beware that captains are not allowed to leave before the first picking phase is over and the preparation is over, they must stay online at least until the game starts, otherwise the event will be automatically canceled[/font]',
-            Color.cyan
+            { color = Color.cyan }
         )
     end
 end
@@ -1383,26 +1386,32 @@ local function change_captain_cmd(cmd, force)
         return
     end
     if not storage.active_special_games.captain_mode then
-        return playerOfCommand.print({ 'captain.cmd_only_captain_mode' }, Color.red)
+        return playerOfCommand.print({ 'captain.cmd_only_captain_mode' }, { color = Color.red })
     end
     local special = storage.special_games_variables.captain_mode
     if special.pickingPhase then
-        return playerOfCommand.print('Cannot change captain when a picking phase is active', Color.red)
+        return playerOfCommand.print('Cannot change captain when a picking phase is active', { color = Color.red })
     elseif not special.initialPickingPhaseFinished then
-        return playerOfCommand.print('Cannot change captain before the initial picking phase is over', Color.red)
+        return playerOfCommand.print(
+            'Cannot change captain before the initial picking phase is over',
+            { color = Color.red }
+        )
     end
     if special.refereeName ~= playerOfCommand.name and not playerOfCommand.admin then
-        return playerOfCommand.print('Only referee and admins have license to use that command', Color.red)
+        return playerOfCommand.print('Only referee and admins have license to use that command', { color = Color.red })
     end
 
     if cmd.parameter then
         local victim = cpt_get_player(cmd.parameter)
         if victim and victim.valid then
             if not victim.connected then
-                return playerOfCommand.print('You can only use this command on a connected player.', Color.red)
+                return playerOfCommand.print(
+                    'You can only use this command on a connected player.',
+                    { color = Color.red }
+                )
             end
             if victim.force.name ~= force then
-                return playerOfCommand.print({ 'captain.change_captain_wrong_member' }, Color.red)
+                return playerOfCommand.print({ 'captain.change_captain_wrong_member' }, { color = Color.red })
             end
             Public.change_captain(victim, force, playerOfCommand.name .. ' (referee)')
         elseif cmd.parameter == '!nobody!' then
@@ -1412,10 +1421,10 @@ local function change_captain_cmd(cmd, force)
         elseif cmd.parameter == '!voteall!' then
             Public.trigger_captain_vote(force, Public.get_captain_candidates(force, true))
         else
-            playerOfCommand.print('Invalid name', Color.warning)
+            playerOfCommand.print('Invalid name', { color = Color.warning })
         end
     else
-        playerOfCommand.print('Usage: /replaceCaptainNorth <playerName|!nobody!>', Color.warning)
+        playerOfCommand.print('Usage: /replaceCaptainNorth <playerName|!nobody!>', { color = Color.warning })
     end
 end
 
@@ -1570,7 +1579,7 @@ local function on_gui_click(event)
             else
                 player.print(
                     'You need to have spent more time on biter battles server to join the captain game event! Learn and watch a bit meanwhile',
-                    Color.red
+                    { color = Color.red }
                 )
             end
         end
@@ -1616,7 +1625,7 @@ local function on_gui_click(event)
             local text = textbox.text
             text = text:gsub('[%(%)%[%]%=]', '')
             if #text > 200 then
-                player.print('Player info must not exceed 200 characters', Color.warning)
+                player.print('Player info must not exceed 200 characters', { color = Color.warning })
                 text = string_sub(text, 1, 200)
             end
             textbox.text = text
@@ -1633,7 +1642,7 @@ local function on_gui_click(event)
     elseif name == 'captain_start_initial_picking' then
         -- This marks the start of a picking phase, so players can no longer volunteer to become captain or play
         if not special.initialPickingPhaseStarted then
-            game.print('The referee has started the initial picking phase', Color.cyan)
+            game.print('The referee has started the initial picking phase', { color = Color.cyan })
             if special.communityPickingMode then
                 if have_enough_community_picks() then
                     start_picking_phase()
@@ -1642,7 +1651,7 @@ local function on_gui_click(event)
                 if check_if_right_number_of_captains() then
                     start_picking_phase()
                 else
-                    player.print('Need exactly 2 captains!', Color.cyan)
+                    player.print('Need exactly 2 captains!', { color = Color.cyan })
                 end
             end
         end
@@ -1665,7 +1674,7 @@ local function on_gui_click(event)
             end
             game.print(
                 '[font=default-large-bold]Referee ' .. player.name .. ' has forced the picking phase to stop[/font]',
-                Color.cyan
+                { color = Color.cyan }
             )
         end
     elseif starts_with(name, 'captain_player_picked_') then
@@ -1686,7 +1695,7 @@ local function on_gui_click(event)
         )
         local listPlayers = special.listPlayers
         switch_team_of_player(playerPicked, forceToGo)
-        cpt_get_player(playerPicked).print({ '', { 'captain.comms_reminder' } }, Color.cyan)
+        cpt_get_player(playerPicked).print({ '', { 'captain.comms_reminder' } }, { color = Color.cyan })
         for index, name in pairs(listPlayers) do
             if name == playerPicked then
                 remove(listPlayers, index)
@@ -1723,7 +1732,10 @@ local function on_gui_click(event)
         Public.update_all_captain_player_guis()
     elseif name == 'captain_is_ready' then
         if not table_contains(special.listTeamReadyToPlay, player.force.name) then
-            game.print('[font=default-large-bold]Team of captain ' .. player.name .. ' is ready ![/font]', Color.cyan)
+            game.print(
+                '[font=default-large-bold]Team of captain ' .. player.name .. ' is ready ![/font]',
+                { color = Color.cyan }
+            )
             insert(special.listTeamReadyToPlay, player.force.name)
             if #special.listTeamReadyToPlay >= 2 then
                 prepare_start_captain_event()
@@ -1734,7 +1746,7 @@ local function on_gui_click(event)
         if #special.listTeamReadyToPlay < 2 then
             game.print(
                 '[font=default-large-bold]Referee ' .. player.name .. ' force started the game ![/font]',
-                Color.cyan
+                { color = Color.cyan }
             )
             prepare_start_captain_event()
             Public.update_all_captain_player_guis()
@@ -1744,13 +1756,13 @@ local function on_gui_click(event)
             special.northEnabledScienceThrow = not special.northEnabledScienceThrow
             game.forces.north.print(
                 'Can anyone throw science in your team ? ' .. tostring(special.northEnabledScienceThrow),
-                Color.yellow
+                { color = Color.yellow }
             )
         elseif special.captainList[2] == player.name then
             special.southEnabledScienceThrow = not special.southEnabledScienceThrow
             game.forces.south.print(
                 'Can anyone throw science in your team ? ' .. tostring(special.southEnabledScienceThrow),
-                Color.yellow
+                { color = Color.yellow }
             )
         end
         Public.update_all_captain_player_guis()
@@ -1781,10 +1793,10 @@ local function on_gui_click(event)
             then
                 Public.change_captain(newCaptain, player.force.name, player.name .. ' (existing captain)')
             else
-                player.print('Invalid name', Color.red)
+                player.print('Invalid name', { color = Color.red })
             end
         else
-            player.print('You are not a captain and currently on north/south', Color.red)
+            player.print('You are not a captain and currently on north/south', { color = Color.red })
         end
     elseif name == 'captain_add_someone_to_throw_trustlist' then
         local frame = Public.get_active_tournament_frame(player, 'captain_manager_gui')
@@ -1797,20 +1809,26 @@ local function on_gui_click(event)
                 tableToUpdate = special.southThrowPlayersListAllowed
                 forceForPrint = 'south'
             elseif player.name ~= special.captainList[1] then
-                player.print('You are not a captain', Color.red)
+                player.print('You are not a captain', { color = Color.red })
                 return
             end
             local playerToAdd = cpt_get_player(playerNameUpdateText)
             if playerToAdd ~= nil and playerToAdd.valid then
                 if not table_contains(tableToUpdate, playerNameUpdateText) then
                     insert(tableToUpdate, playerNameUpdateText)
-                    game.forces[forceForPrint].print(playerNameUpdateText .. ' added to throw trustlist !', Color.green)
+                    game.forces[forceForPrint].print(
+                        playerNameUpdateText .. ' added to throw trustlist !',
+                        { color = Color.green }
+                    )
                 else
-                    player.print(playerNameUpdateText .. ' was already added to throw trustlist !', Color.red)
+                    player.print(
+                        playerNameUpdateText .. ' was already added to throw trustlist !',
+                        { color = Color.red }
+                    )
                 end
                 Public.update_all_captain_player_guis()
             else
-                player.print(playerNameUpdateText .. ' does not even exist or not even valid !', Color.red)
+                player.print(playerNameUpdateText .. ' does not even exist or not even valid !', { color = Color.red })
             end
         end
     elseif name == 'captain_remove_someone_to_throw_trustlist' then
@@ -1824,17 +1842,17 @@ local function on_gui_click(event)
                 tableToUpdate = special.southThrowPlayersListAllowed
                 forceForPrint = 'south'
             elseif player.name ~= special.captainList[1] then
-                player.print('You are not a captain', Color.red)
+                player.print('You are not a captain', { color = Color.red })
                 return
             end
             if table_contains(tableToUpdate, playerNameUpdateText) then
                 table_remove_element(tableToUpdate, playerNameUpdateText)
                 game.forces[forceForPrint].print(
                     playerNameUpdateText .. ' was removed in throw trustlist !',
-                    Color.green
+                    { color = Color.green }
                 )
             else
-                player.print(playerNameUpdateText .. ' was not found in throw trustlist !', Color.red)
+                player.print(playerNameUpdateText .. ' was not found in throw trustlist !', { color = Color.red })
             end
             Public.update_all_captain_player_guis()
         end
@@ -1864,7 +1882,7 @@ local function on_gui_click(event)
         local victim = cpt_get_player(get_dropdown_value(dropdown))
         if victim and victim.valid then
             if victim.name == player.name then
-                return player.print("You can't select yourself!", Color.red)
+                return player.print("You can't select yourself!", { color = Color.red })
             end
             game.print({ 'captain.eject_player', player.name, victim.name })
             special.kickedPlayers[victim.name] = true
@@ -1874,7 +1892,7 @@ local function on_gui_click(event)
             end
             TeamManager.switch_force(victim.name, 'spectator')
         else
-            player.print('Invalid name', Color.red)
+            player.print('Invalid name', { color = Color.red })
         end
     elseif name == 'tournament_subheader_toggle' then
         local parent_name = element.parent.name
@@ -3356,11 +3374,17 @@ decrement_timer_captain_start_token = Token.register(function()
         Task.set_timeout_in_ticks(60, decrement_timer_captain_start_token)
     else
         if #special.captainList < 2 then
-            game.print('Not enough captains to automatically start captain event...', { r = 1, g = 0, b = 0 })
+            game.print(
+                'Not enough captains to automatically start captain event...',
+                { color = { r = 1, g = 0, b = 0 } }
+            )
             force_end_captain_event()
         elseif #special.captainList == 2 then
             if #special.listPlayers < 2 then
-                game.print('Not enough players to automatically start captain event...', { r = 1, g = 0, b = 0 })
+                game.print(
+                    'Not enough players to automatically start captain event...',
+                    { color = { r = 1, g = 0, b = 0 } }
+                )
                 force_end_captain_event()
             else
                 prepare_for_captain()
@@ -3460,20 +3484,26 @@ commands.add_command('replaceReferee', 'Admin or referee can decide to change th
     end
     local special = storage.special_games_variables.captain_mode
     if not special then
-        return playerOfCommand.print({ 'captain.cmd_only_captain_mode' }, Color.red)
+        return playerOfCommand.print({ 'captain.cmd_only_captain_mode' }, { color = Color.red })
     end
     if special.refereeName ~= playerOfCommand.name and not playerOfCommand.admin then
-        return playerOfCommand.print({ 'captain.cmd_only_admin' }, Color.red)
+        return playerOfCommand.print({ 'captain.cmd_only_admin' }, { color = Color.red })
     end
 
     if special.refereeName == nil then
-        return playerOfCommand.print('Something broke, no refereeName in the refereeName variable..', Color.red)
+        return playerOfCommand.print(
+            'Something broke, no refereeName in the refereeName variable..',
+            { color = Color.red }
+        )
     end
     if cmd.parameter then
         local victim = cpt_get_player(cmd.parameter)
         if victim and victim.valid then
             if not victim.connected then
-                return playerOfCommand.print('You can only use this command on a connected player.', Color.red)
+                return playerOfCommand.print(
+                    'You can only use this command on a connected player.',
+                    { color = Color.red }
+                )
             end
 
             local refPlayer = cpt_get_player(special.refereeName)
@@ -3492,10 +3522,10 @@ commands.add_command('replaceReferee', 'Admin or referee can decide to change th
             generate_vs_text_rendering()
             Public.update_all_captain_player_guis()
         else
-            playerOfCommand.print('Invalid name', Color.warning)
+            playerOfCommand.print('Invalid name', { color = Color.warning })
         end
     else
-        playerOfCommand.print('Usage: /replaceReferee <playerName>', Color.warning)
+        playerOfCommand.print('Usage: /replaceReferee <playerName>', { color = Color.warning })
     end
 end)
 
@@ -3511,26 +3541,32 @@ commands.add_command(
             return
         end
         if not storage.active_special_games.captain_mode then
-            return playerOfCommand.print({ 'captain.cmd_only_captain_mode' }, Color.red)
+            return playerOfCommand.print({ 'captain.cmd_only_captain_mode' }, { color = Color.red })
         end
         if storage.special_games_variables.captain_mode.prepaPhase then
-            return playerOfCommand.print({ 'captain.cmd_only_after_prepa_phase' }, Color.red)
+            return playerOfCommand.print({ 'captain.cmd_only_after_prepa_phase' }, { color = Color.red })
         end
         if
             storage.special_games_variables.captain_mode.refereeName ~= playerOfCommand.name
             and not playerOfCommand.admin
         then
-            return playerOfCommand.print({ 'captain.cmd_only_admin' }, Color.red)
+            return playerOfCommand.print({ 'captain.cmd_only_admin' }, { color = Color.red })
         end
 
         if storage.special_games_variables.captain_mode.refereeName == nil then
-            return playerOfCommand.print('Something broke, no refereeName in the refereeName variable..', Color.red)
+            return playerOfCommand.print(
+                'Something broke, no refereeName in the refereeName variable..',
+                { color = Color.red }
+            )
         end
-        playerOfCommand.print('You disabled tournament mode and captain event, now players can freely join', Color.red)
+        playerOfCommand.print(
+            'You disabled tournament mode and captain event, now players can freely join',
+            { color = Color.red }
+        )
 
         storage.active_special_games.captain_mode = false
         storage.tournament_mode = false
-        game.print({ 'captain.disable_picking_announcement', playerOfCommand.name }, Color.green)
+        game.print({ 'captain.disable_picking_announcement', playerOfCommand.name }, { color = Color.green })
         clear_gui_captain_mode()
     end
 )
@@ -3539,7 +3575,7 @@ commands.add_command('cpt-test-func', 'Run some test-only code for captains game
     if game.is_multiplayer() then
         game.print(
             'This command is only for testing, and should only be run when there is exactly one player in the game.',
-            Color.red
+            { color = Color.red }
         )
         return
     end
