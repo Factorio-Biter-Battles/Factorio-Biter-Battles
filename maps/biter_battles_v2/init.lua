@@ -179,12 +179,18 @@ function Public.playground_surface()
     map_gen_settings.seed = storage.next_map_seed
     -- reset next_map_seed for next round
     storage.next_map_seed = 1
-    map_gen_settings.water = storage.random_generator(15, 65) * 0.01
     map_gen_settings.starting_area = 2.5
-    map_gen_settings.terrain_segmentation = storage.random_generator(30, 40) * 0.1
+    map_gen_settings.property_expression_names = {
+        ['segmentation_multiplier'] = 0.1,
+    }
     map_gen_settings.cliff_settings = { cliff_elevation_interval = 0, cliff_elevation_0 = 0 }
     map_gen_settings.autoplace_controls = {
         ['coal'] = { frequency = 6.5, size = 0.34, richness = 0.24 },
+        ['water'] = {
+            frequency = 10,
+            size = 0.3,
+            richness = 0.1,
+        },
         ['stone'] = { frequency = 6, size = 0.385, richness = 0.25 },
         ['copper-ore'] = { frequency = 8.05, size = 0.352, richness = 0.35 },
         ['iron-ore'] = { frequency = 8.5, size = 0.8, richness = 0.23 },
