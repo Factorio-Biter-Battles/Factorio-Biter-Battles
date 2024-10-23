@@ -246,12 +246,12 @@ local function on_gui_click(event)
                 player.force.print(player.name .. ' has set task name to ' .. new_name)
                 CaptainTaskGroup.update_all_captain_organization_gui()
             else
-                player.print('You cant set the task name with same one as before !!', Color.warning)
+                player.print('You cant set the task name with same one as before !!', { color = Color.warning })
             end
         end
     elseif name:find('^task_name_field') then
         if #element.text > 40 then
-            player.print('Task name must be 40 characters or less', Color.warning)
+            player.print('Task name must be 40 characters or less', { color = Color.warning })
             element.text = string_sub(element.text, 1, 40)
         end
     end

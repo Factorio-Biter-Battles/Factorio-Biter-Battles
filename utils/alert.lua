@@ -309,7 +309,7 @@ commands.add_command(
             if player ~= nil then
                 p = player.print
                 if not player.admin then
-                    p("[ERROR] You're not admin!", Color.fail)
+                    p("[ERROR] You're not admin!", { color = Color.fail })
                     return
                 end
                 if not param then
@@ -341,7 +341,7 @@ commands.add_command('notify_player', 'Usable only for admins - sends an alert m
         if player ~= nil then
             p = player.print
             if not player.admin then
-                p("[ERROR] You're not admin!", Color.fail)
+                p("[ERROR] You're not admin!", { color = Color.fail })
                 return
             end
 

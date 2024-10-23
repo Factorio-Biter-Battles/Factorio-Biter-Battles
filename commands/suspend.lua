@@ -242,28 +242,31 @@ local function suspend_player(cmd)
         return
     end
     if storage.suspend_target_info then
-        killer.print('You cant suspend 2 players at same time, wait for previous vote to end', Color.warning)
+        killer.print(
+            'You cant suspend 2 players at same time, wait for previous vote to end',
+            { color = Color.warning }
+        )
         return
     end
     if cmd.parameter then
         local victim = game.get_player(cmd.parameter)
         if victim and victim.valid then
             if victim.force.name == 'spectator' then
-                killer.print('You cant suspend a spectator', Color.warning)
+                killer.print('You cant suspend a spectator', { color = Color.warning })
                 return
             end
             if victim.surface.name == 'gulag' then
-                killer.print('You cant suspend a player in jail', Color.warning)
+                killer.print('You cant suspend a player in jail', { color = Color.warning })
                 return
             end
             if killer.surface.name == 'gulag' then
-                killer.print('You cant suspend a player while you are in jail', Color.warning)
+                killer.print('You cant suspend a player while you are in jail', { color = Color.warning })
                 return
             end
             if storage.suspend_token_running then
                 killer.print(
                     'A suspend was just started before restart, please wait 60s maximum to avoid bugs',
-                    Color.warning
+                    { color = Color.warning }
                 )
                 return
             end
@@ -287,10 +290,10 @@ local function suspend_player(cmd)
             end
             Task.set_timeout_in_ticks(60, decrement_timer_token)
         else
-            killer.print('Invalid name', Color.warning)
+            killer.print('Invalid name', { color = Color.warning })
         end
     else
-        killer.print('Usage: /suspend <name>', Color.warning)
+        killer.print('Usage: /suspend <name>', { color = Color.warning })
     end
 end
 

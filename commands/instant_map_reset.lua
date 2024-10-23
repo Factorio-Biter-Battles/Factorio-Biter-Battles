@@ -9,7 +9,7 @@ function Public.instant_map_reset(cmd)
     if player then
         if not player.admin then
             log('not admin player exists')
-            player.print("[ERROR] You're not admin!", Color.fail)
+            player.print("[ERROR] You're not admin!", { color = Color.fail })
             return
         end
     end
@@ -32,7 +32,7 @@ function Public.instant_map_reset(cmd)
     elseif param then
         next_map_seed = (tonumber(param) or -1)
         if next_map_seed == nil or next_map_seed < 341 or next_map_seed > 4294967294 then
-            player.print('Error: Seed must be between 341 and 4294967294 (inclusive).', Color.warning)
+            player.print('Error: Seed must be between 341 and 4294967294 (inclusive).', { color = Color.warning })
             return
         end
         seed_source = 'specified'
@@ -41,7 +41,7 @@ function Public.instant_map_reset(cmd)
         seed_source = 'autopicked'
     end
     storage.next_map_seed = next_map_seed
-    game.print('Restarting with ' .. seed_source .. ' map seed: ' .. next_map_seed, Color.warning)
+    game.print('Restarting with ' .. seed_source .. ' map seed: ' .. next_map_seed, { color = Color.warning })
     Server.to_discord_bold('[Map Reset] ' .. player.name .. ' has reset the map! seed: ' .. next_map_seed)
     storage.server_restart_timer = 0
     require('maps.biter_battles_v2.game_over').server_restart()

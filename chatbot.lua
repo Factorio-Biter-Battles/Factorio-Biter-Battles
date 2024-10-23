@@ -71,7 +71,7 @@ local function on_player_created(event)
     local player = game.get_player(event.player_index)
     player.print(
         '[font=' .. font .. ']' .. 'Welcome! Join us on discord >> https://discord.com/invite/hAYW3K7J2A' .. '[/font]',
-        font_color
+        { color = font_color }
     )
 end
 
@@ -81,7 +81,7 @@ commands.add_command('trust', 'Promotes a player to trusted!', function(cmd)
 
     if player and player.valid then
         if not player.admin then
-            player.print("You're not admin!", { r = 1, g = 0.5, b = 0.1 })
+            player.print("You're not admin!", { color = { r = 1, g = 0.5, b = 0.1 } })
             return
         end
 
@@ -95,12 +95,12 @@ commands.add_command('trust', 'Promotes a player to trusted!', function(cmd)
                 return
             end
             trusted[target_player.name] = true
-            game.print(target_player.name .. ' is now a trusted player.', { r = 0.22, g = 0.99, b = 0.99 })
+            game.print(target_player.name .. ' is now a trusted player.', { color = { r = 0.22, g = 0.99, b = 0.99 } })
             for _, a in pairs(game.connected_players) do
                 if a.admin and a.name ~= player.name then
                     a.print(
                         '[ADMIN]: ' .. player.name .. ' trusted ' .. target_player.name,
-                        { r = 1, g = 0.5, b = 0.1 }
+                        { color = { r = 1, g = 0.5, b = 0.1 } }
                     )
                 end
             end
@@ -116,7 +116,7 @@ commands.add_command('trust', 'Promotes a player to trusted!', function(cmd)
                 return
             end
             trusted[target_player.name] = true
-            game.print(target_player.name .. ' is now a trusted player.', { r = 0.22, g = 0.99, b = 0.99 })
+            game.print(target_player.name .. ' is now a trusted player.', { color = { r = 0.22, g = 0.99, b = 0.99 } })
         end
     end
 end)
@@ -130,7 +130,7 @@ commands.add_command('untrust', 'Demotes a player from trusted!', function(cmd)
         if player ~= nil then
             p = player.print
             if not player.admin then
-                p("You're not admin!", { r = 1, g = 0.5, b = 0.1 })
+                p("You're not admin!", { color = { r = 1, g = 0.5, b = 0.1 } })
                 return
             end
         else
@@ -147,12 +147,12 @@ commands.add_command('untrust', 'Demotes a player from trusted!', function(cmd)
                 return
             end
             trusted[target_player.name] = false
-            game.print(target_player.name .. ' is now untrusted.', { r = 0.22, g = 0.99, b = 0.99 })
+            game.print(target_player.name .. ' is now untrusted.', { color = { r = 0.22, g = 0.99, b = 0.99 } })
             for _, a in pairs(game.connected_players) do
                 if a.admin == true and a.name ~= player.name then
                     a.print(
                         '[ADMIN]: ' .. player.name .. ' untrusted ' .. target_player.name,
-                        { r = 1, g = 0.5, b = 0.1 }
+                        { color = { r = 1, g = 0.5, b = 0.1 } }
                     )
                 end
             end
@@ -168,7 +168,7 @@ commands.add_command('untrust', 'Demotes a player from trusted!', function(cmd)
                 return
             end
             trusted[target_player.name] = false
-            game.print(target_player.name .. ' is now untrusted.', { r = 0.22, g = 0.99, b = 0.99 })
+            game.print(target_player.name .. ' is now untrusted.', { color = { r = 0.22, g = 0.99, b = 0.99 } })
         end
     end
 end)
@@ -180,7 +180,7 @@ local function process_bot_answers(event)
     for word in string.gmatch(message, '%g+') do
         if links[word] then
             for _, bot_answer in pairs(links[word]) do
-                player.print('[font=' .. font .. ']' .. bot_answer .. '[/font]', font_color)
+                player.print('[font=' .. font .. ']' .. bot_answer .. '[/font]', { color = font_color })
             end
             return
         end
@@ -235,10 +235,10 @@ local function on_console_command(event)
                 if param then
                     p.print(
                         player.name .. ' ran: ' .. cmd .. ' "' .. param .. '" ' .. server_time,
-                        { r = 0.22, g = 0.99, b = 0.99 }
+                        { color = { r = 0.22, g = 0.99, b = 0.99 } }
                     )
                 else
-                    p.print(player.name .. ' ran: ' .. cmd .. server_time, { r = 0.22, g = 0.99, b = 0.99 })
+                    p.print(player.name .. ' ran: ' .. cmd .. server_time, { color = { r = 0.22, g = 0.99, b = 0.99 } })
                 end
             end
         end

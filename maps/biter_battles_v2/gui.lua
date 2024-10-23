@@ -856,7 +856,7 @@ function join_team(player, force_name, forced_join, auto_join)
         return
     end
     if not forced_join and storage.reroll_time_left and storage.reroll_time_left > 0 then
-        player.print(' Wait until reroll ends. ', { r = 0.98, g = 0.66, b = 0.22 })
+        player.print(' Wait until reroll ends. ', { color = { r = 0.98, g = 0.66, b = 0.22 } })
         return
     end
     if not forced_join then
@@ -866,7 +866,7 @@ function join_team(player, force_name, forced_join, auto_join)
         then
             player.print(
                 'The game is set to tournament mode. Teams can only be changed via team manager.',
-                { r = 0.98, g = 0.66, b = 0.22 }
+                { color = { r = 0.98, g = 0.66, b = 0.22 } }
             )
             return
         end
@@ -886,7 +886,7 @@ function join_team(player, force_name, forced_join, auto_join)
                 if not storage.chosen_team[player.name] then
                     player.print(
                         Functions.team_name_with_color(force_name) .. ' has too many players currently.',
-                        { r = 0.98, g = 0.66, b = 0.22 }
+                        { color = { r = 0.98, g = 0.66, b = 0.22 } }
                     )
                     return
                 end
@@ -899,7 +899,7 @@ function join_team(player, force_name, forced_join, auto_join)
             if storage.active_special_games.limited_lives and not has_life(player.name) then
                 player.print(
                     'Special game in progress. You have no lives left until the end of the game.',
-                    { r = 0.98, g = 0.66, b = 0.22 }
+                    { color = { r = 0.98, g = 0.66, b = 0.22 } }
                 )
                 return
             end
@@ -916,7 +916,7 @@ function join_team(player, force_name, forced_join, auto_join)
                             ) / 60
                         )
                         .. ' seconds.',
-                    { r = 0.98, g = 0.66, b = 0.22 }
+                    { color = { r = 0.98, g = 0.66, b = 0.22 } }
                 )
                 return
             end
@@ -928,7 +928,7 @@ function join_team(player, force_name, forced_join, auto_join)
                     'Not ready to return to your team yet. Please wait '
                         .. 60 - (math_floor((game.tick - storage.spectator_rejoin_delay[player.name]) / 60))
                         .. ' seconds.',
-                    { r = 0.98, g = 0.66, b = 0.22 }
+                    { color = { r = 0.98, g = 0.66, b = 0.22 } }
                 )
                 return
             end
@@ -947,7 +947,7 @@ function join_team(player, force_name, forced_join, auto_join)
             )
         end
         if not p then
-            game.print('No spawn position found for ' .. player.name .. '!', { 255, 0, 0 })
+            game.print('No spawn position found for ' .. player.name .. '!', { color = { 255, 0, 0 } })
             return
         end
         player.teleport(p, surface)
@@ -956,7 +956,7 @@ function join_team(player, force_name, forced_join, auto_join)
         Public.refresh()
         game.permissions.get_group('Default').add_player(player)
         local msg = table.concat({ 'Team ', player.force.name, ' player ', player.name, ' is no longer spectating.' })
-        game.print(msg, { r = 0.98, g = 0.66, b = 0.22 })
+        game.print(msg, { color = { r = 0.98, g = 0.66, b = 0.22 } })
         Sounds.notify_allies(player.force, 'utility/build_blueprint_large')
         Server.to_discord_bold(msg)
         storage.spectator_rejoin_delay[player.name] = game.tick
@@ -982,7 +982,7 @@ function join_team(player, force_name, forced_join, auto_join)
         end
         local message =
             table.concat({ player.name, ' ', join_text, ' ', Functions.team_name_with_color(player.force.name), '!' })
-        game.print(message, { r = 0.98, g = 0.66, b = 0.22 })
+        game.print(message, { color = { r = 0.98, g = 0.66, b = 0.22 } })
     end
     local i = player.get_inventory(defines.inventory.character_main)
     i.clear()
@@ -1015,14 +1015,14 @@ function spectate(player, forced_join, stored_position)
         if storage.tournament_mode and not storage.active_special_games.captain_mode then
             player.print(
                 'The game is set to tournament mode. Teams can only be changed via team manager.',
-                { r = 0.98, g = 0.66, b = 0.22 }
+                { color = { r = 0.98, g = 0.66, b = 0.22 } }
             )
             return
         end
         if storage.active_special_games.captain_mode and storage.special_games_variables.captain_mode.prepaPhase then
             player.print(
                 'The game is in preparation phase of captain event, no spectating allowed until the captain game started',
-                { r = 0.98, g = 0.66, b = 0.22 }
+                { color = { r = 0.98, g = 0.66, b = 0.22 } }
             )
             return
         end
@@ -1046,7 +1046,7 @@ function spectate(player, forced_join, stored_position)
     player.character.destructible = false
     if not forced_join then
         local msg = player.name .. ' is spectating.'
-        game.print(msg, { r = 0.98, g = 0.66, b = 0.22 })
+        game.print(msg, { color = { r = 0.98, g = 0.66, b = 0.22 } })
         Server.to_discord_bold(msg)
     end
     game.permissions.get_group('spectator').add_player(player)
@@ -1178,7 +1178,7 @@ local function on_gui_click(event)
         if player.position.y ^ 2 + player.position.x ^ 2 < 12000 then
             spectate(player)
         else
-            player.print('You are too far away from spawn to spectate.', { r = 0.98, g = 0.66, b = 0.22 })
+            player.print('You are too far away from spawn to spectate.', { color = { r = 0.98, g = 0.66, b = 0.22 } })
         end
         return
     end
@@ -1200,11 +1200,11 @@ local function on_gui_click(event)
                     suspend_info.suspend_votes_by_player[player.name] = 1
                     game.print(
                         player.name .. ' wants to suspend ' .. suspend_info.suspendee_player_name,
-                        { r = 0.1, g = 0.9, b = 0.0 }
+                        { color = { r = 0.1, g = 0.9, b = 0.0 } }
                     )
                 end
             else
-                player.print('You cannot vote from a different force!', { r = 0.9, g = 0.1, b = 0.1 })
+                player.print('You cannot vote from a different force!', { color = { r = 0.9, g = 0.1, b = 0.1 } })
             end
         end
     end
@@ -1217,11 +1217,11 @@ local function on_gui_click(event)
                     suspend_info.suspend_votes_by_player[player.name] = 0
                     game.print(
                         player.name .. " doesn't want to suspend " .. suspend_info.suspendee_player_name,
-                        { r = 0.9, g = 0.1, b = 0.1 }
+                        { color = { r = 0.9, g = 0.1, b = 0.1 } }
                     )
                 end
             else
-                player.print('You cannot vote from a different force!', { r = 0.9, g = 0.1, b = 0.1 })
+                player.print('You cannot vote from a different force!', { color = { r = 0.9, g = 0.1, b = 0.1 } })
             end
         end
     end
@@ -1229,28 +1229,31 @@ local function on_gui_click(event)
     if name == 'reroll_yes' then
         if storage.reroll_map_voting[player.name] ~= 1 then
             storage.reroll_map_voting[player.name] = 1
-            game.print(player.name .. ' wants to reroll map ', { r = 0.1, g = 0.9, b = 0.0 })
+            game.print(player.name .. ' wants to reroll map ', { color = { r = 0.1, g = 0.9, b = 0.0 } })
         end
     end
 
     if name == 'reroll_no' then
         if storage.reroll_map_voting[player.name] ~= 0 then
             storage.reroll_map_voting[player.name] = 0
-            game.print(player.name .. ' wants to keep this map', { r = 0.9, g = 0.1, b = 0.1 })
+            game.print(player.name .. ' wants to keep this map', { color = { r = 0.9, g = 0.1, b = 0.1 } })
         end
     end
 
     if name == 'automatic_captain_yes' then
         if storage.automatic_captain_voting[player.name] ~= 1 then
             storage.automatic_captain_voting[player.name] = 1
-            game.print(player.name .. ' wants to play a captain game', { r = 0.1, g = 0.9, b = 0.0 })
+            game.print(player.name .. ' wants to play a captain game', { color = { r = 0.1, g = 0.9, b = 0.0 } })
         end
     end
 
     if name == 'automatic_captain_no' then
         if storage.automatic_captain_voting[player.name] ~= 0 then
             storage.automatic_captain_voting[player.name] = 0
-            game.print(player.name .. ' does not want to play a captain game', { r = 0.9, g = 0.1, b = 0.1 })
+            game.print(
+                player.name .. ' does not want to play a captain game',
+                { color = { r = 0.9, g = 0.1, b = 0.1 } }
+            )
         end
     end
 end

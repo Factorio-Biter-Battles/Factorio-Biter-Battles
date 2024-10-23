@@ -143,7 +143,7 @@ local function damage_player(player, kill, print_to_all)
         if kill then
             player.character.die('enemy')
             if print_to_all then
-                game.print(player.name .. msg, Color.yellow)
+                game.print(player.name .. msg, { color = Color.yellow })
             end
             return
         end
@@ -154,10 +154,10 @@ local function damage_player(player, kill, print_to_all)
             'Just a fleshwound.',
             'Better keep those hands to yourself or you might loose them.',
         }
-        player.print(messages[math.random(1, #messages)], Color.yellow)
+        player.print(messages[math.random(1, #messages)], { color = Color.yellow })
         if player.character.health <= 0 then
             player.character.die('enemy')
-            game.print(player.name .. msg, Color.yellow)
+            game.print(player.name .. msg, { color = Color.yellow })
             return
         end
     end

@@ -20,7 +20,7 @@ local function on_player_died(event)
 
     player.print(
         table.concat({ 'You have', player_lives, ((player_lives == 1) and 'life' or 'lives'), 'left.' }, ' '),
-        Color.warning
+        { color = Color.warning }
     )
 end
 
@@ -56,7 +56,7 @@ local function generate_limited_lives(lives_limit)
         alignment = 'center',
         scale_with_zoom = false,
     })
-    game.print('Special game Limited lives: ' .. special_game_description, Color.warning)
+    game.print('Special game Limited lives: ' .. special_game_description, { color = Color.warning })
 end
 
 local Public = {

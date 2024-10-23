@@ -128,7 +128,10 @@ local function on_gui_click(event)
         flow.add({ type = 'button', name = 'confirm', caption = 'Confirm' })
         flow.add({ type = 'button', name = 'cancel', caption = 'Cancel' })
         element.visible = false -- hides Apply button
-        player.print('[SPECIAL GAMES] Are you sure? This change will be reversed only on map restart!', Color.cyan)
+        player.print(
+            '[SPECIAL GAMES] Are you sure? This change will be reversed only on map restart!',
+            { color = Color.cyan }
+        )
     elseif valid_special_games[special_game_gui.name]['gui_click'] then
         valid_special_games[special_game_gui.name].gui_click(element, config, player)
     end

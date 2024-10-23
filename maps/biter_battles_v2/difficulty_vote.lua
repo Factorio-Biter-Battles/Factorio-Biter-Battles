@@ -169,7 +169,7 @@ local function set_difficulty()
     if storage.difficulty_vote_index ~= new_index then
         local message =
             table.concat({ '>> Map difficulty has changed to ', difficulties[new_index].name, ' difficulty!' })
-        game.print(message, difficulties[new_index].print_color)
+        game.print(message, { color = difficulties[new_index].print_color })
         Server.to_discord_embed(message)
     end
     storage.difficulty_vote_index = new_index
@@ -227,13 +227,13 @@ local function difficulty_voted(player, i)
     if storage.difficulty_player_votes[player.name] ~= i then
         game.print(
             player.name .. ' has voted for ' .. difficulties[i].name .. ' difficulty!',
-            difficulties[i].print_color
+            { color = difficulties[i].print_color }
         )
         storage.difficulty_player_votes[player.name] = i
         set_difficulty()
         difficulty_gui_all()
     else
-        player.print('You already voted for this difficulty', { r = 0.98, g = 0.66, b = 0.22 })
+        player.print('You already voted for this difficulty', { color = { r = 0.98, g = 0.66, b = 0.22 } })
     end
 end
 
@@ -308,7 +308,7 @@ local function on_gui_click(event)
             'Not ready to vote. Please wait '
                 .. 60 - (math.floor((game.tick - storage.spectator_rejoin_delay[player.name]) / 60))
                 .. ' seconds.',
-            { r = 0.98, g = 0.66, b = 0.22 }
+            { color = { r = 0.98, g = 0.66, b = 0.22 } }
         )
         event.element.parent.destroy()
         return

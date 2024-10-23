@@ -258,7 +258,7 @@ function Public.step(id, result)
                     unit_group.surface.name
                 )
                 log(message)
-                game.print(message, Color.red)
+                game.print(message, { color = Color.red })
                 storage.ai_strikes[id] = nil
             else
                 strike.phase = 3

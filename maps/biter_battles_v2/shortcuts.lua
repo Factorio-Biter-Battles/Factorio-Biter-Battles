@@ -82,9 +82,9 @@ local main_frame_actions = {
             return
         end
         if storage.active_special_games.disable_sciences then
-            player.print('Disabled by special game', Color.red)
+            player.print('Disabled by special game', { color = Color.red })
         elseif Captain_event.captain_is_player_prohibited_to_throw(player) then
-            player.print('You are not allowed to send science, ask your captain', Color.red)
+            player.print('You are not allowed to send science, ask your captain', { color = Color.red })
         else
             Feeding.feed_biters_mixed_from_inventory(player, event.button)
         end

@@ -44,13 +44,16 @@ local function startCommand(command)
     local player = game.get_player(command.player_index)
 
     if not Profiler.isProfilingSupported() then
-        player.print(WARNING_MESSAGE_DISABLED, { r = 1, g = 0.25, b = 0.25 })
+        player.print(WARNING_MESSAGE_DISABLED, { color = { r = 1, g = 0.25, b = 0.25 } })
         return
     end
 
     local trusted = session.get_trusted_table()
     if not trusted[player.name] then
-        player.print('You have not grown accustomed to this technology yet.', { r = 0.22, g = 0.99, b = 0.99 })
+        player.print(
+            'You have not grown accustomed to this technology yet.',
+            { color = { r = 0.22, g = 0.99, b = 0.99 } }
+        )
         return
     end
     Profiler.Start(command.parameter ~= nil, player.admin, command.tick)

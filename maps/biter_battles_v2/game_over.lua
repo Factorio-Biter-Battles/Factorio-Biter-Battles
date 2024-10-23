@@ -323,7 +323,7 @@ function Public.server_restart()
         if storage.restart then
             if not storage.announced_message then
                 local message = 'Soft-reset is disabled! Server will restart from scenario to load new changes.'
-                game.print(message, { r = 0.22, g = 0.88, b = 0.22 })
+                game.print(message, { color = { r = 0.22, g = 0.88, b = 0.22 } })
                 Server.to_discord_bold(table.concat({ '*** ', message, ' ***' }))
                 Server.start_scenario('Biter_Battles')
                 storage.announced_message = true
@@ -333,14 +333,14 @@ function Public.server_restart()
         if storage.shutdown then
             if not storage.announced_message then
                 local message = 'Soft-reset is disabled! Server will shutdown. Most likely because of updates.'
-                game.print(message, { r = 0.22, g = 0.88, b = 0.22 })
+                game.print(message, { color = { r = 0.22, g = 0.88, b = 0.22 } })
                 Server.to_discord_bold(table.concat({ '*** ', message, ' ***' }))
                 Server.stop_scenario()
                 storage.announced_message = true
                 return
             end
         end
-        game.print('Map is restarting!', { r = 0.22, g = 0.88, b = 0.22 })
+        game.print('Map is restarting!', { color = { r = 0.22, g = 0.88, b = 0.22 } })
         local message = 'Map is restarting! '
         Server.to_discord_bold(table.concat({ '*** ', message, ' ***' }))
 
@@ -350,10 +350,10 @@ function Public.server_restart()
     if storage.server_restart_timer % 30 == 0 then
         game.print(
             'Map will restart in ' .. storage.server_restart_timer .. ' seconds!',
-            { r = 0.22, g = 0.88, b = 0.22 }
+            { color = { r = 0.22, g = 0.88, b = 0.22 } }
         )
         if storage.server_restart_timer / 30 == 1 then
-            game.print('Good luck with your next match!', { r = 0.98, g = 0.66, b = 0.22 })
+            game.print('Good luck with your next match!', { color = { r = 0.98, g = 0.66, b = 0.22 } })
         end
     end
 end
@@ -578,7 +578,7 @@ local function chat_with_everyone(event)
         return
     end
     local message = player.name .. '[auto-shout]: ' .. event.message
-    game.forces[enemy].print(message, player.chat_color)
+    game.forces[enemy].print(message, { color = player.chat_color })
 end
 
 ---@return success_percent number [0-1] yes/total
@@ -790,7 +790,7 @@ local function start_auto_captain_vote()
     then
         game.print(
             'You can now vote to start or not a captain game, top of screen! You wont be able to play until the poll is over',
-            { r = 0.22, g = 0.88, b = 0.22 }
+            { color = { r = 0.22, g = 0.88, b = 0.22 } }
         )
         storage.tournament_mode = true
         storage.automatic_captain_time_left = storage.automatic_captain_time_limit / 60
@@ -850,7 +850,7 @@ decrement_timer_token = Token.register(function()
         local result, _, _ = get_reroll_stats()
         if result >= 66 then
             game.print('Vote to reload the map has succeeded (' .. result .. '%)')
-            game.print('Map is being rerolled!', { r = 0.22, g = 0.88, b = 0.22 })
+            game.print('Map is being rerolled!', { color = { r = 0.22, g = 0.88, b = 0.22 } })
             Public.generate_new_map()
         else
             game.print('Vote to reload the map has failed (' .. result .. '%)')

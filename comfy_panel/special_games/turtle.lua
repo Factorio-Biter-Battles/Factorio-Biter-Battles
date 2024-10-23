@@ -1,7 +1,7 @@
 local Color = require('utils.color_presets')
 
 local function generate_turtle(moat_width, entrance_width, size_x, size_y)
-    game.print('Special game turtle is being generated!', Color.warning)
+    game.print('Special game turtle is being generated!', { color = Color.warning })
     local surface = game.surfaces[storage.bb_surface_name]
     local water_positions = {}
     local concrete_positions = {}

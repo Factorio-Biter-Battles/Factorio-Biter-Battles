@@ -3,11 +3,11 @@ local Color = require('utils.color_presets')
 local function generate_shared_science_throw()
     game.print(
         '[SPECIAL GAMES] All science throws are shared (if you send, both team gets +threat and +evo !)',
-        Color.warning
+        { color = Color.warning }
     )
     game.print(
         '[SPECIAL GAMES] Evo and threat and threat income were reset to same value for both teams !',
-        Color.warning
+        { color = Color.warning }
     )
     storage.active_special_games['shared_science_throw'] = true
     if not storage.special_games_variables['shared_science_throw'] then

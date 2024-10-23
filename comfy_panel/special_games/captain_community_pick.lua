@@ -37,7 +37,7 @@ local function find_top_pick(community_picks, num_votes_required_for_win)
         local votes = {}
         for _, player_list in pairs(community_picks) do
             if #player_list == 0 then
-                game.print('Error: empty player list in community_picks', Color.red)
+                game.print('Error: empty player list in community_picks', { color = Color.red })
                 game.print(serpent.line(orig_community_picks))
                 return nil
             end
@@ -98,7 +98,7 @@ function CaptainCommunityPick.pick_order(community_picks)
                 if players[player] then
                     game.print(
                         string.format('Error: "%s" is repeated in community_picks for "%s"', player, picking_player),
-                        Color.red
+                        { color = Color.red }
                     )
                     return nil
                 end
@@ -106,7 +106,10 @@ function CaptainCommunityPick.pick_order(community_picks)
             end
         else
             if #player_list ~= num_players then
-                game.print(string.format('Error: "%s" has wrong number of community_picks', picking_player), Color.red)
+                game.print(
+                    string.format('Error: "%s" has wrong number of community_picks', picking_player),
+                    { color = Color.red }
+                )
                 return nil
             end
             local this_unique_players = {}
@@ -114,7 +117,7 @@ function CaptainCommunityPick.pick_order(community_picks)
                 if not players[player] or this_unique_players[player] then
                     game.print(
                         string.format('Error: "%s" is surprising to find in picks for "%s"', player, _),
-                        Color.red
+                        { color = Color.red }
                     )
                     return nil
                 end

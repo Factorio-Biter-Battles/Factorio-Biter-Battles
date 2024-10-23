@@ -9,7 +9,7 @@ local function revote()
 
     if player and player ~= nil then
         if not player.admin then
-            player.print('[ERROR] Command is admin-only. Please ask an admin.', Color.warning)
+            player.print('[ERROR] Command is admin-only. Please ask an admin.', { color = Color.warning })
             return
         else
             local tick = Functions.get_ticks_since_game_start()
@@ -31,7 +31,7 @@ local function close_difficulty_votes(cmd)
         return
     end
     if not player.admin then
-        player.print('[ERROR] Command is admin-only. Please ask an admin.', Color.warning)
+        player.print('[ERROR] Command is admin-only. Please ask an admin.', { color = Color.warning })
         return
     end
     if cmd.parameter and cmd.parameter ~= '' then
@@ -51,7 +51,7 @@ local function close_difficulty_votes(cmd)
         end
         local message =
             table.concat({ '>> Map difficulty has changed to ', difficulty_vote.difficulty_name(), ' difficulty!' })
-        game.print(message, difficulty_vote.difficulty_print_color())
+        game.print(message, { color = difficulty_vote.difficulty_print_color() })
         Server.to_discord_embed(message)
     end
     local tick = Functions.get_ticks_since_game_start()

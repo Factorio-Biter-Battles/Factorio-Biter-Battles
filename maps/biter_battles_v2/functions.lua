@@ -427,7 +427,10 @@ function Functions.no_landfill_by_untrusted_user(event, trusted_table)
     end
     local player = game.get_player(event.player_index)
     if not trusted_table[player.name] then
-        player.print('You have not grown accustomed to this technology yet.', { r = 0.22, g = 0.99, b = 0.99 })
+        player.print(
+            'You have not grown accustomed to this technology yet.',
+            { color = { r = 0.22, g = 0.99, b = 0.99 } }
+        )
         entity.destroy()
         return
     end
@@ -500,7 +503,7 @@ function Functions.print_message_to_players(forcePlayerList, playerNameSendingMe
                 if colorChosen == nil then
                     playerOfForce.print(msgToPrint)
                 else
-                    playerOfForce.print(msgToPrint, colorChosen)
+                    playerOfForce.print(msgToPrint, { color = colorChosen })
                 end
             end
         end
@@ -562,15 +565,18 @@ function Functions.spy_fish(player, event)
                         .. minute_label
                         .. math_floor(spy_time_seconds % 60)
                         .. ' seconds of enemy vision left.',
-                    { r = 0.98, g = 0.66, b = 0.22 }
+                    { color = { r = 0.98, g = 0.66, b = 0.22 } }
                 )
             else
-                player.print(spy_time_seconds .. ' seconds of enemy vision left.', { r = 0.98, g = 0.66, b = 0.22 })
+                player.print(
+                    spy_time_seconds .. ' seconds of enemy vision left.',
+                    { color = { r = 0.98, g = 0.66, b = 0.22 } }
+                )
             end
         else
             game.print(
                 player.name .. ' sent ' .. send_amount .. ' fish to spy on ' .. enemy_team .. ' team!',
-                { r = 0.98, g = 0.66, b = 0.22 }
+                { color = { r = 0.98, g = 0.66, b = 0.22 } }
             )
             storage.spy_fish_timeout[player.force.name] = game.tick + duration_per_unit * send_amount
         end
@@ -648,7 +654,7 @@ function Functions.clear_corpses(player, param)
             entity.destroy()
         end
     end
-    player.print('Cleared biter-corpses.', Color.success)
+    player.print('Cleared biter-corpses.', { color = Color.success })
 end
 
 return Functions
