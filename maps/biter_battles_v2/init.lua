@@ -197,9 +197,9 @@ function Public.playground_surface()
         ['uranium-ore'] = { frequency = 2.2, size = 1, richness = 1 },
         ['crude-oil'] = { frequency = 8, size = 1.4, richness = 0.45 },
         ['trees'] = {
-            frequency = storage.random_generator(8, 28) * 0.1,
-            size = storage.random_generator(6, 14) * 0.1,
-            richness = storage.random_generator(2, 4) * 0.1,
+            frequency = 0.65,
+            size = 0.04,
+            richness = 0.002,
         },
         ['enemy-base'] = { frequency = 0, size = 0, richness = 0 },
     }
