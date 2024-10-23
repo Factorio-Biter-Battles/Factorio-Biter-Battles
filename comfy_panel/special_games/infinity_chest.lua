@@ -42,7 +42,7 @@ local function generate_infinity_chest(separate_chests, operable, gap, eq)
             chest.minable = false
             chest.operable = operable
             chest.destructible = false
-            chest.set_infinity_container_filter(i, { name = v, index = i, count = game.prototypes.item[v].stack_size })
+            chest.set_infinity_container_filter(i, { name = v, index = i, count = prototypes.item[v].stack_size })
             chest.clone({ position = { position_0.x, -position_0.y } })
             position_0.x = position_0.x + (i * k)
             k = k * -1
