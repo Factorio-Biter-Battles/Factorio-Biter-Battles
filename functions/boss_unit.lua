@@ -102,11 +102,11 @@ local function on_entity_damaged(event)
             -- We do not destroy unit.healthbar_id here because we want it to
             -- remain visible for the units "last life". It will automatically
             -- be destroyed when "entity" is destroyed.
-            if unit.text_id then
-                rendering.destroy(unit.text_id)
+            if unit.text_id and unit.text_id.valid then
+                unit.text_id.destroy()
             end
         else
-            if unit.text_id then
+            if unit.text_id and unit.text_id.valid then
                 rendering.set_text(unit.text_id, health_factor_to_rendered_string(unit.health_factor))
             end
         end

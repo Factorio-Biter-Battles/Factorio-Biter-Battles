@@ -156,8 +156,8 @@ local function clear_captain_rendering()
         return
     end
     for textId, render in pairs(storage.special_games_variables.rendering) do
-        if rendering.is_valid(render) then
-            rendering.destroy(render)
+        if render.valid then
+            render.destroy()
         end
         storage.special_games_variables.rendering[textId] = nil
     end
@@ -939,7 +939,7 @@ local function generate_vs_text_rendering()
         and storage.special_games_variables.rendering
         and storage.special_games_variables.rendering.captainLineVersus
     then
-        rendering.destroy(storage.special_games_variables.rendering.captainLineVersus)
+        storage.special_games_variables.rendering.captainLineVersus.destroy()
     end
 
     local special = storage.special_games_variables.captain_mode

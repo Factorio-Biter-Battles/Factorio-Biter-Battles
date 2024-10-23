@@ -20,7 +20,7 @@ local function on_console_chat(event)
     end
 
     if storage.player_floaty_chat[player.index] then
-        rendering.destroy(storage.player_floaty_chat[player.index])
+        storage.player_floaty_chat[player.index].destroy()
         storage.player_floaty_chat[player.index] = nil
     end
 

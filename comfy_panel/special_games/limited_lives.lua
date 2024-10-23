@@ -26,7 +26,7 @@ end
 
 local function generate_limited_lives(lives_limit)
     if storage.special_games_variables['limited_lives'] then
-        rendering.destroy(storage.special_games_variables['limited_lives']['text_id'])
+        storage.special_games_variables['limited_lives']['text_id'].destroy()
     end
 
     if lives_limit == 0 then

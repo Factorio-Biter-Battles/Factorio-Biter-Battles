@@ -14,7 +14,7 @@ local function generate_shared_science_throw()
         storage.special_games_variables['shared_science_throw'] = {}
     end
     if storage.special_games_variables['shared_science_throw']['text_id'] then
-        rendering.destroy(storage.special_games_variables['shared_science_throw']['text_id'])
+        storage.special_games_variables['shared_science_throw']['text_id'].destroy()
     end
     local special_game_description = 'All science throws are shared (if you send, both teams gets +threat and +evo)'
     storage.special_games_variables['shared_science_throw']['text_id'] = rendering.draw_text({
