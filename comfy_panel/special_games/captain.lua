@@ -88,7 +88,7 @@ local tournament_pages = {
     },
     {
         name = 'captain_organization_gui',
-        sprite = 'utility/slot_icon_robot_material',
+        sprite = 'utility/empty_robot_material_slot',
         caption = 'Team Organization',
         tooltip = 'Toggle your team organization window',
     },
@@ -262,13 +262,13 @@ local function pick_player_generator(
         local l
         create_button(parent, button_name, button_1_text, player_name)
 
-        l = parent.add({ type = 'label', caption = group_name, style = 'valid_mod_label' })
+        l = parent.add({ type = 'label', caption = group_name, style = 'tooltip_label' })
         gui_style(l, { minimal_width = 100, font_color = Color.antique_white })
 
-        l = parent.add({ type = 'label', caption = play_time, style = 'valid_mod_label' })
+        l = parent.add({ type = 'label', caption = play_time, style = 'tooltip_label' })
         gui_style(l, { minimal_width = 100 })
 
-        l = parent.add({ type = 'label', caption = special.player_info[player_name] or '', style = 'valid_mod_label' })
+        l = parent.add({ type = 'label', caption = special.player_info[player_name] or '', style = 'tooltip_label' })
         gui_style(l, { minimal_width = 100, single_line = false, maximal_width = 300 })
     end
 
@@ -297,7 +297,7 @@ local function pick_player_generator(
         local inner_frame = flow.add({
             type = 'frame',
             name = 'inner_frame',
-            style = 'a_inner_paddingless_frame',
+            style = 'inside_shallow_frame_packed',
             direction = 'vertical',
         })
         local sp = inner_frame.add({
@@ -307,7 +307,7 @@ local function pick_player_generator(
             direction = 'vertical',
         })
         gui_style(sp, { horizontally_squashable = false, padding = 0 })
-        local t = sp.add({ type = 'table', column_count = 4, style = 'mods_table' })
+        local t = sp.add({ type = 'table', column_count = 4, style = 'mods_explore_results_table' })
         if tableBeingLooped ~= nil then
             local label_style = {
                 font_color = Color.antique_white,
@@ -2085,7 +2085,7 @@ function Public.draw_captain_tournament_button(player)
     Gui.add_top_element(player, {
         type = 'sprite-button',
         sprite = 'utility/side_menu_achievements_icon',
-        hovered_sprite = 'utility/side_menu_achievements_hover_icon',
+        -- hovered_sprite = 'utility/side_menu_achievements_hover_icon',
         name = 'captain_tournament_button',
         tooltip = { 'gui.tournament_top_button' },
         index = Gui.get_top_index(player),
@@ -2413,7 +2413,7 @@ function Public.draw_captain_player_gui(player, main_frame)
 
     do -- Community pick UI
         local flow = main_frame.add({ type = 'flow', name = 'community_pick_flow', direction = 'vertical' })
-        captain_player_gui_header(flow, 'community_pick_title', 'utility/slot_icon_inserter_hand', 'COMMUNITY PICK')
+        captain_player_gui_header(flow, 'community_pick_title', 'utility/empty_inserter_hand_slot', 'COMMUNITY PICK')
         local label = flow.add({
             type = 'label',
             name = 'community_pick_label',
@@ -2443,7 +2443,7 @@ function Public.draw_captain_player_gui(player, main_frame)
         captain_player_gui_header(
             pick_flow,
             'player_table_title',
-            'utility/slot_icon_inserter_hand',
+            'utility/empty_inserter_hand_slot',
             'CAPTAINS PICK LIST'
         )
 
@@ -2614,7 +2614,7 @@ function Public.draw_captain_tournament_gui(player)
         })
         gui_style(icon, { padding = -2, size = 24, right_margin = 4 })
 
-        local label = frame.add({ type = 'label', style = 'heading_3_label', caption = p.caption })
+        local label = frame.add({ type = 'label', style = 'semibold_label', caption = p.caption })
         gui_style(label, { font_color = { 165, 165, 165 } })
 
         Gui.add_pusher(frame)
@@ -2794,7 +2794,7 @@ function Public.update_captain_player_gui(player, frame)
     do -- Player info
         local info_flow = frame.info_flow
         info_flow.visible = (waiting_to_be_picked and not special.pickingPhase)
-        info_flow.display.visible = special.player_info[player.name] and #special.player_info[player.name] > 0
+        info_flow.display.visible = special.player_info[player.name] ~= nil and #special.player_info[player.name] > 0
     end
 
     do -- Community pick UI
@@ -2810,29 +2810,29 @@ function Public.update_captain_player_gui(player, frame)
                 name = 'player_table',
                 column_count = #cols,
                 draw_horizontal_line_after_headers = true,
-                style = 'mods_table',
+                style = 'mods_explore_results_table',
             })
             gui_style(tab, { horizontally_stretchable = true })
 
             for i, col in pairs(cols) do
-                local label = tab.add({ type = 'label', caption = col, style = 'heading_3_label' })
+                local label = tab.add({ type = 'label', caption = col, style = 'semibold_label' })
                 gui_style(label, { top_margin = 4, bottom_margin = 4 })
             end
             local function add_common_cols(tab, player_name)
                 tab.add({
                     type = 'label',
                     caption = player_name,
-                    style = 'valid_mod_label',
+                    style = 'tooltip_label',
                 })
                 tab.add({
                     type = 'label',
                     caption = Functions.format_ticks_as_time(storage.total_time_online_players[player_name] or 0),
-                    style = 'valid_mod_label',
+                    style = 'tooltip_label',
                 })
                 tab.add({
                     type = 'label',
                     caption = special.player_info[player_name] or '',
-                    style = 'valid_mod_label',
+                    style = 'tooltip_label',
                 })
             end
             local pick_order = special.communityPickOrder[player.name] or {}
@@ -2956,25 +2956,25 @@ function Public.update_captain_player_gui(player, frame)
                 name = 'player_table',
                 column_count = 5,
                 draw_horizontal_line_after_headers = true,
-                style = 'mods_table',
+                style = 'mods_explore_results_table',
             })
             gui_style(tab, { horizontally_stretchable = true })
 
             local label
-            label = tab.add({ type = 'label', caption = 'Player', style = 'heading_3_label' })
+            label = tab.add({ type = 'label', caption = 'Player', style = 'semibold_label' })
             gui_style(label, { top_margin = 4, bottom_margin = 4 })
-            label = tab.add({ type = 'label', caption = 'Team', style = 'heading_3_label' })
+            label = tab.add({ type = 'label', caption = 'Team', style = 'semibold_label' })
             gui_style(label, { top_margin = 4, bottom_margin = 4 })
-            label = tab.add({ type = 'label', caption = 'PickedAt', style = 'heading_3_label' })
+            label = tab.add({ type = 'label', caption = 'PickedAt', style = 'semibold_label' })
             gui_style(label, { top_margin = 4, bottom_margin = 4 })
             label = tab.add({
                 type = 'label',
                 caption = 'Playtime [img=info]',
                 tooltip = 'Amount of time actively on their team (fraction of time, since being picked, that the player is online and not spectating)',
-                style = 'heading_3_label',
+                style = 'semibold_label',
             })
             gui_style(label, { top_margin = 4, bottom_margin = 4 })
-            label = tab.add({ type = 'label', caption = 'Status', style = 'heading_3_label' })
+            label = tab.add({ type = 'label', caption = 'Status', style = 'semibold_label' })
             gui_style(label, { top_margin = 4, bottom_margin = 4 })
 
             local now_tick = Functions.get_ticks_since_game_start()
@@ -2982,16 +2982,16 @@ function Public.update_captain_player_gui(player, frame)
                 local info = player_info[player_name]
                 local pick_duration = info.picked_at and (now_tick - info.picked_at) or 0
                 local playtime_frac = pick_duration > 0 and info.playtime / pick_duration or 1
-                label = tab.add({ type = 'label', caption = player_name, style = 'valid_mod_label' })
+                label = tab.add({ type = 'label', caption = player_name, style = 'tooltip_label' })
                 label = tab.add({
                     type = 'label',
                     caption = Functions.team_name_with_color(info.force),
-                    style = 'valid_mod_label',
+                    style = 'tooltip_label',
                 })
                 label = tab.add({
                     type = 'label',
                     caption = info.picked_at and Functions.format_ticks_as_time(info.picked_at) or '',
-                    style = 'valid_mod_label',
+                    style = 'tooltip_label',
                 })
                 label = tab.add({
                     type = 'label',
@@ -3000,9 +3000,9 @@ function Public.update_captain_player_gui(player, frame)
                         Functions.format_ticks_as_time(info.playtime),
                         100 * playtime_frac
                     ),
-                    style = 'valid_mod_label',
+                    style = 'tooltip_label',
                 })
-                label = tab.add({ type = 'label', caption = concat(info.status, ', '), style = 'valid_mod_label' })
+                label = tab.add({ type = 'label', caption = concat(info.status, ', '), style = 'tooltip_label' })
             end
         else
             pick_flow.visible = false
@@ -3289,7 +3289,8 @@ function Public.update_captain_tournament_gui(player)
         local gui_name = data.name
         local action = cpt_ui_visibility[gui_name]
         if menu[gui_name] and action then
-            menu[gui_name].visible = action(player)
+            local visible = not not action(player)
+            menu[gui_name].visible = visible
         elseif not menu[gui_name] then
             error('Missing menu[' .. gui_name .. ']')
         else
