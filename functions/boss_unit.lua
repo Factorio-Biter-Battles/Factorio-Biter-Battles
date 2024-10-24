@@ -91,7 +91,7 @@ local function on_entity_damaged(event)
     end
     if entity.health == 0 then
         local adjustment = math.min(unit.health_factor - 1, 1)
-        entity.health = entity.prototype.max_health * adjustment
+        entity.health = entity.prototype.get_max_health() * adjustment
         unit.health_factor = unit.health_factor - adjustment
         if unit.healthbar_id then
             set_healthbar(unit.healthbar_id, unit.health_factor / unit.original_health_factor)
