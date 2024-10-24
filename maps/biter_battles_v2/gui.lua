@@ -123,13 +123,13 @@ local function drop_burners(player, forced_join)
     end
     local burners_to_drop = player.get_item_count('burner-mining-drill')
     if burners_to_drop ~= 0 then
-        local items = player.surface.spill_item_stack(
-            player.position,
-            { name = 'burner-mining-drill', count = burners_to_drop },
-            false,
-            nil,
-            false
-        )
+        local items = player.surface.spill_item_stack({
+            position = player.position,
+            stack = { name = 'burner-mining-drill', count = burners_to_drop },
+            enable_looted = false,
+            force = nil,
+            allow_belts = false,
+        })
         player.remove_item({ name = 'burner-mining-drill', count = burners_to_drop })
     end
 end
@@ -476,7 +476,7 @@ function Public.create_main_gui(player)
             type = 'frame',
             name = 'table_frame',
             direction = 'horizontal',
-            style = 'filter_frame',
+            style = 'slot_window_frame',
         }) --slot_button_deep_frame, quick_bar_window_frame, quick_bar_inner_panel
         gui_style(table_frame, { minimal_height = 40 })
 
@@ -826,13 +826,13 @@ function Public.burners_balance(player)
         storage.got_burners[player.name] = true
         inserted = player.insert({ name = 'burner-mining-drill', count = burners_to_insert })
         if inserted < burners_to_insert then
-            local items = player.surface.spill_item_stack(
-                player.position,
-                { name = 'burner-mining-drill', count = burners_to_insert - inserted },
-                false,
-                nil,
-                false
-            )
+            local items = player.surface.spill_item_stack({
+                position = player.position,
+                stack = { name = 'burner-mining-drill', count = burners_to_insert - inserted },
+                enable_looted = false,
+                force = nil,
+                allow_belts = false,
+            })
         end
         player.print({ 'info.burner_balance', burners_to_insert }, { r = 1, g = 1, b = 0 })
         player.create_local_flying_text({

@@ -352,7 +352,7 @@ local function on_entity_died(event)
     damage_stats.kills = damage_stats.kills + 1
     -- This is somewhat inaccurate, because biter_health_factor might be different
     -- now than when the biter was spawned, but it is close enough for me.
-    damage_stats.damage = damage_stats.damage + entity.prototype.max_health * health_factor
+    damage_stats.damage = damage_stats.damage + entity.prototype.get_max_health() * health_factor
 end
 
 -- We could theoretically collect just once per minute, but this collection will not be
