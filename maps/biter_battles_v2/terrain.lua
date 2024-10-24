@@ -825,7 +825,11 @@ function Public.minable_wrecks(entity, player)
         local inserted_count = player.insert({ name = name, count = amount })
         if inserted_count ~= amount then
             local amount_to_spill = amount - inserted_count
-            surface.spill_item_stack(entity.position, { name = name, count = amount_to_spill }, true)
+            surface.spill_item_stack({
+                position = entity.position,
+                stack = { name = name, count = amount_to_spill },
+                enable_looted = true,
+            })
         end
 
         player.create_local_flying_text({
@@ -928,9 +932,12 @@ local function add_gifts(surface)
         local item_stacks = LootRaffle.roll(loot_worth, 3, blacklist)
         for k, stack in pairs(item_stacks) do
             surface.spill_item_stack({
-                x = storage.random_generator(-10, 10) * 0.1,
-                y = storage.random_generator(-5, 15) * 0.1,
-            }, { name = stack.name, count = 1 }, false, nil, true)
+                position = { x = storage.random_generator(-10, 10) * 0.1, y = storage.random_generator(-5, 15) * 0.1 },
+                stack = { name = stack.name, count = 1 },
+                enable_looted = false,
+                force = nil,
+                allow_belts = true,
+            })
         end
     end
 end
