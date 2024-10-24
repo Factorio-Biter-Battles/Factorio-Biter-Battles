@@ -19,11 +19,11 @@ local space = {
 }
 
 local function get_player_data(player, remove)
-    if remove and this.data[player.index] then
+    if remove and this.data[player.index] ~= nil then
         this.data[player.index] = nil
         return
     end
-    if not this.data[player.index] then
+    if this.data[player.index] == nil then
         this.data[player.index] = {}
     end
     return this.data[player.index]
@@ -157,16 +157,16 @@ local function redraw_inventory(gui, source, target, caption, panel_type)
 
     inventory_gui.caption = 'Inventory of ' .. target.name
 
-    for name, opts in pairs(panel_type) do
+    for _, opts in ipairs(panel_type) do
         local flow = items_table.add({ type = 'flow' })
         flow.style.vertical_align = 'bottom'
 
         local button = flow.add({
             type = 'sprite-button',
-            sprite = 'item/' .. name,
-            number = opts,
-            name = name,
-            tooltip = types[name].localised_name,
+            sprite = 'item/' .. opts.name,
+            number = opts.count,
+            name = opts.name,
+            tooltip = types[opts.name].localised_name,
             style = 'slot_button',
         })
         button.enabled = false
@@ -180,7 +180,7 @@ local function redraw_inventory(gui, source, target, caption, panel_type)
                         sprite = 'item/' .. k,
                         number = v,
                         name = k,
-                        tooltip = types[name].localised_name,
+                        tooltip = types[opts.name].localised_name,
                         style = 'slot_button',
                     })
                     armor_gui.enabled = false
