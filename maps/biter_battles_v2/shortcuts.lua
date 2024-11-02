@@ -151,6 +151,7 @@ function Public.get_main_frame(player)
         })
         main_frame.auto_center = true
         main_frame.visible = false
+        gui_style(main_frame, { minimal_width = 20 })
 
         local title_bar = main_frame.add({
             type = 'flow',
@@ -226,7 +227,7 @@ function Public.get_main_frame(player)
         for _, s in pairs(shortcut_buttons) do
             button = table.add({
                 type = 'sprite-button',
-                style = 'quick_bar_page_button',
+                style = 'slot_button',
                 sprite = s.sprite,
                 hovered_sprite = s.hovered_sprite,
                 name = s.name,
