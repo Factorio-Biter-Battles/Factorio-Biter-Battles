@@ -290,9 +290,9 @@ function Functions.init_player(player)
 
     if player.character and player.character.valid then
         player.character.destroy()
-        player.set_controller({ type = defines.controllers.god })
-        player.create_character()
     end
+    player.set_controller({ type = defines.controllers.god })
+    player.create_character()
     player.clear_items_inside()
     player.spectator = true
     player.force = game.forces.spectator
