@@ -1,4 +1,4 @@
-_DEBUG = false
+local _DEBUG = false
 
 local bb_config = require('maps.biter_battles_v2.config')
 local Captain_event = require('comfy_panel.special_games.captain')
@@ -185,7 +185,7 @@ local function get_evo_tooltip(force, verbose)
     local damage = (biter_force.get_ammo_damage_modifier('melee') + 1) * 100
     return prefix
         .. style.listbox('Evolution: ')
-        .. style.yellow(style.stat(string_format('%.2f', (biter_force.get_evolution_factor(storage.bb_surface_name) * 100))))
+        .. style.yellow(style.stat(string_format('%.2f', (storage.bb_evolution[biter_force.name] * 100))))
         .. style.listbox('%\nDamage: ')
         .. style.yellow(style.stat(damage))
         .. style.listbox('%\nHealth: ')
@@ -689,7 +689,7 @@ function Public.refresh_main_gui(player)
             team_info.threat.tooltip = get_threat_tooltip(force_name, true)
 
             if team.players.visible then
-                team.players.captain.visible = is_cpt
+                team.players.captain.visible = is_cpt ~= nil
                 team.players.captain.caption = get_captain_caption(force_name)
                 team.players.members.caption = get_player_list_caption(force_name)
             end

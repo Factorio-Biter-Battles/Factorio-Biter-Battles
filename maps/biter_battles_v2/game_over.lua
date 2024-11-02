@@ -202,7 +202,7 @@ local function show_endgame_gui(player)
         gui_style(subheader, { horizontally_squashable = true, maximal_height = 40, use_header_filler = true })
 
         local icon =
-            subheader.add({ type = 'sprite-button', sprite = 'utility/slot_icon_armor', style = 'transparent_slot' })
+            subheader.add({ type = 'sprite-button', sprite = 'utility/empty_armor_slot', style = 'transparent_slot' })
         Gui.add_pusher(subheader)
 
         local label = subheader.add({ type = 'label', caption = 'MVPs' })
@@ -210,7 +210,7 @@ local function show_endgame_gui(player)
 
         Gui.add_pusher(subheader)
         local icon =
-            subheader.add({ type = 'sprite-button', sprite = 'utility/slot_icon_armor', style = 'transparent_slot' })
+            subheader.add({ type = 'sprite-button', sprite = 'utility/empty_armor_slot', style = 'transparent_slot' })
 
         local sp =
             inner_frame.add({ type = 'scroll-pane', style = 'scroll_pane_under_subheader', direction = 'vertical' })
