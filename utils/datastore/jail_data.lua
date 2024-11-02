@@ -177,7 +177,7 @@ local teleport_player_to_gulag = function(player, action)
 
     local gulag_tp = function(surface)
         get_player_data(player, true)
-        player.teleport(
+        player.character.teleport(
             surface.find_non_colliding_position('character', game.forces.player.get_spawn_position(surface), 128, 1),
             surface.name
         )
@@ -189,7 +189,7 @@ local teleport_player_to_gulag = function(player, action)
         p_data.position = player.position
         p_data.p_group_id = player.permission_group.group_id
         p_data.locked = true
-        player.teleport(gulag.find_non_colliding_position('character', { 0, 0 }, 128, 1), gulag.name)
+        player.character.teleport(gulag.find_non_colliding_position('character', { 0, 0 }, 128, 1), gulag.name)
         local data = {
             player = player,
         }
@@ -205,7 +205,7 @@ local teleport_player_to_gulag = function(player, action)
             gulag_tp(surface)
         else
             get_player_data(player, true)
-            player.teleport(surface.find_non_colliding_position('character', p, 128, 1), surface.name)
+            player.character.teleport(surface.find_non_colliding_position('character', p, 128, 1), surface.name)
         end
     end
 end

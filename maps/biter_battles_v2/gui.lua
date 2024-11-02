@@ -185,7 +185,7 @@ local function get_evo_tooltip(force, verbose)
     local damage = (biter_force.get_ammo_damage_modifier('melee') + 1) * 100
     return prefix
         .. style.listbox('Evolution: ')
-        .. style.yellow(style.stat(string_format('%.2f', (storage.bb_evolution[biter_force.name] * 100))))
+        .. style.yellow(style.stat(string_format('%.2f', (biter_force.get_evolution_factor(storage.bb_surface_name) * 100))))
         .. style.listbox('%\nDamage: ')
         .. style.yellow(style.stat(damage))
         .. style.listbox('%\nHealth: ')
@@ -950,7 +950,7 @@ function join_team(player, force_name, forced_join, auto_join)
             game.print('No spawn position found for ' .. player.name .. '!', { color = { 255, 0, 0 } })
             return
         end
-        player.teleport(p, surface)
+        player.character.teleport(p, surface)
         player.force = game.forces[force_name]
         player.character.destructible = true
         Public.refresh()
@@ -969,7 +969,7 @@ function join_team(player, force_name, forced_join, auto_join)
     if not pos then
         pos = game.forces[force_name].get_spawn_position(surface)
     end
-    player.teleport(pos)
+    player.character.teleport(pos)
     player.force = game.forces[force_name]
     player.character.destructible = true
     game.permissions.get_group('Default').add_player(player)
@@ -1040,7 +1040,7 @@ function spectate(player, forced_join, stored_position)
         local p_data = get_player_data(player)
         p_data.position = player.position
     end
-    player.teleport(player.surface.find_non_colliding_position('character', { 0, 0 }, 4, 1))
+    player.character.teleport(player.surface.find_non_colliding_position('character', { 0, 0 }, 4, 1))
     Sounds.notify_player(player, 'utility/build_blueprint_large')
     player.force = game.forces.spectator
     player.character.destructible = false

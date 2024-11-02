@@ -300,9 +300,9 @@ function Functions.init_player(player)
     local surface = game.surfaces[storage.bb_surface_name]
     local p = spawn_positions[math_random(1, size_of_spawn_positions)]
     if surface.is_chunk_generated({ 0, 0 }) then
-        player.teleport(surface.find_non_colliding_position('character', p, 4, 0.5), surface)
+        player.character.teleport(surface.find_non_colliding_position('character', p, 4, 0.5), surface)
     else
-        player.teleport(p, surface)
+        player.character.teleport(p, surface)
     end
     if player.character and player.character.valid then
         player.character.destructible = false

@@ -42,7 +42,7 @@ local function teleport_player_to_position(player, position, surface)
     end
     local pos = surface.find_non_colliding_position('character', position, 50, 1)
     if pos then
-        player.teleport(pos, surface)
+        player.character.teleport(pos, surface)
     end
     return pos ~= nil
 end
@@ -91,7 +91,7 @@ local function go_to_player(player, source_player)
     end
     local pos = player.surface.find_non_colliding_position('character', player.position, 50, 1)
     if pos then
-        source_player.teleport(pos, player.surface)
+        source_player.character.teleport(pos, player.surface)
         game.print(
             source_player.name
                 .. ' is visiting '
