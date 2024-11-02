@@ -25,7 +25,7 @@ local f = string.format
 local MAX_STRIKE_DISTANCE = 512
 local MIN_STRIKE_DISTANCE = 256
 local STRIKE_TARGET_CLEARANCE = 255
-local _DEBUG = true
+local _DEBUG = false
 
 
 local function calculate_secant_intersections(r, a, b, c)
@@ -340,7 +340,6 @@ end
 ---@param strike_position MapPosition
 ---@param target LuaEntity
 function Public.initiate(unit_group, target_force_name, strike_position, target)
-    game.print('Selected '..target.name)
     AI.take_control(unit_group, {
         target_force_name = target_force_name,
         position = strike_position,
