@@ -634,8 +634,8 @@ function Functions.get_entity_contents(entity)
     for i_id = 1, entity.get_max_inventory_index() do
         local inventory = entity.get_inventory(i_id)
         if inventory and inventory.valid and not inventory.is_empty() then
-            for item, amount in pairs(inventory.get_contents()) do
-                totals[item] = (totals[item] or 0) + amount
+            for item, props in pairs(inventory.get_contents()) do
+                totals[item] = (totals[item] or 0) + props.count
             end
         end
     end
