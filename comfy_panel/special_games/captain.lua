@@ -2458,16 +2458,13 @@ function Public.draw_captain_player_gui(player, main_frame)
                 style = 'scroll_pane_under_subheader',
                 vertical_scroll_policy = 'dont-show-but-allow-scrolling',
             })
-        gui_style(
-            scroll,
-            {
-                maximal_height = 600,
-                vertically_squashable = false,
-                horizontally_squashable = true,
-                padding = 0,
-                natural_width = 200,
-            }
-        )
+        gui_style(scroll, {
+            maximal_height = 600,
+            vertically_squashable = false,
+            horizontally_squashable = true,
+            padding = 0,
+            natural_width = 200,
+        })
         Gui.add_pusher(padded_flow)
     end
 
