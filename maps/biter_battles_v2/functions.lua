@@ -248,7 +248,7 @@ function Functions.biters_landfill(entity)
     for _, vector in pairs(landfill_biters_vectors) do
         local tile = surface.get_tile({ position.x + vector[1], position.y + vector[2] })
         if tile.collides_with('resource') then
-            surface.set_tiles({ { name = 'landfill', position = tile.position } })
+            surface.set_tiles({ { name = 'dirt-1', position = tile.position } })
             local particle_pos = { tile.position.x + 0.5, tile.position.y + 0.5 }
             for _ = 1, 50, 1 do
                 surface.create_particle({
