@@ -141,9 +141,7 @@ local function debug_print(message, color)
     if not _DEBUG then
         return
     end
-    for _, p in pairs(game.connected_players) do
-        p.print(message, { color = color or Color.dark_gray })
-    end
+    game.print(message, { color = color or Color.dark_gray })
 end
 
 ---@class AIStrikeData
