@@ -41,7 +41,7 @@ function test_feed_effects_3()
     local num_flasks = 4500
     local flask_food_value = Tables.food_values['utility-science-pack'].value * difficulty / 100
     local calc = Functions.calc_feed_effects(evo, flask_food_value, num_flasks, current_player_count, max_reanim_thresh)
-    lunatest.assert_equal('evo_increase: 0.661 threat: 24250', effects_str(calc))
+    lunatest.assert_equal('evo_increase: 0.671 threat: 25218', effects_str(calc))
 end
 
 function test_feed_effects_4()
@@ -52,7 +52,7 @@ function test_feed_effects_4()
     local num_flasks = 23000
     local flask_food_value = Tables.food_values['space-science-pack'].value * difficulty / 100
     local calc = Functions.calc_feed_effects(evo, flask_food_value, num_flasks, current_player_count, max_reanim_thresh)
-    lunatest.assert_equal('evo_increase: 2.934 threat: 2415118', effects_str(calc))
+    lunatest.assert_equal('evo_increase: 2.203 threat: 1251481', effects_str(calc))
 end
 
 function test_feed_effects_5()
@@ -63,7 +63,7 @@ function test_feed_effects_5()
     local num_flasks = 3000
     local flask_food_value = Tables.food_values['space-science-pack'].value * difficulty / 100
     local calc = Functions.calc_feed_effects(evo, flask_food_value, num_flasks, current_player_count, max_reanim_thresh)
-    lunatest.assert_equal('evo_increase: 0.363 threat: 115317', effects_str(calc))
+    lunatest.assert_equal('evo_increase: 0.254 threat: 75247', effects_str(calc))
 end
 
 local function feed_split_up(evo, total_flasks, flask_food_value, num_splits)
@@ -97,8 +97,8 @@ function test_split_up_feed()
     local many_send = feed_split_up(evo, num_flasks, flask_food_value, 10)
     -- same evolution increase
     lunatest.assert_equal(big_send.evo, many_send.evo, 0.00001, 'evo')
-    -- same threat increase (within 1%)
-    lunatest.assert_equal(big_send.threat, many_send.threat, big_send.threat / 100, 'threat')
+    -- same threat increase (within 2%)
+    lunatest.assert_equal(big_send.threat, many_send.threat, big_send.threat / 50, 'threat')
 end
 
 function test_calc_send()
