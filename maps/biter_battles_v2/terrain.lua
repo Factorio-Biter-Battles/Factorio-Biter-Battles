@@ -125,7 +125,7 @@ local function create_mirrored_tile_chain(surface, tile, count, straightness)
         for b = 1, 4, 1 do
             local pos = { x = position.x + modifiers[b].x, y = position.y + modifiers[b].y }
             if surface.get_tile(pos).name ~= tile.name then
-                surface.set_tiles({ { name = 'landfill', position = pos } }, true)
+                surface.set_tiles({ { name = 'dirt-1', position = pos } }, true)
                 surface.set_tiles({ { name = tile.name, position = pos } }, true)
                 --surface.set_tiles({{name = "landfill", position = {pos.x * -1, (pos.y * -1) - 1}}}, true)
                 --surface.set_tiles({{name = tile.name, position = {pos.x * -1, (pos.y * -1) - 1}}}, true)
