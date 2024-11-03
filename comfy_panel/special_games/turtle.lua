@@ -5,7 +5,7 @@ local function generate_turtle(moat_width, entrance_width, size_x, size_y)
     local surface = game.surfaces[storage.bb_surface_name]
     local water_positions = {}
     local concrete_positions = {}
-    local landfill_positions = {}
+    local land_positions = {}
 
     for i = 0, size_y + moat_width do -- vertical canals
         for a = 1, moat_width do
@@ -39,18 +39,18 @@ local function generate_turtle(moat_width, entrance_width, size_x, size_y)
                 { name = 'refined-concrete', position = { x = -entrance_width / 2 + i, y = -size_y + 2 - a } }
             )
             table.insert(
-                landfill_positions,
-                { name = 'landfill', position = { x = -entrance_width / 2 + i, y = size_y - 3 + a } }
+                land_positions,
+                { name = 'dirt-1', position = { x = -entrance_width / 2 + i, y = size_y - 3 + a } }
             )
             table.insert(
-                landfill_positions,
-                { name = 'landfill', position = { x = -entrance_width / 2 + i, y = -size_y + 2 - a } }
+                land_positions,
+                { name = 'dirt-1', position = { x = -entrance_width / 2 + i, y = -size_y + 2 - a } }
             )
         end
     end
 
     surface.set_tiles(water_positions)
-    surface.set_tiles(landfill_positions)
+    surface.set_tiles(land_positions)
     surface.set_tiles(concrete_positions)
     storage.active_special_games['turtle'] = true
 end
