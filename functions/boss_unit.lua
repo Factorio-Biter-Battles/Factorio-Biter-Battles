@@ -94,7 +94,8 @@ local function on_entity_damaged(event)
         local adjustment = math_min(unit.health_factor - 1, 1)
         entity.health = entity.prototype.get_max_health() * adjustment
         unit.health_factor = unit.health_factor - adjustment
-        if unit.healthbar and unit.healthbar.valid then
+        local healthbar = unit.healthbar
+        if healthbar and healthbar.valid then
             local ratio = unit.health_factor / unit.original_health_factor
             healthbar.x_scale = healthbar.y_scale * HEALTHBAR_SIZE * ratio
             healthbar.color = { math_floor(255 - 255 * ratio), math_floor(200 * ratio), 0 }
