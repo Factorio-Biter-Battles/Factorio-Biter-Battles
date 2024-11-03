@@ -2232,7 +2232,7 @@ function Public.draw_captain_player_gui(player, main_frame)
         end
 
         main_frame = ClosableFrame.create_draggable_frame(player, 'captain_player_gui', 'Join Tournament')
-        main_frame.style.maximal_width = 800
+        main_frame.style.maximal_width = 600
     end
 
     local label, button, line
@@ -2248,7 +2248,7 @@ function Public.draw_captain_player_gui(player, main_frame)
 
     do -- Preparation flow
         local prepa_flow = main_frame.add({ type = 'flow', name = 'prepa_flow', direction = 'vertical' })
-        gui_style(prepa_flow, { horizontally_stretchable = true })
+        gui_style(prepa_flow, { horizontally_stretchable = false })
 
         label = prepa_flow.add({
             type = 'label',
@@ -2447,13 +2447,28 @@ function Public.draw_captain_player_gui(player, main_frame)
             'CAPTAINS PICK LIST'
         )
 
-        local scroll = pick_flow.add({
-            type = 'scroll-pane',
-            name = 'player_table_scroll',
-            direction = 'vertical',
-            style = 'scroll_pane_under_subheader',
-        })
-        gui_style(scroll, { maximal_height = 600, vertically_squashable = false })
+        local padded_flow = pick_flow.add({ type = 'flow', name = 'padded_flow', direction = 'horizontal' })
+        Gui.add_pusher(padded_flow)
+        local scroll = padded_flow
+            .add({ type = 'frame', name = 'pick_frame', style = 'inside_shallow_frame_packed', direction = 'vertical' })
+            .add({
+                type = 'scroll-pane',
+                name = 'player_table_scroll',
+                direction = 'vertical',
+                style = 'scroll_pane_under_subheader',
+                vertical_scroll_policy = 'dont-show-but-allow-scrolling',
+            })
+        gui_style(
+            scroll,
+            {
+                maximal_height = 600,
+                vertically_squashable = false,
+                horizontally_squashable = true,
+                padding = 0,
+                natural_width = 200,
+            }
+        )
+        Gui.add_pusher(padded_flow)
     end
 
     Public.update_captain_player_gui(player, main_frame)
@@ -2812,7 +2827,7 @@ function Public.update_captain_player_gui(player, frame)
                 draw_horizontal_line_after_headers = true,
                 style = 'mods_explore_results_table',
             })
-            gui_style(tab, { horizontally_stretchable = true })
+            --gui_style(tab, { horizontally_stretchable = true })
 
             for i, col in pairs(cols) do
                 local label = tab.add({ type = 'label', caption = col, style = 'semibold_label' })
@@ -2946,7 +2961,7 @@ function Public.update_captain_player_gui(player, frame)
             return a < b
         end)
         local pick_flow = frame.pick_flow
-        local scroll = pick_flow.player_table_scroll
+        local scroll = pick_flow.padded_flow.pick_frame.player_table_scroll
         if #sorted_players > 0 then
             pick_flow.visible = true
             scroll.clear()
@@ -2955,7 +2970,7 @@ function Public.update_captain_player_gui(player, frame)
                 type = 'table',
                 name = 'player_table',
                 column_count = 5,
-                draw_horizontal_line_after_headers = true,
+                --draw_horizontal_line_after_headers = true,
                 style = 'mods_explore_results_table',
             })
             gui_style(tab, { horizontally_stretchable = true })
