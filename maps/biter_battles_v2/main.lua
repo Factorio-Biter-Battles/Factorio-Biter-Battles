@@ -481,7 +481,7 @@ local function on_tick()
         storage.bb_threat['north_biters'] = storage.bb_threat['north_biters'] + storage.bb_threat_income['north_biters']
         storage.bb_threat['south_biters'] = storage.bb_threat['south_biters'] + storage.bb_threat_income['south_biters']
 
-        for _, biter_force_name in pairs({'north_biters', 'south_biters'}) do
+        for _, biter_force_name in pairs({ 'north_biters', 'south_biters' }) do
             local force = game.forces[biter_force_name]
             local storage_evo = storage.bb_evolution[biter_force_name]
             local surface_evo = force.get_evolution_factor(storage.bb_surface_name)

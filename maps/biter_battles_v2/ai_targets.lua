@@ -61,7 +61,10 @@ function Public.start_tracking(entity)
         local targets = storage.ai_targets[entity.force.name]
         if targets ~= nil then
             storage.ai_target_destroyed_map[script.register_on_object_destroyed(entity)] = entity.force.name
-            table_insert(targets.available_list, { unit_number = entity.unit_number, position = entity.position, entity = entity })
+            table_insert(
+                targets.available_list,
+                { unit_number = entity.unit_number, position = entity.position, entity = entity }
+            )
             targets.available[entity.unit_number] = #targets.available_list
         end
     end

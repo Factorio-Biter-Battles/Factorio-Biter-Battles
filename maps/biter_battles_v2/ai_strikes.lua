@@ -1,5 +1,5 @@
-local AiTargets = require 'maps.biter_battles_v2.ai_targets'
-local Color = require 'utils.color_presets'
+local AiTargets = require('maps.biter_battles_v2.ai_targets')
+local Color = require('utils.color_presets')
 
 local Public = {}
 
@@ -26,7 +26,6 @@ local MAX_STRIKE_DISTANCE = 512
 local MIN_STRIKE_DISTANCE = 256
 local STRIKE_TARGET_CLEARANCE = 255
 local _DEBUG = false
-
 
 local function calculate_secant_intersections(r, a, b, c)
     local t = a * a + b * b
@@ -176,14 +175,22 @@ AI.commands = {
         end
         data.position = position
         data.stage = AI.stages.move
-        unit_group.set_command {
+        unit_group.set_command({
             type = defines.command.go_to_location,
             destination = position,
             radius = 3,
-            distraction = defines.distraction.by_enemy
-        }
+            distraction = defines.distraction.by_enemy,
+        })
         unit_group.start_moving()
-        print_admins(f('AI [id=%d] | cmd: MOVE [gps=%.2f,%.2f,%s]', unit_group.unique_id, position.x, position.y, unit_group.surface.name))
+        print_admins(
+            f(
+                'AI [id=%d] | cmd: MOVE [gps=%.2f,%.2f,%s]',
+                unit_group.unique_id,
+                position.x,
+                position.y,
+                unit_group.surface.name
+            )
+        )
     end,
     scout = function(unit_group, position)
         local data = AI.take_control(unit_group)
@@ -193,14 +200,22 @@ AI.commands = {
         end
         data.position = position
         data.stage = AI.stages.scout
-        unit_group.set_command {
+        unit_group.set_command({
             type = defines.command.attack_area,
             destination = position,
             radius = 15,
-            distraction = defines.distraction.by_enemy
-        }
+            distraction = defines.distraction.by_enemy,
+        })
         unit_group.start_moving()
-        print_admins(f('AI [id=%d] | cmd: SCOUT [gps=%.2f,%.2f,%s]', unit_group.unique_id, position.x, position.y, unit_group.surface.name))
+        print_admins(
+            f(
+                'AI [id=%d] | cmd: SCOUT [gps=%.2f,%.2f,%s]',
+                unit_group.unique_id,
+                position.x,
+                position.y,
+                unit_group.surface.name
+            )
+        )
     end,
     attack = function(unit_group, target)
         local data = AI.take_control(unit_group)
@@ -210,13 +225,22 @@ AI.commands = {
         end
         data.target = target
         data.stage = AI.stages.attack
-        unit_group.set_command {
+        unit_group.set_command({
             type = defines.command.attack_area,
             destination = target.position,
             radius = 15,
-            distraction = defines.distraction.by_damage
-        }
-        print_admins(f('AI [id=%d] | cmd: ATTACK [gps=%.2f,%.2f,%s] (type = %s)', unit_group.unique_id, target.position.x, target.position.y, unit_group.surface.name, target.type))
+            distraction = defines.distraction.by_damage,
+        })
+        print_admins(
+            f(
+                'AI [id=%d] | cmd: ATTACK [gps=%.2f,%.2f,%s] (type = %s)',
+                unit_group.unique_id,
+                target.position.x,
+                target.position.y,
+                unit_group.surface.name,
+                target.type
+            )
+        )
     end,
     assassinate = function(unit_group, target)
         local data = AI.take_control(unit_group)
@@ -226,13 +250,22 @@ AI.commands = {
         end
         data.target = target
         data.stage = AI.stages.attack
-        unit_group.set_command {
+        unit_group.set_command({
             type = defines.command.attack,
             target = target,
-            distraction = defines.distraction.by_damage
-        }
-        print_admins(f('AI [id=%d] | cmd: ASSASSINATE [gps=%.2f,%.2f,%s] (type = %s)', unit_group.unique_id, target.position.x, target.position.y, unit_group.surface.name, target.type))
-    end
+            distraction = defines.distraction.by_damage,
+        })
+        print_admins(
+            f(
+                'AI [id=%d] | cmd: ASSASSINATE [gps=%.2f,%.2f,%s] (type = %s)',
+                unit_group.unique_id,
+                target.position.x,
+                target.position.y,
+                unit_group.surface.name,
+                target.type
+            )
+        )
+    end,
 }
 
 AI.take_control = function(unit_group, options)
@@ -243,7 +276,7 @@ AI.take_control = function(unit_group, options)
             target_force_name = target_force_name,
             target = options.target,
             position = options.position,
-            failed_attempts = options.failed_attempts
+            failed_attempts = options.failed_attempts,
         }
     end
     return storage.ai_strikes[unit_group.unique_id]
@@ -285,16 +318,16 @@ AI.processor = function(unit_group, result)
 
     if data.stage == AI.stages.pending then
         if not data.target or not data.target.valid then
-            data.target = unit_group.surface.find_nearest_enemy_entity_with_owner {
+            data.target = unit_group.surface.find_nearest_enemy_entity_with_owner({
                 position = unit_group.position,
                 max_distance = MAX_STRIKE_DISTANCE,
                 force = unit_group.force,
-            }
+            })
             --data.target = AiTargets.get_random_target(data.target_force_name)
         end
         if not (data.target and data.target.valid) then
             storage.ai_strikes[unit_group.unique_id] = nil
-            print_admins('Could not find target for id '..unit_group.unique_id)
+            print_admins('Could not find target for id ' .. unit_group.unique_id)
             return
         end
         --data.position = Public.calculate_strike_position(unit_group, data.target.position)
@@ -316,7 +349,10 @@ AI.processor = function(unit_group, result)
         AI.commands.assassinate(unit_group, rocket_silo)
     else
         data.failed_attempts = (data.failed_attempts or 0) + 1
-        print_admins(f('AI [id=%d] | FAIL | stage: %d | attempts: %d', unit_group.unique_id, data.stage, data.failed_attempts), Color.red)
+        print_admins(
+            f('AI [id=%d] | FAIL | stage: %d | attempts: %d', unit_group.unique_id, data.stage, data.failed_attempts),
+            Color.red
+        )
         data.stage, data.position, data.target = nil, nil, nil
         AI.processor(unit_group, nil)
     end
@@ -343,7 +379,7 @@ function Public.initiate(unit_group, target_force_name, strike_position, target)
     AI.take_control(unit_group, {
         target_force_name = target_force_name,
         position = strike_position,
-        target = target
+        target = target,
     })
     AI.processor(unit_group, nil)
 end
