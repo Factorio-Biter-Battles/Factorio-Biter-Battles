@@ -137,14 +137,12 @@ local function select_strike_position(source_position, target_position, boundary
     }
 end
 
-local function print_admins(message, color)
+local function debug_print(message, color)
     if not _DEBUG then
         return
     end
     for _, p in pairs(game.connected_players) do
-        if p.admin then
-            p.print(message, { color = color or Color.dark_gray })
-        end
+        p.print(message, { color = color or Color.dark_gray })
     end
 end
 
@@ -182,7 +180,7 @@ AI.commands = {
             distraction = defines.distraction.by_enemy,
         })
         unit_group.start_moving()
-        print_admins(
+        debug_print(
             f(
                 'AI [id=%d] | cmd: MOVE [gps=%.2f,%.2f,%s]',
                 unit_group.unique_id,
@@ -207,7 +205,7 @@ AI.commands = {
             distraction = defines.distraction.by_enemy,
         })
         unit_group.start_moving()
-        print_admins(
+        debug_print(
             f(
                 'AI [id=%d] | cmd: SCOUT [gps=%.2f,%.2f,%s]',
                 unit_group.unique_id,
@@ -231,7 +229,7 @@ AI.commands = {
             radius = 15,
             distraction = defines.distraction.by_damage,
         })
-        print_admins(
+        debug_print(
             f(
                 'AI [id=%d] | cmd: ATTACK [gps=%.2f,%.2f,%s] (type = %s)',
                 unit_group.unique_id,
@@ -255,7 +253,7 @@ AI.commands = {
             target = target,
             distraction = defines.distraction.by_damage,
         })
-        print_admins(
+        debug_print(
             f(
                 'AI [id=%d] | cmd: ASSASSINATE [gps=%.2f,%.2f,%s] (type = %s)',
                 unit_group.unique_id,
@@ -327,7 +325,7 @@ AI.processor = function(unit_group, result)
         end
         if not (data.target and data.target.valid) then
             storage.ai_strikes[unit_group.unique_id] = nil
-            print_admins('Could not find target for id ' .. unit_group.unique_id)
+            debug_print('Could not find target for id ' .. unit_group.unique_id)
             return
         end
         --data.position = Public.calculate_strike_position(unit_group, data.target.position)
@@ -337,7 +335,7 @@ AI.processor = function(unit_group, result)
         data.stage = data.stage + 1
     end
 
-    print_admins(f('AI [id=%d] | status: %d', unit_group.unique_id, data.stage))
+    debug_print(f('AI [id=%d] | status: %d', unit_group.unique_id, data.stage))
     if data.stage == AI.stages.move then
         AI.commands.move(unit_group, data.position)
     elseif data.stage == AI.stages.scout then
@@ -349,7 +347,7 @@ AI.processor = function(unit_group, result)
         AI.commands.assassinate(unit_group, rocket_silo)
     else
         data.failed_attempts = (data.failed_attempts or 0) + 1
-        print_admins(
+        debug_print(
             f('AI [id=%d] | FAIL | stage: %d | attempts: %d', unit_group.unique_id, data.stage, data.failed_attempts),
             Color.red
         )

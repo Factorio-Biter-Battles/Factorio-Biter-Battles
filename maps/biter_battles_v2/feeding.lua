@@ -233,7 +233,6 @@ function Public.do_raw_feed(flask_amount, food, biter_force_name)
     local food_value = food_values[food].value * storage.difficulty_vote_value
 
     local evo = storage.bb_evolution[biter_force_name]
-    local biter_evo = game.forces[biter_force_name].get_evolution_factor(storage.bb_surface_name)
     local threat = 0.0
 
     local current_player_count = #game.forces.north.connected_players + #game.forces.south.connected_players
