@@ -133,52 +133,6 @@ local function select_strike_position(source_position, target_position, boundary
     }
 end
 
-local function move(unit_group, position)
-    if _DEBUG then
-        log('ai: ' .. unit_group.unique_id .. ' move to [' .. position.x .. ',' .. position.y .. ']')
-    end
-
-    unit_group.set_command({
-        type = defines.command.go_to_location,
-        destination = position,
-        radius = 32,
-        distraction = defines.distraction.by_enemy,
-    })
-end
-
-local function attack(unit_group, position)
-    if _DEBUG then
-        log('ai: ' .. unit_group.unique_id .. ' attack [' .. position.x .. ',' .. position.y .. ']')
-    end
-    unit_group.set_command({
-        type = defines.command.attack_area,
-        destination = position,
-        radius = 32,
-        distraction = defines.distraction.by_enemy,
-    })
-end
-
-local function assassinate(strike, target)
-    if _DEBUG then
-        log(
-            'ai: '
-                .. strike.unit_group.unique_id
-                .. ' assasinate ['
-                .. target.position.x
-                .. ','
-                .. target.position.y
-                .. ']'
-        )
-    end
-
-    strike.target = target
-    strike.unit_group.set_command({
-        type = defines.command.attack,
-        target = target,
-        distraction = defines.distraction.by_damage,
-    })
-end
-
 function Public.calculate_strike_position(unit_group, target_position)
     local source_position = unit_group.position
     local normalized_source_position = { x = source_position.x, y = math_abs(source_position.y) }
