@@ -198,13 +198,8 @@ function Public.initiate(unit_group, target_force_name, strike_position, target_
         target_force_name = target_force_name,
         target_position = target_position,
     }
-    if strike_position ~= nil then
-        strike_info.phase = 1
-        move(unit_group, strike_position)
-    else
-        strike_info.phase = 2
-        attack(unit_group, target_position)
-    end
+    strike_info.phase = 1
+    move(unit_group, strike_position)
     storage.ai_strikes[unit_group.unique_id] = strike_info
 end
 
