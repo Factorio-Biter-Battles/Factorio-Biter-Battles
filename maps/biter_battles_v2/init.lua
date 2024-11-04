@@ -345,7 +345,6 @@ function Public.tables()
     storage.high_health_units = {}
     storage.unit_spawners.north_biters = {}
     storage.unit_spawners.south_biters = {}
-    storage.ai_strikes = {}
     storage.ai_targets = {}
     storage.player_data_afk = {}
     storage.max_group_size_initial = 300 --Maximum unit group size for all biters at start, just used as a reference, doesnt change initial group size.
