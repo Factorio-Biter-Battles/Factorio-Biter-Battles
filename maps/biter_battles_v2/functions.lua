@@ -290,9 +290,9 @@ function Functions.init_player(player)
 
     if player.character and player.character.valid then
         player.character.destroy()
-        player.set_controller({ type = defines.controllers.god })
-        player.create_character()
     end
+    player.set_controller({ type = defines.controllers.god })
+    player.create_character()
     player.clear_items_inside()
     player.spectator = true
     player.force = game.forces.spectator
@@ -300,9 +300,9 @@ function Functions.init_player(player)
     local surface = game.surfaces[storage.bb_surface_name]
     local p = spawn_positions[math_random(1, size_of_spawn_positions)]
     if surface.is_chunk_generated({ 0, 0 }) then
-        player.teleport(surface.find_non_colliding_position('character', p, 4, 0.5), surface)
+        player.character.teleport(surface.find_non_colliding_position('character', p, 4, 0.5), surface)
     else
-        player.teleport(p, surface)
+        player.character.teleport(p, surface)
     end
     if player.character and player.character.valid then
         player.character.destructible = false
@@ -634,8 +634,8 @@ function Functions.get_entity_contents(entity)
     for i_id = 1, entity.get_max_inventory_index() do
         local inventory = entity.get_inventory(i_id)
         if inventory and inventory.valid and not inventory.is_empty() then
-            for item, amount in pairs(inventory.get_contents()) do
-                totals[item] = (totals[item] or 0) + amount
+            for item, props in pairs(inventory.get_contents()) do
+                totals[item] = (totals[item] or 0) + props.count
             end
         end
     end

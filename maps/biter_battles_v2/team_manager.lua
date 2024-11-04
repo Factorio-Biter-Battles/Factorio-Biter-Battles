@@ -158,7 +158,7 @@ local function draw_manager_gui(player)
                 type = 'sprite-button',
                 caption = string.upper(forces[i2].name),
                 name = forces[i2].name,
-                style = 'side_menu_button',
+                style = 'frame_button',
             })
             l.style.minimal_width = 160
             l.style.maximal_width = 160

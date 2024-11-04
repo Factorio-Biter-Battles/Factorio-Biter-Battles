@@ -23,8 +23,8 @@ function CaptainUtils.cpt_get_player(playerName)
     local special = storage.special_games_variables.captain_mode
     if special and special.test_players and special.test_players[playerName] then
         local res = table.deepcopy(special.test_players[playerName])
-        res.print = function(msg, color)
-            game.print({ '', { 'info.dummy_print', playerName }, msg }, { color = color })
+        res.print = function(msg, options)
+            game.print({ '', { 'info.dummy_print', playerName }, msg }, options)
         end
         res.force = { name = (storage.chosen_team[playerName] or 'spectator') }
         return res

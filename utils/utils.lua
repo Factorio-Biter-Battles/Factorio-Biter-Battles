@@ -169,7 +169,7 @@ Module.gui_style = function(element, attributes)
 end
 
 Module.gui_themes = {
-    { type = 'side_menu_button', name = 'Dark squared' },
+    { type = 'frame_button', name = 'Dark squared' },
     { type = 'slot_button', name = 'Dark rounded' },
     { type = 'mod_gui_button', name = 'Light squared' },
     { type = 'rounded_button', name = 'Light rounded' },

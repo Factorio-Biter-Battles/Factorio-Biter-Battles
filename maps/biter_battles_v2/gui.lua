@@ -1,4 +1,4 @@
-_DEBUG = false
+local _DEBUG = false
 
 local bb_config = require('maps.biter_battles_v2.config')
 local Captain_event = require('comfy_panel.special_games.captain')
@@ -476,7 +476,7 @@ function Public.create_main_gui(player)
             type = 'frame',
             name = 'table_frame',
             direction = 'horizontal',
-            style = 'slot_window_frame',
+            style = 'quick_bar_inner_panel',
         }) --slot_button_deep_frame, quick_bar_window_frame, quick_bar_inner_panel
         gui_style(table_frame, { minimal_height = 40 })
 
@@ -689,7 +689,7 @@ function Public.refresh_main_gui(player)
             team_info.threat.tooltip = get_threat_tooltip(force_name, true)
 
             if team.players.visible then
-                team.players.captain.visible = is_cpt
+                team.players.captain.visible = is_cpt ~= nil
                 team.players.captain.caption = get_captain_caption(force_name)
                 team.players.members.caption = get_player_list_caption(force_name)
             end
@@ -950,7 +950,7 @@ function join_team(player, force_name, forced_join, auto_join)
             game.print('No spawn position found for ' .. player.name .. '!', { color = { 255, 0, 0 } })
             return
         end
-        player.teleport(p, surface)
+        player.character.teleport(p, surface)
         player.force = game.forces[force_name]
         player.character.destructible = true
         Public.refresh()
@@ -969,7 +969,7 @@ function join_team(player, force_name, forced_join, auto_join)
     if not pos then
         pos = game.forces[force_name].get_spawn_position(surface)
     end
-    player.teleport(pos)
+    player.character.teleport(pos)
     player.force = game.forces[force_name]
     player.character.destructible = true
     game.permissions.get_group('Default').add_player(player)
@@ -1040,7 +1040,7 @@ function spectate(player, forced_join, stored_position)
         local p_data = get_player_data(player)
         p_data.position = player.position
     end
-    player.teleport(player.surface.find_non_colliding_position('character', { 0, 0 }, 4, 1))
+    player.character.teleport(player.surface.find_non_colliding_position('character', { 0, 0 }, 4, 1))
     Sounds.notify_player(player, 'utility/build_blueprint_large')
     player.force = game.forces.spectator
     player.character.destructible = false
