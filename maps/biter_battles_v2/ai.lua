@@ -296,13 +296,13 @@ local function create_attack_group(surface, force_name, biter_force_name)
         return false
     end
 
-    local target = AiTargets.get_random_target(force_name)
-    if not (target and target.valid and target.position) then
+    local target_position = AiTargets.get_random_target(force_name)
+    if not target_position then
         print('No side target found for ' .. force_name .. '.')
         return
     end
 
-    local spawner = get_nearby_biter_nest(target.position, biter_force_name)
+    local spawner = get_nearby_biter_nest(target_position, biter_force_name)
     if not spawner then
         print('No spawner found for ' .. force_name .. '.')
         return
@@ -327,9 +327,9 @@ local function create_attack_group(surface, force_name, biter_force_name)
             unit_group.add_member(unit)
         end
     end
-    local strike_position = AiStrikes.calculate_strike_position(unit_group, target.position)
-    AiStrikes.initiate(unit_group, force_name, strike_position, target)
-    AiStrikes.initiate(unit_group_boss, force_name, strike_position, target)
+    local strike_position = AiStrikes.calculate_strike_position(unit_group, target_position)
+    AiStrikes.initiate(unit_group, force_name, strike_position, target_position)
+    AiStrikes.initiate(unit_group_boss, force_name, strike_position, target_position)
 end
 
 Public.pre_main_attack = function()

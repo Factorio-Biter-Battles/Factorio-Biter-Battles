@@ -61,10 +61,7 @@ function Public.start_tracking(entity)
         local targets = storage.ai_targets[entity.force.name]
         if targets ~= nil then
             storage.ai_target_destroyed_map[script.register_on_object_destroyed(entity)] = entity.force.name
-            table_insert(
-                targets.available_list,
-                { unit_number = entity.unit_number, position = entity.position, entity = entity }
-            )
+            table_insert(targets.available_list, { unit_number = entity.unit_number, position = entity.position })
             targets.available[entity.unit_number] = #targets.available_list
         end
     end
@@ -101,10 +98,12 @@ function Public.get_random_target(force_name)
     if not first_entity or not second_entity then
         return nil
     end
-    if origin_distance(first_entity.position) < origin_distance(second_entity.position) then
-        return first_entity.entity
+    local first = first_entity.position
+    local second = second_entity.position
+    if origin_distance(first) < origin_distance(second) then
+        return first
     else
-        return second_entity.entity
+        return second
     end
 end
 
