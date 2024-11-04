@@ -193,14 +193,49 @@ function Public.calculate_strike_position(unit_group, target_position)
 end
 
 function Public.initiate(unit_group, target_force_name, strike_position, target_position)
-    local strike_info = {
-        unit_group = unit_group,
-        target_force_name = target_force_name,
-        target_position = target_position,
+    if storage.bb_game_won_by_team then
+        return
+    end
+
+    local chain = {
+        {
+            type = defines.command.go_to_location,
+            destination = strike_position,
+            radius = 32,
+            distraction = defines.distraction.by_enemy,
+        },
+        {
+            type = defines.command.wander,
+            radius = 32,
+            ticks_to_wait = 1,
+        },
+        {
+            type = defines.command.attack_area,
+            destination = target_position,
+            radius = 32,
+            distraction = defines.distraction.by_enemy,
+        },
+        {
+            type = defines.command.wander,
+            radius = 32,
+            ticks_to_wait = 1,
+        },
     }
-    strike_info.phase = 1
-    move(unit_group, strike_position)
-    storage.ai_strikes[unit_group.unique_id] = strike_info
+
+    local silo = storage.rocket_silo[target_force_name]
+    if silo then -- check for multi-silo special
+        chain[#chain + 1] = {
+            type = defines.command.attack,
+            target = silo,
+            distraction = defines.distraction.by_damage,
+        }
+    end
+
+    unit_group.set_command({
+        type = defines.command.compound,
+        structure_type = defines.compound_command.return_last,
+        commands = chain,
+    })
 end
 
 local function behaviour_result_str(result)
@@ -221,45 +256,9 @@ function Public.step(id, result)
     if storage.bb_game_won_by_team then
         return
     end
-    local strike = storage.ai_strikes[id]
-    if strike ~= nil then
-        if _DEBUG then
-            log('ai: ' .. id .. ' ' .. behaviour_result_str(result))
-        end
-        if result == defines.behavior_result.success then
-            strike.phase = strike.phase + 1
-            if strike.phase == 2 then
-                attack(strike.unit_group, strike.target_position)
-            elseif strike.phase == 3 then
-                local rocket_silo = storage.rocket_silo[strike.target_force_name]
-                assassinate(strike, rocket_silo)
-            else
-                storage.ai_strikes[id] = nil
-            end
-        elseif result == defines.behavior_result.fail or result == defines.behavior_result.deleted then
-            local rocket_silo = storage.rocket_silo[strike.target_force_name]
-            if not rocket_silo then
-                return
-            end -- helps multi-silo special code
-            local unit_group = strike.unit_group
-            if not unit_group.valid then
-                storage.ai_strikes[id] = nil
-            elseif strike.phase == 3 and strike.target == rocket_silo then
-                local position = unit_group.position
-                local message = string.format(
-                    'Biter attack group failed to find a path to the silo! [gps=%d,%d,%s]',
-                    position.x,
-                    position.y,
-                    unit_group.surface.name
-                )
-                log(message)
-                game.print(message, { color = Color.red })
-                storage.ai_strikes[id] = nil
-            else
-                strike.phase = 3
-                assassinate(strike, rocket_silo)
-            end
-        end
+
+    if _DEBUG then
+        log('ai: ' .. id .. ' ' .. behaviour_result_str(result))
     end
 end
 
