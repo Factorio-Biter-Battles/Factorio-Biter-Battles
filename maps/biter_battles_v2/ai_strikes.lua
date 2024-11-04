@@ -1,6 +1,3 @@
-local AiTargets = require('maps.biter_battles_v2.ai_targets')
-local Color = require('utils.color_presets')
-
 local Public = {}
 
 local bb_config = require('maps.biter_battles_v2.config')
@@ -18,7 +15,6 @@ local math_2pi = 2 * math_pi
 local math_sin = math.sin
 local math_cos = math.cos
 local math_atan2 = math.atan2
-local f = string.format
 
 -- these parameters roughly approximate the radius of the average player base
 -- TODO: use some metric to drive adjustments on these values as the game progresses
@@ -137,221 +133,50 @@ local function select_strike_position(source_position, target_position, boundary
     }
 end
 
-local function debug_print(message, color)
-    if not _DEBUG then
-        return
+local function move(unit_group, position)
+    if _DEBUG then
+        log('ai: ' .. unit_group.unique_id .. ' move to [' .. position.x .. ',' .. position.y .. ']')
     end
-    game.print(message, { color = color or Color.dark_gray })
+
+    unit_group.set_command({
+        type = defines.command.go_to_location,
+        destination = position,
+        radius = 32,
+        distraction = defines.distraction.by_enemy,
+    })
 end
 
----@class AIStrikeData
----@field unit_group LuaUnitGroup
----@field stage AIStage
----@field position MapPosition
----@field target? LuaEntity
----@field failed_attempts? number
-
-local AI = {}
-
-AI.stages = {
-    pending = 1,
-    move = 2,
-    scout = 3,
-    attack = 4,
-    assassinate = 5,
-    fail = 6,
-}
-
-AI.commands = {
-    move = function(unit_group, position)
-        local data = AI.take_control(unit_group)
-        if not position then
-            AI.processor(unit_group)
-            return
-        end
-        data.position = position
-        data.stage = AI.stages.move
-        unit_group.set_command({
-            type = defines.command.go_to_location,
-            destination = position,
-            radius = 3,
-            distraction = defines.distraction.by_enemy,
-        })
-        unit_group.start_moving()
-        debug_print(
-            f(
-                'AI [id=%d] | cmd: MOVE [gps=%.2f,%.2f,%s]',
-                unit_group.unique_id,
-                position.x,
-                position.y,
-                unit_group.surface.name
-            )
-        )
-    end,
-    scout = function(unit_group, position)
-        local data = AI.take_control(unit_group)
-        if not position then
-            AI.processor(unit_group)
-            return
-        end
-        data.position = position
-        data.stage = AI.stages.scout
-        unit_group.set_command({
-            type = defines.command.attack_area,
-            destination = position,
-            radius = 15,
-            distraction = defines.distraction.by_enemy,
-        })
-        unit_group.start_moving()
-        debug_print(
-            f(
-                'AI [id=%d] | cmd: SCOUT [gps=%.2f,%.2f,%s]',
-                unit_group.unique_id,
-                position.x,
-                position.y,
-                unit_group.surface.name
-            )
-        )
-    end,
-    attack = function(unit_group, target)
-        local data = AI.take_control(unit_group)
-        if not (target and target.valid) then
-            AI.processor(unit_group, nil)
-            return
-        end
-        data.target = target
-        data.stage = AI.stages.attack
-        unit_group.set_command({
-            type = defines.command.attack_area,
-            destination = target.position,
-            radius = 15,
-            distraction = defines.distraction.by_damage,
-        })
-        debug_print(
-            f(
-                'AI [id=%d] | cmd: ATTACK [gps=%.2f,%.2f,%s] (type = %s)',
-                unit_group.unique_id,
-                target.position.x,
-                target.position.y,
-                unit_group.surface.name,
-                target.type
-            )
-        )
-    end,
-    assassinate = function(unit_group, target)
-        local data = AI.take_control(unit_group)
-        if not (target and target.valid) then
-            AI.processor(unit_group, nil)
-            return
-        end
-        data.target = target
-        data.stage = AI.stages.attack
-        unit_group.set_command({
-            type = defines.command.attack,
-            target = target,
-            distraction = defines.distraction.by_damage,
-        })
-        debug_print(
-            f(
-                'AI [id=%d] | cmd: ASSASSINATE [gps=%.2f,%.2f,%s] (type = %s)',
-                unit_group.unique_id,
-                target.position.x,
-                target.position.y,
-                unit_group.surface.name,
-                target.type
-            )
-        )
-    end,
-}
-
-AI.take_control = function(unit_group, options)
-    if not storage.ai_strikes[unit_group.unique_id] then
-        local target_force_name = options.target_force_name or (unit_group.position.y > 0 and 'south' or 'north')
-        storage.ai_strikes[unit_group.unique_id] = {
-            unit_group = unit_group,
-            target_force_name = target_force_name,
-            target = options.target,
-            position = options.position,
-            failed_attempts = options.failed_attempts,
-        }
+local function attack(unit_group, position)
+    if _DEBUG then
+        log('ai: ' .. unit_group.unique_id .. ' attack [' .. position.x .. ',' .. position.y .. ']')
     end
-    return storage.ai_strikes[unit_group.unique_id]
+    unit_group.set_command({
+        type = defines.command.attack_area,
+        destination = position,
+        radius = 32,
+        distraction = defines.distraction.by_enemy,
+    })
 end
 
-AI.stage_by_distance = function(posA, posB)
-    local x_axis = posA.x - posB.x
-    local y_axis = posA.y - posB.y
-    local distance = math_sqrt(x_axis * x_axis + y_axis * y_axis)
-    if distance <= 15 then
-        return AI.stages.attack
-    elseif distance <= 32 then
-        return AI.stages.scout
-    else
-        return AI.stages.move
-    end
-end
-
-AI.processor = function(unit_group, result)
-    if not (unit_group and unit_group.valid) then
-        return
-    end
-    local data = storage.ai_strikes[unit_group.unique_id]
-    if not data then
-        return
-    end
-    if data.failed_attempts and data.failed_attempts >= 3 then
-        storage.ai_strikes[unit_group.unique_id] = nil
-        return
-    end
-
-    if not result or result == defines.behavior_result.fail or result == defines.behavior_result.deleted then
-        data.stage = AI.stages.pending
-    end
-    if result == defines.behavior_result.success and (data.stage and data.stage == AI.stages.attack) then
-        data.stage = AI.stages.pending
-    end
-    data.stage = data.stage or AI.stages.pending
-
-    if data.stage == AI.stages.pending then
-        if not data.target or not data.target.valid then
-            data.target = unit_group.surface.find_nearest_enemy_entity_with_owner({
-                position = unit_group.position,
-                max_distance = MAX_STRIKE_DISTANCE,
-                force = unit_group.force,
-            })
-            --data.target = AiTargets.get_random_target(data.target_force_name)
-        end
-        if not (data.target and data.target.valid) then
-            storage.ai_strikes[unit_group.unique_id] = nil
-            debug_print('Could not find target for id ' .. unit_group.unique_id)
-            return
-        end
-        --data.position = Public.calculate_strike_position(unit_group, data.target.position)
-        data.position = data.target.position
-        data.stage = AI.stage_by_distance(data.position, unit_group.position)
-    else
-        data.stage = data.stage + 1
-    end
-
-    debug_print(f('AI [id=%d] | status: %d', unit_group.unique_id, data.stage))
-    if data.stage == AI.stages.move then
-        AI.commands.move(unit_group, data.position)
-    elseif data.stage == AI.stages.scout then
-        AI.commands.scout(unit_group, data.position)
-    elseif data.stage == AI.stages.attack then
-        AI.commands.attack(unit_group, data.target)
-    elseif data.stage == AI.stages.assassinate then
-        local rocket_silo = global.rocket_silo[data.target_force_name]
-        AI.commands.assassinate(unit_group, rocket_silo)
-    else
-        data.failed_attempts = (data.failed_attempts or 0) + 1
-        debug_print(
-            f('AI [id=%d] | FAIL | stage: %d | attempts: %d', unit_group.unique_id, data.stage, data.failed_attempts),
-            Color.red
+local function assassinate(strike, target)
+    if _DEBUG then
+        log(
+            'ai: '
+                .. strike.unit_group.unique_id
+                .. ' assasinate ['
+                .. target.position.x
+                .. ','
+                .. target.position.y
+                .. ']'
         )
-        data.stage, data.position, data.target = nil, nil, nil
-        AI.processor(unit_group, nil)
     end
+
+    strike.target = target
+    strike.unit_group.set_command({
+        type = defines.command.attack,
+        target = target,
+        distraction = defines.distraction.by_damage,
+    })
 end
 
 function Public.calculate_strike_position(unit_group, target_position)
@@ -367,27 +192,80 @@ function Public.calculate_strike_position(unit_group, target_position)
     return unit_group.surface.find_non_colliding_position('stone-furnace', nominal_strike_position, 96, 1)
 end
 
----@param unit_group LuaUnitGroup
----@param target_force_name string
----@param strike_position MapPosition
----@param target LuaEntity
-function Public.initiate(unit_group, target_force_name, strike_position, target)
-    AI.take_control(unit_group, {
+function Public.initiate(unit_group, target_force_name, strike_position, target_position)
+    local strike_info = {
+        unit_group = unit_group,
         target_force_name = target_force_name,
-        position = strike_position,
-        target = target,
-    })
-    AI.processor(unit_group, nil)
+        target_position = target_position,
+    }
+    if strike_position ~= nil then
+        strike_info.phase = 1
+        move(unit_group, strike_position)
+    else
+        strike_info.phase = 2
+        attack(unit_group, target_position)
+    end
+    storage.ai_strikes[unit_group.unique_id] = strike_info
+end
+
+local function behaviour_result_str(result)
+    if result == defines.behavior_result.success then
+        return 'success'
+    elseif result == defines.behavior_result.fail then
+        return 'fail'
+    elseif result == defines.behavior_result.deleted then
+        return 'deleted'
+    elseif result == defines.behavior_result.in_progress then
+        return 'in_progress'
+    else
+        return 'unknown'
+    end
 end
 
 function Public.step(id, result)
     if storage.bb_game_won_by_team then
         return
     end
-
-    local data = storage.ai_strikes[id]
-    local unit_group = data and data.unit_group
-    AI.processor(unit_group, result)
+    local strike = storage.ai_strikes[id]
+    if strike ~= nil then
+        if _DEBUG then
+            log('ai: ' .. id .. ' ' .. behaviour_result_str(result))
+        end
+        if result == defines.behavior_result.success then
+            strike.phase = strike.phase + 1
+            if strike.phase == 2 then
+                attack(strike.unit_group, strike.target_position)
+            elseif strike.phase == 3 then
+                local rocket_silo = storage.rocket_silo[strike.target_force_name]
+                assassinate(strike, rocket_silo)
+            else
+                storage.ai_strikes[id] = nil
+            end
+        elseif result == defines.behavior_result.fail or result == defines.behavior_result.deleted then
+            local rocket_silo = storage.rocket_silo[strike.target_force_name]
+            if not rocket_silo then
+                return
+            end -- helps multi-silo special code
+            local unit_group = strike.unit_group
+            if not unit_group.valid then
+                storage.ai_strikes[id] = nil
+            elseif strike.phase == 3 and strike.target == rocket_silo then
+                local position = unit_group.position
+                local message = string.format(
+                    'Biter attack group failed to find a path to the silo! [gps=%d,%d,%s]',
+                    position.x,
+                    position.y,
+                    unit_group.surface.name
+                )
+                log(message)
+                game.print(message, { color = Color.red })
+                storage.ai_strikes[id] = nil
+            else
+                strike.phase = 3
+                assassinate(strike, rocket_silo)
+            end
+        end
+    end
 end
 
 return Public
