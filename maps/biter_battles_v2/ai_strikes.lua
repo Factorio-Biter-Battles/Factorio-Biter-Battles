@@ -192,19 +192,12 @@ function Public.initiate(unit_group, target_force_name, strike_position, target_
     })
 end
 
-local function behaviour_result_str(result)
-    if result == defines.behavior_result.success then
-        return 'success'
-    elseif result == defines.behavior_result.fail then
-        return 'fail'
-    elseif result == defines.behavior_result.deleted then
-        return 'deleted'
-    elseif result == defines.behavior_result.in_progress then
-        return 'in_progress'
-    else
-        return 'unknown'
-    end
-end
+local BEHAVIOR_RESULT = {
+    [defines.behavior_result.success] = 'success',
+    [defines.behavior_result.fail] = 'fail',
+    [defines.behavior_result.deleted] = 'deleted',
+    [defines.behavior_result.in_progress] = 'in_progress',
+}
 
 function Public.step(id, result)
     if storage.bb_game_won_by_team then
@@ -212,7 +205,7 @@ function Public.step(id, result)
     end
 
     if _DEBUG then
-        log('ai: ' .. id .. ' ' .. behaviour_result_str(result))
+        log('ai: ' .. id .. ' ' .. BEHAVIOR_RESULT[result])
     end
 end
 
