@@ -1,6 +1,7 @@
 --scoreboard by mewmew
 
 local Event = require('utils.event')
+local Functions = require('maps.biter_battles_v2.functions')
 local Global = require('utils.global')
 local Tabs = require('comfy_panel.main')
 
@@ -20,6 +21,11 @@ local building_and_mining_blacklist = {
     ['entity-ghost'] = true,
     ['item-entity'] = true,
 }
+
+local math_floor = math.floor
+local math_round = function(x)
+    return math_floor(x + 0.5)
+end
 
 function Public.get_table()
     return this
@@ -370,7 +376,8 @@ local kill_causes = {
 }
 
 local function on_entity_died(event)
-    if not event.entity.valid then
+    local entity = event.entity
+    if not (entity and entity.valid) then
         return
     end
     if not event.cause then
@@ -379,10 +386,10 @@ local function on_entity_died(event)
     if not event.cause.valid then
         return
     end
-    if event.entity.force.index == event.cause.force.index then
+    if entity.force.index == event.cause.force.index then
         return
     end
-    if not entity_score_values[event.entity.name] then
+    if not entity_score_values[entity.name] then
         return
     end
     if not kill_causes[event.cause.type] then
@@ -398,11 +405,18 @@ local function on_entity_died(event)
     for _, player in pairs(players_to_reward) do
         Public.init_player_table(player)
         local score = this.score_table[player.force.name].players[player.name]
-        score.killscore = score.killscore + entity_score_values[event.entity.name]
+        local value = entity_score_values[entity.name]
+        if entity.type == 'unit-spawner' then
+            local evo = game.forces[entity.force.name].get_evolution_factor(entity.surface.name)
+            value = value * (1 + 9 * evo ^ 2.25)
+        end
+        value = math_round(value)
+        score.killscore = score.killscore + value
         if storage.show_floating_killscore[player.name] then
-            event.entity.create_local_flying_text({
-                position = event.entity.position,
-                text = tostring(entity_score_values[event.entity.name]),
+            Functions.create_local_flying_text({
+                surface = entity.surface,
+                position = entity.position,
+                text = tostring(value),
                 color = player.chat_color,
             })
         end

@@ -657,4 +657,19 @@ function Functions.clear_corpses(player, param)
     player.print('Cleared biter-corpses.', { color = Color.success })
 end
 
+--- Will create the text only for those on the same surface
+--- See the docs for LuaPlayer::create_local_flying_text, + surface param
+---@param params {surface: string|integer|LuaSurface}
+function Functions.create_local_flying_text(params)
+    local surface = game.get_surface(params.surface.name or params.surface.index or params.surface)
+    if not surface then
+        return
+    end
+    for _, player in pairs(game.connected_players) do
+        if player.surface_index == surface.index then
+            player.create_local_flying_text(params)
+        end
+    end
+end
+
 return Functions

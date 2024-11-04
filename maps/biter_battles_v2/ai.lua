@@ -448,6 +448,9 @@ function Public.subtract_threat(entity)
     if is_boss == true then
         local health_buff_equivalent_revive = storage.biter_health_factor[game.forces[biter_not_boss_force].index]
         factor = bb_config.health_multiplier_boss * health_buff_equivalent_revive
+    elseif entity.type == 'unit-spawner' then
+        local evo = game.forces[biter_not_boss_force].get_evolution_factor(entity.surface.name)
+        factor = 1 + 9 * evo ^ 2.25
     end
     if storage.active_special_games['threat_farm_threshold'] then
         local threat_value = threat_values[entity.name] * factor

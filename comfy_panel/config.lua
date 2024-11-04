@@ -2,6 +2,7 @@
 
 local Antigrief = require('antigrief')
 local Color = require('utils.color_presets')
+local Functions = require('maps.biter_battles_v2.functions')
 local SessionData = require('utils.datastore.session_data')
 local Utils = require('utils.core')
 local Gui = require('utils.gui')
@@ -46,7 +47,8 @@ local function spaghett_deny_building(event)
         inventory.insert({ name = entity.name, count = 1 })
     end
 
-    event.entity.create_local_flying_text({
+    Functions.create_local_flying_text({
+        surface = entity.surface,
         position = entity.position,
         text = 'Spaghett Mode Active!',
         color = { r = 0.98, g = 0.66, b = 0.22 },
