@@ -234,7 +234,7 @@ local function redraw_poll_viewer_content(data)
         local edit_button = question_flow.add({
             type = 'sprite-button',
             name = poll_view_edit_name,
-            sprite = 'utility/rename_icon_normal',
+            sprite = 'utility/rename_icon',
             tooltip = 'Edit Poll.',
             style = 'button',
         })
@@ -553,7 +553,7 @@ local function redraw_create_poll_content(data)
                 name = create_poll_delete_answer_name,
                 sprite = 'utility/trash_white',
                 tooltip = 'Delete answer field.',
-                style = 'red_logistic_slot_button',
+                style = 'red_slot_button',
             })
             gui_style(delete_button, { height = 26, width = 26 })
         else
