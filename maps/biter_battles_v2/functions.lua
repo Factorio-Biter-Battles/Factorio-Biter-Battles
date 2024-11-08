@@ -295,6 +295,7 @@ function Functions.init_player(player)
     player.create_character()
     player.clear_items_inside()
     player.spectator = true
+    player.show_on_map = false
     player.force = game.forces.spectator
 
     local surface = game.surfaces[storage.bb_surface_name]

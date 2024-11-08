@@ -961,6 +961,7 @@ function join_team(player, force_name, forced_join, auto_join)
         Server.to_discord_bold(msg)
         storage.spectator_rejoin_delay[player.name] = game.tick
         player.spectator = false
+        player.show_on_map = true
         Public.burners_balance(player)
         return
     end
@@ -1001,6 +1002,7 @@ function join_team(player, force_name, forced_join, auto_join)
     storage.chosen_team[player.name] = force_name
     storage.spectator_rejoin_delay[player.name] = game.tick
     player.spectator = false
+    player.show_on_map = true
     Public.burners_balance(player)
     Public.clear_copy_history(player)
     Public.refresh()
@@ -1059,6 +1061,7 @@ function spectate(player, forced_join, stored_position)
     storage.spectator_rejoin_delay[player.name] = game.tick
     Public.create_main_gui(player)
     player.spectator = true
+    player.show_on_map = false
 end
 
 local function join_gui_click(name, player, auto_join)
