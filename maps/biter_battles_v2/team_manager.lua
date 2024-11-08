@@ -66,6 +66,12 @@ local function leave_corpse(player)
         return
     end
 
+    -- Make sure player is not in remote view.
+    player.set_controller({
+        type = defines.controllers.character,
+        character = player.character,
+    })
+
     local inventories = {
         player.get_inventory(defines.inventory.character_main),
         player.get_inventory(defines.inventory.character_guns),
