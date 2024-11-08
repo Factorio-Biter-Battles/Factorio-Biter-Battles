@@ -984,6 +984,12 @@ function join_team(player, force_name, forced_join, auto_join)
             table.concat({ player.name, ' ', join_text, ' ', Functions.team_name_with_color(player.force.name), '!' })
         game.print(message, { color = { r = 0.98, g = 0.66, b = 0.22 } })
     end
+
+    player.set_controller({
+        type = defines.controllers.character,
+        character = player.character,
+    })
+
     local i = player.get_inventory(defines.inventory.character_main)
     i.clear()
     player.insert({ name = 'pistol', count = 1 })
