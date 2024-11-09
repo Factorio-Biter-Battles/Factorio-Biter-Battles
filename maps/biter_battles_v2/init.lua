@@ -79,7 +79,6 @@ function Public.initial_setup()
     game.forces.spectator.research_all_technologies()
     local defs = {
         defines.input_action.import_blueprint_string,
-        defines.input_action.launch_rocket,
         defines.input_action.open_blueprint_library_gui,
     }
     local p = game.permissions.get_group('Default')
