@@ -10,6 +10,7 @@ local Functions = require('maps.biter_battles_v2.functions')
 local Gui = require('utils.gui')
 local PlayerUtils = require('utils.player')
 local ResearchInfo = require('maps.biter_battles_v2.research_info')
+local Quality = require('maps.biter_battles_v2.quality')
 local Server = require('utils.server')
 local Shortcuts = require('maps.biter_battles_v2.shortcuts')
 local Tables = require('maps.biter_battles_v2.tables')
@@ -18,7 +19,7 @@ local gui_style = require('utils.utils').gui_style
 local has_life = require('comfy_panel.special_games.limited_lives').has_life
 
 local wait_messages = Tables.wait_messages
-local food_names = Tables.gui_foods
+local food_names = require('maps.biter_battles_v2.gui_foods').gui_foods
 local automation_feed = Tables.food_values['automation-science-pack'].value * 75
 
 local math_random = math.random
@@ -183,7 +184,7 @@ local function get_evo_tooltip(force, verbose)
     end
     local biter_force = game.forces[gui_values[force].biter_force]
     local damage = (biter_force.get_ammo_damage_modifier('melee') + 1) * 100
-    return prefix
+    local tip = prefix
         .. style.listbox('Evolution: ')
         .. style.yellow(style.stat(string_format('%.2f', (storage.bb_evolution[biter_force.name] * 100))))
         .. style.listbox('%\nDamage: ')
@@ -191,6 +192,26 @@ local function get_evo_tooltip(force, verbose)
         .. style.listbox('%\nHealth: ')
         .. style.yellow(style.stat(string_format('%.0f', (storage.biter_health_factor[biter_force.index] * 100))))
         .. style.listbox('%')
+    if Quality.enabled() then
+        local f = biter_force.name
+        for i = #Quality.TIERS, 1, -1 do
+            local v = Quality.TIERS[i]
+            local c = Quality.chance(i, f) * 100
+            if c ~= 0.0 then
+                tip = tip
+                    .. style.listbox('\n[quality=' .. v.name .. ']: ')
+                    .. style.yellow(style.stat(string_format('%.2f', c)))
+                    .. style.listbox('%')
+            end
+
+            -- Don't print tiers below as they're irrelevant if higher tier is 100%
+            if c == 100.0 then
+                break
+            end
+        end
+    end
+
+    return tip
 end
 
 ---@param force string
@@ -258,6 +279,26 @@ function Public.create_biter_gui_button(player)
         sprite = 'entity/big-biter',
         tooltip = { 'gui.main_gui_top_button' },
     })
+end
+
+---@param player LuaPlayer
+function Public.create_feature_flags(player)
+    local t = Gui.add_top_element(player, {
+        type = 'table',
+        name = 'bb_feature_flags',
+        column_count = 1,
+    })
+
+    t.style.maximal_width = 25
+    t.style.maximal_height = 25 * 3
+end
+
+---@param player LuaPlayer
+function Public.refresh_feature_flags(player)
+    local t = Gui.get_top_element(player, 'bb_feature_flags')
+    t.clear()
+
+    Quality.update_feature_flag(player)
 end
 
 ---@param player LuaPlayer
@@ -343,6 +384,23 @@ function Public.create_statistics_gui_button(player)
 
     Public.refresh_statistics(player)
     frame.visible = false
+end
+
+local function add_feed_button(element, name, tooltip)
+    local f = element.add({
+        type = 'sprite-button',
+        name = name,
+        sprite = 'item/' .. name,
+        style = 'slot_button',
+        tooltip = tooltip,
+    })
+    gui_style(f, { padding = 0 })
+end
+
+local function add_feed_buttons(element, list)
+    for name, tooltip in pairs(list) do
+        add_feed_button(element, name, tooltip)
+    end
 end
 
 ---@param player LuaPlayer
@@ -484,15 +542,12 @@ function Public.create_main_gui(player)
             table_frame.add({ type = 'table', name = 'send_table', column_count = 5, style = 'filter_slot_table' })
         gui_style(t, { horizontally_stretchable = true })
 
-        for food_name, tooltip in pairs(food_names) do
-            local f = t.add({
-                type = 'sprite-button',
-                name = food_name,
-                sprite = 'item/' .. food_name,
-                style = 'slot_button',
-                tooltip = tooltip,
-            })
-            gui_style(f, { padding = 0 })
+        if Quality.enabled() then
+            local id = Quality.selected_by(player)
+            add_feed_buttons(t, food_names[id])
+        else
+            -- Only first tier.
+            add_feed_buttons(t, food_names[1])
         end
         local f = t.add({
             type = 'sprite-button',
@@ -502,6 +557,7 @@ function Public.create_main_gui(player)
             tooltip = 'LMB - low to high, RMB - high to low',
         })
         gui_style(f, { padding = 0, font_color = { r = 0.9, g = 0.9, b = 0.9 } })
+        Quality.add_feeding_button(player, t)
         local f = t.add({
             type = 'sprite-button',
             name = 'info',
@@ -704,7 +760,14 @@ function Public.refresh_main_gui(player)
             local table = main.science_frame.flow.table_frame.send_table
             local all_enabled = true
             local button
-            for food_name, tooltip in pairs(food_names) do
+            local list = {}
+            if Quality.enabled() then
+                list = food_names[Quality.selected_by(player)]
+            else
+                list = food_names[1]
+            end
+
+            for food_name, tooltip in pairs(list) do
                 button = table[food_name]
                 button.visible = true
                 button.tooltip = tooltip
@@ -1134,7 +1197,8 @@ local function on_gui_click(event)
         return
     end
 
-    if food_names[name] then
+    -- Doesn't matter which Quality tier, as this info is not encoded.
+    if food_names[1][name] then
         if not Captain_event.captain_is_player_prohibited_to_throw(player) then
             Feeding.feed_biters_from_inventory(player, name)
         end
@@ -1145,6 +1209,12 @@ local function on_gui_click(event)
         if not Captain_event.captain_is_player_prohibited_to_throw(player) then
             Feeding.feed_biters_mixed_from_inventory(player, event.button)
         end
+        return
+    end
+
+    if name == 'quality_feed' then
+        Quality.on_gui_click(event)
+        Public.refresh_main_gui(player)
         return
     end
 
