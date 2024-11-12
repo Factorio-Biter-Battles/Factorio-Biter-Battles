@@ -20,6 +20,7 @@ local Server = require('utils.server')
 local Task = require('utils.task')
 local Token = require('utils.token')
 local Color = require('utils.color_presets')
+local Quality = require('maps.biter_battles_v2.quality')
 local ResearchInfo = require('maps.biter_battles_v2.research_info')
 local DifficultyVote = require('maps.biter_battles_v2.difficulty_vote')
 local ComfyMain = require('comfy_panel.main')
@@ -58,6 +59,8 @@ local function on_player_joined_game(event)
     Gui.clear_copy_history(player)
 
     -- GUIs
+    Gui.create_feature_flags(player)
+    Gui.refresh_feature_flags(player)
     ComfyMain.comfy_panel_add_top_element(player)
     ComfyPoll.create_top_button(player)
     DifficultyVote.add_difficulty_gui_top_button(player)
@@ -108,6 +111,17 @@ local function on_research_finished(event)
     elseif name == 'stone-wall' then
         force.technologies['gate'].researched = true
     end
+
+    if Quality.enabled() then
+        -- Quality tech tree is too expensive to research in bb, so unlock it
+        -- together with quality modules.
+        if name == 'quality-module' then
+            force.technologies['recycling'].researched = true
+            force.technologies['epic-quality'].researched = true
+            force.technologies['legendary-quality'].researched = true
+        end
+    end
+
     game.forces.spectator.print(
         Functions.team_name_with_color(force.name) .. ' completed research [technology=' .. name .. ']'
     )
@@ -750,6 +764,16 @@ Event.add(defines.events.on_research_reversed, on_research_reversed)
 Event.add(defines.events.on_robot_built_entity, on_robot_built_entity)
 Event.add(defines.events.on_robot_built_tile, on_robot_built_tile)
 Event.add(defines.events.on_tick, on_tick)
+
+if Quality.installed() then
+    Event.add(defines.events.on_robot_mined_entity, Quality.remove_assembling_machine)
+    Event.add(defines.events.on_player_mined_entity, Quality.remove_assembling_machine)
+    Event.add(defines.events.on_built_entity, Quality.track_assembling_machine)
+    Event.add(defines.events.on_entity_died, Quality.remove_assembling_machine)
+    Event.add(defines.events.on_robot_built_entity, Quality.track_assembling_machine)
+    Event.add(defines.events.on_tick, Quality.inspect_satellite)
+end
+
 Event.on_init(on_init)
 
 require('utils.ui.gui-lite').handle_events()

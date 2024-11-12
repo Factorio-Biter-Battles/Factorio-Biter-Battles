@@ -10,6 +10,7 @@ local Functions = require('maps.biter_battles_v2.functions')
 local Gui = require('utils.gui')
 local PlayerUtils = require('utils.player')
 local ResearchInfo = require('maps.biter_battles_v2.research_info')
+local Quality = require('maps.biter_battles_v2.quality')
 local Server = require('utils.server')
 local Shortcuts = require('maps.biter_battles_v2.shortcuts')
 local Tables = require('maps.biter_battles_v2.tables')
@@ -18,7 +19,7 @@ local gui_style = require('utils.utils').gui_style
 local has_life = require('comfy_panel.special_games.limited_lives').has_life
 
 local wait_messages = Tables.wait_messages
-local food_names = Tables.gui_foods
+local food_names = require('maps.biter_battles_v2.tables').gui_foods
 local automation_feed = Tables.food_values['automation-science-pack'].value * 75
 
 local math_random = math.random
@@ -183,7 +184,7 @@ local function get_evo_tooltip(force, verbose)
     end
     local biter_force = game.forces[gui_values[force].biter_force]
     local damage = (biter_force.get_ammo_damage_modifier('melee') + 1) * 100
-    return prefix
+    local tip = prefix
         .. style.listbox('Evolution: ')
         .. style.yellow(style.stat(string_format('%.2f', (storage.bb_evolution[biter_force.name] * 100))))
         .. style.listbox('%\nDamage: ')
@@ -191,6 +192,21 @@ local function get_evo_tooltip(force, verbose)
         .. style.listbox('%\nHealth: ')
         .. style.yellow(style.stat(string_format('%.0f', (storage.biter_health_factor[biter_force.index] * 100))))
         .. style.listbox('%')
+    if Quality.enabled() then
+        local f = biter_force.name
+        local probs = Quality.probabilties(f)
+        for i, p in ipairs(probs) do
+            if p ~= 0.0 then
+                local v = Quality.TIERS[i]
+                tip = tip
+                    .. style.listbox('\n[quality=' .. v.name .. ']: ')
+                    .. style.yellow(style.stat(string_format('%.2f', p)))
+                    .. style.listbox('%')
+            end
+        end
+    end
+
+    return tip
 end
 
 ---@param force string
@@ -301,6 +317,28 @@ local function get_data_for_refresh_statistics()
         },
     }
 end
+
+---Creates GUI element that displays flags/icons depicting enabled mod
+---@param player LuaPlayer
+function Public.create_feature_flags(player)
+    local t = Gui.add_top_element(player, {
+        type = 'table',
+        name = 'bb_feature_flags',
+        column_count = 1,
+    })
+
+    t.style.maximal_width = 25
+    t.style.maximal_height = 25 * 3
+end
+
+---@param player LuaPlayer
+function Public.refresh_feature_flags(player)
+    local t = Gui.get_top_element(player, 'bb_feature_flags')
+    t.clear()
+
+    Quality.update_feature_flag(player)
+end
+
 ---@param player LuaPlayer
 function Public.create_statistics_gui_button(player)
     if Gui.get_top_element(player, 'bb_toggle_statistics') then
@@ -386,6 +424,23 @@ function Public.create_statistics_gui_button(player)
     frame.visible = false
 end
 
+local function add_feed_button(element, name, tooltip)
+    local f = element.add({
+        type = 'sprite-button',
+        name = name,
+        sprite = 'item/' .. name,
+        style = 'slot_button',
+        tooltip = tooltip,
+    })
+    gui_style(f, { padding = 0 })
+end
+
+local function add_feed_buttons(element, list)
+    for name, tooltip in pairs(list) do
+        add_feed_button(element, name, tooltip)
+    end
+end
+
 ---@class RefreshMainGuiData
 ---@field clock_caption string
 ---@field game_speed_caption string
@@ -424,6 +479,7 @@ local function get_data_for_refresh_main_gui()
         },
     }
 end
+
 ---@param player LuaPlayer
 function Public.create_main_gui(player)
     local is_spec = player.force.name == 'spectator' or not storage.chosen_team[player.name]
@@ -562,17 +618,7 @@ function Public.create_main_gui(player)
         local t =
             table_frame.add({ type = 'table', name = 'send_table', column_count = 5, style = 'filter_slot_table' })
         gui_style(t, { horizontally_stretchable = true })
-
-        for food_name, tooltip in pairs(food_names) do
-            local f = t.add({
-                type = 'sprite-button',
-                name = food_name,
-                sprite = 'item/' .. food_name,
-                style = 'slot_button',
-                tooltip = tooltip,
-            })
-            gui_style(f, { padding = 0 })
-        end
+        add_feed_buttons(t, food_names)
         local f = t.add({
             type = 'sprite-button',
             name = 'send_all',

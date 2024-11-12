@@ -183,6 +183,12 @@ function get_product_info_uncached(product, recipes, cache)
         end
         return empty_product_info()
     end
+
+    local name = recipe.name
+    if name and string.find(name, 'recycling') then
+        return empty_product_info()
+    end
+
     local info = empty_product_info()
     for _, ingredient in pairs(recipe.ingredients) do
         info = add_product_infos(

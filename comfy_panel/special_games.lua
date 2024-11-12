@@ -1,5 +1,6 @@
 local Event = require('utils.event')
 local Color = require('utils.color_presets')
+local Quality = require('maps.biter_battles_v2.quality')
 local Public = {}
 storage.active_special_games = {}
 storage.special_games_variables = {}
@@ -43,6 +44,14 @@ function Public.reset_special_games()
     captain_event.reset_special_games()
 end
 
+local function shallow_copy(a)
+    local copy = {}
+    for k, v in pairs(a) do
+        copy[k] = v
+    end
+    return copy
+end
+
 local create_special_games_panel = function(player, frame)
     frame.clear()
     frame.add({ type = 'label', caption = 'Configure and apply special games here' }).style.single_line = false
@@ -58,6 +67,17 @@ local create_special_games_panel = function(player, frame)
         config.style.horizontally_stretchable = true
         config.style.left_padding = 3
         for _, i in ipairs(v.config) do
+            i = shallow_copy(i)
+            -- maybe-item is made up value, that is patched with proper option during
+            -- runtime.
+            if i.elem_type == 'maybe-item' then
+                if Quality.enabled() then
+                    i.elem_type = 'item-with-quality'
+                else
+                    i.elem_type = 'item'
+                end
+            end
+
             config.add(i)
             config[i.name].style.width = i.width
         end

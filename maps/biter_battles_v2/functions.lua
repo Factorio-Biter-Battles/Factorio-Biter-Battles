@@ -1,14 +1,14 @@
 local _TEST = storage['_TEST'] or false
 local Color = require('utils.color_presets')
 local Tables = require('maps.biter_battles_v2.tables')
-local ClosableFrame, Config, Gui, Server, simplex_noise
+local ClosableFrame, Config, Gui, Server
 if not _TEST then
     ClosableFrame = require('utils.ui.closable_frame')
     Config = require('maps.biter_battles_v2.config')
     Gui = require('utils.gui')
     Server = require('utils.server')
-    simplex_noise = require('utils.simplex_noise').d2
 end
+local Quality = require('maps.biter_battles_v2.quality')
 
 local gui_style = require('utils.utils').gui_style
 
@@ -619,7 +619,11 @@ function Functions.get_entity_contents(entity)
         local inventory = entity.get_inventory(i_id)
         if inventory and inventory.valid and not inventory.is_empty() then
             for _, item in pairs(inventory.get_contents()) do
-                totals[item.name] = (totals[item.name] or 0) + item.count
+                if not totals[item.name] then
+                    totals[item.name] = {}
+                end
+                local t = Quality.tier_index_by_name(item.quality)
+                totals[item.name][t] = (totals[item.name][t] or 0) + item.count
             end
         end
     end

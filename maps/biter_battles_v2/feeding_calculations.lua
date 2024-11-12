@@ -1,4 +1,5 @@
 local Tables = require('maps.biter_battles_v2.tables')
+local Quality = require('maps.biter_battles_v2.quality')
 local bb_config = require('maps.biter_battles_v2.config')
 
 local math_floor = math.floor
@@ -98,9 +99,17 @@ function Public.calc_send_command(
     local error_msg
     local flask_color
     local flask_count
+    local flask_quality = Quality.TIER_DEFAULT
     local force_to_send_to
-    local help_text = '\nUsage: /calc-send evo=20.0 difficulty=30 players=4 color=green count=1000'
-        .. '\nUsage: /calc-send force=north color=white count=1000'
+    local help_text
+    if Quality.enabled() then
+        help_text = '\nUsage: /calc-send evo=20.0 difficulty=30 players=4 color=green quality=rare count=1000'
+            .. '\nUsage: /calc-send force=north color=white quality=rare count=1000'
+    else
+        help_text = '\nUsage: /calc-send evo=20.0 difficulty=30 players=4 color=green count=1000'
+            .. '\nUsage: /calc-send force=north color=white count=1000'
+    end
+
     if player and training_mode then
         force_to_send_to = player.force.name
     elseif player and player.force.name == 'north' then
@@ -108,8 +117,20 @@ function Public.calc_send_command(
     elseif player and player.force.name == 'south' then
         force_to_send_to = 'north'
     end
-    -- indexed by strings like "automation-science-pack"
+    local tiers = Quality.max_tier()
+    ---@type table<string, number[]>
     local foods = {}
+    ---@type table<number, number>
+    local q_values = {}
+    for k, _ in pairs(Tables.food_names) do
+        foods[k] = {}
+        -- indexed by tier
+        for i = 1, tiers do
+            foods[k][i] = 0
+            q_values[i] = 0
+        end
+    end
+
     for param in string.gmatch(params, '([^%s]+)') do
         local k, v = string.match(param, '^(%w+)=([%w%p]+)$')
         if k and v then
@@ -169,6 +190,21 @@ function Public.calc_send_command(
                 else
                     flask_color = v
                 end
+            elseif k == 'quality' then
+                if Quality.enabled() then
+                    if flask_color == nil then
+                        error_msg = 'Must specify flask color before quality'
+                    else
+                        local proto = prototypes.quality[v]
+                        if proto == nil then
+                            error_msg = string.format('Invalid quality name: %q', v)
+                        else
+                            flask_quality = Quality.tier_index_by_level(proto.level)
+                        end
+                    end
+                else
+                    error_msg = 'Quality is not enabled!'
+                end
             elseif k == 'count' then
                 if flask_color == nil then
                     error_msg = 'Must specify flask color before count'
@@ -177,13 +213,11 @@ function Public.calc_send_command(
                     if flask_count == nil or flask_count <= 0 or flask_count > 1000000000 then
                         error_msg = 'Invalid flask count'
                     else
-                        if foods[flask_color] == nil then
-                            foods[flask_color] = 0
-                        end
-                        foods[flask_color] = foods[flask_color] + flask_count
+                        foods[flask_color][flask_quality] = foods[flask_color][flask_quality] + flask_count
                     end
                 end
                 flask_color = nil
+                flask_quality = nil
             else
                 error_msg = string.format('Invalid parameter: %q', k)
             end
@@ -197,19 +231,28 @@ function Public.calc_send_command(
     if flask_color ~= nil then
         error_msg = 'Must specify "count" after "color"'
     end
-    if error_msg == nil and next(foods) == nil and player ~= nil then
+
+    if error_msg == nil and params == '' and player ~= nil then
         local i = player.character.get_main_inventory()
         if i then
             for food_type, _ in pairs(Tables.food_values) do
-                local flask_amount = i.get_item_count(food_type)
-                if flask_amount > 0 then
-                    foods[food_type] = flask_amount
+                local req = {
+                    name = food_type,
+                }
+
+                for j = 1, tiers do
+                    req.quality = Quality.TIERS[j].name
+                    local flask_amount = i.get_item_count(req)
+                    if flask_amount > 0 then
+                        foods[food_type][j] = flask_amount
+                    end
                 end
             end
         end
     end
+    local biter_force_name
     if evo == nil and force_to_send_to then
-        local biter_force_name = force_to_send_to .. '_biters'
+        biter_force_name = force_to_send_to .. '_biters'
         if bb_evolution[biter_force_name] then
             evo = bb_evolution[biter_force_name] * 100
         end
@@ -223,24 +266,51 @@ function Public.calc_send_command(
     local total_food = 0
     local debug_command_str =
         string.format('evo=%.1f difficulty=%d players=%d', evo, math.floor(difficulty), player_count)
-    for k, v in pairs(foods) do
-        total_food = total_food + v * Tables.food_values[k].value
-        debug_command_str = debug_command_str .. string.format(' color=%s count=%d', k, v)
+    for color, v in pairs(foods) do
+        for tier, count in pairs(v) do
+            if count ~= 0 then
+                local quality = Quality.TIERS[tier]
+                total_food = total_food + quality.multiplier * count * Tables.food_values[color].value
+                if Quality.enabled() then
+                    q_values[tier] = Quality.dry_feed_flasks(q_values[tier], color, count, difficulty_vote_value)
+                    debug_command_str = debug_command_str
+                        .. string.format('\ncolor=%s quality=%s count=%d', color, quality.name, count)
+                else
+                    debug_command_str = debug_command_str .. string.format('\ncolor=%s count=%d', color, count)
+                end
+            end
+        end
     end
+
     if total_food == 0 then
         error_msg = 'no "color"/"count" specified and nothing found in inventory'
     end
     if error_msg then
         return error_msg .. help_text
     end
+
+    local q_probs_str = {}
+    if Quality.enabled() then
+        local q_curr_values = Quality.collect_values(biter_force_name)
+        for i, v in ipairs(q_values) do
+            q_curr_values[i] = q_curr_values[i] + v
+        end
+
+        local q_probs = Quality.dry_test_probabilities(q_curr_values)
+        for i, q_prob in ipairs(q_probs) do
+            table.insert(q_probs_str, string.format('\n %s: %.2f%%', Quality.TIERS[i].name, q_prob))
+        end
+    end
+
     local effects =
         Public.calc_feed_effects(evo / 100, total_food * difficulty / 100, 1, player_count, max_reanim_thresh)
     return string.format(
-        '/calc-send %s\nevo_increase: %.1f new_evo: %.1f\nthreat_increase: %d',
+        '/calc-send %s\nevo_increase: %.1f new_evo: %.1f\nthreat_increase: %d%s',
         debug_command_str,
         effects.evo_increase * 100,
         evo + effects.evo_increase * 100,
-        math.floor(effects.threat_increase)
+        math.floor(effects.threat_increase),
+        table.concat(q_probs_str)
     )
 end
 

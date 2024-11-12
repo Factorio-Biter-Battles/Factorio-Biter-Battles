@@ -885,6 +885,7 @@ function Public.generate_new_map()
             suspend_frame.destroy()
         end
         BBGui.create_main_gui(player)
+        BBGui.refresh_feature_flags(player)
     end
     game.reset_time_played()
     storage.server_restart_timer = nil

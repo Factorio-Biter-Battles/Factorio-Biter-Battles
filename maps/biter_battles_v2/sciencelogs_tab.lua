@@ -2,6 +2,7 @@
 
 local Tabs = require('comfy_panel.main')
 local tables = require('maps.biter_battles_v2.tables')
+local Quality = require('maps.biter_battles_v2.quality')
 local Functions = require('maps.biter_battles_v2.functions')
 local event = require('utils.event')
 local bb_config = require('maps.biter_battles_v2.config')
@@ -12,6 +13,8 @@ local forces_list = tables.forces_list
 local science_list = tables.science_list
 local evofilter_list = tables.evofilter_list
 local food_value_table_version = tables.food_value_table_version
+
+local Public = {}
 
 local function initialize_dropdown_users_choice()
     storage.dropdown_users_choice_force = {}
@@ -31,9 +34,37 @@ local function get_science_text(food_name, food_short_name)
     })
 end
 
+---@alias ScienceTotal { [number]: {[number]: number}}
+
+---Initialize table that tracks amount of science sent
+---@return ScienceTotal
+function Public.init_science_total_table()
+    local tbl = {}
+    local sz = #tables.food_long_and_short
+    for i = 1, sz do
+        table.insert(tbl, {})
+        Quality.for_each_tier(function(j, _)
+            tbl[i][j] = 0
+        end)
+    end
+
+    return tbl
+end
+
 ---@param player LuaPlayer
 ---@param element LuaGuiElement
 local function add_science_logs(player, element)
+    ---Get a total combined.
+    ---@param tbl integer[]
+    local function sum(tbl)
+        local sum = 0
+        for _, v in ipairs(tbl) do
+            sum = sum + v
+        end
+
+        return sum
+    end
+
     local science_scrollpanel = element.add({
         type = 'scroll-pane',
         name = 'scroll_pane',
@@ -53,12 +84,8 @@ local function add_science_logs(player, element)
         end
     end
     if storage.science_logs_total_north == nil then
-        storage.science_logs_total_north = { 0 }
-        storage.science_logs_total_south = { 0 }
-        for _ = 1, #food_long_and_short do
-            table.insert(storage.science_logs_total_north, 0)
-            table.insert(storage.science_logs_total_south, 0)
-        end
+        storage.science_logs_total_north = Public.init_science_total_table()
+        storage.science_logs_total_south = Public.init_science_total_table()
     end
 
     local width_summary_columns = tonumber(94)
@@ -92,7 +119,7 @@ local function add_science_logs(player, element)
         local label = summary_panel_table.add({
             type = 'label',
             name = 'science_logs_total_north_' .. i,
-            caption = storage.science_logs_total_north[i],
+            caption = sum(storage.science_logs_total_north[i]),
         })
         label.style.minimal_width = width_summary_columns
         label.style.maximal_width = width_summary_columns
@@ -111,7 +138,7 @@ local function add_science_logs(player, element)
         local label = summary_panel_table2.add({
             type = 'label',
             name = 'science_logs_total_south' .. i,
-            caption = storage.science_logs_total_south[i],
+            caption = sum(storage.science_logs_total_south[i]),
         })
         label.style.minimal_width = width_summary_columns
         label.style.maximal_width = width_summary_columns
@@ -314,3 +341,5 @@ end
 event.add(defines.events.on_gui_selection_state_changed, on_gui_selection_state_changed)
 
 comfy_panel_tabs['MutagenLog'] = { gui = build_config_gui, admin = false }
+
+return Public

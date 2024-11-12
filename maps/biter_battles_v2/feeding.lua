@@ -2,6 +2,8 @@ local bb_config = require('maps.biter_battles_v2.config')
 local FeedingCalculations = require('maps.biter_battles_v2.feeding_calculations')
 local Functions = require('maps.biter_battles_v2.functions')
 local Server = require('utils.server')
+local Quality = require('maps.biter_battles_v2.quality')
+local ScienceLogs = require('maps.biter_battles_v2.sciencelogs_tab')
 
 local tables = require('maps.biter_battles_v2.tables')
 local food_values = tables.food_values
@@ -47,7 +49,7 @@ local function get_enemy_team_of(team)
     end
 end
 
-local function print_feeding_msg(player, food, flask_amount)
+local function print_feeding_msg(player, food, flask_amount, quality)
     local enemy = get_enemy_team_of(player.force.name)
     if not enemy then
         return
@@ -74,6 +76,11 @@ local function print_feeding_msg(player, food, flask_amount)
         food,
         ']',
     })
+
+    if Quality.enabled() then
+        formatted_food = formatted_food .. '[img=quality/' .. quality .. ']'
+    end
+
     local formatted_amount =
         table.concat({ '[font=heading-1][color=255,255,255]' .. flask_amount .. '[/color][/font]' })
 
@@ -91,16 +98,12 @@ local function print_feeding_msg(player, food, flask_amount)
             }),
             { color = { r = 0.9, g = 0.9, b = 0.9 } }
         )
-        Server.to_discord_bold(table.concat({
-            player.name,
-            ' fed ',
-            flask_amount,
-            ' flasks of ',
-            food_values[food].name,
-            ' to team ',
-            enemy,
-            ' biters!',
-        }))
+        local msg = player.name .. ' fed ' .. flask_amount .. ' flasks of ' .. food_values[food].name
+        if Quality.enabled() then
+            msg = msg .. ' (' .. quality .. ')'
+        end
+        msg = msg .. ' to team ' .. enemy .. ' biters!'
+        Server.to_discord_bold(msg)
     else
         local target_team_text = 'the enemy'
         if storage.training_mode then
@@ -133,6 +136,7 @@ end
 --- @param biter_force_name string
 --- @param evo_before_science_feed number
 --- @param threat_before_science_feed number
+--- @param quality string
 function Public.add_feeding_stats(
     player,
     feeding_force_name,
@@ -140,7 +144,8 @@ function Public.add_feeding_stats(
     flask_amount,
     biter_force_name,
     evo_before_science_feed,
-    threat_before_science_feed
+    threat_before_science_feed,
+    quality
 )
     local colored_player_name = 'unknown player'
     if player then
@@ -156,7 +161,19 @@ function Public.add_feeding_stats(
             '[/color]',
         })
     end
+
     local formatted_food = table.concat({ '[color=', food_values[food].color, '][/color]', '[img=item/', food, ']' })
+    local tier = Quality.TIER_DEFAULT
+    if Quality.enabled() then
+        tier = Quality.tier_index_by_name(quality)
+        formatted_food = formatted_food .. ' [img=quality/' .. quality .. ']'
+    end
+
+    if tier == nil then
+        log('wrong quality type')
+        return
+    end
+
     local formatted_amount =
         table.concat({ '[font=heading-1][color=255,255,255]' .. flask_amount .. '[/color][/font]' })
     if flask_amount > 0 then
@@ -186,12 +203,8 @@ function Public.add_feeding_stats(
         local team_name_fed_by_science = get_enemy_team_of(feeding_force_name)
 
         if storage.science_logs_total_north == nil then
-            storage.science_logs_total_north = { 0 }
-            storage.science_logs_total_south = { 0 }
-            for _ = 1, 7 do
-                table.insert(storage.science_logs_total_north, 0)
-                table.insert(storage.science_logs_total_south, 0)
-            end
+            storage.science_logs_total_north = ScienceLogs.init_science_total_table()
+            storage.science_logs_total_south = ScienceLogs.init_science_total_table()
         end
 
         local total_science_of_player_force = nil
@@ -202,7 +215,8 @@ function Public.add_feeding_stats(
         end
 
         local indexScience = tables.food_long_to_short[food].indexScience
-        total_science_of_player_force[indexScience] = total_science_of_player_force[indexScience] + flask_amount
+        total_science_of_player_force[indexScience][tier] = total_science_of_player_force[indexScience][tier]
+            + flask_amount
 
         if storage.science_logs_text then
             table.insert(storage.science_logs_date, 1, formatted_feed_time)
@@ -226,11 +240,11 @@ function Public.add_feeding_stats(
     end
 end
 
-function Public.do_raw_feed(flask_amount, food, biter_force_name)
+function Public.do_raw_feed(flask_amount, food, biter_force_name, tier)
     local force_index = game.forces[biter_force_name].index
     local decimals = 9
 
-    local food_value = food_values[food].value * storage.difficulty_vote_value
+    local food_value = food_values[food].value * storage.difficulty_vote_value * Quality.TIERS[tier].multiplier
 
     local evo = storage.bb_evolution[biter_force_name]
     local threat = 0.0
@@ -269,6 +283,9 @@ function Public.do_raw_feed(flask_amount, food, biter_force_name)
     end
 
     storage.bb_threat[biter_force_name] = math_round(storage.bb_threat[biter_force_name] + threat, decimals)
+    if Quality.enabled() then
+        Quality.feed_flasks(food, flask_amount, tier, biter_force_name)
+    end
 
     if storage.active_special_games['shared_science_throw'] then
         local enemyBitersForceName = enemy_team_of[force_translation[biter_force_name]] .. '_biters'
@@ -279,6 +296,10 @@ function Public.do_raw_feed(flask_amount, food, biter_force_name)
         storage.bb_evolution[enemyBitersForceName] = storage.bb_evolution[biter_force_name]
         storage.bb_threat_income[enemyBitersForceName] = storage.bb_threat_income[biter_force_name]
         storage.bb_threat[enemyBitersForceName] = math_round(storage.bb_threat[enemyBitersForceName] + threat, decimals)
+
+        if Quality.enabled() then
+            Quality.feed_flasks(food, flask_amount, tier, enemyBitersForceName)
+        end
     end
 end
 
@@ -303,33 +324,95 @@ function Public.feed_biters_from_inventory(player, food)
     if not i then
         return
     end
-    local flask_amount = i.get_item_count(food)
-    if flask_amount == 0 then
-        player.print(
-            'You have no ' .. food_values[food].name .. ' flask in your inventory.',
-            { color = { r = 0.98, g = 0.66, b = 0.22 } }
-        )
+
+    local req = {
+        name = food,
+        quality = Quality.TIERS[Quality.selected_by(player)].name,
+    }
+    req.count = i.get_item_count(req)
+    if req.count == 0 then
+        local msg = 'You have no ' .. food_values[food].name .. ' flask '
+        if Quality.enabled() then
+            msg = msg .. 'of ' .. req.quality .. ' quality '
+        end
+        player.print(msg .. 'in your inventory.', { color = { r = 0.98, g = 0.66, b = 0.22 } })
         return
     end
+    i.remove(req)
 
-    i.remove({ name = food, count = flask_amount })
-
-    print_feeding_msg(player, food, flask_amount)
+    print_feeding_msg(player, food, req.count, req.quality)
     local evolution_before_feed = storage.bb_evolution[biter_force_name]
     local threat_before_feed = storage.bb_threat[biter_force_name]
 
-    Public.do_raw_feed(flask_amount, food, biter_force_name)
-
+    Public.do_raw_feed(req.count, food, biter_force_name, Quality.selected_by(player))
     Public.add_feeding_stats(
         player,
         player.force.name,
         food,
-        flask_amount,
+        req.count,
         biter_force_name,
         evolution_before_feed,
-        threat_before_feed
+        threat_before_feed,
+        req.quality
     )
 
+    if food == 'space-science-pack' then
+        storage.spy_fish_timeout[player.force.name] = game.tick + 99999999
+    end
+end
+
+---@param player LuaPlayer
+---@param inventory LuaInventory
+---@param enemy_force string
+---@param biter_force string
+---@param food string
+---@param tier number
+---@param msg string
+local function spend_food(player, inventory, enemy_force, biter_force, food, tier, msg)
+    local evolution_before_feed = storage.bb_evolution[biter_force]
+    local threat_before_feed = storage.bb_threat[biter_force]
+
+    local req = {
+        name = food,
+        quality = Quality.TIERS[tier].name,
+    }
+    req.count = inventory.get_item_count(req)
+    if req.count == 0 then
+        return
+    end
+
+    local entry = '[font=heading-1][color=255,255,255]'
+        .. req.count
+        .. '[/color][/font]'
+        .. '[img=item.'
+        .. food
+        .. '] '
+    if Quality.enabled() then
+        entry = entry .. '[img=quality/' .. req.quality .. '] '
+    end
+    entry = entry .. ','
+    table.insert(msg, entry)
+
+    entry = player.name .. ' fed ' .. req.count .. ' flasks of ' .. food_values[food].name
+    if Quality.enabled() then
+        entry = entry .. ' (' .. req.quality .. ')'
+    end
+    entry = entry .. ' to team ' .. enemy_force .. ' biters!'
+    Server.to_discord_bold(entry)
+
+    Public.do_raw_feed(req.count, food, biter_force, tier)
+    Public.add_feeding_stats(
+        player,
+        player.force.name,
+        food,
+        req.count,
+        biter_force,
+        evolution_before_feed,
+        threat_before_feed,
+        req.quality
+    )
+
+    inventory.remove(req)
     if food == 'space-science-pack' then
         storage.spy_fish_timeout[player.force.name] = game.tick + 99999999
     end
@@ -384,41 +467,13 @@ function Public.feed_biters_mixed_from_inventory(player, button)
         '[/color]',
     })
     local message = { colored_player_name, ' fed ' }
-    for k, v in pairs(food) do
-        local evolution_before_feed = storage.bb_evolution[biter_force_name]
-        local threat_before_feed = storage.bb_threat[biter_force_name]
-        local flask_amount = i.get_item_count(v)
-        if flask_amount ~= 0 then
-            table.insert(
-                message,
-                '[font=heading-1][color=255,255,255]' .. flask_amount .. '[/color][/font]' .. '[img=item.' .. v .. '], '
-            )
-            Server.to_discord_bold(table.concat({
-                player.name,
-                ' fed ',
-                flask_amount,
-                ' flasks of ',
-                food_values[v].name,
-                ' to team ',
-                enemy_force_name,
-                ' biters!',
-            }))
-            Public.do_raw_feed(flask_amount, v, biter_force_name)
-            Public.add_feeding_stats(
-                player,
-                player.force.name,
-                v,
-                flask_amount,
-                biter_force_name,
-                evolution_before_feed,
-                threat_before_feed
-            )
-            i.remove({ name = v, count = flask_amount })
-            if v == 'space-science-pack' then
-                storage.spy_fish_timeout[player.force.name] = game.tick + 99999999
-            end
+    local tiers = Quality.max_tier()
+    for _, v in pairs(food) do
+        for tier = 1, tiers do
+            spend_food(player, i, enemy_force_name, biter_force_name, v, tier, message)
         end
     end
+
     if #message == 2 then
         player.print('You have no flasks in your inventory', { color = { r = 0.98, g = 0.66, b = 0.22 } })
         return
