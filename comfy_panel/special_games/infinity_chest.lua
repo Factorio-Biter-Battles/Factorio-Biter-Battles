@@ -1,5 +1,31 @@
 local Color = require('utils.color_presets')
 
+---@param chest LuaEntity
+---@param index number
+---@param item string|PrototypeWithQuality
+local function set_inf_chest(chest, index, item)
+    local filter = {}
+    if type(item) == 'string' then
+        filter.name = item
+    else
+        filter.name = item.name
+        filter.quality = item.quality
+    end
+
+    filter.count = prototypes.item[filter.name].stack_size
+    chest.set_infinity_container_filter(index, filter)
+end
+
+---@param force LuaForce
+---@param item string|PrototypeWithQuality
+local function disable_recycling(force, item)
+    local name = item.name or item
+    local recipe = force.recipes[name .. '-recycling']
+    if recipe then
+        recipe.enabled = false
+    end
+end
+
 local function generate_infinity_chest(separate_chests, operable, gap, eq)
     local surface = game.surfaces[storage.bb_surface_name]
     local position_0 = { x = 0, y = -42 }
@@ -16,6 +42,8 @@ local function generate_infinity_chest(separate_chests, operable, gap, eq)
         operable = false
     end
 
+    local north = game.forces.north
+    local south = game.forces.south
     if separate_chests == 'left' then
         local chest = surface.create_entity({
             name = 'infinity-chest',
@@ -27,7 +55,9 @@ local function generate_infinity_chest(separate_chests, operable, gap, eq)
         chest.operable = operable
         chest.destructible = false
         for i, v in ipairs(eq) do
-            chest.set_infinity_container_filter(i, { name = v, index = i, count = prototypes.item[v].stack_size })
+            set_inf_chest(chest, i, v)
+            disable_recycling(north, v)
+            disable_recycling(south, v)
         end
         chest.clone({ position = { position_0.x, -position_0.y } })
     elseif separate_chests == 'right' then
@@ -42,33 +72,37 @@ local function generate_infinity_chest(separate_chests, operable, gap, eq)
             chest.minable_flag = false
             chest.operable = operable
             chest.destructible = false
-            chest.set_infinity_container_filter(i, { name = v, index = i, count = prototypes.item[v].stack_size })
+            set_inf_chest(chest, i, v)
+            disable_recycling(north, v)
+            disable_recycling(south, v)
             chest.clone({ position = { position_0.x, -position_0.y } })
             position_0.x = position_0.x + (i * k)
             k = k * -1
         end
     end
+
     storage.active_special_games['infinity_chest'] = true
     local special = storage.special_games_variables['infinity_chest']
     if not special then
         special = { freebies = {} }
         storage.special_games_variables['infinity_chest'] = special
     end
-    for i, v in ipairs(eq) do
+    for _, v in ipairs(eq) do
         special.freebies[v] = true
     end
 end
 
 local Public = {
     name = { type = 'label', caption = 'Infinity chest', tooltip = 'Spawn infinity chests with given filters' },
+    -- Patched at runtime, depending if quality is enabled.
     config = {
-        [1] = { name = 'eq1', type = 'choose-elem-button', elem_type = 'item' },
-        [2] = { name = 'eq2', type = 'choose-elem-button', elem_type = 'item' },
-        [3] = { name = 'eq3', type = 'choose-elem-button', elem_type = 'item' },
-        [4] = { name = 'eq4', type = 'choose-elem-button', elem_type = 'item' },
-        [5] = { name = 'eq5', type = 'choose-elem-button', elem_type = 'item' },
-        [6] = { name = 'eq6', type = 'choose-elem-button', elem_type = 'item' },
-        [7] = { name = 'eq7', type = 'choose-elem-button', elem_type = 'item' },
+        [1] = { name = 'eq1', type = 'choose-elem-button', elem_type = 'maybe-item' },
+        [2] = { name = 'eq2', type = 'choose-elem-button', elem_type = 'maybe-item' },
+        [3] = { name = 'eq3', type = 'choose-elem-button', elem_type = 'maybe-item' },
+        [4] = { name = 'eq4', type = 'choose-elem-button', elem_type = 'maybe-item' },
+        [5] = { name = 'eq5', type = 'choose-elem-button', elem_type = 'maybe-item' },
+        [6] = { name = 'eq6', type = 'choose-elem-button', elem_type = 'maybe-item' },
+        [7] = { name = 'eq7', type = 'choose-elem-button', elem_type = 'maybe-item' },
         [8] = {
             name = 'separate_chests',
             type = 'switch',

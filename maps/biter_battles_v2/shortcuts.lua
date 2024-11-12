@@ -5,6 +5,7 @@ local Functions = require('maps.biter_battles_v2.functions')
 local Gui = require('utils.gui')
 local ResearchInfo = require('maps.biter_battles_v2.research_info')
 local Tables = require('maps.biter_battles_v2.tables')
+local gui_foods = require('maps.biter_battles_v2.gui_foods').gui_foods
 local TeamStatsCompare = require('maps.biter_battles_v2.team_stats_compare')
 local Color = require('utils.color_presets')
 
@@ -111,7 +112,7 @@ local shortcut_buttons = {
         name = main_frame_name .. '_send_fish',
         caption = 'Send fish',
         sprite = 'item/raw-fish',
-        tooltip = '[font=default-bold]Send fish[/font] - ' .. Tables.gui_foods['raw-fish'],
+        tooltip = '[font=default-bold]Send fish[/font] - ' .. gui_foods[1]['raw-fish'],
     },
     {
         name = main_frame_name .. '_send_science',
