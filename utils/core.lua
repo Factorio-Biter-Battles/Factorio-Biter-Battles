@@ -310,6 +310,11 @@ function Public.validate_player(player_ident)
     return player, player.name, player.index
 end
 
+function Public.get_package(path)
+    local path = '__level__/' .. path:gsub('%.', '/') .. '.lua'
+    return package.loaded[path]
+end
+
 -- add utility functions that exist in base factorio/util
 require('util')
 
