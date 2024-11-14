@@ -96,8 +96,6 @@ local function on_research_finished(event)
         force.technologies['kovarex-enrichment-process'].researched = true
     elseif name == 'stone-wall' then
         force.technologies['gate'].researched = true
-    elseif name == 'rocket-silo' then
-        force.technologies['space-science-pack'].researched = true
     end
     game.forces.spectator.print(
         Functions.team_name_with_color(force.name) .. ' completed research [technology=' .. name .. ']'
