@@ -1010,7 +1010,7 @@ function Public.add_new_year_island_decorations(surface)
             check_collision = false,
             decoratives = {
                 {
-                    name = 'rock-tiny',
+                    name = 'tiny-rock',
                     position = {
                         x = storage.random_generator(-40, 40) * 0.1,
                         y = storage.random_generator(-40, 40) * 0.1,
