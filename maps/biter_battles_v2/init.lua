@@ -64,6 +64,7 @@ function Public.initial_setup()
     game.map_settings.path_finder.max_clients_to_accept_any_new_request = 4 -- default 10
     game.map_settings.path_finder.max_clients_to_accept_short_new_request = 150 -- default 100
     game.map_settings.path_finder.start_to_goal_cost_multiplier_to_terminate_path_find = 10000 -- default 2000
+    game.technology_notifications_enabled = false
 
     game.create_force('north')
     game.create_force('south')
