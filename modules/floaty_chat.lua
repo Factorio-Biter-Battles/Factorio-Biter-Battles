@@ -15,10 +15,6 @@ local function on_console_chat(event)
     end
 
     local y_offset = -4
-    if package.loaded['modules.rpg'] then
-        y_offset = -4.5
-    end
-
     if storage.player_floaty_chat[player.index] then
         storage.player_floaty_chat[player.index].destroy()
         storage.player_floaty_chat[player.index] = nil
