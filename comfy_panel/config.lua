@@ -267,87 +267,6 @@ local antigrief_functions = {
     end,
 }
 
-local fortress_functions = {
-    ['comfy_panel_disable_fullness'] = function(event)
-        local Fullness = Utils.get_package('modules.check_fullness')
-        local this = Fullness.get()
-        if event.element.switch_state == 'left' then
-            this.fullness_enabled = true
-            get_actor(event, '{Fullness}', 'has enabled the inventory fullness function.')
-        else
-            this.fullness_enabled = false
-            get_actor(event, '{Fullness}', 'has disabled the inventory fullness function.')
-        end
-    end,
-    ['comfy_panel_offline_players'] = function(event)
-        local WPT = Utils.get_package('maps.mountain_fortress_v3.table')
-        local this = WPT.get()
-        if event.element.switch_state == 'left' then
-            this.offline_players_enabled = true
-            get_actor(event, '{Offline Players}', 'has enabled the offline player function.')
-        else
-            this.offline_players_enabled = false
-            get_actor(event, '{Offline Players}', 'has disabled the offline player function.')
-        end
-    end,
-    ['comfy_panel_collapse_grace'] = function(event)
-        local WPT = Utils.get_package('maps.mountain_fortress_v3.table')
-        local this = WPT.get()
-        if event.element.switch_state == 'left' then
-            this.collapse_grace = true
-            get_actor(event, '{Collapse}', 'has enabled the collapse function. Collapse will occur after wave 100!')
-        else
-            this.collapse_grace = false
-            get_actor(
-                event,
-                '{Collapse}',
-                'has disabled the collapse function. You must reach zone 2 for collapse to occur!'
-            )
-        end
-    end,
-    ['comfy_panel_spill_items_to_surface'] = function(event)
-        local WPT = Utils.get_package('maps.mountain_fortress_v3.table')
-        local this = WPT.get()
-        if event.element.switch_state == 'left' then
-            this.spill_items_to_surface = true
-            get_actor(
-                event,
-                '{Item Spill}',
-                'has enabled the ore spillage function. Ores now drop to surface when mining.'
-            )
-        else
-            this.spill_items_to_surface = false
-            get_actor(
-                event,
-                '{Item Spill}',
-                'has disabled the item spillage function. Ores no longer drop to surface when mining.'
-            )
-        end
-    end,
-    ['comfy_panel_void_or_tile'] = function(event)
-        local WPT = Utils.get_package('maps.mountain_fortress_v3.table')
-        local this = WPT.get()
-        if event.element.switch_state == 'left' then
-            this.void_or_tile = 'out-of-map'
-            get_actor(event, '{Void}', 'has changes the tiles of the zones to: out-of-map (void)')
-        else
-            this.void_or_tile = 'lab-dark-2'
-            get_actor(event, '{Void}', 'has changes the tiles of the zones to: dark-tiles (flammable tiles)')
-        end
-    end,
-    ['comfy_panel_trusted_only_car_tanks'] = function(event)
-        local WPT = Utils.get_package('maps.mountain_fortress_v3.table')
-        local this = WPT.get()
-        if event.element.switch_state == 'left' then
-            this.trusted_only_car_tanks = true
-            get_actor(event, '{Market}', 'has changed so only trusted people can buy car/tanks.', true)
-        else
-            this.trusted_only_car_tanks = false
-            get_actor(event, '{Market}', 'has changed so everybody can buy car/tanks.', true)
-        end
-    end,
-}
-
 local selection_functions = {
     ['comfy_panel_theme_dropdown'] = function(event)
         local player = game.get_player(event.player_index)
@@ -749,102 +668,6 @@ local build_config_gui = function(player, frame)
             scroll_pane.add({ type = 'line' })
         end
 
-        if Utils.get_package('maps.mountain_fortress_v3.main') then
-            label = scroll_pane.add({ type = 'label', caption = 'Mountain Fortress Settings' })
-            label.style.font = 'default-bold'
-            label.style.padding = 0
-            label.style.left_padding = 10
-            label.style.top_padding = 10
-            label.style.horizontal_align = 'left'
-            label.style.vertical_align = 'bottom'
-            label.style.font_color = Color.green
-
-            local Fullness = Utils.get_package('modules.check_fullness')
-            local full = Fullness.get()
-            switch_state = 'right'
-            if full.fullness_enabled then
-                switch_state = 'left'
-            end
-            add_switch(
-                scroll_pane,
-                switch_state,
-                'comfy_panel_disable_fullness',
-                'Inventory Fullness',
-                'Left = Enables inventory fullness.\nRight = Disables inventory fullness.'
-            )
-
-            scroll_pane.add({ type = 'line' })
-
-            local WPT = Utils.get_package('maps.mountain_fortress_v3.table')
-            local this = WPT.get()
-            switch_state = 'right'
-            if this.offline_players_enabled then
-                switch_state = 'left'
-            end
-            add_switch(
-                scroll_pane,
-                switch_state,
-                'comfy_panel_offline_players',
-                'Offline Players',
-                'Left = Enables offline player inventory drop.\nRight = Disables offline player inventory drop.'
-            )
-
-            scroll_pane.add({ type = 'line' })
-
-            switch_state = 'right'
-            if this.collapse_grace then
-                switch_state = 'left'
-            end
-            add_switch(
-                scroll_pane,
-                switch_state,
-                'comfy_panel_collapse_grace',
-                'Collapse',
-                'Left = Enables collapse after wave 100.\nRight = Disables collapse - you must reach zone 2 for collapse to occur.'
-            )
-
-            scroll_pane.add({ type = 'line' })
-
-            switch_state = 'right'
-            if this.spill_items_to_surface then
-                switch_state = 'left'
-            end
-            add_switch(
-                scroll_pane,
-                switch_state,
-                'comfy_panel_spill_items_to_surface',
-                'Spill Ores',
-                'Left = Enables ore spillage to surface when mining.\nRight = Disables ore spillage to surface when mining.'
-            )
-            scroll_pane.add({ type = 'line' })
-
-            switch_state = 'right'
-            if this.void_or_tile then
-                switch_state = 'left'
-            end
-            add_switch(
-                scroll_pane,
-                switch_state,
-                'comfy_panel_void_or_tile',
-                'Void Tiles',
-                'Left = Changes the tiles to out-of-map.\nRight = Changes the tiles to lab-dark-2'
-            )
-            scroll_pane.add({ type = 'line' })
-
-            switch_state = 'right'
-            if this.trusted_only_car_tanks then
-                switch_state = 'left'
-            end
-            add_switch(
-                scroll_pane,
-                switch_state,
-                'comfy_panel_trusted_only_car_tanks',
-                'Market Purchase',
-                'Left = Allows only trusted people to buy car/tanks.\nRight = Allows everyone to buy car/tanks.'
-            )
-            scroll_pane.add({ type = 'line' })
-        end
-
         label = scroll_pane.add({ type = 'label', caption = 'Map Settings' })
         label.style.font = 'default-bold'
         label.style.padding = 0
@@ -887,9 +710,6 @@ local function on_gui_switch_state_changed(event)
         return
     elseif antigrief_functions[event.element.name] then
         antigrief_functions[event.element.name](event)
-        return
-    elseif fortress_functions[event.element.name] then
-        fortress_functions[event.element.name](event)
         return
     elseif Utils.get_package('comfy_panel.poll') then
         if poll_function[event.element.name] then
