@@ -21,7 +21,7 @@ require('commands')
 require('antigrief')
 require('modules.corpse_markers')
 require('modules.floaty_chat')
-require('modules.show_inventory')
+-- require('modules.show_inventory')
 
 require('comfy_panel.main')
 require('comfy_panel.player_list')
