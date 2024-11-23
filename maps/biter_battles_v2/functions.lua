@@ -521,7 +521,7 @@ function Functions.spy_fish(player, event)
         return
     end
     local duration_per_unit = 2700
-    local i2 = player.get_inventory(defines.inventory.character_main)
+    local i2 = player.character.get_inventory(defines.inventory.character_main)
     if not i2 then
         player.print('You cannot send spy while in remote view')
         return

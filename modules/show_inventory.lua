@@ -172,8 +172,8 @@ local function redraw_inventory(gui, source, target, caption, panel_type)
         button.enabled = false
 
         if caption == 'Armor' then
-            if target.get_inventory(5)[1].grid then
-                local p_armor = target.get_inventory(5)[1].grid.get_contents()
+            if target.character.get_inventory(5)[1].grid then
+                local p_armor = target.character.get_inventory(5)[1].grid.get_contents()
                 for k, v in pairs(p_armor) do
                     local armor_gui = flow.add({
                         type = 'sprite-button',
@@ -263,11 +263,11 @@ local function open_inventory(source, target)
     data.player_opened = target
     data.last_tab = 'Main'
 
-    local main = target.get_main_inventory().get_contents()
-    local armor = target.get_inventory(defines.inventory.character_armor).get_contents()
-    local guns = target.get_inventory(defines.inventory.character_guns).get_contents()
-    local ammo = target.get_inventory(defines.inventory.character_ammo).get_contents()
-    local trash = target.get_inventory(defines.inventory.character_trash).get_contents()
+    local main = target.character.get_main_inventory().get_contents()
+    local armor = target.character.get_inventory(defines.inventory.character_armor).get_contents()
+    local guns = target.character.get_inventory(defines.inventory.character_guns).get_contents()
+    local ammo = target.character.get_inventory(defines.inventory.character_ammo).get_contents()
+    local trash = target.character.get_inventory(defines.inventory.character_trash).get_contents()
 
     local types = {
         ['Main'] = main,
@@ -318,19 +318,19 @@ local function on_gui_click(event)
     if valid then
         local target_inventories = {
             ['Main'] = function()
-                return target.get_main_inventory().get_contents()
+                return target.character.get_main_inventory().get_contents()
             end,
             ['Armor'] = function()
-                return target.get_inventory(defines.inventory.character_armor).get_contents()
+                return target.character.get_inventory(defines.inventory.character_armor).get_contents()
             end,
             ['Guns'] = function()
-                return target.get_inventory(defines.inventory.character_guns).get_contents()
+                return target.character.get_inventory(defines.inventory.character_guns).get_contents()
             end,
             ['Ammo'] = function()
-                return target.get_inventory(defines.inventory.character_ammo).get_contents()
+                return target.character.get_inventory(defines.inventory.character_ammo).get_contents()
             end,
             ['Trash'] = function()
-                return target.get_inventory(defines.inventory.character_trash).get_contents()
+                return target.character.get_inventory(defines.inventory.character_trash).get_contents()
             end,
         }
 
@@ -400,19 +400,19 @@ local function update_gui(event)
     -- of getting all inventories if only some are watched
     local target_inventories = {
         ['Main'] = function()
-            return target.get_main_inventory().get_contents()
+            return target.character.get_main_inventory().get_contents()
         end,
         ['Armor'] = function()
-            return target.get_inventory(defines.inventory.character_armor).get_contents()
+            return target.character.get_inventory(defines.inventory.character_armor).get_contents()
         end,
         ['Guns'] = function()
-            return target.get_inventory(defines.inventory.character_guns).get_contents()
+            return target.character.get_inventory(defines.inventory.character_guns).get_contents()
         end,
         ['Ammo'] = function()
-            return target.get_inventory(defines.inventory.character_ammo).get_contents()
+            return target.character.get_inventory(defines.inventory.character_ammo).get_contents()
         end,
         ['Trash'] = function()
-            return target.get_inventory(defines.inventory.character_trash).get_contents()
+            return target.character.get_inventory(defines.inventory.character_trash).get_contents()
         end,
     }
 

@@ -105,12 +105,12 @@ local function leave_corpse(player)
     })
 
     local inventories = {
-        player.get_inventory(defines.inventory.character_main),
-        player.get_inventory(defines.inventory.character_guns),
-        player.get_inventory(defines.inventory.character_ammo),
-        player.get_inventory(defines.inventory.character_armor),
-        player.get_inventory(defines.inventory.character_vehicle),
-        player.get_inventory(defines.inventory.character_trash),
+        player.character.get_inventory(defines.inventory.character_main),
+        player.character.get_inventory(defines.inventory.character_guns),
+        player.character.get_inventory(defines.inventory.character_ammo),
+        player.character.get_inventory(defines.inventory.character_armor),
+        player.character.get_inventory(defines.inventory.character_vehicle),
+        player.character.get_inventory(defines.inventory.character_trash),
     }
 
     local corpse = false
