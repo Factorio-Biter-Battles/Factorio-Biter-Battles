@@ -198,7 +198,7 @@ function Public.calc_send_command(
         error_msg = 'Must specify "count" after "color"'
     end
     if error_msg == nil and #foods == 0 and player ~= nil then
-        local i = player.get_main_inventory()
+        local i = player.character.get_main_inventory()
         if i then
             for food_type, _ in pairs(Tables.food_values) do
                 local flask_amount = i.get_item_count(food_type)

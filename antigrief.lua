@@ -591,7 +591,7 @@ local function on_player_cancelled_crafting(event)
     local player = game.get_player(event.player_index)
 
     local crafting_queue_item_count = event.items.get_item_count()
-    local free_slots = player.get_main_inventory().count_empty_stacks()
+    local free_slots = player.character.get_main_inventory().count_empty_stacks()
     local crafted_items = #event.items
 
     if crafted_items > free_slots then

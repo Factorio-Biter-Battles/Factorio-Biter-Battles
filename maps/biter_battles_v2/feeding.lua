@@ -299,7 +299,7 @@ function Public.feed_biters_from_inventory(player, food)
 
     local biter_force_name = enemy_force_name .. '_biters'
 
-    local i = player.get_main_inventory()
+    local i = player.character.get_main_inventory()
     if not i then
         player.print('You cannot feed biters while in remote view')
         return
@@ -369,7 +369,7 @@ function Public.feed_biters_mixed_from_inventory(player, button)
             'automation-science-pack',
         }
     end
-    local i = player.get_main_inventory()
+    local i = player.character.get_main_inventory()
     if not i then
         player.print('You cannot feed biters while in remote view')
         return

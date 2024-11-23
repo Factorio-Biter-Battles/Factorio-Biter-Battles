@@ -91,7 +91,7 @@ local on_player_created = function(event)
             )
             util.remove_safe(player, this.crashed_ship_items)
             util.remove_safe(player, this.crashed_debris_items)
-            player.get_main_inventory().sort_and_merge()
+            player.character.get_main_inventory().sort_and_merge()
             if player.character then
                 player.character.destructible = false
             end

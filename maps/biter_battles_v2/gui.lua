@@ -991,7 +991,7 @@ function join_team(player, force_name, forced_join, auto_join)
         character = player.character,
     })
 
-    local i = player.get_inventory(defines.inventory.character_main)
+    local i = player.character.get_inventory(defines.inventory.character_main)
     i.clear()
     player.insert({ name = 'pistol', count = 1 })
     player.insert({ name = 'raw-fish', count = 3 })

@@ -55,9 +55,9 @@ local function on_built_entity(event)
     if storage.special_games_variables['disabled_entities'][force.name][entity.name] then
         player.create_local_flying_text({ text = 'Disabled by special game', position = entity.position })
         if entity.name == 'straight-rail' or entity.name == 'curved-rail' then
-            player.get_inventory(defines.inventory.character_main).insert({ name = 'rail', count = 1 })
+            player.character.get_inventory(defines.inventory.character_main).insert({ name = 'rail', count = 1 })
         else
-            player.get_inventory(defines.inventory.character_main).insert({ name = entity.name, count = 1 })
+            player.character.get_inventory(defines.inventory.character_main).insert({ name = entity.name, count = 1 })
         end
         entity.destroy()
     elseif
