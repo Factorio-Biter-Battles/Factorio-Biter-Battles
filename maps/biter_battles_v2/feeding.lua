@@ -301,7 +301,6 @@ function Public.feed_biters_from_inventory(player, food)
 
     local i = player.character.get_main_inventory()
     if not i then
-        player.print('You cannot feed biters while in remote view')
         return
     end
     local flask_amount = i.get_item_count(food)
@@ -371,7 +370,6 @@ function Public.feed_biters_mixed_from_inventory(player, button)
     end
     local i = player.character.get_main_inventory()
     if not i then
-        player.print('You cannot feed biters while in remote view')
         return
     end
     local colored_player_name = table.concat({
