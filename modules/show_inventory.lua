@@ -314,6 +314,9 @@ local function on_gui_click(event)
     data.last_tab = name
 
     local valid, target = player_opened(player)
+    if not validate_player(target) then
+        return
+    end
 
     if valid then
         local target_inventories = {
