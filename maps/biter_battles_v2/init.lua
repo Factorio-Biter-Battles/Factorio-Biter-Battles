@@ -76,6 +76,9 @@ function Public.initial_setup()
     game.forces.spectator.set_surface_hidden('gulag', true)
     game.forces.north.set_surface_hidden('gulag', true)
     game.forces.south.set_surface_hidden('gulag', true)
+    game.forces.spectator.set_surface_hidden('nauvis', true)
+    game.forces.north.set_surface_hidden('nauvis', true)
+    game.forces.south.set_surface_hidden('nauvis', true)
     game.forces.spectator.research_all_technologies()
     local defs = {
         defines.input_action.import_blueprint_string,
@@ -209,10 +212,6 @@ function Public.playground_surface()
     surface.request_to_generate_chunks({ x = 0, y = -256 }, 7)
     surface.force_generate_chunk_requests()
     surface.brightness_visual_weights = { -1.17, -0.975, -0.52 }
-
-    game.forces.spectator.set_surface_hidden(storage.bb_surface_name, true)
-    game.forces.north.set_surface_hidden(storage.bb_surface_name, true)
-    game.forces.south.set_surface_hidden(storage.bb_surface_name, true)
 end
 
 function Public.draw_structures()
