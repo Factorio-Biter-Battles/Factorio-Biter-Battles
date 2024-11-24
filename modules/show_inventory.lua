@@ -169,7 +169,8 @@ local function redraw_inventory(gui, source, target, caption, panel_type)
             tooltip = types[opts.name].localised_name,
             style = 'slot_button',
         })
-        button.enabled = false
+        button.enabled = true
+        button.ignored_by_interaction = true
 
         if caption == 'Armor' then
             if target.character.get_inventory(5)[1].grid then
