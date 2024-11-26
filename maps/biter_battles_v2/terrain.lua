@@ -905,18 +905,36 @@ function Public.deny_construction_bots(event)
 end
 
 function Public.deny_enemy_side_ghosts(event)
-    if not event.entity.valid then
+    local e = event.entity
+    if not e.valid then
         return
     end
-    if event.entity.type == 'entity-ghost' or event.entity.type == 'tile-ghost' then
-        local force = game.get_player(event.player_index).force.name
+    if e.type == 'entity-ghost' or e.type == 'tile-ghost' then
+        local player = game.get_player(event.player_index)
+        local force = player.force.name
         if not robot_build_restriction[force] then
             return
         end
         if not robot_build_restriction[force](event.entity.position.y) then
             return
         end
-        event.entity.destroy()
+
+        -- If cursor is not cleared before removing ghost of dragged pipe it
+        -- will cause segfault from infinite recursion.
+        player.clear_cursor()
+        local ghosts = player.surface.find_entities_filtered({
+            position = e.position,
+            -- Undeground pipe creates two ghost tiles, but only one entity
+            -- gets corresponding event
+            radius = 2,
+            name = 'tile-ghost',
+        })
+        e.order_deconstruction(force)
+        for _, g in ipairs(ghosts) do
+            if g.valid then
+                g.order_deconstruction(force)
+            end
+        end
     end
 end
 
