@@ -121,7 +121,10 @@ local function zoom_to_pos(event)
     local element = event.element
     local position = Gui.get_data(element)
 
-    player.zoom_to_world(position, 0.5)
+    player.set_controller({
+        type = defines.controllers.remote,
+        position = position,
+    })
 end
 
 local close_alert = Public.close_alert

@@ -80,12 +80,13 @@ local function do_follow(cmd)
     if not target_player or not validate_player(target_player) then
         return
     end
-    player.zoom_to_world(target_player.position, nil, target_player.character)
+
+    player.centered_on = target_player.character
 end
 
--- commands.add_command('follow', 'Follows a player', function(cmd)
---     safe_wrap_cmd(cmd, do_follow, cmd)
--- end)
+commands.add_command('follow', 'Follows a player', function(cmd)
+    safe_wrap_cmd(cmd, do_follow, cmd)
+end)
 
 Public.create_mini_camera_gui = create_mini_camera_gui
 
