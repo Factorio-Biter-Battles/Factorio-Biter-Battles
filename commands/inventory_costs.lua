@@ -67,8 +67,8 @@ local function inventory_costs_command(cmd)
     safe_wrap_with_player_print(player, inventory_costs, cmd)
 end
 
--- commands.add_command(
---     'inventory-costs',
---     "Print out the top players by inventory values. Pass 'all' to see it for both forces.",
---     inventory_costs_command
--- )
+commands.add_command(
+    'inventory-costs',
+    "Print out the top players by inventory values. Pass 'all' to see it for both forces.",
+    inventory_costs_command
+)
