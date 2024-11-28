@@ -398,7 +398,6 @@ local function on_entity_died(event)
         }
         if chests[event.entity.type] then
             local inv = event.entity.get_inventory(1)
-            local contents = inv.get_contents()
             data.event = table.concat({ data.event, ' with ', inv.get_item_count(), ' items' })
         end
         this.histories_idx.friendly_fire = this.histories_idx.friendly_fire % size + 1
