@@ -184,7 +184,8 @@ local function redraw_inventory(gui, source, target, caption, panel_type)
                         tooltip = types[opts.name].localised_name,
                         style = 'slot_button',
                     })
-                    armor_gui.enabled = false
+                    armor_gui.enabled = true
+                    armor_gui.ignored_by_interaction = true
                 end
             end
         end
