@@ -173,14 +173,15 @@ local function redraw_inventory(gui, source, target, caption, panel_type)
         button.ignored_by_interaction = true
 
         if caption == 'Armor' then
-            if target.character.get_inventory(5)[1].grid then
-                local p_armor = target.character.get_inventory(5)[1].grid.get_contents()
-                for k, v in pairs(p_armor) do
+            local grid = target.character.get_inventory(defines.inventory.character_armor)[1].grid
+            if grid then
+                local p_armor = grid.get_contents()
+                for _, item in ipairs(p_armor) do
                     local armor_gui = flow.add({
                         type = 'sprite-button',
-                        sprite = 'item/' .. k,
-                        number = v,
-                        name = k,
+                        sprite = 'item/' .. item.name,
+                        number = item.count,
+                        name = item.name,
                         tooltip = types[opts.name].localised_name,
                         style = 'slot_button',
                     })
