@@ -292,7 +292,7 @@ function Public.validate_player(player_ident)
     local data_type = type(player_ident)
     local player
 
-    if data_type == 'table' and player_ident.valid then
+    if data_type == 'userdata' and player_ident.valid then
         local is_player = player_ident.is_player()
         if is_player then
             player = player_ident
