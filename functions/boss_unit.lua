@@ -37,8 +37,7 @@ local function add_health_factor_text(entity, health_factor)
         text = text,
         draw_on_ground = true,
         surface = entity.surface,
-        target = entity,
-        target_offset = { 0, -3 },
+        target = { entity = entity, offset = { 0, -3 } },
         scale = 1.5,
         alignment = 'center',
         color = { 1, 1, 1, 1 },
@@ -54,8 +53,7 @@ local function create_healthbar(entity, size)
         x_scale = size * HEALTHBAR_SIZE,
         y_scale = size,
         render_layer = 'light-effect',
-        target = entity,
-        target_offset = { 0, -2.5 },
+        target = { entity = entity, offset = { 0, -2.5 } },
         surface = entity.surface,
     })
 end
