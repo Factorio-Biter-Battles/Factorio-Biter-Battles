@@ -503,7 +503,7 @@ end
 function Public.get_tech_blacklist(tier)
     local blacklist = {}
     local size_of_tech_tier_list = #tech_tier_list
-    local min_index = math_floor(size_of_tech_tier_list * tier)
+    local min_index = math_floor(size_of_tech_tier_list * tier) + 1
     for i = size_of_tech_tier_list, min_index, -1 do
         blacklist[tech_tier_list[i]] = true
     end
