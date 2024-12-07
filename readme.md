@@ -4,11 +4,45 @@
 </p>
 
 # Factorio Biter Battles
-The biters have noticed that you are secretly hoarding fish in the rocket silo.  Your objective is to defend your silo, while defeating the other team.  Feed your opponent's biters with science packs to increase their strength.  High tier science juice will yield stronger mutagenic results.  Only feeding and time increases their power and will lead to your teams victory.  There is no major direct pvp combat.  The horizontal border river is landfill proof.  Construction robots can not build on the other teams's side.  The random map layout is mirrored to provide a fair competition.  West and East directions contain no biter nests, leaving room for factory expansion and outpost building.  North and South directions are biter territory.
 
-### Repository
-- This project project can be found on github at https://github.com/Factorio-Biter-Battles/Factorio-Biter-Battles
-- This is a forked project of from [ComfyFactorio](https://github.com/M3wM3w/ComfyFactorio)
+## Table of Contents
+- [Overview](#overview)
+- [Community and Resources](#community-and-resources)
+- [Installation](#installation)
+- [Contributing](#contributing)
+- [Bug Reports and Feature Requests](#bug-reports-and-feature-requests)
+- [Testing](#testing)
+- [License](#license)
 
-### Join the community
-- We're live on [discord](https://discord.com/invite/hAYW3K7J2A)!
+## Overview
+Biter Battles is an advanced Factorio scenario that transforms the game into a team-based, indirect competitive experience. Two teams, North and South, compete to outlast each other by strategically managing their own defense while simultaneously working to strengthen the enemy's biters.
+
+For detailed gameplay information and strategies, please visit our [Wiki](https://freebb.miraheze.org/wiki/Main_Page).
+
+## Community and Resources
+
+- **Discord:** Join our active community on [Discord](https://discord.gg/ZsNNTcPfXm)
+- **Website:** Visit [BiterBattles.org](https://www.biterbattles.org/) for more information, rankings, and recent game logs
+- **Wiki:** Visit our [Wiki](https://freebb.miraheze.org/wiki/Main_Page) for detailed gameplay information and strategies
+- **ELO Leaderboard:** Check out the [ELO scores and rankings](https://bb-raven.patrol.neutrino.re/leaderboards/)
+
+## Installation
+For developers or server hosts:
+Please refer to our detailed [Installation Guide for Developers](installation-guide.md) for instructions on setting up the scenario.
+
+## Contributing
+We welcome contributions to Biter Battles! Whether you're fixing bugs, improving documentation, or proposing new features, your efforts are appreciated. Please see our [Contributing Guide](contributing.md) for detailed information on how to get started.
+
+## Bug Reports and Feature Requests
+We use GitHub Issues to track bugs and feature requests. Please provide as much detail as possible when submitting issues. You can also use the following in-game commands:
+- `/admins`: List admins
+- `/jail`: Report griefers
+
+## Testing
+We maintain a test suite to ensure the reliability of our codebase. If you're contributing code, please add appropriate tests for your changes and run the existing test suite. For more information, see our [Test Suite README](tests/readme.md).
+
+---
+
+Biter Battles is a community-driven project, originally forked from the [ComfyFactorio](https://github.com/M3wM3w/ComfyFactorio) project. We're constantly working to improve and expand the scenario, and we appreciate your support and feedback!
+
+For the latest updates and more detailed information, visit our [GitHub repository](https://github.com/Factorio-Biter-Battles/Factorio-Biter-Battles) and [BiterBattles.org](https://www.biterbattles.org/).
