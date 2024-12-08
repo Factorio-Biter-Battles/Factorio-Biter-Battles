@@ -372,6 +372,7 @@ local jail = function(player, griefer, msg)
     then
         game.get_player(griefer).character.driving = false
     end
+    game.get_player(griefer).driving = false
 
     jailed[griefer] = { jailed = true, actor = player, reason = msg }
     set_data(jailed_data_set, griefer, { jailed = true, actor = player, reason = msg })
