@@ -65,7 +65,7 @@ end
 
 local function on_player_died(event)
     local player = game.get_player(event.player_index)
-    draw_map_tag(player.surface, player.force, player.position)
+    draw_map_tag(player.physical_surface, player.force, player.physical_position)
 end
 
 local function on_character_corpse_expired(event)

@@ -148,7 +148,7 @@ local function damage_player(player, kill, print_to_all)
             return
         end
         player.character.health = player.character.health - math.random(50, 100)
-        player.character.surface.create_entity({ name = 'water-splash', position = player.position })
+        player.character.surface.create_entity({ name = 'water-splash', position = player.character.position })
         local messages = {
             'Ouch.. That hurt! Better be careful now.',
             'Just a fleshwound.',
@@ -353,7 +353,7 @@ local function on_player_used_capsule(event)
     local position = { x = math.floor(x), y = math.floor(y) }
     if
         ammo_names[item.name]
-        and player.surface.count_entities_filtered({
+        and player.physical_surface.count_entities_filtered({
                 force = player.force.name .. '_biters',
                 area = { { x - 10, y - 10 }, { x + 10, y + 10 } },
                 limit = 1,
@@ -618,7 +618,7 @@ local function on_player_cancelled_crafting(event)
         local data = {
             player_name = player.name,
             event = crafting_queue_item_count .. ' ' .. event.recipe.name,
-            position = { x = math.floor(player.position.x), y = math.floor(player.position.y) },
+            position = { x = math.floor(player.physical_position.x), y = math.floor(player.physical_position.y) },
             time = game.ticks_played,
             server_time = game.tick,
         }
@@ -871,7 +871,7 @@ function Public.insert_into_capsule_history(player, position, msg)
     str = str .. ' Y:'
     str = str .. math.floor(position.y)
     str = str .. ' '
-    str = str .. 'surface:' .. player.surface.index
+    str = str .. 'surface:' .. player.physical_surface_index
     increment(this.capsule_history, str)
 end
 

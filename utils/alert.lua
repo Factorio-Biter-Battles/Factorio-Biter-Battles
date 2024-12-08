@@ -227,7 +227,7 @@ function Public.alert_all_players_location(player, message, color, duration)
             style = 'slot_button',
         })
 
-        Gui.set_data(sprite, player.position)
+        Gui.set_data(sprite, player.physical_position)
 
         local label = container.add({
             type = 'label',

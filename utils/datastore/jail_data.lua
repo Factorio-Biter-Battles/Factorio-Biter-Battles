@@ -185,8 +185,8 @@ local teleport_player_to_gulag = function(player, action)
 
     if action == 'jail' then
         local gulag = game.surfaces['gulag']
-        p_data.fallback_surface_index = player.surface.index
-        p_data.position = player.position
+        p_data.fallback_surface_index = player.physical_surface_index
+        p_data.position = player.physical_position
         p_data.p_group_id = player.permission_group.group_id
         p_data.locked = true
         player.character.teleport(gulag.find_non_colliding_position('character', { 0, 0 }, 128, 1), gulag.name)
@@ -372,6 +372,7 @@ local jail = function(player, griefer, msg)
     then
         game.get_player(griefer).character.driving = false
     end
+    game.get_player(griefer).driving = false
 
     jailed[griefer] = { jailed = true, actor = player, reason = msg }
     set_data(jailed_data_set, griefer, { jailed = true, actor = player, reason = msg })
