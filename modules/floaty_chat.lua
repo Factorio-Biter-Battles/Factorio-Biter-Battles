@@ -32,7 +32,7 @@ local function on_console_chat(event)
 
     storage.player_floaty_chat[player.index] = rendering.draw_text({
         text = event.message,
-        surface = player.surface,
+        surface = player.character.surface,
         target = { entity = player.character, offset = { -0.05, y_offset } },
         color = {
             r = player.color.r * 0.6 + 0.25,

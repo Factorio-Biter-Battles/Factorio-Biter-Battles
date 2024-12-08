@@ -134,10 +134,10 @@ local function punish_player(playerSuspended)
     if playerSuspended.controller_type ~= defines.controllers.character then
         playerSuspended.set_controller({
             type = defines.controllers.character,
-            character = playerSuspended.surface.create_entity({
+            character = playerSuspended.physical_surface.create_entity({
                 name = 'character',
                 force = playerSuspended.force,
-                position = playerSuspended.position,
+                position = playerSuspended.physical_position,
             }),
         })
     end
@@ -181,7 +181,7 @@ local suspend_token = Token.register(function()
                 storage.suspended_players[suspend_info.suspendee_player_name] = game.ticks_played
                 local playerSuspended = game.get_player(suspend_info.suspendee_player_name)
                 storage.suspend_target_info = nil
-                if playerSuspended and playerSuspended.valid and playerSuspended.surface.name ~= 'gulag' then
+                if playerSuspended and playerSuspended.valid and playerSuspended.physical_surface.name ~= 'gulag' then
                     punish_player(playerSuspended)
                 end
                 return
@@ -255,11 +255,11 @@ local function suspend_player(cmd)
                 killer.print('You cant suspend a spectator', { color = Color.warning })
                 return
             end
-            if victim.surface.name == 'gulag' then
+            if victim.physical_surface.name == 'gulag' then
                 killer.print('You cant suspend a player in jail', { color = Color.warning })
                 return
             end
-            if killer.surface.name == 'gulag' then
+            if killer.physical_surface.name == 'gulag' then
                 killer.print('You cant suspend a player while you are in jail', { color = Color.warning })
                 return
             end

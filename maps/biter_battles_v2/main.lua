@@ -160,7 +160,7 @@ function do_ping(from_player_name, to_player, message)
     end
     Sounds.notify_player(to_player, 'utility/undo')
     -- to_player.play_sound({path = "utility/new_objective", volume_modifier = 0.6})
-    -- to_player.surface.create_entity({name = 'big-explosion', position = to_player.position})
+    -- to_player.physical_surface.create_entity({name = 'big-explosion', position = to_player.physical_position})
     local ping_header = to_player.gui.screen['ping_header']
     local uis = to_player.display_scale
     if not ping_header then
@@ -413,14 +413,14 @@ end
 local function autotagging_outposters()
     for _, p in pairs(game.connected_players) do
         if p.force.name == 'north' or p.force.name == 'south' then
-            if math.abs(p.position.x) < autoTagDistance then
+            if math.abs(p.physical_position.x) < autoTagDistance then
                 if hasOutpostTag(p.tag) then
                     p.tag = p.tag:gsub('%' .. autoTagWestOutpost, '')
                     p.tag = p.tag:gsub('%' .. autoTagEastOutpost, '')
                 end
             else
                 if not hasOutpostTag(p.tag) then
-                    p.tag = p.tag .. getTagOutpostName(p.position.x)
+                    p.tag = p.tag .. getTagOutpostName(p.physical_position.x)
                 end
             end
         end
@@ -541,7 +541,7 @@ end
 local function on_player_built_tile(event)
     local player = game.get_player(event.player_index)
     if event.item ~= nil and event.item.name == 'landfill' then
-        Terrain.restrict_landfill(player.surface, player, event.tiles)
+        Terrain.restrict_landfill(player.physical_surface, player, event.tiles)
     end
 end
 

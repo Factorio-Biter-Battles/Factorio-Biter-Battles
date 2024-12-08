@@ -36,13 +36,13 @@ local bring_player_messages = {
     'What are you up to?',
 }
 
-local function teleport_player_to_position(player, position, surface)
-    if player.driving == true then
-        player.driving = false
+local function teleport_to_position(character, position, surface)
+    if character.driving then
+        character.driving = false
     end
     local pos = surface.find_non_colliding_position('character', position, 50, 1)
     if pos then
-        player.character.teleport(pos, surface)
+        character.teleport(pos, surface)
     end
     return pos ~= nil
 end
@@ -51,7 +51,11 @@ local function bring_player(player, source_player)
     if player.name == source_player.name then
         return player.print("You can't select yourself!", { color = { r = 1, g = 0.5, b = 0.1 } })
     end
-    if not teleport_player_to_position(player, source_player.position, source_player.surface) then
+
+    if
+        not player.character
+        or not teleport_to_position(player.character, source_player.physical_position, source_player.physical_surface)
+    then
         return source_player.print(
             'Could not teleport player to your position.',
             { color = { r = 1, g = 0.5, b = 0.1 } }
@@ -68,11 +72,11 @@ local function bring_player(player, source_player)
 end
 
 local function bring_player_to_spawn(player, source_player)
-    local spawn_position = player.force.get_spawn_position(player.surface)
+    local spawn_position = player.force.get_spawn_position(player.physical_surface)
     if not spawn_position then
         return source_player.print('Spawn position not found.', { color = { r = 1, g = 0.5, b = 0.1 } })
     end
-    if not teleport_player_to_position(player, spawn_position, player.surface) then
+    if not player.character or not teleport_to_position(player.character, spawn_position, player.physical_surface) then
         return source_player.print(
             'Could not teleport player to spawn position.',
             { color = { r = 1, g = 0.5, b = 0.1 } }
@@ -89,9 +93,10 @@ local function go_to_player(player, source_player)
     if player.name == source_player.name then
         return player.print("You can't select yourself!", { color = { r = 1, g = 0.5, b = 0.1 } })
     end
-    local pos = player.surface.find_non_colliding_position('character', player.position, 50, 1)
-    if pos then
-        source_player.character.teleport(pos, player.surface)
+    if
+        source_player.character
+        and teleport_to_position(source_player.character, player.physical_position, player.physical_surface)
+    then
         game.print(
             source_player.name
                 .. ' is visiting '
@@ -109,7 +114,7 @@ local function spank(player, source_player)
             player.character.damage(1, 'player')
         end
         player.character.health = player.character.health - 5
-        player.surface.create_entity({ name = 'water-splash', position = player.position })
+        player.physical_surface.create_entity({ name = 'water-splash', position = player.physical_position })
         game.print(source_player.name .. ' spanked ' .. player.name, { color = { r = 0.98, g = 0.66, b = 0.22 } })
     end
 end
@@ -127,7 +132,7 @@ local function damage(player, source_player)
             player.character.damage(1, 'player')
         end
         player.character.health = player.character.health - 125
-        player.surface.create_entity({ name = 'big-explosion', position = player.position })
+        player.physical_surface.create_entity({ name = 'big-explosion', position = player.physical_position })
         game.print(
             player.name .. damage_messages[math.random(1, #damage_messages)] .. source_player.name,
             { color = { r = 0.98, g = 0.66, b = 0.22 } }
