@@ -93,58 +93,32 @@ local suspend_buttons_token = Token.register(
     end
 )
 
-local function leave_corpse(player)
-    if not player.character then
-        return
+local function punish_player(player)
+    if player.physical_controller_type == defines.controllers.editor then
+        player.toggle_map_editor()
     end
-
-    local inventories = {
-        player.character.get_inventory(defines.inventory.character_main),
-        player.character.get_inventory(defines.inventory.character_guns),
-        player.character.get_inventory(defines.inventory.character_ammo),
-        player.character.get_inventory(defines.inventory.character_armor),
-        player.character.get_inventory(defines.inventory.character_vehicle),
-        player.character.get_inventory(defines.inventory.character_trash),
-    }
-
-    local corpse = false
-    for _, i in pairs(inventories) do
-        for index = 1, #i, 1 do
-            if not i[index].valid then
-                break
-            end
-            corpse = true
-            break
-        end
-        if corpse then
-            player.character.die()
-            break
-        end
+    local function force_death_on_spot(character)
+        character.driving = false
+        character.destructible = true
+        character.die()
     end
-
     if player.character then
-        player.character.destroy()
+        player.clear_cursor()
+        if player.character.has_items_inside() then
+            if player.spectator then
+                if storage.chosen_team[player.name] then
+                    join_team(player, storage.chosen_team[player.name], true)
+                    force_death_on_spot(player.character)
+                end
+            else
+                force_death_on_spot(player.character)
+            end
+        end
     end
-    player.character = nil
-    player.set_controller({ type = defines.controllers.god })
-    player.create_character()
-end
-
-local function punish_player(playerSuspended)
-    if playerSuspended.controller_type ~= defines.controllers.character then
-        playerSuspended.set_controller({
-            type = defines.controllers.character,
-            character = playerSuspended.physical_surface.create_entity({
-                name = 'character',
-                force = playerSuspended.force,
-                position = playerSuspended.physical_position,
-            }),
-        })
+    if not player.spectator then
+        player.ticks_to_respawn = nil -- force respawn if dead
+        spectate(player, false, false)
     end
-    if playerSuspended.controller_type == defines.controllers.character then
-        leave_corpse(playerSuspended)
-    end
-    spectate(playerSuspended, false, false)
 end
 
 local suspend_token = Token.register(function()
