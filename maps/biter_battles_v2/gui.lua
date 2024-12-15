@@ -1035,6 +1035,7 @@ function spectate(player, forced_join, stored_position)
         player.cancel_crafting(player.crafting_queue[1])
     end
 
+    player.driving = false
     player.character.driving = false
     player.clear_cursor()
     drop_burners(player, forced_join)
