@@ -970,7 +970,7 @@ function Public.add_new_year_island_decorations(surface)
             surface = surface,
             sprite = params.sprite,
             target = params.target,
-            render_layer = "3",
+            render_layer = '3',
             x_scale = params.x_scale,
             y_scale = params.y_scale,
             orientation = params.orientation or 0,
@@ -1002,7 +1002,6 @@ function Public.add_new_year_island_decorations(surface)
     -- top-left
     draw_sprite_snow({ sprite = sprite, target = { -3.48, -3.48 }, x_scale = scale, y_scale = scale })
     draw_sprite_snow({ sprite = sprite, target = { -3, -3 }, x_scale = scale, y_scale = scale })
-
 
     for _ = 1, storage.random_generator(0, 4) do
         local stump = surface.create_entity({
