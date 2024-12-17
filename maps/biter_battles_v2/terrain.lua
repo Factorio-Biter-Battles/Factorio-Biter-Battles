@@ -966,42 +966,42 @@ end
 function Public.add_new_year_island_decorations(surface)
     -- To fix lab-white tiles transition, draw border snow with sprites
     local function draw_sprite_snow(params)
-        rendering.draw_sprite{
+        rendering.draw_sprite({
             surface = surface,
             sprite = params.sprite,
             target = params.target,
             render_layer = "3",
             x_scale = params.x_scale,
             y_scale = params.y_scale,
-            orientation = params.orientation or 0
-        }
+            orientation = params.orientation or 0,
+        })
     end
 
     -- top and bottom
-    draw_sprite_snow{sprite = "virtual-signal/shape-horizontal", target = {0, 5.22}, x_scale = 4.6, y_scale = 5}
-    draw_sprite_snow{sprite = "virtual-signal/shape-horizontal", target = {0, -5.22}, x_scale = 4.6, y_scale = 5}
+    draw_sprite_snow({ sprite = 'virtual-signal/shape-horizontal', target = { 0, 5.22 }, x_scale = 4.6, y_scale = 5 })
+    draw_sprite_snow({ sprite = 'virtual-signal/shape-horizontal', target = { 0, -5.22 }, x_scale = 4.6, y_scale = 5 })
 
     -- sides
-    draw_sprite_snow{sprite = "virtual-signal/shape-vertical", target = {-5.25, 0}, x_scale = 5, y_scale = 4.5}
-    draw_sprite_snow{sprite = "virtual-signal/shape-vertical", target = {5.25, 0}, x_scale = 5, y_scale = 4.5}
+    draw_sprite_snow({ sprite = 'virtual-signal/shape-vertical', target = { -5.25, 0 }, x_scale = 5, y_scale = 4.5 })
+    draw_sprite_snow({ sprite = 'virtual-signal/shape-vertical', target = { 5.25, 0 }, x_scale = 5, y_scale = 4.5 })
 
-    local sprite = "virtual-signal/shape-diagonal"
+    local sprite = 'virtual-signal/shape-diagonal'
     local scale = 5.75
     -- bottom-right
-    draw_sprite_snow{sprite = sprite, target = {3.48, 3.48}, x_scale = scale, y_scale = scale}
-    draw_sprite_snow{sprite = sprite, target = {3, 3}, x_scale = scale, y_scale = scale}
+    draw_sprite_snow({ sprite = sprite, target = { 3.48, 3.48 }, x_scale = scale, y_scale = scale })
+    draw_sprite_snow({ sprite = sprite, target = { 3, 3 }, x_scale = scale, y_scale = scale })
 
     -- bottom-left
-    draw_sprite_snow{sprite = sprite, target = {-3.48, 3.48}, x_scale = scale, y_scale = scale, orientation = 0.25}
-    draw_sprite_snow{sprite = sprite, target = {-3, 3}, x_scale = scale, y_scale = scale, orientation = 0.25}
+    draw_sprite_snow({ sprite = sprite, target = { -3.48, 3.48 }, x_scale = scale, y_scale = scale, orientation = 0.25 })
+    draw_sprite_snow({ sprite = sprite, target = { -3, 3 }, x_scale = scale, y_scale = scale, orientation = 0.25 })
 
     -- top-right
-    draw_sprite_snow{sprite = sprite, target = {3.48, -3.48}, x_scale = scale, y_scale = scale, orientation = 0.25}
-    draw_sprite_snow{sprite = sprite, target = {3, -3}, x_scale = scale, y_scale = scale, orientation = 0.25}
+    draw_sprite_snow({ sprite = sprite, target = { 3.48, -3.48 }, x_scale = scale, y_scale = scale, orientation = 0.25 })
+    draw_sprite_snow({ sprite = sprite, target = { 3, -3 }, x_scale = scale, y_scale = scale, orientation = 0.25 })
 
     -- top-left
-    draw_sprite_snow{sprite = sprite, target = {-3.48, -3.48}, x_scale = scale, y_scale = scale}
-    draw_sprite_snow{sprite = sprite, target = {-3, -3}, x_scale = scale, y_scale = scale}
+    draw_sprite_snow({ sprite = sprite, target = { -3.48, -3.48 }, x_scale = scale, y_scale = scale })
+    draw_sprite_snow({ sprite = sprite, target = { -3, -3 }, x_scale = scale, y_scale = scale })
 
 
     for _ = 1, storage.random_generator(0, 4) do
