@@ -123,8 +123,8 @@ local function drop_burners(player, forced_join)
     end
     local burners_to_drop = player.get_item_count('burner-mining-drill')
     if burners_to_drop ~= 0 then
-        local items = player.surface.spill_item_stack({
-            position = player.position,
+        local items = player.physical_surface.spill_item_stack({
+            position = player.physical_position,
             stack = { name = 'burner-mining-drill', count = burners_to_drop },
             enable_looted = false,
             force = nil,
@@ -826,8 +826,8 @@ function Public.burners_balance(player)
         storage.got_burners[player.name] = true
         inserted = player.insert({ name = 'burner-mining-drill', count = burners_to_insert })
         if inserted < burners_to_insert then
-            local items = player.surface.spill_item_stack({
-                position = player.position,
+            player.physical_surface.spill_item_stack({
+                position = player.physical_position,
                 stack = { name = 'burner-mining-drill', count = burners_to_insert - inserted },
                 enable_looted = false,
                 force = nil,
@@ -874,7 +874,7 @@ function join_team(player, force_name, forced_join, auto_join)
     if not force_name then
         return
     end
-    local surface = player.surface
+    local surface = player.physical_surface
     local enemy_team = 'south'
     if force_name == 'south' then
         enemy_team = 'north'
@@ -1036,14 +1036,15 @@ function spectate(player, forced_join, stored_position)
     end
 
     player.driving = false
+    player.character.driving = false
     player.clear_cursor()
     drop_burners(player, forced_join)
 
     if stored_position then
         local p_data = get_player_data(player)
-        p_data.position = player.position
+        p_data.position = player.physical_position
     end
-    player.character.teleport(player.surface.find_non_colliding_position('character', { 0, 0 }, 4, 1))
+    player.character.teleport(player.physical_surface.find_non_colliding_position('character', { 0, 0 }, 4, 1))
     Sounds.notify_player(player, 'utility/build_blueprint_large')
     player.force = game.forces.spectator
     player.character.destructible = false
@@ -1075,8 +1076,8 @@ function Public.spy_fish()
             local surface = game.surfaces[storage.bb_surface_name]
             for _, player in pairs(game.forces[f[2]].connected_players) do
                 game.forces[f[1]].chart(surface, {
-                    { player.position.x - r, player.position.y - r },
-                    { player.position.x + r, player.position.y + r },
+                    { player.physical_position.x - r, player.physical_position.y - r },
+                    { player.physical_position.x + r, player.physical_position.y + r },
                 })
             end
         else
@@ -1179,7 +1180,7 @@ local function on_gui_click(event)
     end
 
     if name == 'bb_spectate' then
-        if player.position.y ^ 2 + player.position.x ^ 2 < 12000 then
+        if player.physical_position.y ^ 2 + player.physical_position.x ^ 2 < 12000 then
             spectate(player)
         else
             player.print('You are too far away from spawn to spectate.', { color = { r = 0.98, g = 0.66, b = 0.22 } })

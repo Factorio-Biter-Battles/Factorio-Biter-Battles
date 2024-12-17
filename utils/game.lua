@@ -57,9 +57,9 @@ function Game.print_player_floating_text_position(player_index, text, color, x_o
         return
     end
 
-    local position = player.position
+    local position = player.physical_position
     return Game.print_floating_text(
-        player.surface,
+        player.physical_surface,
         { x = position.x + x_offset, y = position.y + y_offset },
         text,
         color
