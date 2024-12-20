@@ -1,3 +1,4 @@
+local Quality = require('maps.biter_battles_v2.quality')
 local draw_text = rendering.draw_text
 local draw_sprite = rendering.draw_sprite
 local string_format = string.format

@@ -4,6 +4,7 @@ local functions = require('maps.biter_battles_v2.functions')
 local tables = require('maps.biter_battles_v2.tables')
 local event = require('utils.event')
 local difficulty_vote = require('maps.biter_battles_v2.difficulty_vote')
+local Quality = require('maps.biter_battles_v2.quality')
 
 ---@class ForceStats
 ---@field final_evo? number
@@ -39,20 +40,20 @@ TeamStatsCollect.items_to_show_summaries_of = {
     { item = 'rocket-fuel', hide_by_default = true },
     { item = 'low-density-structure', space_after = true, hide_by_default = true },
 
-    { item = 'electric-mining-drill', placed = true },
-    { item = 'boiler', placed = true, hide_by_default = true },
-    { item = 'steam-engine', placed = true, hide_by_default = true },
-    { item = 'fast-transport-belt', placed = true, hide_by_default = true },
-    { item = 'transport-belt', placed = true, space_after = true },
+    { item = 'electric-mining-drill', placed = {} },
+    { item = 'boiler', placed = {}, hide_by_default = true },
+    { item = 'steam-engine', placed = {}, hide_by_default = true },
+    { item = 'fast-transport-belt', placed = {}, hide_by_default = true },
+    { item = 'transport-belt', placed = {}, space_after = true },
 
-    { item = 'roboport', placed = true },
+    { item = 'roboport', placed = {} },
     { item = 'construction-robot' },
-    { item = 'nuclear-reactor', placed = true, space_after = true },
+    { item = 'nuclear-reactor', placed = {}, space_after = true },
 
-    { item = 'stone-wall', placed = true },
-    { item = 'gun-turret', placed = true },
-    { item = 'flamethrower-turret', placed = true },
-    { item = 'laser-turret', placed = true },
+    { item = 'stone-wall', placed = {} },
+    { item = 'gun-turret', placed = {} },
+    { item = 'flamethrower-turret', placed = {} },
+    { item = 'laser-turret', placed = {} },
 }
 
 TeamStatsCollect.damage_render_info = {
@@ -118,6 +119,7 @@ local function update_teamstats()
     if tick == 0 then
         return
     end
+    local tiers = Quality.available_tiers()
     local prev_ticks = team_stats.ticks or 0
     team_stats.ticks = tick
     local total_players = { north = 0, south = 0 }
@@ -146,24 +148,38 @@ local function update_teamstats()
             local item = item_info.item
             local item_stat = force_stats.items[item]
             if not item_stat then
-                item_stat = {}
+                item_stat = {
+                    first_at = {},
+                    produced = {},
+                    consumed = {},
+                    kill_count = {},
+                    placed = {},
+                    lost = {},
+                }
                 force_stats.items[item] = item_stat
             end
-            item_stat.produced = item_prod.get_input_count(item)
-            item_stat.consumed = item_prod.get_output_count(item)
-            if not item_stat.first_at and item_stat.produced and item_stat.produced > 0 then
-                item_stat.first_at = tick
-            end
-            if item_info.placed then
-                local item_build_stat = build_stat.get_input_count(item)
-                if (item_build_stat or 0) > 0 then
-                    -- we subtract out the number deconstructed, so this is really a max-net-placed-over-time
-                    local net_built = item_build_stat - build_stat.get_output_count(item)
-                    item_stat.placed = math.max(0, item_stat.placed or 0, net_built)
+
+            local req = {
+                name = item,
+            }
+            for t = 1, tiers do
+                req['quality'] = Quality.TIERS[t].name
+                item_stat.produced[t] = item_prod.get_input_count(req)
+                item_stat.consumed[t] = item_prod.get_output_count(req)
+                if not item_stat.first_at[t] and item_stat.produced[t] and item_stat.produced[t] > 0 then
+                    item_stat.first_at[t] = tick
                 end
-                local kill_count = kill_stat.get_output_count(item)
-                if (kill_count or 0) > 0 then
-                    item_stat.kill_count = kill_count
+                if item_info.placed then
+                    local item_build_stat = build_stat.get_input_count(req)
+                    if (item_build_stat or 0) > 0 then
+                        -- we subtract out the number deconstructed, so this is really a max-net-placed-over-time
+                        local net_built = item_build_stat - build_stat.get_output_count(req)
+                        item_stat.placed[t] = math.max(0, item_stat.placed[t] or 0, net_built)
+                    end
+                    local kill_count = kill_stat.get_output_count(req)
+                    if (kill_count or 0) > 0 then
+                        item_stat.kill_count[t] = kill_count
+                    end
                 end
             end
         end
@@ -172,14 +188,25 @@ local function update_teamstats()
             local item = info.long_name
             local food_stat = force_stats.food[item]
             if not food_stat then
-                food_stat = {}
+                food_stat = {
+                    sent = {},
+                    produced = {},
+                    consumed = {},
+                    first_at = {},
+                }
                 force_stats.food[item] = food_stat
             end
-            food_stat.sent = science_logs and science_logs[idx] or 0
-            food_stat.produced = item_prod.get_input_count(item)
-            food_stat.consumed = item_prod.get_output_count(item)
-            if not food_stat.first_at and (food_stat.produced or 0) > 0 then
-                food_stat.first_at = tick
+            local req = {
+                name = item,
+            }
+            for t = 1, tiers do
+                req['quality'] = Quality.TIERS[t].name
+                food_stat.sent[t] = science_logs and science_logs[idx] or 0
+                food_stat.produced[t] = item_prod.get_input_count(req)
+                food_stat.consumed[t] = item_prod.get_output_count(req)
+                if not food_stat.first_at[t] and (food_stat.produced[t] or 0) > 0 then
+                    food_stat.first_at[t] = tick
+                end
             end
         end
     end
@@ -209,6 +236,18 @@ local function random_item_subset(num)
     return math.floor(math.exp(math.random() * math.log(num)))
 end
 
+local function fake_tiers(num)
+    local food = {}
+    local tiers = Quality.available_tiers()
+    for t = 1, tiers do
+        if math.random() > 0.2 then
+            food[t] = num
+        end
+    end
+
+    return food
+end
+
 ---@return TeamStats
 function TeamStatsCollect.compute_stats()
     if not storage.team_stats_use_fake_data then
@@ -232,60 +271,69 @@ function TeamStatsCollect.compute_stats()
             player_ticks = math.random() * stats.ticks * 10,
             food = {
                 ['automation-science-pack'] = {
-                    first_at = idx * 10 * 3600,
-                    produced = idx * 1000,
-                    consumed = idx * 500,
-                    sent = idx * 200,
+                    first_at = fake_tiers(idx * 10 * 3600),
+                    produced = fake_tiers(idx * 1000),
+                    consumed = fake_tiers(idx * 500),
+                    sent = fake_tiers(idx * 200),
                 },
                 ['logistic-science-pack'] = {
-                    first_at = idx * 20 * 3600,
-                    produced = idx * 1000,
-                    consumed = idx * 500,
-                    sent = idx * 200,
+                    first_at = fake_tiers(idx * 20 * 3600),
+                    produced = fake_tiers(idx * 1000),
+                    consumed = fake_tiers(idx * 500),
+                    sent = fake_tiers(idx * 200),
                 },
                 ['military-science-pack'] = {
-                    first_at = idx * 30 * 3600,
-                    produced = idx * 1000,
-                    consumed = idx * 500,
-                    sent = idx * 200,
+                    first_at = fake_tiers(idx * 30 * 3600),
+                    produced = fake_tiers(idx * 1000),
+                    consumed = fake_tiers(idx * 500),
+                    sent = fake_tiers(idx * 200),
                 },
                 ['chemical-science-pack'] = {
-                    first_at = idx * 40 * 3600,
-                    produced = idx * 1000,
-                    consumed = idx * 500,
-                    sent = idx * 200,
+                    first_at = fake_tiers(idx * 40 * 3600),
+                    produced = fake_tiers(idx * 1000),
+                    consumed = fake_tiers(idx * 500),
+                    sent = fake_tiers(idx * 200),
                 },
                 ['production-science-pack'] = {
-                    first_at = idx * 50 * 3600,
-                    produced = idx * 1000,
-                    consumed = idx * 500,
-                    sent = idx * 200,
+                    first_at = fake_tiers(idx * 50 * 3600),
+                    produced = fake_tiers(idx * 1000),
+                    consumed = fake_tiers(idx * 500),
+                    sent = fake_tiers(idx * 200),
                 },
                 ['utility-science-pack'] = {
-                    first_at = idx * 60 * 3600,
-                    produced = idx * 1000,
-                    consumed = idx * 500,
-                    sent = idx * 200,
+                    first_at = fake_tiers(idx * 60 * 3600),
+                    produced = fake_tiers(idx * 1000),
+                    consumed = fake_tiers(idx * 500),
+                    sent = fake_tiers(idx * 200),
                 },
                 ['space-science-pack'] = {
-                    first_at = idx * 70 * 3600,
-                    produced = idx * 1000,
-                    consumed = idx * 500,
-                    sent = idx * 200,
+                    first_at = fake_tiers(idx * 70 * 3600),
+                    produced = fake_tiers(idx * 1000),
+                    consumed = fake_tiers(idx * 500),
+                    sent = fake_tiers(idx * 200),
                 },
             },
             items = {},
             damage_types = {},
         }
+        local tiers = Quality.available_tiers()
         for _, item_info in ipairs(TeamStatsCollect.items_to_show_summaries_of) do
             local item_stat = {
-                first_at = math.floor(math.random() * 100 * 3600),
-                produced = random_item_quantity(1000000),
+                first_at = {},
+                produced = {},
+                consumed = {},
+                kill_count = {},
+                placed = {},
+                lost = {},
             }
-            force_stats.items[item_info.item] = item_stat
-            item_stat.consumed = random_item_subset(item_stat.produced)
-            if item_info.placed then
-                item_stat.placed = random_item_subset(item_stat.produced - item_stat.consumed)
+            for t = 1, tiers do
+                item_stat.first_at[t] = math.floor(math.random() * 100 * 3600)
+                item_stat.produced[t] = random_item_quantity(1000000)
+                item_stat.consumed[t] = random_item_subset(item_stat.produced[t])
+                if item_info.placed then
+                    item_stat.placed[t] = random_item_subset(item_stat.produced[t] - item_stat.consumed[t])
+                end
+                force_stats.items[item_info.item] = item_stat
             end
         end
         for _, damage_info in ipairs(TeamStatsCollect.damage_render_info) do
@@ -318,13 +366,34 @@ local function on_entity_died(event)
             storage.team_stats.forces[entity_force_name].items = item_stats
         end
         if entity.type == 'construction-robot' or entity.type == 'logistic-robot' then
-            item_stats[entity.name] = item_stats[entity.name] or {}
-            item_stats[entity.name].kill_count = (item_stats[entity.name].kill_count or 0) + 1
+            if not item_stats[entity.name] then
+                item_stats[entity.name] = {
+                    first_at = {},
+                    produced = {},
+                    consumed = {},
+                    kill_count = {},
+                    placed = {},
+                    lost = {},
+                }
+            end
+            local t = Quality.tier_index_by_level(entity.quality.level)
+            item_stats[entity.name].kill_count[t] = (item_stats[entity.name].kill_count[t] or 0) + 1
         end
         if tracked_inventories[entity.type] then
-            for item, amount in pairs(functions.get_entity_contents(entity)) do
-                item_stats[item] = item_stats[item] or {}
-                item_stats[item].lost = (item_stats[item].lost or 0) + amount
+            for item, q_amount in pairs(functions.get_entity_contents(entity)) do
+                if not item_stats[item] then
+                    item_stats[item] = {
+                        first_at = {},
+                        produced = {},
+                        consumed = {},
+                        kill_count = {},
+                        lost = {},
+                    }
+                end
+
+                for t, amount in pairs(q_amount) do
+                    item_stats[item].lost[t] = (item_stats[item].lost[t] or 0) + amount
+                end
             end
         end
         return

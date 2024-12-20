@@ -4,6 +4,7 @@ local Color = require('utils.color_presets')
 local Gui = require('utils.gui')
 local Tables = require('maps.biter_battles_v2.tables')
 local Server = require('utils.server')
+local Quality = require('maps.biter_battles_v2.quality')
 
 local simplex_noise = require('utils.simplex_noise').d2
 local gui_style = require('utils.utils').gui_style
@@ -636,7 +637,11 @@ function Functions.get_entity_contents(entity)
         local inventory = entity.get_inventory(i_id)
         if inventory and inventory.valid and not inventory.is_empty() then
             for _, item in pairs(inventory.get_contents()) do
-                totals[item.name] = (totals[item.name] or 0) + item.count
+                if not totals[item.name] then
+                    totals[item.name] = {}
+                end
+                local t = Quality.tier_index_by_name(item.quality)
+                totals[item.name][t] = (totals[item.name][t] or 0) + item.count
             end
         end
     end
