@@ -104,28 +104,28 @@ local balance_functions = {
     ['refined-flammables-7'] = function(force_name)
         flamer_buff(0.06, 0.06, force_name)
     end,
-    ['energy-weapons-damage'] = function(force_name)
+    ['laser-weapons-damage'] = function(force_name)
         laser_buff(get_upgrade_modifier('laser-turret') * 2, force_name)
     end,
-    ['energy-weapons-damage-1'] = function(force_name)
+    ['laser-weapons-damage-1'] = function(force_name)
         laser_buff(0.2, force_name)
     end,
-    ['energy-weapons-damage-2'] = function(force_name)
+    ['laser-weapons-damage-2'] = function(force_name)
         laser_buff(0.2, force_name)
     end,
-    ['energy-weapons-damage-3'] = function(force_name)
+    ['laser-weapons-damage-3'] = function(force_name)
         laser_buff(0.4, force_name)
     end,
-    ['energy-weapons-damage-4'] = function(force_name)
+    ['laser-weapons-damage-4'] = function(force_name)
         laser_buff(0.4, force_name)
     end,
-    ['energy-weapons-damage-5'] = function(force_name)
+    ['laser-weapons-damage-5'] = function(force_name)
         laser_buff(0.4, force_name)
     end,
-    ['energy-weapons-damage-6'] = function(force_name)
+    ['laser-weapons-damage-6'] = function(force_name)
         laser_buff(0.5, force_name)
     end,
-    ['energy-weapons-damage-7'] = function(force_name)
+    ['laser-weapons-damage-7'] = function(force_name)
         laser_buff(0.5, force_name)
     end,
     ['stronger-explosives'] = function(force_name)
