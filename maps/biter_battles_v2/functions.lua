@@ -280,6 +280,15 @@ function Functions.combat_balance(event)
     end
 end
 
+local function find_teleport_point(surface)
+    local p = spawn_positions[math_random(1, size_of_spawn_positions)]
+    if surface.is_chunk_generated({ 0, 0 }) then
+        return surface.find_non_colliding_position('character', p, 4, 0.5)
+    end
+
+    return p
+end
+
 function Functions.init_player(player)
     if not player.connected then
         if player.force.index ~= 1 then
@@ -288,26 +297,27 @@ function Functions.init_player(player)
         return
     end
 
-    if player.character and player.character.valid then
-        player.character.destroy()
+    local s = game.surfaces[storage.bb_surface_name]
+    local p = find_teleport_point(s)
+    player.teleport(p, s)
+
+    if not (player.character and player.character.valid) then
+        local ch = s.create_entity({
+            name = 'character',
+            position = p,
+        })
+
+        player.set_controller({
+            type = defines.controllers.character,
+            character = ch,
+        })
     end
-    player.set_controller({ type = defines.controllers.god })
-    player.create_character()
+
+    player.character.destructible = false
     player.clear_items_inside()
     player.spectator = true
     player.show_on_map = false
     player.force = game.forces.spectator
-
-    local surface = game.surfaces[storage.bb_surface_name]
-    local p = spawn_positions[math_random(1, size_of_spawn_positions)]
-    if surface.is_chunk_generated({ 0, 0 }) then
-        player.character.teleport(surface.find_non_colliding_position('character', p, 4, 0.5), surface)
-    else
-        player.character.teleport(p, surface)
-    end
-    if player.character and player.character.valid then
-        player.character.destructible = false
-    end
     game.permissions.get_group('spectator').add_player(player)
 end
 
