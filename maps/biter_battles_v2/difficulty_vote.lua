@@ -30,7 +30,7 @@ function Public.short_difficulty_name()
 end
 
 function Public.difficulty_print_color()
-    return difficulties[storage.difficulty_vote_index or 3].print_color
+    return difficulties[storage.difficulty_vote_index or 4].print_color
 end
 
 local function difficulty_gui(player)

@@ -384,7 +384,7 @@ function Public.tables()
         },
     }
     storage.difficulty_vote_value = 0.75
-    storage.difficulty_vote_index = 3
+    storage.difficulty_vote_index = 4
 
     storage.difficulty_votes_timeout = 36000
     storage.threat_multiplier = nil

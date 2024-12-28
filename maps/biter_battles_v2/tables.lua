@@ -138,7 +138,6 @@ Public.spawn_ore = {
 }
 
 Public.difficulties = {
-
     [1] = {
         name = "I'm Too Young to Die",
         short_name = 'ITYTD',
@@ -148,22 +147,30 @@ Public.difficulties = {
         print_color = { r = 0.00, g = 0.9, b = 0.00 },
     },
     [2] = {
-        name = 'Piece of Cake',
-        short_name = 'PoC',
-        str = '50%',
-        value = 0.5,
+        name = 'Have a Nice Day',
+        short_name = 'HaND',
+        str = '38%',
+        value = 0.38,
         color = { r = 0.00, g = 0.35, b = 0.00 },
         print_color = { r = 0.00, g = 0.7, b = 0.00 },
     },
     [3] = {
-        name = 'Easy',
-        short_name = 'Easy',
-        str = '75%',
-        value = 0.75,
+        name = 'Piece of Cake',
+        short_name = 'PoC',
+        str = '50%',
+        value = 0.5,
         color = { r = 0.00, g = 0.25, b = 0.00 },
         print_color = { r = 0.00, g = 0.5, b = 0.00 },
     },
     [4] = {
+        name = 'Easy',
+        short_name = 'Easy',
+        str = '75%',
+        value = 0.75,
+        color = { r = 0.00, g = 0.00, b = 0.25 },
+        print_color = { r = 0.0, g = 0.0, b = 0.7 },
+    },
+    [5] = {
         name = 'Normal',
         short_name = 'Normal',
         str = '100%',
@@ -171,19 +178,11 @@ Public.difficulties = {
         color = { r = 0.00, g = 0.00, b = 0.25 },
         print_color = { r = 0.0, g = 0.0, b = 0.7 },
     },
-    [5] = {
+    [6] = {
         name = 'Hard',
         short_name = 'Hard',
-        str = '150%',
-        value = 1.5,
-        color = { r = 0.25, g = 0.00, b = 0.00 },
-        print_color = { r = 0.5, g = 0.0, b = 0.00 },
-    },
-    [6] = {
-        name = 'Nightmare',
-        short_name = 'Nightmare',
-        str = '300%',
-        value = 3,
+        str = '200%',
+        value = 2,
         color = { r = 0.35, g = 0.00, b = 0.00 },
         print_color = { r = 0.7, g = 0.0, b = 0.00 },
     },
@@ -200,12 +199,13 @@ Public.difficulties = {
 Public.difficulty_lowered_names_to_index = {
     ["i'm too young to die"] = 1,
     ['itytd'] = 1,
-    ['piece of cake'] = 2,
-    ['poc'] = 2,
-    ['easy'] = 3,
-    ['normal'] = 4,
-    ['hard'] = 5,
-    ['nightmare'] = 6,
+    ['have a nice day'] = 2,
+    ['hand'] = 2,
+    ['piece of cake'] = 3,
+    ['poc'] = 3,
+    ['easy'] = 4,
+    ['normal'] = 5,
+    ['hard'] = 6,
     ['fun and fast'] = 7,
     ['fnf'] = 7,
 }
