@@ -31,7 +31,7 @@ function Public.short_difficulty_name()
 end
 
 function Public.difficulty_print_color()
-    return difficulties[storage.difficulty_vote_index or 4].print_color
+    return difficulties[storage.difficulty_vote_index or 4].color
 end
 
 local function difficulty_gui(player)
@@ -171,7 +171,7 @@ local function set_difficulty()
     if storage.difficulty_vote_index ~= new_index then
         local message =
             table.concat({ '>> Map difficulty has changed to ', difficulties[new_index].name, ' difficulty!' })
-        game.print(message, { color = difficulties[new_index].print_color })
+        game.print(message, { color = difficulties[new_index].color })
         Server.to_discord_embed(message)
     end
     storage.difficulty_vote_index = new_index
@@ -229,7 +229,7 @@ local function difficulty_voted(player, i)
     if storage.difficulty_player_votes[player.name] ~= i then
         game.print(
             player.name .. ' has voted for ' .. difficulties[i].name .. ' difficulty!',
-            { color = difficulties[i].print_color }
+            { color = difficulties[i].color }
         )
         storage.difficulty_player_votes[player.name] = i
         set_difficulty()

@@ -144,7 +144,6 @@ Public.difficulties = {
         str = '25%',
         value = 0.25,
         color = { r = 0.00, g = 1.00, b = 0.00 },
-        print_color = { r = 0.00, g = 1.00, b = 0.00 },
     },
     [2] = {
         name = 'Have a Nice Day',
@@ -152,7 +151,6 @@ Public.difficulties = {
         str = '38%',
         value = 0.38,
         color = { r = 0.33, g = 1.00, b = 0.00 },
-        print_color = { r = 0.33, g = 1.00, b = 0.00 },
     },
     [3] = {
         name = 'Piece of Cake',
@@ -160,7 +158,6 @@ Public.difficulties = {
         str = '50%',
         value = 0.5,
         color = { r = 0.67, g = 1.00, b = 0.00 },
-        print_color = { r = 0.67, g = 1.00, b = 0.00 },
     },
     [4] = {
         name = 'Easy',
@@ -168,7 +165,6 @@ Public.difficulties = {
         str = '75%',
         value = 0.75,
         color = { r = 1.00, g = 1.00, b = 0.00 },
-        print_color = { r = 1.00, g = 1.00, b = 0.00 },
     },
     [5] = {
         name = 'Normal',
@@ -176,7 +172,6 @@ Public.difficulties = {
         str = '100%',
         value = 1,
         color = { r = 1.00, g = 0.67, b = 0.00 },
-        print_color = { r = 1.00, g = 0.67, b = 0.00 },
     },
     [6] = {
         name = 'Hard',
@@ -184,7 +179,6 @@ Public.difficulties = {
         str = '200%',
         value = 2,
         color = { r = 1.00, g = 0.33, b = 0.00 },
-        print_color = { r = 1.00, g = 0.33, b = 0.00 },
     },
     [7] = {
         name = 'Fun and Fast',
@@ -192,7 +186,6 @@ Public.difficulties = {
         str = '500%',
         value = 5,
         color = { r = 1.00, g = 0.00, b = 0.00 },
-        print_color = { r = 1.00, g = 0.00, b = 0.00 },
     },
 }
 
