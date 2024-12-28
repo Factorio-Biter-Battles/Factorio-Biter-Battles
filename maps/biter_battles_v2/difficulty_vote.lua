@@ -7,6 +7,7 @@ local Gui = require('utils.gui')
 local gui_style = require('utils.utils').gui_style
 local closable_frame = require('utils.ui.closable_frame')
 local Functions = require('maps.biter_battles_v2.functions')
+local gui_themes = require('utils.utils').gui_themes
 local Public = {}
 
 local difficulties = Tables.difficulties
@@ -124,13 +125,13 @@ local function poll_difficulty(player)
         return
     end
 
-    local frame = closable_frame.create_main_closable_frame(player, 'difficulty_poll', 'Vote global difficulty:', {
+    local frame = closable_frame.create_main_closable_frame(player, 'difficulty_poll', 'Vote global difficulty', {
         no_dragger = true,
     })
 
     local time_left = frame.add({
         type = 'label',
-        caption = math.floor((storage.difficulty_votes_timeout - tick) / 3600) .. ' minutes left.',
+        caption = math.floor((storage.difficulty_votes_timeout - tick) / 3600) .. ' minutes left',
     })
     time_left.style.font = 'heading-2'
     local separator = frame.add({ type = 'line', direction = 'horizontal' })
@@ -141,9 +142,10 @@ local function poll_difficulty(player)
         vote_amounts[v] = (vote_amounts[v] or 0) + 1
     end
 
+    local btn_theme = storage.gui_theme[player.name] or gui_themes[1].type
     for key, difficulty in pairs(difficulties) do
         local caption = table.concat({ difficulty.name, ' (', difficulty.str, ')', ' : ', (vote_amounts[key] or 0) })
-        local b = frame.add({ type = 'button', name = tostring(key), caption = caption })
+        local b = frame.add({ type = 'button', name = tostring(key), caption = caption, style = btn_theme })
         b.style.font_color = difficulty.color
         b.style.font = 'heading-2'
         b.style.minimal_width = 211
