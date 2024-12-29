@@ -142,10 +142,10 @@ local function poll_difficulty(player)
         vote_amounts[v] = (vote_amounts[v] or 0) + 1
     end
 
-    local btn_theme = storage.gui_theme[player.name] or gui_themes[1].type
+    local btn_theme = storage.gui_theme[player.name] or gui_themes[1]
     for key, difficulty in pairs(difficulties) do
         local caption = table.concat({ difficulty.name, ' (', difficulty.str, ')', ' : ', (vote_amounts[key] or 0) })
-        local b = frame.add({ type = 'button', name = tostring(key), caption = caption, style = btn_theme })
+        local b = frame.add({ type = 'button', name = tostring(key), caption = caption, style = btn_theme.type })
         b.style.font_color = difficulty.color
         b.style.font = 'heading-2'
         b.style.minimal_width = 211

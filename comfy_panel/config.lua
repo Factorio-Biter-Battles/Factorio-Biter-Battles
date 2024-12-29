@@ -274,11 +274,11 @@ local selection_functions = {
             return
         end
         local selected_index = event.element.selected_index
-        local selected_style = gui_themes[selected_index].type
-        local previous_style = storage.gui_theme[player.name] or gui_themes[1].type
+        local selected_style = gui_themes[selected_index]
+        local previous_style = storage.gui_theme[player.name] or gui_themes[1]
         if previous_style ~= selected_style then
             local label = event.element.parent.comfy_panel_theme_label
-            label.caption = gui_themes[selected_index].name
+            label.caption = selected_style.name
             Gui.restyle_top_elements(player, selected_style)
         end
         storage.gui_theme[player.name] = selected_style
