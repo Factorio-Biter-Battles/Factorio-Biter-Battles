@@ -1,3 +1,5 @@
+local GUI_VARIANTS = require('utils.utils').GUI_VARIANTS
+
 local Public = {}
 
 -- List of forces that will be affected by ammo modifier
@@ -143,49 +145,70 @@ Public.difficulties = {
         short_name = 'ITYTD',
         str = '25%',
         value = 0.25,
-        color = { r = 0.00, g = 1.00, b = 0.00 },
+        color = {
+            [GUI_VARIANTS.Dark] = { r = 0.00, g = 1.00, b = 0.00 },
+            [GUI_VARIANTS.Light] = { r = 0.00, g = 0.50, b = 0.00 },
+        },
     },
     [2] = {
         name = 'Have a Nice Day',
         short_name = 'HaND',
         str = '38%',
         value = 0.38,
-        color = { r = 0.33, g = 1.00, b = 0.00 },
+        color = {
+            [GUI_VARIANTS.Dark] = { r = 0.33, g = 1.00, b = 0.00 },
+            [GUI_VARIANTS.Light] = { r = 0.13, g = 0.40, b = 0.00 },
+        },
     },
     [3] = {
         name = 'Piece of Cake',
         short_name = 'PoC',
         str = '50%',
         value = 0.5,
-        color = { r = 0.67, g = 1.00, b = 0.00 },
+        color = {
+            [GUI_VARIANTS.Dark] = { r = 0.67, g = 1.00, b = 0.00 },
+            [GUI_VARIANTS.Light] = { r = 0.17, g = 0.30, b = 0.00 },
+        },
     },
     [4] = {
         name = 'Easy',
         short_name = 'Easy',
         str = '75%',
         value = 0.75,
-        color = { r = 1.00, g = 1.00, b = 0.00 },
+        color = {
+            [GUI_VARIANTS.Dark] = { r = 1.00, g = 1.00, b = 0.00 },
+            [GUI_VARIANTS.Light] = { r = 0.30, g = 0.30, b = 0.00 },
+        },
     },
     [5] = {
         name = 'Normal',
         short_name = 'Normal',
         str = '100%',
         value = 1,
-        color = { r = 1.00, g = 0.67, b = 0.00 },
+        color = {
+            [GUI_VARIANTS.Dark] = { r = 1.00, g = 0.67, b = 0.00 },
+            [GUI_VARIANTS.Light] = { r = 0.30, g = 0.17, b = 0.00 },
+        },
     },
     [6] = {
         name = 'Hard',
         short_name = 'Hard',
         str = '200%',
         value = 2,
-        color = { r = 1.00, g = 0.33, b = 0.00 },
+        color = {
+            [GUI_VARIANTS.Dark] = { r = 1.00, g = 0.33, b = 0.00 },
+            [GUI_VARIANTS.Light] = { r = 0.40, g = 0.13, b = 0.00 },
+        },
     },
     [7] = {
         name = 'Fun and Fast',
         short_name = 'FnF',
         str = '500%',
         value = 5,
-        color = { r = 1.00, g = 0.00, b = 0.00 },
+        color = {
+            [GUI_VARIANTS.Dark] = { r = 1.00, g = 0.00, b = 0.00 },
+            [GUI_VARIANTS.Light] = { r = 0.40, g = 0.00, b = 0.00 },
+        },
     },
 }
 

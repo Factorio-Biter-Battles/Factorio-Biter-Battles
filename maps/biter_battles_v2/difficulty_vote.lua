@@ -7,7 +7,9 @@ local Gui = require('utils.gui')
 local gui_style = require('utils.utils').gui_style
 local closable_frame = require('utils.ui.closable_frame')
 local Functions = require('maps.biter_battles_v2.functions')
-local GUI_THEMES = require('utils.utils').GUI_THEMES
+local Utils = require('utils.utils')
+local GUI_THEMES = Utils.GUI_THEMES
+local GUI_VARIANTS = Utils.GUI_VARIANTS
 local Public = {}
 
 local difficulties = Tables.difficulties
@@ -30,8 +32,26 @@ function Public.short_difficulty_name()
     end
 end
 
-function Public.difficulty_print_color()
-    return difficulties[storage.difficulty_vote_index or 4].color
+---@param index number | nil
+---Returns color in { r, g, b } format that shall be used for printing
+---information in chat.
+function Public.difficulty_print_color(index)
+    if not index then
+        index = storage.difficulty_vote_index or 4
+    end
+
+    -- Text in chat is most readable with font color from dark theme
+    -- as chat has dark background.
+    return difficulties[index].color[GUI_VARIANTS.Dark]
+end
+
+---@param index LuaPlayer
+---Returns color in { r, g, b } format that shall be used for drawing
+---information in gui
+function Public.difficulty_gui_color(player)
+    local index = storage.difficulty_vote_index or 4
+    local variant = Utils.selected_theme_variant(player)
+    return difficulties[index].color[variant]
 end
 
 local function difficulty_gui(player)
@@ -39,7 +59,7 @@ local function difficulty_gui(player)
     if not b then
         return
     end
-    b.style.font_color = Public.difficulty_print_color()
+    b.style.font_color = Public.difficulty_gui_color(player)
     local value = math.floor(storage.difficulty_vote_value * 100)
     local name = Public.difficulty_name()
     local str = table.concat({ 'Global map difficulty is ', name, '. Mutagen has ', value, '% effectiveness.' })
@@ -143,10 +163,11 @@ local function poll_difficulty(player)
     end
 
     local btn_theme = storage.gui_theme[player.name] or GUI_THEMES[1]
+    local variant = Utils.selected_theme_variant(player)
     for key, difficulty in pairs(difficulties) do
         local caption = table.concat({ difficulty.name, ' (', difficulty.str, ')', ' : ', (vote_amounts[key] or 0) })
         local b = frame.add({ type = 'button', name = tostring(key), caption = caption, style = btn_theme.type })
-        b.style.font_color = difficulty.color
+        b.style.font_color = difficulty.color[variant]
         b.style.font = 'heading-2'
         b.style.minimal_width = 211
     end
@@ -171,7 +192,7 @@ local function set_difficulty()
     if storage.difficulty_vote_index ~= new_index then
         local message =
             table.concat({ '>> Map difficulty has changed to ', difficulties[new_index].name, ' difficulty!' })
-        game.print(message, { color = difficulties[new_index].color })
+        game.print(message, { color = Public.difficulty_print_color(new_index) })
         Server.to_discord_embed(message)
     end
     storage.difficulty_vote_index = new_index
@@ -229,7 +250,7 @@ local function difficulty_voted(player, i)
     if storage.difficulty_player_votes[player.name] ~= i then
         game.print(
             player.name .. ' has voted for ' .. difficulties[i].name .. ' difficulty!',
-            { color = difficulties[i].color }
+            { color = Public.difficulty_print_color(i) }
         )
         storage.difficulty_player_votes[player.name] = i
         set_difficulty()
