@@ -5,7 +5,7 @@ local mod_gui = require('__core__/lualib/mod-gui')
 
 local _utils = require('utils.utils')
 local gui_style = _utils.gui_style
-local gui_themes = _utils.gui_themes
+local GUI_THEMES = _utils.GUI_THEMES
 local top_button_style = _utils.top_button_style
 local left_frame_style = _utils.left_frame_style
 
@@ -154,7 +154,7 @@ function Gui.add_top_element(player, frame, style_name)
         return element
     end
     if (frame.type == 'button' or frame.type == 'sprite-button') and frame.style == nil then
-        frame.style = style_name or gui_themes[1].type
+        frame.style = style_name or GUI_THEMES[1].type
     end
     element = mod_gui.get_button_flow(player).add(frame)
     if element.type == 'button' or element.type == 'sprite-button' then

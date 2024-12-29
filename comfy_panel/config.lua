@@ -6,7 +6,7 @@ local Functions = require('maps.biter_battles_v2.functions')
 local SessionData = require('utils.datastore.session_data')
 local Utils = require('utils.core')
 local Gui = require('utils.gui')
-local gui_themes = require('utils.utils').gui_themes
+local GUI_THEMES = require('utils.utils').GUI_THEMES
 local index_of = table.index_of
 
 local spaghett_entity_blacklist = {
@@ -95,7 +95,7 @@ end
 
 local function theme_names()
     local keys, values = {}, {}
-    for _, v in pairs(gui_themes) do
+    for _, v in pairs(GUI_THEMES) do
         keys[#keys + 1] = v.type
         values[#values + 1] = v.name
     end
@@ -274,8 +274,8 @@ local selection_functions = {
             return
         end
         local selected_index = event.element.selected_index
-        local selected_style = gui_themes[selected_index]
-        local previous_style = storage.gui_theme[player.name] or gui_themes[1]
+        local selected_style = GUI_THEMES[selected_index]
+        local previous_style = storage.gui_theme[player.name] or GUI_THEMES[1]
         if previous_style ~= selected_style then
             local label = event.element.parent.comfy_panel_theme_label
             label.caption = selected_style.name
