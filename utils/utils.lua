@@ -168,12 +168,29 @@ Module.gui_style = function(element, attributes)
     end
 end
 
-Module.GUI_THEMES = {
-    { type = 'frame_button', name = 'Dark squared' },
-    { type = 'slot_button', name = 'Dark rounded' },
-    { type = 'mod_gui_button', name = 'Light squared' },
-    { type = 'rounded_button', name = 'Light rounded' },
+Module.GUI_VARIANTS = {
+    Dark = 1,
+    Light = 2,
 }
+local VARIANTS = Module.GUI_VARIANTS
+
+Module.GUI_THEMES = {
+    { type = 'frame_button', name = 'Dark squared', variant = VARIANTS.Dark },
+    { type = 'slot_button', name = 'Dark rounded', variant = VARIANTS.Dark },
+    { type = 'mod_gui_button', name = 'Light squared', variant = VARIANTS.Light },
+    { type = 'rounded_button', name = 'Light rounded', variant = VARIANTS.Light },
+}
+
+---@param player LuaPlayer
+---Get currently selected theme variant by player or default value.
+Module.selected_theme_variant = function(player)
+    local theme = storage.gui_theme[player.name]
+    if not theme then
+        theme = Module.GUI_THEMES[1]
+    end
+
+    return theme.variant
+end
 
 Module.top_button_style = function()
     return {
