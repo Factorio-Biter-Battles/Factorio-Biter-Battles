@@ -630,7 +630,7 @@ function Public.refresh_statistics(player)
     end
 
     local difficulty = DifficultyVote.difficulty_name()
-    local color = DifficultyVote.difficulty_print_color()
+    local color = DifficultyVote.difficulty_chat_color()
     frame.clock.caption = get_format_time()
     frame.clock.tooltip = style.listbox('Difficulty: ')
         .. style.stat(string_format('[color=%.2f,%.2f,%.2f]%s[/color]', color.r, color.g, color.b, difficulty))

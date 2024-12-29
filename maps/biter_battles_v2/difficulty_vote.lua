@@ -35,7 +35,7 @@ end
 ---@param index number | nil
 ---Returns color in { r, g, b } format that shall be used for printing
 ---information in chat.
-function Public.difficulty_print_color(index)
+function Public.difficulty_chat_color(index)
     if not index then
         index = storage.difficulty_vote_index or 4
     end
@@ -192,7 +192,7 @@ local function set_difficulty()
     if storage.difficulty_vote_index ~= new_index then
         local message =
             table.concat({ '>> Map difficulty has changed to ', difficulties[new_index].name, ' difficulty!' })
-        game.print(message, { color = Public.difficulty_print_color(new_index) })
+        game.print(message, { color = Public.difficulty_chat_color(new_index) })
         Server.to_discord_embed(message)
     end
     storage.difficulty_vote_index = new_index
@@ -250,7 +250,7 @@ local function difficulty_voted(player, i)
     if storage.difficulty_player_votes[player.name] ~= i then
         game.print(
             player.name .. ' has voted for ' .. difficulties[i].name .. ' difficulty!',
-            { color = Public.difficulty_print_color(i) }
+            { color = Public.difficulty_chat_color(i) }
         )
         storage.difficulty_player_votes[player.name] = i
         set_difficulty()
