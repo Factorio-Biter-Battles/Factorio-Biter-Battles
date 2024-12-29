@@ -173,7 +173,7 @@ function Gui.restyle_top_elements(player, new_style)
             for _, attr in pairs(backup_attributes) do
                 custom_styles[attr] = ele.style[attr]
             end
-            ele.style = new_style
+            ele.style = new_style.type
             gui_style(ele, top_button_style())
             gui_style(ele, custom_styles)
         end
