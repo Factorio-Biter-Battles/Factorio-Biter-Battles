@@ -280,13 +280,14 @@ function Functions.combat_balance(event)
     end
 end
 
+---@param surface LuaSurface
+---Returns non-colliding position on spectator island or hardcoded coordinate
+---of island as a fallback
 local function find_teleport_point(surface)
     local p = spawn_positions[math_random(1, size_of_spawn_positions)]
-    if surface.is_chunk_generated({ 0, 0 }) then
-        return surface.find_non_colliding_position('character', p, 4, 0.5)
-    end
-
-    return p
+    -- At this point surface has to have several chunks already, but if not fallback
+    -- to random point on the island.
+    return surface.find_non_colliding_position('character', p, 4, 0.5) or p
 end
 
 function Functions.init_player(player)
