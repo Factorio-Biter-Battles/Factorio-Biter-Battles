@@ -3,6 +3,7 @@ local Score = require('comfy_panel.score')
 local Tables = require('maps.biter_battles_v2.tables')
 local Blueprint = require('maps.biter_battles_v2.blueprints')
 local Queue = require('utils.queue')
+local Quality = require('maps.biter_battles_v2.quality')
 local q_size = Queue.size
 local q_push = Queue.push
 local q_pop = Queue.pop
@@ -350,39 +351,46 @@ function Public.tables()
     storage.max_group_size['north_biters'] = 300 --Maximum unit group size for north biters.
     storage.max_group_size['south_biters'] = 300 --Maximum unit group size for south biters.
     storage.biter_spawn_unseen = {
-        ['north'] = {
-            ['medium-spitter'] = true,
-            ['medium-biter'] = true,
-            ['big-spitter'] = true,
-            ['big-biter'] = true,
-            ['behemoth-spitter'] = true,
-            ['behemoth-biter'] = true,
-        },
-        ['south'] = {
-            ['medium-spitter'] = true,
-            ['medium-biter'] = true,
-            ['big-spitter'] = true,
-            ['big-biter'] = true,
-            ['behemoth-spitter'] = true,
-            ['behemoth-biter'] = true,
-        },
-        ['north_biters_boss'] = {
-            ['medium-spitter'] = true,
-            ['medium-biter'] = true,
-            ['big-spitter'] = true,
-            ['big-biter'] = true,
-            ['behemoth-spitter'] = true,
-            ['behemoth-biter'] = true,
-        },
-        ['south_biters_boss'] = {
-            ['medium-spitter'] = true,
-            ['medium-biter'] = true,
-            ['big-spitter'] = true,
-            ['big-biter'] = true,
-            ['behemoth-spitter'] = true,
-            ['behemoth-biter'] = true,
-        },
+        ['north'] = {},
+        ['south'] = {},
+        ['north_biters_boss'] = {},
+        ['south_biters_boss'] = {},
     }
+
+    for i = 1, #Quality.TIERS do
+        storage.biter_spawn_unseen['north'][i] = {
+            ['medium-spitter'] = true,
+            ['medium-biter'] = true,
+            ['big-spitter'] = true,
+            ['big-biter'] = true,
+            ['behemoth-spitter'] = true,
+            ['behemoth-biter'] = true,
+        }
+        storage.biter_spawn_unseen['south'][i] = {
+            ['medium-spitter'] = true,
+            ['medium-biter'] = true,
+            ['big-spitter'] = true,
+            ['big-biter'] = true,
+            ['behemoth-spitter'] = true,
+            ['behemoth-biter'] = true,
+        }
+        storage.biter_spawn_unseen['north_biters_boss'][i] = {
+            ['medium-spitter'] = true,
+            ['medium-biter'] = true,
+            ['big-spitter'] = true,
+            ['big-biter'] = true,
+            ['behemoth-spitter'] = true,
+            ['behemoth-biter'] = true,
+        }
+        storage.biter_spawn_unseen['south_biters_boss'][i] = {
+            ['medium-spitter'] = true,
+            ['medium-biter'] = true,
+            ['big-spitter'] = true,
+            ['big-biter'] = true,
+            ['behemoth-spitter'] = true,
+            ['behemoth-biter'] = true,
+        }
+    end
     storage.difficulty_vote_value = 0.75
     storage.difficulty_vote_index = 3
 
@@ -405,6 +413,8 @@ function Public.tables()
     if storage.random_generator(1, 2) == 1 then
         storage.next_attack = 'south'
     end
+
+    Quality.init()
 
     -- Clear all ping UIs.  Otherwise, if a map reset happens when a ping is
     -- visible, it will be permanently visible.
@@ -533,6 +543,7 @@ function Public.forces()
         game.forces[force.name].technologies['atomic-bomb'].enabled = false
         game.forces[force.name].technologies['cliff-explosives'].enabled = false
         game.forces[force.name].technologies['land-mine'].enabled = false
+        Quality.set_technologies(force.name)
         storage.ai_targets[force.name] = { available = {}, available_list = {} }
         storage.ai_target_destroyed_map = {}
         storage.spy_fish_timeout[force.name] = 0

@@ -1,6 +1,9 @@
 local lunatest = require('lunatest')
-bit32 = require('bit32')
 serpent = require('serpent')
+
+storage = {
+    ['_TEST'] = true,
+}
 
 local Functions = require('maps.biter_battles_v2.feeding_calculations')
 local Tables = require('maps.biter_battles_v2.tables')
@@ -121,7 +124,7 @@ function test_calc_send()
         )
     )
     lunatest.assert_equal(
-        '/calc-send evo=20.0 difficulty=30 players=4 color=logistic-science-pack count=1000\n'
+        '/calc-send evo=20.0 difficulty=30 players=4\n color=logistic-science-pack quality=normal count=1000\n'
             .. 'evo_increase: 2.9 new_evo: 22.9\n'
             .. 'threat_increase: 187',
         Functions.calc_send_command(
