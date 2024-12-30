@@ -204,7 +204,7 @@ local spawn_r_square = spawn_r ^ 2
 for x = spawn_r * -1, spawn_r, 0.5 do
     for y = spawn_r * -1, spawn_r, 0.5 do
         if x ^ 2 + y ^ 2 < spawn_r_square then
-            table.insert(spawn_positions, { x, y })
+            table.insert(spawn_positions, { x = x, y = y })
         end
     end
 end
@@ -297,24 +297,44 @@ function Functions.init_player(player)
         return
     end
 
+    -- If we don't get rid of character, associated construction
+    -- bots will be teleported as well and there is no API to destroy them.
+    -- Leave the character on previous surface, to avoid destroying and
+    -- creating new one for a player in single tick as it might cause
+    -- problem with subsequent assignment. Destruction of character will take
+    -- place in LuaGameScript::delete_surface.
+    player.character = nil
+
     local s = game.surfaces[storage.bb_surface_name]
     local p = find_teleport_point(s)
     player.teleport(p, s)
 
-    if not (player.character and player.character.valid) then
-        local ch = s.create_entity({
-            name = 'character',
-            position = p,
-        })
+    -- Avoid using create_character() as even though it was called, player in
+    -- rare case did not have assigned character.
+    local ch = s.create_entity({
+        name = 'character',
+        position = p,
+    })
+    -- Mark as non-destructible before assigning to controller
+    -- to avoid accessing through LuaPlayer which might be in weird state.
+    ch.destructible = false
+    player.set_controller({
+        type = defines.controllers.character,
+        character = ch,
+    })
 
-        player.set_controller({
-            type = defines.controllers.character,
-            character = ch,
-        })
+    if not player.character then
+        log(
+            'BUG: character assigned for '
+                .. player.name
+                .. ' at { '
+                .. p.x
+                .. ', '
+                .. p.y
+                .. ' } but still not accessible'
+        )
     end
 
-    player.character.destructible = false
-    player.clear_items_inside()
     player.spectator = true
     player.show_on_map = false
     player.force = game.forces.spectator
