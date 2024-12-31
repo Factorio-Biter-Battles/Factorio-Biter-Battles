@@ -154,7 +154,7 @@ local create_gulag_surface = function()
         for _, entity in pairs(walls) do
             local e = surface.create_entity(entity)
             e.destructible = false
-            e.minable = false
+            e.minable_flag = false
         end
 
         rendering.draw_text({

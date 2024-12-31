@@ -750,7 +750,7 @@ function Public.generate_silo(surface)
         position = pos,
         force = 'north',
     })
-    silo.minable = false
+    silo.minable_flag = false
     storage.rocket_silo[silo.force.name] = silo
     AiTargets.start_tracking(silo)
 
@@ -1021,7 +1021,7 @@ function Public.add_new_year_island_decorations(surface)
         name = 'tree-01',
         position = { x = 0, y = 0.05 },
     })
-    tree.minable = false
+    tree.minable_flag = false
     tree.destructible = false
 
     add_gifts(surface)
@@ -1046,7 +1046,7 @@ function Public.add_new_year_island_decorations(surface)
     }
     for _, v in pairs(signals) do
         local signal = surface.create_entity(v)
-        signal.minable = false
+        signal.minable_flag = false
         signal.destructible = false
     end
 

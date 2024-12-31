@@ -23,7 +23,7 @@ local function generate_infinity_chest(separate_chests, operable, gap, eq)
             force = 'neutral',
             fast_replace = true,
         })
-        chest.minable = false
+        chest.minable_flag = false
         chest.operable = operable
         chest.destructible = false
         for i, v in ipairs(eq) do
@@ -39,7 +39,7 @@ local function generate_infinity_chest(separate_chests, operable, gap, eq)
                 force = 'neutral',
                 fast_replace = true,
             })
-            chest.minable = false
+            chest.minable_flag = false
             chest.operable = operable
             chest.destructible = false
             chest.set_infinity_container_filter(i, { name = v, index = i, count = prototypes.item[v].stack_size })
