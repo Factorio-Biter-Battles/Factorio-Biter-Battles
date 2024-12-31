@@ -421,7 +421,7 @@ local function respawn_silo(event)
         force = force_name,
         create_build_effect_smoke = false,
     })
-    entity.minable = false
+    entity.minable_flag = false
     entity.health = 5
     storage.rocket_silo[force_name] = entity
     AiTargets.start_tracking(entity)

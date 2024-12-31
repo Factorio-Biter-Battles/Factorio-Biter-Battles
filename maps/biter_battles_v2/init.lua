@@ -39,7 +39,7 @@ local function createTrollSong(forceName, offset)
         },
     })
     for k, v in pairs(songBuildings) do
-        v.minable = false
+        v.minable_flag = false
         v.destructible = false
         v.operable = false
     end
