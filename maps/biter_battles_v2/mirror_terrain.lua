@@ -81,19 +81,6 @@ function Public.invert_entity(event)
         destination.force = 'south_biters'
     end
 
-    if
-        destination.name == 'rocket-silo'
-        and math.abs(destination.position.y) < 150
-        and math.abs(destination.position.x) < 100
-    then
-        storage.rocket_silo[destination.force.name] = destination
-        AiTargets.start_tracking(destination)
-    elseif destination.name == 'gun-turret' then
-        AiTargets.start_tracking(destination)
-    elseif destination.name == 'spitter-spawner' or destination.name == 'biter-spawner' then
-        table_insert(storage.unit_spawners[destination.force.name], destination)
-    end
-
     if destination.supports_direction then
         destination.direction = direction_translation[destination.direction]
     end
@@ -112,6 +99,19 @@ function Public.invert_entity(event)
     -- It's safe to use teleport() even if final position is on top
     -- of lake.
     destination.teleport(dest_pos)
+
+    if
+        destination.name == 'rocket-silo'
+        and math.abs(destination.position.y) < 150
+        and math.abs(destination.position.x) < 100
+    then
+        storage.rocket_silo[destination.force.name] = destination
+        AiTargets.start_tracking(destination)
+    elseif destination.name == 'gun-turret' then
+        AiTargets.start_tracking(destination)
+    elseif destination.name == 'spitter-spawner' or destination.name == 'biter-spawner' then
+        table_insert(storage.unit_spawners[destination.force.name], destination)
+    end
 end
 
 function Public.remove_hidden_tiles(event)
