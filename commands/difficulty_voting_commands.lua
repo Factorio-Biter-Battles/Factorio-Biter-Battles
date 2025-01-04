@@ -51,7 +51,7 @@ local function close_difficulty_votes(cmd)
         end
         local message =
             table.concat({ '>> Map difficulty has changed to ', difficulty_vote.difficulty_name(), ' difficulty!' })
-        game.print(message, { color = difficulty_vote.difficulty_print_color() })
+        game.print(message, { color = difficulty_vote.difficulty_chat_color() })
         Server.to_discord_embed(message)
     end
     local tick = Functions.get_ticks_since_game_start()
