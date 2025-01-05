@@ -95,6 +95,10 @@ local function leave_corpse(player)
     end
     player.character = nil
     player.set_controller({ type = defines.controllers.god })
+    -- In a situtation when player looks at chunk which was not generated yet
+    -- removing the character and subsequent attempt to create it will fail
+    -- silently. Reposition the view to middle of the surface.
+    player.teleport({ 0, 0 })
     player.create_character()
 end
 
