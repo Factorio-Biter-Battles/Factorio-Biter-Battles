@@ -141,22 +141,6 @@ local function create_mirrored_tile_chain(surface, tile, count, straightness)
     end
 end
 
-local function get_replacement_tile(surface, position)
-    for i = 1, 128, 1 do
-        local vectors = { { 0, i }, { 0, i * -1 }, { i, 0 }, { i * -1, 0 } }
-        table.shuffle_table(vectors)
-        for _, v in pairs(vectors) do
-            local tile = surface.get_tile(position.x + v[1], position.y + v[2])
-            if tile.valid and not tile.collides_with('resource') then
-                if tile.name ~= 'refined-concrete' then
-                    return tile.name
-                end
-            end
-        end
-    end
-    return 'grass-1'
-end
-
 local function draw_noise_ore_patch(position, name, surface, radius, richness)
     if not position then
         return
@@ -233,6 +217,7 @@ local function is_horizontal_border_river(pos, seed)
     return (y <= river_width_half)
 end
 
+local DEFAULT_HIDDEN_TILE = 'dirt-3'
 local function generate_starting_area(pos, surface)
     local spawn_wall_radius = 116
     local noise_multiplier = 15
@@ -280,7 +265,7 @@ local function generate_starting_area(pos, surface)
 
     if distance_from_spawn_wall < -10 then
         surface.set_tiles({ { name = 'refined-concrete', position = pos } }, true)
-        surface.set_hidden_tile(pos, get_replacement_tile(surface, pos))
+        surface.set_hidden_tile(pos, DEFAULT_HIDDEN_TILE)
         return
     end
 
@@ -728,7 +713,7 @@ function Public.generate_silo(surface)
             name = { 'water', 'deepwater' },
         }))
     do
-        surface.set_tiles({ { name = get_replacement_tile(surface, t.position), position = t.position } })
+        surface.set_tiles({ { name = DEFAULT_HIDDEN_TILE, position = t.position } })
     end
     for _, t in
         pairs(surface.find_tiles_filtered({
@@ -742,7 +727,7 @@ function Public.generate_silo(surface)
             name = { 'water', 'deepwater' },
         }))
     do
-        surface.set_tiles({ { name = get_replacement_tile(surface, t.position), position = t.position } })
+        surface.set_tiles({ { name = DEFAULT_HIDDEN_TILE, position = t.position } })
     end
 
     local silo = surface.create_entity({
