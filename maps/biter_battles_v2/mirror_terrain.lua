@@ -127,10 +127,9 @@ function Public.remove_hidden_tiles(event)
         if not tile.valid then
             goto remove_hidden_cont
         end
-        local pos_opposite_tile = surface.get_tile(tile.position.x, -tile.position.y - 1).position
-        if pos_opposite_tile.valid then
-            surface.set_hidden_tile(tile.position, surface.get_hidden_tile(pos_opposite_tile))
-        end
+
+        local pos = { tile.position.x, -tile.position.y - 1 }
+        surface.set_hidden_tile(tile.position, surface.get_hidden_tile(pos))
         ::remove_hidden_cont::
     end
 end
