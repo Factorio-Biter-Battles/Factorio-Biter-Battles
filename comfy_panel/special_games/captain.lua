@@ -1288,6 +1288,13 @@ end
 
 local function prepare_for_captain()
     local special = storage.special_games_variables.captain_mode
+
+    -- randomize captain forces, otherwise it's too deterministic
+    -- for example, first volunteer/most playtime player always end up on north
+    if math_random(2) == 1 then
+        special.captainList[1], special.captainList[2] = special.captainList[2], special.captainList[1]
+    end
+
     for index, force_name in pairs({ 'north', 'south' }) do
         local captainName = special.captainList[index]
         add_to_trust(captainName)
