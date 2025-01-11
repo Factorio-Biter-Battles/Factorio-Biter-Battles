@@ -29,6 +29,7 @@ local function add_changelog(player, element)
         label = changelog_panel_table.add { type = "label", caption = change.comment }
         label.style.minimal_width = column_widths[2]
         label.style.maximal_width = column_widths[2]
+        label.style.single_line = false
         label = changelog_panel_table.add { type = "label", caption = change.author }
         label.style.minimal_width = column_widths[3]
         label.style.maximal_width = column_widths[3]

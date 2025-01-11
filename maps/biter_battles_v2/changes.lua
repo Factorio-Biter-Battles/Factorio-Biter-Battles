@@ -3,13 +3,13 @@ return {
         number = 673,
         date = '2025-01-19',
         author = 'cogito123',
-        comment = [[(#673) Partial revert of fix introduced in #670]],
+        comment = [[(#673) Fix the regression introduced in #670 that would make players lose their character when rejoining]],
     },
     {
         number = 670,
         date = '2025-01-12',
         author = 'cogito123',
-        comment = [[(#670) Destroy character when joining for the first time]],
+        comment = [[(#670) Fix the issue where new joiners would leave their character on default Nauvis surface which degraded performance]],
     },
     {
         number = 666,
@@ -21,85 +21,113 @@ return {
         number = 662,
         date = '2025-01-11',
         author = 'DaTa-',
-        comment = [[(#662) Fixed incorrect south silo tracking position]],
+        comment = [[(#662) Fix the southern silo position used for biter tracking, which was not symmetrical with the northern silo]],
     },
     {
         number = 667,
         date = '2025-01-09',
         author = 'cogito123',
-        comment = [[(#667) Optimize and fix bug in hidden tile mirroring]],
+        comment = [[(#667) Changes to terrain mirroring:
+  - Optimize spawn area generation on top of a lake
+  - Fix the south team having water under spawn due to broken mirroring of hidden tiles from the north]],
     },
     {
         number = 665,
         date = '2025-01-06',
         author = 'DaTa-',
-        comment = [[(#665) Fixed invalid feeding value applied to `/calc-send` command]],
+        comment = [[(#665) Fix a bug in /calc-send that resulted in the wrong values when inputting parameters while carrying science packs in the inventory]],
     },
     {
         number = 664,
         date = '2025-01-06',
-        author = 'cogito123',
-        comment = [[(#664) Fix missing character bug when switching teams]],
+        author = 'cogito123, developer-8',
+        comment = [[(#664) Fix a player losing their character when switching teams with the camera centered on a chunk that was not yet generated while in remote view]],
     },
     {
         number = 663,
         date = '2025-01-04',
         author = 'cogito123',
-        comment = [[(#663) Fix difficulty-close-vote command]],
+        comment = [[(#663) Fix a crash when calling /difficulty-close-vote]],
     },
     {
         number = 660,
         date = '2025-01-03',
         author = 'cogito123',
-        comment = [[(#660) Another attempt at fixing player missing character during map reset]],
+        comment = [[(#660) Second attempt to workaround double surface bug]],
     },
     {
         number = 658,
         date = '2025-01-02',
         author = 'cogito123',
-        comment = [[(#658) Implement 38% difficulty and cleanup hard/nightmare]],
+        comment = [[(#658) Changes to difficulty:
+  - Implement new "have a nice day" (HaND) difficulty
+  - Change hard difficulty to 200%
+  - Remove nightmare difficulty
+  - Refresh difficulty colors for better representation
+  - The difficulty voting menu now follows the theme selected in the config menu]],
     },
     {
         number = 661,
         date = '2025-01-01',
         author = 'cogito123',
-        comment = [[(#661) Adaptation for 2.0.26]],
+        comment = [[(#661) Adapt for 2.0.26 deprecated 'minable' flag]],
     },
     {
         number = 655,
         date = '2024-12-29',
         author = 'DaTa-',
-        comment = [[(#655) Fixed error while running `/inventory-costs` with a disconnected player]],
+        comment = [[(#655) Changes related to /inventory-costs:
+  - Fix accessing the inventory of disconnected or dead players
+  - Count inventory costs for players who switched back to spectator]],
     },
     {
         number = 659,
         date = '2024-12-29',
         author = 'cogito123',
-        comment = [[(#659) Fix missing player icons in comfy panel]],
+        comment = [[(#659) Fix a truncated player list due to missing icons]],
     },
     {
         number = 656,
         date = '2024-12-29',
         author = 'cogito123',
-        comment = [[(#656) Avoid destruction of associated player character during map reset]],
+        comment = [[(#656) First attempt at fixing the double surface bug]],
     },
     {
         number = 657,
         date = '2024-12-28',
-        author = 'DaTa-',
-        comment = [[(#657) Fixed laser damage buff wasn't applied due to technology rename]],
+        author = 'DaTa-, floortiler',
+        comment = [[(#657) Fix laser damage to match values from 1.1]],
     },
     {
         number = 653,
         date = '2024-12-17',
         author = 'developer-8',
-        comment = [[(#653) Fix New Year Island snow transition]],
+        comment = [[(#653) Fix snow transition on edges of the new year tree]],
     },
     {
         number = 654,
         date = '2024-12-17',
         author = 'DaTa-',
-        comment = [[(#654) Fixes related to subtle changes in Factorio 2.0 API]],
+        comment = [[(#654) Fix issues related to remote view (non-exhaustive list):
+  - Admin teleporting of a driving player while they are in remote view fails
+  - Admin teleporting of a dead player error (in log)
+  - Admin "bring player/bring to spawn/go to player": incorrect destination position/surface while in remote view
+  - Admin "spank/damage": incorrect particle position while the target is in remote view
+  - Show player in player list: remote view position was used instead of physical
+  - "/where" command view: remote view position was used instead of physical
+  - Suspend player remote viewing gulag failure/double suspend
+  - Suspend player in remote view leaves corpses in an invalid location
+  - Player going into spectate mode drops burner miners on the remote-viewed position
+  - Player receiving burners via burner balance spills overflow to the remote view position
+  - Player joining a team while remote viewing another surface spawns on the incorrect surface
+  - Player rejoining a team in an incorrect location after AFK forced them to spectate in remote view
+  - Spying on the other team was done incorrectly by using the remote view positions of enemy players
+  - Players could bypass the requirement to be near the spawn point and just go spectate via remote view
+  - Players could refuse to be teleported to spec island by being in remote view and driving
+  - Outposting players were auto-tagged based on their remote view positions
+  - Freeing a player from gulag restored them to their remote view position
+  - Player leaves dummy characters along with corpses when being suspended in remote view or in editor mode, among multiple other improperly handled corner cases
+  - Stop jailed players from driving in remote view]],
     },
     {
         number = 651,
@@ -111,145 +139,163 @@ return {
         number = 650,
         date = '2024-12-03',
         author = 'DaTa-',
-        comment = [[(#650) Minor fixes]],
+        comment = [[(#650) Batch of minor fixes:
+  - Fix /jail and /free notifications
+  - Fix the offset of drawn text/graphics]],
     },
     {
         number = 649,
         date = '2024-12-02',
         author = 'DaTa-',
-        comment = [[(#649) Fix usage of `LuaEquipmentGrid::get_contents` to accommodate api changes]],
+        comment = [[(#649) Further adaptations to 2.0.22 breaking API changes]],
     },
     {
         number = 647,
         date = '2024-11-28',
         author = 'cogito123',
-        comment = [[(#647) Fix uses of zoom_to_world]],
+        comment = [[(#647) Fix the /follow command and other utilities that use zoom_to_world]],
     },
     {
         number = 648,
         date = '2024-11-28',
         author = 'DaTa-',
-        comment = [[(#648) Migration to Factorio 2.0 fixes]],
+        comment = [[(#648) Batch of fixes:
+  - Adapt for a backward-incompatible change in 2.0.22 that caused a crash when using /inventory
+  - Fix /inventory-costs stack overflow
+  - Fix a grayed-out GUI in the /inventory widget for armor slots]],
     },
     {
         number = 645,
         date = '2024-11-27',
         author = 'DaTa-',
-        comment = [[(#645) Fix grayed out item icons in /inventory ui]],
+        comment = [[(#645) Fix an issue with a grayed-out GUI in the /inventory widget]],
     },
     {
         number = 646,
         date = '2024-11-26',
         author = 'cogito123',
-        comment = [[(#646) Workaround segfault when dragging pipe across river]],
+        comment = [[(#646) Fix a segfault when blueprinting an underground pipe across a river]],
     },
     {
         number = 644,
         date = '2024-11-23',
         author = 'cogito123',
-        comment = [[(#644) Fix uses of inventories]],
+        comment = [[(#644) Fix and remove restrictions on using the GUI from remote view]],
     },
     {
         number = 642,
         date = '2024-11-23',
         author = 'cogito123',
-        comment = [[(#642) Fix alert display]],
+        comment = [[(#642) Fix broken alerts about entities getting attacked]],
     },
     {
         number = 641,
         date = '2024-11-18',
         author = 'cogito123',
-        comment = [[(#641) Revert of tech notifications]],
+        comment = [[(#641) Re-enable chat tech notifications, as it was suppressing messages generated even by your own force]],
     },
     {
         number = 640,
         date = '2024-11-15',
         author = 'cogito123',
-        comment = [[(#640) Batch of fixes]],
+        comment = [[(#640) Batch of fixes:
+  - Don't unlock [technology=space-science-pack] when unlocking [technology=rocket-silo] because it's now done automatically on satellite launch
+  - Fix some settings not showing up for admins
+  - Fix new year tree generation
+  - Remove code related to other comfy maps from the comfy panel]],
     },
     {
         number = 638,
         date = '2024-11-09',
         author = 'cogito123',
-        comment = [[(#638) Minor fixes related to rocket]],
+        comment = [[(#638) Remove the restriction on manually launching a rocket, as it's no longer possible to send anything other than a satellite (unlike in 1.1)]],
     },
     {
         number = 637,
         date = '2024-11-08',
         author = 'cogito123',
-        comment = [[(#637) Hotfixes from MP testing]],
+        comment = [[(#637) Batch of fixes for issues found in multiplayer testing:
+  - Don't show spectators flying around the map
+  - Fix the poll vote
+  - Disable the broken /follow
+  - Restrict GUI options while in remote view
+  - Force a player out of remote view when suspending or switching teams
+  - Fix looting wrecks
+  - Change the sound when receiving pings]],
     },
     {
         number = 636,
         date = '2024-11-08',
         author = 'cogito123',
-        comment = [[(#636) Fix joining when in remote view]],
+        comment = [[(#636) Fix a player losing their character when joining a team while in remote view]],
     },
     {
         number = 635,
         date = '2024-11-05',
         author = 'cogito123',
-        comment = [[(#635) Another biter AI rework for 2.0]],
+        comment = [[(#635) Workaround broken biter pathing with 1 tick wander commands]],
     },
     {
         number = 633,
         date = '2024-11-04',
         author = 'RedRafe',
-        comment = [[(#633) Adjust nests value by evolution]],
+        comment = [[(#633) Adjust nest kill score and threat value calculation by a factor of 1 + 9 * evo ^ 2.25. Since 2.0.x nest health is increased by the evolution factor, see: FFF-427]],
     },
     {
         number = 631,
         date = '2024-11-04',
         author = 'RedRafe',
-        comment = [[(#631) Biter AI refactor]],
+        comment = [[(#631) Miscellaneous and AI fixes related to 2.0.x]],
     },
     {
         number = 630,
         date = '2024-11-04',
         author = 'cogito123',
-        comment = [[(#630) Balance mutagen values for 2.0]],
+        comment = [[(#630) Balance mutagen values:
+  - Lower the mutagen value of [item=space-science-pack] by 30%
+  - Increase the mutagen value of [item=utility-science-pack] by 5%]],
     },
     {
         number = 634,
         date = '2024-11-03',
         author = 'cogito123',
-        comment = [[(#634) Disable inventory-cost command]],
+        comment = [[(#634) Temporarily disable /inventory-costs due to stack overflow]],
     },
     {
         number = 632,
         date = '2024-11-03',
         author = 'cogito123',
-        comment = [[(#632) Fix landfill uses]],
+        comment = [[(#632) Replace all uses of [img=item/landfill] (landfill) with [img=tile/dirt-1] (dirt-1) in the scenario, as it can be picked up]],
     },
     {
         number = 629,
         date = '2024-10-25',
         author = 'cogito123',
-        comment = [[(#629) Minimal 2.0.x support | Part 5]],
+        comment = [[(#629) Add 2.0.x support, 5th batch of commits]],
     },
     {
         number = 628,
         date = '2024-10-24',
         author = 'cogito123',
-        comment = [[(#628) Minimal 2.0.x support | Part 4]],
+        comment = [[(#628) Add 2.0.x support, 4th batch of commits]],
     },
     {
         number = 627,
         date = '2024-10-23',
         author = 'cogito123',
-        comment = [[(#627) Minimal 2.0.x support | Part 3]],
+        comment = [[(#627) Add 2.0.x support, 3rd batch of commits]],
     },
     {
         number = 626,
         date = '2024-10-22',
         author = 'cogito123',
-        comment = [[(#626) Minimal 2.0.x support | Part 2]],
+        comment = [[(#626) Add 2.0.x support, 2nd batch of commits]],
     },
     {
         number = 625,
         date = '2024-10-21',
         author = 'cogito123',
-        comment = [[(#625) Minimal 2.0.x support]],
+        comment = [[(#625) Add 2.0.x support, 1st batch of commits]],
     },
     {
         number = 624,
