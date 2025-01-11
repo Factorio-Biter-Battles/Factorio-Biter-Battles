@@ -32,24 +32,10 @@ local function errorHandler(err)
     log(debug.traceback())
 end
 
-local call_handlers
-function call_handlers(handlers, event)
-    if not handlers then
-        return log('Handlers was nil!')
-    end
-    local handlers_copy = table.deepcopy(handlers)
+local function call_handlers(handlers, event)
     for i = 1, #handlers do
         local handler = handlers[i]
-        if handler == nil and handlers_copy[i] ~= nil then
-            if table.contains(handlers, handlers_copy[i]) then
-                handler = handlers_copy[i]
-            end
-        end
-        if handler ~= nil then
-            xpcall(handler, errorHandler, event)
-        else
-            log('nil handler')
-        end
+        xpcall(handler, errorHandler, event)
     end
 end
 
