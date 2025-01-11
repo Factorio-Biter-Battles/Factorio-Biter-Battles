@@ -7,7 +7,7 @@ local function add_changelog(player, element)
     changelog_scrollpanel.style.padding = 2
 
     local t = changelog_scrollpanel.add { type = "table", name = "changelog_header_table", column_count = 3 }
-    local column_widths = {tonumber(115), tonumber(435), tonumber(230)}
+    local column_widths = {tonumber(100), tonumber(525), tonumber(145)}
     local headers = {
         [1] = "Date",
         [2] = "Change",
