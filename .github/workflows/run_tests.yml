@@ -16,3 +16,4 @@ jobs:
       - name: test
         run: |
           lua tests/test-feeding.lua
+          lua tests/test-functions.lua
