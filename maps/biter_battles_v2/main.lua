@@ -42,6 +42,17 @@ local function on_player_joined_game(event)
         return
     end
     if player.online_time == 0 or player.force.name == 'player' then
+        -- When player joins a game for the first time they'll spawn on nauvis.
+        -- Workaround within init_player function will cause player to disassociate
+        -- from character without destroying it. Not destroying it at this point
+        -- will fill nauvis surface with orphaned entities that bring down
+        -- performance. On top of it, check if character is still associated
+        -- as not connected player will be moved to 'player' force during map
+        -- reset without reinitializing their state.
+        if player.character and player.character.valid then
+            player.character.destroy()
+        end
+
         Functions.init_player(player)
     end
     Gui.clear_copy_history(player)
