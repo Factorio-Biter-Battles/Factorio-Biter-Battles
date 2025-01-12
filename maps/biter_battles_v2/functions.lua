@@ -1,11 +1,15 @@
-local ClosableFrame = require('utils.ui.closable_frame')
-local Config = require('maps.biter_battles_v2.config')
+local _TEST = storage['_TEST'] or false
 local Color = require('utils.color_presets')
-local Gui = require('utils.gui')
 local Tables = require('maps.biter_battles_v2.tables')
-local Server = require('utils.server')
+local ClosableFrame, Config, Gui, Server, simplex_noise
+if not _TEST then
+    ClosableFrame = require('utils.ui.closable_frame')
+    Config = require('maps.biter_battles_v2.config')
+    Gui = require('utils.gui')
+    Server = require('utils.server')
+    simplex_noise = require('utils.simplex_noise').d2
+end
 
-local simplex_noise = require('utils.simplex_noise').d2
 local gui_style = require('utils.utils').gui_style
 local math_abs = math.abs
 local math_floor = math.floor
@@ -13,6 +17,7 @@ local math_min = math.min
 local math_random = math.random
 local math_round = math.round
 local string_find = string.find
+local string_format = string.format
 local string_sub = string.sub
 
 local function get_ammo_modifier(ammo_category)
@@ -650,12 +655,12 @@ function Functions.map_intro_click(player, element)
 end
 
 function Functions.format_ticks_as_time(ticks)
-    local seconds = ticks / 60
-    local hours = math.floor(seconds / 3600)
-    seconds = seconds % 3600
-    local minutes = math.floor(seconds / 60)
-    seconds = seconds % 60
-    return string.format('%d:%02d:%02d', hours, minutes, seconds)
+    local seconds = (ticks - (ticks % 60)) / 60
+    local hour_f = seconds % 3600
+    local hours = (seconds - hour_f) / 3600
+    seconds = hour_f % 60
+    local minutes = (hour_f - seconds) / 60
+    return string_format('%d:%02d:%02d', hours, minutes, seconds)
 end
 
 function Functions.get_entity_contents(entity)
