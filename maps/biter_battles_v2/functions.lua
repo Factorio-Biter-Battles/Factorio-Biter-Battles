@@ -290,6 +290,25 @@ local function find_teleport_point(surface)
     return surface.find_non_colliding_position('character', p, 4, 0.5) or p
 end
 
+---@param player LuaPlayer
+---Initialize character of a player that joined for the first time or after
+---map reset.
+local function init_new_player(player)
+    if player.online_time == 0 or player.force.name == 'player' then
+        -- Check if character is still associated as not connected player will be
+        -- moved to 'player' force during map reset without reinitializing their
+        -- state.
+        if player.character and player.character.valid then
+            -- When player joins a game for the first time they'll spawn on nauvis.
+            -- Workaround within init_player function will cause player to disassociate
+            -- from character without destroying it. Not destroying it at this point
+            -- will fill nauvis surface with orphaned entities that bring down
+            -- performance.
+            player.character.destroy()
+        end
+    end
+end
+
 function Functions.init_player(player)
     if not player.connected then
         if player.force.index ~= 1 then
@@ -297,6 +316,8 @@ function Functions.init_player(player)
         end
         return
     end
+
+    init_new_player(player)
 
     -- If we don't get rid of character, associated construction
     -- bots will be teleported as well and there is no API to destroy them.
