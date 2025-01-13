@@ -1,3 +1,4 @@
+import json
 import requests
 import os
 import sys
@@ -8,6 +9,24 @@ GIT_NAME_MAPPING = {
     "amannm": "BigFatDuck",
     "clifffrey": "cliff_build",
 }
+
+def sanitize_string(string):
+    """ Simple way of using json to sanitize string for any special characters
+    that might break syntax in target lua file.
+    """
+
+    return json.dumps(string)[1:-1]
+
+def parse_entry(pull_req):
+    """ Process GH pull request metadata
+    """
+
+    date = pull_req["merged_at"].split("T")[0]
+    return {
+        'date': sanitize_string(date),
+        'title': sanitize_string(pull_req['title']),
+        'login': sanitize_string(pull_req['user']['login'])
+    }
 
 def collect_entries():
     """ Queries GH pull requests and creates entries out of them for the changelog
@@ -33,8 +52,7 @@ def collect_entries():
     merged_pull_requests.sort(key=lambda x: x["merged_at"], reverse=True)
     entries = []
     for data in merged_pull_requests:
-        date_update = data["merged_at"].split("T")[0]
-        entries.append(f'{date_update};{data["title"]};{data["user"]["login"]}' + "\n")
+        entries.append(parse_entry(data))
 
     return entries
 
@@ -59,14 +77,12 @@ def main():
     for line in lines:
         if "\tadd_entry(" in line and found_first_line == 0:
             found_first_line = 1
-            for line_new in entries:
-                formated_line = line_new.split(";")
-                if "[HIDDEN]" not in formated_line[1]:
-                    cleaned_name = formated_line[2].rstrip("\n").replace('"', "'")
-                    if cleaned_name in GIT_NAME_MAPPING:
-                        cleaned_name = GIT_NAME_MAPPING[cleaned_name]
-                    f.write("\tadd_entry(\"" + formated_line[0].rstrip("\n").replace('"', "'") + "\", \"" +
-                            cleaned_name + "\", \"" + formated_line[1].rstrip("\n").replace('"', "'") + "\")\n")
+            for entry in entries:
+                if "[HIDDEN]" not in entry['title']:
+                    name = entry['login']
+                    if name in GIT_NAME_MAPPING:
+                        name = GIT_NAME_MAPPING[name]
+                    f.write("\tadd_entry(\"" + entry['date'] + "\", \"" + name + "\", \"" + entry['title'] + "\")\n")
         if "\tadd_entry(" not in line:
             f.write(line)
     f.close()
