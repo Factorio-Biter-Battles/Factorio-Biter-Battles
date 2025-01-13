@@ -2,7 +2,7 @@ import requests
 import os
 import sys
 
-gitNameToFactorioUsername = {
+GIT_NAME_MAPPING = {
     "Ragnarok77-factorio": "Ragnarok77",
     "XVhc6A": "DrButtons",
     "amannm": "BigFatDuck",
@@ -27,48 +27,48 @@ def main():
 
     for i in range(1, 10):
         payload = None
-        linkAPI = "https://api.github.com/repos/Factorio-Biter-Battles/Factorio-Biter-Battles/pulls?state=closed&per_page=100&" + "page=" + str(i)
+        link_api = "https://api.github.com/repos/Factorio-Biter-Battles/Factorio-Biter-Battles/pulls?state=closed&per_page=100&" + "page=" + str(i)
         if len(sys.argv) == 3:
             username = sys.argv[1]
             token = sys.argv[2]
-            payload = requests.get(linkAPI, auth=(username, token)).json()
+            payload = requests.get(link_api, auth=(username, token)).json()
         else:
-            payload = requests.get(linkAPI).json()
+            payload = requests.get(link_api).json()
 
         for data in payload:
-            mergedAt = data["merged_at"]
-            if mergedAt is not None:
+            merged_at = data["merged_at"]
+            if merged_at is not None:
                 merged_pull_requests.append(data)
 
     # Sort the merged pull requests by merge date in descending order
     merged_pull_requests.sort(key=lambda x: x["merged_at"], reverse=True)
 
     for data in merged_pull_requests:
-        dateUpdate = data["merged_at"].split("T")[0]
-        f.write(f'{dateUpdate};{data["title"]};{data["user"]["login"]}' + "\n")
+        date_update = data["merged_at"].split("T")[0]
+        f.write(f'{date_update};{data["title"]};{data["user"]["login"]}' + "\n")
 
     f.close()
 
-    fchangelogTab = open("maps/biter_battles_v2/changelog_tab.lua", "r")
-    lines = fchangelogTab.readlines()
-    fchangelogTab.close()
+    fchangelog_tab = open("maps/biter_battles_v2/changelog_tab.lua", "r")
+    lines = fchangelog_tab.readlines()
+    fchangelog_tab.close()
 
     f = open("maps/biter_battles_v2/changelog_tab_temp.lua", "w")
-    foundFirstLine = 0
+    found_first_line = 0
     for line in lines:
-        if "\tadd_entry(" in line and foundFirstLine == 0:
-            foundFirstLine = 1
+        if "\tadd_entry(" in line and found_first_line == 0:
+            found_first_line = 1
             fnewlogs = open("changelog.txt", "r")
-            linesnewLogs = fnewlogs.readlines()
+            linesnew_logs = fnewlogs.readlines()
             fnewlogs.close()
-            for lineNew in linesnewLogs:
-                formatedLine = lineNew.split(";")
-                if "[HIDDEN]" not in formatedLine[1]:
-                    cleanedName = formatedLine[2].rstrip("\n").replace('"', "'")
-                    if cleanedName in gitNameToFactorioUsername:
-                        cleanedName = gitNameToFactorioUsername[cleanedName]
-                    f.write("\tadd_entry(\"" + formatedLine[0].rstrip("\n").replace('"', "'") + "\", \"" +
-                            cleanedName + "\", \"" + formatedLine[1].rstrip("\n").replace('"', "'") + "\")\n")
+            for line_new in linesnew_logs:
+                formated_line = line_new.split(";")
+                if "[HIDDEN]" not in formated_line[1]:
+                    cleaned_name = formated_line[2].rstrip("\n").replace('"', "'")
+                    if cleaned_name in GIT_NAME_MAPPING:
+                        cleaned_name = GIT_NAME_MAPPING[cleaned_name]
+                    f.write("\tadd_entry(\"" + formated_line[0].rstrip("\n").replace('"', "'") + "\", \"" +
+                            cleaned_name + "\", \"" + formated_line[1].rstrip("\n").replace('"', "'") + "\")\n")
         if "\tadd_entry(" not in line:
             f.write(line)
     f.close()
