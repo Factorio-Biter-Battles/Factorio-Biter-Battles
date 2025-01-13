@@ -40,11 +40,10 @@ def main():
 
     # Sort the merged pull requests by merge date in descending order
     merged_pull_requests.sort(key=lambda x: x["merged_at"], reverse=True)
-
-    with open("changelog.txt", 'w', encoding='utf-8') as log:
-        for data in merged_pull_requests:
-            date_update = data["merged_at"].split("T")[0]
-            log.write(f'{date_update};{data["title"]};{data["user"]["login"]}' + "\n")
+    entries = []
+    for data in merged_pull_requests:
+        date_update = data["merged_at"].split("T")[0]
+        entries.append(f'{date_update};{data["title"]};{data["user"]["login"]}' + "\n")
 
     with open("maps/biter_battles_v2/changelog_tab.lua", 'r', encoding='utf-8') as log:
         lines = log.readlines()
@@ -54,10 +53,7 @@ def main():
     for line in lines:
         if "\tadd_entry(" in line and found_first_line == 0:
             found_first_line = 1
-            fnewlogs = open("changelog.txt", "r")
-            linesnew_logs = fnewlogs.readlines()
-            fnewlogs.close()
-            for line_new in linesnew_logs:
+            for line_new in entries:
                 formated_line = line_new.split(";")
                 if "[HIDDEN]" not in formated_line[1]:
                     cleaned_name = formated_line[2].rstrip("\n").replace('"', "'")
@@ -76,7 +72,6 @@ def main():
         output.writelines(lines)
 
     os.remove("maps/biter_battles_v2/changelog_tab_temp.lua") 
-    os.remove("changelog.txt")
 
 if __name__ == '__main__':
     main()
