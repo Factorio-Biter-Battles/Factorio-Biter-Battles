@@ -9,18 +9,9 @@ GIT_NAME_MAPPING = {
     "clifffrey": "cliff_build",
 }
 
-def main():
-    print("Usage of script with usage of GitHub token for more API requests: python scriptName username token")
-    print("Usage of script without any token: python scriptName")
-    print("If the script crashes with a TypeError, it should be because you spammed the GitHub API too much; use a token instead (if the token doesn't work, you failed to give the Python script the correct git username and token)")
-
-    if len(sys.argv) == 1:
-        print('No arguments used, will use the default connection to the GitHub API without any token')
-    elif len(sys.argv) == 3:
-        print('Two arguments provided, will use the token to connect to the API')
-    else:
-        print('Wrong number of arguments (should be 2 or 0) for the script, will use the default connection to the GitHub API without any token')
-
+def collect_entries():
+    """ Queries GH pull requests and creates entries out of them for the changelog
+    """
     merged_pull_requests = []
 
     for i in range(1, 10):
@@ -45,6 +36,21 @@ def main():
         date_update = data["merged_at"].split("T")[0]
         entries.append(f'{date_update};{data["title"]};{data["user"]["login"]}' + "\n")
 
+    return entries
+
+def main():
+    print("Usage of script with usage of GitHub token for more API requests: python scriptName username token")
+    print("Usage of script without any token: python scriptName")
+    print("If the script crashes with a TypeError, it should be because you spammed the GitHub API too much; use a token instead (if the token doesn't work, you failed to give the Python script the correct git username and token)")
+
+    if len(sys.argv) == 1:
+        print('No arguments used, will use the default connection to the GitHub API without any token')
+    elif len(sys.argv) == 3:
+        print('Two arguments provided, will use the token to connect to the API')
+    else:
+        print('Wrong number of arguments (should be 2 or 0) for the script, will use the default connection to the GitHub API without any token')
+
+    entries = collect_entries()
     with open("maps/biter_battles_v2/changelog_tab.lua", 'r', encoding='utf-8') as log:
         lines = log.readlines()
 
