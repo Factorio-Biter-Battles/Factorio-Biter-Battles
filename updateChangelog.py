@@ -10,8 +10,6 @@ GIT_NAME_MAPPING = {
 }
 
 def main():
-    f = open("changelog.txt", "w")
-
     print("Usage of script with usage of GitHub token for more API requests: python scriptName username token")
     print("Usage of script without any token: python scriptName")
     print("If the script crashes with a TypeError, it should be because you spammed the GitHub API too much; use a token instead (if the token doesn't work, you failed to give the Python script the correct git username and token)")
@@ -43,15 +41,13 @@ def main():
     # Sort the merged pull requests by merge date in descending order
     merged_pull_requests.sort(key=lambda x: x["merged_at"], reverse=True)
 
-    for data in merged_pull_requests:
-        date_update = data["merged_at"].split("T")[0]
-        f.write(f'{date_update};{data["title"]};{data["user"]["login"]}' + "\n")
+    with open("changelog.txt", 'w', encoding='utf-8') as log:
+        for data in merged_pull_requests:
+            date_update = data["merged_at"].split("T")[0]
+            log.write(f'{date_update};{data["title"]};{data["user"]["login"]}' + "\n")
 
-    f.close()
-
-    fchangelog_tab = open("maps/biter_battles_v2/changelog_tab.lua", "r")
-    lines = fchangelog_tab.readlines()
-    fchangelog_tab.close()
+    with open("maps/biter_battles_v2/changelog_tab.lua", 'r', encoding='utf-8') as log:
+        lines = log.readlines()
 
     f = open("maps/biter_battles_v2/changelog_tab_temp.lua", "w")
     found_first_line = 0
@@ -73,13 +69,12 @@ def main():
             f.write(line)
     f.close()
 
-    fa = open("maps/biter_battles_v2/changelog_tab_temp.lua", "r")
-    fb = open("maps/biter_battles_v2/changelog_tab.lua", "w")
-    lines = fa.readlines()
-    for line in lines:
-        fb.write(line)
-    fa.close()
-    fb.close()
+    with open("maps/biter_battles_v2/changelog_tab_temp.lua", 'r', encoding='utf-8') as tmp:
+        lines = tmp.readlines()
+
+    with open("maps/biter_battles_v2/changelog_tab.lua", 'w', encoding='utf-8') as output:
+        output.writelines(lines)
+
     os.remove("maps/biter_battles_v2/changelog_tab_temp.lua") 
     os.remove("changelog.txt")
 
