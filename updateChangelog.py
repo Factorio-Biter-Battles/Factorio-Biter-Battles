@@ -2,15 +2,15 @@ import requests
 import os
 import sys
 
+gitNameToFactorioUsername = {
+    "Ragnarok77-factorio": "Ragnarok77",
+    "XVhc6A": "DrButtons",
+    "amannm": "BigFatDuck",
+    "clifffrey": "cliff_build",
+}
+
 def main():
     f = open("changelog.txt", "w")
-
-    gitNameToFactorioUsername = {
-        "Ragnarok77-factorio": "Ragnarok77",
-        "XVhc6A": "DrButtons",
-        "amannm": "BigFatDuck",
-        "clifffrey": "cliff_build",
-    }
 
     print("Usage of script with usage of GitHub token for more API requests: python scriptName username token")
     print("Usage of script without any token: python scriptName")
