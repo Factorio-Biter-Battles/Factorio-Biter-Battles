@@ -10,6 +10,11 @@ GIT_NAME_MAPPING = {
     "clifffrey": "cliff_build",
 }
 
+def get_name(login):
+    """ If possible translate GH login into player handle.
+    """
+    return GIT_NAME_MAPPING.get(login, login)
+
 def sanitize_string(string):
     """ Simple way of using json to sanitize string for any special characters
     that might break syntax in target lua file.
@@ -22,10 +27,11 @@ def parse_entry(pull_req):
     """
 
     date = pull_req["merged_at"].split("T")[0]
+    name = get_name(pull_req['user']['login'])
     return {
         'date': sanitize_string(date),
         'title': sanitize_string(pull_req['title']),
-        'login': sanitize_string(pull_req['user']['login'])
+        'login': sanitize_string(name)
     }
 
 def collect_entries():
@@ -80,8 +86,6 @@ def main():
             for entry in entries:
                 if "[HIDDEN]" not in entry['title']:
                     name = entry['login']
-                    if name in GIT_NAME_MAPPING:
-                        name = GIT_NAME_MAPPING[name]
                     f.write("\tadd_entry(\"" + entry['date'] + "\", \"" + name + "\", \"" + entry['title'] + "\")\n")
         if "\tadd_entry(" not in line:
             f.write(line)
