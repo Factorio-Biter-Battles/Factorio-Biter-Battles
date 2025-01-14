@@ -34,6 +34,14 @@ def parse_entry(pull_req):
         'login': sanitize_string(name)
     }
 
+def is_valid_entry(pull_req):
+    """ Checks if PR should be skipped
+    """
+    if pull_req["merged_at"] is None:
+        return False
+
+    return "[HIDDEN]" not in pull_req['title']
+
 def collect_entries():
     """ Queries GH pull requests and creates entries out of them for the changelog
     """
@@ -50,8 +58,7 @@ def collect_entries():
             payload = requests.get(link_api).json()
 
         for data in payload:
-            merged_at = data["merged_at"]
-            if merged_at is not None:
+            if is_valid_entry(data):
                 merged_pull_requests.append(data)
 
     # Sort the merged pull requests by merge date in descending order
@@ -84,9 +91,8 @@ def main():
         if "\tadd_entry(" in line and found_first_line == 0:
             found_first_line = 1
             for entry in entries:
-                if "[HIDDEN]" not in entry['title']:
-                    name = entry['login']
-                    f.write("\tadd_entry(\"" + entry['date'] + "\", \"" + name + "\", \"" + entry['title'] + "\")\n")
+                name = entry['login']
+                f.write("\tadd_entry(\"" + entry['date'] + "\", \"" + name + "\", \"" + entry['title'] + "\")\n")
         if "\tadd_entry(" not in line:
             f.write(line)
     f.close()
