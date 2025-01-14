@@ -112,6 +112,7 @@ function Public.initial_setup()
         defines.input_action.gui_text_changed,
         defines.input_action.gui_value_changed,
         defines.input_action.map_editor_action,
+        defines.input_action.open_gui,
         defines.input_action.open_character_gui,
         defines.input_action.quick_bar_set_selected_page,
         defines.input_action.quick_bar_set_slot,
