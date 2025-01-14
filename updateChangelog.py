@@ -42,21 +42,32 @@ def is_valid_entry(pull_req):
 
     return "[HIDDEN]" not in pull_req['title']
 
+GH_URL = "https://api.github.com/repos/Factorio-Biter-Battles/Factorio-Biter-Battles/pulls"
+def fetch_pr_page(auth, page):
+    """ Scrape up to 100 PRs per page
+    """
+
+    params = {
+        'state': 'closed',
+        'per_page': 100,
+        'page': page,
+    }
+
+    return requests.get(GH_URL, auth=auth, params=params).json()
+
 def collect_entries():
     """ Queries GH pull requests and creates entries out of them for the changelog
     """
     merged_pull_requests = []
 
-    for i in range(1, 10):
-        payload = None
-        link_api = "https://api.github.com/repos/Factorio-Biter-Battles/Factorio-Biter-Battles/pulls?state=closed&per_page=100&" + "page=" + str(i)
-        if len(sys.argv) == 3:
-            username = sys.argv[1]
-            token = sys.argv[2]
-            payload = requests.get(link_api, auth=(username, token)).json()
-        else:
-            payload = requests.get(link_api).json()
+    auth = ()
+    if len(sys.argv) == 3:
+        username = sys.argv[1]
+        token = sys.argv[2]
+        auth = (username, token)
 
+    for page in range(1, 10):
+        payload = fetch_pr_page(auth, page)
         for data in payload:
             if is_valid_entry(data):
                 merged_pull_requests.append(data)
