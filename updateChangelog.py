@@ -96,25 +96,19 @@ def main():
     with open("maps/biter_battles_v2/changelog_tab.lua", 'r', encoding='utf-8') as log:
         lines = log.readlines()
 
-    f = open("maps/biter_battles_v2/changelog_tab_temp.lua", "w")
+    source = []
     found_first_line = 0
     for line in lines:
         if "\tadd_entry(" in line and found_first_line == 0:
             found_first_line = 1
             for entry in entries:
                 name = entry['login']
-                f.write("\tadd_entry(\"" + entry['date'] + "\", \"" + name + "\", \"" + entry['title'] + "\")\n")
+                source.append("\tadd_entry(\"" + entry['date'] + "\", \"" + name + "\", \"" + entry['title'] + "\")\n")
         if "\tadd_entry(" not in line:
-            f.write(line)
-    f.close()
-
-    with open("maps/biter_battles_v2/changelog_tab_temp.lua", 'r', encoding='utf-8') as tmp:
-        lines = tmp.readlines()
+            source.append(line)
 
     with open("maps/biter_battles_v2/changelog_tab.lua", 'w', encoding='utf-8') as output:
-        output.writelines(lines)
-
-    os.remove("maps/biter_battles_v2/changelog_tab_temp.lua") 
+        output.writelines(source)
 
 if __name__ == '__main__':
     main()
