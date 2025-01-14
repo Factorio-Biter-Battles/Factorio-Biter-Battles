@@ -1,7 +1,9 @@
+""" Script for updating in-game changelog tab
+"""
+
 import json
-import requests
-import os
 import sys
+import requests
 
 GIT_NAME_MAPPING = {
     "Ragnarok77-factorio": "Ragnarok77",
