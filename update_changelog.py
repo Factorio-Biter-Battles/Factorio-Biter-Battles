@@ -10,10 +10,13 @@ from luaparser.astnodes import (Table, Chunk, Block, Field, Name,
                                 Return, String, Number, StringDelimiter)
 
 GIT_NAME_MAPPING = {
+    "DaTa-": "Data-",
     "Ragnarok77-factorio": "Ragnarok77",
     "XVhc6A": "DrButtons",
     "amannm": "BigFatDuck",
     "clifffrey": "cliff_build",
+    "developer-8": "developer",
+    "outstanding-factorio": "outstanding",
 }
 
 def get_name(login):

@@ -14,13 +14,13 @@ return {
     {
         number = 666,
         date = '2025-01-11',
-        author = 'DaTa-',
+        author = 'Data-',
         comment = [[(#666) Change so captains during the special join random forces]],
     },
     {
         number = 662,
         date = '2025-01-11',
-        author = 'DaTa-',
+        author = 'Data-',
         comment = [[(#662) Fix the southern silo position used for biter tracking, which was not symmetrical with the northern silo]],
     },
     {
@@ -34,13 +34,13 @@ return {
     {
         number = 665,
         date = '2025-01-06',
-        author = 'DaTa-',
+        author = 'Data-',
         comment = [[(#665) Fix a bug in /calc-send that resulted in the wrong values when inputting parameters while carrying science packs in the inventory]],
     },
     {
         number = 664,
         date = '2025-01-06',
-        author = 'cogito123, developer-8',
+        author = 'cogito123, developer',
         comment = [[(#664) Fix a player losing their character when switching teams with the camera centered on a chunk that was not yet generated while in remote view]],
     },
     {
@@ -75,7 +75,7 @@ return {
     {
         number = 655,
         date = '2024-12-29',
-        author = 'DaTa-',
+        author = 'Data-',
         comment = [[(#655) Changes related to /inventory-costs:
   - Fix accessing the inventory of disconnected or dead players
   - Count inventory costs for players who switched back to spectator]],
@@ -95,19 +95,19 @@ return {
     {
         number = 657,
         date = '2024-12-28',
-        author = 'DaTa-, floortiler',
+        author = 'Data-, floortiler',
         comment = [[(#657) Fix laser damage to match values from 1.1]],
     },
     {
         number = 653,
         date = '2024-12-17',
-        author = 'developer-8',
+        author = 'developer',
         comment = [[(#653) Fix snow transition on edges of the new year tree]],
     },
     {
         number = 654,
         date = '2024-12-17',
-        author = 'DaTa-',
+        author = 'Data-',
         comment = [[(#654) Fix issues related to remote view (non-exhaustive list):
   - Admin teleporting of a driving player while they are in remote view fails
   - Admin teleporting of a dead player error (in log)
@@ -132,13 +132,13 @@ return {
     {
         number = 651,
         date = '2024-12-04',
-        author = 'DaTa-',
+        author = 'Data-',
         comment = [[(#651) Fix minable wrecks yielding incorrect loot]],
     },
     {
         number = 650,
         date = '2024-12-03',
-        author = 'DaTa-',
+        author = 'Data-',
         comment = [[(#650) Batch of minor fixes:
   - Fix /jail and /free notifications
   - Fix the offset of drawn text/graphics]],
@@ -146,7 +146,7 @@ return {
     {
         number = 649,
         date = '2024-12-02',
-        author = 'DaTa-',
+        author = 'Data-',
         comment = [[(#649) Further adaptations to 2.0.22 breaking API changes]],
     },
     {
@@ -158,7 +158,7 @@ return {
     {
         number = 648,
         date = '2024-11-28',
-        author = 'DaTa-',
+        author = 'Data-',
         comment = [[(#648) Batch of fixes:
   - Adapt for a backward-incompatible change in 2.0.22 that caused a crash when using /inventory
   - Fix /inventory-costs stack overflow
@@ -167,7 +167,7 @@ return {
     {
         number = 645,
         date = '2024-11-27',
-        author = 'DaTa-',
+        author = 'Data-',
         comment = [[(#645) Fix an issue with a grayed-out GUI in the /inventory widget]],
     },
     {
@@ -306,19 +306,19 @@ return {
     {
         number = 623,
         date = '2024-10-13',
-        author = 'developer-8',
+        author = 'developer',
         comment = [[(#623) Fix send science after game over]],
     },
     {
         number = 621,
         date = '2024-09-28',
-        author = 'developer-8',
+        author = 'developer',
         comment = [[(#621) Fix send science when disabled]],
     },
     {
         number = 620,
         date = '2024-09-26',
-        author = 'developer-8',
+        author = 'developer',
         comment = [[(#620) move biter area slope to config]],
     },
     {
@@ -330,13 +330,13 @@ return {
     {
         number = 616,
         date = '2024-09-14',
-        author = 'outstanding-factorio',
+        author = 'outstanding',
         comment = [[(#616) Create test-readme.md]],
     },
     {
         number = 614,
         date = '2024-09-09',
-        author = 'outstanding-factorio',
+        author = 'outstanding',
         comment = [[(#614) Added instalation guide]],
     },
     {
@@ -468,7 +468,7 @@ return {
     {
         number = 589,
         date = '2024-08-10',
-        author = 'developer-8',
+        author = 'developer',
         comment = [[(#589) Fix reply notification to wrong player]],
     },
     {
@@ -750,7 +750,7 @@ return {
     {
         number = 538,
         date = '2024-06-14',
-        author = 'developer-8',
+        author = 'developer',
         comment = [[(#538) Fix reply ping]],
     },
     {
@@ -762,7 +762,7 @@ return {
     {
         number = 537,
         date = '2024-06-07',
-        author = 'developer-8',
+        author = 'developer',
         comment = [[(#537) Add `on_player_joined_team` event]],
     },
     {
@@ -792,7 +792,7 @@ return {
     {
         number = 531,
         date = '2024-05-27',
-        author = 'developer-8',
+        author = 'developer',
         comment = [[(#531) Add a new Patches type for mixed ore map special]],
     },
     {
@@ -834,7 +834,7 @@ return {
     {
         number = 525,
         date = '2024-05-24',
-        author = 'developer-8',
+        author = 'developer',
         comment = [[(#525) Fix error on non exist inventory]],
     },
     {
@@ -930,7 +930,7 @@ return {
     {
         number = 509,
         date = '2024-05-09',
-        author = 'developer-8',
+        author = 'developer',
         comment = [[(#509) Fix mining history is empty]],
     },
     {
@@ -1122,7 +1122,7 @@ return {
     {
         number = 453,
         date = '2024-03-25',
-        author = 'developer-8',
+        author = 'developer',
         comment = [[(#453) Fix Event.add_removable_nth_tick_function]],
     },
     {
@@ -1260,7 +1260,7 @@ return {
     {
         number = 426,
         date = '2023-12-27',
-        author = 'developer-8',
+        author = 'developer',
         comment = [[(#426) fix poll button opens random player camera]],
     },
     {
@@ -1278,13 +1278,13 @@ return {
     {
         number = 425,
         date = '2023-12-20',
-        author = 'developer-8',
+        author = 'developer',
         comment = [[(#425) fix decontruction on island working on only half of the island]],
     },
     {
         number = 413,
         date = '2023-12-20',
-        author = 'developer-8',
+        author = 'developer',
         comment = [[(#413) instant map reset can be done during map reroll + default yes map reroll + added possibility cancel map reroll]],
     },
     {
@@ -1302,7 +1302,7 @@ return {
     {
         number = 331,
         date = '2023-12-03',
-        author = 'developer-8',
+        author = 'developer',
         comment = [[(#331) Separate special games into individual files]],
     },
     {
@@ -1356,7 +1356,7 @@ return {
     {
         number = 391,
         date = '2023-11-03',
-        author = 'developer-8',
+        author = 'developer',
         comment = [[(#391) Fix server crash on debug_getinfo with nil handler]],
     },
     {
@@ -1398,7 +1398,7 @@ return {
     {
         number = 353,
         date = '2023-10-19',
-        author = 'developer-8',
+        author = 'developer',
         comment = [[(#353) Special game Mixed ore map]],
     },
     {
@@ -1434,13 +1434,13 @@ return {
     {
         number = 378,
         date = '2023-07-20',
-        author = 'developer-8',
+        author = 'developer',
         comment = [[(#378) Allow change_active_item_group_for_filters for spectators]],
     },
     {
         number = 373,
         date = '2023-07-14',
-        author = 'developer-8',
+        author = 'developer',
         comment = [[(#373) Allows group name and description to include spaces and punctuation characters]],
     },
     {
@@ -1530,25 +1530,25 @@ return {
     {
         number = 334,
         date = '2022-12-18',
-        author = 'developer-8',
+        author = 'developer',
         comment = [[(#334) Change river function]],
     },
     {
         number = 335,
         date = '2022-12-18',
-        author = 'developer-8',
+        author = 'developer',
         comment = [[(#335) Add New Year Island decorations]],
     },
     {
         number = 330,
         date = '2022-12-18',
-        author = 'developer-8',
+        author = 'developer',
         comment = [[(#330) Fix Limited lives desync]],
     },
     {
         number = 304,
         date = '2022-12-18',
-        author = 'developer-8',
+        author = 'developer',
         comment = [[(#304) Perf: Improve river check function]],
     },
     {
@@ -1566,7 +1566,7 @@ return {
     {
         number = 327,
         date = '2022-11-22',
-        author = 'developer-8',
+        author = 'developer',
         comment = [[(#327) Special game: Limited lives]],
     },
     {
@@ -1626,13 +1626,13 @@ return {
     {
         number = 298,
         date = '2022-08-05',
-        author = 'developer-8',
+        author = 'developer',
         comment = [[(#298) Fix spectator in vehicle]],
     },
     {
         number = 297,
         date = '2022-08-05',
-        author = 'developer-8',
+        author = 'developer',
         comment = [[(#297) Fix ghost rotation by spectator]],
     },
     {
@@ -1645,7 +1645,7 @@ return {
         number = 278,
         date = '2022-07-30',
         author = 'Ragnarok77',
-        comment = [[(#278) Prevent pathfinder crossing river(made by developer-8, not Ragnarok77)]],
+        comment = [[(#278) Prevent pathfinder crossing river(made by developer, not Ragnarok77)]],
     },
     {
         number = 282,
@@ -1818,7 +1818,7 @@ return {
     {
         number = 255,
         date = '2022-02-01',
-        author = 'developer-8',
+        author = 'developer',
         comment = [[(#255) Revert "Add holiday decorations to the island"]],
     },
     {
@@ -1848,13 +1848,13 @@ return {
     {
         number = 243,
         date = '2021-12-25',
-        author = 'developer-8',
+        author = 'developer',
         comment = [[(#243) Add holiday decorations to the island]],
     },
     {
         number = 240,
         date = '2021-12-19',
-        author = 'developer-8',
+        author = 'developer',
         comment = [[(#240) Mirror decoratives to south]],
     },
     {
@@ -1926,7 +1926,7 @@ return {
     {
         number = 230,
         date = '2021-12-09',
-        author = 'developer-8',
+        author = 'developer',
         comment = [[(#230) Do not allow ghosts on enemy side]],
     },
     {
@@ -1956,7 +1956,7 @@ return {
     {
         number = 205,
         date = '2021-11-25',
-        author = 'developer-8',
+        author = 'developer',
         comment = [[(#205) Remove vehicle from silo]],
     },
     {
