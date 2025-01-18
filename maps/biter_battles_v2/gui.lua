@@ -1086,8 +1086,48 @@ function join_team(player, force_name, forced_join, auto_join)
 end
 
 function spectate(player, forced_join, stored_position)
+    -- Player might not have a body if captain ejected them, was waiting
+    -- for a respawn or has alternative controller set.
     if not player.character then
-        return
+        -- Reposition camera to chunk which is guaranteed to exists to avoid
+        -- any issue with character positioning. Repositioning is performed
+        -- only for cases where character is to be created.
+        local origin = { 0, 0 }
+        if player.ticks_to_respawn then
+            -- Character cannot be created while dead, we can only speed up
+            -- respawn and pray it doesn't race.
+            player.teleport(origin)
+            player.ticks_to_respawn = nil
+            if not player.character then
+                log('WARN: spectate: player ' .. player.name .. ' still without a character')
+                log('WARN: spectate: fallback to old behavior')
+                return
+            end
+        else
+            -- Is player missing a body due to unrelated bug/accidental removal?
+            -- Maybe admin tries to recover situation.
+            if player.physical_controller_type ~= defines.controllers.editor then
+                log('INFO: spectate: player ' .. player.name .. ' was without a character')
+                -- We cannot trust LuaPlayer::physical_surface as they might be trapped
+                -- on another surface.
+                local s = game.surfaces[storage.bb_surface_name]
+                player.teleport(origin, s)
+                local ch = s.create_entity({
+                    name = 'character',
+                    position = origin,
+                })
+                player.set_controller({
+                    type = defines.controllers.character,
+                    character = ch,
+                })
+            else
+                -- Non-admin player should never reach this state.
+                -- If it's an admin, best to not interfere (leave old behavior).
+                log('WARN: spectate: player ' .. player.name .. " doesn't have associated character")
+                log('WARN: spectate: fallback to old behavior')
+                return
+            end
+        end
     end
     if player.spectator then
         return
