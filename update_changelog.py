@@ -60,7 +60,11 @@ def fetch_pr_page(auth, page):
         'page': page,
     }
 
-    return requests.get(GH_URL, auth=auth, params=params).json()
+    resp = requests.get(GH_URL, auth=auth, params=params)
+    if resp.status_code == 403 or resp.status_code == 429:
+        raise RuntimeError("Rate limit hit @ api.github, try later or use credentials")
+
+    return resp.json()
 
 def gh_collect_entries():
     """ Queries GH pull requests and creates entries out of them for the changelog
@@ -201,7 +205,6 @@ def gh_tag_pulls(pulls):
 def main():
     print("Usage of script with usage of GitHub token for more API requests: python scriptName username token")
     print("Usage of script without any token: python scriptName")
-    print("If the script crashes with a TypeError, it should be because you spammed the GitHub API too much; use a token instead (if the token doesn't work, you failed to give the Python script the correct git username and token)")
 
     if len(sys.argv) == 1:
         print('No arguments used, will use the default connection to the GitHub API without any token')
