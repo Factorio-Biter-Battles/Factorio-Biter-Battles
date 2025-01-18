@@ -559,7 +559,69 @@ local function mixed_ore(surface, left_top_x, left_top_y)
     end
 end
 
+-- this will enable collection of chunk generation profiling statistics, chart huge area around the map origin
+-- and enable `chunk-profiling-stats` command to retrieve the statistics
+local ENABLE_CHUNK_GEN_PROFILING = false
+
+local chunk_profiling = nil
+if ENABLE_CHUNK_GEN_PROFILING then
+    local profile_stats = require('utils.profiler_stats')
+    local event = require('utils.event')
+    local token = require('utils.token')
+
+    chunk_profiling = {
+        per_chunk_type = {},
+        all = profile_stats.new(),
+    }
+
+    for _, i in pairs(chunk_type) do
+        chunk_profiling.per_chunk_type[i] = profile_stats.new()
+    end
+
+    local function chart_profiling_area(surface)
+        game.forces['spectator'].chart(surface, { { x = -1024, y = -1024 }, { x = 1023, y = 1023 } })
+    end
+
+    local on_after_init -- pass self reference to the callback below
+    on_after_init = token.register(function()
+        local bb_surface = game.get_surface(storage.bb_surface_name)
+        chart_profiling_area(bb_surface)
+        event.remove_removable(defines.events.on_tick, on_after_init)
+    end)
+    event.add_removable(defines.events.on_tick, on_after_init)
+
+    -- this won't be called if you create a surface during `on_init`
+    event.add(defines.events.on_surface_created, function(event)
+        local bb_surface = game.get_surface(storage.bb_surface_name)
+        if not bb_surface or event.surface_index ~= bb_surface.index then
+            return
+        end
+        chart_profiling_area(bb_surface)
+    end)
+
+    -- server and client output won't match
+    commands.add_command('chunk-profiling-stats', 'Display and log statistics of chunk generation time', function(cmd)
+        local caller = cmd.player_index and game.get_player(cmd.player_index)
+
+        if caller and not caller.admin then
+            caller.print('Only admin may run this command')
+            return
+        end
+
+        local stats = 'Chunk profiling statistics\nall: ' .. chunk_profiling.all.summarize_records()
+        for chunk_name, i in pairs(chunk_type) do
+            stats = stats .. '\n' .. chunk_name .. ': ' .. chunk_profiling.per_chunk_type[i].summarize_records()
+        end
+        log(stats)
+        if caller then
+            caller.print(stats)
+        end
+    end)
+end
+
 function Public.generate(event)
+    local profiler = chunk_profiling and helpers.create_profiler(false)
+
     local surface = event.surface
     local left_top = event.area.left_top
     local left_top_x = left_top.x
@@ -576,6 +638,12 @@ function Public.generate(event)
     generate_river(surface, left_top_x, left_top_y)
     draw_biter_area(surface, left_top_x, left_top_y)
     generate_extra_worm_turrets(surface, left_top)
+
+    if profiler then
+        profiler.stop()
+        chunk_profiling.all.add_record(profiler)
+        chunk_profiling.per_chunk_type[chunk_type_at(event.position)].add_record(profiler)
+    end
 end
 
 function Public.draw_spawn_island(surface)
