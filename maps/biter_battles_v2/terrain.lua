@@ -91,6 +91,62 @@ local function shuffle(tbl)
     return tbl
 end
 
+---@enum area_intersection
+area_intersection = {
+    none = 1,
+    partial = 2,
+    full = 3,
+}
+
+---Analyzes partiality of intersection of a north chunk and the biter area
+---@param chunk_pos {x: int, y: int} north chunk position (not tile position)
+---@return area_intersection
+local function chunk_biter_area_intersection(chunk_pos)
+    local left_top_x = chunk_pos.x * 32
+    local right_top_x = left_top_x + 32 - 1
+
+    local bitera_area_distance = bb_config.bitera_area_distance * -1
+    local min_slope = bitera_area_distance - (math_abs(left_top_x) * bb_config.biter_area_slope)
+    local max_slope = bitera_area_distance - (math_abs(right_top_x) * bb_config.biter_area_slope)
+    if min_slope > max_slope then
+        min_slope, max_slope = max_slope, min_slope
+    end
+    local top = chunk_pos.y * 32
+    local bottom = top + 32 - 1
+    if top - 70 > max_slope then
+        return area_intersection.none
+    elseif bottom + 70 < min_slope then
+        return area_intersection.full
+    else
+        return area_intersection.partial
+    end
+end
+
+---@enum chunk_type
+chunk_type = {
+    river = 1,
+    ordinary = 2,
+    biter_area_border = 3,
+    biter_area = 4,
+}
+
+---@param chunk_pos {x: int, y: int} north chunk position (not tile position)
+---@return chunk_type
+function chunk_type_at(chunk_pos)
+    if chunk_pos.y == -1 or (chunk_pos.y == -2 and (chunk_pos.x == -1 or chunk_pos.x == 0)) then
+        return chunk_type.river
+    end
+
+    local biterland_intersection = chunk_biter_area_intersection(chunk_pos)
+    if biterland_intersection == area_intersection.none then
+        return chunk_type.ordinary
+    elseif biterland_intersection == area_intersection.partial then
+        return chunk_type.biter_area_border
+    else
+        return chunk_type.biter_area
+    end
+end
+
 local function create_mirrored_tile_chain(surface, tile, count, straightness)
     if not surface then
         return
