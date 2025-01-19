@@ -214,7 +214,7 @@ end
 
 -- generate ore on entire map for special game
 local function mixed_ore_map(surface, left_top_x, left_top_y)
-    if Functions.is_biter_area({ x = left_top_x, y = left_top_y + 96 }, true) then
+    if Functions.is_roughly_biter_area({ x = left_top_x, y = left_top_y + 96 }) then
         return
     end
 
