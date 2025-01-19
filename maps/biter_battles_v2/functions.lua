@@ -11,6 +11,10 @@ if not _TEST then
 end
 
 local gui_style = require('utils.utils').gui_style
+
+local get_noise = require('utils.multi_octave_noise').get
+local biter_area_border_noise = require('maps.biter_battles_v2.predefined_noise').biter_area_border
+
 local math_abs = math.abs
 local math_floor = math.floor
 local math_min = math.min
@@ -347,33 +351,6 @@ function Functions.init_player(player)
     game.permissions.get_group('spectator').add_player(player)
 end
 
-function Functions.get_noise(name, pos)
-    local seed = game.surfaces[storage.bb_surface_name].map_gen_settings.seed
-    local noise_seed_add = 25000
-    if name == 1 then
-        local noise = simplex_noise(pos.x * 0.0042, pos.y * 0.0042, seed)
-        seed = seed + noise_seed_add
-        noise = noise + simplex_noise(pos.x * 0.031, pos.y * 0.031, seed) * 0.08
-        seed = seed + noise_seed_add
-        noise = noise + simplex_noise(pos.x * 0.1, pos.y * 0.1, seed) * 0.025
-        return noise
-    end
-
-    if name == 2 then
-        local noise = simplex_noise(pos.x * 0.011, pos.y * 0.011, seed)
-        seed = seed + noise_seed_add
-        noise = noise + simplex_noise(pos.x * 0.08, pos.y * 0.08, seed) * 0.2
-        return noise
-    end
-
-    if name == 3 then
-        local noise = simplex_noise(pos.x * 0.005, pos.y * 0.005, seed)
-        noise = noise + simplex_noise(pos.x * 0.02, pos.y * 0.02, seed) * 0.3
-        noise = noise + simplex_noise(pos.x * 0.15, pos.y * 0.15, seed) * 0.025
-        return noise
-    end
-end
-
 function Functions.is_biter_area(position, noise_Enabled)
     local bitera_area_distance = Config.bitera_area_distance * -1
     local a = bitera_area_distance - (math_abs(position.x) * Config.biter_area_slope)
@@ -384,7 +361,8 @@ function Functions.is_biter_area(position, noise_Enabled)
         return true
     end
     if noise_Enabled then
-        if position.y + (Functions.get_noise(3, position) * 64) > a then
+        local seed = game.surfaces[storage.bb_surface_name].map_gen_settings.seed
+        if position.y + (get_noise(biter_area_border_noise, position, seed, 0) * 64) > a then
             return false
         end
     else
