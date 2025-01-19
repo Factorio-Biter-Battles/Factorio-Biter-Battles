@@ -1,5 +1,10 @@
 local Functions = require('maps.biter_battles_v2.functions')
-local GetNoise = require('utils.get_noise')
+local noise = require('maps.biter_battles_v2.predefined_noise')
+
+local get_noise = require('utils.multi_octave_noise').get
+local mixed_ore_noise = noise.mixed_ore
+local vertical_lines_ore_noise = noise.vertical_lines_ore
+
 local math_floor = math.floor
 local math_random = math.random
 local math_abs = math.abs
@@ -34,7 +39,7 @@ local function mixed_ore(surface, left_top_x, left_top_y)
         for y = 0, 31, 1 do
             local pos = { x = left_top_x + x, y = left_top_y + y }
             if surface.can_place_entity({ name = 'iron-ore', position = pos }) then
-                local noise = GetNoise('bb_ore', pos, seed)
+                local noise = get_noise(mixed_ore_noise, pos, seed, 10000)
                 local i_raw = math_floor(noise * 25 * size + math_abs(pos.x) * 0.05) % mixed_ore_weight_total
                 local i = 1
                 for k, v in ipairs(mixed_ore_weight) do
@@ -160,7 +165,7 @@ local function vertical_lines(surface, left_top_x, left_top_y)
         for y = 0, 31, 1 do
             local pos = { x = left_top_x + x, y = left_top_y + y }
             if surface.can_place_entity({ name = 'iron-ore', position = pos }) then
-                local noise = GetNoise('bb_ore_vertical_lines', pos, seed)
+                local noise = get_noise(vertical_lines_ore_noise, pos, seed, 10000)
                 local i = math.floor(noise * 50 + math.abs(pos.x) * 0.2) % 16 + 1
                 local amount = (1000 + math.sqrt(pos.x ^ 2 + pos.y ^ 2) * 3) * 10
                 surface.create_entity({ name = ores[i], position = pos, amount = amount, enable_tree_removal = false })
@@ -195,7 +200,7 @@ local function mixed_patches(surface, left_top_x, left_top_y)
         for y = 0, 31, 1 do
             local pos = { x = left_top_x + x, y = left_top_y + y }
             if surface.can_place_entity({ name = 'iron-ore', position = pos }) then
-                local noise = GetNoise('bb_ore', pos, seed)
+                local noise = get_noise(mixed_ore_noise, pos, seed, 10000)
                 if noise > 0.1 * size or noise < -0.1 * size then
                     local i = math_floor(noise * 25 + math_abs(pos.x) * 0.05) % 15 + 1
                     local amount = (storage.random_generator(800, 1000) + math_sqrt(pos.x ^ 2 + pos.y ^ 2) * 3)
