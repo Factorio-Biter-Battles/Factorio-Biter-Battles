@@ -7,9 +7,6 @@ local Server = require('utils.server')
 
 local gui_style = require('utils.utils').gui_style
 
-local get_noise = require('utils.multi_octave_noise').get
-local biter_area_border_noise = require('maps.biter_battles_v2.predefined_noise').biter_area_border
-
 local math_abs = math.abs
 local math_floor = math.floor
 local math_min = math.min
@@ -345,26 +342,10 @@ function Functions.init_player(player)
     game.permissions.get_group('spectator').add_player(player)
 end
 
-function Functions.is_biter_area(position, noise_Enabled)
+function Functions.is_roughly_biter_area(position)
     local bitera_area_distance = Config.bitera_area_distance * -1
     local a = bitera_area_distance - (math_abs(position.x) * Config.biter_area_slope)
-    if position.y - 70 > a then
-        return false
-    end
-    if position.y + 70 < a then
-        return true
-    end
-    if noise_Enabled then
-        local seed = game.surfaces[storage.bb_surface_name].map_gen_settings.seed
-        if position.y + (get_noise(biter_area_border_noise, position, seed, 0) * 64) > a then
-            return false
-        end
-    else
-        if position.y > a then
-            return false
-        end
-    end
-    return true
+    return position.y <= a
 end
 
 function Functions.no_turret_creep(event)
@@ -383,7 +364,7 @@ function Functions.no_turret_creep(event)
     if posEntity.y < 0 then
         posEntity.y = posEntity.y - 100
     end
-    if not Functions.is_biter_area(posEntity, false) then
+    if not Functions.is_roughly_biter_area(posEntity) then
         return
     end
 

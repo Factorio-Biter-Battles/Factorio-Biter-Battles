@@ -2,7 +2,6 @@ local Public = {}
 local LootRaffle = require('functions.loot_raffle')
 local BiterRaffle = require('maps.biter_battles_v2.biter_raffle')
 local bb_config = require('maps.biter_battles_v2.config')
-local Functions = require('maps.biter_battles_v2.functions')
 local mixed_ore_map = require('maps.biter_battles_v2.mixed_ore_map')
 local noise = require('maps.biter_battles_v2.predefined_noise')
 local AiTargets = require('maps.biter_battles_v2.ai_targets')
@@ -20,6 +19,7 @@ local math_sqrt = math.sqrt
 
 local get_noise = require('utils.multi_octave_noise').get
 local simplex_noise = require('utils.simplex_noise').d2
+local biter_area_border_noise = noise.biter_area_border
 local mixed_ore_noise = noise.mixed_ore
 local spawn_wall_noise = noise.spawn_wall
 local spawn_wall_2_noise = noise.spawn_wall_2
@@ -464,11 +464,26 @@ local function generate_extra_worm_turrets(surface, left_top)
     end
 end
 
+---@param seed uint
+---@param position {x: number, y: number}
+---@return boolean
+local function is_biter_area(seed, position)
+    local bitera_area_distance = bb_config.bitera_area_distance * -1
+    local a = bitera_area_distance - (math_abs(position.x) * bb_config.biter_area_slope)
+    if position.y - 70 > a then
+        return false
+    end
+    if position.y + 70 < a then
+        return true
+    end
+    return position.y + (get_noise(biter_area_border_noise, position, seed, 0) * 64) <= a
+end
+
 local function draw_biter_area(surface, left_top_x, left_top_y)
-    if not Functions.is_biter_area({ x = left_top_x, y = left_top_y - 96 }, true) then
+    local seed = game.surfaces[storage.bb_surface_name].map_gen_settings.seed
+    if not is_biter_area(seed, { x = left_top_x, y = left_top_y - 96 }) then
         return
     end
-    local seed = game.surfaces[storage.bb_surface_name].map_gen_settings.seed
 
     local out_of_map = {}
     local tiles = {}
@@ -480,7 +495,7 @@ local function draw_biter_area(surface, left_top_x, left_top_y)
     for x = 0, 31, 1 do
         for y = 0, 31, 1 do
             local position = { x = left_top_x + x, y = left_top_y + y }
-            if Functions.is_biter_area(position, true) then
+            if is_biter_area(seed, position) then
                 -- + 1, because lua has 1-based indices
                 local grid_p_x = ((position.x + seed) % biter_texture.width) + 1
                 local grid_p_y = ((position.y + seed) % biter_texture.height) + 1
@@ -500,7 +515,7 @@ local function draw_biter_area(surface, left_top_x, left_top_y)
         local v = chunk_tile_vectors[storage.random_generator(1, size_of_chunk_tile_vectors)]
         local position = { x = left_top_x + v[1], y = left_top_y + v[2] }
         if
-            Functions.is_biter_area(position, true)
+            is_biter_area(seed, position)
             and surface.can_place_entity({ name = 'spitter-spawner', position = position })
         then
             local e
@@ -519,7 +534,7 @@ local function draw_biter_area(surface, left_top_x, left_top_y)
         local position = { x = left_top_x + v[1], y = left_top_y + v[2] }
         local worm_turret_name = BiterRaffle.roll('worm', e)
         if
-            Functions.is_biter_area(position, true)
+            is_biter_area(seed, position)
             and surface.can_place_entity({ name = worm_turret_name, position = position })
         then
             surface.create_entity({ name = worm_turret_name, position = position, force = 'north_biters' })
