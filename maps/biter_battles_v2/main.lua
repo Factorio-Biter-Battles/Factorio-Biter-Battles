@@ -498,17 +498,17 @@ local function on_tick()
 
     if (tick + 5) % 180 == 0 then
         local profiler
-	if (tick + 5) % 3600 == 0 then
+        if (tick + 5) % 3600 == 0 then
             profiler = game.create_profiler()
-	end
+        end
 
         Gui.refresh()
         Shortcuts.refresh()
         ResearchInfo.update_research_info_ui()
 
-	if profiler ~= nil then
-            print({'', 'gui refresh took: ', profiler})
-	end
+        if profiler ~= nil then
+            print({ '', 'gui refresh took: ', profiler })
+        end
     end
 
     --[[
