@@ -9,7 +9,6 @@ local tables = require('maps.biter_battles_v2.tables')
 local session = require('utils.datastore.session_data')
 local biter_texture = require('maps.biter_battles_v2.precomputed.biter_texture')
 local river = require('maps.biter_battles_v2.precomputed.river')
-local chunk = require('maps.biter_battles_v2.precomputed.chunk_container')
 
 local spawn_ore = tables.spawn_ore
 local table_insert = table.insert
@@ -379,13 +378,14 @@ local function generate_starting_area(pos, surface)
     end
 end
 
+-- reuse same buffer to avoid reallocations
+local tiles = {}
+
 local function generate_river(surface, left_top_x, left_top_y)
     if not (left_top_y == -32 or (left_top_y == -64 and (left_top_x == -32 or left_top_x == 0))) then
         return
     end
     local seed = game.surfaces[storage.bb_surface_name].map_gen_settings.seed
-    -- Stack allocated buffer with a capacity of 1024.
-    local tiles = chunk.buffer
     local pos = { x = left_top_x }
     local i = 1
     for _ = 0, 31, 1 do
