@@ -12,8 +12,11 @@ local river = require('maps.biter_battles_v2.precomputed.river')
 
 local spawn_ore = tables.spawn_ore
 local table_insert = table.insert
-local math_floor = math.floor
 local math_abs = math.abs
+local math_ceil = math.ceil
+local math_floor = math.floor
+local math_max = math.max
+local math_min = math.min
 local math_sqrt = math.sqrt
 
 local get_noise = require('utils.multi_octave_noise').get
@@ -23,8 +26,12 @@ local mixed_ore_noise = noise.mixed_ore
 local spawn_wall_noise = noise.spawn_wall
 local spawn_wall_2_noise = noise.spawn_wall_2
 
+-- max value 64
 local river_circle_size = 39
+
+-- max value 32
 local spawn_island_size = 9
+
 local ores = {
     'iron-ore',
     'copper-ore',
@@ -45,6 +52,10 @@ local ores = {
 -- mixed_ore_multiplier order is based on the ores variable
 local mixed_ore_multiplier = { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 }
 local rocks = { 'huge-rock', 'big-rock', 'big-rock', 'big-rock', 'big-sand-rock' }
+
+-- 32 * 32 buffers
+local chunk_buffer = {}
+local chunk_buffer2 = {}
 
 local chunk_tile_vectors = {}
 for x = 0, 31, 1 do
@@ -269,7 +280,7 @@ local function is_horizontal_border_river(pos, seed)
         return true
     end
 
-    -- Offset contains coefficient in a range between [-4,4]. Select it
+    -- Offset contains coefficient in a range between [0,4]. Select it
     -- from pre-computed table. Position X coordinate is used to determinate
     -- which offset is selected.
     local offset = river.offset[(pos.x + seed) % river.size]
@@ -378,35 +389,92 @@ local function generate_starting_area(pos, surface)
     end
 end
 
--- reuse same buffer to avoid reallocations
-local tiles = {}
-
-local function generate_river(surface, left_top_x, left_top_y)
-    if not (left_top_y == -32 or (left_top_y == -64 and (left_top_x == -32 or left_top_x == 0))) then
-        return
-    end
-    local seed = game.surfaces[storage.bb_surface_name].map_gen_settings.seed
-    local pos = { x = left_top_x }
-    local i = 1
-    for _ = 0, 31, 1 do
-        pos.y = left_top_y
-        for _ = 0, 31, 1 do
-            pos.y = pos.y + 1
-            if is_horizontal_border_river(pos, seed) and not is_within_spawn_island(pos) then
-                -- Need to create brand new object to avoid passing 'pos' as
-                -- reference. API calls don't require 'x' and 'y' keys.
-                local unref_pos = { pos.x, pos.y }
-                tiles[i] = { name = 'deepwater', position = unref_pos }
-                if storage.random_generator(1, 64) == 1 then
-                    surface.create_entity({ name = 'fish', position = pos })
-                end
-            else
-                tiles[i] = nil
-            end
-
-            i = i + 1
+local function generate_ordinary_tile(surface, seed, pos, rng)
+    if surface.can_place_entity({ name = 'iron-ore', position = pos }) then
+        local noise = get_noise(mixed_ore_noise, pos, seed, 10000)
+        if noise > 0.6 then
+            local i = math_floor(noise * 25 + math_abs(pos.x) * 0.05) % 15 + 1
+            local amount = (rng(800, 1000) + math_sqrt(pos.x ^ 2 + pos.y ^ 2) * 3) * mixed_ore_multiplier[i]
+            surface.create_entity({ name = ores[i], position = pos, amount = amount })
         end
-        pos.x = pos.x + 1
+    end
+end
+
+local function is_outside_spawn(chunk_pos)
+    return chunk_pos.x < -5 or chunk_pos.x >= 5 or chunk_pos.y < -5
+end
+
+--- Calculates tile y coordinate which has top border closest to the intersection point of the middle
+---  of a vertical column and the top (negative) part of a circle at the origin, ties prefer tile below (towards positive)
+---@param column_x number tile column x coordinate
+---@param circle_radius number
+---@return number? tile_y # intersection point, if any
+local function tile_near_column_with_origin_circle_intersection(column_x, circle_radius)
+    local tile_center = 0.5
+    local circle_y_intersection_sq = circle_radius ^ 2 - (column_x + tile_center) ^ 2
+    if circle_y_intersection_sq < 0 then
+        return nil
+    end
+    local circle_y_intersection = -math_sqrt(circle_y_intersection_sq)
+    -- round, tie breaker ceil
+    circle_y_intersection = math_floor(circle_y_intersection + 0.5)
+    return circle_y_intersection
+end
+
+local river_width_half = math_floor(bb_config.border_river_width * 0.5)
+
+---@param surface LuaSurface
+---@param chunk_pos {x: number, y: number}
+---@param rng LuaRandomGenerator
+local function generate_river(surface, chunk_pos, rng)
+    local left_top_x = chunk_pos.x * 32
+    local left_top_y = chunk_pos.y * 32
+    local seed = surface.map_gen_settings.seed
+    local in_spawn_river_circle_bbox = chunk_pos.x >= -2 and chunk_pos.x < 2
+    local is_outside_spawn = is_outside_spawn(chunk_pos)
+
+    local tiles = {}
+    local i = 1
+
+    -- fill vertically strip by strip, dividing into river/ordinary/spec_island parts
+    for x = left_top_x, left_top_x + 32 - 1 do
+        -- Offset contains coefficient in a range between [0, 4]. Select it
+        -- from pre-computed table. Position X coordinate is used to determinate
+        -- which offset is selected.
+        local offset = river.offset[(x + seed) % river.size]
+        local river_border_start_y = -river_width_half - offset
+
+        if in_spawn_river_circle_bbox then
+            local circle_y_intersection = tile_near_column_with_origin_circle_intersection(x, river_circle_size)
+            if circle_y_intersection then
+                river_border_start_y = math_min(river_border_start_y, circle_y_intersection)
+                river_border_start_y = math_max(river_border_start_y, left_top_y)
+            end
+        end
+
+        local river_border_end_y = left_top_y + 32 - 1
+        local is_spec_island_chunk = (chunk_pos_x == -1 or chunk_pos_x == 0) and chunk_pos_y == -1
+        if is_spec_island_chunk then
+            local circle_y_intersection = tile_near_column_with_origin_circle_intersection(x, spawn_island_size)
+            if circle_y_intersection then
+                local spec_island_start = math_min(river_border_end_y, circle_y_intersection)
+                river_border_end_y = spec_island_start - 1
+            end
+        end
+
+        if is_outside_spawn then
+            for y = left_top_y, river_border_start_y - 1 do
+                generate_ordinary_tile(surface, seed, { x = x, y = y }, rng)
+            end
+        end
+
+        for y = river_border_start_y, river_border_end_y do
+            tiles[i] = { name = 'deepwater', position = { x, y } }
+            i = i + 1
+            if rng(1, 64) == 1 then
+                surface.create_entity({ name = 'fish', position = { x + 0.5, y + 0.5 } })
+            end
+        end
     end
 
     surface.set_tiles(tiles)
@@ -422,8 +490,11 @@ for x = -8, 8, 1 do
 end
 local size_of_scrap_vectors = #scrap_vectors
 
-local function generate_extra_worm_turrets(surface, left_top)
-    local chunk_distance_to_center = math_sqrt(left_top.x ^ 2 + left_top.y ^ 2)
+local function populate_with_extra_worm_turrets(surface, chunk_pos, rng)
+    local left_top_x = chunk_pos.x * 32
+    local left_top_y = chunk_pos.y * 32
+
+    local chunk_distance_to_center = math_sqrt(left_top_x ^ 2 + left_top_y ^ 2)
     if bb_config.bitera_area_distance > chunk_distance_to_center then
         return
     end
@@ -434,7 +505,7 @@ local function generate_extra_worm_turrets(surface, left_top)
     end
     local floor_amount = math_floor(amount)
     local r = math.round(amount - floor_amount, 3) * 1000
-    if storage.random_generator(0, 999) <= r then
+    if rng(0, 999) <= r then
         floor_amount = floor_amount + 1
     end
 
@@ -444,17 +515,17 @@ local function generate_extra_worm_turrets(surface, left_top)
 
     for _ = 1, floor_amount, 1 do
         local worm_turret_name = BiterRaffle.roll('worm', chunk_distance_to_center * 0.00015)
-        local v = chunk_tile_vectors[storage.random_generator(1, size_of_chunk_tile_vectors)]
+        local v = chunk_tile_vectors[rng(1, size_of_chunk_tile_vectors)]
         local position =
-            surface.find_non_colliding_position(worm_turret_name, { left_top.x + v[1], left_top.y + v[2] }, 8, 1)
+            surface.find_non_colliding_position(worm_turret_name, { left_top_x + v[1], left_top_y + v[2] }, 8, 1)
         if position then
             local worm = surface.create_entity({ name = worm_turret_name, position = position, force = 'north_biters' })
 
             -- add some scrap
-            for _ = 1, storage.random_generator(0, 4), 1 do
-                local vector = scrap_vectors[storage.random_generator(1, size_of_scrap_vectors)]
+            for _ = 1, rng(0, 4), 1 do
+                local vector = scrap_vectors[rng(1, size_of_scrap_vectors)]
                 local position = { worm.position.x + vector[1], worm.position.y + vector[2] }
-                local name = wrecks[storage.random_generator(1, size_of_wrecks)]
+                local name = wrecks[rng(1, size_of_wrecks)]
                 position = surface.find_non_colliding_position(name, position, 16, 1)
                 if position then
                     local e = surface.create_entity({ name = name, position = position, force = 'neutral' })
@@ -479,62 +550,43 @@ local function is_biter_area(seed, position)
     return position.y + (get_noise(biter_area_border_noise, position, seed, 0) * 64) <= a
 end
 
-local function draw_biter_area(surface, left_top_x, left_top_y)
-    local seed = game.surfaces[storage.bb_surface_name].map_gen_settings.seed
-    if not is_biter_area(seed, { x = left_top_x, y = left_top_y - 96 }) then
-        return
-    end
+local function populate_biter_area(surface, chunk_pos, rng, is_biter_area_chunk)
+    local left_top_x = chunk_pos.x * 32
+    local left_top_y = chunk_pos.y * 32
+    local seed = surface.map_gen_settings.seed
 
-    local out_of_map = {}
-    local tiles = {}
-    local i = 1
-
-    -- Iterates over each position within chunk, maps the relative x/y position into
-    -- biter_texture with pre-computed 2D grid. The value from the grid is then mapped
-    -- into tile name and is applied into game state.
-    for x = 0, 31, 1 do
-        for y = 0, 31, 1 do
-            local position = { x = left_top_x + x, y = left_top_y + y }
-            if is_biter_area(seed, position) then
-                -- + 1, because lua has 1-based indices
-                local grid_p_x = ((position.x + seed) % biter_texture.width) + 1
-                local grid_p_y = ((position.y + seed) % biter_texture.height) + 1
-                local id = biter_texture.grid[grid_p_x][grid_p_y]
-                local name = biter_texture.map[id]
-                out_of_map[i] = { name = 'out-of-map', position = position }
-                tiles[i] = { name = name, position = position }
-                i = i + 1 -- need semicolon to fix stylua formatting
-            end
-        end
-    end
-
-    surface.set_tiles(out_of_map, false)
-    surface.set_tiles(tiles, true)
-
-    for _ = 1, 4, 1 do
-        local v = chunk_tile_vectors[storage.random_generator(1, size_of_chunk_tile_vectors)]
+    for _ = 1, 4 do
+        local v = chunk_tile_vectors[rng(1, size_of_chunk_tile_vectors)]
         local position = { x = left_top_x + v[1], y = left_top_y + v[2] }
         if
-            is_biter_area(seed, position)
+            (is_biter_area_chunk or is_biter_area(seed, position))
             and surface.can_place_entity({ name = 'spitter-spawner', position = position })
         then
             local e
-            if storage.random_generator(1, 4) == 1 then
-                e = surface.create_entity({ name = 'spitter-spawner', position = position, force = 'north_biters' })
+            if rng(1, 4) == 1 then
+                e = surface.create_entity({
+                    name = 'spitter-spawner',
+                    position = position,
+                    force = 'north_biters',
+                })
             else
-                e = surface.create_entity({ name = 'biter-spawner', position = position, force = 'north_biters' })
+                e = surface.create_entity({
+                    name = 'biter-spawner',
+                    position = position,
+                    force = 'north_biters',
+                })
             end
-            table.insert(storage.unit_spawners[e.force.name], e)
+            table_insert(storage.unit_spawners[e.force.name], e)
         end
     end
 
     local e = (math_abs(left_top_y) - bb_config.bitera_area_distance) * 0.0015
-    for _ = 1, storage.random_generator(5, 10), 1 do
-        local v = chunk_tile_vectors[storage.random_generator(1, size_of_chunk_tile_vectors)]
+    for _ = 1, rng(5, 10), 1 do
+        local v = chunk_tile_vectors[rng(1, size_of_chunk_tile_vectors)]
         local position = { x = left_top_x + v[1], y = left_top_y + v[2] }
         local worm_turret_name = BiterRaffle.roll('worm', e)
         if
-            is_biter_area(seed, position)
+            (is_biter_area_chunk or is_biter_area(seed, position))
             and surface.can_place_entity({ name = worm_turret_name, position = position })
         then
             surface.create_entity({ name = worm_turret_name, position = position, force = 'north_biters' })
@@ -542,38 +594,109 @@ local function draw_biter_area(surface, left_top_x, left_top_y)
     end
 end
 
-local function mixed_ore(surface, left_top_x, left_top_y)
-    local seed = game.surfaces[storage.bb_surface_name].map_gen_settings.seed
+local function get_biter_area_tile(seed, pos)
+    -- Maps the relative x/y position into biter_texture with pre-computed 2D grid.
+    -- The value from the grid is then mapped into tile name.
+    -- + 1, because lua has 1-based indices
+    local grid_p_x = ((pos.x + seed) % biter_texture.width) + 1
+    local grid_p_y = ((pos.y + seed) % biter_texture.height) + 1
+    local id = biter_texture.grid[grid_p_x][grid_p_y]
+    local name = biter_texture.map[id]
+    return { name = 'out-of-map', position = pos }, { name = name, position = pos }
+end
 
-    --Draw noise text values to determine which chunks are valid for mixed ore.
-    -- local noise = get_noise(mixed_ore_noise, { x = left_top_x + 16, y = left_top_y + 16 }, seed, 10000)
-    -- rendering.draw_text{text = noise, surface = surface, target = {left_top_x + 16, left_top_y + 16}, color = {255, 128, 0}, scale = 2, font = "default-game"}
+---@param surface LuaSurface
+---@param chunk_pos {x: number, y: number}
+---@param rng LuaRandomGenerator
+local function generate_biter_area_border(surface, chunk_pos, rng)
+    local bitera_area_distance = bb_config.bitera_area_distance * -1
+    local left_top_x = chunk_pos.x * 32
+    local left_top_y = chunk_pos.y * 32
+    local seed = surface.map_gen_settings.seed
 
-    --Draw the mixed ore patches.
-    for x = 0, 31, 1 do
-        for y = 0, 31, 1 do
-            local pos = { x = left_top_x + x, y = left_top_y + y }
-            if surface.can_place_entity({ name = 'iron-ore', position = pos }) then
-                local noise = get_noise(mixed_ore_noise, pos, seed, 10000)
-                if noise > 0.6 then
-                    local i = math_floor(noise * 25 + math_abs(pos.x) * 0.05) % 15 + 1
-                    local amount = (storage.random_generator(800, 1000) + math_sqrt(pos.x ^ 2 + pos.y ^ 2) * 3)
-                        * mixed_ore_multiplier[i]
-                    surface.create_entity({ name = ores[i], position = pos, amount = amount })
-                end
+    local out_of_map = {}
+    local tiles = {}
+    local i = 1
+
+    -- fill vertically strip by strip, dividing into biter_area/transitional/ordinary parts
+    for x = left_top_x, left_top_x + 32 - 1 do
+        local a = bitera_area_distance - math_abs(x) * bb_config.biter_area_slope
+
+        local transitional_area_start = math_ceil(a - 70)
+        local transitional_area_end = math_floor(a + 70)
+
+        local biter_area_end = math_min(left_top_y + 32 - 1, transitional_area_start - 1)
+        local ordinary_start = math_max(transitional_area_end + 1, left_top_y)
+        transitional_area_start = math_max(transitional_area_start, left_top_y)
+        transitional_area_end = math_min(left_top_y + 32 - 1, transitional_area_end)
+
+        for y = left_top_y, biter_area_end do
+            out_of_map[i], tiles[i] = get_biter_area_tile(seed, { x = x, y = y })
+            i = i + 1
+        end
+
+        for y = transitional_area_start, transitional_area_end do
+            local pos = { x = x, y = y }
+            local is_biter_area = y + (get_noise(biter_area_border_noise, pos, seed, 0) * 64) <= a
+            if is_biter_area then
+                out_of_map[i], tiles[i] = get_biter_area_tile(seed, pos)
+                i = i + 1
+            else
+                generate_ordinary_tile(surface, seed, pos, rng)
             end
+        end
+
+        for y = ordinary_start, left_top_y + 32 - 1 do
+            generate_ordinary_tile(surface, seed, { x = x, y = y }, rng)
         end
     end
 
-    if left_top_y == -32 and math_abs(left_top_x) <= 32 then
-        for _, e in
-            pairs(surface.find_entities_filtered({
-                name = 'character',
-                invert = true,
-                area = { { -12, -12 }, { 12, 12 } },
-            }))
-        do
-            e.destroy()
+    surface.set_tiles(out_of_map, false)
+    surface.set_tiles(tiles, true)
+
+    populate_biter_area(surface, chunk_pos, rng, false)
+end
+
+---@param surface LuaSurface
+---@param chunk_pos {x: number, y: number}
+---@param rng LuaRandomGenerator
+local function generate_biter_area(surface, chunk_pos, rng)
+    local left_top_x = chunk_pos.x * 32
+    local left_top_y = chunk_pos.y * 32
+    local seed = surface.map_gen_settings.seed
+
+    local out_of_map = chunk_buffer
+    local tiles = chunk_buffer2
+    local i = 1
+
+    for y = left_top_y, left_top_y + 32 - 1 do
+        for x = left_top_x, left_top_x + 32 - 1 do
+            out_of_map[i], tiles[i] = get_biter_area_tile(seed, { x = x, y = y })
+            i = i + 1
+        end
+    end
+
+    surface.set_tiles(out_of_map, false)
+    surface.set_tiles(tiles, true)
+
+    populate_biter_area(surface, chunk_pos, rng, true)
+end
+
+---@param surface LuaSurface
+---@param chunk_pos {x: number, y: number}
+---@param rng LuaRandomGenerator
+local function generate_ordinary(surface, chunk_pos, rng)
+    if not is_outside_spawn(chunk_pos) then
+        return
+    end
+
+    local left_top_x = chunk_pos.x * 32
+    local left_top_y = chunk_pos.y * 32
+    local seed = surface.map_gen_settings.seed
+
+    for y = left_top_y, left_top_y + 32 - 1 do
+        for x = left_top_x, left_top_x + 32 - 1 do
+            generate_ordinary_tile(surface, seed, { x = x, y = y }, rng)
         end
     end
 end
@@ -642,26 +765,32 @@ function Public.generate(event)
     local profiler = chunk_profiling and helpers.create_profiler(false)
 
     local surface = event.surface
-    local left_top = event.area.left_top
-    local left_top_x = left_top.x
-    local left_top_y = left_top.y
+    local chunk_pos = event.position
+    local rng = storage.random_generator
 
-    if storage.active_special_games['mixed_ore_map'] then
-        mixed_ore_map(surface, left_top_x, left_top_y)
+    -- local is_mixed_ore_special = storage.active_special_games['mixed_ore_map']
+    -- TODO:
+    -- if is_mixed_ore_special then
+    --     mixed_ore_map(surface, left_top_x, left_top_y)
+    -- end
 
-    -- Since a chunk size is 32 in Factorio, therefore we draw mixed ore from -16 to +16. But also we make sure that in the 300x300
-    -- square that we have in Main, we don't draw mixed ore patches. (thats bounded by -150 and +150)
-    elseif left_top_x + 16 < -150 or left_top_x + 16 > 150 or left_top_y + 16 < -150 then
-        mixed_ore(surface, left_top_x, left_top_y)
+    local chunk_variant = chunk_type_at(chunk_pos)
+    if chunk_variant == chunk_type.river then
+        generate_river(surface, chunk_pos, rng)
+    elseif chunk_variant == chunk_type.ordinary then
+        generate_ordinary(surface, chunk_pos, rng)
+    elseif chunk_variant == chunk_type.biter_area_border then
+        generate_biter_area_border(surface, chunk_pos, rng)
+    elseif chunk_variant == chunk_type.biter_area then
+        generate_biter_area(surface, chunk_pos, rng)
     end
-    generate_river(surface, left_top_x, left_top_y)
-    draw_biter_area(surface, left_top_x, left_top_y)
-    generate_extra_worm_turrets(surface, left_top)
+
+    populate_with_extra_worm_turrets(surface, chunk_pos, rng)
 
     if profiler then
         profiler.stop()
         chunk_profiling.all.add_record(profiler)
-        chunk_profiling.per_chunk_type[chunk_type_at(event.position)].add_record(profiler)
+        chunk_profiling.per_chunk_type[chunk_variant].add_record(profiler)
     end
 end
 
@@ -724,7 +853,7 @@ function Public.draw_mixed_ore_spawn_area(surface)
     local chunk_r = 4
     for x = chunk_r * -1, chunk_r, 1 do
         for y = chunk_r * -1, -1, 1 do
-            mixed_ore_map(surface, x * 32, y * 32)
+            -- mixed_ore_map(surface, x * 32, y * 32)
         end
     end
 end
@@ -901,38 +1030,6 @@ function Public.generate_silo(surface)
     turret2.insert({ name = 'firearm-magazine', count = 10 })
     AiTargets.start_tracking(turret2)
 end
---[[
-function Public.generate_spawn_goodies(surface)
-	local tiles = surface.find_tiles_filtered({name = "stone-path"})
-	table.shuffle_table(tiles)
-	local budget = 1500
-	local min_roll = 30
-	local max_roll = 600
-	local blacklist = {
-		["automation-science-pack"] = true,
-		["logistic-science-pack"] = true,
-		["military-science-pack"] = true,
-		["chemical-science-pack"] = true,
-		["production-science-pack"] = true,
-		["utility-science-pack"] = true,
-		["space-science-pack"] = true,
-		["loader"] = true,
-		["fast-loader"] = true,
-		["express-loader"] = true,		
-	}
-	local container_names = {"wooden-chest", "wooden-chest", "iron-chest"}
-	for k, tile in pairs(tiles) do
-		if budget <= 0 then return end
-		if surface.can_place_entity({name = "wooden-chest", position = tile.position, force = "neutral"}) then
-			local v = storage.random_generator(min_roll, max_roll)
-			local item_stacks = LootRaffle.roll(v, 4, blacklist)		
-			local container = surface.create_entity({name = container_names[storage.random_generator(1, 3)], position = tile.position, force = "neutral"})
-			for _, item_stack in pairs(item_stacks) do container.insert(item_stack)	end
-			budget = budget - v
-		end
-	end
-end
-]]
 
 ---@param entity LuaEntity
 ---@param player LuaPlayer
