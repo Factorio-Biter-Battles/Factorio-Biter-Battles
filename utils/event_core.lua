@@ -37,7 +37,7 @@ function call_handlers(handlers, event)
     if not handlers then
         return log('Handlers was nil!')
     end
-    local handlers_copy = table.deepcopy(handlers)
+    local handlers_copy = { table.unpack(handlers) }
     for i = 1, #handlers do
         local handler = handlers[i]
         if handler == nil and handlers_copy[i] ~= nil then
