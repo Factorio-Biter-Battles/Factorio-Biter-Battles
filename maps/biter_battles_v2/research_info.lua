@@ -4,6 +4,10 @@ local uic = require('utils.ui.fcomponents')
 local Event = require('utils.event')
 local Functions = require('maps.biter_battles_v2.functions')
 local closable_frame = require('utils.ui.closable_frame')
+local string_format = string.format
+local table_sort = table.sort
+local table_concat = table.concat
+local table_insert = table.insert
 
 local MAXHEIGHT_PADDING = 50
 
@@ -161,13 +165,13 @@ local UI = ui_template()
 ---@return GuiElemDef
 local function research_item(tech_id, north_desc, south_desc)
     local tooltip_items = {}
-    table.insert(tooltip_items, 'North: ' .. (north_desc or 'Not started'))
-    table.insert(tooltip_items, 'South: ' .. (south_desc or 'Not started'))
+    table_insert(tooltip_items, 'North: ' .. (north_desc or 'Not started'))
+    table_insert(tooltip_items, 'South: ' .. (south_desc or 'Not started'))
     ---@type GuiElemDef
     return {
         type = 'sprite',
         sprite = 'technology/' .. tech_id,
-        tooltip = table.concat(tooltip_items, '\n'),
+        tooltip = table_concat(tooltip_items, '\n'),
         elem_tooltip = { type = 'technology', name = tech_id },
         name = '_' .. tech_id,
         tags = {
@@ -193,8 +197,8 @@ end
 ---@return GuiElemDef
 local function progress_research_item(tech_id, this_progress, is_active, north_desc, south_desc)
     local tooltip_items = {}
-    table.insert(tooltip_items, 'North: ' .. (north_desc or 'Not started'))
-    table.insert(tooltip_items, 'South: ' .. (south_desc or 'Not started'))
+    table_insert(tooltip_items, 'North: ' .. (north_desc or 'Not started'))
+    table_insert(tooltip_items, 'South: ' .. (south_desc or 'Not started'))
     ---@type GuiElemDef
     local el = {
         type = 'flow',
@@ -212,7 +216,7 @@ local function progress_research_item(tech_id, this_progress, is_active, north_d
         {
             type = 'progressbar',
             value = this_progress,
-            tooltip = table.concat(tooltip_items, '\n'),
+            tooltip = table_concat(tooltip_items, '\n'),
             style_mods = {
                 color = is_active and { 0, 1, 0 } or { 1, 1, 0 },
             },
@@ -325,7 +329,7 @@ local function get_research_info(tech_id)
                 progress = all_technologies[tech_id].saved_progress
             end
             if progress then
-                result = type .. string.format('%.0f%% complete', progress * 100)
+                result = type .. string_format('%.0f%% complete', progress * 100)
             end
         end
         return result, progress, active
@@ -358,7 +362,7 @@ local function construct_completed(filter)
             elements[#elements + 1] = research_item(tech_name, info.north.desc, info.south.desc)
         end
     end
-    table.sort(elements, function(a, b)
+    table_sort(elements, function(a, b)
         return a.tags.sort_by < b.tags.sort_by
     end)
     if #elements == 0 then
