@@ -309,7 +309,7 @@ function Event.remove_removable_function(event_name, name)
         local n = v.event_name
         if n == event_name then
             local f = v.handler
-            function_handlers[name][k] = nil
+            function_handlers[name]:remove(v)
             remove(handlers, f)
         end
     end)
