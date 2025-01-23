@@ -305,14 +305,15 @@ function Event.remove_removable_function(event_name, name)
 
     local handlers = event_handlers[event_name]
 
-    for k, v in pairs(function_table[name]) do
+    function_table[name]:traverse(function(node)
+        local v = node.value
         local n = v.event_name
         if n == event_name then
             local f = v.handler
             function_handlers[name][k] = nil
             remove(handlers, f)
         end
-    end
+    end)
 
     if handlers:isEmpty() then
         script_on_event(event_name, nil)
