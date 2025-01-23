@@ -73,6 +73,7 @@ function LinkedList:remove(value)
     while node do
         local prev = node
         node = node._next
+        if node == nil then return nil end
         if value == node.value then
             prev._next = node._next
             return nil

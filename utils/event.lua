@@ -456,21 +456,23 @@ function Event.remove_removable_nth_tick_function(tick, name)
     local handlers = on_nth_tick_event_handlers[tick]
     local f = function_nth_tick_table[name]
 
-    for k, v in pairs(function_nth_tick_table[name]) do
+    function_nth_tick_table[name]:traverse(function(node)
+        local v = node.value
         local t = v.tick
         if t == tick then
             f = v.handler
         end
-    end
+    end)
 
     handlers:remove(f)
 
-    for k, v in pairs(function_nth_tick_handlers[name]) do
+    function_nth_tick_handlers[name]:traverse(function(node)
+        local v = node.value
         local t = v.tick
         if t == tick then
-            function_nth_tick_handlers[name][k] = nil
+            function_nth_tick_handlers[name]:remove(k)
         end
-    end
+    end)
 
     if handlers:isEmpty() then
         script_on_nth_tick(tick, nil)
