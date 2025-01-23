@@ -306,7 +306,6 @@ local function get_research_info(tech_id)
     ---@param force LuaForce
     ---@return string?, number?, boolean
     local function format(force)
-        local all_technologies = force.technologies
         local force_name = force.name
         ---@type string?
         local result = nil
@@ -325,7 +324,7 @@ local function get_research_info(tech_id)
                 active = true
             else
                 type = 'Paused - '
-                progress = all_technologies[tech_id].saved_progress
+                progress = force.technologies[tech_id].saved_progress
             end
             if progress then
                 result = type .. string_format('%.0f%% complete', progress * 100)
