@@ -67,7 +67,7 @@ end
 ----@return nil
 function LinkedList:remove(value)
     if value == self._head.value then
-        self._head = self._hed.next
+        self._head = self._head.next
     end
     local node = self._head
     while node do
