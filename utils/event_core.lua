@@ -91,8 +91,9 @@ function Public.add(event_name, handler)
         event_handlers[event_name]:append(handler)
         script_on_event(event_name, on_event)
     else
+        local isEmpty = handlers:isEmpty()
         handlers:append(handler)
-        if handlers:size() == 1 then
+        if isEmpty then
             script_on_event(event_name, on_event)
         end
     end
@@ -106,8 +107,9 @@ function Public.on_init(handler)
         event_handlers[init_event_name]:append(handler)
         script.on_init(on_init)
     else
+        local isEmpty = handlers:isEmpty()
         handlers:append(handler)
-        if handlers:size() == 1 then
+        if isEmpty then
             script.on_init(on_init)
         end
     end
@@ -121,8 +123,9 @@ function Public.on_load(handler)
         event_handlers[load_event_name]:append(handler)
         script.on_load(on_load)
     else
+        local isEmpty = handlers:isEmpty()
         handlers:append(handler)
-        if handlers:size() == 1 then
+        if isEmpty then
             script.on_load(on_load)
         end
     end
@@ -136,8 +139,9 @@ function Public.on_nth_tick(tick, handler)
         on_nth_tick_event_handlers[tick]:append(handler)
         script_on_nth_tick(tick, on_nth_tick_event)
     else
+        local isEmpty = handlers:isEmpty()
         handlers:append(handler)
-        if handlers:size() == 1 then
+        if isEmpty then
             script_on_nth_tick(tick, on_nth_tick_event)
         end
     end

@@ -195,7 +195,7 @@ function Event.remove_removable(event_name, token)
     remove(tokens, token)
     remove(handlers, handler)
 
-    if handlers:size() == 0 then
+    if handlers:isEmpty() then
         script_on_event(event_name, nil)
     end
 end
@@ -314,12 +314,8 @@ function Event.remove_removable_function(event_name, name)
         end
     end
 
-    if handlers:size() == 0 then
+    if handlers:isEmpty() then
         script_on_event(event_name, nil)
-    end
-
-    if function_handlers[name]:size() == 0 then
-        function_handlers[name] = nil
     end
 end
 
@@ -367,7 +363,7 @@ function Event.remove_removable_nth_tick(tick, token)
     remove(tokens, token)
     remove(handlers, handler)
 
-    if handlers:size() == 0 then
+    if handlers:isEmpty() then
         script_on_nth_tick(tick, nil)
     end
 end
@@ -476,11 +472,7 @@ function Event.remove_removable_nth_tick_function(tick, name)
         end
     end
 
-    if function_nth_tick_handlers[name]:size() == 0 then
-        function_nth_tick_handlers[name] = nil
-    end
-
-    if handlers:size() == 0 then
+    if handlers:isEmpty() then
         script_on_nth_tick(tick, nil)
     end
 end
