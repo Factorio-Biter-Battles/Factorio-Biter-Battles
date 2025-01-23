@@ -40,8 +40,8 @@ function call_handlers(handlers, event)
         return log('Handlers was nil!')
     end
 
-    handlers:traverse(function(node)
-        xpcall(node.value, errorHandler, event)
+    handlers:traverse(function(handler)
+        xpcall(handler, errorHandler, event)
     end)
 end
 

@@ -305,8 +305,7 @@ function Event.remove_removable_function(event_name, name)
 
     local handlers = event_handlers[event_name]
 
-    function_table[name]:traverse(function(node)
-        local v = node.value
+    function_table[name]:traverse(function(v)
         local n = v.event_name
         if n == event_name then
             local f = v.handler
@@ -457,8 +456,7 @@ function Event.remove_removable_nth_tick_function(tick, name)
     local handlers = on_nth_tick_event_handlers[tick]
     local f = function_nth_tick_table[name]
 
-    function_nth_tick_table[name]:traverse(function(node)
-        local v = node.value
+    function_nth_tick_table[name]:traverse(function(v)
         local t = v.tick
         if t == tick then
             f = v.handler
@@ -467,8 +465,7 @@ function Event.remove_removable_nth_tick_function(tick, name)
 
     handlers:remove(f)
 
-    function_nth_tick_handlers[name]:traverse(function(node)
-        local v = node.value
+    function_nth_tick_handlers[name]:traverse(function(v)
         local t = v.tick
         if t == tick then
             function_nth_tick_handlers[name]:remove(k)
@@ -515,8 +512,7 @@ local function add_handlers()
     end
 
     for name, funcs in pairs(function_handlers) do
-        funcs:traverse(function(node)
-            local func = node.value
+        funcs:traverse(function(func)
             local e_name = func.event_name
             local func_string = func.handler
             local handler = assert(load('return ' .. func_string))()
@@ -539,8 +535,7 @@ local function add_handlers()
     end
 
     for name, funcs in pairs(function_nth_tick_handlers) do
-        funcs:traverse(function(node)
-            local func = node.value
+        funcs:traverse(function(func)
             local tick = func.tick
             local func_string = func.handler
             local handler = assert(load('return ' .. func_string))()

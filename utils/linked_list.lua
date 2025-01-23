@@ -88,7 +88,7 @@ end
 function LinkedList:traverse(fn)
     local node = self._head
     while node do
-        fn(node)
+        fn(node.value)
         node = node.next
     end
 end
