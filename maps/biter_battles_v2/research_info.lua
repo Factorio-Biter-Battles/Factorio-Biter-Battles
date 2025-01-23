@@ -1,4 +1,3 @@
-local gui_style = require('utils.utils').gui_style
 local flui = require('utils.ui.gui-lite')
 local uic = require('utils.ui.fcomponents')
 local Event = require('utils.event')
@@ -122,7 +121,7 @@ local function ui_template()
             },
         })
     end
-    local both_teams = uic.add(container, {
+    uic.add(container, {
         type = 'frame',
         style = 'inside_shallow_frame_with_padding',
         direction = 'vertical',
@@ -302,7 +301,6 @@ end
 
 local function get_research_info(tech_id)
     local tech_info = storage.research_info.completed[tech_id]
-    local progress = storage.research_info.current_progress
 
     ---@param force LuaForce
     ---@return string?, number?, boolean
@@ -499,7 +497,6 @@ end
 
 ---@param player LuaPlayer
 function ResearchInfo.show_research_info(player)
-    local all_technologies = game.forces.spectator.technologies
     local frame = player.gui.screen['research_info_frame']
 
     if frame and frame.valid then
