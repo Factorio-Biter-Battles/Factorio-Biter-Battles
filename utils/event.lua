@@ -71,13 +71,7 @@ local function remove(tbl, handler)
         return
     end
 
-    -- the handler we are looking for is more likly to be at the back of the array.
-    for i = #tbl, 1, -1 do
-        if tbl[i] == handler then
-            table_remove(tbl, i)
-            break
-        end
-    end
+    tbl:remove(handler)
 end
 
 ---Register a handler for the event_name event, can only be used during control, init or load cycles.</br>
@@ -168,9 +162,10 @@ function Event.add_removable(event_name, token)
 
     local tokens = token_handlers[event_name]
     if not tokens then
-        token_handlers[event_name] = { token }
+        token_handlers[event_name] = LinkedList:new()
+        token_handlers[event_name].append(token)
     else
-        tokens[#tokens + 1] = token
+        tokens.append(token)
     end
 
     if handlers_added then
@@ -199,7 +194,7 @@ function Event.remove_removable(event_name, token)
     remove(tokens, token)
     remove(handlers, handler)
 
-    if #handlers == 0 then
+    if handlers:size() == 0 then
         script_on_event(event_name, nil)
     end
 end
@@ -269,19 +264,19 @@ function Event.add_removable_function(event_name, func, remove_token)
 
     local funcs = function_handlers[name]
     if not funcs then
-        function_handlers[name] = {}
+        function_handlers[name] = LinkedList:new()
         funcs = function_handlers[name]
     end
 
-    funcs[#funcs + 1] = { event_name = event_name, handler = func }
+    funcs:append({ event_name = event_name, handler = func })
 
     local func_table = function_table[name]
     if not func_table then
-        function_table[name] = {}
+        function_table[name] = LinkedList:new()
         func_table = function_table[name]
     end
 
-    func_table[#func_table + 1] = { event_name = event_name, handler = f }
+    func_table.append({ event_name = event_name, handler = f })
 
     if handlers_added then
         core_add(event_name, f)
@@ -318,11 +313,11 @@ function Event.remove_removable_function(event_name, name)
         end
     end
 
-    if #handlers == 0 then
+    if handlers:size() == 0 then
         script_on_event(event_name, nil)
     end
 
-    if #function_handlers[name] == 0 then
+    if function_handlers[name]:size() == 0 then
         function_handlers[name] = nil
     end
 end
@@ -340,9 +335,10 @@ function Event.add_removable_nth_tick(tick, token)
 
     local tokens = token_nth_tick_handlers[tick]
     if not tokens then
-        token_nth_tick_handlers[tick] = { token }
+        token_nth_tick_handlers[tick] = LinkedList:new()
+        token_nth_tick_handlers[tick].append(token)
     else
-        tokens[#tokens + 1] = token
+        tokens.append(token)
     end
 
     if handlers_added then
@@ -370,7 +366,7 @@ function Event.remove_removable_nth_tick(tick, token)
     remove(tokens, token)
     remove(handlers, handler)
 
-    if #handlers == 0 then
+    if handlers:size() == 0 then
         script_on_nth_tick(tick, nil)
     end
 end
@@ -423,19 +419,19 @@ function Event.add_removable_nth_tick_function(tick, func, remove_token)
 
     local funcs = function_nth_tick_handlers[name]
     if not funcs then
-        function_nth_tick_handlers[name] = {}
+        function_nth_tick_handlers[name] = LinkedList:new()
         funcs = function_nth_tick_handlers[name]
     end
 
-    funcs[#funcs + 1] = { tick = tick, handler = func }
+    funcs:append({ tick = tick, handler = func })
 
     local func_table = function_nth_tick_table[name]
     if not func_table then
-        function_nth_tick_table[name] = {}
+        function_nth_tick_table[name] = LinkedList:new()
         func_table = function_nth_tick_table[name]
     end
 
-    func_table[#func_table + 1] = { tick = tick, handler = f }
+    func_table:append({ tick = tick, handler = f })
 
     if handlers_added then
         core_on_nth_tick(tick, f)
@@ -470,7 +466,7 @@ function Event.remove_removable_nth_tick_function(tick, name)
         end
     end
 
-    remove(handlers, f)
+    handlers:remove(f)
 
     for k, v in pairs(function_nth_tick_handlers[name]) do
         local t = v.tick
@@ -479,11 +475,11 @@ function Event.remove_removable_nth_tick_function(tick, name)
         end
     end
 
-    if #function_nth_tick_handlers[name] == 0 then
+    if function_nth_tick_handlers[name]:size() == 0 then
         function_nth_tick_handlers[name] = nil
     end
 
-    if #handlers == 0 then
+    if handlers:size() == 0 then
         script_on_nth_tick(tick, nil)
     end
 end
@@ -523,19 +519,20 @@ local function add_handlers()
     end
 
     for name, funcs in pairs(function_handlers) do
-        for i, func in pairs(funcs) do
+        funcs:traverse(function(node)
+            local func = node.value
             local e_name = func.event_name
             local func_string = func.handler
             local handler = assert(load('return ' .. func_string))()
             local func_handler = function_table[name]
             if not func_handler then
-                function_table[name] = {}
+                function_table[name] = LinkedList:new()
                 func_handler = function_table[name]
             end
 
-            func_handler[#func_handler + 1] = { event_name = e_name, handler = handler }
+            func_handler:append({ event_name = e_name, handler = handler })
             core_add(e_name, handler)
-        end
+        end)
     end
 
     for tick, tokens in pairs(token_nth_tick_handlers) do
@@ -546,19 +543,20 @@ local function add_handlers()
     end
 
     for name, funcs in pairs(function_nth_tick_handlers) do
-        for i, func in pairs(funcs) do
+        funcs:traverse(function(node)
+            local func = node.value
             local tick = func.tick
             local func_string = func.handler
             local handler = assert(load('return ' .. func_string))()
             local func_handler = function_nth_tick_table[name]
             if not func_handler then
-                function_nth_tick_table[name] = {}
+                function_nth_tick_table[name] = LinkedList:new()
                 func_handler = function_nth_tick_table[name]
             end
 
-            func_handler[#func_handler + 1] = { tick = tick, handler = handler }
+            func_handler:append({ tick = tick, handler = handler })
             core_on_nth_tick(tick, handler)
-        end
+        end)
     end
 
     handlers_added = true
