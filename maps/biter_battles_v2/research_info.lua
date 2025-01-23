@@ -268,7 +268,8 @@ function ResearchInfo.research_finished(tech_name, force)
         tech_info = {}
         storage.research_info.completed[tech_name] = tech_info
     end
-    tech_info[force_name] = Functions.get_ticks_since_game_start()
+    local ticks = Functions.get_ticks_since_game_start()
+    tech_info[force_name] = Functions.format_ticks_as_time(ticks)
     storage.research_info.current_progress[force_name][tech_name] = nil
 
     ResearchInfo.update_research_info_ui(true)
@@ -313,7 +314,7 @@ local function get_research_info(tech_id)
         local progress
         local active = false
         if tech_info and tech_info[force_name] then
-            result = Functions.format_ticks_as_time(tech_info[force_name])
+            result = tech_info[force_name]
         else
             local current = force.current_research
             ---@type string?
