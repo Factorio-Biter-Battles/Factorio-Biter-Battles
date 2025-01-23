@@ -62,6 +62,9 @@ function LinkedList:append(value)
     return self._head
 end
 
+----Removes the first occruenace of the value.
+----@param value any
+----@return nil
 function LinkedList:remove(value)
     if value == self._head.value then
         self._head = self._hed.next
@@ -72,6 +75,7 @@ function LinkedList:remove(value)
         node = node._next
         if value == node.value then
             prev._next = node._next
+            return nil
         end
     end
 end
