@@ -163,9 +163,10 @@ local UI = ui_template()
 ---@param south_desc string | nil
 ---@return GuiElemDef
 local function research_item(tech_id, north_desc, south_desc)
-    local tooltip_items = {}
-    table_insert(tooltip_items, 'North: ' .. (north_desc or 'Not started'))
-    table_insert(tooltip_items, 'South: ' .. (south_desc or 'Not started'))
+    local tooltip_items = {
+        'North: ' .. (north_desc or 'Not started'),
+        'South: ' .. (south_desc or 'Not started'),
+    }
     ---@type GuiElemDef
     return {
         type = 'sprite',
