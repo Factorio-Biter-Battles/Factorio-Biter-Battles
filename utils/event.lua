@@ -505,10 +505,10 @@ end
 
 local function add_handlers()
     for event_name, tokens in pairs(token_handlers) do
-        for i = 1, #tokens do
-            local handler = Token.get(tokens[i])
+        tokens:traverse(function(token)
+            local handler = Token.get(token)
             core_add(event_name, handler)
-        end
+        end)
     end
 
     for name, funcs in pairs(function_handlers) do
@@ -528,10 +528,10 @@ local function add_handlers()
     end
 
     for tick, tokens in pairs(token_nth_tick_handlers) do
-        for i = 1, #tokens do
-            local handler = Token.get(tokens[i])
+        tokens:traverse(function(token)
+            local handler = Token.get(token)
             core_on_nth_tick(tick, handler)
-        end
+        end)
     end
 
     for name, funcs in pairs(function_nth_tick_handlers) do
