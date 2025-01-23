@@ -5,6 +5,7 @@
 ---To create custom events, use script.generate_event_name and use its return value as an event name.
 ---To raise that event, use script.raise_event
 
+local LinkedList = require('utils.linked_list')
 local EventCore = require('utils.event_core')
 local Global = require('utils.global')
 local Token = require('utils.token')
@@ -163,9 +164,9 @@ function Event.add_removable(event_name, token)
     local tokens = token_handlers[event_name]
     if not tokens then
         token_handlers[event_name] = LinkedList:new()
-        token_handlers[event_name].append(token)
+        token_handlers[event_name]:append(token)
     else
-        tokens.append(token)
+        tokens:append(token)
     end
 
     if handlers_added then
@@ -276,7 +277,7 @@ function Event.add_removable_function(event_name, func, remove_token)
         func_table = function_table[name]
     end
 
-    func_table.append({ event_name = event_name, handler = f })
+    func_table:append({ event_name = event_name, handler = f })
 
     if handlers_added then
         core_add(event_name, f)
@@ -336,9 +337,9 @@ function Event.add_removable_nth_tick(tick, token)
     local tokens = token_nth_tick_handlers[tick]
     if not tokens then
         token_nth_tick_handlers[tick] = LinkedList:new()
-        token_nth_tick_handlers[tick].append(token)
+        token_nth_tick_handlers[tick]:append(token)
     else
-        tokens.append(token)
+        tokens:append(token)
     end
 
     if handlers_added then
