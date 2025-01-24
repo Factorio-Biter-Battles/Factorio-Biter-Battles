@@ -34,14 +34,16 @@ end
 
 local call_handlers
 function call_handlers(handlers, event)
+    local table_contains = table.contains
+    local table_deepcopy = table.deepcopy
     if not handlers then
         return log('Handlers was nil!')
     end
-    local handlers_copy = table.deepcopy(handlers)
+    local handlers_copy = table_deepcopy(handlers)
     for i = 1, #handlers do
         local handler = handlers[i]
         if handler == nil and handlers_copy[i] ~= nil then
-            if table.contains(handlers, handlers_copy[i]) then
+            if table_contains(handlers, handlers_copy[i]) then
                 handler = handlers_copy[i]
             end
         end
