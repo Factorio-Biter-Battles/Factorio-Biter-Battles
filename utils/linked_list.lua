@@ -17,7 +17,6 @@ end
 
 ---@class LinkedList
 ---@field private _head Node | nil
----@field private _size number
 local LinkedList = {}
 LinkedList.__index = LinkedList
 
@@ -25,7 +24,6 @@ LinkedList.__index = LinkedList
 function LinkedList:new()
     local t = {
         _head = nil,
-        _size = 0,
     }
     return setmetatable(t, self)
 end
@@ -39,7 +37,6 @@ end
 ---@param value any
 ---@return Node
 function LinkedList:prepend(value)
-    self._size = self._size + 1
     self._head = Node:new(value, self._head)
     return self._head
 end
@@ -58,7 +55,6 @@ function LinkedList:append(value)
         end
         ptr.next = node
     end
-    self._size = self._size + 1
     return self._head
 end
 
