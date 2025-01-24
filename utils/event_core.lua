@@ -87,64 +87,56 @@ function Public.add(event_name, handler)
     end
     local handlers = event_handlers[event_name]
     if not handlers then
-        event_handlers[event_name] = LinkedList:new()
-        event_handlers[event_name]:append(handler)
-        script_on_event(event_name, on_event)
-    else
-        local isEmpty = handlers:isEmpty()
-        handlers:append(handler)
-        if isEmpty then
-            script_on_event(event_name, on_event)
-        end
+        handlers = LinkedList:new()
+        event_handlers[event_name] = handlers
     end
+
+    if handlers:isEmpty() then
+        script_on_event(event_name, on_event)
+    end
+    event_handlers[event_name]:append(handler)
 end
 
 --- Do not use this function, use Event.on_init instead as it has safety checks.
 function Public.on_init(handler)
     local handlers = event_handlers[init_event_name]
     if not handlers then
-        event_handlers[init_event_name] = LinkedList:new()
-        event_handlers[init_event_name]:append(handler)
-        script.on_init(on_init)
-    else
-        local isEmpty = handlers:isEmpty()
-        handlers:append(handler)
-        if isEmpty then
-            script.on_init(on_init)
-        end
+        handlers = LinkedList:new()
+        event_handlers[init_event_name] = handlers
     end
+
+    if handlers:isEmpty() then
+        script.on_init(on_init)
+    end
+    handlers:append(handler)
 end
 
 --- Do not use this function, use Event.on_load instead as it has safety checks.
 function Public.on_load(handler)
     local handlers = event_handlers[load_event_name]
     if not handlers then
-        event_handlers[load_event_name] = LinkedList:new()
-        event_handlers[load_event_name]:append(handler)
-        script.on_load(on_load)
-    else
-        local isEmpty = handlers:isEmpty()
-        handlers:append(handler)
-        if isEmpty then
-            script.on_load(on_load)
-        end
+        handlers  = LinkedList:new()
+        event_handlers[load_event_name] = handlers
     end
+
+    if handlers:isEmpty() then
+        script.on_load(on_load)
+    end
+    handlers:append(handler)
 end
 
 --- Do not use this function, use Event.on_nth_tick instead as it has safety checks.
 function Public.on_nth_tick(tick, handler)
     local handlers = on_nth_tick_event_handlers[tick]
     if not handlers then
-        on_nth_tick_event_handlers[tick] = LinkedList:new()
-        on_nth_tick_event_handlers[tick]:append(handler)
-        script_on_nth_tick(tick, on_nth_tick_event)
-    else
-        local isEmpty = handlers:isEmpty()
-        handlers:append(handler)
-        if isEmpty then
-            script_on_nth_tick(tick, on_nth_tick_event)
-        end
+        handlers = LinkedList:new()
+        on_nth_tick_event_handlers[tick] = handlers
     end
+
+    if handlers:isEmpty() then
+        script_on_nth_tick(tick, on_nth_tick_event)
+    end
+    handlers:append(handler)
 end
 
 function Public.get_event_handlers()
