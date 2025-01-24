@@ -21,10 +21,23 @@ local math_sqrt = math.sqrt
 
 local get_noise = require('utils.multi_octave_noise').get
 local simplex_noise = require('utils.simplex_noise').d2
+
 local biter_area_border_noise = noise.biter_area_border
 local mixed_ore_noise = noise.mixed_ore
 local spawn_wall_noise = noise.spawn_wall
 local spawn_wall_2_noise = noise.spawn_wall_2
+
+local biter_texture_width = biter_texture.width
+local biter_texture_height = biter_texture.height
+local biter_texture_grid = biter_texture.grid
+local biter_texture_map = biter_texture.map
+
+-- pre-map
+for x = 1, biter_texture_width do
+    for y = 1, biter_texture_height do
+        biter_texture_grid[x][y] = biter_texture_map[biter_texture_grid[x][y]]
+    end
+end
 
 -- max value 64
 local river_circle_size = 39
@@ -644,15 +657,35 @@ local function populate_biter_area(surface, chunk_pos, rng, is_biter_area_chunk)
     end
 end
 
-local function get_biter_area_tile(seed, pos)
+-- avoid allocations to improve performance and maybe reduce gc lag
+local preallocated_out_of_map_tiles = {}
+local preallocated_tiles = {}
+for i = 1, 32 * 32 do
+    preallocated_out_of_map_tiles[i] = { name = 'out-of-map', position = { 0, 0 } }
+    preallocated_tiles[i] = { name = 'out-of-map', position = { 0, 0 } }
+end
+local next_preallocated_tile = 1
+
+---@param seed uint
+---@param x number
+---@param y number
+---@return any out_of_map_tile, any tile # returns params for `set_tile`
+local function get_biter_area_tile(seed, x, y)
     -- Maps the relative x/y position into biter_texture with pre-computed 2D grid.
     -- The value from the grid is then mapped into tile name.
     -- + 1, because lua has 1-based indices
-    local grid_p_x = ((pos.x + seed) % biter_texture.width) + 1
-    local grid_p_y = ((pos.y + seed) % biter_texture.height) + 1
-    local id = biter_texture.grid[grid_p_x][grid_p_y]
-    local name = biter_texture.map[id]
-    return { name = 'out-of-map', position = pos }, { name = name, position = pos }
+    local grid_p_x = ((x + seed) % biter_texture_width) + 1
+    local grid_p_y = ((y + seed) % biter_texture_height) + 1
+    local name = biter_texture_grid[grid_p_x][grid_p_y]
+
+    local out_of_map = preallocated_out_of_map_tiles[next_preallocated_tile]
+    local tile = preallocated_tiles[next_preallocated_tile]
+    next_preallocated_tile = (next_preallocated_tile % (32 * 32)) + 1
+
+    out_of_map.position[1], out_of_map.position[2] = x, y
+    tile.position[1], tile.position[2] = x, y
+    tile.name = name
+    return out_of_map, tile
 end
 
 ---@param surface LuaSurface
@@ -682,7 +715,7 @@ local function generate_biter_area_border(surface, chunk_pos, rng)
         transitional_area_end = math_min(left_top_y + 32 - 1, transitional_area_end)
 
         for y = left_top_y, biter_area_end do
-            out_of_map[i], tiles[i] = get_biter_area_tile(seed, { x = x, y = y })
+            out_of_map[i], tiles[i] = get_biter_area_tile(seed, x, y)
             i = i + 1
         end
 
@@ -690,7 +723,7 @@ local function generate_biter_area_border(surface, chunk_pos, rng)
             local pos = { x = x, y = y }
             local is_biter_area = y + (get_noise(biter_area_border_noise, pos, seed, 0) * 64) <= a
             if is_biter_area then
-                out_of_map[i], tiles[i] = get_biter_area_tile(seed, pos)
+                out_of_map[i], tiles[i] = get_biter_area_tile(seed, x, y)
                 i = i + 1
             elseif tile_gen then
                 tile_gen(pos, rng)
@@ -724,7 +757,7 @@ local function generate_biter_area(surface, chunk_pos, rng)
 
     for y = left_top_y, left_top_y + 32 - 1 do
         for x = left_top_x, left_top_x + 32 - 1 do
-            out_of_map[i], tiles[i] = get_biter_area_tile(seed, { x = x, y = y })
+            out_of_map[i], tiles[i] = get_biter_area_tile(seed, x, y)
             i = i + 1
         end
     end
