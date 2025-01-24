@@ -184,30 +184,7 @@ function Public.playground_surface()
     map_gen_settings.seed = storage.next_map_seed
     -- reset next_map_seed for next round
     storage.next_map_seed = 1
-    map_gen_settings.starting_area = 2.5
-    map_gen_settings.property_expression_names = {
-        ['segmentation_multiplier'] = 0.1,
-    }
-    map_gen_settings.cliff_settings = { cliff_elevation_interval = 0, cliff_elevation_0 = 0 }
-    map_gen_settings.autoplace_controls = {
-        ['coal'] = { frequency = 6.5, size = 0.34, richness = 0.24 },
-        ['water'] = {
-            frequency = 10,
-            size = 0.3,
-            richness = 0.1,
-        },
-        ['stone'] = { frequency = 6, size = 0.385, richness = 0.25 },
-        ['copper-ore'] = { frequency = 8.05, size = 0.352, richness = 0.35 },
-        ['iron-ore'] = { frequency = 8.5, size = 0.8, richness = 0.23 },
-        ['uranium-ore'] = { frequency = 2.2, size = 1, richness = 1 },
-        ['crude-oil'] = { frequency = 8, size = 1.4, richness = 0.45 },
-        ['trees'] = {
-            frequency = 0.65,
-            size = 0.04,
-            richness = 0.002,
-        },
-        ['enemy-base'] = { frequency = 0, size = 0, richness = 0 },
-    }
+    Terrain.adjust_map_gen_settings(map_gen_settings)
     local surface = game.create_surface(storage.bb_surface_name, map_gen_settings)
     surface.request_to_generate_chunks({ x = 0, y = -256 }, 7)
     surface.force_generate_chunk_requests()
@@ -215,18 +192,7 @@ function Public.playground_surface()
 end
 
 function Public.draw_structures()
-    local surface = game.surfaces[storage.bb_surface_name]
-    Terrain.draw_spawn_area(surface)
-    if storage.active_special_games['mixed_ore_map'] then
-        Terrain.draw_mixed_ore_spawn_area(surface)
-    else
-        Terrain.clear_ore_in_main(surface)
-        Terrain.generate_spawn_ore(surface)
-    end
-    Terrain.generate_additional_rocks(surface)
-    Terrain.generate_silo(surface)
-    Terrain.draw_spawn_island(surface)
-    --Terrain.generate_spawn_goodies(surface)
+    Terrain.generate_initial_structures(game.surfaces[storage.bb_surface_name])
 end
 
 function Public.queue_reveal_map()
