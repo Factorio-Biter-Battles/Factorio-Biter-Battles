@@ -20,7 +20,7 @@ local on_nth_tick_event_handlers = {}
 if not remote.interfaces['interface'] then
     remote.add_interface('interface', interface)
 end ]]
-local pcall = pcall
+local xpcall = xpcall
 local debug_getinfo = debug.getinfo
 local log = log
 local script_on_event = script.on_event
@@ -32,6 +32,7 @@ local function errorHandler(err)
     log(debug.traceback())
 end
 
+-- loop backwards to allow handlers to safely self-remove themselves
 local function call_handlers(handlers, event)
     for i = #handlers, 1, -1 do
         xpcall(handlers[i], errorHandler, event)
