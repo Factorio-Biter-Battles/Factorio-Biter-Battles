@@ -32,24 +32,9 @@ local function errorHandler(err)
     log(debug.traceback())
 end
 
-local call_handlers
-function call_handlers(handlers, event)
-    if not handlers then
-        return log('Handlers was nil!')
-    end
-    local handlers_copy = table.deepcopy(handlers)
-    for i = 1, #handlers do
-        local handler = handlers[i]
-        if handler == nil and handlers_copy[i] ~= nil then
-            if table.contains(handlers, handlers_copy[i]) then
-                handler = handlers_copy[i]
-            end
-        end
-        if handler ~= nil then
-            xpcall(handler, errorHandler, event)
-        else
-            log('nil handler')
-        end
+local function call_handlers(handlers, event)
+    for i = #handlers, 1, -1 do
+        xpcall(handlers[i], errorHandler, event)
     end
 end
 
@@ -98,7 +83,7 @@ function Public.add(event_name, handler)
         event_handlers[event_name] = { handler }
         script_on_event(event_name, on_event)
     else
-        table.insert(handlers, handler)
+        table.insert(handlers, 1, handler)
         if #handlers == 1 then
             script_on_event(event_name, on_event)
         end
@@ -112,7 +97,7 @@ function Public.on_init(handler)
         event_handlers[init_event_name] = { handler }
         script.on_init(on_init)
     else
-        table.insert(handlers, handler)
+        table.insert(handlers, 1, handler)
         if #handlers == 1 then
             script.on_init(on_init)
         end
@@ -126,7 +111,7 @@ function Public.on_load(handler)
         event_handlers[load_event_name] = { handler }
         script.on_load(on_load)
     else
-        table.insert(handlers, handler)
+        table.insert(handlers, 1, handler)
         if #handlers == 1 then
             script.on_load(on_load)
         end
@@ -140,7 +125,7 @@ function Public.on_nth_tick(tick, handler)
         on_nth_tick_event_handlers[tick] = { handler }
         script_on_nth_tick(tick, on_nth_tick_event)
     else
-        table.insert(handlers, handler)
+        table.insert(handlers, 1, handler)
         if #handlers == 1 then
             script_on_nth_tick(tick, on_nth_tick_event)
         end
