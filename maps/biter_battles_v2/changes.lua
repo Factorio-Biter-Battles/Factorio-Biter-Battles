@@ -1,5 +1,35 @@
 return {
     {
+        number = 681,
+        date = '2025-01-25',
+        author = 'RedRafe',
+        comment = [[(#681) Improve performance of event dispatcher by getting rid of memory allocations]],
+    },
+    {
+        number = 679,
+        date = '2025-01-24',
+        author = 'morganc',
+        comment = [[(#679) Remove unused alerts.lua file]],
+    },
+    {
+        number = 676,
+        date = '2025-01-24',
+        author = 'morganc',
+        comment = [[(#676) Remove unused duplicate biter_raffle.lua file]],
+    },
+    {
+        number = 668,
+        date = '2025-01-23',
+        author = 'cogito123',
+        comment = [[(#668) Rework how changelog tab gets information to avoid any data processing inside scenario code]],
+    },
+    {
+        number = 675,
+        date = '2025-01-20',
+        author = 'morganc',
+        comment = [[(#675) Profile GUI once per minute]],
+    },
+    {
         number = 673,
         date = '2025-01-19',
         author = 'cogito123',
@@ -15,7 +45,7 @@ return {
         number = 666,
         date = '2025-01-11',
         author = 'Data-',
-        comment = [[(#666) Change so captains during the special join random forces]],
+        comment = [[(#666) Make captains join random forces]],
     },
     {
         number = 662,

@@ -17,6 +17,7 @@ GIT_NAME_MAPPING = {
     "clifffrey": "cliff_build",
     "developer-8": "developer",
     "outstanding-factorio": "outstanding",
+    "morganchristiansson": 'morganc',
 }
 
 def get_name(login):
