@@ -22,7 +22,7 @@ local on_nth_tick_event_handlers = {}
 if not remote.interfaces['interface'] then
     remote.add_interface('interface', interface)
 end ]]
-local pcall = pcall
+local xpcall = xpcall
 local debug_getinfo = debug.getinfo
 local log = log
 local script_on_event = script.on_event
