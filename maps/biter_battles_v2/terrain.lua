@@ -499,9 +499,12 @@ local chunk_has_ore_hint = 0.16
 ---@param chunk_pos {x: number, y: number}
 ---@return fun(x: number, y: number, rng: LuaRandomGenerator)?
 local function get_tile_generator(surface, chunk_pos)
-    local special_gen = mixed_ore_map_special.get_tile_generator(surface)
-    if special_gen then
-        return special_gen
+    local special_gen = mixed_ore_map_special.get_tile_generator(surface, chunk_pos)
+    local suppress_tile_gen = special_gen == false
+    if suppress_tile_gen then
+        return nil
+    elseif special_gen ~= nil then
+        return special_gen ---@type fun(x: number, y: number, rng: LuaRandomGenerator)
     end
     if not is_outside_spawn(chunk_pos) then
         return nil
@@ -860,23 +863,24 @@ local ENABLE_CHUNK_GEN_PROFILING = false
 
 local chunk_profiling = nil
 if ENABLE_CHUNK_GEN_PROFILING then
-    local function enabled_mixed_ore_map_special(type)
+    local function enabled_mixed_ore_map_special(type, size)
         storage.active_special_games['mixed_ore_map'] = true
-        local size
-        if type == 1 then -- mixed ores
-            size = 9
-        elseif type == 2 then -- checkerboard, 3 - vertical lines
-            size = 5
-        elseif type == 4 then -- mixed patches
-            size = 4
-        elseif type == 5 then -- dots
-            size = 7
+        if not size then
+            if type == 1 then -- mixed ores
+                size = 9
+            elseif type == 2 then -- checkerboard, 3 - vertical lines
+                size = 5
+            elseif type == 4 then -- mixed patches
+                size = 4
+            elseif type == 5 then -- dots
+                size = 7
+            end
         end
         storage.special_games_variables['mixed_ore_map'] = { type = type, size = size }
     end
 
     -- you can uncomment this to test mixed ore map special performance
-    -- enabled_mixed_ore_map_special(1)
+    -- enabled_mixed_ore_map_special(4, 4)
 
     local profile_stats = require('utils.profiler_stats')
     local event = require('utils.event')

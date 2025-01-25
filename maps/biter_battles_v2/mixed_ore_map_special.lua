@@ -191,6 +191,14 @@ local mixed_patches_ores = {
     'coal',
 }
 
+local mixed_patches_hints = { 0.65, 0.45, 0.25, 0.16, 0.011, nil, nil, nil, nil, nil }
+local impactful_mixed_ore_noise = { mixed_ore_noise[1] }
+
+local function chunk_noise_hint(seed, chunk_pos)
+    local mid_x, mid_y = chunk_pos.x * 32 + 16, chunk_pos.y * 32 + 16
+    return math_abs(get_noise(impactful_mixed_ore_noise, mid_x, mid_y, seed, 10000))
+end
+
 local mixed_patches_ore_multiplier = { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 }
 
 ---@param can_place_entity fun(LuaSurface.can_place_entity_param): boolean
@@ -240,8 +248,9 @@ function Public.adjust_map_gen_settings(map_gen_settings)
 end
 
 ---@param surface LuaSurface
----@return fun(x: number, y: number, rng: LuaRandomGenerator)?
-function Public.get_tile_generator(surface)
+---@param chunk_pos {x: number, y: number}
+---@return boolean|fun(x: number, y: number, rng: LuaRandomGenerator)|nil # nil, if special game disabled and 'false' if tile generation must be suppressed
+function Public.get_tile_generator(surface, chunk_pos)
     if not storage.active_special_games['mixed_ore_map'] then
         return nil
     end
@@ -271,6 +280,10 @@ function Public.get_tile_generator(surface)
             generate_vertical_lines_tile(can_place_entity, create_entity, seed, x, y)
         end
     elseif type == 4 then
+        local chunk_has_ore_hint = mixed_patches_hints[size]
+        if chunk_has_ore_hint and chunk_noise_hint(seed, chunk_pos) < chunk_has_ore_hint then
+            return false
+        end
         local size = 10 - size
         return function(x, y, rng)
             generate_mixed_patches_tile(can_place_entity, create_entity, seed, x, y, rng, size)
