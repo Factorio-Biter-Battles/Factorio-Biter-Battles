@@ -16,42 +16,53 @@ for k, v in ipairs({ 0.3, 6, 8.05, 8.5, 6.5 }) do
     mixed_ore_weight[k] = mixed_ore_weight_total
 end
 
----@param surface LuaSurface
+local ore_template = { name = 'iron-ore', position = { 0, 0 }, amount = 1 }
+local ore_template_no_tree_removal = { name = 'iron-ore', position = { 0, 0 }, amount = 1, enable_tree_removal = false }
+
+---@param can_place_entity fun(LuaSurface.can_place_entity_param): boolean
+---@param create_entity fun(LuaSurface.create_entity_param): LuaEntity?
 ---@param seed uint
----@param pos {x: number, y: number}
+---@param x number
+---@param y number
 ---@param rng LuaRandomGenerator
 ---@param size number
-local function generate_mixed_ore_tile(surface, seed, pos, rng, size)
-    if surface.can_place_entity({ name = 'iron-ore', position = pos }) then
-        local noise = get_noise(mixed_ore_noise, pos, seed, 10000)
-        local i_raw = math_floor(noise * 25 * size + math_abs(pos.x) * 0.05) % mixed_ore_weight_total
+local function generate_mixed_ore_tile(can_place_entity, create_entity, seed, x, y, rng, size)
+    ore_template_no_tree_removal.position[1], ore_template_no_tree_removal.position[2] = x, y
+    ore_template_no_tree_removal.name = 'iron-ore'
+    ore_template_no_tree_removal.amount = 1
+    if can_place_entity(ore_template_no_tree_removal) then
+        local noise = get_noise(mixed_ore_noise, x, y, seed, 10000)
+        local i_raw = math_floor(noise * 25 * size + math_abs(x) * 0.05) % mixed_ore_weight_total
         local i = 1
-        for k, v in ipairs(mixed_ore_weight) do
+        for k, v in pairs(mixed_ore_weight) do
             if i_raw < v then
                 i = k
                 break
             end
         end
-        local amount = (rng(80, 100) + math_sqrt(math_abs(pos.x) ^ 1.5 + math_abs(pos.y) ^ 1.5) * 1)
-        surface.create_entity({
-            name = mixed_ores[i],
-            position = pos,
-            amount = amount,
-            enable_tree_removal = false,
-        })
+        local amount = (rng(80, 100) + math_sqrt(math_abs(x) ^ 1.5 + math_abs(y) ^ 1.5) * 1)
+        ore_template_no_tree_removal.name = mixed_ores[i]
+        ore_template_no_tree_removal.amount = amount
+        create_entity(ore_template_no_tree_removal)
     end
 end
 
 local dots_ores = { 'uranium-ore', 'stone', 'copper-ore', 'iron-ore', 'coal' }
 
----@param surface LuaSurface
----@param pos {x: number, y: number}
+---@param can_place_entity fun(LuaSurface.can_place_entity_param): boolean
+---@param create_entity fun(LuaSurface.create_entity_param): LuaEntity?
+---@param x number
+---@param y number
+---@param rng LuaRandomGenerator
 ---@param space number
-local function generate_dots_tile(surface, pos, space)
-    if surface.can_place_entity({ name = 'iron-ore', position = pos }) then
+local function generate_dots_tile(can_place_entity, create_entity, x, y, rng, space)
+    ore_template_no_tree_removal.position[1], ore_template_no_tree_removal.position[2] = x, y
+    ore_template_no_tree_removal.name = 'iron-ore'
+    ore_template_no_tree_removal.amount = 1
+    if can_place_entity(ore_template_no_tree_removal) then
         local ore
-        local cx = pos.x % (space * 2)
-        local cy = pos.y % (space * 2)
+        local cx = x % (space * 2)
+        local cy = y % (space * 2)
         if cx == 0 and cy == 0 then
             ore = dots_ores[2]
         elseif cx == 0 and cy == space then
@@ -60,33 +71,37 @@ local function generate_dots_tile(surface, pos, space)
             ore = dots_ores[4]
         elseif cx == space and cy == space then
             ore = dots_ores[5]
-            if math.random(1, 1000) > 998 then
+            if rng(1, 1000) > 998 then
                 ore = dots_ores[1]
             end
         end
         if ore then
-            surface.create_entity({ name = ore, position = pos, amount = 100000, enable_tree_removal = false })
+            ore_template_no_tree_removal.name = ore
+            ore_template_no_tree_removal.amount = 100000
+            create_entity(ore_template_no_tree_removal)
         end
     end
 end
 
 local checkerboard_ores = { 'uranium-ore', 'stone', 'copper-ore', 'iron-ore', 'coal' }
 
----@param surface LuaSurface
+---@param can_place_entity fun(LuaSurface.can_place_entity_param): boolean
+---@param create_entity fun(LuaSurface.create_entity_param): LuaEntity?
 ---@param seed uint
----@param pos {x: number, y: number}
+---@param x number
+---@param y number
 ---@param cell_size number
 ---@param uranium_cells {[string]: boolean} # cache
-local function generate_checkerboard_tile(surface, seed, pos, cell_size, uranium_cells)
-    if surface.can_place_entity({ name = 'iron-ore', position = pos }) then
+local function generate_checkerboard_tile(can_place_entity, create_entity, seed, x, y, cell_size, uranium_cells)
+    ore_template_no_tree_removal.position[1], ore_template_no_tree_removal.position[2] = x, y
+    ore_template_no_tree_removal.name = 'iron-ore'
+    ore_template_no_tree_removal.amount = 15000
+    if can_place_entity(ore_template_no_tree_removal) then
         local ore
-        local cell_start_pos = {
-            x = pos.x - (pos.x % cell_size),
-            y = pos.y - (pos.y % cell_size),
-        }
-        local cell_start_key = cell_start_pos.x .. '_' .. cell_start_pos.y
+        local cell_x, cell_y = x - (x % cell_size), y - (y % cell_size)
+        local cell_start_key = cell_x .. '_' .. cell_y
         if uranium_cells[cell_start_key] == nil then
-            local new_seed = (cell_start_pos.x * 374761393 + cell_start_pos.y * 668265263 + seed) % 4294967296 -- numbers from internet
+            local new_seed = (cell_x * 374761393 + cell_y * 668265263 + seed) % 4294967296 -- numbers from internet
             local rng = game.create_random_generator(new_seed)
             uranium_cells[cell_start_key] = rng() > 0.999
         end
@@ -94,8 +109,8 @@ local function generate_checkerboard_tile(surface, seed, pos, cell_size, uranium
         if uranium_cells[cell_start_key] then
             ore = checkerboard_ores[1]
         else
-            local cx = pos.x % (cell_size * 2)
-            local cy = pos.y % (cell_size * 2)
+            local cx = x % (cell_size * 2)
+            local cy = y % (cell_size * 2)
             local is_row1 = cy >= 0 and cy < cell_size
 
             if cx >= 0 and cx < cell_size then -- col 1
@@ -112,8 +127,8 @@ local function generate_checkerboard_tile(surface, seed, pos, cell_size, uranium
                 end
             end
         end
-
-        surface.create_entity({ name = ore, position = pos, amount = 15000, enable_tree_removal = false })
+        ore_template_no_tree_removal.name = ore
+        create_entity(ore_template_no_tree_removal)
     end
 end
 
@@ -136,20 +151,22 @@ local vertical_lines_ores = {
     'iron-ore',
 }
 
----@param surface LuaSurface
+---@param can_place_entity fun(LuaSurface.can_place_entity_param): boolean
+---@param create_entity fun(LuaSurface.create_entity_param): LuaEntity?
 ---@param seed uint
----@param pos {x: number, y: number}
-local function generate_vertical_lines_tile(surface, seed, pos)
-    if surface.can_place_entity({ name = 'iron-ore', position = pos }) then
-        local noise = get_noise(vertical_lines_ore_noise, pos, seed, 10000)
-        local i = math.floor(noise * 50 + math.abs(pos.x) * 0.2) % 16 + 1
-        local amount = (1000 + math.sqrt(pos.x ^ 2 + pos.y ^ 2) * 3) * 10
-        surface.create_entity({
-            name = vertical_lines_ores[i],
-            position = pos,
-            amount = amount,
-            enable_tree_removal = false,
-        })
+---@param x number
+---@param y number
+local function generate_vertical_lines_tile(can_place_entity, create_entity, seed, x, y)
+    ore_template_no_tree_removal.position[1], ore_template_no_tree_removal.position[2] = x, y
+    ore_template_no_tree_removal.name = 'iron-ore'
+    ore_template_no_tree_removal.amount = 1
+    if can_place_entity(ore_template_no_tree_removal) then
+        local noise = get_noise(vertical_lines_ore_noise, x, y, seed, 10000)
+        local i = math.floor(noise * 50 + math.abs(x) * 0.2) % 16 + 1
+        local amount = (1000 + math.sqrt(x ^ 2 + y ^ 2) * 3) * 10
+        ore_template_no_tree_removal.name = vertical_lines_ores[i]
+        ore_template_no_tree_removal.amount = amount
+        create_entity(ore_template_no_tree_removal)
     end
 end
 
@@ -173,18 +190,25 @@ local mixed_patches_ores = {
 
 local mixed_patches_ore_multiplier = { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 }
 
----@param surface LuaSurface
+---@param can_place_entity fun(LuaSurface.can_place_entity_param): boolean
+---@param create_entity fun(LuaSurface.create_entity_param): LuaEntity?
 ---@param seed uint
----@param pos {x: number, y: number}
+---@param x number
+---@param y number
 ---@param rng LuaRandomGenerator
 ---@param size number
-local function generate_mixed_patches_tile(surface, seed, pos, rng, size)
-    if surface.can_place_entity({ name = 'iron-ore', position = pos }) then
-        local noise = get_noise(mixed_ore_noise, pos, seed, 10000)
+local function generate_mixed_patches_tile(can_place_entity, create_entity, seed, x, y, rng, size)
+    ore_template.position[1], ore_template.position[2] = x, y
+    ore_template.name = 'iron-ore'
+    ore_template.amount = 1
+    if can_place_entity(ore_template) then
+        local noise = get_noise(mixed_ore_noise, x, y, seed, 10000)
         if noise > 0.1 * size or noise < -0.1 * size then
-            local i = math_floor(noise * 25 + math_abs(pos.x) * 0.05) % 15 + 1
-            local amount = (rng(800, 1000) + math_sqrt(pos.x ^ 2 + pos.y ^ 2) * 3) * mixed_patches_ore_multiplier[i]
-            surface.create_entity({ name = mixed_patches_ores[i], position = pos, amount = amount })
+            local i = math_floor(noise * 25 + math_abs(x) * 0.05) % 15 + 1
+            local amount = (rng(800, 1000) + math_sqrt(x ^ 2 + y ^ 2) * 3) * mixed_patches_ore_multiplier[i]
+            ore_template.name = mixed_patches_ores[i]
+            ore_template.amount = amount
+            create_entity(ore_template)
         end
     end
 end
@@ -211,20 +235,22 @@ function Public.adjust_map_gen_settings(map_gen_settings)
 end
 
 ---@param surface LuaSurface
----@return fun(pos: {x: number, y: number}, rng: LuaRandomGenerator)?
+---@return fun(x: number, y: number, rng: LuaRandomGenerator)?
 function Public.get_tile_generator(surface)
     if not storage.active_special_games['mixed_ore_map'] then
         return nil
     end
 
     local seed = surface.map_gen_settings.seed
+    local can_place_entity = surface.can_place_entity
+    local create_entity = surface.create_entity
     local type = storage.special_games_variables['mixed_ore_map']['type']
     local size = storage.special_games_variables['mixed_ore_map']['size']
 
     if type == 1 then
         local size = 1 + size
-        return function(pos, rng)
-            generate_mixed_ore_tile(surface, seed, pos, rng, size)
+        return function(x, y, rng)
+            generate_mixed_ore_tile(can_place_entity, create_entity, seed, x, y, rng, size)
         end
     elseif type == 2 then
         local cell_size = size
@@ -232,22 +258,22 @@ function Public.get_tile_generator(surface)
             cell_size = 1
         end
         local uranium_cells_cache = {}
-        return function(pos, _)
-            generate_checkerboard_tile(surface, seed, pos, cell_size, uranium_cells_cache)
+        return function(x, y, _)
+            generate_checkerboard_tile(can_place_entity, create_entity, seed, x, y, cell_size, uranium_cells_cache)
         end
     elseif type == 3 then
-        return function(pos, _)
-            generate_vertical_lines_tile(surface, seed, pos)
+        return function(x, y, _)
+            generate_vertical_lines_tile(can_place_entity, create_entity, seed, x, y)
         end
     elseif type == 4 then
         local size = 10 - size
-        return function(pos, rng)
-            generate_mixed_patches_tile(surface, seed, pos, rng, size)
+        return function(x, y, rng)
+            generate_mixed_patches_tile(can_place_entity, create_entity, seed, x, y, rng, size)
         end
     elseif type == 5 then
         local space = size
-        return function(pos, _)
-            generate_dots_tile(surface, pos, space)
+        return function(x, y, rng)
+            generate_dots_tile(can_place_entity, create_entity, x, y, rng, space)
         end
     end
 end
