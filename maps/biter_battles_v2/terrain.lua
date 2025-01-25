@@ -484,6 +484,17 @@ local function generate_ordinary_tile(can_place_entity, create_entity, seed, x, 
     end
 end
 
+local impactful_mixed_ore_noise = { mixed_ore_noise[1] }
+
+local function chunk_noise_hint(seed, chunk_pos)
+    local mid_x, mid_y = chunk_pos.x * 32 + 16, chunk_pos.y * 32 + 16
+    return get_noise(impactful_mixed_ore_noise, mid_x, mid_y, seed, 10000)
+end
+
+-- calculate_chunk_has_ore_hint()
+-- local chunk_has_ore_hint = -0.081660016785248 -- way too conservative
+local chunk_has_ore_hint = 0.16
+
 ---@param surface LuaSurface
 ---@param chunk_pos {x: number, y: number}
 ---@return fun(x: number, y: number, rng: LuaRandomGenerator)?
@@ -496,6 +507,9 @@ local function get_tile_generator(surface, chunk_pos)
         return nil
     end
     local seed = surface.map_gen_settings.seed
+    if chunk_noise_hint(seed, chunk_pos) < chunk_has_ore_hint then
+        return nil
+    end
     local can_place_entity = surface.can_place_entity
     local create_entity = surface.create_entity
     return function(x, y, rng)
