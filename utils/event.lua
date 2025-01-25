@@ -5,6 +5,7 @@
 ---To create custom events, use script.generate_event_name and use its return value as an event name.
 ---To raise that event, use script.raise_event
 
+local LinkedList = require('utils.linked_list')
 local EventCore = require('utils.event_core')
 local Global = require('utils.global')
 local Token = require('utils.token')
@@ -197,9 +198,9 @@ function Event.remove_removable(event_name, token)
     local handlers = event_handlers[event_name]
 
     remove(tokens, token)
-    remove(handlers, handler)
+    handlers:remove(handler)
 
-    if #handlers == 0 then
+    if handlers:isEmpty() then
         script_on_event(event_name, nil)
     end
 end
@@ -314,11 +315,11 @@ function Event.remove_removable_function(event_name, name)
         if n == event_name then
             local f = v.handler
             function_handlers[name][k] = nil
-            remove(handlers, f)
+            handlers:remove(f)
         end
     end
 
-    if #handlers == 0 then
+    if handlers:isEmpty() then
         script_on_event(event_name, nil)
     end
 
@@ -368,9 +369,9 @@ function Event.remove_removable_nth_tick(tick, token)
     local handlers = on_nth_tick_event_handlers[tick]
 
     remove(tokens, token)
-    remove(handlers, handler)
+    handlers:remove(handler)
 
-    if #handlers == 0 then
+    if handlers:isEmpty() then
         script_on_nth_tick(tick, nil)
     end
 end
@@ -470,7 +471,7 @@ function Event.remove_removable_nth_tick_function(tick, name)
         end
     end
 
-    remove(handlers, f)
+    handlers:remove(f)
 
     for k, v in pairs(function_nth_tick_handlers[name]) do
         local t = v.tick
@@ -483,7 +484,7 @@ function Event.remove_removable_nth_tick_function(tick, name)
         function_nth_tick_handlers[name] = nil
     end
 
-    if #handlers == 0 then
+    if handlers:isEmpty() then
         script_on_nth_tick(tick, nil)
     end
 end

@@ -1,6 +1,8 @@
 -- This module exists to break the circular dependency between event.lua and storage.lua.
 -- It is not expected that any user code would require this module instead event.lua should be required.
 
+local LinkedList = require('utils.linked_list')
+
 local Public = {}
 
 local init_event_name = -1
@@ -20,7 +22,7 @@ local on_nth_tick_event_handlers = {}
 if not remote.interfaces['interface'] then
     remote.add_interface('interface', interface)
 end ]]
-local pcall = pcall
+local xpcall = xpcall
 local debug_getinfo = debug.getinfo
 local log = log
 local script_on_event = script.on_event
@@ -37,20 +39,10 @@ function call_handlers(handlers, event)
     if not handlers then
         return log('Handlers was nil!')
     end
-    local handlers_copy = table.deepcopy(handlers)
-    for i = 1, #handlers do
-        local handler = handlers[i]
-        if handler == nil and handlers_copy[i] ~= nil then
-            if table.contains(handlers, handlers_copy[i]) then
-                handler = handlers_copy[i]
-            end
-        end
-        if handler ~= nil then
-            xpcall(handler, errorHandler, event)
-        else
-            log('nil handler')
-        end
-    end
+
+    handlers:traverse(function(handler)
+        xpcall(handler, errorHandler, event)
+    end)
 end
 
 local function on_event(event)
@@ -95,56 +87,56 @@ function Public.add(event_name, handler)
     end
     local handlers = event_handlers[event_name]
     if not handlers then
-        event_handlers[event_name] = { handler }
-        script_on_event(event_name, on_event)
-    else
-        table.insert(handlers, handler)
-        if #handlers == 1 then
-            script_on_event(event_name, on_event)
-        end
+        handlers = LinkedList:new()
+        event_handlers[event_name] = handlers
     end
+
+    if handlers:isEmpty() then
+        script_on_event(event_name, on_event)
+    end
+    event_handlers[event_name]:append(handler)
 end
 
 --- Do not use this function, use Event.on_init instead as it has safety checks.
 function Public.on_init(handler)
     local handlers = event_handlers[init_event_name]
     if not handlers then
-        event_handlers[init_event_name] = { handler }
-        script.on_init(on_init)
-    else
-        table.insert(handlers, handler)
-        if #handlers == 1 then
-            script.on_init(on_init)
-        end
+        handlers = LinkedList:new()
+        event_handlers[init_event_name] = handlers
     end
+
+    if handlers:isEmpty() then
+        script.on_init(on_init)
+    end
+    handlers:append(handler)
 end
 
 --- Do not use this function, use Event.on_load instead as it has safety checks.
 function Public.on_load(handler)
     local handlers = event_handlers[load_event_name]
     if not handlers then
-        event_handlers[load_event_name] = { handler }
-        script.on_load(on_load)
-    else
-        table.insert(handlers, handler)
-        if #handlers == 1 then
-            script.on_load(on_load)
-        end
+        handlers  = LinkedList:new()
+        event_handlers[load_event_name] = handlers
     end
+
+    if handlers:isEmpty() then
+        script.on_load(on_load)
+    end
+    handlers:append(handler)
 end
 
 --- Do not use this function, use Event.on_nth_tick instead as it has safety checks.
 function Public.on_nth_tick(tick, handler)
     local handlers = on_nth_tick_event_handlers[tick]
     if not handlers then
-        on_nth_tick_event_handlers[tick] = { handler }
-        script_on_nth_tick(tick, on_nth_tick_event)
-    else
-        table.insert(handlers, handler)
-        if #handlers == 1 then
-            script_on_nth_tick(tick, on_nth_tick_event)
-        end
+        handlers = LinkedList:new()
+        on_nth_tick_event_handlers[tick] = handlers
     end
+
+    if handlers:isEmpty() then
+        script_on_nth_tick(tick, on_nth_tick_event)
+    end
+    handlers:append(handler)
 end
 
 function Public.get_event_handlers()
