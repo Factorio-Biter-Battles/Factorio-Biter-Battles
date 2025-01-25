@@ -8,8 +8,14 @@ local load_event_name = -2
 
 -- map of event_name to handlers[]
 local event_handlers = {}
+local event_profilers = {}
 -- map of nth_tick to handlers[]
 local on_nth_tick_event_handlers = {}
+local on_nth_tick_event_profilers = {}
+local event_names = {}
+for k, v in pairs(defines.events) do
+    event_names[v] = k
+end
 
 --[[ local interface = {
     get_handler = function()
@@ -44,7 +50,15 @@ local function on_event(event)
     if not handlers then
         handlers = event_handlers[event.input_name]
     end
+    local profiler = event_profilers[event.name]
+    if not profiler then
+        profiler = game.create_profiler()
+        event_profilers[event.name] = profiler
+    else
+        profiler.restart()
+    end
     call_handlers(handlers, event)
+    profiler.stop()
 end
 
 local function on_init()
@@ -71,7 +85,15 @@ end
 
 local function on_nth_tick_event(event)
     local handlers = on_nth_tick_event_handlers[event.nth_tick]
+    local profiler = on_nth_tick_event_profilers[event.nth_tick]
+    if not profiler then
+        profiler = game.create_profiler()
+        on_nth_tick_event_profilers[event.nth_tick] = profiler
+    else
+        profiler.restart()
+    end
     call_handlers(handlers, event)
+    profiler.stop()
 end
 
 --- Do not use this function, use Event.add instead as it has safety checks.
@@ -140,5 +162,19 @@ end
 function Public.get_on_nth_tick_event_handlers()
     return on_nth_tick_event_handlers
 end
+
+local function update_profilers()
+    local profiler
+    for event_name, profiler in pairs(event_profilers) do
+        print({ '', 'event_handlers[', event_names[event_name], ']: ', profiler })
+    end
+    for nth_tick, profiler in pairs(on_nth_tick_event_profilers) do
+        print({ '', 'on_nth_tick_event_handlers[', nth_tick, ']: ', profiler })
+    end
+    event_profilers = {}
+    on_nth_tick_event_profilers = {}
+end
+
+Public.on_nth_tick(60 * 5, update_profilers)
 
 return Public
