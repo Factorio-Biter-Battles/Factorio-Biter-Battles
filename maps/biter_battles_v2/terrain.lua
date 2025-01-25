@@ -3,6 +3,7 @@ local LootRaffle = require('functions.loot_raffle')
 local BiterRaffle = require('maps.biter_battles_v2.biter_raffle')
 local bb_config = require('maps.biter_battles_v2.config')
 local mixed_ore_map_special = require('maps.biter_battles_v2.mixed_ore_map_special')
+local multi_octave_noise = require('utils.multi_octave_noise')
 local noise = require('maps.biter_battles_v2.predefined_noise')
 local AiTargets = require('maps.biter_battles_v2.ai_targets')
 local tables = require('maps.biter_battles_v2.tables')
@@ -19,11 +20,19 @@ local math_max = math.max
 local math_min = math.min
 local math_sqrt = math.sqrt
 
-local get_noise = require('utils.multi_octave_noise').get
+local get_noise = multi_octave_noise.get
+local get_lower_bounded_noise = multi_octave_noise.get_lower_bounded
 local simplex_noise = require('utils.simplex_noise').d2
 
 local biter_area_border_noise = noise.biter_area_border
+local biter_area_border_noise_amp_sum = 0
+for _, octave in pairs(biter_area_border_noise) do
+    biter_area_border_noise_amp_sum = biter_area_border_noise_amp_sum + octave.amp
+end
+
 local mixed_ore_noise = noise.mixed_ore
+local mixed_ore_noise_amp_sum = 1.0 -- normalized
+
 local spawn_wall_noise = noise.spawn_wall
 local spawn_wall_2_noise = noise.spawn_wall_2
 
@@ -441,8 +450,8 @@ end
 ---@param rng LuaRandomGenerator
 local function generate_ordinary_tile(surface, seed, pos, rng)
     if surface.can_place_entity({ name = 'iron-ore', position = pos }) then
-        local noise = get_noise(mixed_ore_noise, pos, seed, 10000)
-        if noise > 0.6 then
+        local noise = get_lower_bounded_noise(mixed_ore_noise, mixed_ore_noise_amp_sum, pos, seed, 10000, 0.6)
+        if noise then
             local i = math_floor(noise * 25 + math_abs(pos.x) * 0.05) % 15 + 1
             local amount = (rng(800, 1000) + math_sqrt(pos.x ^ 2 + pos.y ^ 2) * 3) * mixed_ore_multiplier[i]
             surface.create_entity({ name = ores[i], position = pos, amount = amount })
@@ -598,6 +607,24 @@ local function populate_with_extra_worm_turrets(surface, chunk_pos, rng)
     end
 end
 
+---@param pos {x: number, y: number}
+---@param seed number
+---@param a number biter area slope start
+---@return boolean
+local function biter_area_noise_test(pos, seed, a)
+    -- original test
+    -- return pos.y + (get_noise(biter_area_border_noise, pos, seed, 0) * 64) <= a
+    local noise = get_lower_bounded_noise(
+        biter_area_border_noise,
+        biter_area_border_noise_amp_sum,
+        pos,
+        seed,
+        0,
+        (a - pos.y) / 64
+    )
+    return noise == nil
+end
+
 ---@param seed uint
 ---@param position {x: number, y: number}
 ---@return boolean
@@ -610,7 +637,7 @@ local function is_biter_area(seed, position)
     if position.y + 70 < a then
         return true
     end
-    return position.y + (get_noise(biter_area_border_noise, position, seed, 0) * 64) <= a
+    return biter_area_noise_test(position, seed, a)
 end
 
 local function populate_biter_area(surface, chunk_pos, rng, is_biter_area_chunk)
@@ -721,7 +748,7 @@ local function generate_biter_area_border(surface, chunk_pos, rng)
 
         for y = transitional_area_start, transitional_area_end do
             local pos = { x = x, y = y }
-            local is_biter_area = y + (get_noise(biter_area_border_noise, pos, seed, 0) * 64) <= a
+            local is_biter_area = biter_area_noise_test(pos, seed, a)
             if is_biter_area then
                 out_of_map[i], tiles[i] = get_biter_area_tile(seed, x, y)
                 i = i + 1
