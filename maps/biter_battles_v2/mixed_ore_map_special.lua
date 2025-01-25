@@ -1,7 +1,10 @@
 local noise = require('maps.biter_battles_v2.predefined_noise')
+local multi_octave_noise = require('utils.multi_octave_noise')
 
-local get_noise = require('utils.multi_octave_noise').get
+local get_noise = multi_octave_noise.get
+local get_noise_outside_bounds = multi_octave_noise.get_outside_bounds
 local mixed_ore_noise = noise.mixed_ore
+local mixed_ore_noise_amp_sum = 1.0 -- normalized
 local vertical_lines_ore_noise = noise.vertical_lines_ore
 
 local math_floor = math.floor
@@ -202,8 +205,10 @@ local function generate_mixed_patches_tile(can_place_entity, create_entity, seed
     ore_template.name = 'iron-ore'
     ore_template.amount = 1
     if can_place_entity(ore_template) then
-        local noise = get_noise(mixed_ore_noise, x, y, seed, 10000)
-        if noise > 0.1 * size or noise < -0.1 * size then
+        local threshold = 0.1 * size
+        local noise =
+            get_noise_outside_bounds(mixed_ore_noise, mixed_ore_noise_amp_sum, x, y, seed, 10000, -threshold, threshold)
+        if noise then
             local i = math_floor(noise * 25 + math_abs(x) * 0.05) % 15 + 1
             local amount = (rng(800, 1000) + math_sqrt(x ^ 2 + y ^ 2) * 3) * mixed_patches_ore_multiplier[i]
             ore_template.name = mixed_patches_ores[i]

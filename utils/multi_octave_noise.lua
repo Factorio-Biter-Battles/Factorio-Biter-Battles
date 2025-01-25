@@ -41,4 +41,30 @@ return {
         end
         return noise
     end,
+
+    --- Calculates noise value for given octaves, short circuits if further computations give result inside specified bounds
+    ---
+    --- This function expects octaves ordered by positive amplitudes in descending order
+    ---@param octaves [{amp: number, freq: number}]
+    ---@param amplitude_sum number # precalculated sum of amplitudes of all layers
+    ---@param x number
+    ---@param y number
+    ---@param seed number
+    ---@param offset number offset of the seed between each octave. Providing low value will result at interference near origin point
+    ---@param lb number lower bound
+    ---@param ub number upper bound
+    ---@return number? # of the range [-1; 1] * (sum of all amplitudes), if value is outside bounds
+    get_outside_bounds = function(octaves, amplitude_sum, x, y, seed, offset, lb, ub)
+        local noise = 0.0
+        local amplitude_left = amplitude_sum
+        for _, octave in ipairs(octaves) do
+            noise = noise + simplex_noise(x * octave.freq, y * octave.freq, seed) * octave.amp
+            amplitude_left = amplitude_left - octave.amp
+            if noise - amplitude_left >= lb and noise + amplitude_left <= ub then
+                return nil
+            end
+            seed = seed + offset
+        end
+        return noise
+    end,
 }
