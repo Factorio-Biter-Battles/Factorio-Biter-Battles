@@ -37,7 +37,7 @@ function Public.instant_map_reset(cmd)
         end
         seed_source = 'specified'
     else
-        next_map_seed = storage.random_generator(341, 4294967294)
+        next_map_seed = math.random(341, 4294967294)
         seed_source = 'autopicked'
     end
     storage.next_map_seed = next_map_seed

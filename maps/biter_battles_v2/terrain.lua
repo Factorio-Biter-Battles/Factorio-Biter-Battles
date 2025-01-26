@@ -23,6 +23,7 @@ local math_ceil = math.ceil
 local math_floor = math.floor
 local math_max = math.max
 local math_min = math.min
+local math_random = math.random
 local math_sqrt = math.sqrt
 
 local get_noise = multi_octave_noise.get
@@ -956,12 +957,20 @@ if ENABLE_CHUNK_GEN_PROFILING then
     end)
 end
 
+---@param chunk_pos {x: number, y: number}
+---@param seed uint
+---@return LuaRandomGenerator
+local function create_rng_for_chunk(chunk_pos, seed)
+    -- seeding from mixed ores special map generation
+    return game.create_random_generator((chunk_pos.x * 374761393 + chunk_pos.y * 668265263 + seed) % 4294967296)
+end
+
 function Public.generate(event)
     local profiler = chunk_profiling and helpers.create_profiler(false)
 
     local surface = event.surface
     local chunk_pos = event.position
-    local rng = storage.random_generator
+    local rng = create_rng_for_chunk(chunk_pos, surface.map_gen_settings.seed)
 
     local chunk_variant = chunk_type_at(chunk_pos)
     if chunk_variant == chunk_type.river then
@@ -1022,9 +1031,8 @@ local function draw_spawn_island(surface)
     end
 end
 
-local function draw_spawn_area(surface)
+local function draw_spawn_area(surface, rng)
     local chunk_r = 4
-    local rng = storage.random_generator
 
     local spawn_wall_area_radius = spawn_wall_radius + spawn_wall_noise_deviation
     local trees = surface.find_entities_filtered({
@@ -1114,9 +1122,7 @@ local function clear_ore_in_main(surface)
     end
 end
 
-local function generate_spawn_ore(surface)
-    local rng = storage.random_generator
-
+local function generate_spawn_ore(surface, rng)
     -- This array holds indices of chunks onto which we desire to
     -- generate ore patches. It is visually representing north spawn
     -- area. One element was removed on purpose - we don't want to
@@ -1152,17 +1158,17 @@ local function generate_spawn_ore(surface)
     end
 end
 
-local function generate_additional_rocks(surface)
+local function generate_additional_rocks(surface, rng)
     local r = 130
     if surface.count_entities_filtered({ type = 'simple-entity', area = { { r * -1, r * -1 }, { r, 0 } } }) >= 12 then
         return
     end
-    local position = { x = -96 + storage.random_generator(0, 192), y = -40 - storage.random_generator(0, 96) }
-    for _ = 1, storage.random_generator(6, 10) do
-        local name = rocks[storage.random_generator(1, 5)]
+    local position = { x = -96 + rng(0, 192), y = -40 - rng(0, 96) }
+    for _ = 1, rng(6, 10) do
+        local name = rocks[rng(1, 5)]
         local p = surface.find_non_colliding_position(name, {
-            position.x + (-10 + storage.random_generator(0, 20)),
-            position.y + (-10 + storage.random_generator(0, 20)),
+            position.x + (-10 + rng(0, 20)),
+            position.y + (-10 + rng(0, 20)),
         }, 16, 1)
         if p and p.y < -16 then
             surface.create_entity({ name = name, position = p })
@@ -1170,8 +1176,8 @@ local function generate_additional_rocks(surface)
     end
 end
 
-local function generate_silo(surface)
-    local pos = { x = -32 + storage.random_generator(0, 64), y = -72 }
+local function generate_silo(surface, rng)
+    local pos = { x = -32 + rng(0, 64), y = -72 }
     local mirror_position = { x = pos.x * -1, y = pos.y * -1 }
 
     for _, t in
@@ -1222,13 +1228,14 @@ local function generate_silo(surface)
 end
 
 function Public.generate_initial_structures(surface)
-    draw_spawn_area(surface)
+    local rng = create_rng_for_chunk({ x = 1, y = 1 }, surface.map_gen_settings.seed)
+    draw_spawn_area(surface, rng)
     if not storage.active_special_games['mixed_ore_map'] then
         clear_ore_in_main(surface)
-        generate_spawn_ore(surface)
+        generate_spawn_ore(surface, rng)
     end
-    generate_additional_rocks(surface)
-    generate_silo(surface)
+    generate_additional_rocks(surface, rng)
+    generate_silo(surface, rng)
     draw_spawn_island(surface)
 end
 
@@ -1241,12 +1248,12 @@ function Public.minable_wrecks(entity, player)
 
     local surface = entity.surface
 
-    local loot_worth = math_floor(math_abs(entity.position.x * 0.02)) + storage.random_generator(16, 32)
+    local loot_worth = math_floor(math_abs(entity.position.x * 0.02)) + math_random(16, 32)
     local blacklist = LootRaffle.get_tech_blacklist(math_abs(entity.position.x * 0.0001) + 0.10)
     for k, _ in pairs(loot_blacklist) do
         blacklist[k] = true
     end
-    local item_stacks = LootRaffle.roll(loot_worth, storage.random_generator(1, 3), blacklist)
+    local item_stacks = LootRaffle.roll(loot_worth, math_random(1, 3), blacklist)
 
     for k, stack in pairs(item_stacks) do
         local amount = stack.count
@@ -1375,12 +1382,12 @@ local function add_gifts(surface)
         blacklist[k] = true
     end
 
-    for i = 1, storage.random_generator(8, 12) do
-        local loot_worth = storage.random_generator(1, 35000)
+    for i = 1, math_random(8, 12) do
+        local loot_worth = math_random(1, 35000)
         local item_stacks = LootRaffle.roll(loot_worth, 3, blacklist)
         for k, stack in pairs(item_stacks) do
             surface.spill_item_stack({
-                position = { x = storage.random_generator(-10, 10) * 0.1, y = storage.random_generator(-5, 15) * 0.1 },
+                position = { x = math_random(-10, 10) * 0.1, y = math_random(-5, 15) * 0.1 },
                 stack = { name = stack.name, count = 1 },
                 enable_looted = false,
                 force = nil,
@@ -1430,10 +1437,10 @@ function Public.add_new_year_island_decorations(surface)
     draw_sprite_snow({ sprite = sprite, target = { -3.48, -3.48 }, x_scale = scale, y_scale = scale })
     draw_sprite_snow({ sprite = sprite, target = { -3, -3 }, x_scale = scale, y_scale = scale })
 
-    for _ = 1, storage.random_generator(0, 4) do
+    for _ = 1, math_random(0, 4) do
         local stump = surface.create_entity({
             name = 'tree-05-stump',
-            position = { x = storage.random_generator(-40, 40) * 0.1, y = storage.random_generator(-40, 40) * 0.1 },
+            position = { x = math_random(-40, 40) * 0.1, y = math_random(-40, 40) * 0.1 },
         })
         stump.corpse_expires = false
     end
@@ -1477,30 +1484,30 @@ function Public.add_new_year_island_decorations(surface)
         signal.destructible = false
     end
 
-    for _ = 1, storage.random_generator(0, 6) do
+    for _ = 1, math_random(0, 6) do
         surface.create_decoratives({
             check_collision = false,
             decoratives = {
                 {
                     name = 'green-asterisk-mini',
                     position = {
-                        x = storage.random_generator(-40, 40) * 0.1,
-                        y = storage.random_generator(-40, 40) * 0.1,
+                        x = math_random(-40, 40) * 0.1,
+                        y = math_random(-40, 40) * 0.1,
                     },
                     amount = 1,
                 },
             },
         })
     end
-    for _ = 1, storage.random_generator(0, 6) do
+    for _ = 1, math_random(0, 6) do
         surface.create_decoratives({
             check_collision = false,
             decoratives = {
                 {
                     name = 'tiny-rock',
                     position = {
-                        x = storage.random_generator(-40, 40) * 0.1,
-                        y = storage.random_generator(-40, 40) * 0.1,
+                        x = math_random(-40, 40) * 0.1,
+                        y = math_random(-40, 40) * 0.1,
                     },
                     amount = 1,
                 },

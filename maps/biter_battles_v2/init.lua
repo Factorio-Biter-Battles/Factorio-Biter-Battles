@@ -273,16 +273,11 @@ function Public.tables()
     ---Name and tick suspended at
     ---@type table<string, int>
     storage.suspended_players = {}
-    if storage.random_generator == nil then
-        storage.random_generator = game.create_random_generator()
-    end
     if storage.next_map_seed == nil or storage.next_map_seed < 341 then
         -- Seeds 1-341 inclusive are the same
         -- https://lua-api.factorio.com/latest/classes/LuaRandomGenerator.html#re_seed
-        storage.next_map_seed = storage.random_generator(341, 4294967294)
+        storage.next_map_seed = math.random(341, 4294967294)
     end
-    -- Our terrain gen seed IS the map seed
-    storage.random_generator.re_seed(storage.next_map_seed)
     storage.reroll_map_voting = {}
     storage.automatic_captain_voting = {}
     storage.bb_evolution = {}
@@ -367,8 +362,9 @@ function Public.tables()
     ---@type table<integer, number>
     storage.biter_health_factor = {}
 
+    local rng = game.create_random_generator(storage.next_map_seed)
     storage.next_attack = 'north'
-    if storage.random_generator(1, 2) == 1 then
+    if rng(1, 2) == 1 then
         storage.next_attack = 'south'
     end
 
