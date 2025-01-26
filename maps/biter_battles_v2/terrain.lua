@@ -150,15 +150,6 @@ local loot_blacklist = {
     ['express-loader'] = true,
 }
 
-local function shuffle(tbl)
-    local size = #tbl
-    for i = size, 1, -1 do
-        local rand = storage.random_generator(size)
-        tbl[i], tbl[rand] = tbl[rand], tbl[i]
-    end
-    return tbl
-end
-
 function Public.adjust_map_gen_settings(map_gen_settings)
     map_gen_settings.starting_area = 2.5
     map_gen_settings.property_expression_names = {
@@ -240,56 +231,6 @@ function chunk_type_at(chunk_pos)
         return chunk_type.biter_area_border
     else
         return chunk_type.biter_area
-    end
-end
-
-local function create_mirrored_tile_chain(surface, tile, count, straightness)
-    if not surface then
-        return
-    end
-    if not tile then
-        return
-    end
-    if not count then
-        return
-    end
-
-    local position = { x = tile.position.x, y = tile.position.y }
-
-    local modifiers = {
-        { x = 0, y = -1 },
-        { x = -1, y = 0 },
-        { x = 1, y = 0 },
-        { x = 0, y = 1 },
-        { x = -1, y = 1 },
-        { x = 1, y = -1 },
-        { x = 1, y = 1 },
-        { x = -1, y = -1 },
-    }
-    modifiers = shuffle(modifiers)
-
-    for _ = 1, count, 1 do
-        local tile_placed = false
-
-        if storage.random_generator(0, 100) > straightness then
-            modifiers = shuffle(modifiers)
-        end
-        for b = 1, 4, 1 do
-            local pos = { x = position.x + modifiers[b].x, y = position.y + modifiers[b].y }
-            if surface.get_tile(pos).name ~= tile.name then
-                surface.set_tiles({ { name = 'dirt-1', position = pos } }, true)
-                surface.set_tiles({ { name = tile.name, position = pos } }, true)
-                --surface.set_tiles({{name = "landfill", position = {pos.x * -1, (pos.y * -1) - 1}}}, true)
-                --surface.set_tiles({{name = tile.name, position = {pos.x * -1, (pos.y * -1) - 1}}}, true)
-                position = { x = pos.x, y = pos.y }
-                tile_placed = true
-                break
-            end
-        end
-
-        if not tile_placed then
-            position = { x = position.x + modifiers[1].x, y = position.y + modifiers[1].y }
-        end
     end
 end
 
@@ -1264,10 +1205,6 @@ local function generate_silo(surface)
     silo.minable_flag = false
     storage.rocket_silo[silo.force.name] = silo
     AiTargets.start_tracking(silo)
-
-    for _ = 1, 32, 1 do
-        create_mirrored_tile_chain(surface, { name = 'refined-concrete', position = silo.position }, 32, 10)
-    end
 
     for _, entity in pairs(surface.find_entities({ { pos.x - 4, pos.y - 6 }, { pos.x + 5, pos.y + 5 } })) do
         if entity.type == 'simple-entity' or entity.type == 'tree' then
