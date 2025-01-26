@@ -10,7 +10,7 @@ return {
     ---@return number # of the range [-1; 1] * (sum of modules of all amplitudes)
     get = function(octaves, x, y, seed, offset)
         local noise = 0
-        for _, octave in ipairs(octaves) do
+        for _, octave in pairs(octaves) do
             noise = noise + simplex_noise(x * octave.freq, y * octave.freq, seed) * octave.amp
             seed = seed + offset
         end
@@ -31,7 +31,7 @@ return {
     get_lower_bounded = function(octaves, amplitude_sum, x, y, seed, offset, lower_bound)
         local noise = 0.0
         local amplitude_left = amplitude_sum
-        for _, octave in ipairs(octaves) do
+        for _, octave in pairs(octaves) do
             noise = noise + simplex_noise(x * octave.freq, y * octave.freq, seed) * octave.amp
             amplitude_left = amplitude_left - octave.amp
             if noise + amplitude_left <= lower_bound then
@@ -57,7 +57,7 @@ return {
     get_outside_bounds = function(octaves, amplitude_sum, x, y, seed, offset, lb, ub)
         local noise = 0.0
         local amplitude_left = amplitude_sum
-        for _, octave in ipairs(octaves) do
+        for _, octave in pairs(octaves) do
             noise = noise + simplex_noise(x * octave.freq, y * octave.freq, seed) * octave.amp
             amplitude_left = amplitude_left - octave.amp
             if noise - amplitude_left >= lb and noise + amplitude_left <= ub then
