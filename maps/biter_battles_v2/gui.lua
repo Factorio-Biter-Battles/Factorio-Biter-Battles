@@ -260,6 +260,33 @@ function Public.create_biter_gui_button(player)
     })
 end
 
+local function get_data_for_refresh_statistics()
+    local color = DifficultyVote.difficulty_chat_color()
+    return {
+        clock_caption = get_format_time(),
+        clock_tooltip = style.listbox('Difficulty: ') .. style.stat(
+            string_format('[color=%.2f,%.2f,%.2f]%s[/color]', color.r, color.g, color.b, DifficultyVote.difficulty_name())
+        ) .. string_format(style.listbox('\nGame speed: ') .. style.yellow(style.stat('%.2f')), game.speed),
+        ['north'] = {
+            style.bold(Functions.team_name('north')),
+            '(' .. style.green(#game.forces['north'].connected_players) .. ')',
+            get_captain_caption('north') .. get_player_list_caption('north'),
+            (math_floor(1000 * storage.bb_evolution['north_biters']) * 0.1) .. '%',
+            get_evo_tooltip('north', false),
+            threat_to_pretty_string(math_floor(storage.bb_threat['north_biters'])),
+            get_threat_tooltip('north', false),
+        },
+        ['south'] = {
+            style.bold(Functions.team_name('south')),
+            '(' .. style.green(#game.forces['south'].connected_players) .. ')',
+            get_captain_caption('south') .. get_player_list_caption('south'),
+            (math_floor(1000 * storage.bb_evolution['south_biters']) * 0.1) .. '%',
+            get_evo_tooltip('south', false),
+            threat_to_pretty_string(math_floor(storage.bb_threat['south_biters'])),
+            get_threat_tooltip('south', false),
+        },
+    }
+end
 ---@param player LuaPlayer
 function Public.create_statistics_gui_button(player)
     if Gui.get_top_element(player, 'bb_toggle_statistics') then
@@ -341,7 +368,7 @@ function Public.create_statistics_gui_button(player)
         )
     end
 
-    Public.refresh_statistics(player)
+    Public.refresh_statistics(player, get_data_for_refresh_statistics())
     frame.visible = false
 end
 
@@ -623,33 +650,26 @@ function Public.create_main_gui(player)
 end
 
 ---@param player LuaPlayer
-function Public.refresh_statistics(player)
+function Public.refresh_statistics(player, data)
     local frame = Gui.get_top_element(player, 'bb_frame_statistics')
     if not frame or not frame.visible then
         return
     end
 
-    local difficulty = DifficultyVote.difficulty_name()
-    local color = DifficultyVote.difficulty_chat_color()
-    frame.clock.caption = get_format_time()
-    frame.clock.tooltip = style.listbox('Difficulty: ')
-        .. style.stat(string_format('[color=%.2f,%.2f,%.2f]%s[/color]', color.r, color.g, color.b, difficulty))
-        .. string_format(style.listbox('\nGame speed: ') .. style.yellow(style.stat('%.2f')), game.speed)
+    frame.clock.caption = data.clock_caption
+    frame.clock.tooltip = data.clock_tooltip
 
     for force_name, gui_value in pairs(gui_values) do
-        local biter_force = game.forces[gui_value.biter_force]
-        frame[force_name .. '_name'].tooltip = style.bold(Functions.team_name(force_name))
+        frame[force_name .. '_name'].tooltip = data[force_name][1]
 
-        frame[force_name .. '_players'].caption = '(' .. style.green(#game.forces[force_name].connected_players) .. ')'
-        frame[force_name .. '_players'].tooltip = get_captain_caption(force_name) .. get_player_list_caption(force_name)
+        frame[force_name .. '_players'].caption = data[force_name][2]
+        frame[force_name .. '_players'].tooltip = data[force_name][3]
 
-        frame[force_name .. '_evolution'].caption = (math_floor(1000 * storage.bb_evolution[biter_force.name]) * 0.1)
-            .. '%'
-        frame[force_name .. '_evolution'].tooltip = get_evo_tooltip(force_name, false)
+        frame[force_name .. '_evolution'].caption = data[force_name][4]
+        frame[force_name .. '_evolution'].tooltip = data[force_name][5]
 
-        frame[force_name .. '_threat'].caption =
-            threat_to_pretty_string(math_floor(storage.bb_threat[biter_force.name]))
-        frame[force_name .. '_threat'].tooltip = get_threat_tooltip(force_name, false)
+        frame[force_name .. '_threat'].caption = data[force_name][6]
+        frame[force_name .. '_threat'].tooltip = data[force_name][7]
     end
 end
 
@@ -788,10 +808,11 @@ function Public.refresh_main_gui(player, data)
 end
 
 function Public.refresh()
-    local data = get_data_for_refresh_main_gui()
+    local main_data = get_data_for_refresh_main_gui()
+    local statistics_data = get_data_for_refresh_statistics()
     for _, player in pairs(game.connected_players) do
-        Public.refresh_statistics(player)
-        Public.refresh_main_gui(player, data)
+        Public.refresh_statistics(player, statistics_data)
+        Public.refresh_main_gui(player, main_data)
         DifficultyVote.difficulty_gui(player)
     end
     storage.gui_refresh_delay = game.tick + 30
@@ -1156,7 +1177,7 @@ local function on_gui_click(event)
         local frame = Gui.get_top_element(player, 'bb_frame_statistics')
         if frame then
             frame.visible = not frame.visible
-            Public.refresh_statistics(player)
+            Public.refresh_statistics(player, get_data_for_refresh_statistics())
         end
         return
     end
