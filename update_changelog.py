@@ -189,10 +189,10 @@ def gh_filter_unique_pulls(entries, pulls):
     be added to changelog.
     """
 
-    threshold = max(entry['number'] for entry in entries)
+    old = [entry['number'] for entry in entries]
     new = []
     for pull in pulls:
-        if pull['number'] <= threshold:
+        if pull['number'] in old:
             continue
         new.append(pull)
 
