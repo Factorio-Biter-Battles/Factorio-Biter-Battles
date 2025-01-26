@@ -69,6 +69,12 @@ def fetch_pr_page(auth, page):
 
     return resp.json()
 
+def gh_sort_by_key_desc(pulls, key):
+    """ Sort all entries by key in descending order
+    """
+
+    return sorted(pulls, key=lambda entry: entry[key], reverse=True)
+
 def gh_collect_entries():
     """ Queries GH pull requests and creates entries out of them for the changelog
     """
@@ -87,7 +93,7 @@ def gh_collect_entries():
                 merged_pull_requests.append(data)
 
     # Sort the merged pull requests by merge date in descending order
-    merged_pull_requests.sort(key=lambda x: x["merged_at"], reverse=True)
+    merged_pull_requests = gh_sort_by_key_desc(merged_pull_requests, 'merged_at')
     entries = []
     for data in merged_pull_requests:
         entries.append(parse_entry(data))
@@ -220,7 +226,8 @@ def main():
     entries = lua_collect_entries()
     new = gh_filter_unique_pulls(entries, pulls)
     gh_tag_pulls(new)
-    lua_dump_entries(new + entries)
+    total = gh_sort_by_key_desc(new + entries, 'date')
+    lua_dump_entries(total)
 
 if __name__ == '__main__':
     main()
