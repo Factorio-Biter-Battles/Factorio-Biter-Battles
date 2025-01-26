@@ -372,6 +372,37 @@ function Public.create_statistics_gui_button(player)
     frame.visible = false
 end
 
+local function get_data_for_refresh_main_gui()
+    return {
+        clock_caption = string_format('Time: %s', get_format_time()),
+        game_speed_caption = string_format('Speed: %.2f', game.speed),
+        is_cpt = storage.active_special_games.captain_mode,
+        main_frame = {
+            ['north'] = {
+                Functions.team_name('north'),
+                #game.forces['north'].connected_players,
+                math_floor(1000 * storage.bb_evolution['north_biters']) * 0.1,
+                get_evo_sprite(math_floor(1000 * storage.bb_evolution['north_biters']) * 0.1),
+                get_evo_tooltip('north', true),
+                math_floor(storage.bb_threat['north_biters']),
+                get_threat_tooltip('north', true),
+                get_captain_caption('north'),
+                get_player_list_caption('north'),
+            },
+            ['south'] = {
+                Functions.team_name('south'),
+                #game.forces['south'].connected_players,
+                math_floor(1000 * storage.bb_evolution['south_biters']) * 0.1,
+                get_evo_sprite(math_floor(1000 * storage.bb_evolution['south_biters']) * 0.1),
+                get_evo_tooltip('south', true),
+                math_floor(storage.bb_threat['south_biters']),
+                get_threat_tooltip('south', true),
+                get_captain_caption('south'),
+                get_player_list_caption('south'),
+            },
+        },
+    }
+end 
 ---@param player LuaPlayer
 function Public.create_main_gui(player)
     local is_spec = player.force.name == 'spectator' or not storage.chosen_team[player.name]
@@ -646,7 +677,7 @@ function Public.create_main_gui(player)
 
     -- ============================================================================
 
-    Public.refresh_main_gui(player)
+    Public.refresh_main_gui(player, get_data_for_refresh_main_gui())
 end
 
 ---@param player LuaPlayer
@@ -659,7 +690,7 @@ function Public.refresh_statistics(player, data)
     frame.clock.caption = data.clock_caption
     frame.clock.tooltip = data.clock_tooltip
 
-    for force_name, gui_value in pairs(gui_values) do
+    for force_name, _ in pairs(gui_values) do
         frame[force_name .. '_name'].tooltip = data[force_name][1]
 
         frame[force_name .. '_players'].caption = data[force_name][2]
@@ -673,40 +704,6 @@ function Public.refresh_statistics(player, data)
     end
 end
 
-local function get_data_for_refresh_main_gui()
-    return {
-        clock_caption = string_format('Time: %s', get_format_time()),
-        game_speed_caption = string_format('Speed: %.2f', game.speed),
-        is_cpt = storage.active_special_games.captain_mode,
-        main_frame = {
-            ['north'] = {
-                team_name_caption = Functions.team_name('north'),
-                team_info_bb_toggle_player_list_number = #game.forces['north'].connected_players,
-                team_info_evolution_number = math_floor(1000 * storage.bb_evolution['north_biters']) * 0.1,
-                team_info_evolution_sprite = get_evo_sprite(
-                    math_floor(1000 * storage.bb_evolution['north_biters']) * 0.1
-                ),
-                team_info_evolution_tooltip = get_evo_tooltip('north', true),
-                team_info_threat_number = math_floor(storage.bb_threat['north_biters']),
-                team_info_threat_tooltip = get_threat_tooltip('north', true),
-                team_players_captain_caption = get_captain_caption('north'),
-                team_players_members_caption = get_player_list_caption('north'),
-            },
-            ['south'] = {
-                team_info_bb_toggle_player_list_number = #game.forces['south'].connected_players,
-                team_info_evolution_number = math_floor(1000 * storage.bb_evolution['south_biters']) * 0.1,
-                team_info_evolution_sprite = get_evo_sprite(
-                    math_floor(1000 * storage.bb_evolution['south_biters']) * 0.1
-                ),
-                team_info_evolution_tooltip = get_evo_tooltip('south', true),
-                team_info_threat_number = math_floor(storage.bb_threat['south_biters']),
-                team_info_threat_tooltip = get_threat_tooltip('south', true),
-                team_players_captain_caption = get_captain_caption('south'),
-                team_players_members_caption = get_player_list_caption('south'),
-            },
-        },
-    }
-end
 
 ---@param player LuaPlayer
 ---@param data {clock_caption:string, game_speed_caption:string, is_cpt:boolean, main_frame:{}}}
@@ -730,25 +727,25 @@ function Public.refresh_main_gui(player, data)
         for force_name, _ in pairs(gui_values) do
             local local_data = data.main_frame[force_name]
             local team = main[force_name]
-            team.flow.caption_flow.team_name.caption = local_data.team_name_caption
+            team.flow.caption_flow.team_name.caption = local_data[1]
 
             local team_info = team.flow.table
 
-            team_info.bb_toggle_player_list.number = local_data.team_info_bb_toggle_player_list_number
+            team_info.bb_toggle_player_list.number = local_data[2]
             team_info.bb_toggle_player_list.tooltip = style.bold('Player list')
                 .. (team_info.bb_toggle_player_list.toggled and ' - Hide player list' or ' - Show player list')
 
-            team_info.evolution.number = local_data.team_info_evolution_number
-            team_info.evolution.sprite = local_data.team_info_evolution_sprite
-            team_info.evolution.tooltip = local_data.team_info_evolution_tooltip
+            team_info.evolution.number = local_data[3]
+            team_info.evolution.sprite = local_data[4]
+            team_info.evolution.tooltip = local_data[5]
 
-            team_info.threat.number = local_data.team_info_threat_number
-            team_info.threat.tooltip = local_data.team_info_threat_tooltip
+            team_info.threat.number = local_data[6]
+            team_info.threat.tooltip = local_data[7]
 
             if team.players.visible then
                 team.players.captain.visible = is_cpt ~= nil
-                team.players.captain.caption = local_data.team_players_captain_caption
-                team.players.members.caption = local_data.team_players_members_caption
+                team.players.captain.caption = local_data[8]
+                team.players.members.caption = local_data[9]
             end
         end
     end
@@ -1185,7 +1182,7 @@ local function on_gui_click(event)
     if name == 'bb_toggle_player_list' then
         local team_frame = element.parent.parent.parent
         team_frame.players.visible = element.toggled
-        Public.refresh_main_gui(player)
+        Public.refresh_main_gui(player, get_data_for_refresh_main_gui())
         return
     end
 
