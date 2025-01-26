@@ -469,12 +469,12 @@ local ore_template = { name = 'iron-ore', position = { 0, 0 }, amount = 1 }
 ---@param y number
 ---@param rng LuaRandomGenerator
 local function generate_ordinary_tile(can_place_entity, create_entity, seed, x, y, rng)
-    ore_template.position[1], ore_template.position[2] = x, y
-    ore_template.name = 'iron-ore'
-    ore_template.amount = 1
-    if can_place_entity(ore_template) then
-        local noise = get_lower_bounded_noise(mixed_ore_noise, mixed_ore_noise_amp_sum, x, y, seed, 10000, 0.6)
-        if noise then
+    local noise = get_lower_bounded_noise(mixed_ore_noise, mixed_ore_noise_amp_sum, x, y, seed, 10000, 0.6)
+    if noise then
+        ore_template.position[1], ore_template.position[2] = x, y
+        ore_template.name = 'iron-ore'
+        ore_template.amount = 1
+        if can_place_entity(ore_template) then
             local i = math_floor(noise * 25 + math_abs(x) * 0.05) % 15 + 1
             local amount = (rng(800, 1000) + math_sqrt(x ^ 2 + y ^ 2) * 3) * mixed_ore_multiplier[i]
             ore_template.name = ores[i]

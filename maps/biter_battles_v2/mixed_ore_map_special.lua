@@ -209,14 +209,14 @@ local mixed_patches_ore_multiplier = { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
 ---@param rng LuaRandomGenerator
 ---@param size number
 local function generate_mixed_patches_tile(can_place_entity, create_entity, seed, x, y, rng, size)
-    ore_template.position[1], ore_template.position[2] = x, y
-    ore_template.name = 'iron-ore'
-    ore_template.amount = 1
-    if can_place_entity(ore_template) then
-        local threshold = 0.1 * size
-        local noise =
-            get_noise_outside_bounds(mixed_ore_noise, mixed_ore_noise_amp_sum, x, y, seed, 10000, -threshold, threshold)
-        if noise then
+    local threshold = 0.1 * size
+    local noise =
+        get_noise_outside_bounds(mixed_ore_noise, mixed_ore_noise_amp_sum, x, y, seed, 10000, -threshold, threshold)
+    if noise then
+        ore_template.position[1], ore_template.position[2] = x, y
+        ore_template.name = 'iron-ore'
+        ore_template.amount = 1
+        if can_place_entity(ore_template) then
             local i = math_floor(noise * 25 + math_abs(x) * 0.05) % 15 + 1
             local amount = (rng(800, 1000) + math_sqrt(x ^ 2 + y ^ 2) * 3) * mixed_patches_ore_multiplier[i]
             ore_template.name = mixed_patches_ores[i]
