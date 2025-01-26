@@ -616,7 +616,7 @@ local size_of_scrap_vectors = #scrap_vectors
 
 local function populate_with_extra_worm_turrets(surface, chunk_pos, rng)
     local worm_template = { name = '', position = { 0, 0 }, force = 'north_biters' }
-    local scrap_template = { name = '', position = { 0, 0 }, force = 'neutral' }
+    local scrap_template = { name = '', position = { 0, 0 }, force = 'neutral', create_build_effect_smoke = false }
 
     local left_top_x = chunk_pos.x * 32
     local left_top_y = chunk_pos.y * 32
