@@ -11,6 +11,7 @@ local session = require('utils.datastore.session_data')
 local biter_texture = require('maps.biter_battles_v2.precomputed.biter_texture')
 local river = require('maps.biter_battles_v2.precomputed.river')
 
+local ai_targets_start_tracking = AiTargets.start_tracking
 local bb_config_bitera_area_distance = bb_config.bitera_area_distance
 local bb_config_biter_area_slope = bb_config.biter_area_slope
 local biter_raffle_roll = BiterRaffle.roll
@@ -25,19 +26,28 @@ local math_sqrt = math.sqrt
 
 local get_noise = multi_octave_noise.get
 local get_lower_bounded_noise = multi_octave_noise.get_lower_bounded
+local get_upper_bounded_noise = multi_octave_noise.get_upper_bounded
 local simplex_noise = require('utils.simplex_noise').d2
 
-local biter_area_border_noise = noise.biter_area_border
-local biter_area_border_noise_amp_sum = 0
-for _, octave in pairs(biter_area_border_noise) do
-    biter_area_border_noise_amp_sum = biter_area_border_noise_amp_sum + octave.amp
+function amp_sum(octaves)
+    local result = 0
+    for _, octave in pairs(octaves) do
+        result = result + octave.amp
+    end
+    return result
 end
+
+local biter_area_border_noise = noise.biter_area_border
+local biter_area_border_noise_amp_sum = amp_sum(biter_area_border_noise)
 
 local mixed_ore_noise = noise.mixed_ore
 local mixed_ore_noise_amp_sum = 1.0 -- normalized
 
 local spawn_wall_noise = noise.spawn_wall
+local spawn_wall_noise_amp_sum = amp_sum(spawn_wall_noise)
+
 local spawn_wall_2_noise = noise.spawn_wall_2
+local spawn_wall_2_noise_amp_sum = amp_sum(spawn_wall_2_noise)
 
 local biter_texture_width = biter_texture.width
 local biter_texture_height = biter_texture.height
@@ -324,61 +334,118 @@ local function draw_noise_ore_patch(position, name, surface, radius, richness)
 end
 
 -- distance to the center of the map from the center of the tile
-local function tile_distance_to_center(tile_pos)
-    return math_sqrt((tile_pos.x + 0.5) ^ 2 + (tile_pos.y + 0.5) ^ 2)
+local function tile_distance_to_center(x, y)
+    return math_sqrt((x + 0.5) ^ 2 + (y + 0.5) ^ 2)
 end
 
-local function is_within_spawn_island(pos)
-    if math_abs(pos.x) > spawn_island_size then
+local function is_within_spawn_island(x, y)
+    if math_abs(x) > spawn_island_size then
         return false
     end
-    if math_abs(pos.y) > spawn_island_size then
+    if math_abs(y) > spawn_island_size then
         return false
     end
-    if tile_distance_to_center(pos) > spawn_island_size then
+    if tile_distance_to_center(x, y) > spawn_island_size then
         return false
     end
     return true
 end
 
-local function is_horizontal_border_river(pos, seed)
-    if tile_distance_to_center(pos) < river_circle_size then
+local function is_horizontal_border_river(x, y, seed)
+    if tile_distance_to_center(x, y) < river_circle_size then
         return true
     end
 
     -- Offset contains coefficient in a range between [0,4]. Select it
     -- from pre-computed table. Position X coordinate is used to determinate
     -- which offset is selected.
-    local offset = river.offset[(pos.x + seed) % river.size]
-    local y = -(pos.y + offset)
+    local offset = river.offset[(x + seed) % river.size]
+    y = -(y + offset)
     return (y <= river_width_half)
 end
 
+--- Calculates tile y coordinate which has top border closest to the intersection point of the middle
+---  of a vertical column and the top (negative) part of a circle at the origin, ties prefer tile below (towards positive)
+---@param column_x number tile column x coordinate
+---@param circle_radius number
+---@return number? tile_y # intersection point, if any
+local function tile_near_column_with_origin_circle_intersection(column_x, circle_radius)
+    local tile_center = 0.5
+    local circle_y_intersection_sq = circle_radius ^ 2 - (column_x + tile_center) ^ 2
+    if circle_y_intersection_sq < 0 then
+        return nil
+    end
+    local circle_y_intersection = -math_sqrt(circle_y_intersection_sq)
+    -- round, tie breaker ceil
+    circle_y_intersection = math_floor(circle_y_intersection + 0.5)
+    return circle_y_intersection
+end
+
+---@param chunk_pos {x: number, y: number}
+---@return boolean
+local function in_spawn_river_circle_bbox(chunk_pos)
+    return chunk_pos.y >= -2 and chunk_pos.x >= -2 and chunk_pos.x < 2
+end
+
+---@param seed any
+---@param x number
+---@param include_spawn_circle boolean
+---@return number y
+local function river_start(seed, x, include_spawn_circle)
+    -- Offset contains coefficient in a range between [0, 4]. Select it
+    -- from pre-computed table. Position X coordinate is used to determinate
+    -- which offset is selected.
+    local offset = river_offset[(x + seed) % river_size]
+    local start = -river_width_half - offset
+
+    if include_spawn_circle then
+        local circle_y_intersection = tile_near_column_with_origin_circle_intersection(x, river_circle_size)
+        if circle_y_intersection then
+            start = math_min(start, circle_y_intersection)
+        end
+    end
+
+    return start
+end
+
 local DEFAULT_HIDDEN_TILE = 'dirt-3'
-local function generate_starting_area(pos, surface)
-    local spawn_wall_radius = 116
-    local noise_multiplier = 15
-    local min_noise = -noise_multiplier * 1.25
 
-    local seed = game.surfaces[storage.bb_surface_name].map_gen_settings.seed
-    if is_horizontal_border_river(pos, seed) then
-        return
-    end
+local spawn_wall_radius = 116
+local spawn_wall_noise_multiplier = 15
+local spawn_wall_noise_deviation = spawn_wall_noise_multiplier * spawn_wall_noise_amp_sum
 
-    local distance_to_center = tile_distance_to_center(pos)
-    -- Avoid calculating noise, see comment below
-    if (distance_to_center + min_noise - spawn_wall_radius) > 4.5 then
-        return
-    end
+local concrete_circle_radius = spawn_wall_radius - (10 + spawn_wall_noise_deviation)
+local spawn_wall_noise_radius = spawn_wall_radius + (4.5 + spawn_wall_noise_deviation)
 
-    local noise = get_noise(spawn_wall_noise, pos.x, pos.y, seed, 25000) * noise_multiplier
-    local distance_from_spawn_wall = distance_to_center + noise - spawn_wall_radius
+---@param surface LuaSurface
+---@param chunk_pos {x: number, y: number}
+---@param rng LuaRandomGenerator
+local function generate_starting_area(surface, chunk_pos, rng)
+    local wooden_chest_template = { name = 'wooden-chest', position = { 0, 0 }, force = 'north' }
+    local coal_template = { name = 'coal', position = { 0, 0 } }
+    local stone_wall_template = { name = 'stone-wall', position = { 0, 0 }, force = 'north' }
+    local gun_turret_template = { name = 'gun-turret', position = { 0, 0 }, force = 'north' }
+    local gun_turret_remnants_template = { name = 'gun-turret-remnants', position = { 0, 0 }, force = 'neutral' }
+    local fire_magazine_template = { name = 'firearm-magazine', count = 0 }
+
+    local seed = surface.map_gen_settings.seed
+    local left_top_x = chunk_pos.x * 32
+    local left_top_y = chunk_pos.y * 32
+    local is_river_chunk = chunk_type_at(chunk_pos) == chunk_type.river
+    local in_spawn_river_circle_bb = in_spawn_river_circle_bbox(chunk_pos)
+    local mixed_ore_map_special_active = storage.active_special_games['mixed_ore_map']
+    local can_place_entity = surface.can_place_entity
+    local create_entity = surface.create_entity
+    local concrete_foundation = {}
+    local concrete = {}
+    local i = 1
+
     -- distance_from_spawn_wall is the difference between the distance_to_center (with added noise)
     -- and our spawn_wall radius (spawn_wall_radius=116), i.e. how far are we from the ring with radius spawn_wall_radius.
     -- The following shows what happens depending on distance_from_spawn_wall:
     --   	min     max
     --  	N/A     -10	    => replace water
-    -- if noise_2 > -0.5:
+    -- if noise_2 > -0.4:
     --      -1.75    0 	    => wall
     -- else:
     --   	-6      -3 	 	=> 1/16 chance of turret or turret-remnants
@@ -386,73 +453,104 @@ local function generate_starting_area(pos, surface)
     --    	 0       4.5    => chest-remnants with 1/3, chest with 1/(distance_from_spawn_wall+2)
     --
     -- => We never do anything for (distance_to_center + min_noise - spawn_wall_radius) > 4.5
+    for x = left_top_x, left_top_x + 32 - 1 do
+        local noise_start = tile_near_column_with_origin_circle_intersection(x, spawn_wall_noise_radius)
+        noise_start = noise_start and math_max(noise_start, left_top_y) or (left_top_y + 32)
+        noise_end = left_top_y + 32 - 1
 
-    if distance_from_spawn_wall < 0 then
-        if storage.random_generator(1, 100) > 23 then
-            for _, tree in
-                pairs(surface.find_entities_filtered({
-                    type = 'tree',
-                    area = { { pos.x, pos.y }, { pos.x + 1, pos.y + 1 } },
-                }))
-            do
-                tree.destroy()
-            end
+        local concrete_start = tile_near_column_with_origin_circle_intersection(x, concrete_circle_radius)
+        if concrete_start then
+            noise_end = math_min(noise_end, concrete_start - 1)
+        else
+            concrete_start = left_top_y + 32
         end
-    end
 
-    if distance_from_spawn_wall < -10 then
-        surface.set_tiles({ { name = 'refined-concrete', position = pos } }, true)
-        surface.set_hidden_tile(pos, DEFAULT_HIDDEN_TILE)
-        return
-    end
+        local concrete_end = left_top_y + 32 - 1
+        if is_river_chunk then
+            local river_start = river_start(seed, x, in_spawn_river_circle_bb)
+            concrete_end = math_min(concrete_end, river_start - 1)
+            noise_end = math_min(noise_end, river_start - 1)
+        end
 
-    if
-        surface.can_place_entity({ name = 'wooden-chest', position = pos })
-        and (
-            surface.can_place_entity({ name = 'coal', position = pos })
-            or storage.active_special_games['mixed_ore_map']
-        )
-    then
-        local noise_2 = get_noise(spawn_wall_2_noise, pos.x, pos.y, seed, 0)
-        if noise_2 < 0.40 then
+        for y = concrete_start, concrete_end do
+            concrete_foundation[i] = { name = DEFAULT_HIDDEN_TILE, position = { x, y } }
+            concrete[i] = { name = 'refined-concrete', position = { x, y } }
+            i = i + 1
+        end
+
+        for y = noise_start, noise_end do
+            local distance_to_center = tile_distance_to_center(x, y)
+            local noise = get_noise(spawn_wall_noise, x, y, seed, 25000) * spawn_wall_noise_multiplier
+            local distance_from_spawn_wall = distance_to_center + noise - spawn_wall_radius
+
+            local pos = { x, y }
+            if distance_from_spawn_wall < -10 then
+                concrete_foundation[i] = { name = DEFAULT_HIDDEN_TILE, position = pos }
+                concrete[i] = { name = 'refined-concrete', position = pos }
+                i = i + 1
+                goto continue
+            end
+
+            wooden_chest_template.name = 'wooden-chest'
+            wooden_chest_template.position = pos
+            coal_template.position = pos
+            if
+                not can_place_entity(wooden_chest_template)
+                or (not mixed_ore_map_special_active and not can_place_entity(coal_template))
+            then
+                goto continue
+            end
+
+            local noise_2 = get_upper_bounded_noise(spawn_wall_2_noise, spawn_wall_2_noise_amp_sum, x, y, seed, 0, 0.4)
+            if not noise_2 then
+                goto continue
+            end
+
             if noise_2 > -0.40 then
                 if distance_from_spawn_wall > -1.75 and distance_from_spawn_wall < 0 then
-                    local e = surface.create_entity({ name = 'stone-wall', position = pos, force = 'north' })
+                    stone_wall_template.position = pos
+                    create_entity(stone_wall_template)
                 end
-            else
-                if distance_from_spawn_wall > -1.95 and distance_from_spawn_wall < 0 then
-                    local e = surface.create_entity({ name = 'stone-wall', position = pos, force = 'north' })
-                elseif distance_from_spawn_wall > 0 and distance_from_spawn_wall < 4.5 then
-                    local name = 'wooden-chest'
-                    local r_max = math_floor(math.abs(distance_from_spawn_wall)) + 2
-                    if storage.random_generator(1, 3) == 1 then
-                        name = name .. '-remnants'
+                goto continue
+            end
+
+            if distance_from_spawn_wall > -1.95 and distance_from_spawn_wall < 0 then
+                stone_wall_template.position = pos
+                create_entity(stone_wall_template)
+            elseif distance_from_spawn_wall > 0 and distance_from_spawn_wall < 4.5 then
+                local r_max = math_floor(math_abs(distance_from_spawn_wall)) + 2
+                if rng(1, 3) == 1 then
+                    wooden_chest_template.name = 'wooden-chest-remnants'
+                end
+                if rng(1, r_max) == 1 then
+                    create_entity(wooden_chest_template)
+                end
+            elseif distance_from_spawn_wall > -6 and distance_from_spawn_wall < -3 then
+                if rng(1, 16) == 1 then
+                    gun_turret_template.position = pos
+                    if can_place_entity(gun_turret_template) then
+                        local turret = surface.create_entity(gun_turret_template)
+                        fire_magazine_template.count = rng(2, 16)
+                        turret.insert(fire_magazine_template)
+                        ai_targets_start_tracking(turret)
                     end
-                    if storage.random_generator(1, r_max) == 1 then
-                        local e = surface.create_entity({ name = name, position = pos, force = 'north' })
-                    end
-                elseif distance_from_spawn_wall > -6 and distance_from_spawn_wall < -3 then
-                    if storage.random_generator(1, 16) == 1 then
-                        if surface.can_place_entity({ name = 'gun-turret', position = pos }) then
-                            local e = surface.create_entity({ name = 'gun-turret', position = pos, force = 'north' })
-                            e.insert({ name = 'firearm-magazine', count = storage.random_generator(2, 16) })
-                            AiTargets.start_tracking(e)
-                        end
-                    else
-                        if storage.random_generator(1, 24) == 1 then
-                            if surface.can_place_entity({ name = 'gun-turret', position = pos }) then
-                                surface.create_entity({
-                                    name = 'gun-turret-remnants',
-                                    position = pos,
-                                    force = 'neutral',
-                                })
-                            end
+                else
+                    if rng(1, 24) == 1 then
+                        gun_turret_template.position = pos
+                        if can_place_entity(gun_turret_template) then
+                            gun_turret_remnants_template.position = pos
+                            surface.create_entity(gun_turret_remnants_template)
                         end
                     end
                 end
             end
+
+            ::continue::
         end
     end
+
+    surface.set_tiles(concrete_foundation, false)
+    surface.set_tiles(concrete, true)
 end
 
 ---@param chunk_pos {x: number, y: number}
@@ -520,23 +618,6 @@ local function get_tile_generator(surface, chunk_pos)
     end
 end
 
---- Calculates tile y coordinate which has top border closest to the intersection point of the middle
----  of a vertical column and the top (negative) part of a circle at the origin, ties prefer tile below (towards positive)
----@param column_x number tile column x coordinate
----@param circle_radius number
----@return number? tile_y # intersection point, if any
-local function tile_near_column_with_origin_circle_intersection(column_x, circle_radius)
-    local tile_center = 0.5
-    local circle_y_intersection_sq = circle_radius ^ 2 - (column_x + tile_center) ^ 2
-    if circle_y_intersection_sq < 0 then
-        return nil
-    end
-    local circle_y_intersection = -math_sqrt(circle_y_intersection_sq)
-    -- round, tie breaker ceil
-    circle_y_intersection = math_floor(circle_y_intersection + 0.5)
-    return circle_y_intersection
-end
-
 ---@param surface LuaSurface
 ---@param chunk_pos {x: number, y: number}
 ---@param rng LuaRandomGenerator
@@ -557,19 +638,8 @@ local function generate_river(surface, chunk_pos, rng)
 
     -- fill vertically strip by strip, dividing into river/ordinary/spec_island parts
     for x = left_top_x, left_top_x + 32 - 1 do
-        -- Offset contains coefficient in a range between [0, 4]. Select it
-        -- from pre-computed table. Position X coordinate is used to determinate
-        -- which offset is selected.
-        local offset = river_offset[(x + seed) % river_size]
-        local river_border_start_y = -river_width_half - offset
-
-        if in_spawn_river_circle_bbox then
-            local circle_y_intersection = tile_near_column_with_origin_circle_intersection(x, river_circle_size)
-            if circle_y_intersection then
-                river_border_start_y = math_min(river_border_start_y, circle_y_intersection)
-                river_border_start_y = math_max(river_border_start_y, left_top_y)
-            end
-        end
+        local river_border_start_y = river_start(seed, x, in_spawn_river_circle_bbox)
+        river_border_start_y = math_max(river_border_start_y, left_top_y)
 
         local river_border_end_y = left_top_y + 32 - 1
         local is_spec_island_chunk = (chunk_pos_x == -1 or chunk_pos_x == 0) and chunk_pos_y == -1
@@ -967,9 +1037,8 @@ local function draw_spawn_island(surface)
     local tiles = {}
     for x = math_floor(spawn_island_size) * -1, -1, 1 do
         for y = math_floor(spawn_island_size) * -1, -1, 1 do
-            local pos = { x = x, y = y }
-            if is_within_spawn_island(pos) then
-                local distance_to_center = tile_distance_to_center(pos)
+            if is_within_spawn_island(x, y) then
+                local distance_to_center = tile_distance_to_center(x, y)
                 local tile_name = 'refined-concrete'
                 if distance_to_center < 6.3 then
                     tile_name = 'sand-1'
@@ -985,7 +1054,7 @@ local function draw_spawn_island(surface)
                     end
                 end
 
-                table_insert(tiles, { name = tile_name, position = pos })
+                table_insert(tiles, { name = tile_name, position = { x = x, y = y } })
             end
         end
     end
@@ -1005,11 +1074,24 @@ end
 
 local function draw_spawn_area(surface)
     local chunk_r = 4
-    local r = chunk_r * 32
+    local rng = storage.random_generator
 
-    for x = r * -1, r, 1 do
-        for y = r * -1, -4, 1 do
-            generate_starting_area({ x = x, y = y }, surface)
+    local spawn_wall_area_radius = spawn_wall_radius + spawn_wall_noise_deviation
+    local trees = surface.find_entities_filtered({
+        type = 'tree',
+        position = { 0, 0 },
+        radius = spawn_wall_area_radius,
+    })
+    for _, tree in pairs(trees) do
+        -- old code checked for each tile with 2x2 box with chance of skipping 23%
+        -- 4 times same tree 23% gives chance < 1%
+        if rng(1, 100) > 1 then
+            tree.destroy()
+        end
+    end
+    for x = -chunk_r, chunk_r - 1 do
+        for y = -chunk_r, -1 do
+            generate_starting_area(surface, { x = x, y = y }, rng)
         end
     end
 
@@ -1253,7 +1335,7 @@ function Public.restrict_landfill(surface, user, tiles)
             check_position = { x = check_position.x, y = (check_position.y * -1) - 1 }
         end
         local trusted = session.get_trusted_table()
-        if is_horizontal_border_river(check_position, seed) then
+        if is_horizontal_border_river(check_position.x, check_position.y, seed) then
             surface.set_tiles({ { name = t.old_tile.name, position = t.position } }, true)
             if user ~= nil then
                 user.print('You can not landfill the river', { color = { r = 0.22, g = 0.99, b = 0.99 } })
