@@ -1017,12 +1017,17 @@ local function draw_spawn_area(surface)
     surface.regenerate_decorative()
 end
 
+local water_barrier = {}
+for i = 1, 32 do
+    water_barrier[i] = { name = 'deepwater', position = { 0, 0 } }
+end
+
 function Public.draw_water_for_river_ends(surface, chunk_pos)
     local left_top_x = chunk_pos.x * 32
-    for x = 0, 31, 1 do
-        local pos = { x = left_top_x + x, y = 1 }
-        surface.set_tiles({ { name = 'deepwater', position = pos } })
+    for x = 0, 32 - 1 do
+        water_barrier[x + 1].position[1] = left_top_x + x
     end
+    surface.set_tiles(water_barrier)
 end
 
 local function draw_grid_ore_patch(count, grid, name, surface, size, density)
