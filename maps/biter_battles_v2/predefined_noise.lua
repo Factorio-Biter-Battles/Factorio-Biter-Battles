@@ -29,6 +29,11 @@ local noise = {
         { freq = 0.02, amp = 0.3 },
         { freq = 0.15, amp = 0.025 },
     },
+
+    spawn_ore = {
+        { freq = 0.0125, amp = 1 },
+        { freq = 0.1, amp = 0.12 },
+    },
 }
 
 for _, name in ipairs(normalize_amp_of) do
