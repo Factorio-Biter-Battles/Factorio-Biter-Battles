@@ -17,6 +17,7 @@ local bb_config_biter_area_slope = bb_config.biter_area_slope
 local biter_raffle_roll = BiterRaffle.roll
 local spawn_ore = tables.spawn_ore
 local table_insert = table.insert
+local table_remove = table.remove
 local math_abs = math.abs
 local math_ceil = math.ceil
 local math_floor = math.floor
@@ -27,7 +28,7 @@ local math_sqrt = math.sqrt
 local get_noise = multi_octave_noise.get
 local get_lower_bounded_noise = multi_octave_noise.get_lower_bounded
 local get_upper_bounded_noise = multi_octave_noise.get_upper_bounded
-local simplex_noise = require('utils.simplex_noise').d2
+local get_noise_between_bounds = multi_octave_noise.get_between_bounds
 
 function amp_sum(octaves)
     local result = 0
@@ -48,6 +49,9 @@ local spawn_wall_noise_amp_sum = amp_sum(spawn_wall_noise)
 
 local spawn_wall_2_noise = noise.spawn_wall_2
 local spawn_wall_2_noise_amp_sum = amp_sum(spawn_wall_2_noise)
+
+local spawn_ore_noise = noise.spawn_ore
+local spawn_ore_noise_amp_sum = amp_sum(spawn_ore_noise)
 
 local biter_texture_width = biter_texture.width
 local biter_texture_height = biter_texture.height
@@ -289,43 +293,48 @@ local function create_mirrored_tile_chain(surface, tile, count, straightness)
     end
 end
 
-local function draw_noise_ore_patch(position, name, surface, radius, richness)
-    if not position then
-        return
-    end
-    if not name then
-        return
-    end
-    if not surface then
-        return
-    end
-    if not radius then
-        return
-    end
-    if not richness then
-        return
-    end
-    local seed = game.surfaces[storage.bb_surface_name].map_gen_settings.seed
-    local noise_seed_add = 25000
+local function draw_noise_ore_patch(x, y, name, surface, radius, richness)
+    local ore_template = { name = 'iron-ore', position = { 0, 0 }, amount = 1 }
+    local remove_structures_template = { position = { 0, 0 }, name = { 'wooden-chest', 'stone-wall', 'gun-turret' } }
+
+    local seed = surface.map_gen_settings.seed
+    local can_place_entity = surface.can_place_entity
+    local create_entity = surface.create_entity
+    local find_entities_filtered = surface.find_entities_filtered
+
     local richness_part = richness / radius
-    for y = radius * -3, radius * 3, 1 do
-        for x = radius * -3, radius * 3, 1 do
-            local pos = { x = x + position.x + 0.5, y = y + position.y + 0.5 }
-            local noise_1 = simplex_noise(pos.x * 0.0125, pos.y * 0.0125, seed)
-            local noise_2 = simplex_noise(pos.x * 0.1, pos.y * 0.1, seed + 25000)
-            local noise = noise_1 + noise_2 * 0.12
-            local distance_to_center = math_sqrt(x ^ 2 + y ^ 2)
-            local a = richness - richness_part * distance_to_center
-            if distance_to_center < radius - math_abs(noise * radius * 0.85) and a > 1 then
-                if surface.can_place_entity({ name = name, position = pos, amount = a }) then
-                    surface.create_entity({ name = name, position = pos, amount = a })
-                    for _, e in
-                        pairs(surface.find_entities_filtered({
-                            position = pos,
-                            name = { 'wooden-chest', 'stone-wall', 'gun-turret' },
-                        }))
-                    do
-                        e.destroy()
+    for dy = radius * -3, radius * 3, 1 do
+        for dx = radius * -3, radius * 3, 1 do
+            local distance_to_center = math_sqrt(dx ^ 2 + dy ^ 2)
+            local amount = richness - richness_part * distance_to_center
+            if amount > 1 then
+                local ore_x, ore_y = x + dx, y + dy
+
+                -- old equation
+                -- distance_to_center < radius - math_abs(noise * radius * 0.85)
+                local bound = (radius - distance_to_center) / (radius * 0.85)
+                local noise = get_noise_between_bounds(
+                    spawn_ore_noise,
+                    spawn_ore_noise_amp_sum,
+                    ore_x,
+                    ore_y,
+                    seed,
+                    25000,
+                    -bound,
+                    bound
+                )
+
+                if noise then
+                    local pos = { ore_x, ore_y }
+                    ore_template.position = pos
+                    ore_template.name = name
+                    ore_template.amount = amount
+                    if can_place_entity(ore_template) then
+                        create_entity(ore_template)
+                        remove_structures_template.position = pos
+                        for _, e in pairs(find_entities_filtered(remove_structures_template)) do
+                            e.destroy()
+                        end
                     end
                 end
             end
@@ -1112,18 +1121,16 @@ function Public.draw_water_for_river_ends(surface, chunk_pos)
     surface.set_tiles(water_barrier)
 end
 
-local function draw_grid_ore_patch(count, grid, name, surface, size, density)
+local function draw_grid_ore_patch(count, grid, name, surface, size, density, rng)
     -- Takes a random left_top coordinate from grid, removes it and draws
     -- ore patch on top of it. Grid is held by reference, so this function
     -- is reentrant.
     for i = 1, count, 1 do
-        local idx = storage.random_generator(1, #grid)
+        local idx = rng(1, #grid)
         local pos = grid[idx]
-        table.remove(grid, idx)
+        table_remove(grid, idx)
 
-        -- The draw_noise_ore_patch expects position with x and y keys.
-        pos = { x = pos[1], y = pos[2] }
-        draw_noise_ore_patch(pos, name, surface, size, density)
+        draw_noise_ore_patch(pos[1], pos[2], name, surface, size, density)
     end
 end
 
@@ -1135,10 +1142,8 @@ local function _clear_resources(surface, area)
 
     local i = 0
     for _, res in pairs(resources) do
-        if res.valid then
-            res.destroy()
-            i = i + 1
-        end
+        res.destroy()
+        i = i + 1
     end
 
     return i
@@ -1169,7 +1174,9 @@ local function clear_ore_in_main(surface)
 end
 
 local function generate_spawn_ore(surface)
-    -- This array holds indicies of chunks onto which we desire to
+    local rng = storage.random_generator
+
+    -- This array holds indices of chunks onto which we desire to
     -- generate ore patches. It is visually representing north spawn
     -- area. One element was removed on purpose - we don't want to
     -- draw ore in the lake which overlaps with chunk [0,-1]. All ores
@@ -1194,13 +1201,13 @@ local function generate_spawn_ore(surface)
     -- Calculate left_top position of a chunk. It will be used as origin
     -- for ore drawing. Reassigns new coordinates to the grid.
     for i, _ in ipairs(grid) do
-        grid[i][1] = grid[i][1] * 32 + storage.random_generator(-12, 12)
-        grid[i][2] = grid[i][2] * 32 + storage.random_generator(-24, -1)
+        grid[i][1] = grid[i][1] * 32 + rng(-12, 12)
+        grid[i][2] = grid[i][2] * 32 + rng(-24, -1)
     end
 
     for name, props in pairs(spawn_ore) do
-        draw_grid_ore_patch(props.big_patches, grid, name, surface, props.size, props.density)
-        draw_grid_ore_patch(props.small_patches, grid, name, surface, props.size / 2, props.density)
+        draw_grid_ore_patch(props.big_patches, grid, name, surface, props.size, props.density, rng)
+        draw_grid_ore_patch(props.small_patches, grid, name, surface, props.size / 2, props.density, rng)
     end
 end
 
