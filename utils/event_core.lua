@@ -166,10 +166,10 @@ end
 local function update_profilers()
     local profiler
     for event_name, profiler in pairs(event_profilers) do
-        print({ '', 'event_handlers[', event_names[event_name], ']: ', profiler })
+        log({ '', 'event_handlers[', event_names[event_name], ']: ', profiler })
     end
     for nth_tick, profiler in pairs(on_nth_tick_event_profilers) do
-        print({ '', 'on_nth_tick_event_handlers[', nth_tick, ']: ', profiler })
+        log({ '', 'on_nth_tick_event_handlers[', nth_tick, ']: ', profiler })
     end
     event_profilers = {}
     on_nth_tick_event_profilers = {}
