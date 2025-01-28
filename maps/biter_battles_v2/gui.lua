@@ -265,7 +265,13 @@ local function get_data_for_refresh_statistics()
     return {
         clock_caption = get_format_time(),
         clock_tooltip = style.listbox('Difficulty: ') .. style.stat(
-            string_format('[color=%.2f,%.2f,%.2f]%s[/color]', color.r, color.g, color.b, DifficultyVote.difficulty_name())
+            string_format(
+                '[color=%.2f,%.2f,%.2f]%s[/color]',
+                color.r,
+                color.g,
+                color.b,
+                DifficultyVote.difficulty_name()
+            )
         ) .. string_format(style.listbox('\nGame speed: ') .. style.yellow(style.stat('%.2f')), game.speed),
         ['north'] = {
             team_caption = style.bold(Functions.team_name('north')),
@@ -402,7 +408,7 @@ local function get_data_for_refresh_main_gui()
             },
         },
     }
-end 
+end
 ---@param player LuaPlayer
 function Public.create_main_gui(player)
     local is_spec = player.force.name == 'spectator' or not storage.chosen_team[player.name]
@@ -704,7 +710,6 @@ function Public.refresh_statistics(player, data)
         frame[force_name .. '_threat'].tooltip = local_data.threat_tooltip
     end
 end
-
 
 ---@param player LuaPlayer
 ---@param data {clock_caption:string, game_speed_caption:string, is_cpt:boolean, main_frame:{}}}
