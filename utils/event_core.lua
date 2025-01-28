@@ -8,10 +8,17 @@ local load_event_name = -2
 
 -- map of event_name to handlers[]
 local event_handlers = {}
+---@type table<defines.events, LuaProfiler>
 local event_profilers = {}
+---@type table<defines.events, uint>
+local event_count = {}
+
 -- map of nth_tick to handlers[]
 local on_nth_tick_event_handlers = {}
+---@type table<uint, LuaProfiler>
 local on_nth_tick_event_profilers = {}
+---@type table<uint, uint>
+local on_nth_tick_event_count = {}
 local event_names = {}
 for k, v in pairs(defines.events) do
     event_names[v] = k
@@ -54,8 +61,10 @@ local function on_event(event)
     if not profiler then
         profiler = game.create_profiler()
         event_profilers[event.name] = profiler
+        event_count[event.name] = 1
     else
         profiler.restart()
+        event_count[event.name] = event_count[event.name] + 1
     end
     call_handlers(handlers, event)
     profiler.stop()
@@ -89,8 +98,10 @@ local function on_nth_tick_event(event)
     if not profiler then
         profiler = game.create_profiler()
         on_nth_tick_event_profilers[event.nth_tick] = profiler
+        on_nth_tick_event_count[event.nth_tick] = 1
     else
         profiler.restart()
+        on_nth_tick_event_count[event.nth_tick] = on_nth_tick_event_count[event.nth_tick] + 1
     end
     call_handlers(handlers, event)
     profiler.stop()
@@ -166,14 +177,16 @@ end
 local function update_profilers()
     local profiler
     for event_name, profiler in pairs(event_profilers) do
-        log({ '', 'event_handlers[', event_names[event_name], ']: ', profiler })
+        log({ '', 'event_handlers[', event_names[event_name], ']: ', event_count[event_name], ' times, ', profiler })
     end
     for nth_tick, profiler in pairs(on_nth_tick_event_profilers) do
-        log({ '', 'on_nth_tick_event_handlers[', nth_tick, ']: ', profiler })
+        log({ '', 'on_nth_tick_event_handlers[', nth_tick, ']: ', on_nth_tick_event_count[nth_tick], ' times, ', profiler })
     end
     log('connected players: ' .. #game.connected_players .. ' game speed: ' .. game.speed)
     event_profilers = {}
+    event_count = {}
     on_nth_tick_event_profilers = {}
+    on_nth_tick_event_count = {}
 end
 
 Public.on_nth_tick(60 * 5, update_profilers)
