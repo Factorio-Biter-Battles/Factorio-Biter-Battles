@@ -181,6 +181,6 @@ local function update_profilers()
     on_nth_tick_event_profilers = {}
 end
 
-Public.on_nth_tick(60 * 5, update_profilers)
+Public.on_nth_tick(60 * 60, update_profilers)
 
 return Public
