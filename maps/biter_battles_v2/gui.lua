@@ -268,22 +268,22 @@ local function get_data_for_refresh_statistics()
             string_format('[color=%.2f,%.2f,%.2f]%s[/color]', color.r, color.g, color.b, DifficultyVote.difficulty_name())
         ) .. string_format(style.listbox('\nGame speed: ') .. style.yellow(style.stat('%.2f')), game.speed),
         ['north'] = {
-            style.bold(Functions.team_name('north')),
-            '(' .. style.green(#game.forces['north'].connected_players) .. ')',
-            get_captain_caption('north') .. get_player_list_caption('north'),
-            (math_floor(1000 * storage.bb_evolution['north_biters']) * 0.1) .. '%',
-            get_evo_tooltip('north', false),
-            threat_to_pretty_string(math_floor(storage.bb_threat['north_biters'])),
-            get_threat_tooltip('north', false),
+            team_caption = style.bold(Functions.team_name('north')),
+            players_caption = '(' .. style.green(#game.forces['north'].connected_players) .. ')',
+            players_tooltip = get_captain_caption('north') .. get_player_list_caption('north'),
+            evolution_caption = (math_floor(1000 * storage.bb_evolution['north_biters']) * 0.1) .. '%',
+            evolution_tooltip = get_evo_tooltip('north', false),
+            threat_caption = threat_to_pretty_string(math_floor(storage.bb_threat['north_biters'])),
+            threat_tooltip = get_threat_tooltip('north', false),
         },
         ['south'] = {
-            style.bold(Functions.team_name('south')),
-            '(' .. style.green(#game.forces['south'].connected_players) .. ')',
-            get_captain_caption('south') .. get_player_list_caption('south'),
-            (math_floor(1000 * storage.bb_evolution['south_biters']) * 0.1) .. '%',
-            get_evo_tooltip('south', false),
-            threat_to_pretty_string(math_floor(storage.bb_threat['south_biters'])),
-            get_threat_tooltip('south', false),
+            team_caption = style.bold(Functions.team_name('south')),
+            players_caption = '(' .. style.green(#game.forces['south'].connected_players) .. ')',
+            players_tooltip = get_captain_caption('south') .. get_player_list_caption('south'),
+            evolution_caption = (math_floor(1000 * storage.bb_evolution['south_biters']) * 0.1) .. '%',
+            evolution_tooltip = get_evo_tooltip('south', false),
+            threat_caption = threat_to_pretty_string(math_floor(storage.bb_threat['south_biters'])),
+            threat_tooltip = get_threat_tooltip('south', false),
         },
     }
 end
@@ -379,26 +379,26 @@ local function get_data_for_refresh_main_gui()
         is_cpt = storage.active_special_games.captain_mode,
         main_frame = {
             ['north'] = {
-                Functions.team_name('north'),
-                #game.forces['north'].connected_players,
-                math_floor(1000 * storage.bb_evolution['north_biters']) * 0.1,
-                get_evo_sprite(math_floor(1000 * storage.bb_evolution['north_biters']) * 0.1),
-                get_evo_tooltip('north', true),
-                math_floor(storage.bb_threat['north_biters']),
-                get_threat_tooltip('north', true),
-                get_captain_caption('north'),
-                get_player_list_caption('north'),
+                teamname = Functions.team_name('north'),
+                playerlist_number = #game.forces['north'].connected_players,
+                evolution_number = math_floor(1000 * storage.bb_evolution['north_biters']) * 0.1,
+                evolution_sprite = get_evo_sprite(math_floor(1000 * storage.bb_evolution['north_biters']) * 0.1),
+                evolution_tootltip = get_evo_tooltip('north', true),
+                threat_number = math_floor(storage.bb_threat['north_biters']),
+                threat_tooltip = get_threat_tooltip('north', true),
+                captain = get_captain_caption('north'),
+                members = get_player_list_caption('north'),
             },
             ['south'] = {
-                Functions.team_name('south'),
-                #game.forces['south'].connected_players,
-                math_floor(1000 * storage.bb_evolution['south_biters']) * 0.1,
-                get_evo_sprite(math_floor(1000 * storage.bb_evolution['south_biters']) * 0.1),
-                get_evo_tooltip('south', true),
-                math_floor(storage.bb_threat['south_biters']),
-                get_threat_tooltip('south', true),
-                get_captain_caption('south'),
-                get_player_list_caption('south'),
+                teamname = Functions.team_name('south'),
+                playerlist_number = #game.forces['south'].connected_players,
+                evolution_number = math_floor(1000 * storage.bb_evolution['south_biters']) * 0.1,
+                evolution_sprite = get_evo_sprite(math_floor(1000 * storage.bb_evolution['south_biters']) * 0.1),
+                evolution_tootltip = get_evo_tooltip('south', true),
+                threat_number = math_floor(storage.bb_threat['south_biters']),
+                threat_tooltip = get_threat_tooltip('south', true),
+                captain = get_captain_caption('south'),
+                members = get_player_list_caption('south'),
             },
         },
     }
@@ -691,16 +691,17 @@ function Public.refresh_statistics(player, data)
     frame.clock.tooltip = data.clock_tooltip
 
     for force_name, _ in pairs(gui_values) do
-        frame[force_name .. '_name'].tooltip = data[force_name][1]
+        local local_data = data[force_name]
+        frame[force_name .. '_name'].tooltip = local_data.team_caption
 
-        frame[force_name .. '_players'].caption = data[force_name][2]
-        frame[force_name .. '_players'].tooltip = data[force_name][3]
+        frame[force_name .. '_players'].caption = local_data.players_caption
+        frame[force_name .. '_players'].tooltip = local_data.players_tooltip
 
-        frame[force_name .. '_evolution'].caption = data[force_name][4]
-        frame[force_name .. '_evolution'].tooltip = data[force_name][5]
+        frame[force_name .. '_evolution'].caption = local_data.evolution_caption
+        frame[force_name .. '_evolution'].tooltip = local_data.evolution_tooltip
 
-        frame[force_name .. '_threat'].caption = data[force_name][6]
-        frame[force_name .. '_threat'].tooltip = data[force_name][7]
+        frame[force_name .. '_threat'].caption = local_data.threat_caption
+        frame[force_name .. '_threat'].tooltip = local_data.threat_tooltip
     end
 end
 
@@ -727,25 +728,25 @@ function Public.refresh_main_gui(player, data)
         for force_name, _ in pairs(gui_values) do
             local local_data = data.main_frame[force_name]
             local team = main[force_name]
-            team.flow.caption_flow.team_name.caption = local_data[1]
+            team.flow.caption_flow.team_name.caption = local_data.teamname
 
             local team_info = team.flow.table
 
-            team_info.bb_toggle_player_list.number = local_data[2]
+            team_info.bb_toggle_player_list.number = local_data.playerlist_number
             team_info.bb_toggle_player_list.tooltip = style.bold('Player list')
                 .. (team_info.bb_toggle_player_list.toggled and ' - Hide player list' or ' - Show player list')
 
-            team_info.evolution.number = local_data[3]
-            team_info.evolution.sprite = local_data[4]
-            team_info.evolution.tooltip = local_data[5]
+            team_info.evolution.number = local_data.evolution_number
+            team_info.evolution.sprite = local_data.evolution_sprite
+            team_info.evolution.tooltip = local_data.evolution_tooltip
 
-            team_info.threat.number = local_data[6]
-            team_info.threat.tooltip = local_data[7]
+            team_info.threat.number = local_data.threat_number
+            team_info.threat.tooltip = local_data.threat_tooltip
 
             if team.players.visible then
                 team.players.captain.visible = is_cpt ~= nil
-                team.players.captain.caption = local_data[8]
-                team.players.members.caption = local_data[9]
+                team.players.captain.caption = local_data.captain
+                team.players.members.caption = local_data.members
             end
         end
     end
