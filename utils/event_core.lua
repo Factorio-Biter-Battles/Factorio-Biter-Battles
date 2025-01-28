@@ -8,17 +8,13 @@ local load_event_name = -2
 
 -- map of event_name to handlers[]
 local event_handlers = {}
----@type table<defines.events, LuaProfiler>
+---@type table<defines.events, {profiler: LuaProfiler, count: int}>
 local event_profilers = {}
----@type table<defines.events, uint>
-local event_count = {}
 
 -- map of nth_tick to handlers[]
 local on_nth_tick_event_handlers = {}
----@type table<uint, LuaProfiler>
+---@type table<defines.events, {profiler: LuaProfiler, count: int}>
 local on_nth_tick_event_profilers = {}
----@type table<uint, uint>
-local on_nth_tick_event_count = {}
 local event_names = {}
 for k, v in pairs(defines.events) do
     event_names[v] = k
@@ -59,15 +55,14 @@ local function on_event(event)
     end
     local profiler = event_profilers[event.name]
     if not profiler then
-        profiler = game.create_profiler()
+        profiler = { profiler = game.create_profiler(), count = 1 }
         event_profilers[event.name] = profiler
-        event_count[event.name] = 1
     else
-        profiler.restart()
-        event_count[event.name] = event_count[event.name] + 1
+        profiler.profiler.restart()
+        profiler.count = profiler.count + 1
     end
     call_handlers(handlers, event)
-    profiler.stop()
+    profiler.profiler.stop()
 end
 
 local function on_init()
@@ -96,15 +91,14 @@ local function on_nth_tick_event(event)
     local handlers = on_nth_tick_event_handlers[event.nth_tick]
     local profiler = on_nth_tick_event_profilers[event.nth_tick]
     if not profiler then
-        profiler = game.create_profiler()
+        profiler = { profiler = game.create_profiler(), count = 1 }
         on_nth_tick_event_profilers[event.nth_tick] = profiler
-        on_nth_tick_event_count[event.nth_tick] = 1
     else
-        profiler.restart()
-        on_nth_tick_event_count[event.nth_tick] = on_nth_tick_event_count[event.nth_tick] + 1
+        profiler.profiler.restart()
+        profiler.count = profiler.count + 1
     end
     call_handlers(handlers, event)
-    profiler.stop()
+    profiler.profiler.stop()
 end
 
 --- Do not use this function, use Event.add instead as it has safety checks.
@@ -177,16 +171,14 @@ end
 local function update_profilers()
     local profiler
     for event_name, profiler in pairs(event_profilers) do
-        log({ '', 'event_handlers[', event_names[event_name], ']: ', event_count[event_name], ' times, ', profiler })
+        log({ '', 'event_handlers[', event_names[event_name], ']: ', profiler.count, ' times, ', profiler.profiler })
     end
     for nth_tick, profiler in pairs(on_nth_tick_event_profilers) do
-        log({ '', 'on_nth_tick_event_handlers[', nth_tick, ']: ', on_nth_tick_event_count[nth_tick], ' times, ', profiler })
+        log({ '', 'on_nth_tick_event_handlers[', nth_tick, ']: ', profiler.count, ' times, ', profiler.prfiler })
     end
     log('connected players: ' .. #game.connected_players .. ' game speed: ' .. game.speed)
     event_profilers = {}
-    event_count = {}
     on_nth_tick_event_profilers = {}
-    on_nth_tick_event_count = {}
 end
 
 Public.on_nth_tick(60 * 5, update_profilers)
