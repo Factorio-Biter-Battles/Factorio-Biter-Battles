@@ -289,7 +289,7 @@ function Public.feed_biters_from_inventory(player, food)
     if storage.active_special_games['captain_mode'] then
         tick = game.ticks_played
     end
-    if tick < storage.difficulty_votes_timeout then
+    if tick <= storage.difficulty_votes_timeout then
         player.print('Please wait for voting to finish before feeding')
         return
     end
@@ -342,7 +342,7 @@ function Public.feed_biters_mixed_from_inventory(player, button)
     if storage.active_special_games['captain_mode'] then
         tick = game.ticks_played
     end
-    if tick < storage.difficulty_votes_timeout then
+    if tick <= storage.difficulty_votes_timeout then
         player.print('Please wait for voting to finish before feeding')
         return
     end
