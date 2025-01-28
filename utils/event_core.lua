@@ -171,7 +171,7 @@ local function update_profilers()
     for nth_tick, profiler in pairs(on_nth_tick_event_profilers) do
         log({ '', 'on_nth_tick_event_handlers[', nth_tick, ']: ', profiler })
     end
-    log('connected players: ' .. #game.connected_players)
+    log('connected players: ' .. #game.connected_players .. ' game speed: ' .. game.speed)
     event_profilers = {}
     on_nth_tick_event_profilers = {}
 end
