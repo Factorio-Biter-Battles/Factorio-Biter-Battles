@@ -5,6 +5,7 @@ local closable_frame = require('utils.ui.closable_frame')
 local TeamStatsCollect = require('maps.biter_battles_v2.team_stats_collect')
 local safe_wrap_with_player_print = require('utils.utils').safe_wrap_with_player_print
 local safe_wrap_cmd = require('utils.utils').safe_wrap_cmd
+local Quality = require('maps.biter_battles_v2.quality')
 local Event = require('utils.event')
 
 local math_floor = math.floor
@@ -63,6 +64,154 @@ local function format_one_sig_fig(num)
     else
         return format_with_thousands_sep(num)
     end
+end
+
+local function simple_sum(vals)
+    local total = 0
+    for _, num in pairs(vals) do
+        total = total + num
+    end
+
+    return total
+end
+
+local function format_total_caption(vals)
+    local total = simple_sum(vals)
+    return format_with_thousands_sep(total)
+end
+
+local function format_food_tooltip_with_quality(vals, reference)
+    local total = 0
+    local tooltip = ''
+    if not vals then
+        return tooltip
+    end
+
+    for tier, num in pairs(vals) do
+        local q = Quality.TIERS[tier]
+        if num ~= 0 then
+            tooltip = tooltip
+                .. '[img=quality/'
+                .. q.name
+                .. '] '
+                .. format_with_thousands_sep(num)
+                .. ' X '
+                .. q.multiplier
+                .. '\n'
+            total = total + num * q.multiplier
+        end
+    end
+
+    if total ~= 0 then
+        if #vals > 1 then
+            tooltip = tooltip .. '[img=utility/any_quality] ' .. format_with_thousands_sep(total) .. '\n'
+        else
+            tooltip = ''
+        end
+
+        tooltip = tooltip .. '[item=space-science-pack] equivalent: ' .. format_one_sig_fig(total * reference)
+    end
+
+    return tooltip
+end
+
+local function format_first_at(val)
+    return (val and ticks_to_hh_mm(val)) or ''
+end
+
+local function format_first_at_caption(vals)
+    if not vals then
+        return ''
+    end
+
+    return format_first_at(vals[1])
+end
+
+local function format_first_at_tooltip_with_quality(vals)
+    local tooltip = ''
+    if not vals then
+        return tooltip
+    end
+
+    if #vals == 1 then
+        return tooltip
+    end
+
+    for tier, first_at in pairs(vals) do
+        local q = Quality.TIERS[tier]
+        tooltip = tooltip .. '[img=quality/' .. q.name .. '] ' .. format_first_at(first_at) .. '\n'
+    end
+
+    return tooltip:sub(1, -2)
+end
+
+local function format_generic_caption(vals)
+    if vals and vals ~= {} then
+        return format_total_caption(vals)
+    end
+
+    return ''
+end
+
+local function format_generic_tooltip_with_quality(vals)
+    local tooltip = ''
+    if not vals then
+        return tooltip
+    end
+
+    if #vals == 1 then
+        return tooltip
+    end
+
+    for tier, num in pairs(vals) do
+        if num ~= 0 then
+            local q = Quality.TIERS[tier]
+            tooltip = tooltip .. '[img=quality/' .. q.name .. '] ' .. format_with_thousands_sep(num) .. '\n'
+        end
+    end
+
+    return tooltip:sub(1, -2)
+end
+
+local function quality_sum(arrs)
+    if not arrs then
+        return {}
+    end
+
+    local total = {}
+    local tiers = Quality.available_tiers()
+    for t = 1, tiers do
+        total[t] = 0
+        for _, arr in ipairs(arrs) do
+            if arr[t] then
+                total[t] = total[t] + arr[t]
+            end
+        end
+    end
+
+    return total
+end
+
+local function get_killed_or_lost(killed, lost)
+    return quality_sum({ killed, lost })
+end
+
+local function get_buffered(produced, consumed, placed, lost)
+    return quality_sum({ produced, consumed, placed, lost })
+end
+
+local function total_with_quality(vals)
+    if not vals then
+        return 0
+    end
+
+    local total = 0
+    for tier, num in pairs(vals) do
+        local q = Quality.TIERS[tier]
+        total = total + num * q.multiplier
+    end
+
+    return total
 end
 
 ---@param player LuaPlayer
@@ -208,36 +357,34 @@ function TeamStatsCompare.show_stats(player)
             local force_stats = stats.forces[force_name]
             local food_stats = force_stats.food[food.long_name] or {}
             local food_mutagen = Tables.food_values[food.long_name].value
-            local produced = food_stats.produced or 0
-            local consumed = food_stats.consumed or 0
-            local sent = food_stats.sent or 0
+            local reference = food_mutagen / space_sci_mutagen
+            local produced = food_stats.produced or {}
+            local consumed = food_stats.consumed or {}
+            local sent = food_stats.sent or {}
             add_small_label(science_table, { caption = string_format('[item=%s]', food.long_name) })
-            add_small_label(
-                science_table,
-                { caption = (food_stats.first_at and ticks_to_hh_mm(food_stats.first_at) or '') }
-            )
+            add_small_label(science_table, {
+                caption = format_first_at_caption(food_stats.first_at),
+                tooltip = format_first_at_tooltip_with_quality(food_stats.first_at),
+            })
             if not exclude_forces[force_name] then
                 add_small_label(science_table, {
-                    caption = format_with_thousands_sep(produced),
-                    tooltip = '[item=space-science-pack] equivalent: '
-                        .. format_one_sig_fig(produced * food_mutagen / space_sci_mutagen),
+                    caption = format_total_caption(produced),
+                    tooltip = format_food_tooltip_with_quality(produced, reference),
                 })
                 add_small_label(science_table, {
-                    caption = format_with_thousands_sep(consumed),
-                    tooltip = '[item=space-science-pack] equivalent: '
-                        .. format_one_sig_fig(consumed * food_mutagen / space_sci_mutagen),
+                    caption = format_total_caption(consumed),
+                    tooltip = format_food_tooltip_with_quality(consumed, reference),
                 })
             else
                 add_small_label(science_table, { caption = '' })
                 add_small_label(science_table, { caption = '' })
             end
             add_small_label(science_table, {
-                caption = format_with_thousands_sep(sent),
-                tooltip = '[item=space-science-pack] equivalent: '
-                    .. format_one_sig_fig(sent * food_mutagen / space_sci_mutagen),
+                caption = format_total_caption(sent),
+                tooltip = format_food_tooltip_with_quality(sent, reference),
             })
-            total_sent_mutagen = total_sent_mutagen + (food_stats.sent or 0) * food_mutagen
-            total_produced_mutagen = total_produced_mutagen + (food_stats.produced or 0) * food_mutagen
+            total_sent_mutagen = total_sent_mutagen + total_with_quality(food_stats.sent) * food_mutagen
+            total_produced_mutagen = total_produced_mutagen + total_with_quality(food_stats.produced) * food_mutagen
         end
         local produced_info = ''
         if not exclude_forces[force_name] then
@@ -288,23 +435,15 @@ function TeamStatsCompare.show_stats(player)
             if not exclude_forces[force_name] and (show_hidden or not item_info.hide_by_default) then
                 local item_stats = force_stats.items[item_info.item] or {}
                 ---@type number?
-                local killed_or_lost = (item_stats.kill_count or 0) + (item_stats.lost or 0)
-                if killed_or_lost == 0 then
-                    killed_or_lost = nil
-                end
-                local buffered = math_max(
-                    0,
-                    (item_stats.produced or 0)
-                        - (item_stats.consumed or 0)
-                        - (item_stats.placed or 0)
-                        - (item_stats.lost or 0)
-                )
+                local killed_or_lost = get_killed_or_lost(item_stats.kill_count, item_stats.lost)
+                local buffered =
+                    get_buffered(item_stats.produced, item_stats.consumed, item_stats.placed, item_stats.lost)
                 local tooltip = string_format(
                     'Produced: %s, Consumed: %s, Lost: %s, Buffered: %s',
-                    format_with_thousands_sep(item_stats.produced or 0),
-                    format_with_thousands_sep(item_stats.consumed or 0),
-                    format_with_thousands_sep(item_stats.lost or 0),
-                    format_with_thousands_sep(buffered)
+                    format_generic_caption(item_stats.produced),
+                    format_generic_caption(item_stats.consumed),
+                    format_generic_caption(item_stats.lost),
+                    format_generic_caption(buffered)
                 )
                 local l = add_small_label(
                     item_table,
@@ -313,22 +452,28 @@ function TeamStatsCompare.show_stats(player)
                 if item_info.space_after then
                     l.style.bottom_padding = 12
                 end
-                add_small_label(
-                    item_table,
-                    { caption = (item_stats.first_at and ticks_to_hh_mm(item_stats.first_at) or '') }
-                )
-                add_small_label(item_table, { caption = format_with_thousands_sep(item_stats.produced or 0) })
+                add_small_label(item_table, {
+                    caption = format_first_at_caption(item_stats.first_at),
+                    tooltip = format_first_at_tooltip_with_quality(item_stats.first_at),
+                })
+                add_small_label(item_table, {
+                    caption = format_generic_caption(item_stats.produced),
+                    tooltip = format_generic_tooltip_with_quality(item_stats.produced),
+                })
                 if show_hidden then
-                    add_small_label(item_table, { caption = format_with_thousands_sep(buffered) })
+                    add_small_label(item_table, {
+                        caption = format_generic_caption(buffered),
+                        tooltip = format_generic_tooltip_with_quality(buffered),
+                    })
                 end
-                add_small_label(
-                    item_table,
-                    { caption = item_stats.placed and format_with_thousands_sep(item_stats.placed) or '' }
-                )
-                add_small_label(
-                    item_table,
-                    { caption = killed_or_lost and format_with_thousands_sep(killed_or_lost) or '' }
-                )
+                add_small_label(item_table, {
+                    caption = format_generic_caption(item_stats.placed),
+                    tooltip = format_generic_tooltip_with_quality(item_stats.placed),
+                })
+                add_small_label(item_table, {
+                    caption = format_generic_caption(killed_or_lost),
+                    tooltip = format_generic_tooltip_with_quality(killed_or_lost),
+                })
             end
         end
     end

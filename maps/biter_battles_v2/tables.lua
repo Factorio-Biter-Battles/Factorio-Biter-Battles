@@ -41,13 +41,6 @@ Public.food_values = {
     ['space-science-pack'] = { value = 0.3500, name = 'space science', color = '255, 255, 255' },
 }
 
-Public.gui_foods = {}
-for k, v in pairs(Public.food_values) do
-    Public.gui_foods[k] = math.floor(v.value * 10000) .. ' Mutagen strength'
-end
-Public.gui_foods['raw-fish'] =
-    'Send a fish to spy for 45 seconds.\nLeft Mouse Button: Send one fish.\nRMB: Sends 5 fish.\nShift+LMB: Send all fish.\nShift+RMB: Send half of all fish.'
-
 Public.force_translation = {
     ['south_biters'] = 'south',
     ['north_biters'] = 'north',

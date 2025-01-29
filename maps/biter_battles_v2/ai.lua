@@ -8,6 +8,7 @@ local Functions = require('maps.biter_battles_v2.functions')
 local Tables = require('maps.biter_battles_v2.tables')
 local AiStrikes = require('maps.biter_battles_v2.ai_strikes')
 local AiTargets = require('maps.biter_battles_v2.ai_targets')
+local Quality = require('maps.biter_battles_v2.quality')
 local math_random = math.random
 local math_floor = math.floor
 
@@ -133,26 +134,53 @@ local function spawn_biters(
         if isItnormalBiters and biter_threat < 0 then
             break
         end
+
+        local req = {
+            name = unit_name,
+            force = biter_force_name,
+        }
+
+        local tier = 1
+        local max = Quality.available_tiers()
+        -- Roll the quality of biter. Highest to lowest.
+        for i = max, 1, -1 do
+            if Quality.chance(i, req['force']) == 1.0 then
+                req['quality'] = Quality.TIERS[i].name
+                tier = i
+                break
+            end
+
+            if Quality.chance(i, req['force']) ~= 0.0 then
+                if Quality.roll(i, req['force']) then
+                    req['quality'] = Quality.TIERS[i].name
+                    tier = i
+                    break
+                end
+            end
+        end
+
         if not isItnormalBiters and biter_threat - threat_values[unit_name] * health_buff_equivalent_revive < 0 then
             break
         end -- Do not add a biter if it will make the threat goes negative when all the biters of wave were killed
-        local position = spawner.surface.find_non_colliding_position(unit_name, spawner.position, 128, 2)
-        if not position then
+        req['position'] = spawner.surface.find_non_colliding_position(unit_name, spawner.position, 128, 2)
+        if not req['position'] then
             break
         end
-        local biter
 
         if isItnormalBiters then
-            biter = spawner.surface.create_entity({ name = unit_name, force = biter_force_name, position = position })
+            req['force'] = biter_force_name
         else
-            biter =
-                spawner.surface.create_entity({ name = unit_name, force = boss_biter_force_name, position = position })
+            req['force'] = boss_biter_force_name
         end
+
+        local biter = spawner.surface.create_entity(req)
         if isItnormalBiters then
             biter_threat = biter_threat - threat_values[biter.name]
         else
             biter_threat = biter_threat - threat_values[biter.name] * health_buff_equivalent_revive
         end
+
+        biter_threat = biter_threat
         i = i + 1
         valid_biters[i] = biter
         if health_buff_equivalent_revive > 1 then
@@ -160,27 +188,33 @@ local function spawn_biters(
         end
 
         --Announce New Spawn
-        if isItnormalBiters and storage.biter_spawn_unseen[force_name][unit_name] then
-            game.print({
-                '',
-                'A ',
-                unit_name:gsub('-', ' '),
-                ' was spotted far away on ',
-                Functions.team_name_with_color(force_name),
-                '...',
-            })
-            storage.biter_spawn_unseen[force_name][unit_name] = false
+        if isItnormalBiters and storage.biter_spawn_unseen[force_name][tier][unit_name] then
+            local text = ''
+            if Quality.enabled() then
+                text = '[entity=' .. unit_name .. ',quality=' .. req['quality'] .. ']'
+            else
+                text = '[entity=' .. unit_name .. ']'
+            end
+
+            text = text .. ' was spotted far away on ' .. Functions.team_name_with_color(force_name) .. '...'
+            game.print(text)
+            storage.biter_spawn_unseen[force_name][tier][unit_name] = false
         end
-        if not isItnormalBiters and storage.biter_spawn_unseen[boss_biter_force_name][unit_name] then
-            game.print({
-                '',
-                'A ',
-                unit_name:gsub('-', ' '),
-                ' boss was spotted far away on ',
-                Functions.team_name_with_color(force_name),
-                '...',
-            })
-            storage.biter_spawn_unseen[boss_biter_force_name][unit_name] = false
+        if not isItnormalBiters and storage.biter_spawn_unseen[boss_biter_force_name][tier][unit_name] then
+            local text
+            if Quality.enabled() then
+                text = '[entity=' .. unit_name .. ',quality=' .. req['quality'] .. ']'
+            else
+                text = '[entity=' .. unit_name .. ']'
+            end
+
+            text = text
+                .. ' [font=var]BOSS[/font] was spotted far away on '
+                .. Functions.team_name_with_color(force_name)
+                .. '...'
+
+            game.print(text)
+            storage.biter_spawn_unseen[boss_biter_force_name][tier][unit_name] = false
         end
     end
 end
