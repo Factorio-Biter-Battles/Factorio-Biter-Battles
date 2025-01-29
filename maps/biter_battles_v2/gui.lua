@@ -260,6 +260,12 @@ function Public.create_biter_gui_button(player)
     })
 end
 
+---@class RefreshStatisticsData
+---@field clock_caption string
+---@field clock_tooltip string
+---@field team_frame table<"north"|"south",{team_caption:string, players_caption:string, players_tooltip:string, evolution_caption:string, evolution_tooltip:string, threat_caption:string, threat_tooltip:string}>
+
+---@return RefreshStatisticsData
 local function get_data_for_refresh_statistics()
     local color = DifficultyVote.difficulty_chat_color()
     return {
@@ -273,23 +279,25 @@ local function get_data_for_refresh_statistics()
                 DifficultyVote.difficulty_name()
             )
         ) .. string_format(style.listbox('\nGame speed: ') .. style.yellow(style.stat('%.2f')), game.speed),
-        ['north'] = {
-            team_caption = style.bold(Functions.team_name('north')),
-            players_caption = '(' .. style.green(#game.forces['north'].connected_players) .. ')',
-            players_tooltip = get_captain_caption('north') .. get_player_list_caption('north'),
-            evolution_caption = (math_floor(1000 * storage.bb_evolution['north_biters']) * 0.1) .. '%',
-            evolution_tooltip = get_evo_tooltip('north', false),
-            threat_caption = threat_to_pretty_string(math_floor(storage.bb_threat['north_biters'])),
-            threat_tooltip = get_threat_tooltip('north', false),
-        },
-        ['south'] = {
-            team_caption = style.bold(Functions.team_name('south')),
-            players_caption = '(' .. style.green(#game.forces['south'].connected_players) .. ')',
-            players_tooltip = get_captain_caption('south') .. get_player_list_caption('south'),
-            evolution_caption = (math_floor(1000 * storage.bb_evolution['south_biters']) * 0.1) .. '%',
-            evolution_tooltip = get_evo_tooltip('south', false),
-            threat_caption = threat_to_pretty_string(math_floor(storage.bb_threat['south_biters'])),
-            threat_tooltip = get_threat_tooltip('south', false),
+        team_frame = {
+            ['north'] = {
+                team_caption = style.bold(Functions.team_name('north')),
+                players_caption = '(' .. style.green(#game.forces['north'].connected_players) .. ')',
+                players_tooltip = get_captain_caption('north') .. get_player_list_caption('north'),
+                evolution_caption = (math_floor(1000 * storage.bb_evolution['north_biters']) * 0.1) .. '%',
+                evolution_tooltip = get_evo_tooltip('north', false),
+                threat_caption = threat_to_pretty_string(math_floor(storage.bb_threat['north_biters'])),
+                threat_tooltip = get_threat_tooltip('north', false),
+            },
+            ['south'] = {
+                team_caption = style.bold(Functions.team_name('south')),
+                players_caption = '(' .. style.green(#game.forces['south'].connected_players) .. ')',
+                players_tooltip = get_captain_caption('south') .. get_player_list_caption('south'),
+                evolution_caption = (math_floor(1000 * storage.bb_evolution['south_biters']) * 0.1) .. '%',
+                evolution_tooltip = get_evo_tooltip('south', false),
+                threat_caption = threat_to_pretty_string(math_floor(storage.bb_threat['south_biters'])),
+                threat_tooltip = get_threat_tooltip('south', false),
+            },
         },
     }
 end
@@ -378,6 +386,13 @@ function Public.create_statistics_gui_button(player)
     frame.visible = false
 end
 
+---@class RefreshMainGuiData
+---@field clock_caption string
+---@field game_speed_caption string
+---@field is_cpt boolean
+---@field main_frame table<"north"|"south", {teamname:string, playerlist_number:integer, evolution_number:integer, evolution_sprite:string, evolution_tooltip:string, threat_number:integer, threat_tooltip:string, captain:string, members:string}>
+
+---@return RefreshMainGuiData
 local function get_data_for_refresh_main_gui()
     return {
         clock_caption = string_format('Time: %s', get_format_time()),
@@ -687,6 +702,7 @@ function Public.create_main_gui(player)
 end
 
 ---@param player LuaPlayer
+---@param data RefreshStatisticsData
 function Public.refresh_statistics(player, data)
     local frame = Gui.get_top_element(player, 'bb_frame_statistics')
     if not frame or not frame.visible then
@@ -697,7 +713,7 @@ function Public.refresh_statistics(player, data)
     frame.clock.tooltip = data.clock_tooltip
 
     for force_name, _ in pairs(gui_values) do
-        local local_data = data[force_name]
+        local local_data = data.team_frame[force_name]
         frame[force_name .. '_name'].tooltip = local_data.team_caption
 
         frame[force_name .. '_players'].caption = local_data.players_caption
@@ -712,7 +728,7 @@ function Public.refresh_statistics(player, data)
 end
 
 ---@param player LuaPlayer
----@param data {clock_caption:string, game_speed_caption:string, is_cpt:boolean, main_frame:{}}}
+---@param data RefreshMainGuiData
 function Public.refresh_main_gui(player, data)
     local frame = Gui.get_left_element(player, 'bb_main_gui')
     if not frame or not frame.visible then
