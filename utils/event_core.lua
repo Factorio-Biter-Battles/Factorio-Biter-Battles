@@ -8,12 +8,12 @@ local load_event_name = -2
 
 -- map of event_name to handlers[]
 local event_handlers = {}
----@type table<defines.events, {profiler: LuaProfiler, count: int}>
+---@type table<defines.events, {profiler: LuaProfiler, count: integer}>
 local event_profilers = {}
 
 -- map of nth_tick to handlers[]
 local on_nth_tick_event_handlers = {}
----@type table<defines.events, {profiler: LuaProfiler, count: int}>
+---@type table<defines.events, {profiler: LuaProfiler, count: integer}>
 local on_nth_tick_event_profilers = {}
 local event_names = {}
 for k, v in pairs(defines.events) do
