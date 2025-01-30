@@ -218,6 +218,7 @@ local function on_marked_for_deconstruction(event)
         return
     end
     local player = game.get_player(event.player_index)
+    if not player then return end
     if player.admin then
         return
     end
@@ -316,7 +317,7 @@ local function on_built_entity(event)
     local trusted = session.get_trusted_table()
     if event.entity.type == 'entity-ghost' then
         local player = game.get_player(event.player_index)
-
+        if not player then return end
         if player.admin then
             return
         end
@@ -764,7 +765,7 @@ function Public.reset_tables()
 end
 
 --- Enable this to log when trees are destroyed
----@param value <boolean>
+---@param value boolean
 function Public.log_tree_harvest(value)
     if value then
         this.log_tree_harvest = value
@@ -774,8 +775,8 @@ function Public.log_tree_harvest(value)
 end
 
 --- Add entity type to the whitelist so it gets logged.
----@param key <string>
----@param value <string>
+---@param key string
+---@param value string
 function Public.whitelist_types(key, value)
     if key and value then
         this.whitelist_types[key] = value
@@ -785,7 +786,7 @@ function Public.whitelist_types(key, value)
 end
 
 --- If the event should also check trusted players.
----@param value <string>
+---@param value string
 function Public.do_not_check_trusted(value)
     if value then
         this.do_not_check_trusted = value
@@ -797,7 +798,7 @@ function Public.do_not_check_trusted(value)
 end
 
 --- If ANY actions should be performed when a player misbehaves.
----@param value <string>
+---@param value string
 function Public.enable_capsule_warning(value)
     if value then
         this.enable_capsule_warning = value
@@ -809,7 +810,7 @@ function Public.enable_capsule_warning(value)
 end
 
 --- If ANY actions should be performed when a player misbehaves.
----@param value <string>
+---@param value string
 function Public.enable_capsule_cursor_warning(value)
     if value then
         this.enable_capsule_cursor_warning = value
@@ -821,7 +822,7 @@ function Public.enable_capsule_cursor_warning(value)
 end
 
 --- If the script should jail a person instead of kicking them
----@param value <string>
+---@param value string
 function Public.enable_jail(value)
     if value then
         this.enable_jail = value
@@ -833,7 +834,7 @@ function Public.enable_jail(value)
 end
 
 --- Defines what the threshold for amount of explosives in chest should be - logged or not.
----@param value <string>
+---@param value string
 function Public.explosive_threshold(value)
     if value then
         this.explosive_threshold = value
@@ -843,7 +844,7 @@ function Public.explosive_threshold(value)
 end
 
 --- Defines what the threshold for amount of times before the script should take action.
----@param value <string>
+---@param value string
 function Public.damage_entity_threshold(value)
     if value then
         this.damage_entity_threshold = value
@@ -853,9 +854,9 @@ function Public.damage_entity_threshold(value)
 end
 
 --- This is used for the RPG module, when casting capsules.
----@param player <LuaPlayer>
----@param position <EventPosition>
----@param msg <string>
+---@param player LuaPlayer
+---@param position MapPosition
+---@param msg string
 function Public.insert_into_capsule_history(player, position, msg)
     if not this.capsule_history then
         this.capsule_history = {}
@@ -876,7 +877,7 @@ function Public.insert_into_capsule_history(player, position, msg)
 end
 
 --- Returns the table.
----@param key string
+---@param key string?
 function Public.get(key)
     if key then
         return this[key]

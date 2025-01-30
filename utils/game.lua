@@ -23,14 +23,12 @@ function Game.get_player(mixed)
     end
 end
 
---[[
-    @param Position String to display at
-    @param text String to display
-    @param color table in {r = 0~1, g = 0~1, b = 0~1}, defaults to white.
-    @param surface LuaSurface
 
-    @return the created entity
-]]
+---@param position MapPosition Position string to display at
+---@param text string to display
+---@param color Color in {r = 0-1, g = 0-1, b = 0-1}, defaults to white.
+---@param surface LuaSurface
+---@return LuaEntity? #the created entity
 function Game.print_floating_text(surface, position, text, color)
     color = color
 
@@ -42,15 +40,13 @@ function Game.print_floating_text(surface, position, text, color)
     })
 end
 
---[[
-    Creates a floating text entity at the player location with the specified color in {r, g, b} format.
-    Example: "+10 iron" or "-10 coins"
 
-    @param text String to display
-    @param color table in {r = 0~1, g = 0~1, b = 0~1}, defaults to white.
-
-    @return the created entity
-]]
+---Creates a floating text entity at the player location with the specified color in {r, g, b} format.
+---Example: "+10 iron" or "-10 coins"
+---@param player_index integer
+---@param text string to display
+---@param color Color in {r = 0-1, g = 0-1, b = 0-1}, defaults to white.
+---@return LuaEntity? #the created entity
 function Game.print_player_floating_text_position(player_index, text, color, x_offset, y_offset)
     local player = game.get_player(player_index)
     if not player or not player.valid then

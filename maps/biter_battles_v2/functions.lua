@@ -229,7 +229,7 @@ function Functions.maybe_set_game_start_tick(event)
     if player.force.name ~= 'north' and player.force.name ~= 'south' then
         return
     end
-    Functions.set_game_start_tick(event)
+    Functions.set_game_start_tick()
 end
 
 function Functions.set_game_start_tick()

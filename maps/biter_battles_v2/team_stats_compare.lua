@@ -15,7 +15,7 @@ local TeamStatsCompare = {}
 
 ---@alias TeamstatsPreferences {show_hidden: boolean?, show_prev: boolean?}
 
----@param player
+---@param player LuaPlayer
 ---@return TeamstatsPreferences
 local function get_preferences(player)
     local res = storage.teamstats_preferences[player.name]

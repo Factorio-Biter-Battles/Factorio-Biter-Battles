@@ -3,7 +3,6 @@ local Color = require('utils.color_presets')
 local Public = {}
 
 ---@param cmd CustomCommandData
----@param player LuaPlayer|nil
 function Public.instant_map_reset(cmd)
     local player = cmd.player_index and game.get_player(cmd.player_index)
     if player then
@@ -17,6 +16,7 @@ function Public.instant_map_reset(cmd)
     --- when we don't have a player (benchmarking) we don't want the call to crash
     --- if no player exists.
     if player == nil then
+        ---@diagnostic disable-next-line
         player = {
             print = game.print,
             name = 'unknown_server_god',

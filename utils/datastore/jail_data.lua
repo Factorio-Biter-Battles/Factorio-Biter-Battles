@@ -172,6 +172,8 @@ local create_gulag_surface = function()
     return surface
 end
 
+---@param player LuaPlayer
+---@param action string
 local teleport_player_to_gulag = function(player, action)
     local p_data = get_player_data(player)
 
@@ -199,8 +201,7 @@ local teleport_player_to_gulag = function(player, action)
         local p = p_data.position
         local p_group = game.permissions.get_group(p_data.p_group_id)
         p_group.add_player(player)
-        local pos = { x = p.x, y = p.y }
-        local get_tile = surface.get_tile(pos)
+        local get_tile = surface.get_tile(p)
         if get_tile.valid and get_tile.name == 'out-of-map' then
             gulag_tp(surface)
         else

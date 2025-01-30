@@ -432,6 +432,9 @@ local function get_surface_from_string(str)
     return surface
 end
 
+
+---@param str string?
+---@return MapPosition?
 local function get_position_from_string(str)
     if not str then
         return
@@ -443,10 +446,10 @@ local function get_position_from_string(str)
     local x_pos = string.find(str, 'x:')
     local y_pos = string.find(str, 'y:')
     if not x_pos then
-        return false
+        return
     end
     if not y_pos then
-        return false
+        return
     end
     x_pos = x_pos + 2
     y_pos = y_pos + 2
@@ -464,7 +467,7 @@ local function get_position_from_string(str)
     end
     local x = string.sub(str, x_pos, x_pos + a)
 
-    local a = 1
+    a = 1
     for i = 1, string.len(str), 1 do
         local s = string.sub(str, y_pos + i, y_pos + i)
         if not s then
@@ -477,10 +480,7 @@ local function get_position_from_string(str)
     end
 
     local y = string.sub(str, y_pos, y_pos + a)
-    x = tonumber(x)
-    y = tonumber(y)
-    local position = { x = x, y = y }
-    return position
+    return { x = tonumber(x), y = tonumber(y) }
 end
 
 local function on_gui_click(event)

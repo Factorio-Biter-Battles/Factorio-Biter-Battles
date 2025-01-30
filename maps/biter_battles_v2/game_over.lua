@@ -364,14 +364,8 @@ local function set_victory_time()
     local hours = tick - minutes
     minutes = math.floor(minutes / 3600)
     hours = math.floor(hours / 216000)
-    if hours > 0 then
-        hours = hours .. ' hours and '
-    else
-        hours = ''
-    end
-    storage.victory_time = 'Time - ' .. hours
-    storage.victory_time = storage.victory_time .. minutes
-    storage.victory_time = storage.victory_time .. ' minutes'
+    storage.victory_time =
+        table.concat({ 'Time - ', hours > 0 and (hours .. ' hours and ') or '', minutes, ' minutes' })
 end
 
 local function freeze_all_biters(surface)
@@ -581,9 +575,7 @@ local function chat_with_everyone(event)
     game.forces[enemy].print(message, { color = player.chat_color })
 end
 
----@return success_percent number [0-1] yes/total
----@return yes_count number
----@return no_count number
+---@return number, number, number #success percent[0-1], yes count, no count
 local function get_reroll_stats()
     local total_votes = table.size(storage.reroll_map_voting)
     if total_votes == 0 then
@@ -646,9 +638,7 @@ local function draw_reroll_gui(player)
     end
 end
 
----@return success_percent number [0-1] yes/total
----@return yes_count number
----@return no_count number
+---@return number, number, number #success percent[0-1], yes count, no count
 local function get_automatic_captain_stats()
     local total_votes = table.size(storage.automatic_captain_voting)
     if total_votes == 0 then

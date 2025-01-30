@@ -6,9 +6,7 @@ local Event = require('utils.event')
 local Gui = require('utils.gui')
 local gui_style = require('utils.utils').gui_style
 
----@return success_percent number [0-1] yes/total
----@return yes_count number
----@return no_count number
+---@return number, number, number #success percent[0-1], yes count, no count
 local function get_suspend_stats()
     local total_votes = table.size(storage.suspend_target_info.suspend_votes_by_player)
     if total_votes == 0 then
