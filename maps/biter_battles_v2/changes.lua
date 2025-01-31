@@ -1,5 +1,29 @@
 return {
     {
+        number = 690,
+        date = '2025-01-30',
+        author = 'RedRafe',
+        comment = [[(#690) Fix a bug that allowed the 'send all' button to be used before the match started]],
+    },
+    {
+        number = 685,
+        date = '2025-01-30',
+        author = 'TheBigZet',
+        comment = [[(#685) Speed up UI building by referencing shared elements and data rather than duplicating them for every player]],
+    },
+    {
+        number = 683,
+        date = '2025-01-30',
+        author = 'morganc',
+        comment = [[(#683) Profile the execution time of event handlers and log measurements once per minute]],
+    },
+    {
+        number = 680,
+        date = '2025-01-30',
+        author = 'cogito123',
+        comment = [[(#680) Minor optimizations to the data collection used by the research UI]],
+    },
+    {
         number = 681,
         date = '2025-01-25',
         author = 'RedRafe',
