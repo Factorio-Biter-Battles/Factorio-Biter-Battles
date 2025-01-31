@@ -2,20 +2,20 @@ local Public = {}
 local math_random = math.random
 local math_floor = math.floor
 
-local function get_raffle_table(level, name)
+local function get_raffle_table(level)
     local raffle = {
-        ['small-' .. name] = 1000 - level * 1.75,
-        ['medium-' .. name] = -250 + level * 1.5,
-        ['big-' .. name] = 0,
-        ['behemoth-' .. name] = 0,
+        ['small-'] = 1000 - level * 1.75,
+        ['medium-'] = -250 + level * 1.5,
+        ['big-'] = 0,
+        ['behemoth-'] = 0,
     }
 
     if level > 500 then
-        raffle['medium-' .. name] = 500 - (level - 500)
-        raffle['big-' .. name] = (level - 500) * 2
+        raffle['medium-'] = 500 - (level - 500)
+        raffle['big-'] = (level - 500) * 2
     end
     if level > 900 then
-        raffle['behemoth-' .. name] = (level - 900) * 8
+        raffle['behemoth-'] = (level - 900) * 8
     end
     for k, _ in pairs(raffle) do
         if raffle[k] < 0 then
@@ -26,7 +26,7 @@ local function get_raffle_table(level, name)
 end
 
 local function roll(evolution_factor, name)
-    local raffle = get_raffle_table(math_floor(evolution_factor * 1000), name)
+    local raffle = get_raffle_table(math_floor(evolution_factor * 1000))
     local max_chance = 0
     for _, v in pairs(raffle) do
         max_chance = max_chance + v
@@ -36,7 +36,7 @@ local function roll(evolution_factor, name)
     for k, v in pairs(raffle) do
         current_chance = current_chance + v
         if r <= current_chance then
-            return k
+            return k .. name
         end
     end
 end
@@ -103,6 +103,9 @@ local type_functions = {
     ['worm'] = get_worm_name,
 }
 
+---@param entity_type 'spitter'|'biter'|'mixed'|'worm'
+---@param evolution_factor number?
+---@return string?
 function Public.roll(entity_type, evolution_factor)
     if not entity_type then
         return
