@@ -28,7 +28,7 @@ local valid_special_games = {
     ]]
 }
 
-function clear_gui_specials()
+local function clear_gui_specials()
     local captain_event = require('comfy_panel.special_games.captain')
     captain_event.clear_gui_special()
 end

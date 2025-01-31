@@ -421,7 +421,7 @@ local function respawn_silo(event)
     AiTargets.start_tracking(entity)
 end
 
-function log_to_db(message, appendBool)
+local function log_to_db(message, appendBool)
     helpers.write_file('logToDBgameResult', message, appendBool, 0)
 end
 
@@ -447,8 +447,8 @@ function Public.silo_death(event)
 
         set_victory_time()
         team_stats_compare.game_over()
-        north_players = 'NORTH PLAYERS: \\n'
-        south_players = 'SOUTH PLAYERS: \\n'
+        local north_players = 'NORTH PLAYERS: \\n'
+        local south_players = 'SOUTH PLAYERS: \\n'
 
         for _, player in pairs(game.connected_players) do
             player.play_sound({ path = 'utility/game_won', volume_modifier = 1 })
@@ -470,32 +470,34 @@ function Public.silo_death(event)
 
         game.speed = 1
 
-        north_evo = math.floor(1000 * storage.bb_evolution['north_biters']) * 0.1
-        north_threat = math.floor(storage.bb_threat['north_biters'])
-        south_evo = math.floor(1000 * storage.bb_evolution['south_biters']) * 0.1
-        south_threat = math.floor(storage.bb_threat['south_biters'])
+        local north_evo = math.floor(1000 * storage.bb_evolution['north_biters']) * 0.1
+        local north_threat = math.floor(storage.bb_threat['north_biters'])
+        local south_evo = math.floor(1000 * storage.bb_evolution['south_biters']) * 0.1
+        local south_threat = math.floor(storage.bb_threat['south_biters'])
 
-        discord_message = '*** Team '
-            .. storage.bb_game_won_by_team
-            .. ' has won! ***'
-            .. '\\n'
-            .. storage.victory_time
-            .. '\\n\\n'
-            .. 'North Evo: '
-            .. north_evo
-            .. '%\\n'
-            .. 'North Threat: '
-            .. north_threat
-            .. '\\n\\n'
-            .. 'South Evo: '
-            .. south_evo
-            .. '%\\n'
-            .. 'South Threat: '
-            .. south_threat
-            .. '\\n\\n'
-            .. north_players
-            .. '\\n\\n'
-            .. south_players
+        local discord_message = table.concat({
+            '*** Team ',
+            storage.bb_game_won_by_team,
+            ' has won! ***',
+            '\\n',
+            storage.victory_time,
+            '\\n\\n',
+            'North Evo: ',
+            north_evo,
+            '%\\n',
+            'North Threat: ',
+            north_threat,
+            '\\n\\n',
+            'South Evo: ',
+            south_evo,
+            '%\\n',
+            'South Threat: ',
+            south_threat,
+            '\\n\\n',
+            north_players,
+            '\\n\\n',
+            south_players,
+        })
 
         Server.to_discord_embed(discord_message)
         log({ '', '[TEAMSTATS-FINAL]', helpers.table_to_json(storage.team_stats) })

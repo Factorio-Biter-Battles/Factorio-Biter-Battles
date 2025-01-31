@@ -1,3 +1,4 @@
+---@diagnostic disable
 local lunatest = require('lunatest')
 
 storage = {

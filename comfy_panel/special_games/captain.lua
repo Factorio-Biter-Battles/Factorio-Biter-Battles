@@ -2201,7 +2201,7 @@ local function captain_player_gui_header(parent, flow_name, sprite, caption)
 
     Gui.add_pusher(title)
 
-    button = title.add({
+    local button = title.add({
         type = 'sprite-button',
         sprite = sprite,
         style = 'transparent_slot',
@@ -2211,7 +2211,7 @@ local function captain_player_gui_header(parent, flow_name, sprite, caption)
 
     Gui.add_pusher(title)
 
-    label = title.add({ name = 'title', type = 'label', caption = caption })
+    local label = title.add({ name = 'title', type = 'label', caption = caption })
     gui_style(label, { font = 'heading-2' })
 
     Gui.add_pusher(title)
