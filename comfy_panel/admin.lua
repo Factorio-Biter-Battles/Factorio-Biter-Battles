@@ -432,7 +432,6 @@ local function get_surface_from_string(str)
     return surface
 end
 
-
 ---@param str string?
 ---@return MapPosition?
 local function get_position_from_string(str)

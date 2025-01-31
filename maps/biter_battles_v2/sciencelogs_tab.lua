@@ -31,7 +31,6 @@ local function get_science_text(food_name, food_short_name)
     })
 end
 
-
 ---@param player LuaPlayer
 ---@param element LuaGuiElement
 local function add_science_logs(player, element)

@@ -218,7 +218,9 @@ local function on_marked_for_deconstruction(event)
         return
     end
     local player = game.get_player(event.player_index)
-    if not player then return end
+    if not player then
+        return
+    end
     if player.admin then
         return
     end
@@ -317,7 +319,9 @@ local function on_built_entity(event)
     local trusted = session.get_trusted_table()
     if event.entity.type == 'entity-ghost' then
         local player = game.get_player(event.player_index)
-        if not player then return end
+        if not player then
+            return
+        end
         if player.admin then
             return
         end

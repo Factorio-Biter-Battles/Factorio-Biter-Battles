@@ -364,9 +364,13 @@ local function on_console_command(event)
             end
         end
     elseif cmd == 's' or cmd == 'shout' then
-        possibly_do_pings(table.concat{'[shout] ' , player.name , ' (' , player.force.name , '): ' , param}, player.name, function(ping_player)
-            return true
-        end)
+        possibly_do_pings(
+            table.concat({ '[shout] ', player.name, ' (', player.force.name, '): ', param }),
+            player.name,
+            function(ping_player)
+                return true
+            end
+        )
     end
 end
 
