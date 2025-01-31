@@ -1,31 +1,34 @@
 local Public = {}
 local math_random = math.random
 local math_floor = math.floor
+local math_max = math.max
 
 local function get_raffle_table(level)
-    local raffle = {
-        ['small-'] = 1000 - level * 1.75,
-        ['medium-'] = -250 + level * 1.5,
-        ['big-'] = 0,
-        ['behemoth-'] = 0,
+    if level < 500 then
+        return {
+            ['small-biter'] = 1000 - level * 1.75,
+            ['medium-biter'] = math_max(-250 + level * 1.5, 0), -- only this one can be negative for level < 500
+            ['big-biter'] = 0,
+            ['behemoth-biter'] = 0,
+        }
+    end
+    if level < 900 then
+        return {
+            ['small-biter'] = math_max(1000 - level * 1.75, 0), -- only this one can be negative for level < 900
+            ['medium-biter'] = 1000 - level,
+            ['big-biter'] = (level - 500) * 2,
+            ['behemoth-biter'] = 0,
+        }
+    end
+    return {
+        ['small-biter'] = 0,
+        ['medium-biter'] = math_max(1000 - level, 0),
+        ['big-biter'] = (level - 500) * 2,
+        ['behemoth-biter'] = (level - 900) * 8,
     }
-
-    if level > 500 then
-        raffle['medium-'] = 500 - (level - 500)
-        raffle['big-'] = (level - 500) * 2
-    end
-    if level > 900 then
-        raffle['behemoth-'] = (level - 900) * 8
-    end
-    for k, _ in pairs(raffle) do
-        if raffle[k] < 0 then
-            raffle[k] = 0
-        end
-    end
-    return raffle
 end
 
-local function roll(evolution_factor, name)
+local function roll(evolution_factor)
     local raffle = get_raffle_table(math_floor(evolution_factor * 1000))
     local max_chance = 0
     for _, v in pairs(raffle) do
@@ -36,17 +39,17 @@ local function roll(evolution_factor, name)
     for k, v in pairs(raffle) do
         current_chance = current_chance + v
         if r <= current_chance then
-            return k .. name
+            return k
         end
     end
 end
 
 local function get_biter_name(evolution_factor)
-    return roll(evolution_factor, 'biter')
+    return roll(evolution_factor) .. 'biter'
 end
 
 local function get_spitter_name(evolution_factor)
-    return roll(evolution_factor, 'spitter')
+    return roll(evolution_factor) .. 'spitter'
 end
 
 local function get_worm_raffle_table(level)
