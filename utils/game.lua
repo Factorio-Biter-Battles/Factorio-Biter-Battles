@@ -23,7 +23,6 @@ function Game.get_player(mixed)
     end
 end
 
-
 ---@param position MapPosition Position string to display at
 ---@param text string to display
 ---@param color Color in {r = 0-1, g = 0-1, b = 0-1}, defaults to white.
@@ -39,7 +38,6 @@ function Game.print_floating_text(surface, position, text, color)
         position = position,
     })
 end
-
 
 ---Creates a floating text entity at the player location with the specified color in {r, g, b} format.
 ---Example: "+10 iron" or "-10 coins"
