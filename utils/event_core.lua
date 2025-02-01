@@ -174,7 +174,7 @@ local function update_profilers()
         log({ '', 'event_handlers[', event_names[event_name], ']: ', profiler.count, ' times, ', profiler.profiler })
     end
     for nth_tick, profiler in pairs(on_nth_tick_event_profilers) do
-        log({ '', 'on_nth_tick_event_handlers[', nth_tick, ']: ', profiler.count, ' times, ', profiler.prfiler })
+        log({ '', 'on_nth_tick_event_handlers[', nth_tick, ']: ', profiler.count, ' times, ', profiler.profiler })
     end
     log('connected players: ' .. #game.connected_players .. ' game speed: ' .. game.speed)
     event_profilers = {}
