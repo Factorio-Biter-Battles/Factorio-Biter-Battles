@@ -36,6 +36,7 @@ require('comfy_panel.special_games')
 ---------------- ENABLE MAPS HERE ----------------
 --![[North VS South Survival PVP, feed the opposing team's biters with science flasks. Disable Autostash, Group and Poll modules.]]--
 require('maps.biter_battles_v2.main')
+require("utils.profiler_new")
 ---------------------------------------------------------------
 
 -- Controlled via external script

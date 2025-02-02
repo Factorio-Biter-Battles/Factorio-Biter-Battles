@@ -3,11 +3,23 @@
 
 local Public = {}
 
+---Translate EventName (int) to file path (string)
+---@type table<EventName, string>
+local event_to_path = {}
+for event_name, event_id in pairs(defines.events) do
+    event_to_path[event_id] = "profiler/"..event_name..".txt"
+end
+---Translate WventNthtick (int) to file path (string)
+---@type table<uint, string>
+local nth_tick_to_path = {}
+
 local init_event_name = -1
 local load_event_name = -2
 
 -- map of event_name to handlers[]
+---@type table<EventName, fun(event: EventData)[]>
 local event_handlers = {}
+local profiler_new_player = storage.profiler_new.player
 -- map of nth_tick to handlers[]
 local on_nth_tick_event_handlers = {}
 
@@ -39,12 +51,42 @@ local function call_handlers(handlers, event)
     end
 end
 
+local function call_handlers_profiled(handlers, event)
+    local event_name = event.name
+    local game_tick = game.tick
+    local path = event_to_path[event_name]
+    for i = #handlers, 1, -1 do
+        local profiler = helpers.create_profiler()
+        xpcall(handlers[i], errorHandler, event)
+        profiler.stop()
+        -- conventionally there's only handler for event in each file, so short_scr is enough to identify a function
+        helpers.write_file(path, {"", game_tick, "\t",debug_getinfo(handlers[i],"S").short_src, "\t", profiler, "\n"}, true, profiler_new_player)
+    end
+end
+
+local function call_nth_tick_handlers_profiled(handlers, event)
+    local event_tick = event.nth_tick
+    local game_tick = game.tick
+    local path = nth_tick_to_path[event_tick]
+    for i = #handlers, 1, -1 do
+        local profiler = helpers.create_profiler()
+        xpcall(handlers[i], errorHandler, event)
+        profiler.stop()
+        -- conventionally there's only handler for event in each file, so short_scr is enough to identify a function
+        helpers.write_file(path, {"", game_tick, "\t",debug_getinfo(handlers[i],"S").short_src, "\t", profiler, "\n"}, true, profiler_new_player)
+    end
+end
+
 local function on_event(event)
     local handlers = event_handlers[event.name]
     if not handlers then
         handlers = event_handlers[event.input_name]
     end
-    call_handlers(handlers, event)
+    if storage.profiler_new.enabled then
+        call_handlers_profiled(handlers, event)
+    else
+        call_handlers(handlers, event)
+    end
 end
 
 local function on_init()
@@ -71,10 +113,16 @@ end
 
 local function on_nth_tick_event(event)
     local handlers = on_nth_tick_event_handlers[event.nth_tick]
-    call_handlers(handlers, event)
+    if storage.profiler_new.enabled then
+        call_nth_tick_handlers_profiled(handlers, event)
+    else
+        call_handlers(handlers, event)
+    end
 end
 
 --- Do not use this function, use Event.add instead as it has safety checks.
+---@param event_name EventName
+---@param handler fun(event: EventData)
 function Public.add(event_name, handler)
     if event_name == defines.events.on_entity_damaged then
         error('on_entity_damaged is managed outside of the event framework.')
@@ -131,6 +179,7 @@ function Public.on_nth_tick(tick, handler)
             script_on_nth_tick(tick, on_nth_tick_event)
         end
     end
+    nth_tick_to_path[tick] = "profiler/"..tick ..".txt"
 end
 
 function Public.get_event_handlers()
