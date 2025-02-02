@@ -359,151 +359,6 @@ local function river_start(seed, x, include_spawn_circle)
     return start
 end
 
-local DEFAULT_HIDDEN_TILE = 'dirt-3'
-
-local spawn_wall_radius = 116
-local spawn_wall_noise_multiplier = 15
-local spawn_wall_noise_deviation = spawn_wall_noise_multiplier * spawn_wall_noise_amp_sum
-
-local concrete_circle_radius = spawn_wall_radius - (10 + spawn_wall_noise_deviation)
-local spawn_wall_noise_radius = spawn_wall_radius + (4.5 + spawn_wall_noise_deviation)
-
----@param surface LuaSurface
----@param chunk_pos {x: number, y: number}
----@param rng LuaRandomGenerator
-local function generate_starting_area(surface, chunk_pos, rng)
-    local wooden_chest_template = { name = 'wooden-chest', position = { 0, 0 }, force = 'north' }
-    local coal_template = { name = 'coal', position = { 0, 0 } }
-    local stone_wall_template = { name = 'stone-wall', position = { 0, 0 }, force = 'north' }
-    local gun_turret_template = { name = 'gun-turret', position = { 0, 0 }, force = 'north' }
-    local gun_turret_remnants_template = { name = 'gun-turret-remnants', position = { 0, 0 }, force = 'neutral' }
-    local fire_magazine_template = { name = 'firearm-magazine', count = 0 }
-
-    local seed = surface.map_gen_settings.seed
-    local left_top_x = chunk_pos.x * 32
-    local left_top_y = chunk_pos.y * 32
-    local is_river_chunk = chunk_type_at(chunk_pos) == chunk_type.river
-    local in_spawn_river_circle_bb = in_spawn_river_circle_bbox(chunk_pos)
-    local mixed_ore_map_special_active = storage.active_special_games['mixed_ore_map']
-    local can_place_entity = surface.can_place_entity
-    local create_entity = surface.create_entity
-    local concrete_foundation = {}
-    local concrete = {}
-    local i = 1
-
-    -- distance_from_spawn_wall is the difference between the distance_to_center (with added noise)
-    -- and our spawn_wall radius (spawn_wall_radius=116), i.e. how far are we from the ring with radius spawn_wall_radius.
-    -- The following shows what happens depending on distance_from_spawn_wall:
-    --   	min     max
-    --  	N/A     -10	    => replace water
-    -- if noise_2 > -0.4:
-    --      -1.75    0 	    => wall
-    -- else:
-    --   	-6      -3 	 	=> 1/16 chance of turret or turret-remnants
-    --   	-1.95    0 	 	=> wall
-    --    	 0       4.5    => chest-remnants with 1/3, chest with 1/(distance_from_spawn_wall+2)
-    --
-    -- => We never do anything for (distance_to_center + min_noise - spawn_wall_radius) > 4.5
-    for x = left_top_x, left_top_x + 32 - 1 do
-        local noise_start = tile_near_column_with_origin_circle_intersection(x, spawn_wall_noise_radius)
-        noise_start = noise_start and math_max(noise_start, left_top_y) or (left_top_y + 32)
-        noise_end = left_top_y + 32 - 1
-
-        local concrete_start = tile_near_column_with_origin_circle_intersection(x, concrete_circle_radius)
-        if concrete_start then
-            noise_end = math_min(noise_end, concrete_start - 1)
-        else
-            concrete_start = left_top_y + 32
-        end
-
-        local concrete_end = left_top_y + 32 - 1
-        if is_river_chunk then
-            local river_start = river_start(seed, x, in_spawn_river_circle_bb)
-            concrete_end = math_min(concrete_end, river_start - 1)
-            noise_end = math_min(noise_end, river_start - 1)
-        end
-
-        for y = concrete_start, concrete_end do
-            concrete_foundation[i] = { name = DEFAULT_HIDDEN_TILE, position = { x, y } }
-            concrete[i] = { name = 'refined-concrete', position = { x, y } }
-            i = i + 1
-        end
-
-        for y = noise_start, noise_end do
-            local distance_to_center = tile_distance_to_center(x, y)
-            local noise = get_noise(spawn_wall_noise, x, y, seed, 25000) * spawn_wall_noise_multiplier
-            local distance_from_spawn_wall = distance_to_center + noise - spawn_wall_radius
-
-            local pos = { x, y }
-            if distance_from_spawn_wall < -10 then
-                concrete_foundation[i] = { name = DEFAULT_HIDDEN_TILE, position = pos }
-                concrete[i] = { name = 'refined-concrete', position = pos }
-                i = i + 1
-                goto continue
-            end
-
-            wooden_chest_template.name = 'wooden-chest'
-            wooden_chest_template.position = pos
-            coal_template.position = pos
-            if
-                not can_place_entity(wooden_chest_template)
-                or (not mixed_ore_map_special_active and not can_place_entity(coal_template))
-            then
-                goto continue
-            end
-
-            local noise_2 = get_upper_bounded_noise(spawn_wall_2_noise, spawn_wall_2_noise_amp_sum, x, y, seed, 0, 0.4)
-            if not noise_2 then
-                goto continue
-            end
-
-            if noise_2 > -0.40 then
-                if distance_from_spawn_wall > -1.75 and distance_from_spawn_wall < 0 then
-                    stone_wall_template.position = pos
-                    create_entity(stone_wall_template)
-                end
-                goto continue
-            end
-
-            if distance_from_spawn_wall > -1.95 and distance_from_spawn_wall < 0 then
-                stone_wall_template.position = pos
-                create_entity(stone_wall_template)
-            elseif distance_from_spawn_wall > 0 and distance_from_spawn_wall < 4.5 then
-                local r_max = math_floor(math_abs(distance_from_spawn_wall)) + 2
-                if rng(1, 3) == 1 then
-                    wooden_chest_template.name = 'wooden-chest-remnants'
-                end
-                if rng(1, r_max) == 1 then
-                    create_entity(wooden_chest_template)
-                end
-            elseif distance_from_spawn_wall > -6 and distance_from_spawn_wall < -3 then
-                if rng(1, 16) == 1 then
-                    gun_turret_template.position = pos
-                    if can_place_entity(gun_turret_template) then
-                        local turret = surface.create_entity(gun_turret_template)
-                        fire_magazine_template.count = rng(2, 16)
-                        turret.insert(fire_magazine_template)
-                        ai_targets_start_tracking(turret)
-                    end
-                else
-                    if rng(1, 24) == 1 then
-                        gun_turret_template.position = pos
-                        if can_place_entity(gun_turret_template) then
-                            gun_turret_remnants_template.position = pos
-                            surface.create_entity(gun_turret_remnants_template)
-                        end
-                    end
-                end
-            end
-
-            ::continue::
-        end
-    end
-
-    surface.set_tiles(concrete_foundation, false)
-    surface.set_tiles(concrete, true)
-end
-
 ---@param chunk_pos {x: number, y: number}
 local function is_outside_spawn(chunk_pos)
     return chunk_pos.x < -5 or chunk_pos.x >= 5 or chunk_pos.y < -5
@@ -567,6 +422,160 @@ local function get_tile_generator(surface, chunk_pos)
     return function(x, y, rng)
         generate_ordinary_tile(can_place_entity, create_entity, seed, x, y, rng)
     end
+end
+
+local DEFAULT_HIDDEN_TILE = 'dirt-3'
+
+local spawn_wall_radius = 116
+local spawn_wall_noise_multiplier = 15
+local spawn_wall_noise_deviation = spawn_wall_noise_multiplier * spawn_wall_noise_amp_sum
+
+local concrete_circle_radius = spawn_wall_radius - (10 + spawn_wall_noise_deviation)
+local spawn_wall_noise_radius = spawn_wall_radius + (4.5 + spawn_wall_noise_deviation)
+
+---@param surface LuaSurface
+---@param chunk_pos {x: number, y: number}
+---@param rng LuaRandomGenerator
+local function generate_starting_area(surface, chunk_pos, rng)
+    local wooden_chest_template = { name = 'wooden-chest', position = { 0, 0 }, force = 'north' }
+    local coal_template = { name = 'coal', position = { 0, 0 } }
+    local stone_wall_template = { name = 'stone-wall', position = { 0, 0 }, force = 'north' }
+    local gun_turret_template = { name = 'gun-turret', position = { 0, 0 }, force = 'north' }
+    local gun_turret_remnants_template = { name = 'gun-turret-remnants', position = { 0, 0 }, force = 'neutral' }
+    local fire_magazine_template = { name = 'firearm-magazine', count = 0 }
+
+    local seed = surface.map_gen_settings.seed
+    local left_top_x = chunk_pos.x * 32
+    local left_top_y = chunk_pos.y * 32
+    local is_river_chunk = chunk_type_at(chunk_pos) == chunk_type.river
+    local in_spawn_river_circle_bb = in_spawn_river_circle_bbox(chunk_pos)
+    local mixed_ore_map_special_active = storage.active_special_games['mixed_ore_map']
+    local can_place_entity = surface.can_place_entity
+    local create_entity = surface.create_entity
+    local get_tile = surface.get_tile
+    local concrete_foundation = {}
+    local concrete = {}
+
+    -- distance_from_spawn_wall is the difference between the distance_to_center (with added noise)
+    -- and our spawn_wall radius (spawn_wall_radius=116), i.e. how far are we from the ring with radius spawn_wall_radius.
+    -- The following shows what happens depending on distance_from_spawn_wall:
+    --   	min     max
+    --  	N/A     -10	    => replace water
+    -- if noise_2 > -0.4:
+    --      -1.75    0 	    => wall
+    -- else:
+    --   	-6      -3 	 	=> 1/16 chance of turret or turret-remnants
+    --   	-1.95    0 	 	=> wall
+    --    	 0       4.5    => chest-remnants with 1/3, chest with 1/(distance_from_spawn_wall+2)
+    --
+    -- => We never do anything for (distance_to_center + min_noise - spawn_wall_radius) > 4.5
+    for x = left_top_x, left_top_x + 32 - 1 do
+        local noise_start = tile_near_column_with_origin_circle_intersection(x, spawn_wall_noise_radius)
+        noise_start = noise_start and math_max(noise_start, left_top_y) or (left_top_y + 32)
+        noise_end = left_top_y + 32 - 1
+
+        local concrete_start = tile_near_column_with_origin_circle_intersection(x, concrete_circle_radius)
+        if concrete_start then
+            noise_end = math_min(noise_end, concrete_start - 1)
+        else
+            concrete_start = left_top_y + 32
+        end
+
+        local concrete_end = left_top_y + 32 - 1
+        if is_river_chunk then
+            local river_start = river_start(seed, x, in_spawn_river_circle_bb)
+            concrete_end = math_min(concrete_end, river_start - 1)
+            noise_end = math_min(noise_end, river_start - 1)
+        end
+
+        for y = concrete_start, concrete_end do
+            if get_tile(x, y).collides_with('resource') then
+                concrete_foundation[#concrete_foundation + 1] = { name = DEFAULT_HIDDEN_TILE, position = { x, y } }
+            end
+            concrete[#concrete + 1] = { name = 'refined-concrete', position = { x, y } }
+        end
+
+        for y = noise_start, noise_end do
+            local distance_to_center = tile_distance_to_center(x, y)
+            local noise = get_noise(spawn_wall_noise, x, y, seed, 25000) * spawn_wall_noise_multiplier
+            local distance_from_spawn_wall = distance_to_center + noise - spawn_wall_radius
+
+            local pos = { x, y }
+            if distance_from_spawn_wall < -10 then
+                if get_tile(x, y).collides_with('resource') then
+                    concrete_foundation[#concrete_foundation + 1] = { name = DEFAULT_HIDDEN_TILE, position = pos }
+                end
+                concrete[#concrete + 1] = { name = 'refined-concrete', position = pos }
+                goto continue
+            end
+
+            wooden_chest_template.name = 'wooden-chest'
+            wooden_chest_template.position = pos
+            coal_template.position = pos
+            if
+                not can_place_entity(wooden_chest_template)
+                or (not mixed_ore_map_special_active and not can_place_entity(coal_template))
+            then
+                goto continue
+            end
+
+            local noise_2 = get_upper_bounded_noise(spawn_wall_2_noise, spawn_wall_2_noise_amp_sum, x, y, seed, 0, 0.4)
+            if not noise_2 then
+                goto continue
+            end
+
+            if noise_2 > -0.40 then
+                if distance_from_spawn_wall > -1.75 and distance_from_spawn_wall < 0 then
+                    stone_wall_template.position = pos
+                    create_entity(stone_wall_template)
+                end
+                goto continue
+            end
+
+            if distance_from_spawn_wall > -1.95 and distance_from_spawn_wall < 0 then
+                stone_wall_template.position = pos
+                create_entity(stone_wall_template)
+            elseif distance_from_spawn_wall > 0 and distance_from_spawn_wall < 4.5 then
+                local r_max = math_floor(math_abs(distance_from_spawn_wall)) + 2
+                if rng(1, 3) == 1 then
+                    wooden_chest_template.name = 'wooden-chest-remnants'
+                end
+                if rng(1, r_max) == 1 then
+                    create_entity(wooden_chest_template)
+                end
+            elseif distance_from_spawn_wall > -6 and distance_from_spawn_wall < -3 then
+                if rng(1, 16) == 1 then
+                    gun_turret_template.position = pos
+                    if can_place_entity(gun_turret_template) then
+                        local turret = surface.create_entity(gun_turret_template)
+                        fire_magazine_template.count = rng(2, 16)
+                        turret.insert(fire_magazine_template)
+                        ai_targets_start_tracking(turret)
+                    end
+                else
+                    if rng(1, 24) == 1 then
+                        gun_turret_template.position = pos
+                        if can_place_entity(gun_turret_template) then
+                            gun_turret_remnants_template.position = pos
+                            surface.create_entity(gun_turret_remnants_template)
+                        end
+                    end
+                end
+            end
+
+            ::continue::
+        end
+    end
+
+    surface.set_tiles(concrete_foundation, false)
+    local tile_gen = get_tile_generator(surface, chunk_pos)
+    if tile_gen then
+        for _, filler in pairs(concrete_foundation) do
+            local pos = filler.position
+            tile_gen(pos[1], pos[2], rng)
+        end
+    end
+    surface.set_tiles(concrete, true)
 end
 
 ---@param surface LuaSurface
