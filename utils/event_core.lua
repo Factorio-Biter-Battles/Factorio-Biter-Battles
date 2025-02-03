@@ -19,7 +19,7 @@ local load_event_name = -2
 -- map of event_name to handlers[]
 ---@type table<EventName, fun(event: EventData)[]>
 local event_handlers = {}
-local profiler_new_player = storage.profiler_new.player
+
 -- map of nth_tick to handlers[]
 local on_nth_tick_event_handlers = {}
 
@@ -60,7 +60,7 @@ local function call_handlers_profiled(handlers, event)
         xpcall(handlers[i], errorHandler, event)
         profiler.stop()
         -- conventionally there's only handler for event in each file, so short_scr is enough to identify a function
-        helpers.write_file(path, {"", game_tick, "\t",debug_getinfo(handlers[i],"S").short_src, "\t", profiler, "\n"}, true, profiler_new_player)
+        helpers.write_file(path, {"", game_tick, "\t",debug_getinfo(handlers[i],"S").short_src, "\t", profiler, "\n"}, true, storage.profiler_new.player)
     end
 end
 
@@ -73,7 +73,7 @@ local function call_nth_tick_handlers_profiled(handlers, event)
         xpcall(handlers[i], errorHandler, event)
         profiler.stop()
         -- conventionally there's only handler for event in each file, so short_scr is enough to identify a function
-        helpers.write_file(path, {"", game_tick, "\t",debug_getinfo(handlers[i],"S").short_src, "\t", profiler, "\n"}, true, profiler_new_player)
+        helpers.write_file(path, {"", game_tick, "\t",debug_getinfo(handlers[i],"S").short_src, "\t", profiler, "\n"}, true, storage.profiler_new.player)
     end
 end
 
