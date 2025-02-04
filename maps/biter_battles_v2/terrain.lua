@@ -508,13 +508,16 @@ function Public.generate(event)
     local left_top_x = left_top.x
     local left_top_y = left_top.y
 
-    if storage.active_special_games['mixed_ore_map'] then
-        mixed_ore_map(surface, left_top_x, left_top_y)
+    local pos = { x = left_top_x, y = left_top_y }
+    if not Functions.is_biter_area(pos) then
+        if storage.active_special_games['mixed_ore_map'] then
+            mixed_ore_map(surface, left_top_x, left_top_y)
 
-    -- Since a chunk size is 32 in Factorio, therefore we draw mixed ore from -16 to +16. But also we make sure that in the 300x300
-    -- square that we have in Main, we don't draw mixed ore patches. (thats bounded by -150 and +150)
-    elseif left_top_x + 16 < -150 or left_top_x + 16 > 150 or left_top_y + 16 < -150 then
-        mixed_ore(surface, left_top_x, left_top_y)
+        -- Since a chunk size is 32 in Factorio, therefore we draw mixed ore from -16 to +16. But also we make sure that in the 300x300
+        -- square that we have in Main, we don't draw mixed ore patches. (thats bounded by -150 and +150)
+        elseif left_top_x + 16 < -150 or left_top_x + 16 > 150 or left_top_y + 16 < -150 then
+            mixed_ore(surface, left_top_x, left_top_y)
+        end
     end
     generate_river(surface, left_top_x, left_top_y)
     draw_biter_area(surface, left_top_x, left_top_y)
