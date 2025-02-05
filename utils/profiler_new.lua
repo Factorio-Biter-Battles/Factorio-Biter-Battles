@@ -64,7 +64,7 @@ local measure_tick_duration = Token.register(function(event)
     index = index + 1
     ---dump data when LocalisedString limit size is reached
     if index == 21 then
-        helpers.write_file('profiler/total_tick_duration.txt', tick_durations, true, storage.profiler_new.player)
+        helpers.write_file('profiler/cumulative/total_tick_duration.txt', tick_durations, true, storage.profiler_new.player)
         index = 2
     end
     ---start timer for this tick
