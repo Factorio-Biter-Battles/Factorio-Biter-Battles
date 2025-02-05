@@ -75,7 +75,7 @@ local function remove(tbl, handler)
     for i = #tbl, 1, -1 do
         if tbl[i] == handler then
             table_remove(tbl, i)
-            break
+            return i
         end
     end
 end
@@ -197,8 +197,8 @@ function Event.remove_removable(event_name, token)
     local handlers = event_handlers[event_name]
 
     remove(tokens, token)
-    remove(handlers, handler)
-
+    local index = remove(handlers, handler)
+    EventCore.remove_event_handler_path(event_name, index)
     if #handlers == 0 then
         script_on_event(event_name, nil)
     end
@@ -314,7 +314,8 @@ function Event.remove_removable_function(event_name, name)
         if n == event_name then
             local f = v.handler
             function_handlers[name][k] = nil
-            remove(handlers, f)
+            local index = remove(handlers, f)
+            EventCore.remove_event_handler_path(event_name,index)
         end
     end
 
@@ -368,8 +369,8 @@ function Event.remove_removable_nth_tick(tick, token)
     local handlers = on_nth_tick_event_handlers[tick]
 
     remove(tokens, token)
-    remove(handlers, handler)
-
+    local index = remove(handlers, handler)
+    EventCore.remove_nth_tick_event_handler_path(tick, index)
     if #handlers == 0 then
         script_on_nth_tick(tick, nil)
     end

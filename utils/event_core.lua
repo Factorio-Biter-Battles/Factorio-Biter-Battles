@@ -16,11 +16,21 @@ end
 ---example: event_handlers_paths[defines.events.on_tick][1] = 'profiler/on_tick/maps-biter_battles_v2-main.txt'
 ---@type table<EventName, string[]>
 local event_handlers_paths = {}
-
+---@param event_name EventName
+---@param index integer?
+function Public.remove_event_handler_path(event_name, index)
+    if index then
+        log({"","Removed \t ", table.remove(event_handlers_paths[event_name],index), " at index ", index})
+    end
+end
 ---example: nth_tick_event_handlers_paths[60][1] = 'profiler/on_60th_tick/maps-biter_battles_v2-main.txt'
----@type table<unit, string[]>
+---@type table<integer, string[]>
 local nth_tick_event_handlers_paths = {}
-
+function Public.remove_nth_tick_event_handler_path(tick, index)
+    if index then
+        log({"","Removed \t ", table.remove(nth_tick_event_handlers_paths[tick],index), " at index ", index})
+    end
+end
 local init_event_name = -1
 local load_event_name = -2
 
@@ -145,7 +155,9 @@ function Public.add(event_name, handler)
         end
     end
 
-    --- save profiler log location for this handler 
+    --- save profiler log location for this handler
+    if not event_handlers_paths[event_name] then event_handlers_paths[event_name] = {} end
+    local info = debug_getinfo(handler, "S")
     table.insert(
         event_handlers_paths[event_name], 
         1, 
@@ -153,7 +165,9 @@ function Public.add(event_name, handler)
             "profiler/", 
             event_name_to_human_readable_name[event_name], 
             "/",
-            string.gsub(string.sub(debug_getinfo(handler, "S").short_scr, 11, -5), "/", "-"),
+            string.gsub(string.sub(info.short_src, 11, -5), "/", "-"),
+            "@",
+            info.linedefined,
             ".txt"
         }
     )
@@ -199,6 +213,9 @@ function Public.on_nth_tick(tick, handler)
             script_on_nth_tick(tick, on_nth_tick_event)
         end
     end
+
+    if not nth_tick_event_handlers_paths[tick] then nth_tick_event_handlers_paths[tick] = {} end
+    local info = debug_getinfo(handler, "S")
     table.insert(
         nth_tick_event_handlers_paths[tick], 
         1, 
@@ -206,7 +223,9 @@ function Public.on_nth_tick(tick, handler)
             "profiler/on_", 
             tick, 
             "th_tick/",
-            string.gsub(string.sub(debug_getinfo(handler, "S").short_scr, 11, -5), "/", "-"),
+            string.gsub(string.sub(info.short_src, 11, -5), "/", "-"),
+            "@",
+            info.linedefined,
             ".txt"
         }
     )
