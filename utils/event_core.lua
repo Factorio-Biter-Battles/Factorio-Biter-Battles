@@ -3,15 +3,23 @@
 
 local Public = {}
 
----Translate EventName (int) to file path (string)
+--- translate EventName (int) into string
+--- example: defines.events.on_tick -> "on_tick"
 ---@type table<EventName, string>
-local event_to_path = {}
+local event_name_to_human_readable_name = {}
 for event_name, event_id in pairs(defines.events) do
-    event_to_path[event_id] = "profiler/"..event_name..".txt"
+    event_name_to_human_readable_name[event_id] = event_name
 end
----Translate WventNthtick (int) to file path (string)
----@type table<uint, string>
-local nth_tick_to_path = {}
+
+--- path to log file for each handler
+--- conventionally there's only one handler for given event per lua file, so one log file per lua file is sufficient
+---example: event_handlers_paths[defines.events.on_tick][1] = 'profiler/on_tick/maps-biter_battles_v2-main.txt'
+---@type table<EventName, string[]>
+local event_handlers_paths = {}
+
+---example: nth_tick_event_handlers_paths[60][1] = 'profiler/on_60th_tick/maps-biter_battles_v2-main.txt'
+---@type table<unit, string[]>
+local nth_tick_event_handlers_paths = {}
 
 local init_event_name = -1
 local load_event_name = -2
@@ -54,26 +62,25 @@ end
 local function call_handlers_profiled(handlers, event)
     local event_name = event.name
     local game_tick = game.tick
-    local path = event_to_path[event_name]
+    local path = event_handlers_paths[event_name]
     for i = #handlers, 1, -1 do
         local profiler = helpers.create_profiler()
         xpcall(handlers[i], errorHandler, event)
         profiler.stop()
-        -- conventionally there's only handler for event in each file, so short_scr is enough to identify a function
-        helpers.write_file(path, {"", game_tick, "\t",debug_getinfo(handlers[i],"S").short_src, "\t", profiler, "\n"}, true, storage.profiler_new.player)
+        
+        helpers.write_file(path[i], {"", game_tick, "\t", profiler, "\n"}, true, storage.profiler_new.player)
     end
 end
 
 local function call_nth_tick_handlers_profiled(handlers, event)
     local event_tick = event.nth_tick
     local game_tick = game.tick
-    local path = nth_tick_to_path[event_tick]
+    local path = nth_tick_event_handlers_paths[event_tick]
     for i = #handlers, 1, -1 do
         local profiler = helpers.create_profiler()
         xpcall(handlers[i], errorHandler, event)
         profiler.stop()
-        -- conventionally there's only handler for event in each file, so short_scr is enough to identify a function
-        helpers.write_file(path, {"", game_tick, "\t",debug_getinfo(handlers[i],"S").short_src, "\t", profiler, "\n"}, true, storage.profiler_new.player)
+        helpers.write_file(path[i], {"", game_tick,  "\t", profiler, "\n"}, true, storage.profiler_new.player)
     end
 end
 
@@ -137,6 +144,19 @@ function Public.add(event_name, handler)
             script_on_event(event_name, on_event)
         end
     end
+
+    --- save profiler log location for this handler 
+    table.insert(
+        event_handlers_paths[event_name], 
+        1, 
+        table.concat{
+            "profiler/", 
+            event_name_to_human_readable_name[event_name], 
+            "/",
+            string.gsub(string.sub(debug_getinfo(handler, "S").short_scr, 11, -5), "/", "-"),
+            ".txt"
+        }
+    )
 end
 
 --- Do not use this function, use Event.on_init instead as it has safety checks.
@@ -179,7 +199,17 @@ function Public.on_nth_tick(tick, handler)
             script_on_nth_tick(tick, on_nth_tick_event)
         end
     end
-    nth_tick_to_path[tick] = "profiler/"..tick ..".txt"
+    table.insert(
+        nth_tick_event_handlers_paths[tick], 
+        1, 
+        table.concat{
+            "profiler/on_", 
+            tick, 
+            "th_tick/",
+            string.gsub(string.sub(debug_getinfo(handler, "S").short_scr, 11, -5), "/", "-"),
+            ".txt"
+        }
+    )
 end
 
 function Public.get_event_handlers()
