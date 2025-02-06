@@ -492,34 +492,56 @@ local tick_minute_functions = {
     [300 * 4 + 30 * 1] = anti_afk_system,
 }
 
+local on_tick_profilers = {}
+local function profile(profilers, key, fn)
+    local profiler = profilers[key]
+    if not profiler then
+        profiler = { profiler = game.create_profiler(), count = 1 }
+        profilers[key] = profiler
+    else
+        profiler.profiler.restart()
+    end
+    fn()
+    profiler.profiler.stop()
+end
 local function on_tick()
     local tick = game.tick
 
     if tick % 60 == 0 then
-        storage.bb_threat['north_biters'] = storage.bb_threat['north_biters'] + storage.bb_threat_income['north_biters']
-        storage.bb_threat['south_biters'] = storage.bb_threat['south_biters'] + storage.bb_threat_income['south_biters']
+        profile(on_tick_profilers, 'threat', function()
+            storage.bb_threat['north_biters'] = storage.bb_threat['north_biters']
+                + storage.bb_threat_income['north_biters']
+            storage.bb_threat['south_biters'] = storage.bb_threat['south_biters']
+                + storage.bb_threat_income['south_biters']
+        end)
     end
 
     if (tick + 11) % 300 == 0 then
-        Gui.spy_fish()
+        profile(on_tick_profilers, 'fish', function()
+            Gui.spy_fish()
 
-        if storage.bb_game_won_by_team then
-            Game_over.reveal_map()
-            Game_over.server_restart()
-        end
+            if storage.bb_game_won_by_team then
+                Game_over.reveal_map()
+                Game_over.server_restart()
+            end
+        end)
     end
 
     if tick % 30 == 0 then
         local key = tick % 3600
         if tick_minute_functions[key] then
-            tick_minute_functions[key]()
+            profile(on_tick_profilers, key, function()
+                tick_minute_functions[key]()
+            end)
         end
     end
 
     if (tick + 5) % 180 == 0 then
-        Gui.refresh()
-        Shortcuts.refresh()
-        ResearchInfo.update_research_info_ui()
+        profile(on_tick_profilers, 'gui', function()
+            Gui.refresh()
+            Shortcuts.refresh()
+            ResearchInfo.update_research_info_ui()
+        end)
     end
 
     --[[
@@ -533,7 +555,15 @@ local function on_tick()
 		plus + 24 ticks as offset to avoid tick_0
 	]]
     if (tick + 24) % 84 == 0 then
-        Init.pop_chunk_request(65)
+        profile(on_tick_profilers, 'pop_chunk_request', function()
+            Init.pop_chunk_request(65)
+        end)
+    end
+    if tick % 3600 == 0 then
+        for key, profiler in pairs(on_tick_profilers) do
+            log({ '', 'on_tick_profilers[', key, ']: ', profiler.count, ' times, ', profiler.profiler })
+        end
+        on_tick_profilers = {}
     end
 end
 
