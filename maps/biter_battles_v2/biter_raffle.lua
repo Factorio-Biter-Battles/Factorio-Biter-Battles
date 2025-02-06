@@ -30,7 +30,7 @@ end
 
 local function roll(evolution_factor)
     local raffle = get_raffle_table(math_floor(evolution_factor * 1000))
-    local r = math_random(0, math_floor(raffle[1] + raffle[2] + raffle[3] + raffle[4]))
+    local r = math_random(0, math_floor(raffle['small-'] + raffle['medium-'] + raffle['big-'] + raffle['behemoth-']))
     local current_chance = 0
     for k, v in pairs(raffle) do
         current_chance = current_chance + v
