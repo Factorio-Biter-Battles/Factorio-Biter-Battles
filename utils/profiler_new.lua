@@ -47,7 +47,7 @@ local measure_tick_duration = Token.register(function(event)
         column = 2
     end
     -- dump data when LocalisedString limit size is reached
-    if row == 20 then
+    if row == 21 then
         helpers.write_file(
         'profiler/cumulative/total_tick_duration.txt',
             tick_durations,
@@ -76,7 +76,7 @@ local function profiler_start(cmd)
     end
     storage.profiler_new = { enabled = true, player = cmd.player_index }
 
-    tick_durations[2][4].restart()
+    tick_durations[2][3].restart()
     Event.add_removable(defines.events.on_tick, measure_tick_duration)
     game.print('====Profiler started====\n')
 end
