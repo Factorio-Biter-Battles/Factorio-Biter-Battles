@@ -759,7 +759,7 @@ local function generate_captain_mode(refereeName, autoTrust, captainKick, specia
         game.print('>>> Players have been frozen!', { color = { r = 111, g = 111, b = 255 } })
     end
     allow_vote()
-    game.print('Teams\' chat have been concealed until game begins!', { color = Color.cyan })
+    game.print("Teams' chat have been concealed until game begins!", { color = Color.cyan })
 
     local y = 0
     if storage.special_games_variables.rendering == nil then
@@ -964,7 +964,7 @@ local function start_captain_event()
         storage.freeze_players = false
         TeamManager.unfreeze_players()
         game.print('>>> Players have been unfrozen!', { color = { r = 255, g = 77, b = 77 } })
-        game.print('Teams\' chat have been revealed!', { color = Color.cyan })
+        game.print("Teams' chat have been revealed!", { color = Color.cyan })
         log('Players have been unfrozen! Game starts now!')
     end
     local special = storage.special_games_variables.captain_mode
