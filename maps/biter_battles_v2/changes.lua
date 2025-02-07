@@ -1,5 +1,17 @@
 return {
     {
+        number = 696,
+        date = '2025-02-07',
+        author = 'RedRafe',
+        comment = [[(#696) While in captain mode, hide both teams’ chat from spectators until the match starts]],
+    },
+    {
+        number = 674,
+        date = '2025-02-07',
+        author = 'cogito123',
+        comment = [[(#674) Fix an issue preventing a player from being correctly assigned as a spectator when kicked out of the team by the captain]],
+    },
+    {
         number = 690,
         date = '2025-01-30',
         author = 'RedRafe',
