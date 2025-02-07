@@ -964,7 +964,7 @@ local function start_captain_event()
         storage.freeze_players = false
         TeamManager.unfreeze_players()
         game.print('>>> Players have been unfrozen!', { color = { r = 255, g = 77, b = 77 } })
-        game.print("Teams' chat have been revealed!", { color = Color.cyan })
+        game.print("Teams' chat have been revealed to spectators!", { color = Color.cyan })
         log('Players have been unfrozen! Game starts now!')
     end
     local special = storage.special_games_variables.captain_mode
