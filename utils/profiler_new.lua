@@ -6,51 +6,59 @@ storage.profiler_new = {
     player = 0,
 }
 --- starting at index 2, as first entry is a constant empty string
-local index = 2
+local row = 2
+local column = 2
 ---preallocate array of log entries
 -- stylua: ignore
 local tick_durations = {
     '',
-    {'',0,'\t',helpers.create_profiler(true), '\n'},
-    {'',0,'\t',helpers.create_profiler(true), '\n'},
-    {'',0,'\t',helpers.create_profiler(true), '\n'},
-    {'',0,'\t',helpers.create_profiler(true), '\n'},
-    {'',0,'\t',helpers.create_profiler(true), '\n'},
-    {'',0,'\t',helpers.create_profiler(true), '\n'},
-    {'',0,'\t',helpers.create_profiler(true), '\n'},
-    {'',0,'\t',helpers.create_profiler(true), '\n'},
-    {'',0,'\t',helpers.create_profiler(true), '\n'},
-    {'',0,'\t',helpers.create_profiler(true), '\n'},
-    {'',0,'\t',helpers.create_profiler(true), '\n'},
-    {'',0,'\t',helpers.create_profiler(true), '\n'},
-    {'',0,'\t',helpers.create_profiler(true), '\n'},
-    {'',0,'\t',helpers.create_profiler(true), '\n'},
-    {'',0,'\t',helpers.create_profiler(true), '\n'},
-    {'',0,'\t',helpers.create_profiler(true), '\n'},
-    {'',0,'\t',helpers.create_profiler(true), '\n'},
-    {'',0,'\t',helpers.create_profiler(true), '\n'},
-    {'',0,'\t',helpers.create_profiler(true), '\n'},
+    {'',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n'},
+    {'',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n'},
+    {'',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n'},
+    {'',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n'},
+    {'',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n'},
+    {'',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n'},
+    {'',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n'},
+    {'',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n'},
+    {'',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n'},
+    {'',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n'},
+    {'',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n'},
+    {'',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n'},
+    {'',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n'},
+    {'',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n'},
+    {'',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n'},
+    {'',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n'},
+    {'',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n'},
+    {'',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n'},
+    {'',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n'},
 }
 
 --- Measure duration of each tick update.
 --- Dumping on every 19th tick to minimize number of write_file() calls
 local measure_tick_duration = Token.register(function(event)
-    ---stop the profiler started in previous tick and log its data
-    tick_durations[index][2] = event.tick - 1
-    tick_durations[index][4].stop()
-    index = index + 1
-    ---dump data when LocalisedString limit size is reached
-    if index == 21 then
+    -- stop the profiler started in previous tick and log its data
+    tick_durations[row][column] = event.tick - 1
+    tick_durations[row][column+1].stop()
+    -- move to next column
+    column = column + 3
+    -- move to the next row when this one is full
+    if column == 20 then
+        row = row + 1
+        column = 2
+    end
+    -- dump data when LocalisedString limit size is reached
+    if row == 20 then
         helpers.write_file(
         'profiler/cumulative/total_tick_duration.txt',
             tick_durations,
             true,
             storage.profiler_new.player
         )
-        index = 2
+        row=2
+        column=2
     end
     ---start timer for this tick
-    tick_durations[index][4].reset()
+    tick_durations[row][column+1].reset()
 end)
 
 ---Start the profiler
@@ -86,12 +94,22 @@ local function profiler_stop(cmd)
         player.print("Profiler isn't running")
         return
     end
-    tick_durations[index][2] = cmd.tick-1
-    tick_durations[index][4].stop()
-    for i = 2,index, 1 do
-        helpers.write_file('profiler/cumulative/total_tick_duration.txt', tick_durations[i], true, storage.profiler_new.player)
+    tick_durations[row][column] = cmd.tick-1
+    tick_durations[row][column + 1].stop()
+    for i = 2,row, 1 do
+        if i == row then
+            -- construct sub array of partially filled row
+            local t = {''}
+            for j = 2, column+2, 1 do
+                t[j] = tick_durations[row][column]
+            end
+            helpers.write_file('profiler/cumulative/total_tick_duration.txt', t, true, storage.profiler_new.player)
+        else
+            helpers.write_file('profiler/cumulative/total_tick_duration.txt', tick_durations[i], true, storage.profiler_new.player)
+        end
     end
-    index = 2
+    row = 2
+    column = 2
     storage.profiler_new.enabled = false
 
     Event.remove_removable(defines.events.on_tick, measure_tick_duration)
