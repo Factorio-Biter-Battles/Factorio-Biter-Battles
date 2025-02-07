@@ -573,6 +573,18 @@ local function on_chunk_generated(event)
     local pos = event.area.left_top
     if pos.y < 0 then
         Terrain.generate(event)
+
+        -- If we mirror-clone chunk here it may cause entity truncation on a chunk border
+        -- duo to receiving chunk empty neighbors. Also for some reason additional tile
+        -- correction would be required. So we wait for native generation occurrence,
+        -- and this will guarantee existing of neighboring chunks
+    end
+
+    local opposite_chunk_pos = { event.position.x, -event.position.y - 1 }
+    if surface.is_chunk_generated(opposite_chunk_pos) then
+        -- Notice that this will trigger for both paired chunks if they were force generated together, which is rare.
+        -- Otherwise first chunk will delay cloning until after the second one is generated
+        Mirror_terrain.clone(event)
     end
 
     -- Request chunk for opposite side, maintain the lockstep.
@@ -583,15 +595,6 @@ local function on_chunk_generated(event)
     -- Setting position in the middle of a chunk sometimes doesn't
     -- do a request, but seems to work for the left top corner, maybe an api bug?
     surface.request_to_generate_chunks({ pos.x, -pos.y - 32 }, 0)
-
-    -- Clone from north and south. NOTE: This WILL fire 2 times
-    -- for each chunk due to asynchronus nature of this event.
-    -- Both sides contain arbitary amount of chunks, some positions
-    -- when inverted will be still in process of generation or not
-    -- generated at all. It is important to perform 2 passes to make
-    -- sure everything is cloned properly. Normally we would use mutex
-    -- but this is not reliable in this environment.
-    Mirror_terrain.clone(event)
 
     -- The game pregenerate tiles within a radius of 3 chunks from the generated chunk.
     -- Bites can use these tiles for pathing.
