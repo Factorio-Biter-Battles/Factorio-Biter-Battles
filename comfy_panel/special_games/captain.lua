@@ -759,7 +759,7 @@ local function generate_captain_mode(refereeName, autoTrust, captainKick, specia
         game.print('>>> Players have been frozen!', { color = { r = 111, g = 111, b = 255 } })
     end
     allow_vote()
-    game.print("Teams' chat have been concealed until game begins!", { color = Color.cyan })
+    game.print("Teams' chat have been hidden from spectators until game begins!", { color = Color.cyan })
 
     local y = 0
     if storage.special_games_variables.rendering == nil then
