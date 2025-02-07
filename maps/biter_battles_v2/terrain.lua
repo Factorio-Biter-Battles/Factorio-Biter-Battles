@@ -1040,9 +1040,39 @@ local function draw_spawn_island(surface)
     end
 end
 
-local function draw_spawn_area(surface, rng)
-    local chunk_r = 4
+local chunk_r = 4
 
+--- Create initial chunks to be populated with spawn objects
+---@param surface LuaSurface
+---@param mirror boolean force south spawn chunks generation
+local function force_spawn_chunks_generation(surface, mirror)
+    local start_row = mirror and 0 or -chunk_r
+    local end_row = start_row + chunk_r - 1
+    local request_to_generate_chunks = surface.request_to_generate_chunks
+    for x = -chunk_r, chunk_r - 1 do
+        for y = start_row, end_row do
+            request_to_generate_chunks({ x * 32, y * 32 }, 0)
+        end
+    end
+    surface.force_generate_chunk_requests()
+end
+
+--- Generate some biter nests so attack groups could be spawned
+---@param surface LuaSurface
+local function request_biters_area_generation(surface)
+    -- skip biter area border at x=0 chunk and include solid biter area chunk which guaranteed to contain some nests
+    local solid_biter_area_start = bb_config_bitera_area_distance + 70 + (32 - 1) * bb_config_biter_area_slope
+    local start_row = -1 - math_ceil(solid_biter_area_start / 32)
+    local end_row = -chunk_r - 1
+    local request_to_generate_chunks = surface.request_to_generate_chunks
+    for x = -chunk_r, chunk_r - 1 do
+        for y = start_row, end_row do
+            request_to_generate_chunks({ x * 32, y * 32 }, 0)
+        end
+    end
+end
+
+local function draw_spawn_area(surface, rng)
     local spawn_wall_area_radius = spawn_wall_radius + spawn_wall_noise_deviation
     local trees = surface.find_entities_filtered({
         type = 'tree',
@@ -1237,6 +1267,7 @@ local function generate_silo(surface, rng)
 end
 
 function Public.generate_initial_structures(surface)
+    force_spawn_chunks_generation(surface, false)
     local rng = create_rng_for_chunk({ x = 1, y = 1 }, surface.map_gen_settings.seed)
     draw_spawn_area(surface, rng)
     if not storage.active_special_games['mixed_ore_map'] then
@@ -1246,6 +1277,8 @@ function Public.generate_initial_structures(surface)
     generate_additional_rocks(surface, rng)
     generate_silo(surface, rng)
     draw_spawn_island(surface)
+    force_spawn_chunks_generation(surface, true)
+    request_biters_area_generation(surface)
 end
 
 ---@param entity LuaEntity

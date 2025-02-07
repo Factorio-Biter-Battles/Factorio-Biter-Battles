@@ -580,8 +580,9 @@ local function on_chunk_generated(event)
     -- and it will be mirrored. However this window is so tiny - user would
     -- need to fly in god mode and spam entities in partially generated
     -- chunks.
-    local req_pos = { pos.x + 16, -pos.y + 16 }
-    surface.request_to_generate_chunks(req_pos, 0)
+    -- Setting position in the middle of a chunk sometimes doesn't
+    -- do a request, but seems to work for the left top corner, maybe an api bug?
+    surface.request_to_generate_chunks({ pos.x, -pos.y - 32 }, 0)
 
     -- Clone from north and south. NOTE: This WILL fire 2 times
     -- for each chunk due to asynchronus nature of this event.
@@ -684,7 +685,6 @@ local function on_init()
     Init.playground_surface()
     Init.forces()
     Init.draw_structures()
-    Init.load_spawn()
     Init.queue_reveal_map()
 end
 
