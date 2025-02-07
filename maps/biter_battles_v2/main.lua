@@ -273,6 +273,12 @@ local function on_console_chat(event)
         return player_force_name == ping_player.force.name
     end)
     if not muted and (player_force_name == 'north' or player_force_name == 'south') then
+        -- Do not share team's chat with spectators during CPT preparation phase
+        local special = storage.special_games_variables.captain_mode
+        if special and special.prepaPhase then
+            return
+        end
+
         Functions.print_message_to_players(game.forces.spectator.players, player_name, msg, color, do_ping)
     end
 
