@@ -186,8 +186,6 @@ function Public.playground_surface()
     storage.next_map_seed = 1
     Terrain.adjust_map_gen_settings(map_gen_settings)
     local surface = game.create_surface(storage.bb_surface_name, map_gen_settings)
-    surface.request_to_generate_chunks({ x = 0, y = -256 }, 7)
-    surface.force_generate_chunk_requests()
     surface.brightness_visual_weights = { -1.17, -0.975, -0.52 }
 end
 
@@ -379,31 +377,6 @@ function Public.tables()
         if ping_header then
             ping_header.destroy()
         end
-    end
-end
-
-function Public.load_spawn()
-    local surface = game.surfaces[storage.bb_surface_name]
-    surface.request_to_generate_chunks({ x = 0, y = 0 }, 1)
-    surface.force_generate_chunk_requests()
-
-    surface.request_to_generate_chunks({ x = 0, y = 0 }, 2)
-    surface.force_generate_chunk_requests()
-
-    for y = 0, 576, 32 do
-        surface.request_to_generate_chunks({ x = 80, y = y + 16 }, 0)
-        surface.request_to_generate_chunks({ x = 48, y = y + 16 }, 0)
-        surface.request_to_generate_chunks({ x = 16, y = y + 16 }, 0)
-        surface.request_to_generate_chunks({ x = -16, y = y - 16 }, 0)
-        surface.request_to_generate_chunks({ x = -48, y = y - 16 }, 0)
-        surface.request_to_generate_chunks({ x = -80, y = y - 16 }, 0)
-
-        surface.request_to_generate_chunks({ x = 80, y = y * -1 + 16 }, 0)
-        surface.request_to_generate_chunks({ x = 48, y = y * -1 + 16 }, 0)
-        surface.request_to_generate_chunks({ x = 16, y = y * -1 + 16 }, 0)
-        surface.request_to_generate_chunks({ x = -16, y = y * -1 - 16 }, 0)
-        surface.request_to_generate_chunks({ x = -48, y = y * -1 - 16 }, 0)
-        surface.request_to_generate_chunks({ x = -80, y = y * -1 - 16 }, 0)
     end
 end
 
