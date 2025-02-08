@@ -34,7 +34,7 @@ local tick_durations = {
 }
 
 --- Measure duration of each tick update.
---- Dumping on every 19th tick to minimize number of write_file() calls
+--- Dumping on every 114th tick to minimize number of write_file() calls
 local measure_tick_duration = Token.register(function(event)
     -- stop the profiler started in previous tick and log its data
     tick_durations[row][column] = event.tick - 1
@@ -99,9 +99,10 @@ local function profiler_stop(cmd)
     for i = 2,row, 1 do
         if i == row then
             -- construct sub array of partially filled row
+            ---@type LocalisedString
             local t = {''}
             for j = 2, column+2, 1 do
-                t[j] = tick_durations[row][column]
+                t[j] = tick_durations[row][j]
             end
             helpers.write_file('profiler/cumulative/total_tick_duration.txt', t, true, storage.profiler_new.player)
         else
