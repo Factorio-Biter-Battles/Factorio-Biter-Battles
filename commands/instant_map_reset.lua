@@ -22,6 +22,14 @@ function Public.instant_map_reset(cmd)
             name = 'unknown_server_god',
         }
     end
+
+    -- previous surface deletion could be still pending if you spam multiple commands
+    local hot_swap_surface = storage.bb_surface_name == 'bb0' and 'bb1' or 'bb0'
+    if game.get_surface(hot_swap_surface) then
+        player.print('Error: the command was called too soon, try again later.', { color = Color.fail })
+        return
+    end
+
     -- Safely convert cmd.parameter to a number if given
     local param = cmd.parameter
     local next_map_seed
