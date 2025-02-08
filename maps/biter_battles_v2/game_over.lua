@@ -882,7 +882,6 @@ function Public.generate_new_map()
     Init.forces()
     Init.draw_structures()
     BBGui.reset_tables_gui()
-    Init.load_spawn()
     Init.queue_reveal_map()
     for _, player in pairs(game.players) do
         Functions.init_player(player)

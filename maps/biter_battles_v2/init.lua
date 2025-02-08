@@ -184,49 +184,13 @@ function Public.playground_surface()
     map_gen_settings.seed = storage.next_map_seed
     -- reset next_map_seed for next round
     storage.next_map_seed = 1
-    map_gen_settings.starting_area = 2.5
-    map_gen_settings.property_expression_names = {
-        ['segmentation_multiplier'] = 0.1,
-    }
-    map_gen_settings.cliff_settings = { cliff_elevation_interval = 0, cliff_elevation_0 = 0 }
-    map_gen_settings.autoplace_controls = {
-        ['coal'] = { frequency = 6.5, size = 0.34, richness = 0.24 },
-        ['water'] = {
-            frequency = 10,
-            size = 0.3,
-            richness = 0.1,
-        },
-        ['stone'] = { frequency = 6, size = 0.385, richness = 0.25 },
-        ['copper-ore'] = { frequency = 8.05, size = 0.352, richness = 0.35 },
-        ['iron-ore'] = { frequency = 8.5, size = 0.8, richness = 0.23 },
-        ['uranium-ore'] = { frequency = 2.2, size = 1, richness = 1 },
-        ['crude-oil'] = { frequency = 8, size = 1.4, richness = 0.45 },
-        ['trees'] = {
-            frequency = 0.65,
-            size = 0.04,
-            richness = 0.002,
-        },
-        ['enemy-base'] = { frequency = 0, size = 0, richness = 0 },
-    }
+    Terrain.adjust_map_gen_settings(map_gen_settings)
     local surface = game.create_surface(storage.bb_surface_name, map_gen_settings)
-    surface.request_to_generate_chunks({ x = 0, y = -256 }, 7)
-    surface.force_generate_chunk_requests()
     surface.brightness_visual_weights = { -1.17, -0.975, -0.52 }
 end
 
 function Public.draw_structures()
-    local surface = game.surfaces[storage.bb_surface_name]
-    Terrain.draw_spawn_area(surface)
-    if storage.active_special_games['mixed_ore_map'] then
-        Terrain.draw_mixed_ore_spawn_area(surface)
-    else
-        Terrain.clear_ore_in_main(surface)
-        Terrain.generate_spawn_ore(surface)
-    end
-    Terrain.generate_additional_rocks(surface)
-    Terrain.generate_silo(surface)
-    Terrain.draw_spawn_island(surface)
-    --Terrain.generate_spawn_goodies(surface)
+    Terrain.generate_initial_structures(game.surfaces[storage.bb_surface_name])
 end
 
 function Public.queue_reveal_map()
@@ -307,16 +271,11 @@ function Public.tables()
     ---Name and tick suspended at
     ---@type table<string, int>
     storage.suspended_players = {}
-    if storage.random_generator == nil then
-        storage.random_generator = game.create_random_generator()
-    end
     if storage.next_map_seed == nil or storage.next_map_seed < 341 then
         -- Seeds 1-341 inclusive are the same
         -- https://lua-api.factorio.com/latest/classes/LuaRandomGenerator.html#re_seed
-        storage.next_map_seed = storage.random_generator(341, 4294967294)
+        storage.next_map_seed = math.random(341, 4294967294)
     end
-    -- Our terrain gen seed IS the map seed
-    storage.random_generator.re_seed(storage.next_map_seed)
     storage.reroll_map_voting = {}
     storage.automatic_captain_voting = {}
     storage.bb_evolution = {}
@@ -401,8 +360,9 @@ function Public.tables()
     ---@type table<integer, number>
     storage.biter_health_factor = {}
 
+    local rng = game.create_random_generator(storage.next_map_seed)
     storage.next_attack = 'north'
-    if storage.random_generator(1, 2) == 1 then
+    if rng(1, 2) == 1 then
         storage.next_attack = 'south'
     end
 
@@ -417,31 +377,6 @@ function Public.tables()
         if ping_header then
             ping_header.destroy()
         end
-    end
-end
-
-function Public.load_spawn()
-    local surface = game.surfaces[storage.bb_surface_name]
-    surface.request_to_generate_chunks({ x = 0, y = 0 }, 1)
-    surface.force_generate_chunk_requests()
-
-    surface.request_to_generate_chunks({ x = 0, y = 0 }, 2)
-    surface.force_generate_chunk_requests()
-
-    for y = 0, 576, 32 do
-        surface.request_to_generate_chunks({ x = 80, y = y + 16 }, 0)
-        surface.request_to_generate_chunks({ x = 48, y = y + 16 }, 0)
-        surface.request_to_generate_chunks({ x = 16, y = y + 16 }, 0)
-        surface.request_to_generate_chunks({ x = -16, y = y - 16 }, 0)
-        surface.request_to_generate_chunks({ x = -48, y = y - 16 }, 0)
-        surface.request_to_generate_chunks({ x = -80, y = y - 16 }, 0)
-
-        surface.request_to_generate_chunks({ x = 80, y = y * -1 + 16 }, 0)
-        surface.request_to_generate_chunks({ x = 48, y = y * -1 + 16 }, 0)
-        surface.request_to_generate_chunks({ x = 16, y = y * -1 + 16 }, 0)
-        surface.request_to_generate_chunks({ x = -16, y = y * -1 - 16 }, 0)
-        surface.request_to_generate_chunks({ x = -48, y = y * -1 - 16 }, 0)
-        surface.request_to_generate_chunks({ x = -80, y = y * -1 - 16 }, 0)
     end
 end
 

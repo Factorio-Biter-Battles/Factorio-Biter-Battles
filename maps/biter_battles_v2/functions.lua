@@ -11,6 +11,7 @@ if not _TEST then
 end
 
 local gui_style = require('utils.utils').gui_style
+
 local math_abs = math.abs
 local math_floor = math.floor
 local math_min = math.min
@@ -347,52 +348,10 @@ function Functions.init_player(player)
     game.permissions.get_group('spectator').add_player(player)
 end
 
-function Functions.get_noise(name, pos)
-    local seed = game.surfaces[storage.bb_surface_name].map_gen_settings.seed
-    local noise_seed_add = 25000
-    if name == 1 then
-        local noise = simplex_noise(pos.x * 0.0042, pos.y * 0.0042, seed)
-        seed = seed + noise_seed_add
-        noise = noise + simplex_noise(pos.x * 0.031, pos.y * 0.031, seed) * 0.08
-        seed = seed + noise_seed_add
-        noise = noise + simplex_noise(pos.x * 0.1, pos.y * 0.1, seed) * 0.025
-        return noise
-    end
-
-    if name == 2 then
-        local noise = simplex_noise(pos.x * 0.011, pos.y * 0.011, seed)
-        seed = seed + noise_seed_add
-        noise = noise + simplex_noise(pos.x * 0.08, pos.y * 0.08, seed) * 0.2
-        return noise
-    end
-
-    if name == 3 then
-        local noise = simplex_noise(pos.x * 0.005, pos.y * 0.005, seed)
-        noise = noise + simplex_noise(pos.x * 0.02, pos.y * 0.02, seed) * 0.3
-        noise = noise + simplex_noise(pos.x * 0.15, pos.y * 0.15, seed) * 0.025
-        return noise
-    end
-end
-
-function Functions.is_biter_area(position, noise_Enabled)
+function Functions.is_roughly_biter_area(position)
     local bitera_area_distance = Config.bitera_area_distance * -1
     local a = bitera_area_distance - (math_abs(position.x) * Config.biter_area_slope)
-    if position.y - 70 > a then
-        return false
-    end
-    if position.y + 70 < a then
-        return true
-    end
-    if noise_Enabled then
-        if position.y + (Functions.get_noise(3, position) * 64) > a then
-            return false
-        end
-    else
-        if position.y > a then
-            return false
-        end
-    end
-    return true
+    return position.y <= a
 end
 
 function Functions.no_turret_creep(event)
@@ -411,7 +370,7 @@ function Functions.no_turret_creep(event)
     if posEntity.y < 0 then
         posEntity.y = posEntity.y - 100
     end
-    if not Functions.is_biter_area(posEntity, false) then
+    if not Functions.is_roughly_biter_area(posEntity) then
         return
     end
 

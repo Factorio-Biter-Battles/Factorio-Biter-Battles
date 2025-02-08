@@ -1,8 +1,6 @@
 local Public = {}
 
 local AiTargets = require('maps.biter_battles_v2.ai_targets')
-local terrain = require('maps.biter_battles_v2.terrain')
-local table_remove = table.remove
 local table_insert = table.insert
 
 local direction_translation = {
@@ -31,7 +29,10 @@ end
 function Public.clone(event)
     local surface = event.surface
     local source_bb = event.area
-    local destination_bb = table.deepcopy(source_bb)
+    local destination_bb = {
+        left_top = { x = source_bb.left_top.x, y = source_bb.left_top.y },
+        right_bottom = { x = source_bb.right_bottom.x, y = source_bb.right_bottom.y },
+    }
 
     -- Clone entities. This will trigger on_entity_cloned where
     -- we'll adjust positions, orientations etc. It will also
@@ -124,14 +125,17 @@ function Public.remove_hidden_tiles(event)
     })
 
     for i, tile in pairs(to_remove) do
-        if not tile.valid then
-            goto remove_hidden_cont
-        end
-
         local pos = { tile.position.x, -tile.position.y - 1 }
         surface.set_hidden_tile(tile.position, surface.get_hidden_tile(pos))
-        ::remove_hidden_cont::
     end
+end
+
+local tiles = {}
+for i = 1, 32 * 32 do
+    tiles[i] = {
+        position = { 0, 0 },
+        name = '',
+    }
 end
 
 function Public.invert_tiles(event)
@@ -140,16 +144,12 @@ function Public.invert_tiles(event)
         area = event.source_area,
     })
 
-    local tiles = {}
-    for i, tile in pairs(to_emplace) do
-        if tile.valid then
-            local pos = tile.position
-            pos.y = -pos.y - 1
-            tiles[i] = {
-                position = pos,
-                name = tile.name,
-            }
-        end
+    assert(#to_emplace == #tiles)
+    for i, src_tile in pairs(to_emplace) do
+        local tile = tiles[i]
+        local pos = src_tile.position
+        tile.position[1], tile.position[2] = pos.x, -pos.y - 1
+        tile.name = src_tile.name
     end
 
     surface.set_tiles(tiles)
