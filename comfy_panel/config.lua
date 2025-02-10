@@ -358,11 +358,10 @@ local function add_dropdown(element, caption, selected_item, name, items)
     return dropdown
 end
 
-function player_wants_pings(name)
-    if storage.want_pings[name] ~= nil then
-        return storage.want_pings[name]
-    end
-    return storage.want_pings_default_value
+---@param player_name string
+---@return boolean
+function player_wants_pings(player_name)
+    return storage.want_pings[player_name] or storage.want_pings_default_value
 end
 
 local build_config_gui = function(player, frame)

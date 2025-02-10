@@ -230,6 +230,9 @@ local ResearchInfo = {}
 ---@param evt GuiEventData
 function ResearchInfo.show_research_info_handler(evt)
     local player = game.get_player(evt.player_index)
+    if not player then
+        return
+    end
     ResearchInfo.show_research_info(player)
 end
 local show_research_info_handler = ResearchInfo.show_research_info_handler
@@ -257,7 +260,7 @@ function ResearchInfo.create_research_info_button(element)
     return button
 end
 
----@param force string
+---@param force LuaForce
 ---@param tech_name string
 function ResearchInfo.research_finished(tech_name, force)
     local force_name = force.name
@@ -276,7 +279,7 @@ function ResearchInfo.research_finished(tech_name, force)
     ResearchInfo.update_research_info_ui(true)
 end
 
----@param force string
+---@param force LuaForce
 ---@param tech_name string
 function ResearchInfo.research_started(tech_name, force)
     local force_name = force.name

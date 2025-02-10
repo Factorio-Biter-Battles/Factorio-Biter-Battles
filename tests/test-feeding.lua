@@ -1,3 +1,4 @@
+---@diagnostic disable
 local lunatest = require('lunatest')
 bit32 = require('bit32')
 serpent = require('serpent')

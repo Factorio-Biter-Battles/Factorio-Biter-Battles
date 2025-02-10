@@ -204,7 +204,7 @@ end
 
 ---@param parent LuaGuiElement
 ---@param direction? string, default: horizontal
----@return LuaGuiElement
+---@return LuaGuiElement?
 function Gui.add_pusher(parent, direction)
     if not (parent and parent.valid) then
         return

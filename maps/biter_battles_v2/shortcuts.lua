@@ -30,7 +30,7 @@ local function handle_spectator(player)
     return is_spectator
 end
 
-function get_player_preferences(player)
+local function get_player_preferences(player)
     local player_preferences = storage.shortcuts_ui[player.name]
     if not player_preferences then
         player_preferences = { enabled = false }

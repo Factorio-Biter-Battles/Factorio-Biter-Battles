@@ -33,6 +33,7 @@ function Public.short_difficulty_name()
 end
 
 ---@param index number | nil
+---@return Color
 ---Returns color in { r, g, b } format that shall be used for printing
 ---information in chat.
 function Public.difficulty_chat_color(index)
@@ -45,7 +46,7 @@ function Public.difficulty_chat_color(index)
     return difficulties[index].color[GUI_VARIANTS.Dark]
 end
 
----@param index LuaPlayer
+---@param player LuaPlayer
 ---Returns color in { r, g, b } format that shall be used for drawing
 ---information in gui
 function Public.difficulty_gui_color(player)

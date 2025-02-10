@@ -21,7 +21,7 @@ Sounds.notify_player = function(player, sound_path)
     play({ player }, sound_path)
 end
 
----@param player LuaForce
+---@param force LuaForce
 ---@param sound_path string
 Sounds.notify_force = function(force, sound_path)
     play(force.connected_players, sound_path)
@@ -36,7 +36,7 @@ Sounds.notify_admins = function(sound_path)
     end
 end
 
----@param player LuaForce
+---@param force LuaForce
 ---@param sound_path string
 Sounds.notify_allies = function(force, sound_path)
     for _, f in pairs(game.forces) do

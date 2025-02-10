@@ -31,6 +31,8 @@ local function get_science_text(food_name, food_short_name)
     })
 end
 
+---@param player LuaPlayer
+---@param element LuaGuiElement
 local function add_science_logs(player, element)
     local science_scrollpanel = element.add({
         type = 'scroll-pane',
@@ -78,7 +80,7 @@ local function add_science_logs(player, element)
         label.style.maximal_width = w
     end
 
-    summary_panel_table = science_scrollpanel.add({ type = 'table', column_count = #column_widths })
+    local summary_panel_table = science_scrollpanel.add({ type = 'table', column_count = #column_widths })
     local label = summary_panel_table.add({
         type = 'label',
         name = 'science_logs_total_north_header',
@@ -97,7 +99,7 @@ local function add_science_logs(player, element)
     end
     science_scrollpanel.add({ type = 'line' })
 
-    summary_panel_table2 = science_scrollpanel.add({ type = 'table', column_count = #column_widths })
+    local summary_panel_table2 = science_scrollpanel.add({ type = 'table', column_count = #column_widths })
     local label = summary_panel_table2.add({
         type = 'label',
         name = 'science_logs_total_south_header',
@@ -116,7 +118,7 @@ local function add_science_logs(player, element)
     end
     science_scrollpanel.add({ type = 'line' })
 
-    summary_panel_table3 = science_scrollpanel.add({ type = 'table', column_count = #column_widths })
+    local summary_panel_table3 = science_scrollpanel.add({ type = 'table', column_count = #column_widths })
     local label = summary_panel_table3.add({
         type = 'label',
         name = 'science_logs_total_passive_feed_header',
@@ -277,7 +279,7 @@ local function add_science_logs(player, element)
     end
 end
 
-local build_config_gui = function(player, frame)
+local build_config_gui = function(player)
     local frame_sciencelogs = Tabs.comfy_panel_get_active_frame(player)
     if not frame_sciencelogs then
         return
@@ -297,15 +299,15 @@ local function on_gui_selection_state_changed(event)
     end
     if name == 'dropdown-force' then
         storage.dropdown_users_choice_force[player.name] = event.element.selected_index
-        build_config_gui(player, frame_sciencelogs)
+        build_config_gui(player)
     end
     if name == 'dropdown-science' then
         storage.dropdown_users_choice_science[player.name] = event.element.selected_index
-        build_config_gui(player, frame_sciencelogs)
+        build_config_gui(player)
     end
     if name == 'dropdown-evofilter' then
         storage.dropdown_users_choice_evo_filter[player.name] = event.element.selected_index
-        build_config_gui(player, frame_sciencelogs)
+        build_config_gui(player)
     end
 end
 

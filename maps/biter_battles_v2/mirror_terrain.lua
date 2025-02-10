@@ -17,7 +17,7 @@ local direction_translation = {
 }
 
 local function clear_entities(surface, bb)
-    objects = surface.find_entities_filtered({
+    local objects = surface.find_entities_filtered({
         area = bb,
         name = 'character',
         invert = true,
