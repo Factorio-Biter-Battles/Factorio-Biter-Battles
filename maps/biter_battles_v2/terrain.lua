@@ -1082,9 +1082,9 @@ local function draw_spawn_area(surface, rng)
     for _, tree in pairs(trees) do
         -- old code checked for each tile with 2x2 box with chance of skipping 23%
         -- 4 times same tree 23% gives chance < 1%
-        if rng(1, 100) > 1 then
-            tree.destroy()
-        end
+        -- if rng(1, 100) > 1 then
+        tree.destroy()
+        -- end
     end
     for x = -chunk_r, chunk_r - 1 do
         for y = -chunk_r, -1 do
