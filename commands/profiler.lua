@@ -35,9 +35,10 @@ local function startCommand(cmd)
             return
         end
         storage.profiler_new = { enabled = true, player = cmd.player_index }
+        NewProfiler.counstruct_tick_durations_data()
         NewProfiler.construct_profiler_data()
         Event.add_removable(defines.events.on_tick, NewProfiler.measure_tick_duration)
-        game.print('====ProfilerNew started====\n')
+        game.print('\n====ProfilerNew started====\n')
     end
 end
 
@@ -57,8 +58,10 @@ local function stopCommand(cmd)
         end
         NewProfiler.dump_all_profiler_data()
         Event.remove_removable(defines.events.on_tick, NewProfiler.measure_tick_duration)
+        NewProfiler.dump_tick_durations_data()
         storage.profiler_new.enabled = false
-        game.print('====Profiler stopped====\n Check logs in script-output/profiler \n')
+        game.print('\n====ProfilerNew stopped====\n')
+        player.print('Check logs in script-output/profiler. Please share them with other interested players.')
     end
 end
 

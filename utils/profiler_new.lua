@@ -70,7 +70,7 @@ local function dump_profiler_data(event_name, handler_index)
             -- construct sub array of partially filled row
             ---@type LocalisedString
             local t = { '' }
-            for j = 2, column + 2, 1 do
+            for j = 2, column - 3 + 2, 1 do --the entry with [column] index is from the future, hence the -3; +2 to get LuaProfiler and '\n' as well
                 t[j] = data[row][j]
             end
             helpers.write_file(path, t, true, storage.profiler_new.player)
@@ -214,30 +214,13 @@ end
 --- starting at index 2, as first entry is a constant empty string
 local row = 2
 local column = 2
----preallocate array of log entries
--- stylua: ignore
-local tick_durations = {
-    '',
-    {'',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n'},
-    {'',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n'},
-    {'',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n'},
-    {'',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n'},
-    {'',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n'},
-    {'',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n'},
-    {'',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n'},
-    {'',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n'},
-    {'',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n'},
-    {'',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n'},
-    {'',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n'},
-    {'',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n'},
-    {'',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n'},
-    {'',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n'},
-    {'',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n'},
-    {'',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n'},
-    {'',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n'},
-    {'',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n'},
-    {'',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n'},
-}
+
+---@type ProfilerBuffer
+local tick_durations = {}
+
+function Public.counstruct_tick_durations_data()
+    tick_durations = pool.profiler_malloc()
+end
 
 --- Measure duration of each tick update.
 --- Dumping on every 114th tick to minimize number of write_file() calls
@@ -267,11 +250,9 @@ Public.measure_tick_duration = Token.register(function(event)
     tick_durations[row][column + 1].reset()
 end)
 
----Stop the profiler
----todo: dump the data from partially filled tick_duration array
----@param cmd CustomCommandData
-local function profiler_stop(cmd)
-    tick_durations[row][column] = cmd.tick - 1
+---Dump the data from partially filled tick_duration array
+function Public.dump_tick_durations_data()
+    tick_durations[row][column] = game.tick - 1
     tick_durations[row][column + 1].stop()
     for i = 2, row, 1 do
         if i == row then
@@ -291,6 +272,7 @@ local function profiler_stop(cmd)
             )
         end
     end
+    tick_durations = {}
     row = 2
     column = 2
 end
