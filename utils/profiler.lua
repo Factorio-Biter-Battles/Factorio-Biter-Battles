@@ -3,7 +3,6 @@ local string_rep = string.rep
 local string_format = string.format
 local debug_getinfo = debug and debug.getinfo
 local Event = require('utils.event')
-local session = require('utils.datastore.session_data')
 local admin_autostop = 60 * 60 -- 1 min
 local player_autostop = 60 * 10 -- 10 s
 
@@ -39,33 +38,6 @@ end
 local namedSources = {
     ['[string "local n, v = "serpent", "0.30" -- (C) 2012-17..."]'] = 'serpent',
 }
-
-local function startCommand(command)
-    local player = game.get_player(command.player_index)
-
-    if not Profiler.isProfilingSupported() then
-        player.print(WARNING_MESSAGE_DISABLED, { color = { r = 1, g = 0.25, b = 0.25 } })
-        return
-    end
-
-    local trusted = session.get_trusted_table()
-    if not trusted[player.name] then
-        player.print(
-            'You have not grown accustomed to this technology yet.',
-            { color = { r = 0.22, g = 0.99, b = 0.99 } }
-        )
-        return
-    end
-    Profiler.Start(command.parameter ~= nil, player.admin, command.tick)
-end
-local function stopCommand(command)
-    Profiler.Stop(command.parameter ~= nil, nil)
-end
-ignoredFunctions[startCommand] = true
-ignoredFunctions[stopCommand] = true
-
-commands.add_command('startProfiler', 'Starts profiling', startCommand)
-commands.add_command('stopProfiler', 'Stops profiling', stopCommand)
 
 --local assert_raw = assert
 --function assert(expr, ...)

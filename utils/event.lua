@@ -6,6 +6,7 @@
 ---To raise that event, use script.raise_event
 
 local EventCore = require('utils.event_core')
+local NewProfiler = require('utils.profiler_new')
 local Global = require('utils.global')
 local Token = require('utils.token')
 
@@ -198,7 +199,7 @@ function Event.remove_removable(event_name, token)
 
     remove(tokens, token)
     local index = remove(handlers, handler)
-    EventCore.remove_event_handler_path(event_name, index)
+    NewProfiler.remove_event_handler_path(event_name, index)
     if #handlers == 0 then
         script_on_event(event_name, nil)
     end
@@ -315,7 +316,7 @@ function Event.remove_removable_function(event_name, name)
             local f = v.handler
             function_handlers[name][k] = nil
             local index = remove(handlers, f)
-            EventCore.remove_event_handler_path(event_name,index)
+            NewProfiler.remove_event_handler_path(event_name, index)
         end
     end
 
@@ -370,7 +371,7 @@ function Event.remove_removable_nth_tick(tick, token)
 
     remove(tokens, token)
     local index = remove(handlers, handler)
-    EventCore.remove_nth_tick_event_handler_path(tick, index)
+    NewProfiler.remove_nth_tick_event_handler_path(tick, index)
     if #handlers == 0 then
         script_on_nth_tick(tick, nil)
     end
