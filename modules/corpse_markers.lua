@@ -6,7 +6,7 @@ local function is_tag_valid(tag)
     if not tag.icon then
         return
     end
-    if tag.icon.type ~= 'item' then
+    if tag.icon.type ~= nil then -- type 'icon' actually reads nil for some reason https://lua-api.factorio.com/latest/concepts/SignalID.html
         return
     end
     if tag.icon.name ~= 'heavy-armor' then
