@@ -14,8 +14,6 @@ local load_event_name = -2
 
 -- map of nth_tick to handlers[]
 local on_nth_tick_event_handlers = {}
---- push reference to on_nth_tick_event_handlers to NewProfiler
-NewProfiler.event_handlers = event_handlers
 
 --[[ local interface = {
     get_handler = function()

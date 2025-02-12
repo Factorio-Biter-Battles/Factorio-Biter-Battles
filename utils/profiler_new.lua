@@ -146,7 +146,7 @@ end
 --- Insert handler's path to event_handlers_path array
 --- Construct LocalisedString buffer for removable handlers added while the profiler is running
 --- @param event_name EventName
----@param handler function
+---@param handler fun(event: EventData)
 function Public.add(event_name, handler)
     --- save profiler log location for this handler
     if not event_handlers_paths[event_name] then
@@ -175,6 +175,8 @@ function Public.add(event_name, handler)
 end
 
 --- Insert handler's path to event_handlers_path array
+--- @param tick uint
+--- @param handler fun(event: EventData)
 function Public.on_nth_tick(tick, handler)
     if not nth_tick_event_handlers_paths[tick] then
         nth_tick_event_handlers_paths[tick] = {}
@@ -203,7 +205,7 @@ function Public.call_nth_tick_handlers_profiled(handlers, event)
         local profiler = helpers.create_profiler()
         xpcall(handlers[i], errorHandler, event)
         profiler.stop()
-        helpers.write_file(path[i], { '', game_tick, '\t', profiler, '\n' }, true, storage.profiler_new.player)
+        helpers.write_file(path[i], { '', game_tick, profiler, '\n' }, true, storage.profiler_new.player)
     end
 end
 
