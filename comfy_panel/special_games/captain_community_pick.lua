@@ -67,7 +67,7 @@ end
 
 ---@param list string[]
 ---@param item string
-function move_to_front_of_list(list, item)
+local function move_to_front_of_list(list, item)
     for i, list_item in ipairs(list) do
         if list_item == item then
             table.remove(list, i)

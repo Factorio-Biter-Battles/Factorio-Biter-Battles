@@ -22,25 +22,13 @@ local string_format = string.format
 local string_sub = string.sub
 
 local function get_ammo_modifier(ammo_category)
-    local result = 0
-    if Tables.base_ammo_modifiers[ammo_category] then
-        result = Tables.base_ammo_modifiers[ammo_category]
-    end
-    return result
+    return Tables.base_ammo_modifiers[ammo_category] or 0
 end
 local function get_turret_attack_modifier(turret_category)
-    local result = 0
-    if Tables.base_turret_attack_modifiers[turret_category] then
-        result = Tables.base_turret_attack_modifiers[turret_category]
-    end
-    return result
+    return Tables.base_turret_attack_modifiers[turret_category] or 0
 end
 local function get_upgrade_modifier(ammo_category)
-    result = 0
-    if Tables.upgrade_modifiers[ammo_category] then
-        result = Tables.upgrade_modifiers[ammo_category]
-    end
-    return result
+    return Tables.upgrade_modifiers[ammo_category] or 0
 end
 
 -- Only add upgrade research balancing logic in this section
@@ -230,7 +218,7 @@ function Functions.maybe_set_game_start_tick(event)
     if player.force.name ~= 'north' and player.force.name ~= 'south' then
         return
     end
-    Functions.set_game_start_tick(event)
+    Functions.set_game_start_tick()
 end
 
 function Functions.set_game_start_tick()
@@ -550,7 +538,7 @@ function Functions.spy_fish(player, event)
         if storage.spy_fish_timeout[player.force.name] - game.tick > 0 then
             storage.spy_fish_timeout[player.force.name] = storage.spy_fish_timeout[player.force.name]
                 + duration_per_unit * send_amount
-            spy_time_seconds = math_floor((storage.spy_fish_timeout[player.force.name] - game.tick) / 60)
+            local spy_time_seconds = math_floor((storage.spy_fish_timeout[player.force.name] - game.tick) / 60)
             if spy_time_seconds > 60 then
                 local minute_label = ' minute and '
                 if spy_time_seconds > 120 then
@@ -580,7 +568,7 @@ function Functions.spy_fish(player, event)
 end
 
 function Functions.create_map_intro_button(player)
-    local b = Gui.add_top_element(player, {
+    Gui.add_top_element(player, {
         type = 'sprite-button',
         sprite = 'utility/custom_tag_icon',
         name = 'map_intro_button',

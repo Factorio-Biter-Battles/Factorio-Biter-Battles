@@ -33,7 +33,7 @@ local function inventory_costs_for_force(force)
     local players = {}
     for name, chosen_force in pairs(storage.chosen_team) do
         if chosen_force == force then
-            player = game.get_player(name)
+            local player = game.get_player(name)
             if player then
                 table.insert(players, { player = player, cost = inventory_cost(player) })
             end

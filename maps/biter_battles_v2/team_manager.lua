@@ -205,6 +205,7 @@ local function draw_manager_gui(player)
     flow.style.top_margin = 8
     local t = flow.add({ type = 'table', name = 'team_manager_bottom_buttons', column_count = 3 })
 
+    local button
     if storage.tournament_mode then
         button = t.add({
             type = 'button',

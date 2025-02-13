@@ -2,7 +2,6 @@ local Color = require('utils.color_presets')
 local Public = {}
 
 ---@param cmd CustomCommandData
----@param player LuaPlayer|nil
 function Public.current_map_seed(cmd)
     local player = cmd.player_index and game.get_player(cmd.player_index)
     if player then
