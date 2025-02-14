@@ -1,5 +1,29 @@
 return {
     {
+        number = 698,
+        date = '2025-02-14',
+        author = 'TheBigZet',
+        comment = [[(#698) Fix an issue where the [img=item/heavy-armor] map icon would not be removed after the corpse was picked up or expired]],
+    },
+    {
+        number = 693,
+        date = '2025-02-14',
+        author = 'morganc',
+        comment = [[(#693) Increase measurement granularity in the on_tick handler]],
+    },
+    {
+        number = 691,
+        date = '2025-02-13',
+        author = 'TheBigZet',
+        comment = [[(#691) Miscellaneous changes to type annotations and variable scoping]],
+    },
+    {
+        number = 686,
+        date = '2025-02-12',
+        author = 'Data-',
+        comment = [[(#686) [color=yellow]⚡[/color] Major refactoring and optimization of terrain generation. Older seeds may produce different terrain due to changes in RNG and increased determinism]]
+    },
+    {
         number = 696,
         date = '2025-02-07',
         author = 'RedRafe',
