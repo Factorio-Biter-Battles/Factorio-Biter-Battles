@@ -21,7 +21,7 @@ return {
         number = 686,
         date = '2025-02-12',
         author = 'Data-',
-        comment = [[(#686) [color=yellow]⚡[/color] Major refactoring and optimization of terrain generation. Older seeds may produce different terrain due to changes in RNG and increased determinism]]
+        comment = [[(#686) [color=yellow]⚡[/color] Major refactoring and optimization of terrain generation. Older seeds may produce different terrain due to changes in RNG and increased determinism]],
     },
     {
         number = 696,
