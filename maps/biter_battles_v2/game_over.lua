@@ -568,7 +568,10 @@ function Public.silo_death(event)
                     table.concat({ '[CommunityPickInfo]', helpers.table_to_json(special.stats.communityPickInfo), '\n' })
                 )
             end
-            table.insert(log_message, table.concat({ '[TeamStats]', helpers.table_to_json(storage.team_stats), '\n>End of log' }))
+            table.insert(
+            log_message,
+                table.concat({ '[TeamStats]', helpers.table_to_json(storage.team_stats), '\n>End of log' })
+            )
             log_to_db(log_message, true)
         end
     end
