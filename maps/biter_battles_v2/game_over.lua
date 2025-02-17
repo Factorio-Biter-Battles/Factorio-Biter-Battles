@@ -569,7 +569,7 @@ function Public.silo_death(event)
                 )
             end
             table.insert(
-            log_message,
+                log_message,
                 table.concat({ '[TeamStats]', helpers.table_to_json(storage.team_stats), '\n>End of log' })
             )
             log_to_db(log_message, true)
