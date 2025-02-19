@@ -119,4 +119,9 @@ function Public.roll(entity_type, evolution_factor)
     return type_functions[entity_type](evo)
 end
 
+--- export the local roll() for testing
+function Public._test_roll(evolution_factor)
+    return roll(evolution_factor)
+end
+
 return Public
