@@ -161,6 +161,11 @@ function Public.initial_setup()
     storage.default_clear_corpses_radius = 160
     storage.total_time_online_players = {}
     storage.already_logged_current_session_time_online_players = {}
+    ---Holds information about announcement
+    ---@class AnnouncementData
+    ---@field entity LuaEntity? Reference to speech-bubble entity
+    ---@field text string? Text for speech-bubble
+    storage.announcement = {}
     ---@type table<string, TeamstatsPreferences>
     storage.teamstats_preferences = {}
     storage.allow_teamstats = 'always'
