@@ -6,6 +6,7 @@ local Functions = require('maps.biter_battles_v2.functions')
 local SessionData = require('utils.datastore.session_data')
 local Utils = require('utils.core')
 local Gui = require('utils.gui')
+local Quality = require('maps.biter_battles_v2.quality')
 local GUI_THEMES = require('utils.utils').GUI_THEMES
 local index_of = table.index_of
 
@@ -151,6 +152,9 @@ local functions = {
             game.permissions.get_group('Default').set_allows_action(defines.input_action.import_blueprint_string, false)
             get_actor(event, '{Blueprints}', 'has disabled blueprints!')
         end
+    end,
+    ['comfy_panel_quality_toggle'] = function(event)
+        Quality.on_gui_switch_state_changed(event)
     end,
     ['comfy_panel_spaghett_toggle'] = function(event)
         if event.element.switch_state == 'left' then
@@ -506,6 +510,16 @@ local build_config_gui = function(player, frame)
 
         scroll_pane.add({ type = 'line' })
 
+        if Quality.installed() then
+            switch_state = 'right'
+            if Quality.scheduled() then
+                switch_state = 'left'
+            end
+
+            add_switch(scroll_pane, switch_state, 'comfy_panel_quality_toggle', 'Quality Mod', 'Enables quality mod')
+            scroll_pane.add({ type = 'line' })
+        end
+
         switch_state = 'right'
         if storage.comfy_panel_config.spaghett.enabled then
             switch_state = 'left'
@@ -747,6 +761,9 @@ local function on_init()
     storage.comfy_panel_config.spaghett.undo = {}
     storage.comfy_panel_config.poll_trusted = false
     storage.comfy_panel_disable_antigrief = false
+    if Quality.installed() then
+        storage.comfy_panel_config.quality_scheduled = true
+    end
     storage.want_pings = {}
     storage.ping_gui_locations = {}
 end
