@@ -2,11 +2,14 @@ local Token = require('utils.token')
 local pool = require('maps.biter_battles_v2.pool')
 local debug_getinfo = debug.getinfo
 
-storage.profiler_new = {
-    enabled = false,
-    player = 0,
-}
+
+--- Flag to use ONLY at start and stop command 
+storage.new_profiler.is_running = false
+storage.new_profiler.clients_joined_midrun = {}
 local Public = {}
+--- If we keep this local then joining players won't enter NewProfiler code in the middle of profiling
+Public.enabled = false
+Public.player_index = 0
 
 local function errorHandler(err)
     log('Error caught: ' .. err)
@@ -73,9 +76,9 @@ local function dump_profiler_data(event_name, handler_index)
             for j = 2, column - 3 + 2, 1 do --the entry with [column] index is from the future, hence the -3; +2 to get LuaProfiler and '\n' as well
                 t[j] = data[row][j]
             end
-            helpers.write_file(path, t, true, storage.profiler_new.player)
+            helpers.write_file(path, t, true, Public.player_index)
         else
-            helpers.write_file(path, data[i], true, storage.profiler_new.player)
+            helpers.write_file(path, data[i], true, Public.player_index)
         end
     end
 end
@@ -136,7 +139,7 @@ function Public.call_handlers_profiled(handlers, event)
         end
         -- dump data when LocalisedString limit size is reached
         if rows_e[i] == 21 then
-            helpers.write_file(path[i], data[i], true, storage.profiler_new.player)
+            helpers.write_file(path[i], data[i], true, Public.player_index)
             rows_e[i] = 2
             columns_e[i] = 2
         end
@@ -167,7 +170,7 @@ function Public.add(event_name, handler)
         })
     )
     -- construct profiler structure for handlers added after the profiler was started
-    if storage.profiler_new.enabled then
+    if Public.enabled then
         table.insert(profiler_data[event_name], 1, pool.profiler_malloc())
         table.insert(rows[event_name], 1, 2)
         table.insert(columns[event_name], 1, 2)
@@ -205,7 +208,7 @@ function Public.call_nth_tick_handlers_profiled(handlers, event)
         local profiler = helpers.create_profiler()
         xpcall(handlers[i], errorHandler, event)
         profiler.stop()
-        helpers.write_file(path[i], { '', game_tick, profiler, '\n' }, true, storage.profiler_new.player)
+        helpers.write_file(path[i], { '', game_tick, profiler, '\n' }, true, Public.player_index)
     end
 end
 
@@ -243,7 +246,7 @@ Public.measure_tick_duration = Token.register(function(event)
             'profiler/cumulative/total_tick_duration.txt',
             tick_durations,
             true,
-            storage.profiler_new.player
+            Public.player_index
         )
         row = 2
         column = 2
@@ -264,13 +267,13 @@ function Public.dump_tick_durations_data()
             for j = 2, column + 2, 1 do
                 t[j] = tick_durations[row][j]
             end
-            helpers.write_file('profiler/cumulative/total_tick_duration.txt', t, true, storage.profiler_new.player)
+            helpers.write_file('profiler/cumulative/total_tick_duration.txt', t, true, Public.player_index)
         else
             helpers.write_file(
                 'profiler/cumulative/total_tick_duration.txt',
                 tick_durations[i],
                 true,
-                storage.profiler_new.player
+                Public.player_index
             )
         end
     end

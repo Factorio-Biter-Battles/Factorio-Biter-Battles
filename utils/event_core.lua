@@ -48,7 +48,8 @@ local function on_event(event)
     if not handlers then
         handlers = event_handlers[event.input_name]
     end
-    if storage.profiler_new.enabled then
+    --- As long as call_handlers_profiled doesn't make any gamestate changes, we should be fine with different clients choosing different paths here
+    if NewProfiler.enabled then
         NewProfiler.call_handlers_profiled(handlers, event)
     else
         call_handlers(handlers, event)
@@ -79,7 +80,7 @@ end
 
 local function on_nth_tick_event(event)
     local handlers = on_nth_tick_event_handlers[event.nth_tick]
-    if storage.profiler_new.enabled then
+    if NewProfiler.enabled then
         NewProfiler.call_nth_tick_handlers_profiled(handlers, event)
     else
         call_handlers(handlers, event)
