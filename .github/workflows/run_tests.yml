@@ -17,3 +17,4 @@ jobs:
         run: |
           lua tests/test-feeding.lua
           lua tests/test-functions.lua
+          lua tests/test-biter_raffle.lua
