@@ -130,5 +130,4 @@ function Public._test_get_worm_raffle_table(level)
     return get_worm_raffle_table(level)
 end
 
-
 return Public
