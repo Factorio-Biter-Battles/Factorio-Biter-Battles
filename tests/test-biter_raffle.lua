@@ -7,7 +7,7 @@ local Public = {}
 ---@param type 'spitter'|'biter'|'mixed'|'worm'
 ---@param n integer number of calls to make
 ---@return string
-function Public.test_performance(type, n)
+function Public.benchmark_performance(type, n)
     local t1 = os.clock()
     for i = 1, n, 1 do
         biter_raffle.roll(type, math_random())
@@ -16,8 +16,8 @@ function Public.test_performance(type, n)
     return(string.format('%s:\tn=%d\ttotal=%dms\tavg=%fms', type, n, (t2 - t1) * 1e3, (t2 - t1) * 1e3 / n))
 end
 
-
-function Public.test_is_string()
+--- Test if roll() returns string
+function Public.test_roll()
     local types = {'spitter','biter','mixed','worm'}
     local evo_values = {-0.5, 0, 0.01, 0.1, 0.5, 0.9, 1, 1.5}
     for _, t in pairs(types) do
@@ -27,75 +27,33 @@ function Public.test_is_string()
     end
 end
 
--- test if rolled values approach expected values for large set 
-function Public.test_chances()
-    local n = 1e5
-    -- 10% evo
-    local count = {
-        ['small-'] = 0,
-        ['medium-'] = 0,
-        ['big-'] = 0,
-        ['behemoth-'] = 0,
+--- Test if get_raffle_table() returns table
+--- Compare the results with reference values based on de118e2eb4c32577ec3d988170de6e029af58834 comit
+function Public.test_get_raffle_table()
+    local levels = {-500, 0, 10, 100, 500, 900, 1000, 1500}
+    local expected_raffle_tables = {
+        [-500] = {['small-']=1875, ['medium-']=0, ['big-'] =0, ['behemoth-']=0},
+        [0] = {['small-']=1000, ['medium-']=0, ['big-'] =0, ['behemoth-']=0},
+        [10] = {['small-']=982.5, ['medium-']=0, ['big-'] =0, ['behemoth-']=0},
+        [100] = {['small-']=825, ['medium-']=0, ['big-'] =0, ['behemoth-']=0},
+        [500] = {['small-']=125, ['medium-']=500, ['big-'] =0, ['behemoth-']=0},
+        [900] = {['small-']=0, ['medium-']=100, ['big-'] =800, ['behemoth-']=0},
+        [1000] = {['small-']=0, ['medium-']=0, ['big-'] =1000, ['behemoth-']=800},
+        [1500] ={['small-']=0, ['medium-']=0, ['big-'] =2000, ['behemoth-']=4800},
     }
-    for i=1, n, 1 do
-        local result = biter_raffle._test_roll(0.1)
-        count[result] = count[result] + 1
-    end
-    lunatest.assert_equal(n * 1, count['small-'], 1)
-    lunatest.assert_equal(0, count['medium-'], 1)
-    lunatest.assert_equal(0, count['big-'], 1)
-    lunatest.assert_equal(0, count['behemoth-'], 1)
+    for _, level in pairs(levels) do
+        local expected_raffle_table = expected_raffle_tables[level]
+        local raffle_table = biter_raffle._test_get_raffle_table(level)
+        lunatest.assert_table(raffle_table, 'get_raffle_table(' .. level .. ') failed to return a table')
 
-    -- 30% evo
-    count = {
-        ['small-'] = 0,
-        ['medium-'] = 0,
-        ['big-'] = 0,
-        ['behemoth-'] = 0,
-    }
-    for i=1, n, 1 do
-        local result = biter_raffle._test_roll(0.3)
-        count[result] = count[result] + 1
+        for name, value in pairs(raffle_table) do
+            lunatest.assert_equal(expected_raffle_table[name], value)
+        end
     end
-    lunatest.assert_equal(n * ??, count['small-'], 1)
-    lunatest.assert_equal(n * ??, count['medium-'], 1)
-    lunatest.assert_equal(0, count['big-'], 1)
-    lunatest.assert_equal(0, count['behemoth-'], 1)
-
-    -- 60% evo
-    count = {
-        ['small-'] = 0,
-        ['medium-'] = 0,
-        ['big-'] = 0,
-        ['behemoth-'] = 0,
-    }
-    for i=1, n, 1 do
-        local result = biter_raffle._test_roll(0.6)
-        count[result] = count[result] + 1
-    end
-    lunatest.assert_equal(n * ??, count['small-'], 1)
-    lunatest.assert_equal(n * ??, count['medium-'], 1)
-    lunatest.assert_equal(n * ??, count['big-'], 1)
-    lunatest.assert_equal(0, count['behemoth-'], 1)
-
-    -- 95% evo
-    count = {
-        ['small-'] = 0,
-        ['medium-'] = 0,
-        ['big-'] = 0,
-        ['behemoth-'] = 0,
-    }
-    for i=1, n, 1 do
-        local result = biter_raffle._test_roll(0.95)
-        count[result] = count[result] + 1
-    end
-    lunatest.assert_equal(n * ??, count['small-'], 1)
-    lunatest.assert_equal(n * ??, count['medium-'], 1)
-    lunatest.assert_equal(n * ??, count['big-'], 1)
-    lunatest.assert_equal(n * ??, count['behemoth-'], 1)
 end
 
+
+lunatest.run()
 return Public
--- sample usage
--- print(Public.test_biter_raffle_performance('biter', 1e5))
+
 
