@@ -119,9 +119,16 @@ function Public.roll(entity_type, evolution_factor)
     return type_functions[entity_type](evo)
 end
 
---- export the local roll() for testing
-function Public._test_roll(evolution_factor)
-    return roll(evolution_factor)
+--- export the local get_raffle_table() for testing
+--- @deprecated
+function Public._test_get_raffle_table(level)
+    return get_raffle_table(level)
 end
+--- export the local get_worm_raffle_table() for testing
+--- @deprecated
+function Public._test_get_worm_raffle_table(level)
+    return get_worm_raffle_table(level)
+end
+
 
 return Public
