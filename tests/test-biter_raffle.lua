@@ -17,7 +17,7 @@ function Public.benchmark_performance(type, n)
 end
 
 --- Test if roll() returns string
-function Public.test_roll()
+function test_roll()
     local types = {'spitter','biter','mixed','worm'}
     local evo_values = {-0.5, 0, 0.01, 0.1, 0.5, 0.9, 1, 1.5}
     for _, t in pairs(types) do
@@ -29,7 +29,7 @@ end
 
 --- Test if get_raffle_table() returns table
 --- Compare the results with reference values based on de118e2eb4c32577ec3d988170de6e029af58834 comit
-function Public.test_get_raffle_table()
+function test_get_raffle_table()
     local levels = {-500, 0, 10, 100, 500, 900, 1000, 1500}
     local expected_raffle_tables = {
         [-500] = {['small-']=1875, ['medium-']=0, ['big-'] =0, ['behemoth-']=0},
