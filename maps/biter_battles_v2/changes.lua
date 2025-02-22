@@ -1,5 +1,23 @@
 return {
     {
+        number = 692,
+        date = '2025-02-22',
+        author = 'TheBigZet',
+        comment = [[(#692) Improve biter spawning performance by optimizing the name selection logic]],
+    },
+    {
+        number = 701,
+        date = '2025-02-21',
+        author = 'cogito123',
+        comment = [[(#701) Add an admin-only /announce command]],
+    },
+    {
+        number = 700,
+        date = '2025-02-18',
+        author = 'cogito123',
+        comment = [[(#700) Fix an issue that prevented the tooltip from appearing when hovering over the evolution icon]],
+    },
+    {
         number = 698,
         date = '2025-02-14',
         author = 'TheBigZet',
