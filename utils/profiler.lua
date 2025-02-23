@@ -19,7 +19,6 @@ local Profiler = {
 local WARNING_MESSAGE_DISABLED = (
     'The profiler cannot work in this version of Factorio by default,'
     .. ' downgrade to 1.1.106 or start the game with --enable-unsafe-lua-debug-api.'
-    .. ' Do not play online with this setting enabled or you will encounter desyncs!'
 )
 
 function Profiler.isProfilingSupported()
@@ -42,18 +41,23 @@ local namedSources = {
 
 local function startCommand(command)
     local player = game.get_player(command.player_index)
+    game.print({
+        '',
+        '\n====\n',
+        player.name,
+        " is trying to turn on the profiler.\nIf you don't know what that means, then you don't have to worry about it.\n Further info will be available in logs ONLY.",
+        '\n====\n',
+    })
+    log({ '', '\n====\n', player.name, ' is trying to turn on the profiler.', '\n====\n' })
 
     if not Profiler.isProfilingSupported() then
-        player.print(WARNING_MESSAGE_DISABLED, { color = { r = 1, g = 0.25, b = 0.25 } })
+        log(WARNING_MESSAGE_DISABLED)
         return
     end
 
     local trusted = session.get_trusted_table()
     if not trusted[player.name] then
-        player.print(
-            'You have not grown accustomed to this technology yet.',
-            { color = { r = 0.22, g = 0.99, b = 0.99 } }
-        )
+        log(player.name .. ' has not grown accustomed to this technology yet.')
         return
     end
     Profiler.Start(command.parameter ~= nil, player.admin, command.tick)
@@ -96,7 +100,7 @@ function Profiler.Start(excludeCalledMs, admin, tick)
     end
     if admin then
         Profiler.AutoStopTick = tick + admin_autostop
-        game.print(
+        log(
             string_format(
                 '====Profiler started====\nIt will be automatically stopped in %d seconds if no action is performed',
                 admin_autostop / 60
@@ -104,7 +108,7 @@ function Profiler.Start(excludeCalledMs, admin, tick)
         )
     else
         Profiler.AutoStopTick = tick + player_autostop
-        game.print(
+        log(
             string_format(
                 '====Profiler started====\nIt will be automatically stopped in %d seconds if no action is performed',
                 player_autostop / 60
@@ -272,7 +276,7 @@ function Profiler.Stop(averageMs, message)
     Profiler.CallTree = nil
     Profiler.IsRunning = false
     Profiler.AutoStopTick = nil
-    game.print('====Profiler stopped====')
+    log('====Profiler stopped====')
 end
 ignoredFunctions[Profiler.Stop] = true
 
