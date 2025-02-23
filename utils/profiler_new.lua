@@ -2,20 +2,31 @@ local Token = require('utils.token')
 local pool = require('maps.biter_battles_v2.pool')
 local debug_getinfo = debug.getinfo
 
+storage.new_profiler = {
+    --- This variable is synced with all clients.
+    --- Everybody will agree if the NewProfiler is running or not
+    is_running = false,
+    clients_joined_midrun = {},
+    --- Globalised index of the player that started the profiler.
+    --- Needed for autostopping when he leaves the game.
+    player_index = 0,
+}
 
---- Flag to use ONLY at start and stop command 
-storage.new_profiler.is_running = false
-storage.new_profiler.clients_joined_midrun = {}
-local Public = {}
---- If we keep this local then joining players won't enter NewProfiler code in the middle of profiling
-Public.enabled = false
-Public.player_index = 0
+local NewProfiler = {
+    --- Every joining player will get this variable set to false.
+    --- Only clients that witnessed the NewProfiler being started will have this set to true.
+    --- This way we can filter players that have the profiler_data constructed from those who don't
+    enabled = false,
+    --- player that started the NewProfiler, and will have the logs written
+    player_index = 0,
+}
 
 local function errorHandler(err)
     log('Error caught: ' .. err)
     -- Print the full stack trace
     log(debug.traceback())
 end
+
 --- ====================================
 --- EVENTS PROFILERS
 --- ====================================
@@ -29,26 +40,33 @@ for event_name, event_id in pairs(defines.events) do
 end
 
 --- path to log file for each handler
---- conventionally there's only one handler for given event per lua file, so one log file per lua file is sufficient
----example: event_handlers_paths[defines.events.on_tick][1] = 'profiler/on_tick/maps-biter_battles_v2-main.txt'
+--- format: script-output/profiler/<event name>/<file defined @ line defined>
 ---@type table<EventName, string[]>
 local event_handlers_paths = {}
+
+--- remove removable event path so that lists stay in sync
 ---@param event_name EventName
 ---@param index integer?
-function Public.remove_event_handler_path(event_name, index)
+function NewProfiler.remove_event_handler_path(event_name, index)
     if index then
         log({ '', 'Removed \t ', table.remove(event_handlers_paths[event_name], index), ' at index ', index })
     end
 end
 
----example: nth_tick_event_handlers_paths[60][1] = 'profiler/on_60th_tick/maps-biter_battles_v2-main.txt'
+--- path to log file for each handler
+--- format: script-output/profiler/<nth tick>/<file defined @ line defined>
 ---@type table<integer, string[]>
 local nth_tick_event_handlers_paths = {}
-function Public.remove_nth_tick_event_handler_path(tick, index)
+
+--- remove removable event path so that lists stay in sync
+---@param tick uint
+---@param index integer
+function NewProfiler.remove_nth_tick_event_handler_path(tick, index)
     if index then
         log({ '', 'Removed \t ', table.remove(nth_tick_event_handlers_paths[tick], index), ' at index ', index })
     end
 end
+
 --- current row for each handler, waiting to be filled
 ---@type table<EventName, integer[]>
 local rows = {}
@@ -60,7 +78,8 @@ local columns = {}
 ---@type table<EventName, ProfilerBuffer[]>
 local profiler_data = {}
 
--- Dump partially filled log tabel for given handler.
+--- Dump partially filled ProfilerBuffer for given handler.
+--- Doesn't drop the table.
 ---@param event_name EventName
 ---@param handler_index int
 local function dump_profiler_data(event_name, handler_index)
@@ -68,6 +87,10 @@ local function dump_profiler_data(event_name, handler_index)
     local row = rows[event_name][handler_index]
     local column = columns[event_name][handler_index]
     local path = event_handlers_paths[event_name][handler_index]
+    if row == 2 and column == 2 then
+        --- skip empty log dumping
+        return
+    end
     for i = 2, row, 1 do
         if i == row then
             -- construct sub array of partially filled row
@@ -76,15 +99,20 @@ local function dump_profiler_data(event_name, handler_index)
             for j = 2, column - 3 + 2, 1 do --the entry with [column] index is from the future, hence the -3; +2 to get LuaProfiler and '\n' as well
                 t[j] = data[row][j]
             end
-            helpers.write_file(path, t, true, Public.player_index)
+            helpers.write_file(path, t, true, NewProfiler.player_index)
         else
-            helpers.write_file(path, data[i], true, Public.player_index)
+            helpers.write_file(path, data[i], true, NewProfiler.player_index)
         end
     end
 end
 
 --- Dump all profiler data and remove buffer
-function Public.dump_all_profiler_data()
+function NewProfiler.dump_all_profiler_data()
+    --- Block clients that don't have profiler data from entering this code
+    if not NewProfiler.enabled then
+        return
+    end
+
     for event_name, handlers in pairs(profiler_data) do
         for handler_index, _ in pairs(handlers) do
             dump_profiler_data(event_name, handler_index)
@@ -95,11 +123,11 @@ function Public.dump_all_profiler_data()
     columns = {}
 end
 
---- Construct LocalisedString buffer for each handler for each event,
---- that have been registered before /startProfiler was run
---- Add entries in rows and columns arrays as well
-function Public.construct_profiler_data()
-    for event_name, handlers in pairs(Public.event_handlers) do
+--- Construct ProfilerBuffer for each handler for each event,
+--- that have been registered before `/startProfiler` was run.
+--- Add entries in `rows` and `columns` arrays as well
+function NewProfiler.construct_profiler_data()
+    for event_name, handlers in pairs(NewProfiler.event_handlers) do
         profiler_data[event_name] = {}
         rows[event_name] = {}
         columns[event_name] = {}
@@ -111,9 +139,10 @@ function Public.construct_profiler_data()
     end
 end
 
+---Same as `call_handlers` in EventCore but with profiling wrapped around it
 ---@param handlers fun(event: EventData)[]
 ---@param event EventData
-function Public.call_handlers_profiled(handlers, event)
+function NewProfiler.call_handlers_profiled(handlers, event)
     local event_name = event.name
     local game_tick = game.tick
     local path = event_handlers_paths[event_name]
@@ -139,7 +168,7 @@ function Public.call_handlers_profiled(handlers, event)
         end
         -- dump data when LocalisedString limit size is reached
         if rows_e[i] == 21 then
-            helpers.write_file(path[i], data[i], true, Public.player_index)
+            helpers.write_file(path[i], data[i], true, NewProfiler.player_index)
             rows_e[i] = 2
             columns_e[i] = 2
         end
@@ -147,10 +176,10 @@ function Public.call_handlers_profiled(handlers, event)
 end
 
 --- Insert handler's path to event_handlers_path array
---- Construct LocalisedString buffer for removable handlers added while the profiler is running
+--- Construct ProfilerBuffer for removable handlers added while the profiler is running
 --- @param event_name EventName
 ---@param handler fun(event: EventData)
-function Public.add(event_name, handler)
+function NewProfiler.add(event_name, handler)
     --- save profiler log location for this handler
     if not event_handlers_paths[event_name] then
         event_handlers_paths[event_name] = {}
@@ -170,7 +199,7 @@ function Public.add(event_name, handler)
         })
     )
     -- construct profiler structure for handlers added after the profiler was started
-    if Public.enabled then
+    if NewProfiler.enabled then
         table.insert(profiler_data[event_name], 1, pool.profiler_malloc())
         table.insert(rows[event_name], 1, 2)
         table.insert(columns[event_name], 1, 2)
@@ -180,7 +209,7 @@ end
 --- Insert handler's path to event_handlers_path array
 --- @param tick uint
 --- @param handler fun(event: EventData)
-function Public.on_nth_tick(tick, handler)
+function NewProfiler.on_nth_tick(tick, handler)
     if not nth_tick_event_handlers_paths[tick] then
         nth_tick_event_handlers_paths[tick] = {}
     end
@@ -200,7 +229,10 @@ function Public.on_nth_tick(tick, handler)
     )
 end
 
-function Public.call_nth_tick_handlers_profiled(handlers, event)
+--- Since nth_tick_event are called relatively rarelly, we're writting the logs directly, skipping the buffer
+---@param handlers fun(event: NthTickEventData)[]
+---@param event NthTickEventData
+function NewProfiler.call_nth_tick_handlers_profiled(handlers, event)
     local event_tick = event.nth_tick
     local game_tick = game.tick
     local path = nth_tick_event_handlers_paths[event_tick]
@@ -208,7 +240,7 @@ function Public.call_nth_tick_handlers_profiled(handlers, event)
         local profiler = helpers.create_profiler()
         xpcall(handlers[i], errorHandler, event)
         profiler.stop()
-        helpers.write_file(path[i], { '', game_tick, profiler, '\n' }, true, Public.player_index)
+        helpers.write_file(path[i], { '', game_tick, profiler, '\n' }, true, NewProfiler.player_index)
     end
 end
 
@@ -223,13 +255,16 @@ local column = 2
 ---@type ProfilerBuffer
 local tick_durations = {}
 
-function Public.counstruct_tick_durations_data()
+function NewProfiler.counstruct_tick_durations_data()
     tick_durations = pool.profiler_malloc()
 end
 
 --- Measure duration of each tick update.
 --- Dumping on every 114th tick to minimize number of write_file() calls
-Public.measure_tick_duration = Token.register(function(event)
+NewProfiler.measure_tick_duration = Token.register(function(event)
+    if not NewProfiler.enabled then
+        return
+    end
     -- stop the profiler started in previous tick and log its data
     tick_durations[row][column] = event.tick - 1
     tick_durations[row][column + 1].stop()
@@ -246,7 +281,7 @@ Public.measure_tick_duration = Token.register(function(event)
             'profiler/cumulative/total_tick_duration.txt',
             tick_durations,
             true,
-            Public.player_index
+            NewProfiler.player_index
         )
         row = 2
         column = 2
@@ -256,7 +291,10 @@ Public.measure_tick_duration = Token.register(function(event)
 end)
 
 ---Dump the data from partially filled tick_duration array
-function Public.dump_tick_durations_data()
+function NewProfiler.dump_tick_durations_data()
+    if not NewProfiler.enabled then
+        return
+    end
     tick_durations[row][column] = game.tick - 1
     tick_durations[row][column + 1].stop()
     for i = 2, row, 1 do
@@ -267,13 +305,13 @@ function Public.dump_tick_durations_data()
             for j = 2, column + 2, 1 do
                 t[j] = tick_durations[row][j]
             end
-            helpers.write_file('profiler/cumulative/total_tick_duration.txt', t, true, Public.player_index)
+            helpers.write_file('profiler/cumulative/total_tick_duration.txt', t, true, NewProfiler.player_index)
         else
             helpers.write_file(
                 'profiler/cumulative/total_tick_duration.txt',
                 tick_durations[i],
                 true,
-                Public.player_index
+                NewProfiler.player_index
             )
         end
     end
@@ -282,4 +320,4 @@ function Public.dump_tick_durations_data()
     column = 2
 end
 
-return Public
+return NewProfiler

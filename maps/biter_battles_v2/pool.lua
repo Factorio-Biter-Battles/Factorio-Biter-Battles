@@ -29,8 +29,11 @@ function mod.enlarge(memory, offset, bytes)
 
     return memory
 end
+-- stylua: ignore start
 
----@alias ProfilerBuffer LocalisedString
+---@alias ProfilerRow ['',0,LuaProfiler,'\\n',0,LuaProfiler,'\\n',0,LuaProfiler,'\\n',0,LuaProfiler,'\\n',0,LuaProfiler,'\\n',0,LuaProfiler,'\\n']
+--- Nested LocalisedString with 19x6 LuaProfilers
+---@alias ProfilerBuffer ['', ProfilerRow,ProfilerRow,ProfilerRow,ProfilerRow,ProfilerRow,ProfilerRow,ProfilerRow,ProfilerRow,ProfilerRow,ProfilerRow,ProfilerRow,ProfilerRow,ProfilerRow,ProfilerRow,ProfilerRow,ProfilerRow,ProfilerRow,ProfilerRow,ProfilerRow]
 
 ---@return ProfilerBuffer
 function mod.profiler_malloc()
@@ -57,4 +60,5 @@ function mod.profiler_malloc()
         {'',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n',0,helpers.create_profiler(true),'\n'},
     }
 end
+-- stylua: ignore end
 return mod
