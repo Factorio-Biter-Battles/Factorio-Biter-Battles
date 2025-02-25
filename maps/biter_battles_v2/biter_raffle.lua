@@ -44,8 +44,9 @@ local function get_raffle_table(level)
 end
 
 local function roll(evolution_factor)
-    if not (evolution_factor * 1000) == raffle_level then
-        get_raffle_table(math_floor(evolution_factor * 1000))
+    local level = math_floor(evolution_factor * 1000)
+    if not (level == raffle_level) then
+        get_raffle_table(level)
     end
     local raffle = raffle_table
     local r = math_random(0, math_floor(raffle[1] + raffle[2] + raffle[3] + raffle[4]))
@@ -57,7 +58,6 @@ local function roll(evolution_factor)
         end
     end
 end
-
 local function get_biter_name(evolution_factor)
     return biter_names[roll(evolution_factor)]
 end
