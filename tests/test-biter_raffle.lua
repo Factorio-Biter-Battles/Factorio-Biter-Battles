@@ -34,14 +34,14 @@ end
 function test_get_raffle_table()
     local levels = { -500, 0, 10, 100, 500, 900, 1000, 1500 }
     local expected_raffle_tables = {
-        [-500] = { ['small-'] = 1875, ['medium-'] = 0, ['big-'] = 0, ['behemoth-'] = 0 },
-        [0] = { ['small-'] = 1000, ['medium-'] = 0, ['big-'] = 0, ['behemoth-'] = 0 },
-        [10] = { ['small-'] = 982.5, ['medium-'] = 0, ['big-'] = 0, ['behemoth-'] = 0 },
-        [100] = { ['small-'] = 825, ['medium-'] = 0, ['big-'] = 0, ['behemoth-'] = 0 },
-        [500] = { ['small-'] = 125, ['medium-'] = 500, ['big-'] = 0, ['behemoth-'] = 0 },
-        [900] = { ['small-'] = 0, ['medium-'] = 100, ['big-'] = 800, ['behemoth-'] = 0 },
-        [1000] = { ['small-'] = 0, ['medium-'] = 0, ['big-'] = 1000, ['behemoth-'] = 800 },
-        [1500] = { ['small-'] = 0, ['medium-'] = 0, ['big-'] = 2000, ['behemoth-'] = 4800 },
+        [-500] = { [1] = 1875, [2] = 0, [3] = 0, [4] = 0 },
+        [0] = { [1] = 1000, [2] = 0, [3] = 0, [4] = 0 },
+        [10] = { [1] = 982.5, [2] = 0, [3] = 0, [4] = 0 },
+        [100] = { [1] = 825, [2] = 0, [3] = 0, [4] = 0 },
+        [500] = { [1] = 125, [2] = 500, [3] = 0, [4] = 0 },
+        [900] = { [1] = 0, [2] = 100, [3] = 800, [4] = 0 },
+        [1000] = { [1] = 0, [2] = 0, [3] = 1000, [4] = 800 },
+        [1500] = { [1] = 0, [2] = 0, [3] = 2000, [4] = 4800 },
     }
     for _, level in pairs(levels) do
         local expected_raffle_table = expected_raffle_tables[level]
