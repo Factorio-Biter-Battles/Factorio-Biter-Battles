@@ -7,45 +7,50 @@ local biter_names = {
     'small-biter',
     'medium-biter',
     'big-biter',
-    'behemoth-biter'
+    'behemoth-biter',
 }
-local spitter_names ={
+local spitter_names = {
     'small-spitter',
     'medium-spitter',
     'big-spitter',
-    'behemoth-spitter'
+    'behemoth-spitter',
 }
 
+local raffle_table = { 1000, 0, 0, 0 }
+local raffle_level = 0
 local function get_raffle_table(level)
     if level < 500 then
-        return {
-            1000 - level * 1.75,
-            math_max(-250 + level * 1.5, 0), -- only this one can be negative for level < 500
-            0,
-            0,
-        }
+        raffle_table[1] = 1000 - level * 1.75
+        raffle_table[2] = math_max(-250 + level * 1.5, 0) -- only this one can be negative for level < 500
+        raffle_table[3] = 0
+        raffle_table[4] = 0
+        raffle_level = level
+        return raffle_table
     end
     if level < 900 then
-        return {
-            math_max(1000 - level * 1.75, 0), -- only this one can be negative for level < 900
-            1000 - level,
-            (level - 500) * 2,
-            0,
-        }
+        raffle_table[1] = math_max(1000 - level * 1.75, 0) -- only this one can be negative for level < 900
+        raffle_table[2] = 1000 - level
+        raffle_table[3] = (level - 500) * 2
+        raffle_table[4] = 0
+        raffle_level = level
+        return raffle_table
     end
-    return {
-        0,
-        math_max(1000 - level, 0),
-        (level - 500) * 2,
-        (level - 900) * 8,
-    }
+    raffle_table[1] = 0
+    raffle_table[2] = math_max(1000 - level, 0)
+    raffle_table[3] = (level - 500) * 2
+    raffle_table[4] = (level - 900) * 8
+    raffle_level = level
+    return raffle_table
 end
 
 local function roll(evolution_factor)
-    local raffle = get_raffle_table(math_floor(evolution_factor * 1000))
+    if not (evolution_factor * 1000) == raffle_level then
+        get_raffle_table(math_floor(evolution_factor * 1000))
+    end
+    local raffle = raffle_table
     local r = math_random(0, math_floor(raffle[1] + raffle[2] + raffle[3] + raffle[4]))
     local current_chance = 0
-    for i=1, 4, 1 do
+    for i = 1, 4, 1 do
         current_chance = current_chance + raffle[i]
         if r <= current_chance then
             return i
