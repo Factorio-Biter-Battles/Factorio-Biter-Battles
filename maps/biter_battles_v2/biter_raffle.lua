@@ -3,49 +3,62 @@ local math_random = math.random
 local math_floor = math.floor
 local math_max = math.max
 
+local biter_names = {
+    'small-biter',
+    'medium-biter',
+    'big-biter',
+    'behemoth-biter'
+}
+local spitter_names ={
+    'small-spitter',
+    'medium-spitter',
+    'big-spitter',
+    'behemoth-spitter'
+}
+
 local function get_raffle_table(level)
     if level < 500 then
         return {
-            ['small-'] = 1000 - level * 1.75,
-            ['medium-'] = math_max(-250 + level * 1.5, 0), -- only this one can be negative for level < 500
-            ['big-'] = 0,
-            ['behemoth-'] = 0,
+            1000 - level * 1.75,
+            math_max(-250 + level * 1.5, 0), -- only this one can be negative for level < 500
+            0,
+            0,
         }
     end
     if level < 900 then
         return {
-            ['small-'] = math_max(1000 - level * 1.75, 0), -- only this one can be negative for level < 900
-            ['medium-'] = 1000 - level,
-            ['big-'] = (level - 500) * 2,
-            ['behemoth-'] = 0,
+            math_max(1000 - level * 1.75, 0), -- only this one can be negative for level < 900
+            1000 - level,
+            (level - 500) * 2,
+            0,
         }
     end
     return {
-        ['small-'] = 0,
-        ['medium-'] = math_max(1000 - level, 0),
-        ['big-'] = (level - 500) * 2,
-        ['behemoth-'] = (level - 900) * 8,
+        0,
+        math_max(1000 - level, 0),
+        (level - 500) * 2,
+        (level - 900) * 8,
     }
 end
 
 local function roll(evolution_factor)
     local raffle = get_raffle_table(math_floor(evolution_factor * 1000))
-    local r = math_random(0, math_floor(raffle['small-'] + raffle['medium-'] + raffle['big-'] + raffle['behemoth-']))
+    local r = math_random(0, math_floor(raffle[1] + raffle[2] + raffle[3] + raffle[4]))
     local current_chance = 0
-    for k, v in pairs(raffle) do
-        current_chance = current_chance + v
+    for i=1, 4, 1 do
+        current_chance = current_chance + raffle[i]
         if r <= current_chance then
-            return k
+            return i
         end
     end
 end
 
 local function get_biter_name(evolution_factor)
-    return roll(evolution_factor) .. 'biter'
+    return biter_names[roll(evolution_factor)]
 end
 
 local function get_spitter_name(evolution_factor)
-    return roll(evolution_factor) .. 'spitter'
+    return spitter_names[roll(evolution_factor)]
 end
 
 local function get_worm_raffle_table(level)
