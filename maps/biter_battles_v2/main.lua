@@ -279,7 +279,7 @@ local function on_console_chat(event)
             return
         end
 
-        Functions.print_message_to_players(game.forces.spectator.players, player_name, msg, color, do_ping)
+        Functions.print_message_to_players(game.forces.spectator.connected_players, player_name, msg, color, do_ping)
     end
 
     if storage.tournament_mode then
@@ -298,8 +298,8 @@ local function on_console_chat(event)
         Muted.print_muted_message(player)
     end
     if not muted and player_force_name == 'spectator' then
-        Functions.print_message_to_players(game.forces.north.players, player_name, msg, nil, do_ping)
-        Functions.print_message_to_players(game.forces.south.players, player_name, msg, nil, do_ping)
+        Functions.print_message_to_players(game.forces.north.connected_players, player_name, msg, nil, do_ping)
+        Functions.print_message_to_players(game.forces.south.connected_players, player_name, msg, nil, do_ping)
     end
 
     discord_msg = discord_msg .. player_name .. ' (' .. player_force_name .. '): ' .. event.message

@@ -475,20 +475,18 @@ end
 function Functions.print_message_to_players(forcePlayerList, playerNameSendingMessage, msgToPrint, colorChosen, ping_fn)
     local possible_pings = Functions.extract_possible_pings(msgToPrint)
     for _, playerOfForce in pairs(forcePlayerList) do
-        if playerOfForce.connected then
-            local player_name = playerOfForce.name
-            if
-                storage.ignore_lists[player_name] == nil
-                or not storage.ignore_lists[player_name][playerNameSendingMessage]
-            then
-                if ping_fn and possible_pings[player_name] then
-                    ping_fn(playerNameSendingMessage, playerOfForce, msgToPrint)
-                end
-                if colorChosen == nil then
-                    playerOfForce.print(msgToPrint)
-                else
-                    playerOfForce.print(msgToPrint, { color = colorChosen })
-                end
+        local player_name = playerOfForce.name
+        if
+            storage.ignore_lists[player_name] == nil
+            or not storage.ignore_lists[player_name][playerNameSendingMessage]
+        then
+            if ping_fn and possible_pings[player_name] then
+                ping_fn(playerNameSendingMessage, playerOfForce, msgToPrint)
+            end
+            if colorChosen == nil then
+                playerOfForce.print(msgToPrint)
+            else
+                playerOfForce.print(msgToPrint, { color = colorChosen })
             end
         end
     end
