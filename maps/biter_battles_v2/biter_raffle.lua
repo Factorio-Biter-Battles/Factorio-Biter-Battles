@@ -18,7 +18,11 @@ local spitter_names = {
 
 local raffle_table = { 1000, 0, 0, 0 }
 local raffle_level = 0
+
 local function get_raffle_table(level)
+    if level == raffle_level then
+        return raffle_table
+    end
     if level < 500 then
         raffle_table[1] = 1000 - level * 1.75
         raffle_table[2] = math_max(-250 + level * 1.5, 0) -- only this one can be negative for level < 500
@@ -44,11 +48,7 @@ local function get_raffle_table(level)
 end
 
 local function roll(evolution_factor)
-    local level = math_floor(evolution_factor * 1000)
-    if not (level == raffle_level) then
-        get_raffle_table(level)
-    end
-    local raffle = raffle_table
+    local raffle = get_raffle_table(math_floor(evolution_factor * 1000))
     local r = math_random(0, math_floor(raffle[1] + raffle[2] + raffle[3] + raffle[4]))
     local current_chance = 0
     for i = 1, 4, 1 do
