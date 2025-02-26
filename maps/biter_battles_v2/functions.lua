@@ -483,11 +483,7 @@ function Functions.print_message_to_players(forcePlayerList, playerNameSendingMe
             if ping_fn and possible_pings[player_name] then
                 ping_fn(playerNameSendingMessage, playerOfForce, msgToPrint)
             end
-            if colorChosen == nil then
-                playerOfForce.print(msgToPrint)
-            else
-                playerOfForce.print(msgToPrint, { color = colorChosen })
-            end
+            playerOfForce.print(msgToPrint, { color = colorChosen })
         end
     end
 end
