@@ -19,7 +19,6 @@ local has_life = require('comfy_panel.special_games.limited_lives').has_life
 
 local wait_messages = Tables.wait_messages
 local food_names = Tables.gui_foods
-local automation_feed = Tables.food_values['automation-science-pack'].value * 75
 
 local math_random = math.random
 local math_abs = math.abs
