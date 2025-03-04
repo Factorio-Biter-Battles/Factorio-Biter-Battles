@@ -232,6 +232,7 @@ end
 
 ---@param player LuaPlayer
 function Public.clear_copy_history(player)
+    player.clear_cursor() -- move items from cursor stack to inventory otherwise they would be lost
     if player and player.valid and player.cursor_stack then
         for i = 1, 21 do
             -- Imports blueprint of single burner miner into the cursor stack
