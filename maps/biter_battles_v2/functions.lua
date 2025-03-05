@@ -626,14 +626,17 @@ function Functions.get_entity_contents(entity)
     return totals
 end
 
-function Functions.clear_corpses(player, param)
+---@param player LuaPlayer
+---@param radius number? #radius
+function Functions.clear_corpses(player, radius)
     if not (player and player.valid) then
         return
     end
-    param = param or storage.default_clear_corpses_radius
+    radius = radius or storage.default_clear_corpses_radius
     local pos = player.position
-    local radius = { { x = (pos.x + -param), y = (pos.y + -param) }, { x = (pos.x + param), y = (pos.y + param) } }
-    for _, entity in pairs(player.surface.find_entities_filtered({ area = radius, type = 'corpse' })) do
+    -- we could replace area with radius, as find_entities_filtered have radius key
+    local area = { { pos.x + -radius, pos.y + -radius }, { pos.x + radius, pos.y + radius } }
+    for _, entity in pairs(player.surface.find_entities_filtered({ area = area, type = 'corpse' })) do
         if entity.corpse_expires then
             entity.destroy()
         end
