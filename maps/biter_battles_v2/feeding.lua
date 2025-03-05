@@ -4,7 +4,9 @@ local Functions = require('maps.biter_battles_v2.functions')
 local Server = require('utils.server')
 local Quality = require('maps.biter_battles_v2.quality')
 local ScienceLogs = require('maps.biter_battles_v2.sciencelogs_tab')
-
+local Text = require('utils.rich_text')
+local Player = require('utils.player')
+local Table = require('utils.table')
 local tables = require('maps.biter_battles_v2.tables')
 local food_values = tables.food_values
 local force_translation = tables.force_translation
@@ -49,86 +51,6 @@ local function get_enemy_team_of(team)
     end
 end
 
-local function print_feeding_msg(player, food, flask_amount, quality)
-    local enemy = get_enemy_team_of(player.force.name)
-    if not enemy then
-        return
-    end
-
-    local colored_player_name = table.concat({
-        '[color=',
-        player.color.r * 0.6 + 0.35,
-        ',',
-        player.color.g * 0.6 + 0.35,
-        ',',
-        player.color.b * 0.6 + 0.35,
-        ']',
-        player.name,
-        '[/color]',
-    })
-    local formatted_food = table.concat({
-        '[color=',
-        food_values[food].color,
-        ']',
-        food_values[food].name,
-        ' juice[/color]',
-        '[img=item/',
-        food,
-        ']',
-    })
-
-    if Quality.enabled() then
-        formatted_food = formatted_food .. '[img=quality/' .. quality .. ']'
-    end
-
-    local formatted_amount =
-        table.concat({ '[font=heading-1][color=255,255,255]' .. flask_amount .. '[/color][/font]' })
-
-    if flask_amount >= 20 then
-        game.print(
-            table.concat({
-                colored_player_name,
-                ' fed ',
-                formatted_amount,
-                ' flasks of ',
-                formatted_food,
-                ' to ',
-                Functions.team_name_with_color(enemy),
-                "'s biters!",
-            }),
-            { color = { r = 0.9, g = 0.9, b = 0.9 } }
-        )
-        local msg = player.name .. ' fed ' .. flask_amount .. ' flasks of ' .. food_values[food].name
-        if Quality.enabled() then
-            msg = msg .. ' (' .. quality .. ')'
-        end
-        msg = msg .. ' to team ' .. enemy .. ' biters!'
-        Server.to_discord_bold(msg)
-    else
-        local target_team_text = 'the enemy'
-        if storage.training_mode then
-            target_team_text = 'your own'
-        end
-        if flask_amount == 1 then
-            player.print(
-                'You fed one flask of ' .. formatted_food .. ' to ' .. target_team_text .. " team's biters.",
-                { color = { r = 0.98, g = 0.66, b = 0.22 } }
-            )
-        else
-            player.print(
-                'You fed '
-                    .. formatted_amount
-                    .. ' flasks of '
-                    .. formatted_food
-                    .. ' to '
-                    .. target_team_text
-                    .. " team's biters.",
-                { color = { r = 0.98, g = 0.66, b = 0.22 } }
-            )
-        end
-    end
-end
-
 --- @param player LuaPlayer?
 --- @param feeding_force_name string
 --- @param food string
@@ -147,26 +69,17 @@ function Public.add_feeding_stats(
     threat_before_science_feed,
     quality
 )
-    local colored_player_name = 'unknown player'
+    local nick = 'unknown player'
     if player then
-        colored_player_name = table.concat({
-            '[color=',
-            player.color.r * 0.6 + 0.35,
-            ',',
-            player.color.g * 0.6 + 0.35,
-            ',',
-            player.color.b * 0.6 + 0.35,
-            ']',
-            player.name,
-            '[/color]',
-        })
+        local color = Player.get_accent_color(player)
+        nick = Text.colored(player.name, color)
     end
 
-    local formatted_food = table.concat({ '[color=', food_values[food].color, '][/color]', '[img=item/', food, ']' })
     local tier = Quality.TIER_DEFAULT
+    local formatted_food = Text.img('item/' .. food)
     if Quality.enabled() then
         tier = Quality.tier_index_by_name(quality)
-        formatted_food = formatted_food .. ' [img=quality/' .. quality .. ']'
+        formatted_food = formatted_food .. ' ' .. Text.quality(quality)
     end
 
     if tier == nil then
@@ -199,7 +112,7 @@ function Public.add_feeding_stats(
         local evo_jump_difference = math_round(formatted_evo_after_feed - evo_before_science_feed, 1)
         local threat_jump_difference = math_round(formatted_threat_after_feed - threat_before_science_feed, 0)
         local line_log_stats_to_add =
-            table.concat({ formatted_amount .. ' ' .. formatted_food .. ' by ' .. colored_player_name .. ' to ' })
+            table.concat({ formatted_amount .. ' ' .. formatted_food .. ' by ' .. nick .. ' to ' })
         local team_name_fed_by_science = get_enemy_team_of(feeding_force_name)
 
         if storage.science_logs_total_north == nil then
@@ -303,6 +216,237 @@ function Public.do_raw_feed(flask_amount, food, biter_force_name, tier)
     end
 end
 
+---@class InventoryContent
+---@field name string Name of an item
+---@field quality string Name of a quality level
+---@field count number Number of items
+
+---Takes specified item with quality from the inventory.
+---@param inv LuaInventory Inventory of a player
+---@param item string
+---@param quality TierEntry
+---@return InventoryContent
+local function take_from_inventory(inv, item, quality)
+    ---@type InventoryContent
+    local req = {
+        name = item,
+        quality = quality.name,
+        count = 0,
+    }
+    req.count = inv.get_item_count(req)
+    if req.count ~= 0 then
+        inv.remove(req)
+    end
+
+    return req
+end
+
+---Takes all variants of specified item regardless of it's quality from the inventory.
+---@param inv LuaInventory Inventory of a player
+---@param item string
+---@return InventoryContent[]
+local function take_from_inventory_any(inv, item)
+    local items = {}
+    Quality.for_each_tier(function(_, quality)
+        table.insert(items, take_from_inventory(inv, item, quality))
+    end)
+    return items
+end
+
+---Reentrant version of take_from_inventory_any that extends 'content'.
+---@param content InventoryContent[]?
+---@param inv LuaInventory Inventory of a player
+---@param item string
+---@return InventoryContent[]
+local function take_from_inventory_any_r(content, inv, item)
+    local delta = take_from_inventory_any(inv, item)
+    if not content then
+        return delta
+    end
+
+    for _, c in ipairs(delta) do
+        table.insert(content, c)
+    end
+
+    return content
+end
+
+---Get sum value of item count within InventoryContent[]
+---@param content InventoryContent[]
+---@return number
+local function inventory_content_sum_count(content)
+    local sum = 0
+    for _, c in ipairs(content) do
+        sum = sum + c.count
+    end
+
+    return sum
+end
+
+---Prune entries that are empty (count==0)
+---@param content InventoryContent[]
+---@return InventoryContent[]
+local function inventory_content_prune(content)
+    local new = {}
+    for _, c in ipairs(content) do
+        if c.count ~= 0 then
+            table.insert(new, c)
+        end
+    end
+
+    return new
+end
+
+---Generate relevant information about single item being feed in game chat.
+---@param content InventoryContent
+---@param player LuaPlayer
+---@param enemy string
+local function inventory_content_print_single(content, player, enemy)
+    local color = Player.get_accent_color(player)
+    local name = Text.colored(player.name, color)
+    local value = food_values[content.name]
+    local img = Text.img('item/' .. content.name)
+    local text = Text.colored(value.name .. ' juice' .. img, value.color)
+    if content.quality ~= 'normal' then
+        text = text .. Text.quality(content.quality)
+    end
+
+    ---Fills in template with information broadcasted to all players
+    ---@param nick string Name of a player
+    ---@param amount string|number Number of flasks
+    ---@param food string Food being sent
+    ---@param force string Name of a force to sent to
+    ---@return string Filled template
+    local function template_public(nick, amount, food, force)
+        if type(amount) == 'number' then
+            amount = tostring(amount)
+        end
+
+        return table.concat({ nick, ' fed ', amount, ' flasks of ', food, ' to ', force, ' biters!' })
+    end
+
+    ---Fills in template with information presented only to single player.
+    ---@param amount string Number of flasks
+    ---@param food string Food being sent
+    ---@param force string Name of a force to sent to
+    ---@return string Filled template
+    local function template_secret(amount, food, force)
+        force = Functions.team_name_with_color(force)
+        return table.concat({ 'You fed ', amount, ' flask(s) of ', food, ' to ', force, ' biters!' })
+    end
+
+    local amount = Text.font(Text.colored(content.count, { 1, 1, 1 }), 'heading-1')
+    if content.count >= 20 then
+        local col_enemy = Functions.team_name_with_color(enemy)
+        text = Text.colored(template_public(name, amount, text, col_enemy), { 0.9, 0.9, 0.9 })
+        game.print(text)
+
+        local flask = value.name
+        if Quality.enabled() then
+            flask = flask .. ' (' .. content.quality .. ')'
+        end
+
+        text = template_public(player.name, content.count, flask, enemy)
+        Server.to_discord_bold(text)
+    else
+        local force = 'the enemy'
+        if storage.training_mode then
+            force = 'your own'
+        end
+
+        text = Text.colored(template_secret(amount, text, force), { 0.98, 0.66, 0.22 })
+        player.print(text)
+    end
+end
+
+---Reentrant helper function that generated relevant information about
+---each item variant/group being sent using rich text.
+---@param message string String that will grow with each reentry.
+---@param content InventoryContent
+local function inventory_content_print_multiple_rich_r(message, content)
+    local img = Text.img('item/' .. content.name)
+    local white = { 1, 1, 1 }
+    local entry = Text.font(Text.colored(content.count, white), 'heading-1') .. img
+    if Quality.enabled() then
+        entry = entry .. Text.quality(content.quality)
+    end
+
+    return message .. entry .. ', '
+end
+
+---Print information about fed items to discord.
+---@param content InventoryContent
+---@param player LuaPlayer
+---@param enemy string
+local function inventory_content_print_multiple_discord(content, player, enemy)
+    local item = food_values[content.name].name
+    local msg = player.name .. ' fed ' .. content.count .. ' flasks of ' .. item .. ' '
+    if Quality.enabled() then
+        msg = msg .. '(' .. content.quality .. ') '
+    end
+
+    msg = msg .. 'to team ' .. enemy .. ' biters!'
+    Server.to_discord_bold(msg)
+end
+
+---Generate relevant information about multiple variants of the same item being feed.
+---@param content InventoryContent[]
+---@param player LuaPlayer
+---@param enemy string
+local function inventory_content_print_multiple(content, player, enemy)
+    local items = ''
+    for _, c in ipairs(content) do
+        items = inventory_content_print_multiple_rich_r(items, c)
+        inventory_content_print_multiple_discord(c, player, enemy)
+    end
+
+    local force = Functions.team_name_with_color(enemy)
+    local color = Player.get_accent_color(player)
+    local nick = Text.colored(player.name, color)
+    local msg = nick .. ' fed ' .. items .. 'to ' .. force .. "'s biters!"
+    msg = Text.colored(msg, { 0.9, 0.9, 0.9 })
+    game.print(msg)
+end
+
+---Display relevant information about feeding in game chat.
+---@param content InventoryContent[]
+---@param player LuaPlayer Player that does the feeding
+local function inventory_content_print(content, player)
+    local enemy = get_enemy_team_of(player.force.name)
+    if not enemy then
+        return
+    end
+
+    if #content == 1 then
+        inventory_content_print_single(content[1], player, enemy)
+    else
+        inventory_content_print_multiple(content, player, enemy)
+    end
+end
+
+---Spend available inventory content by sending it to opposite team.
+---@param content InventoryContent[]
+---@param player LuaPlayer Player that does the feeding
+local function inventory_content_spend(content, player)
+    local evo, threat = 0, 0
+    local space_sci = false
+    local p_force = player.force.name
+    local b_force = get_enemy_team_of(p_force) .. '_biters'
+    for _, c in ipairs(content) do
+        evo = storage.bb_evolution[b_force]
+        threat = storage.bb_threat[b_force]
+        Public.do_raw_feed(c.count, c.name, b_force, Quality.tier_index_by_name(c.quality))
+        Public.add_feeding_stats(player, p_force, c.name, c.count, b_force, evo, threat, c.quality)
+        if c.name == 'space-science-pack' then
+            space_sci = true
+        end
+    end
+
+    if space_sci then
+        storage.spy_fish_timeout[p_force] = game.tick + 99999999
+    end
+end
+
 --- @param player LuaPlayer
 --- @param food string
 function Public.feed_biters_from_inventory(player, food)
@@ -315,107 +459,26 @@ function Public.feed_biters_from_inventory(player, food)
         return
     end
 
-    local enemy_force_name = get_enemy_team_of(player.force.name) ---------------
-    --enemy_force_name = player.force.name
-
-    local biter_force_name = enemy_force_name .. '_biters'
-
-    local i = player.character.get_main_inventory()
-    if not i then
+    local inv = player.character.get_main_inventory()
+    if not inv then
         return
     end
 
-    local req = {
-        name = food,
-        quality = Quality.TIERS[Quality.selected_by(player)].name,
-    }
-    req.count = i.get_item_count(req)
-    if req.count == 0 then
+    local content = take_from_inventory_any(inv, food)
+    content = inventory_content_prune(content)
+    local total = inventory_content_sum_count(content)
+    if total == 0 then
         local msg = 'You have no ' .. food_values[food].name .. ' flask '
         if Quality.enabled() then
-            msg = msg .. 'of ' .. req.quality .. ' quality '
+            msg = msg .. 'of any quality '
         end
-        player.print(msg .. 'in your inventory.', { color = { r = 0.98, g = 0.66, b = 0.22 } })
-        return
-    end
-    i.remove(req)
-
-    print_feeding_msg(player, food, req.count, req.quality)
-    local evolution_before_feed = storage.bb_evolution[biter_force_name]
-    local threat_before_feed = storage.bb_threat[biter_force_name]
-
-    Public.do_raw_feed(req.count, food, biter_force_name, Quality.selected_by(player))
-    Public.add_feeding_stats(
-        player,
-        player.force.name,
-        food,
-        req.count,
-        biter_force_name,
-        evolution_before_feed,
-        threat_before_feed,
-        req.quality
-    )
-
-    if food == 'space-science-pack' then
-        storage.spy_fish_timeout[player.force.name] = game.tick + 99999999
-    end
-end
-
----@param player LuaPlayer
----@param inventory LuaInventory
----@param enemy_force string
----@param biter_force string
----@param food string
----@param tier number
----@param msg string
-local function spend_food(player, inventory, enemy_force, biter_force, food, tier, msg)
-    local evolution_before_feed = storage.bb_evolution[biter_force]
-    local threat_before_feed = storage.bb_threat[biter_force]
-
-    local req = {
-        name = food,
-        quality = Quality.TIERS[tier].name,
-    }
-    req.count = inventory.get_item_count(req)
-    if req.count == 0 then
+        msg = msg .. 'in your inventory.'
+        player.print(Text.colored(msg, { 0.98, 0.66, 0.22 }))
         return
     end
 
-    local entry = '[font=heading-1][color=255,255,255]'
-        .. req.count
-        .. '[/color][/font]'
-        .. '[img=item.'
-        .. food
-        .. '] '
-    if Quality.enabled() then
-        entry = entry .. '[img=quality/' .. req.quality .. '] '
-    end
-    entry = entry .. ','
-    table.insert(msg, entry)
-
-    entry = player.name .. ' fed ' .. req.count .. ' flasks of ' .. food_values[food].name
-    if Quality.enabled() then
-        entry = entry .. ' (' .. req.quality .. ')'
-    end
-    entry = entry .. ' to team ' .. enemy_force .. ' biters!'
-    Server.to_discord_bold(entry)
-
-    Public.do_raw_feed(req.count, food, biter_force, tier)
-    Public.add_feeding_stats(
-        player,
-        player.force.name,
-        food,
-        req.count,
-        biter_force,
-        evolution_before_feed,
-        threat_before_feed,
-        req.quality
-    )
-
-    inventory.remove(req)
-    if food == 'space-science-pack' then
-        storage.spy_fish_timeout[player.force.name] = game.tick + 99999999
-    end
+    inventory_content_print(content, player)
+    inventory_content_spend(content, player)
 end
 
 --- @param player LuaPlayer
@@ -429,57 +492,46 @@ function Public.feed_biters_mixed_from_inventory(player, button)
         player.print('Please wait for voting to finish before feeding')
         return
     end
-    local enemy_force_name = get_enemy_team_of(player.force.name)
-    local biter_force_name = enemy_force_name .. '_biters'
-    local food = {
-        'automation-science-pack',
-        'logistic-science-pack',
-        'military-science-pack',
-        'chemical-science-pack',
-        'production-science-pack',
-        'utility-science-pack',
-        'space-science-pack',
-    }
-    if button == defines.mouse_button_type.right then
-        food = {
-            'space-science-pack',
-            'utility-science-pack',
-            'production-science-pack',
-            'chemical-science-pack',
-            'military-science-pack',
-            'logistic-science-pack',
-            'automation-science-pack',
-        }
-    end
-    local i = player.character.get_main_inventory()
-    if not i then
-        return
-    end
-    local colored_player_name = table.concat({
-        '[color=',
-        player.color.r * 0.6 + 0.35,
-        ',',
-        player.color.g * 0.6 + 0.35,
-        ',',
-        player.color.b * 0.6 + 0.35,
-        ']',
-        player.name,
-        '[/color]',
-    })
-    local message = { colored_player_name, ' fed ' }
-    local tiers = Quality.max_tier()
-    for _, v in pairs(food) do
-        for tier = 1, tiers do
-            spend_food(player, i, enemy_force_name, biter_force_name, v, tier, message)
+
+    ---Reverse elements in an array.
+    ---@param arr table
+    local function reverse(arr)
+        local i = 1
+        local new = {}
+        for j = #arr, 1, -1 do
+            new[i] = arr[j]
+            i = i + 1
         end
+
+        return new
     end
 
-    if #message == 2 then
-        player.print('You have no flasks in your inventory', { color = { r = 0.98, g = 0.66, b = 0.22 } })
+    local food = Table.keys(tables.food_values)
+    if button == defines.mouse_button_type.right then
+        food = reverse(food)
+    end
+
+    local inv = player.character.get_main_inventory()
+    if not inv then
         return
     end
-    table.insert(message, 'to ' .. Functions.team_name_with_color(enemy_force_name) .. "'s biters!")
-    game.print(table.concat(message), { color = { r = 0.9, g = 0.9, b = 0.9 } })
+
+    local content = nil
+    for _, v in ipairs(food) do
+        content = take_from_inventory_any_r(content, inv, v)
+    end
+    content = inventory_content_prune(content)
+
+    local total = inventory_content_sum_count(content)
+    if total == 0 then
+        local msg = 'You have no flasks in your inventory'
+        msg = Text.colored(msg, { 0.98, 0.66, 0.22 })
+        player.print(msg)
+        return
+    end
+
+    inventory_content_print(content, player)
+    inventory_content_spend(content, player)
 end
 
 local function calc_send(cmd)

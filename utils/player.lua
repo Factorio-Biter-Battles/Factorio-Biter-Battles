@@ -16,6 +16,19 @@ local function get_or_create_dummy_player(playerName)
         }
 end
 
+---Get slightly modified color of a player biased towards #7f7f7f.
+---Prevents color too be either to bright or dark.
+---@param player LuaPlayer
+---@return number[]
+function Public.get_accent_color(player)
+    local color = player.color
+    return {
+        color.r * 0.6 + 0.35,
+        color.g * 0.6 + 0.35,
+        color.b * 0.6 + 0.35,
+    }
+end
+
 ---@param player_list LuaPlayer[]
 ---@return string[]
 function Public.get_colored_player_list(player_list)

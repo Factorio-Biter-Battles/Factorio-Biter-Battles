@@ -1,21 +1,15 @@
 -- feed values tab --
 
 local Tables = require('maps.biter_battles_v2.tables')
+local Text = require('utils.rich_text')
 local ItemCosts = require('maps.biter_battles_v2.item_costs')
 local food_values = Tables.food_values
 local food_long_and_short = Tables.food_long_and_short
 local Tabs = require('comfy_panel.main')
 
 local function get_science_text(food_name, food_short_name)
-    return table.concat({
-        '[img=item/',
-        food_name,
-        '][color=',
-        food_values[food_name].color,
-        ']',
-        food_short_name,
-        '[/color]',
-    })
+    local color = food_values[food_name].color
+    return Text.img('item/' .. food_name) .. Text.colored(food_short_name, color)
 end
 
 local debug = false

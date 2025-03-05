@@ -4,6 +4,7 @@ local Tabs = require('comfy_panel.main')
 local tables = require('maps.biter_battles_v2.tables')
 local Quality = require('maps.biter_battles_v2.quality')
 local Functions = require('maps.biter_battles_v2.functions')
+local Text = require('utils.rich_text')
 local event = require('utils.event')
 local bb_config = require('maps.biter_battles_v2.config')
 local food_values = tables.food_values
@@ -23,15 +24,8 @@ local function initialize_dropdown_users_choice()
 end
 
 local function get_science_text(food_name, food_short_name)
-    return table.concat({
-        '[img=item/',
-        food_name,
-        '][color=',
-        food_values[food_name].color,
-        ']',
-        food_short_name,
-        '[/color]',
-    })
+    local text = Text.img('item/' .. food_name)
+    return text .. Text.colored(food_short_name, food_values[food_name].color)
 end
 
 ---@alias ScienceTotal { [number]: {[number]: number}}
