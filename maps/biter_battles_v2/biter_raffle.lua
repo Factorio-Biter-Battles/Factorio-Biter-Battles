@@ -3,6 +3,11 @@ local math_random = math.random
 local math_floor = math.floor
 local math_max = math.max
 
+local SMALL = 1
+local MEDIUM = 2
+local BIG = 3
+local BEHEMOTH = 4
+
 local biter_names = {
     'small-biter',
     'medium-biter',
@@ -24,32 +29,32 @@ local function get_raffle_table(level)
         return raffle_table
     end
     if level < 500 then
-        raffle_table[1] = 1000 - level * 1.75
-        raffle_table[2] = math_max(-250 + level * 1.5, 0) -- only this one can be negative for level < 500
-        raffle_table[3] = 0
-        raffle_table[4] = 0
+        raffle_table[SMALL] = 1000 - level * 1.75
+        raffle_table[MEDIUM] = math_max(-250 + level * 1.5, 0) -- only this one can be negative for level < 500
+        raffle_table[BIG] = 0
+        raffle_table[BEHEMOTH] = 0
         raffle_level = level
         return raffle_table
     end
     if level < 900 then
-        raffle_table[1] = math_max(1000 - level * 1.75, 0) -- only this one can be negative for level < 900
-        raffle_table[2] = 1000 - level
-        raffle_table[3] = (level - 500) * 2
-        raffle_table[4] = 0
+        raffle_table[SMALL] = math_max(1000 - level * 1.75, 0) -- only this one can be negative for level < 900
+        raffle_table[MEDIUM] = 1000 - level
+        raffle_table[BIG] = (level - 500) * 2
+        raffle_table[BEHEMOTH] = 0
         raffle_level = level
         return raffle_table
     end
-    raffle_table[1] = 0
-    raffle_table[2] = math_max(1000 - level, 0)
-    raffle_table[3] = (level - 500) * 2
-    raffle_table[4] = (level - 900) * 8
+    raffle_table[SMALL] = 0
+    raffle_table[MEDIUM] = math_max(1000 - level, 0)
+    raffle_table[BIG] = (level - 500) * 2
+    raffle_table[BEHEMOTH] = (level - 900) * 8
     raffle_level = level
     return raffle_table
 end
 
 local function roll(evolution_factor)
     local raffle = get_raffle_table(math_floor(evolution_factor * 1000))
-    local r = math_random(0, math_floor(raffle[1] + raffle[2] + raffle[3] + raffle[4]))
+    local r = math_random(0, math_floor(raffle[SMALL] + raffle[MEDIUM] + raffle[BIG] + raffle[BEHEMOTH]))
     local current_chance = 0
     for i = 1, 4, 1 do
         current_chance = current_chance + raffle[i]
