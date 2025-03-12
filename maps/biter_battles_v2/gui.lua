@@ -17,7 +17,6 @@ local TeamStatsCompare = require('maps.biter_battles_v2.team_stats_compare')
 local gui_style = require('utils.utils').gui_style
 local has_life = require('comfy_panel.special_games.limited_lives').has_life
 
-local wait_messages = Tables.wait_messages
 local food_names = Tables.gui_foods
 
 local math_random = math.random
