@@ -58,16 +58,6 @@ Public.enemy_team_of = {
     ['south'] = 'north',
 }
 
-Public.wait_messages = {
-    'Once upon a dreary night...',
-    'Nevermore.',
-    'go and grab a drink.',
-    'take a short healthy break.',
-    'go and stretch your legs.',
-    'please pet the cat.',
-    'time to get a bowl of snacks :3',
-}
-
 Public.food_names = {
     ['automation-science-pack'] = true,
     ['logistic-science-pack'] = true,
