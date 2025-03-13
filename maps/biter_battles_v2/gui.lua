@@ -233,7 +233,7 @@ local function get_captain_caption(force)
 end
 
 ---@param player LuaPlayer
-function Public.clear_copy_history(player)    
+function Public.clear_copy_history(player)
     if player and player.valid and player.cursor_stack then
         player.clear_cursor() -- move items from cursor stack to inventory otherwise they would be lost
         for i = 1, 21 do
