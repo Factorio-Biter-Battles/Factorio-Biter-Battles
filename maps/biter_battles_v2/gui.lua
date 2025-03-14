@@ -1128,9 +1128,7 @@ function spectate(player, forced_join, stored_position)
             end
         end
     end
-    if player.spectator then
-        return
-    end
+
     if not forced_join then
         if storage.tournament_mode and not storage.active_special_games.captain_mode then
             player.print(
