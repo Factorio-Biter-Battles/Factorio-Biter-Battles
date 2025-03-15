@@ -3,7 +3,6 @@ local Session = require('utils.datastore.session_data')
 local Color_fail = require('utils.color_presets').fail
 local Color_warning = require('utils.color_presets').warning
 
-local untrusted_max_radius = storage.default_clear_corpses_radius
 local trusted_max_radius = 500
 
 local function clear_corpses(cmd)
@@ -15,12 +14,13 @@ local function clear_corpses(cmd)
         return
     end
 
-    if not trusted[player.name] and not player.admin and param > untrusted_max_radius then
+    if not trusted[player.name] and not player.admin and param > storage.default_clear_corpses_radius then
         player.print(
-            '[INFO] Replaced radius with max allowable value for untrusted players: ' .. untrusted_max_radius,
+            '[INFO] Replaced radius with max allowable value for untrusted players: '
+                .. storage.default_clear_corpses_radius,
             { color = Color_warning }
         )
-        param = untrusted_max_radius
+        param = storage.default_clear_corpses_radius
     end
     if param < 0 then
         player.print('[ERROR] Value must be positive.', { color = Color_fail })
