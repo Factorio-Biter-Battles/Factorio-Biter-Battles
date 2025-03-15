@@ -693,34 +693,6 @@ local function on_area_cloned(event)
     end
 end
 
-local function clear_corpses(cmd)
-    local player = game.player
-    local trusted = Session.get_trusted_table()
-    local param = tonumber(cmd.parameter)
-
-    if not player or not player.valid then
-        return
-    end
-    if param == nil then
-        player.print('[ERROR] Must specify radius!', { color = Color.fail })
-        return
-    end
-    if not trusted[player.name] and not player.admin and param > 100 then
-        player.print('[ERROR] Value is too big. Max radius is 100', { color = Color.fail })
-        return
-    end
-    if param < 0 then
-        player.print('[ERROR] Value is too low.', { color = Color.fail })
-        return
-    end
-    if param > 500 then
-        player.print('[ERROR] Value is too big.', { color = Color.fail })
-        return
-    end
-
-    Functions.clear_corpses(player, param)
-end
-
 local function on_init()
     Init.tables()
     Init.initial_setup()
@@ -753,5 +725,3 @@ Event.add(defines.events.on_tick, on_tick)
 Event.on_init(on_init)
 
 require('utils.ui.gui-lite').handle_events()
-
-commands.add_command('clear-corpses', 'Clears all the biter corpses..', clear_corpses)
