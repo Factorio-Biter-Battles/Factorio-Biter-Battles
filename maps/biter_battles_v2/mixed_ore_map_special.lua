@@ -261,7 +261,9 @@ function Public.get_tile_generator(surface, chunk_pos)
     local type = storage.special_games_variables['mixed_ore_map']['type']
     local size = storage.special_games_variables['mixed_ore_map']['size']
 
-    if type == 1 then
+    if type == 0 then
+        return false
+    elseif type == 1 then
         local size = 1 + size
         return function(x, y, rng)
             generate_mixed_ore_tile(can_place_entity, create_entity, seed, x, y, rng, size)
