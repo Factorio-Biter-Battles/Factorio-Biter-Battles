@@ -1,5 +1,44 @@
 return {
     {
+        number = 707,
+        date = '2025-03-14',
+        author = 'Max1000',
+        comment = [[(#707) Fix an issue where an item held by the player was lost if they disconnected]],
+    },
+    {
+        number = 710,
+        date = '2025-03-14',
+        author = 'cogito123',
+        comment = [[(#710) Balance mutagen values:
+  - Increase mutagen value of [item=chemical-science-pack] by 4%
+  - Increase mutagen value of [item=utility-science-pack] by 2%
+  - Decrease mutagen value of [item=production-science-pack] by 2%]],
+    },
+    {
+        number = 703,
+        date = '2025-03-14',
+        author = 'TheBigZet',
+        comment = [[(#703) Fix a desync issue when running the profiler in multiplayer]],
+    },
+    {
+        number = 706,
+        date = '2025-03-14',
+        author = 'TheBigZet',
+        comment = [[(#706) Prevent messages from being printed to disconnected players when using /nth, /sth, or /spectator-chat]],
+    },
+    {
+        number = 705,
+        date = '2025-03-14',
+        author = 'TheBigZet',
+        comment = [[(#705) Follow-up optimization for #692]],
+    },
+    {
+        number = 709,
+        date = '2025-03-14',
+        author = 'morganc',
+        comment = [[(#709) Remove some unused code]],
+    },
+    {
         number = 692,
         date = '2025-02-22',
         author = 'TheBigZet',
@@ -582,7 +621,7 @@ return {
     {
         number = 586,
         date = '2024-08-07',
-        author = 'PlayerNoon',
+        author = 'Max1000',
         comment = [[(#586) You can turn off flashlight in config]],
     },
     {
@@ -594,7 +633,7 @@ return {
     {
         number = 584,
         date = '2024-08-06',
-        author = 'PlayerNoon',
+        author = 'Max1000',
         comment = [[(#584) add message for discord server chat when match starts]],
     },
     {
@@ -612,13 +651,13 @@ return {
     {
         number = 578,
         date = '2024-08-06',
-        author = 'PlayerNoon',
+        author = 'Max1000',
         comment = [[(#578) now can't join team if reroll didn't end.]],
     },
     {
         number = 579,
         date = '2024-08-06',
-        author = 'PlayerNoon',
+        author = 'Max1000',
         comment = [[(#579) Synchronize voting time with displayed time in gui.]],
     },
     {
@@ -660,7 +699,7 @@ return {
     {
         number = 573,
         date = '2024-07-19',
-        author = 'PlayerNoon',
+        author = 'Max1000',
         comment = [[(#573) Fix, prevent voting same difficulty: Now also in captains.]],
     },
     {
@@ -714,7 +753,7 @@ return {
     {
         number = 556,
         date = '2024-07-13',
-        author = 'PlayerNoon',
+        author = 'Max1000',
         comment = [[(#556) burners-balance. now player drop burners when left game]],
     },
     {
@@ -762,7 +801,7 @@ return {
     {
         number = 552,
         date = '2024-07-08',
-        author = 'PlayerNoon',
+        author = 'Max1000',
         comment = [[(#552) Special games, add ore pattern  in mixed ore]],
     },
     {
@@ -804,7 +843,7 @@ return {
     {
         number = 546,
         date = '2024-07-03',
-        author = 'PlayerNoon',
+        author = 'Max1000',
         comment = [[(#546) implement burners balance.]],
     },
     {
@@ -1524,13 +1563,13 @@ return {
     {
         number = 352,
         date = '2023-10-03',
-        author = 'PlayerNoon',
+        author = 'Max1000',
         comment = [[(#352) Introduce map reroll]],
     },
     {
         number = 354,
         date = '2023-10-03',
-        author = 'PlayerNoon',
+        author = 'Max1000',
         comment = [[(#354) Special game disable sciences from sending]],
     },
     {
@@ -1596,7 +1635,7 @@ return {
     {
         number = 356,
         date = '2023-01-29',
-        author = 'PlayerNoon',
+        author = 'Max1000',
         comment = [[(#356) fix autounlock uranium ammo after sulfur reaserch]],
     },
     {
@@ -1626,13 +1665,13 @@ return {
     {
         number = 338,
         date = '2023-01-26',
-        author = 'PlayerNoon',
+        author = 'Max1000',
         comment = [[(#338) fix team name on biters spotted]],
     },
     {
         number = 336,
         date = '2023-01-26',
-        author = 'PlayerNoon',
+        author = 'Max1000',
         comment = [[(#336) difficulty_vote: prevent voting same difficulty.]],
     },
     {
