@@ -163,7 +163,7 @@ local function show_endgame_gui(player)
             maximal_height = 180,
         })
 
-        local icon = subheader.add({
+        subheader.add({
             type = 'sprite-button',
             sprite = 'utility/side_menu_achievements_icon',
             style = 'transparent_slot',
@@ -178,7 +178,7 @@ local function show_endgame_gui(player)
         )
 
         Gui.add_pusher(subheader)
-        local icon = subheader.add({
+        subheader.add({
             type = 'sprite-button',
             sprite = 'utility/side_menu_achievements_icon',
             style = 'transparent_slot',
@@ -202,16 +202,14 @@ local function show_endgame_gui(player)
         local subheader = inner_frame.add({ type = 'frame', style = 'subheader_frame' })
         gui_style(subheader, { horizontally_squashable = true, maximal_height = 40, use_header_filler = true })
 
-        local icon =
-            subheader.add({ type = 'sprite-button', sprite = 'utility/empty_armor_slot', style = 'transparent_slot' })
+        subheader.add({ type = 'sprite-button', sprite = 'utility/empty_armor_slot', style = 'transparent_slot' })
         Gui.add_pusher(subheader)
 
         local label = subheader.add({ type = 'label', caption = 'MVPs' })
         gui_style(label, { font = 'default-semibold', font_color = { 165, 165, 165 }, left_margin = 4 })
 
         Gui.add_pusher(subheader)
-        local icon =
-            subheader.add({ type = 'sprite-button', sprite = 'utility/empty_armor_slot', style = 'transparent_slot' })
+        subheader.add({ type = 'sprite-button', sprite = 'utility/empty_armor_slot', style = 'transparent_slot' })
 
         local sp =
             inner_frame.add({ type = 'scroll-pane', style = 'scroll_pane_under_subheader', direction = 'vertical' })
@@ -224,41 +222,46 @@ local function show_endgame_gui(player)
 
             local t = f.add({ type = 'table', column_count = 2 })
 
-            local l = t.add({ type = 'label', caption = 'Defender >> ' })
-            gui_style(l, category_style)
+            gui_style(t.add({ type = 'label', caption = 'Defender >> ' }), category_style)
 
-            local l =
-                t.add({ type = 'label', caption = mvp.killscore.name .. ' with a score of ' .. mvp.killscore.score })
-            gui_style(l, winner_style)
+            gui_style(
+                t.add({ type = 'label', caption = { '', mvp.killscore.name, ' with a score of ', mvp.killscore.score } }),
+                winner_style
+            )
 
-            local l = t.add({ type = 'label', caption = 'Builder >> ' })
-            gui_style(l, category_style)
+            gui_style(t.add({ type = 'label', caption = 'Builder >> ' }), category_style)
 
-            local l = t.add({
-                type = 'label',
-                caption = mvp.built_entities.name .. ' built ' .. mvp.built_entities.score .. ' things',
-            })
-            gui_style(l, winner_style)
+            gui_style(
+                t.add({
+                    type = 'label',
+                    caption = { '', mvp.built_entities.name, ' built ', mvp.built_entities.score, ' things' },
+                }),
+                winner_style
+            )
 
-            local l = t.add({ type = 'label', caption = 'Deaths >> ' })
-            gui_style(l, category_style)
+            gui_style(t.add({ type = 'label', caption = 'Deaths >> ' }), category_style)
 
-            local l = t.add({ type = 'label', caption = mvp.deaths.name .. ' died ' .. mvp.deaths.score .. ' times' })
-            gui_style(l, winner_style)
+            gui_style(
+                t.add({ type = 'label', caption = { '', mvp.deaths.name, ' died ', mvp.deaths.score, ' times' } }),
+                winner_style
+            )
 
             if not storage.results_sent_north then
-                local result = {}
-                table.insert(result, 'NORTH: \\n')
-                table.insert(result, 'MVP Defender: \\n')
-                table.insert(result, mvp.killscore.name .. ' with a score of ' .. mvp.killscore.score .. '\\n')
-                table.insert(result, '\\n')
-                table.insert(result, 'MVP Builder: \\n')
-                table.insert(result, mvp.built_entities.name .. ' built ' .. mvp.built_entities.score .. ' things\\n')
-                table.insert(result, '\\n')
-                table.insert(result, 'MVP Deaths: \\n')
-                table.insert(result, mvp.deaths.name .. ' died ' .. mvp.deaths.score .. ' times')
-                local message = table.concat(result)
-                Server.to_discord_embed(message)
+                Server.to_discord_embed(table.concat({
+                    'NORTH: \\nMVP Defender: \\n',
+                    mvp.killscore.name,
+                    ' with a score of ',
+                    mvp.killscore.score,
+                    '\\n\\nMVP Builder: \\n',
+                    mvp.built_entities.name,
+                    ' built ',
+                    mvp.built_entities.score,
+                    ' things\\n\\nMVP Deaths: \\n',
+                    mvp.deaths.name,
+                    ' died ',
+                    mvp.deaths.score,
+                    ' times',
+                }))
                 storage.results_sent_north = true
             end
         end
@@ -271,41 +274,46 @@ local function show_endgame_gui(player)
 
             local t = f.add({ type = 'table', column_count = 2 })
 
-            local l = t.add({ type = 'label', caption = 'Defender >> ' })
-            gui_style(l, category_style)
+            gui_style(t.add({ type = 'label', caption = 'Defender >> ' }), category_style)
 
-            local l =
-                t.add({ type = 'label', caption = mvp.killscore.name .. ' with a score of ' .. mvp.killscore.score })
-            gui_style(l, winner_style)
+            gui_style(
+                t.add({ type = 'label', caption = { '', mvp.killscore.name, ' with a score of ', mvp.killscore.score } }),
+                winner_style
+            )
 
-            local l = t.add({ type = 'label', caption = 'Builder >> ' })
-            gui_style(l, category_style)
+            gui_style(t.add({ type = 'label', caption = 'Builder >> ' }), category_style)
 
-            local l = t.add({
-                type = 'label',
-                caption = mvp.built_entities.name .. ' built ' .. mvp.built_entities.score .. ' things',
-            })
-            gui_style(l, winner_style)
+            gui_style(
+                t.add({
+                    type = 'label',
+                    caption = { '', mvp.built_entities.name, ' built ', mvp.built_entities.score, ' things' },
+                }),
+                winner_style
+            )
 
-            local l = t.add({ type = 'label', caption = 'Deaths >> ' })
-            gui_style(l, category_style)
+            gui_style(t.add({ type = 'label', caption = 'Deaths >> ' }), category_style)
 
-            local l = t.add({ type = 'label', caption = mvp.deaths.name .. ' died ' .. mvp.deaths.score .. ' times' })
-            gui_style(l, winner_style)
+            gui_style(
+                t.add({ type = 'label', caption = { '', mvp.deaths.name, ' died ', mvp.deaths.score, ' times' } }),
+                winner_style
+            )
 
             if not storage.results_sent_south then
-                local result = {}
-                table.insert(result, 'SOUTH: \\n')
-                table.insert(result, 'MVP Defender: \\n')
-                table.insert(result, mvp.killscore.name .. ' with a score of ' .. mvp.killscore.score .. '\\n')
-                table.insert(result, '\\n')
-                table.insert(result, 'MVP Builder: \\n')
-                table.insert(result, mvp.built_entities.name .. ' built ' .. mvp.built_entities.score .. ' things\\n')
-                table.insert(result, '\\n')
-                table.insert(result, 'MVP Deaths: \\n')
-                table.insert(result, mvp.deaths.name .. ' died ' .. mvp.deaths.score .. ' times')
-                local message = table.concat(result)
-                Server.to_discord_embed(message)
+                Server.to_discord_embed(table.concat({
+                    'SOUTH: \\nMVP Defender: \\n',
+                    mvp.killscore.name,
+                    ' with a score of ',
+                    mvp.killscore.score,
+                    '\\n\\nMVP Builder: \\n',
+                    mvp.built_entities.name,
+                    ' built ',
+                    mvp.built_entities.score,
+                    ' things\\n\\nMVP Deaths: \\n',
+                    mvp.deaths.name,
+                    ' died ',
+                    mvp.deaths.score,
+                    ' times',
+                }))
                 storage.results_sent_south = true
             end
         end
@@ -448,9 +456,7 @@ function Public.silo_death(event)
 
         set_victory_time()
         team_stats_compare.game_over()
-        local north_players = 'NORTH PLAYERS: \\n'
-        local south_players = 'SOUTH PLAYERS: \\n'
-
+        local players = { north = { 'NORTH PLAYERS: \\n' }, south = { 'SOUTH PLAYERS: \\n' } }
         for _, player in pairs(game.connected_players) do
             player.play_sound({ path = 'utility/game_won', volume_modifier = 1 })
             local main_frame = Gui.get_left_element(player, 'bb_main_gui')
@@ -458,11 +464,8 @@ function Public.silo_death(event)
                 main_frame.visible = false
             end
             show_endgame_gui(player)
-            if player.force.name == 'south' then
-                south_players = south_players .. player.name .. '   '
-            elseif player.force.name == 'north' then
-                north_players = north_players .. player.name .. '   '
-            end
+
+            table.insert(players[player.force.name], player.name) --players with force other than north or south should automatically fall into other, unused fields
         end
 
         storage.spy_fish_timeout.north = game.tick + 999999
@@ -482,22 +485,18 @@ function Public.silo_death(event)
             ' has won! ***',
             '\\n',
             storage.victory_time,
-            '\\n\\n',
-            'North Evo: ',
+            '\\n\\nNorth Evo: ',
             north_evo,
-            '%\\n',
-            'North Threat: ',
+            '%\\nNorth Threat: ',
             north_threat,
-            '\\n\\n',
-            'South Evo: ',
+            '\\n\\nSouth Evo: ',
             south_evo,
-            '%\\n',
-            'South Threat: ',
+            '%\\nSouth Threat: ',
             south_threat,
             '\\n\\n',
-            north_players,
+            table.concat(players.north, '    '),
             '\\n\\n',
-            south_players,
+            table.concat(players.south, '    '),
         })
 
         Server.to_discord_embed(discord_message)
@@ -519,39 +518,62 @@ function Public.silo_death(event)
                 Server.send_special_game_state('[CAPTAIN-SPECIAL]')
             end
             log_to_db('>Game has ended\n', false)
-            log_to_db('[RefereeName]' .. special.stats.InitialReferee .. '\n', true)
-            if special.stats.NorthInitialCaptain then
-                log_to_db('[CaptainNorth]' .. special.stats.NorthInitialCaptain .. '\n', true)
-            end
-            if special.stats.SouthInitialCaptain then
-                log_to_db('[CaptainSouth]' .. special.stats.SouthInitialCaptain .. '\n', true)
-            end
-            local listPicks = table.concat(special.stats.northPicks, ';')
-            log_to_db('[NorthTeam]' .. listPicks .. '\n', true)
-            listPicks = table.concat(special.stats.southPicks, ';')
-            log_to_db('[SouthTeam]' .. listPicks .. '\n', true)
-            log_to_db('[Gamelength]' .. game.ticks_played .. '\n', true)
-            log_to_db('[StartTick]' .. special.stats.tickGameStarting .. '\n', true)
-            log_to_db('[WinnerTeam]' .. storage.bb_game_won_by_team .. '\n', true)
-            log_to_db('[ExtraInfo]' .. special.stats.extrainfo .. '\n', true)
-            log_to_db('[SpecialEnabled]' .. special.stats.specialEnabled .. '\n', true)
-            log_to_db('[CommunityPickMode]' .. tostring(special.communityPickingMode) .. '\n', true)
+
+            local log_message = {
+                '[RefereeName]',
+                special.stats.InitialReferee,
+                '\n',
+                (special.stats.NorthInitialCaptain and ('[CaptainNorth]' .. special.stats.NorthInitialCaptain .. '\n'))
+                    or '',
+                (special.stats.SouthInitialCaptain and ('[CaptainSouth]' .. special.stats.SouthInitialCaptain .. '\n'))
+                    or '',
+                '[NorthTeam]',
+                table.concat(special.stats.northPicks, ';'),
+                '\n[SouthTeam]',
+                table.concat(special.stats.southPicks, ';'),
+                '\n[Gamelength]',
+                game.ticks_played,
+                '\n[StartTick]',
+                special.stats.tickGameStarting,
+                '\n[WinnerTeam]',
+                storage.bb_game_won_by_team,
+                '\n[ExtraInfo]',
+                special.stats.extrainfo,
+                '\n[SpecialEnabled]',
+                special.stats.specialEnabled,
+                '\n[CommunityPickMode]',
+                tostring(special.communityPickingMode),
+                '\n',
+            }
+
             for _, player in pairs(game.players) do
                 if player.connected and (player.force.name == 'north' or player.force.name == 'south') then
                     Captain_special.captain_log_end_time_player(player)
                 end
                 if special.stats.playerPlaytimes[player.name] ~= nil then
-                    log_to_db(
-                        '[Playtime][' .. player.name .. ']' .. special.stats.playerPlaytimes[player.name] .. '\n',
-                        true
+                    table.insert(
+                        log_message,
+                        table.concat({
+                            '[Playtime][',
+                            player.name,
+                            ']',
+                            special.stats.playerPlaytimes[player.name],
+                            '\n',
+                        })
                     )
                 end
             end
             if special.stats.communityPickInfo then
-                log_to_db('[CommunityPickInfo]' .. helpers.table_to_json(special.stats.communityPickInfo) .. '\n', true)
+                table.insert(
+                    log_message,
+                    table.concat({ '[CommunityPickInfo]', helpers.table_to_json(special.stats.communityPickInfo), '\n' })
+                )
             end
-            log_to_db('[TeamStats]' .. helpers.table_to_json(storage.team_stats) .. '\n', true)
-            log_to_db('>End of log', true)
+            table.insert(
+                log_message,
+                table.concat({ '[TeamStats]', helpers.table_to_json(storage.team_stats), '\n>End of log' })
+            )
+            log_to_db(log_message, true)
         end
     end
 end
@@ -574,8 +596,7 @@ local function chat_with_everyone(event)
     if not enemy then
         return
     end
-    local message = player.name .. '[auto-shout]: ' .. event.message
-    game.forces[enemy].print(message, { color = player.chat_color })
+    game.forces[enemy].print({ '', player.name, '[auto-shout]: ', event.message }, { color = player.chat_color })
 end
 
 ---@return number, number, number #success percent[0-1], yes count, no count
