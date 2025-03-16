@@ -5,6 +5,7 @@ local ClosableFrame = require('utils.ui.closable_frame')
 local Color = require('utils.color_presets')
 local ComfyPanelGroup = require('comfy_panel.group')
 local DifficultyVote = require('maps.biter_battles_v2.difficulty_vote')
+local DraftTimer = require('maps.biter_battles_v2.draft_timer')
 local Event = require('utils.event')
 local Functions = require('maps.biter_battles_v2.functions')
 local Gui = require('utils.gui')
@@ -185,6 +186,7 @@ local function clear_gui_captain_mode()
         end
         storage.captain_ui[player.name] = {}
     end
+    DraftTimer.disable()
 end
 
 local function clear_character_corpses()
@@ -402,6 +404,7 @@ local function poll_alternate_picking(player, force_name, location)
         'captain_player_picked_Magical1@StringHere',
         location
     )
+    DraftTimer.switch_turn(force_name)
 end
 
 local function render_text(textId, textChosen, targetPos, color, scaleChosen, fontChosen)
@@ -1177,6 +1180,7 @@ function Public.end_of_picking_phase()
             )
         end
     end
+    DraftTimer.disable()
     special.nextAutoPickTicks = Functions.get_ticks_since_game_start() + special.autoPickIntervalTicks
     if special.prepaPhase then
         game.print(
@@ -1283,6 +1287,7 @@ local function start_picking_phase()
             next_pick_force = math_random() < northThreshold and 'north' or 'south'
             log('Next force to pick: ' .. next_pick_force)
         end
+        DraftTimer.enable()
         poll_alternate_picking(Public.get_player_to_make_pick(next_pick_force), next_pick_force)
     end
     Public.update_all_captain_player_guis()
@@ -1963,6 +1968,17 @@ local function on_gui_click(event)
         Public.update_all_captain_player_guis()
     elseif name == 'captain_willingness_confirm' then
         element.parent.parent.destroy()
+    elseif name == 'draft_timer_enable' then
+        DraftTimer.enable()
+        DraftTimer.switch_turn((event.button == defines.mouse_button_type.left) and 'north' or 'south')
+    elseif name == 'draft_timer_disable' then
+        DraftTimer.disable()
+    elseif name == 'draft_timer_pause' then
+        DraftTimer.pause()
+    elseif name == 'draft_timer_unpause' then
+        DraftTimer.unpause()
+    elseif starts_with(name, 'draft_timer_change') then
+        DraftTimer.change_time(element.tags.time)
     end
 end
 
@@ -2063,6 +2079,7 @@ end
 local function every_1sec(event)
     local special = storage.special_games_variables.captain_mode
     if special then
+        -- Captain Willingness
         for _, force_name in pairs({ 'north', 'south' }) do
             local willingness = special.captainWillingness[force_name]
             if willingness then
@@ -2081,6 +2098,15 @@ local function every_1sec(event)
                         end
                     end
                 end
+            end
+        end
+
+        -- Captain Picking Timer
+        if DraftTimer.get('enabled') then
+            if DraftTimer.get_time() <= 0 then
+                local force_to_pick_next = DraftTimer.get('turn') == 'north' and 'south' or 'north'
+                poll_alternate_picking(Public.get_player_to_make_pick(force_to_pick_next), force_to_pick_next, location)
+                Public.update_all_captain_player_guis()
             end
         end
     end
@@ -3206,6 +3232,46 @@ function Public.update_captain_referee_gui(player, frame)
                 right_label_caption = 'Allow top picks to volunteer to be captain',
             })
         end
+    end
+
+    scroll.add({ type = 'line', style = 'inside_shallow_frame_with_padding_line' })
+
+    do -- Draft Timer settings
+        local dt = scroll.add({
+            type = 'frame',
+            style = 'bordered_frame',
+            direction = 'horizontal',
+            caption = 'Draft Timer settings',
+        })
+        local dt_table = dt.add({ type = 'table', column_count = 4 })
+        dt_table.add({
+            type = 'button',
+            name = 'draft_timer_enable',
+            caption = 'Enable',
+            tooltip = { 'captain.draft_timer_enable_tooltip' },
+        })
+        dt_table.add({ type = 'button', name = 'draft_timer_disable', caption = 'Disable' })
+        dt_table.add({ type = 'button', name = 'draft_timer_pause', caption = 'Pause' })
+        dt_table.add({ type = 'button', name = 'draft_timer_unpause', caption = 'Unpause' })
+        dt_table.add({ type = 'button', name = 'draft_timer_change_1', caption = 'Add 0:30', tags = { time = 30 * 60 } })
+        dt_table.add({
+            type = 'button',
+            name = 'draft_timer_change_2',
+            caption = 'Add 5:00',
+            tags = { time = 5 * 60 * 60 },
+        })
+        dt_table.add({
+            type = 'button',
+            name = 'draft_timer_change_3',
+            caption = 'Remove 0:30',
+            tags = { time = -30 * 60 },
+        })
+        dt_table.add({
+            type = 'button',
+            name = 'draft_timer_change_4',
+            caption = 'Remove 5:00',
+            tags = { time = -5 * 60 * 60 },
+        })
     end
 end
 
