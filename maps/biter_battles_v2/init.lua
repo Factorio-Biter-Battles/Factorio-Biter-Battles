@@ -118,6 +118,7 @@ function Public.initial_setup()
         defines.input_action.remote_view_surface,
         defines.input_action.set_filter,
         defines.input_action.set_player_color,
+        defines.input_action.spawn_item,
         defines.input_action.start_walking,
         defines.input_action.toggle_map_editor,
         defines.input_action.toggle_show_entity_info,
