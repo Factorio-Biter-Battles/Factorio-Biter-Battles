@@ -87,15 +87,13 @@ function Public.invert_entity(event)
     end
 
     -- Invert entity position to south in relation to source entity.
-    local src_pos = source.position
     local dest_pos = source.position
-    dest_pos.y = -dest_pos.y
-
     -- Check if there are no overlaps.
-    if src_pos.x == dest_pos.x and src_pos.y == dest_pos.y then
+    if dest_pos.y == 0 then
         destination.destroy()
         return
     end
+    dest_pos.y = -dest_pos.y
 
     -- It's safe to use teleport() even if final position is on top
     -- of lake.
