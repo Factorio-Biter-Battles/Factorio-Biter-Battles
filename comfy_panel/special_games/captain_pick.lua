@@ -190,10 +190,6 @@ Global.register({
     player_preferences = tbl.player_preferences
 end)
 
-Public.force_lists = function()
-    return serpent.line({ nth = #this.north.list, sth = #this.south.list, spect = #this.spectator.list })
-end
-
 Public.get = function(key)
     if key then
         return this[key]
@@ -293,8 +289,6 @@ Public.add_player = function(playerID)
     end
 
     Public.queue_update()
-    game.print('ADD player ' .. player.name)
-    game.print(Public.force_lists())
 end
 
 ---@param playerID number|string
