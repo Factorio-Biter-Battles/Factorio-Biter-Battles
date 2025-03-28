@@ -1186,8 +1186,11 @@ local function start_picking_phase()
             next_pick_force = math_random() < northThreshold and 'north' or 'south'
             log('Next force to pick: ' .. next_pick_force)
         end
-        CaptainPick.enable({ turn = next_pick_force })
-        --poll_alternate_picking(Public.get_player_to_make_pick(next_pick_force), next_pick_force)
+        if Functions.get_ticks_since_game_start() > 0 then
+            poll_alternate_picking(Public.get_player_to_make_pick(next_pick_force), next_pick_force)
+        else
+            CaptainPick.enable({ turn = next_pick_force })
+        end
     end
     Public.update_all_captain_player_guis()
 end
