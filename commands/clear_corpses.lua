@@ -1,4 +1,5 @@
 local Functions_clear_corpses = require('maps.biter_battles_v2.functions').clear_corpses
+local Utils_safe_wrap_cmd = require('utils.utils').safe_wrap_cmd
 local Session = require('utils.datastore.session_data')
 local Color_fail = require('utils.color_presets').fail
 local Color_warning = require('utils.color_presets').warning
@@ -37,4 +38,6 @@ local function clear_corpses(cmd)
     Functions_clear_corpses(player, param)
 end
 
-commands.add_command('clear-corpses', 'Clears all the biter corpses..', clear_corpses)
+commands.add_command('clear-corpses', 'Clears all the biter corpses..', function(cmd)
+    Utils_safe_wrap_cmd(cmd, clear_corpses, cmd)
+end)
