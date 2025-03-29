@@ -1,7 +1,6 @@
 local CaptainUtils = require('comfy_panel.special_games.captain_utils')
 local Color = require('utils.color_presets')
 local Event = require('utils.event')
-local Global = require('utils.global')
 local Gui = require('utils.gui')
 local Session = require('utils.datastore.session_data')
 local Token = require('utils.token')
@@ -77,7 +76,7 @@ end
 
 ---@param self PlayerMeta
 function PlayerMeta.get_weight(self)
-    self.weight = 2 ^ (math.max(0, 12 - self.rank))
+    self.weight = math.ceil(math.sqrt(2) ^ (math.max(0, 12 - self.rank)))
     return self.weight
 end
 
@@ -178,16 +177,19 @@ local this = {
     time_increment = 0,
 }
 
-Global.register({
-    this = this,
-    debounce = debounce,
-    favourites = favourites,
-    player_preferences = player_preferences,
-}, function(tbl)
-    this = tbl.this
-    debounce = tbl.debounce
-    favourites = tbl.favourites
-    player_preferences = tbl.player_preferences
+Event.on_init(function()
+    storage.captainPick = {
+        this = this,
+        debounce = debounce,
+        favourites = favourites,
+        player_preferences = player_preferences,
+    }
+end)
+Event.on_load(function()
+    this = storage.captainPick.this
+    debounce = storage.captainPick.debounce
+    favourites = storage.captainPick.favourites
+    player_preferences = storage.captainPick.player_preferences
 end)
 
 Public.get = function(key)
@@ -314,19 +316,21 @@ Public.pick_player = function(player_index)
 
     local side = this[this.turn]
 
+    --- Remove any references from all lists
     this.spectator.list[player_index] = nil
     this.north.list[player_index] = nil
     this.south.list[player_index] = nil
 
-    if not p.player.tag then
-        p.player.force = { name = this.turn }
-    else
-        CaptainUtils.switch_team_of_player(p.name, this.turn)
-    end
+    --- Create new reference on correct team and switch player to it
+    CaptainUtils.switch_team_of_player(p.name, this.turn)
     p.rank = side.rounds
     PlayerMeta.get_weight(p)
-
     side.list[player_index] = p
+
+    --- Remove player from all favourites lists
+    for _, list_of in pairs(favourites) do
+        list_of[player_index] = nil
+    end
 
     Public.queue_update()
 end
@@ -434,12 +438,27 @@ end
 Public.perform_auto_picks = function()
     local side = this[this.turn]
     local max_attempts = 5
+    local cpt_index = false
+
+    -- Cache cpt index
+    if storage.special_games_variables.captain_mode then
+        local list = storage.special_games_variables.captain_mode.captainList
+        local captain = game.get_player(list[side == 'north' and 1 or 2])
+        if captain and captain.valid then
+            cpt_index = captain.index
+        end
+    end
+
     while (side.picks - side.picked > 1) and max_attempts > 0 do
-        -- Build array of players
-        local candidates = {}
-        for _, p in pairs(side.list) do
-            if p.player.force.name == 'spectator' then
-                candidates[#candidates + 1] = p.index
+        -- Build array of players from favourites, if any
+        local candidates = cpt_index and Public.get_favourites_list(cpt_index) or {}
+
+        -- Fallback to whole player list
+        if #candidates == 0 then
+            for _, p in pairs(side.list) do
+                if p.player.force.name == 'spectator' then
+                    candidates[#candidates + 1] = p.index
+                end
             end
         end
 
@@ -1448,17 +1467,13 @@ end
 
 ---@param player LuaPlayer
 Public.debounce = function(player)
-    if game.tick_paused then
-        return false
-    end
-
     local tick = debounce[player.index]
-    if tick and tick >= game.tick then
+    if tick and tick >= game.ticks_played then
         player.print({ 'gui.debounce' })
         return true
     end
 
-    debounce[player.index] = game.tick + 10 -- 166ms
+    debounce[player.index] = game.ticks_played + 10 -- 166ms
     return false
 end
 
@@ -1519,6 +1534,17 @@ Public.get_player_preferences = function(player_index)
         player_preferences[player_index] = preferences
     end
     return preferences
+end
+
+---@param player_index number
+Public.get_favourites_list = function(player_index)
+    local result = {}
+
+    for k, _ in pairs(favourites[player_index] or {}) do
+        result[#result + 1] = k
+    end
+
+    return result
 end
 
 ---@param player LuaPlayer
