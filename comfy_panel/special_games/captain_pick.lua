@@ -29,7 +29,7 @@ function PlayerMeta.new(p)
     return {
         ---@type string
         name = p.player.name,
-        ---@type number
+        ---@type integer
         index = p.player.index,
         ---@type LuaPlayer
         player = p.player,
@@ -47,7 +47,7 @@ function PlayerMeta.new(p)
         note = p.note or '',
         ---@type table<string, boolean>
         tasks = table_deepcopy(p.tasks or {}),
-        ---@type table<number, number>
+        ---@type table<integer, number>
         votes = table_deepcopy(p.votes or {}),
     }
 end
@@ -154,11 +154,11 @@ local Icons = {
     right_arrow_disabled = '[img=virtual-signal/right-arrow;tint=55,55,55,0]',
 }
 
----@type table<number, table<string, boolean>>
+---@type table<integer, table<string, boolean>>
 local player_preferences = {}
----@type table<number, table<number, boolean>>
+---@type table<integer, table<integer, boolean>>
 local favourites = {}
----@type table<number, number>
+---@type table<integer, number>
 local debounce = {}
 
 local this = {
@@ -255,7 +255,7 @@ end
 
 -- == PLAYER MANAGER ==========================================================
 
----@param playerID number|string
+---@param playerID integer|string
 Public.get_player = function(playerID)
     local player = game.get_player(playerID)
     if not (player and player.valid) then
@@ -269,7 +269,7 @@ Public.get_player = function(playerID)
     end
 end
 
----@param playerID number|string
+---@param playerID integer|string
 Public.add_player = function(playerID)
     local player = game.get_player(playerID)
     if not (player and player.valid) then
@@ -293,7 +293,7 @@ Public.add_player = function(playerID)
     Public.queue_update()
 end
 
----@param playerID number|string
+---@param playerID integer|string
 Public.remove_player = function(playerID)
     local player = game.get_player(playerID)
     if not (player and player.valid) then
@@ -307,7 +307,7 @@ Public.remove_player = function(playerID)
     Public.queue_update()
 end
 
----@param player_index number
+---@param player_index integer
 Public.pick_player = function(player_index)
     local p = this.spectator.list[player_index]
     if not p then
@@ -335,7 +335,7 @@ Public.pick_player = function(player_index)
     Public.queue_update()
 end
 
----@param player_index number
+---@param player_index integer
 ---@param task_name string
 Public.toggle_enrollment_task = function(player_index, task_name)
     local p = this.spectator.list[player_index]
@@ -350,8 +350,8 @@ Public.toggle_enrollment_task = function(player_index, task_name)
     end
 end
 
----@param actor_index number
----@param target_index number
+---@param actor_index integer
+---@param target_index integer
 ---@param sign number
 Public.cast_vote = function(actor_index, target_index, sign)
     local actor = Public.get_player(actor_index)
@@ -378,7 +378,7 @@ Public.cast_vote = function(actor_index, target_index, sign)
     PlayerMeta.get_value(target)
 end
 
----@param player_index number
+---@param player_index integer
 ---@param text string
 Public.set_player_note = function(player_index, text)
     local p = this.spectator.list[player_index]
@@ -398,7 +398,7 @@ Public.set_player_note = function(player_index, text)
     return text
 end
 
----@param playerID number|string
+---@param playerID integer|string
 ---@param force_name string
 Public.set_captain = function(playerID, force_name)
     local player = game.get_player(playerID)
@@ -457,7 +457,7 @@ Public.perform_auto_picks = function()
         if #candidates == 0 then
             for _, p in pairs(side.list) do
                 if p.player.force.name == 'spectator' then
-                    candidates[#candidates + 1] = p.index
+                    table_insert(candidates, p.index)
                 end
             end
         end
@@ -1505,7 +1505,7 @@ Public.format_time = function(ticks)
     )
 end
 
----@param list table<number, PlayerMeta>
+---@param list table<integer, PlayerMeta>
 Public.get_force_settings = function(list)
     return {
         ---@type PlayerMeta[]
@@ -1517,7 +1517,7 @@ Public.get_force_settings = function(list)
     }
 end
 
----@param player_index number
+---@param player_index integer
 Public.get_player_preferences = function(player_index)
     local preferences = player_preferences[player_index]
     if not preferences then
@@ -1536,12 +1536,12 @@ Public.get_player_preferences = function(player_index)
     return preferences
 end
 
----@param player_index number
+---@param player_index integer
 Public.get_favourites_list = function(player_index)
     local result = {}
 
     for k, _ in pairs(favourites[player_index] or {}) do
-        result[#result + 1] = k
+        table_insert(result, k)
     end
 
     return result
@@ -1590,13 +1590,16 @@ Public.get_value_tooltip = function(playerMeta)
         local actor = Public.get_player(actor_index)
         local _c = actor.player.color
         local actor_color = string_format('%.2f,%.2f,%.2f', _c.r, _c.g, _c.b)
-        votes[#votes + 1] = string_format(
-            '[font=default-listbox][color=%s]%s%04d[/color] - [color=%s]%s[/color][/font]',
-            color,
-            sign,
-            math.abs(value),
-            actor_color,
-            actor.name
+        table_insert(
+            votes,
+            string_format(
+                '[font=default-listbox][color=%s]%s%04d[/color] - [color=%s]%s[/color][/font]',
+                color,
+                sign,
+                math.abs(value),
+                actor_color,
+                actor.name
+            )
         )
     end
 
@@ -1604,14 +1607,14 @@ Public.get_value_tooltip = function(playerMeta)
     return table_concat(votes, '\n')
 end
 
----@param list table<number, PlayerMeta>
+---@param list table<integer, PlayerMeta>
 ---@param force LuaForce
 Public.get_force_tooltip = function(list, force)
     local tmp, result = {}, {}
 
     for _, p in pairs(list) do
         if p.player.force.name == force then
-            tmp[#tmp + 1] = p
+            table_insert(tmp, p)
         end
     end
 
@@ -1620,8 +1623,10 @@ Public.get_force_tooltip = function(list, force)
     for _, p in pairs(tmp) do
         local _c = p.player.color
         local color = string_format('%.2f,%.2f,%.2f', _c.r, _c.g, _c.b)
-        result[#result + 1] =
+        table_insert(
+            result,
             string_format('[font=default-listbox]%02d - [color=%s]%s[/color][/font]', p.rank, color, p.name)
+        )
     end
 
     return table_concat(result, '\n')
