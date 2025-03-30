@@ -286,10 +286,6 @@ Public.add_player = function(playerID)
         force.list[player.index] = p
     end
 
-    if table.contains(storage.special_games_variables.captain_mode.listPlayers, player.name) then
-        table.remove_element(storage.special_games_variables.captain_mode.listPlayers, player.name)
-    end
-
     Public.queue_update()
 end
 
