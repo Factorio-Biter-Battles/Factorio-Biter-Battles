@@ -2943,10 +2943,6 @@ function Public.update_captain_player_gui(player, frame)
         else
             pick_flow.visible = false
         end
-
-        if pick_flow.visible then
-            pick_flow.visible = not CaptainPick.get('enabled')
-        end
     end
 end
 
