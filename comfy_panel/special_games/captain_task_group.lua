@@ -5,8 +5,9 @@ local Event = require('utils.event')
 local Gui = require('utils.gui')
 local gui_style = require('utils.utils').gui_style
 local frame_style = require('utils.utils').left_frame_style
+local table = require('utils.table')
 local concat, insert, remove = table.concat, table.insert, table.remove
-local table_contains = CaptainUtils.table_contains
+local table_contains = table.contains
 local string_sub = string.sub
 
 local CaptainTaskGroup = {}
