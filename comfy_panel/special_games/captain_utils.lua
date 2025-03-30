@@ -4,14 +4,17 @@ local Functions = require('maps.biter_battles_v2.functions')
 local player_utils = require('utils.player')
 local Session = require('utils.datastore.session_data')
 local starts_with = require('utils.string').starts_with
+local Table = require('utils.table')
 local TeamManager = require('maps.biter_battles_v2.team_manager')
-local insert, concat = table.insert, table.concat
+local insert, concat, contains = table.insert, table.concat, Table.contains
+local table_remove_element = Table.remove_element
 
 local CaptainUtils = {}
 
 local get_special = function()
     return storage.special_games_variables.captain_mode
 end
+CaptainUtils.get_special = get_special
 
 ---@param playerName string
 function CaptainUtils.add_to_trust(playerName)
@@ -22,6 +25,27 @@ function CaptainUtils.add_to_trust(playerName)
             trusted[playerName] = true
         end
     end
+end
+
+---@param playerName string
+function CaptainUtils.add_to_playerList(playerName)
+    local special = get_special()
+    if not special then
+        return
+    end
+    if contains(special.listPlayers, playerName) then
+        return
+    end
+    insert(special.listPlayers, playerName)
+end
+
+---@param playerName string
+function CaptainUtils.remove_from_playerList(playerName)
+    local special = get_special()
+    if not special then
+        return
+    end
+    table_remove_element(special.listPlayers, playerName)
 end
 
 ---@param player LuaPlayer

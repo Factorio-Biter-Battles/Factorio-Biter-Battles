@@ -322,6 +322,7 @@ Public.pick_player = function(player_index)
     this.south.list[player_index] = nil
 
     --- Create new reference on correct team and switch player to it
+    CaptainUtils.remove_from_playerList(p.name)
     CaptainUtils.switch_team_of_player(p.name, this.turn)
     p.rank = side.rounds
     PlayerMeta.get_weight(p)
@@ -515,7 +516,7 @@ local on_tick = function()
         return
     end
 
-    if #this.spectator.list == 0 then
+    if table_size(this.spectator.list) == 0 then
         Public.end_of_picking_phase()
         return
     end
@@ -1467,13 +1468,17 @@ end
 
 ---@param player LuaPlayer
 Public.debounce = function(player)
+    if game.tick_paused then
+        return true
+    end
+
     local tick = debounce[player.index]
-    if tick and tick >= game.ticks_played then
+    if tick and tick >= game.tick then
         player.print({ 'gui.debounce' })
         return true
     end
 
-    debounce[player.index] = game.ticks_played + 10 -- 166ms
+    debounce[player.index] = game.tick + 10 -- 166ms
     return false
 end
 

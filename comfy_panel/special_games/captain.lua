@@ -2659,7 +2659,7 @@ function Public.update_captain_player_gui(player, frame)
         if storage.chosen_team[player.name] then
             insert(
                 status_strings,
-                'On team '
+                'You are on '
                     .. storage.chosen_team[player.name]
                     .. ': '
                     .. Functions.team_name_with_color(storage.chosen_team[player.name])
