@@ -641,6 +641,9 @@ Public.draw = function(player)
         local label = flow.add({ type = 'label', caption = 'Team picker', style = 'frame_title' })
         label.drag_target = frame
 
+        local label = flow.add({ type = 'label', caption = '[img=info]', tooltip = { 'captain.team_picker_tooltip' } })
+        label.drag_target = frame
+
         local dragger = flow.add({ type = 'empty-widget', style = 'draggable_space_header' })
         dragger.drag_target = frame
         Gui.set_style(dragger, { height = 24, minimal_width = 48, horizontally_stretchable = true })
