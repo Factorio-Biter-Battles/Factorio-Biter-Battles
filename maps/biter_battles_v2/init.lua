@@ -83,6 +83,10 @@ function Public.initial_setup()
     local defs = {
         defines.input_action.import_blueprint_string,
         defines.input_action.open_blueprint_library_gui,
+        -- infinity chest filters can't be changed by admins in north or south
+        defines.input_action.swap_infinity_container_filter_items,
+        defines.input_action.set_infinity_container_remove_unfiltered_items,
+        defines.input_action.set_infinity_container_filter_item,
     }
     local p = game.permissions.get_group('Default')
     for k, v in pairs(defs) do
