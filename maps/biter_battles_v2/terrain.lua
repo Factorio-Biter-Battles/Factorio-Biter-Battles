@@ -1311,12 +1311,6 @@ function Public.minable_wrecks(event)
                 enable_looted = true,
             })
         end
-
-        player.create_local_flying_text({
-            position = { entity.position.x, entity.position.y - 0.5 * k },
-            text = '+' .. amount .. ' [img=item/' .. name .. ']',
-            color = { r = 0.98, g = 0.66, b = 0.22 },
-        })
     end
 end
 
