@@ -1,3 +1,5 @@
+local GUI_VARIANTS = require('utils.utils').GUI_VARIANTS
+
 local Public = {}
 
 -- List of forces that will be affected by ammo modifier
@@ -33,10 +35,10 @@ Public.food_values = {
     ['automation-science-pack'] = { value = 0.0009, name = 'automation science', color = '255, 50, 50' },
     ['logistic-science-pack'] = { value = 0.0023, name = 'logistic science', color = '50, 255, 50' },
     ['military-science-pack'] = { value = 0.0095, name = 'military science', color = '105, 105, 105' },
-    ['chemical-science-pack'] = { value = 0.0250, name = 'chemical science', color = '100, 200, 255' },
-    ['production-science-pack'] = { value = 0.1050, name = 'production science', color = '150, 25, 255' },
-    ['utility-science-pack'] = { value = 0.1600, name = 'utility science', color = '210, 210, 60' },
-    ['space-science-pack'] = { value = 0.5000, name = 'space science', color = '255, 255, 255' },
+    ['chemical-science-pack'] = { value = 0.0260, name = 'chemical science', color = '100, 200, 255' },
+    ['production-science-pack'] = { value = 0.1029, name = 'production science', color = '150, 25, 255' },
+    ['utility-science-pack'] = { value = 0.1713, name = 'utility science', color = '210, 210, 60' },
+    ['space-science-pack'] = { value = 0.3500, name = 'space science', color = '255, 255, 255' },
 }
 
 Public.gui_foods = {}
@@ -54,16 +56,6 @@ Public.force_translation = {
 Public.enemy_team_of = {
     ['north'] = 'south',
     ['south'] = 'north',
-}
-
-Public.wait_messages = {
-    'Once upon a dreary night...',
-    'Nevermore.',
-    'go and grab a drink.',
-    'take a short healthy break.',
-    'go and stretch your legs.',
-    'please pet the cat.',
-    'time to get a bowl of snacks :3',
 }
 
 Public.food_names = {
@@ -138,74 +130,88 @@ Public.spawn_ore = {
 }
 
 Public.difficulties = {
-
     [1] = {
         name = "I'm Too Young to Die",
         short_name = 'ITYTD',
         str = '25%',
         value = 0.25,
-        color = { r = 0.00, g = 0.45, b = 0.00 },
-        print_color = { r = 0.00, g = 0.9, b = 0.00 },
+        color = {
+            [GUI_VARIANTS.Dark] = { r = 0.00, g = 1.00, b = 0.00 },
+            [GUI_VARIANTS.Light] = { r = 0.00, g = 0.50, b = 0.00 },
+        },
     },
     [2] = {
+        name = 'Have a Nice Day',
+        short_name = 'HaND',
+        str = '38%',
+        value = 0.38,
+        color = {
+            [GUI_VARIANTS.Dark] = { r = 0.33, g = 1.00, b = 0.00 },
+            [GUI_VARIANTS.Light] = { r = 0.13, g = 0.40, b = 0.00 },
+        },
+    },
+    [3] = {
         name = 'Piece of Cake',
         short_name = 'PoC',
         str = '50%',
         value = 0.5,
-        color = { r = 0.00, g = 0.35, b = 0.00 },
-        print_color = { r = 0.00, g = 0.7, b = 0.00 },
+        color = {
+            [GUI_VARIANTS.Dark] = { r = 0.67, g = 1.00, b = 0.00 },
+            [GUI_VARIANTS.Light] = { r = 0.17, g = 0.30, b = 0.00 },
+        },
     },
-    [3] = {
+    [4] = {
         name = 'Easy',
         short_name = 'Easy',
         str = '75%',
         value = 0.75,
-        color = { r = 0.00, g = 0.25, b = 0.00 },
-        print_color = { r = 0.00, g = 0.5, b = 0.00 },
+        color = {
+            [GUI_VARIANTS.Dark] = { r = 1.00, g = 1.00, b = 0.00 },
+            [GUI_VARIANTS.Light] = { r = 0.30, g = 0.30, b = 0.00 },
+        },
     },
-    [4] = {
+    [5] = {
         name = 'Normal',
         short_name = 'Normal',
         str = '100%',
         value = 1,
-        color = { r = 0.00, g = 0.00, b = 0.25 },
-        print_color = { r = 0.0, g = 0.0, b = 0.7 },
-    },
-    [5] = {
-        name = 'Hard',
-        short_name = 'Hard',
-        str = '150%',
-        value = 1.5,
-        color = { r = 0.25, g = 0.00, b = 0.00 },
-        print_color = { r = 0.5, g = 0.0, b = 0.00 },
+        color = {
+            [GUI_VARIANTS.Dark] = { r = 1.00, g = 0.67, b = 0.00 },
+            [GUI_VARIANTS.Light] = { r = 0.30, g = 0.17, b = 0.00 },
+        },
     },
     [6] = {
-        name = 'Nightmare',
-        short_name = 'Nightmare',
-        str = '300%',
-        value = 3,
-        color = { r = 0.35, g = 0.00, b = 0.00 },
-        print_color = { r = 0.7, g = 0.0, b = 0.00 },
+        name = 'Hard',
+        short_name = 'Hard',
+        str = '200%',
+        value = 2,
+        color = {
+            [GUI_VARIANTS.Dark] = { r = 1.00, g = 0.33, b = 0.00 },
+            [GUI_VARIANTS.Light] = { r = 0.40, g = 0.13, b = 0.00 },
+        },
     },
     [7] = {
         name = 'Fun and Fast',
         short_name = 'FnF',
         str = '500%',
         value = 5,
-        color = { r = 0.55, g = 0.00, b = 0.00 },
-        print_color = { r = 0.9, g = 0.0, b = 0.00 },
+        color = {
+            [GUI_VARIANTS.Dark] = { r = 1.00, g = 0.00, b = 0.00 },
+            [GUI_VARIANTS.Light] = { r = 0.40, g = 0.00, b = 0.00 },
+        },
     },
 }
 
 Public.difficulty_lowered_names_to_index = {
     ["i'm too young to die"] = 1,
     ['itytd'] = 1,
-    ['piece of cake'] = 2,
-    ['poc'] = 2,
-    ['easy'] = 3,
-    ['normal'] = 4,
-    ['hard'] = 5,
-    ['nightmare'] = 6,
+    ['have a nice day'] = 2,
+    ['hand'] = 2,
+    ['piece of cake'] = 3,
+    ['poc'] = 3,
+    ['easy'] = 4,
+    ['normal'] = 5,
+    ['hard'] = 6,
     ['fun and fast'] = 7,
     ['fnf'] = 7,
 }

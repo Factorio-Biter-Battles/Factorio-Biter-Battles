@@ -4,7 +4,7 @@ Sounds = {}
 
 local function play(players, sound_path)
     local sound = sound_path or default_sound_path
-    if not game.is_valid_sound_path(sound) then
+    if not helpers.is_valid_sound_path(sound) then
         log('Invalid sound path ' .. sound_path)
         return
     end
@@ -21,7 +21,7 @@ Sounds.notify_player = function(player, sound_path)
     play({ player }, sound_path)
 end
 
----@param player LuaForce
+---@param force LuaForce
 ---@param sound_path string
 Sounds.notify_force = function(force, sound_path)
     play(force.connected_players, sound_path)
@@ -36,7 +36,7 @@ Sounds.notify_admins = function(sound_path)
     end
 end
 
----@param player LuaForce
+---@param force LuaForce
 ---@param sound_path string
 Sounds.notify_allies = function(force, sound_path)
     for _, f in pairs(game.forces) do

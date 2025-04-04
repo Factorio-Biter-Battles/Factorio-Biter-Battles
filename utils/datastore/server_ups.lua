@@ -77,7 +77,7 @@ commands.add_command('server-ups', 'Toggle the server UPS display!', function()
 
     if validate_player(player) then
         if not secs then
-            return player.print('Not running on Comfy backend.', Color.warning)
+            return player.print('Not running on Comfy backend.', { color = Color.warning })
         end
 
         local label = player.gui.screen[ups_label]
@@ -87,11 +87,11 @@ commands.add_command('server-ups', 'Toggle the server UPS display!', function()
 
         if label.visible then
             label.visible = false
-            player.print('Removed Server-UPS label.', Color.warning)
+            player.print('Removed Server-UPS label.', { color = Color.warning })
         else
             label.visible = true
             set_location(player)
-            player.print('Added Server-UPS label.', Color.success)
+            player.print('Added Server-UPS label.', { color = Color.success })
         end
     end
 end)

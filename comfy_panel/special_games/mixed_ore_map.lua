@@ -4,28 +4,32 @@ local function generate_mixed_ore_map(type, size)
     if type then
         if not size then
             -- size not specified, set default values
-            if type == 1 then
+            if type == 1 then -- mixed ores
                 size = 9
-            elseif type == 2 then
+            elseif type == 2 then -- checkerboard, 3 - vertical lines
                 size = 5
-            elseif type == 4 then
+            elseif type == 4 then -- mixed patches
                 size = 4
-            elseif type == 5 then
+            elseif type == 5 then -- dots
                 size = 7
             end
+        else
+            if type == 1 or type == 4 then
+                size = math.max(size, 1)
+                size = math.min(size, 10)
+            elseif type == 2 then
+                size = math.max(1, size)
+            end
         end
-        if type == 1 and size > 10 then
-            size = 10
-        end
-        global.next_special_games['mixed_ore_map'] = true
-        global.next_special_games_variables['mixed_ore_map'] = {
+        storage.next_special_games['mixed_ore_map'] = true
+        storage.next_special_games_variables['mixed_ore_map'] = {
             type = type,
             size = size,
         }
 
         game.print(
             'Special game Mixed ore map is being scheduled. The special game will start after restarting the map!',
-            Color.warning
+            { color = Color.warning }
         )
     end
 end

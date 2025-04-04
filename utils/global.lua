@@ -12,7 +12,7 @@ function Global.register(tbl, callback)
         error('can only be called during the control stage', 2)
     end
 
-    local filepath = debug.getinfo(2, 'S').source:match('^.+/currently%-playing/(.+)$'):sub(1, -5)
+    local filepath = debug.getinfo(2, 'S').source:match('^@__level__/(.+)$'):sub(1, -5)
     local token = Token.register_global(tbl)
 
     names[token] = concat({ token, ' - ', filepath })
@@ -28,7 +28,7 @@ function Global.register_init(tbl, init_handler, callback)
     if _LIFECYCLE ~= _STAGE.control then
         error('can only be called during the control stage', 2)
     end
-    local filepath = debug.getinfo(2, 'S').source:match('^.+/currently%-playing/(.+)$'):sub(1, -5)
+    local filepath = debug.getinfo(2, 'S').source:match('^@__level__/(.+)$'):sub(1, -5)
     local token = Token.register_global(tbl)
 
     names[token] = concat({ token, ' - ', filepath })

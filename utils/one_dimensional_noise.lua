@@ -516,7 +516,7 @@ local heights = {
     103,
 }
 
-function get_noise(x, seed)
+local function get_noise(x, seed)
     x = x + seed
     local index = math_floor(x % 255) + 1
     local h1 = heights[index]
@@ -541,7 +541,7 @@ function get_noise(x, seed)
     return n
 end
 
-function testnoise()
+local function testnoise()
     local surface = game.surfaces[1]
     local seed = math.random(1, 1000000)
     for x = -256, 256, 1 do
@@ -551,7 +551,6 @@ function testnoise()
             text = math.round(noise, 4),
             surface = surface,
             target = entity,
-            target_offset = { 0, 0 },
             color = { 0, 255, 0 },
             scale = 0.88,
             font = default,

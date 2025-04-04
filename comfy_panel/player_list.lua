@@ -196,8 +196,8 @@ end
 
 local function get_rank(player)
     local t = 0
-    if global.total_time_online_players[player.name] then
-        t = global.total_time_online_players[player.name]
+    if storage.total_time_online_players[player.name] then
+        t = storage.total_time_online_players[player.name]
     end
 
     local m = t / 3600
@@ -216,7 +216,7 @@ local function get_rank(player)
         'item/long-handed-inserter',
         'item/electronic-circuit',
         'item/electric-mining-drill',
-        'item/dummy-steel-axe',
+        'technology/steel-axe',
         'item/heavy-armor',
         'item/steel-furnace',
         'item/gun-turret',
@@ -226,7 +226,7 @@ local function get_rank(player)
         'item/assembling-machine-2',
         'item/fast-inserter',
         'item/radar',
-        'item/filter-inserter',
+        'item/repair-pack',
         'item/defender-capsule',
         'item/pumpjack',
         'item/chemical-plant',
@@ -236,7 +236,7 @@ local function get_rank(player)
         'item/accumulator',
         'item/construction-robot',
         'item/distractor-capsule',
-        'item/stack-inserter',
+        'item/bulk-inserter',
         'item/electric-furnace',
         'item/express-transport-belt',
         'item/express-underground-belt',
@@ -246,7 +246,7 @@ local function get_rank(player)
         'item/power-armor',
         'item/logistic-robot',
         'item/laser-turret',
-        'item/stack-filter-inserter',
+        'item/personal-laser-defense-equipment',
         'item/destroyer-capsule',
         'item/power-armor-mk2',
         'item/flamethrower-turret',
@@ -319,8 +319,8 @@ local function get_sorted_list(sort_by)
         player_list[i].name = player.name
 
         local t = 0
-        if global.total_time_online_players[player.name] then
-            t = global.total_time_online_players[player.name]
+        if storage.total_time_online_players[player.name] then
+            t = storage.total_time_online_players[player.name]
         end
 
         player_list[i].total_played_time = Public.get_formatted_playtime_from_ticks(t)
@@ -597,7 +597,7 @@ local function on_gui_click(event)
             if not target or not target.valid then
                 return
             end
-            Where.create_mini_camera_gui(player, target.name, target.position, target.surface.index)
+            Where.create_mini_camera_gui(player, target.name, target.physical_position, target.physical_surface_index)
         end
     --Poke other players
     elseif string.sub(event.element.name, 1, 11) == 'poke_player' then

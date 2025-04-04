@@ -58,40 +58,41 @@ function Public.start_tracking(entity)
         return
     end
     if target_entity_type[entity.type] and entity.unit_number then
-        local targets = global.ai_targets[entity.force.name]
+        local targets = storage.ai_targets[entity.force.name]
         if targets ~= nil then
-            global.ai_target_destroyed_map[script.register_on_entity_destroyed(entity)] = entity.force.name
-            table_insert(targets.available_list, { unit_number = entity.unit_number, position = entity.position })
-            targets.available[entity.unit_number] = #targets.available_list
+            local _, id, _ = script.register_on_object_destroyed(entity)
+            storage.ai_target_destroyed_map[id] = entity.force.name
+            table_insert(targets.available_list, { id = id, position = entity.position })
+            targets.available[id] = #targets.available_list
         end
     end
 end
 
-local function on_entity_destroyed(event)
-    local map = global.ai_target_destroyed_map
-    local unit_number = event.unit_number
-    local force = map[event.registration_number]
-    map[event.registration_number] = nil
-    local targets = global.ai_targets[force]
+local function on_object_destroyed(event)
+    local map = storage.ai_target_destroyed_map
+    local id = event.useful_id
+    local force = map[id]
+    map[id] = nil
+    local targets = storage.ai_targets[force]
     if targets ~= nil then
-        local target_list_index = targets.available[unit_number]
+        local target_list_index = targets.available[id]
         if target_list_index ~= nil then
             if target_list_index ~= #targets.available_list then
                 -- swap the last element with the element to be removed
                 local last = targets.available_list[#targets.available_list]
-                targets.available[last.unit_number] = target_list_index
+                targets.available[last.id] = target_list_index
                 targets.available_list[target_list_index] = last
             end
             table_remove(targets.available_list)
-            targets.available[unit_number] = nil
+            targets.available[id] = nil
         end
     end
 end
 
-script.on_event(defines.events.on_entity_destroyed, on_entity_destroyed)
+script.on_event(defines.events.on_object_destroyed, on_object_destroyed)
 
 function Public.get_random_target(force_name)
-    local targets = global.ai_targets[force_name]
+    local targets = storage.ai_targets[force_name]
     local available_list = targets.available_list
     local first_entity = simple_random_sample(available_list)
     local second_entity = simple_random_sample(available_list)

@@ -10,6 +10,7 @@ local Score = require('comfy_panel.score')
 local Server = require('utils.server')
 local Special_games = require('comfy_panel.special_games')
 local Tables = require('maps.biter_battles_v2.tables')
+local Announce = require('commands.announce')
 local Task = require('utils.task')
 local Token = require('utils.token')
 local team_stats_compare = require('maps.biter_battles_v2.team_stats_compare')
@@ -35,7 +36,7 @@ end
 function Public.reveal_map()
     for _, f in pairs({ 'north', 'south', 'player', 'spectator' }) do
         local r = 768
-        game.forces[f].chart(game.surfaces[global.bb_surface_name], { { r * -1, r * -1 }, { r, r } })
+        game.forces[f].chart(game.surfaces[storage.bb_surface_name], { { r * -1, r * -1 }, { r, r } })
     end
 end
 
@@ -66,13 +67,13 @@ local function silo_kaboom(entity)
     end
     for _, drop in pairs(drops) do
         for _ = 1, drop[2], 1 do
-            entity.surface.spill_item_stack(
-                { drop[1].x + math.random(0, 9) * 0.1, drop[1].y + math.random(0, 9) * 0.1 },
-                { name = 'raw-fish', count = 1 },
-                false,
-                nil,
-                true
-            )
+            entity.surface.spill_item_stack({
+                position = { drop[1].x + math.random(0, 9) * 0.1, drop[1].y + math.random(0, 9) * 0.1 },
+                stack = { name = 'raw-fish', count = 1 },
+                enable_looted = false,
+                force = nil,
+                allow_belts = true,
+            })
         end
     end
 end
@@ -150,7 +151,7 @@ local function show_endgame_gui(player)
 
     local main_frame = Gui.add_left_element(player, { type = 'frame', name = 'mvps', direction = 'vertical' })
     local flow = main_frame.add({ type = 'flow', style = 'vertical_flow', direction = 'vertical' })
-    local inner_frame = flow.add({ type = 'frame', style = 'window_content_frame_packed', direction = 'vertical' })
+    local inner_frame = flow.add({ type = 'frame', style = 'inside_shallow_frame_packed', direction = 'vertical' })
 
     do -- Game overview
         local subheader = inner_frame.add({ type = 'frame', style = 'subheader_frame' })
@@ -170,7 +171,7 @@ local function show_endgame_gui(player)
         Gui.add_pusher(subheader)
 
         local label =
-            subheader.add({ type = 'label', caption = Functions.team_name(global.bb_game_won_by_team) .. ' won!' })
+            subheader.add({ type = 'label', caption = Functions.team_name(storage.bb_game_won_by_team) .. ' won!' })
         gui_style(
             label,
             { font = 'heading-2', font_color = { 165, 165, 165 }, single_line = false, maximal_width = 280, margin = 4 }
@@ -186,13 +187,13 @@ local function show_endgame_gui(player)
         local sp =
             inner_frame.add({ type = 'scroll-pane', style = 'scroll_pane_under_subheader', direction = 'vertical' })
 
-        local l = sp.add({ type = 'label', style = 'caption_label', caption = global.victory_time })
+        local l = sp.add({ type = 'label', style = 'caption_label', caption = storage.victory_time })
         gui_style(l, { left_padding = 8 })
 
         local l = sp.add({
             type = 'label',
             style = 'caption_label',
-            caption = 'Total players - ' .. table_size(global.chosen_team),
+            caption = 'Total players - ' .. table_size(storage.chosen_team),
         })
         gui_style(l, { left_padding = 8 })
     end
@@ -202,15 +203,15 @@ local function show_endgame_gui(player)
         gui_style(subheader, { horizontally_squashable = true, maximal_height = 40, use_header_filler = true })
 
         local icon =
-            subheader.add({ type = 'sprite-button', sprite = 'utility/slot_icon_armor', style = 'transparent_slot' })
+            subheader.add({ type = 'sprite-button', sprite = 'utility/empty_armor_slot', style = 'transparent_slot' })
         Gui.add_pusher(subheader)
 
         local label = subheader.add({ type = 'label', caption = 'MVPs' })
-        gui_style(label, { font = 'heading-3', font_color = { 165, 165, 165 }, left_margin = 4 })
+        gui_style(label, { font = 'default-semibold', font_color = { 165, 165, 165 }, left_margin = 4 })
 
         Gui.add_pusher(subheader)
         local icon =
-            subheader.add({ type = 'sprite-button', sprite = 'utility/slot_icon_armor', style = 'transparent_slot' })
+            subheader.add({ type = 'sprite-button', sprite = 'utility/empty_armor_slot', style = 'transparent_slot' })
 
         local sp =
             inner_frame.add({ type = 'scroll-pane', style = 'scroll_pane_under_subheader', direction = 'vertical' })
@@ -245,7 +246,7 @@ local function show_endgame_gui(player)
             local l = t.add({ type = 'label', caption = mvp.deaths.name .. ' died ' .. mvp.deaths.score .. ' times' })
             gui_style(l, winner_style)
 
-            if not global.results_sent_north then
+            if not storage.results_sent_north then
                 local result = {}
                 table.insert(result, 'NORTH: \\n')
                 table.insert(result, 'MVP Defender: \\n')
@@ -258,7 +259,7 @@ local function show_endgame_gui(player)
                 table.insert(result, mvp.deaths.name .. ' died ' .. mvp.deaths.score .. ' times')
                 local message = table.concat(result)
                 Server.to_discord_embed(message)
-                global.results_sent_north = true
+                storage.results_sent_north = true
             end
         end
 
@@ -292,7 +293,7 @@ local function show_endgame_gui(player)
             local l = t.add({ type = 'label', caption = mvp.deaths.name .. ' died ' .. mvp.deaths.score .. ' times' })
             gui_style(l, winner_style)
 
-            if not global.results_sent_south then
+            if not storage.results_sent_south then
                 local result = {}
                 table.insert(result, 'SOUTH: \\n')
                 table.insert(result, 'MVP Defender: \\n')
@@ -305,7 +306,7 @@ local function show_endgame_gui(player)
                 table.insert(result, mvp.deaths.name .. ' died ' .. mvp.deaths.score .. ' times')
                 local message = table.concat(result)
                 Server.to_discord_embed(message)
-                global.results_sent_south = true
+                storage.results_sent_south = true
             end
         end
     end
@@ -314,46 +315,46 @@ end
 local enemy_team_of = { ['north'] = 'south', ['south'] = 'north' }
 
 function Public.server_restart()
-    if not global.server_restart_timer then
+    if not storage.server_restart_timer then
         return
     end
-    global.server_restart_timer = global.server_restart_timer - 5
+    storage.server_restart_timer = storage.server_restart_timer - 5
 
-    if global.server_restart_timer <= 0 then
-        if global.restart then
-            if not global.announced_message then
+    if storage.server_restart_timer <= 0 then
+        if storage.restart then
+            if not storage.announced_message then
                 local message = 'Soft-reset is disabled! Server will restart from scenario to load new changes.'
-                game.print(message, { r = 0.22, g = 0.88, b = 0.22 })
+                game.print(message, { color = { r = 0.22, g = 0.88, b = 0.22 } })
                 Server.to_discord_bold(table.concat({ '*** ', message, ' ***' }))
                 Server.start_scenario('Biter_Battles')
-                global.announced_message = true
+                storage.announced_message = true
                 return
             end
         end
-        if global.shutdown then
-            if not global.announced_message then
+        if storage.shutdown then
+            if not storage.announced_message then
                 local message = 'Soft-reset is disabled! Server will shutdown. Most likely because of updates.'
-                game.print(message, { r = 0.22, g = 0.88, b = 0.22 })
+                game.print(message, { color = { r = 0.22, g = 0.88, b = 0.22 } })
                 Server.to_discord_bold(table.concat({ '*** ', message, ' ***' }))
                 Server.stop_scenario()
-                global.announced_message = true
+                storage.announced_message = true
                 return
             end
         end
-        game.print('Map is restarting!', { r = 0.22, g = 0.88, b = 0.22 })
+        game.print('Map is restarting!', { color = { r = 0.22, g = 0.88, b = 0.22 } })
         local message = 'Map is restarting! '
         Server.to_discord_bold(table.concat({ '*** ', message, ' ***' }))
 
         Public.generate_new_map()
         return
     end
-    if global.server_restart_timer % 30 == 0 then
+    if storage.server_restart_timer % 30 == 0 then
         game.print(
-            'Map will restart in ' .. global.server_restart_timer .. ' seconds!',
-            { r = 0.22, g = 0.88, b = 0.22 }
+            'Map will restart in ' .. storage.server_restart_timer .. ' seconds!',
+            { color = { r = 0.22, g = 0.88, b = 0.22 } }
         )
-        if global.server_restart_timer / 30 == 1 then
-            game.print('Good luck with your next match!', { r = 0.98, g = 0.66, b = 0.22 })
+        if storage.server_restart_timer / 30 == 1 then
+            game.print('Good luck with your next match!', { color = { r = 0.98, g = 0.66, b = 0.22 } })
         end
     end
 end
@@ -364,14 +365,8 @@ local function set_victory_time()
     local hours = tick - minutes
     minutes = math.floor(minutes / 3600)
     hours = math.floor(hours / 216000)
-    if hours > 0 then
-        hours = hours .. ' hours and '
-    else
-        hours = ''
-    end
-    global.victory_time = 'Time - ' .. hours
-    global.victory_time = global.victory_time .. minutes
-    global.victory_time = global.victory_time .. ' minutes'
+    storage.victory_time =
+        table.concat({ 'Time - ', hours > 0 and (hours .. ' hours and ') or '', minutes, ' minutes' })
 end
 
 local function freeze_all_biters(surface)
@@ -408,7 +403,7 @@ local function respawn_silo(event)
     local entity = event.entity
     local surface = entity.surface
     if surface == nil or not surface.valid then
-        log('Surface ' .. global.bb_surface_name .. ' invalid - cannot respawn silo')
+        log('Surface ' .. storage.bb_surface_name .. ' invalid - cannot respawn silo')
         return
     end
 
@@ -421,14 +416,14 @@ local function respawn_silo(event)
         force = force_name,
         create_build_effect_smoke = false,
     })
-    entity.minable = false
+    entity.minable_flag = false
     entity.health = 5
-    global.rocket_silo[force_name] = entity
+    storage.rocket_silo[force_name] = entity
     AiTargets.start_tracking(entity)
 end
 
-function log_to_db(message, appendBool)
-    game.write_file('logToDBgameResult', message, appendBool, 0)
+local function log_to_db(message, appendBool)
+    helpers.write_file('logToDBgameResult', message, appendBool, 0)
 end
 
 function Public.silo_death(event)
@@ -439,22 +434,22 @@ function Public.silo_death(event)
     if entity.name ~= 'rocket-silo' then
         return
     end
-    if global.bb_game_won_by_team then
+    if storage.bb_game_won_by_team then
         return
     end
-    if entity == global.rocket_silo.south or entity == global.rocket_silo.north then
+    if entity == storage.rocket_silo.south or entity == storage.rocket_silo.north then
         -- Respawn Silo in case of friendly fire
         if not biter_killed_the_silo(event) then
             respawn_silo(event)
             return
         end
 
-        global.bb_game_won_by_team = enemy_team_of[entity.force.name]
+        storage.bb_game_won_by_team = enemy_team_of[entity.force.name]
 
         set_victory_time()
         team_stats_compare.game_over()
-        north_players = 'NORTH PLAYERS: \\n'
-        south_players = 'SOUTH PLAYERS: \\n'
+        local north_players = 'NORTH PLAYERS: \\n'
+        local south_players = 'SOUTH PLAYERS: \\n'
 
         for _, player in pairs(game.connected_players) do
             player.play_sound({ path = 'utility/game_won', volume_modifier = 1 })
@@ -470,50 +465,52 @@ function Public.silo_death(event)
             end
         end
 
-        global.spy_fish_timeout.north = game.tick + 999999
-        global.spy_fish_timeout.south = game.tick + 999999
-        global.server_restart_timer = 150
+        storage.spy_fish_timeout.north = game.tick + 999999
+        storage.spy_fish_timeout.south = game.tick + 999999
+        storage.server_restart_timer = 150
 
         game.speed = 1
 
-        north_evo = math.floor(1000 * global.bb_evolution['north_biters']) * 0.1
-        north_threat = math.floor(global.bb_threat['north_biters'])
-        south_evo = math.floor(1000 * global.bb_evolution['south_biters']) * 0.1
-        south_threat = math.floor(global.bb_threat['south_biters'])
+        local north_evo = math.floor(1000 * storage.bb_evolution['north_biters']) * 0.1
+        local north_threat = math.floor(storage.bb_threat['north_biters'])
+        local south_evo = math.floor(1000 * storage.bb_evolution['south_biters']) * 0.1
+        local south_threat = math.floor(storage.bb_threat['south_biters'])
 
-        discord_message = '*** Team '
-            .. global.bb_game_won_by_team
-            .. ' has won! ***'
-            .. '\\n'
-            .. global.victory_time
-            .. '\\n\\n'
-            .. 'North Evo: '
-            .. north_evo
-            .. '%\\n'
-            .. 'North Threat: '
-            .. north_threat
-            .. '\\n\\n'
-            .. 'South Evo: '
-            .. south_evo
-            .. '%\\n'
-            .. 'South Threat: '
-            .. south_threat
-            .. '\\n\\n'
-            .. north_players
-            .. '\\n\\n'
-            .. south_players
+        local discord_message = table.concat({
+            '*** Team ',
+            storage.bb_game_won_by_team,
+            ' has won! ***',
+            '\\n',
+            storage.victory_time,
+            '\\n\\n',
+            'North Evo: ',
+            north_evo,
+            '%\\n',
+            'North Threat: ',
+            north_threat,
+            '\\n\\n',
+            'South Evo: ',
+            south_evo,
+            '%\\n',
+            'South Threat: ',
+            south_threat,
+            '\\n\\n',
+            north_players,
+            '\\n\\n',
+            south_players,
+        })
 
         Server.to_discord_embed(discord_message)
-        log({ '', '[TEAMSTATS-FINAL]', game.table_to_json(global.team_stats) })
+        log({ '', '[TEAMSTATS-FINAL]', helpers.table_to_json(storage.team_stats) })
 
-        global.results_sent_south = false
-        global.results_sent_north = false
+        storage.results_sent_south = false
+        storage.results_sent_north = false
         silo_kaboom(entity)
 
         freeze_all_biters(entity.surface)
-        local special = global.special_games_variables.captain_mode
+        local special = storage.special_games_variables.captain_mode
         if special and not special.prepaPhase then
-            global.tournament_mode = false
+            storage.tournament_mode = false
             game.print('Tournament mode is now disabled')
             game.print('Updating logs for the game')
             if special.communityPickingMode then
@@ -535,7 +532,7 @@ function Public.silo_death(event)
             log_to_db('[SouthTeam]' .. listPicks .. '\n', true)
             log_to_db('[Gamelength]' .. game.ticks_played .. '\n', true)
             log_to_db('[StartTick]' .. special.stats.tickGameStarting .. '\n', true)
-            log_to_db('[WinnerTeam]' .. global.bb_game_won_by_team .. '\n', true)
+            log_to_db('[WinnerTeam]' .. storage.bb_game_won_by_team .. '\n', true)
             log_to_db('[ExtraInfo]' .. special.stats.extrainfo .. '\n', true)
             log_to_db('[SpecialEnabled]' .. special.stats.specialEnabled .. '\n', true)
             log_to_db('[CommunityPickMode]' .. tostring(special.communityPickingMode) .. '\n', true)
@@ -551,16 +548,16 @@ function Public.silo_death(event)
                 end
             end
             if special.stats.communityPickInfo then
-                log_to_db('[CommunityPickInfo]' .. game.table_to_json(special.stats.communityPickInfo) .. '\n', true)
+                log_to_db('[CommunityPickInfo]' .. helpers.table_to_json(special.stats.communityPickInfo) .. '\n', true)
             end
-            log_to_db('[TeamStats]' .. game.table_to_json(global.team_stats) .. '\n', true)
+            log_to_db('[TeamStats]' .. helpers.table_to_json(storage.team_stats) .. '\n', true)
             log_to_db('>End of log', true)
         end
     end
 end
 
 local function chat_with_everyone(event)
-    if not global.server_restart_timer then
+    if not storage.server_restart_timer then
         return
     end
     if not event.message then
@@ -578,20 +575,18 @@ local function chat_with_everyone(event)
         return
     end
     local message = player.name .. '[auto-shout]: ' .. event.message
-    game.forces[enemy].print(message, player.chat_color)
+    game.forces[enemy].print(message, { color = player.chat_color })
 end
 
----@return success_percent number [0-1] yes/total
----@return yes_count number
----@return no_count number
+---@return number, number, number #success percent[0-1], yes count, no count
 local function get_reroll_stats()
-    local total_votes = table.size(global.reroll_map_voting)
+    local total_votes = table.size(storage.reroll_map_voting)
     if total_votes == 0 then
         return 0, 0, 0
     end
 
     local yes_votes = 0
-    for _, vote in pairs(global.reroll_map_voting) do
+    for _, vote in pairs(storage.reroll_map_voting) do
         yes_votes = yes_votes + vote
     end
     return math.floor(100 * yes_votes / total_votes), yes_votes, total_votes - yes_votes
@@ -602,8 +597,7 @@ local function draw_reroll_gui(player)
         return
     end
 
-    local frame =
-        Gui.add_top_element(player, { type = 'frame', name = 'reroll_frame', style = 'finished_game_subheader_frame' })
+    local frame = Gui.add_top_element(player, { type = 'frame', name = 'reroll_frame', style = 'subheader_frame' })
     gui_style(frame, { minimal_height = 36, maximal_height = 36, padding = 0, vertical_align = 'center' })
 
     local f = frame.add({ type = 'flow', name = 'flow', direction = 'horizontal' })
@@ -613,7 +607,7 @@ local function draw_reroll_gui(player)
         local t = f.add({ type = 'table', name = 'reroll_table', column_count = 3, vertical_centering = true })
         gui_style(t, { top_margin = 2, left_margin = 8, right_margin = 8 })
 
-        local l = t.add({ type = 'label', caption = { 'gui.reroll_caption', global.reroll_time_left } })
+        local l = t.add({ type = 'label', caption = { 'gui.reroll_caption', storage.reroll_time_left } })
         gui_style(l, {
             font = 'heading-2',
             font_color = { r = 0.88, g = 0.55, b = 0.11 },
@@ -647,17 +641,15 @@ local function draw_reroll_gui(player)
     end
 end
 
----@return success_percent number [0-1] yes/total
----@return yes_count number
----@return no_count number
+---@return number, number, number #success percent[0-1], yes count, no count
 local function get_automatic_captain_stats()
-    local total_votes = table.size(global.automatic_captain_voting)
+    local total_votes = table.size(storage.automatic_captain_voting)
     if total_votes == 0 then
         return 0, 0, 0
     end
 
     local yes_votes = 0
-    for _, vote in pairs(global.automatic_captain_voting) do
+    for _, vote in pairs(storage.automatic_captain_voting) do
         yes_votes = yes_votes + vote
     end
     return math.floor(100 * yes_votes / total_votes), yes_votes, total_votes - yes_votes
@@ -670,7 +662,7 @@ local function draw_automatic_captain_poll_gui(player)
 
     local frame = Gui.add_top_element(
         player,
-        { type = 'frame', name = 'automatic_captain_poll_frame', style = 'finished_game_subheader_frame' }
+        { type = 'frame', name = 'automatic_captain_poll_frame', style = 'subheader_frame' }
     )
     gui_style(frame, { minimal_height = 36, maximal_height = 36, padding = 0, vertical_align = 'center' })
 
@@ -682,8 +674,10 @@ local function draw_automatic_captain_poll_gui(player)
             f.add({ type = 'table', name = 'automatic_captain_table', column_count = 3, vertical_centering = true })
         gui_style(t, { top_margin = 2, left_margin = 8, right_margin = 8 })
 
-        local l =
-            t.add({ type = 'label', caption = { 'gui.automatic_captain_caption', global.automatic_captain_time_left } })
+        local l = t.add({
+            type = 'label',
+            caption = { 'gui.automatic_captain_caption', storage.automatic_captain_time_left },
+        })
         gui_style(l, {
             font = 'heading-2',
             font_color = { r = 0.88, g = 0.55, b = 0.11 },
@@ -722,7 +716,7 @@ local function draw_automatic_captain_poll_gui(player)
 end
 
 local function stop_automatic_captain()
-    global.automatic_captain_time_left = 0
+    storage.automatic_captain_time_left = 0
     -- remove existing buttons
     for _, player in pairs(game.players) do
         local frame = Gui.get_top_element(player, 'automatic_captain_poll_frame')
@@ -734,18 +728,18 @@ end
 
 local decrement_timer_automatic_captain_token = Token.get_counter() + 1 -- predict what the token will look like
 decrement_timer_automatic_captain_token = Token.register(function()
-    if not global.bb_settings.automatic_captain then
+    if not storage.bb_settings.automatic_captain then
         stop_automatic_captain()
         return
     end
 
-    global.automatic_captain_time_left = global.automatic_captain_time_left - 1
-    if global.automatic_captain_time_left > 0 then
+    storage.automatic_captain_time_left = storage.automatic_captain_time_left - 1
+    if storage.automatic_captain_time_left > 0 then
         for _, player in pairs(game.connected_players) do
             local frame = Gui.get_top_element(player, 'automatic_captain_poll_frame')
             if frame and frame.valid then
                 frame.flow.automatic_captain_table.children[1].caption =
-                    { 'gui.automatic_captain_caption', global.automatic_captain_time_left }
+                    { 'gui.automatic_captain_caption', storage.automatic_captain_time_left }
                 local percent, yes_votes, no_votes = get_automatic_captain_stats()
                 frame.flow.automatic_captain_stats.caption =
                     { 'gui.automatic_captain_stats', no_votes, yes_votes, percent }
@@ -777,22 +771,22 @@ decrement_timer_automatic_captain_token = Token.register(function()
             if result < percentRequired then
                 game.print('At least ' .. percentRequired .. '% of yes are required')
             end
-            global.tournament_mode = false
+            storage.tournament_mode = false
         end
     end
 end)
 
 local function start_auto_captain_vote()
     if
-        global.bb_settings.automatic_captain
-        and #game.connected_players > global.automatic_captain_min_connected_players_for_vote
+        storage.bb_settings.automatic_captain
+        and #game.connected_players > storage.automatic_captain_min_connected_players_for_vote
     then
         game.print(
             'You can now vote to start or not a captain game, top of screen! You wont be able to play until the poll is over',
-            { r = 0.22, g = 0.88, b = 0.22 }
+            { color = { r = 0.22, g = 0.88, b = 0.22 } }
         )
-        global.tournament_mode = true
-        global.automatic_captain_time_left = global.automatic_captain_time_limit / 60
+        storage.tournament_mode = true
+        storage.automatic_captain_time_left = storage.automatic_captain_time_limit / 60
         Task.set_timeout_in_ticks(60, decrement_timer_automatic_captain_token)
         for _, player in pairs(game.connected_players) do
             draw_automatic_captain_poll_gui(player)
@@ -810,7 +804,7 @@ local reroll_buttons_token = Token.register(
 )
 
 local function stop_map_reroll()
-    global.reroll_time_left = 0
+    storage.reroll_time_left = 0
     -- disable reroll buttons creation for joining players
     Event.remove_removable(defines.events.on_player_joined_game, reroll_buttons_token)
     -- remove existing buttons
@@ -824,17 +818,17 @@ end
 
 local decrement_timer_token = Token.get_counter() + 1 -- predict what the token will look like
 decrement_timer_token = Token.register(function()
-    if not global.bb_settings.map_reroll then
+    if not storage.bb_settings.map_reroll then
         stop_map_reroll()
         return
     end
 
-    global.reroll_time_left = global.reroll_time_left - 1
-    if global.reroll_time_left > 0 then
+    storage.reroll_time_left = storage.reroll_time_left - 1
+    if storage.reroll_time_left > 0 then
         for _, player in pairs(game.connected_players) do
             local frame = Gui.get_top_element(player, 'reroll_frame')
             if frame and frame.valid then
-                frame.flow.reroll_table.children[1].caption = { 'gui.reroll_caption', global.reroll_time_left }
+                frame.flow.reroll_table.children[1].caption = { 'gui.reroll_caption', storage.reroll_time_left }
 
                 local percent, yes_votes, no_votes = get_reroll_stats()
                 frame.flow.reroll_stats.caption = { 'gui.reroll_stats', no_votes, yes_votes, percent }
@@ -849,7 +843,7 @@ decrement_timer_token = Token.register(function()
         local result, _, _ = get_reroll_stats()
         if result >= 66 then
             game.print('Vote to reload the map has succeeded (' .. result .. '%)')
-            game.print('Map is being rerolled!', { r = 0.22, g = 0.88, b = 0.22 })
+            game.print('Map is being rerolled!', { color = { r = 0.22, g = 0.88, b = 0.22 } })
             Public.generate_new_map()
         else
             game.print('Vote to reload the map has failed (' .. result .. '%)')
@@ -859,12 +853,12 @@ decrement_timer_token = Token.register(function()
 end)
 
 local function start_map_reroll()
-    if global.bb_settings.map_reroll then
-        if not global.reroll_time_left or global.reroll_time_left <= 0 then
+    if storage.bb_settings.map_reroll then
+        if not storage.reroll_time_left or storage.reroll_time_left <= 0 then
             Task.set_timeout_in_ticks(60, decrement_timer_token)
             Event.add_removable(defines.events.on_player_joined_game, reroll_buttons_token)
         end
-        global.reroll_time_left = global.reroll_time_limit / 60
+        storage.reroll_time_left = storage.reroll_time_limit / 60
         for _, player in pairs(game.connected_players) do
             draw_reroll_gui(player)
         end
@@ -874,15 +868,15 @@ end
 
 function Public.generate_new_map()
     game.speed = 1
-    local prev_surface = global.bb_surface_name
+    local prev_surface = storage.bb_surface_name
     Special_games.reset_special_games()
     Init.tables()
     Init.playground_surface()
     Init.forces()
     Init.draw_structures()
     BBGui.reset_tables_gui()
-    Init.load_spawn()
     Init.queue_reveal_map()
+    Announce.announce_if_any()
     for _, player in pairs(game.players) do
         Functions.init_player(player)
         for _, e in pairs(player.gui.left.children) do
@@ -895,17 +889,17 @@ function Public.generate_new_map()
         BBGui.create_main_gui(player)
     end
     game.reset_time_played()
-    global.server_restart_timer = nil
+    storage.server_restart_timer = nil
     game.delete_surface(prev_surface)
     start_map_reroll()
 end
 
 function Public.automatic_captain_draw_buttons(event)
-    if not global.bb_settings.automatic_captain then
+    if not storage.bb_settings.automatic_captain then
         return
     end
 
-    if global.automatic_captain_time_left > 0 then
+    if storage.automatic_captain_time_left > 0 then
         local player = game.get_player(event.player_index)
         draw_automatic_captain_poll_gui(player)
     end

@@ -98,9 +98,12 @@ commands.add_command('scenario', 'Usable only for admins - controls the scenario
     elseif param == 'reset' then
         this.reset_are_you_sure = nil
         if player and player.valid then
-            game.print(mapkeeper .. ' ' .. player.name .. ', has reset the game!', { r = 0.98, g = 0.66, b = 0.22 })
+            game.print(
+                mapkeeper .. ' ' .. player.name .. ', has reset the game!',
+                { color = { r = 0.98, g = 0.66, b = 0.22 } }
+            )
         else
-            game.print(mapkeeper .. ' server, has reset the game!', { r = 0.98, g = 0.66, b = 0.22 })
+            game.print(mapkeeper .. ' server, has reset the game!', { color = { r = 0.98, g = 0.66, b = 0.22 } })
         end
         reset_map()
         p('[WARNING] Game has been reset!')

@@ -19,11 +19,11 @@ local space = {
 }
 
 local function get_player_data(player, remove)
-    if remove and this.data[player.index] then
+    if remove and this.data[player.index] ~= nil then
         this.data[player.index] = nil
         return
     end
-    if not this.data[player.index] then
+    if this.data[player.index] == nil then
         this.data[player.index] = {}
     end
     return this.data[player.index]
@@ -145,7 +145,7 @@ local function redraw_inventory(gui, source, target, caption, panel_type)
     gui.clear()
 
     local items_table = gui.add({ type = 'table', column_count = 11 })
-    local types = game.item_prototypes
+    local types = prototypes.item
 
     local screen = source.gui.screen
 
@@ -157,33 +157,36 @@ local function redraw_inventory(gui, source, target, caption, panel_type)
 
     inventory_gui.caption = 'Inventory of ' .. target.name
 
-    for name, opts in pairs(panel_type) do
+    for _, opts in ipairs(panel_type) do
         local flow = items_table.add({ type = 'flow' })
         flow.style.vertical_align = 'bottom'
 
         local button = flow.add({
             type = 'sprite-button',
-            sprite = 'item/' .. name,
-            number = opts,
-            name = name,
-            tooltip = types[name].localised_name,
+            sprite = 'item/' .. opts.name,
+            number = opts.count,
+            name = opts.name,
+            tooltip = types[opts.name].localised_name,
             style = 'slot_button',
         })
-        button.enabled = false
+        button.enabled = true
+        button.ignored_by_interaction = true
 
         if caption == 'Armor' then
-            if target.get_inventory(5)[1].grid then
-                local p_armor = target.get_inventory(5)[1].grid.get_contents()
-                for k, v in pairs(p_armor) do
+            local grid = target.character.get_inventory(defines.inventory.character_armor)[1].grid
+            if grid then
+                local p_armor = grid.get_contents()
+                for _, item in ipairs(p_armor) do
                     local armor_gui = flow.add({
                         type = 'sprite-button',
-                        sprite = 'item/' .. k,
-                        number = v,
-                        name = k,
-                        tooltip = types[name].localised_name,
+                        sprite = 'item/' .. item.name,
+                        number = item.count,
+                        name = item.name,
+                        tooltip = types[opts.name].localised_name,
                         style = 'slot_button',
                     })
-                    armor_gui.enabled = false
+                    armor_gui.enabled = true
+                    armor_gui.ignored_by_interaction = true
                 end
             end
         end
@@ -263,11 +266,11 @@ local function open_inventory(source, target)
     data.player_opened = target
     data.last_tab = 'Main'
 
-    local main = target.get_main_inventory().get_contents()
-    local armor = target.get_inventory(defines.inventory.character_armor).get_contents()
-    local guns = target.get_inventory(defines.inventory.character_guns).get_contents()
-    local ammo = target.get_inventory(defines.inventory.character_ammo).get_contents()
-    local trash = target.get_inventory(defines.inventory.character_trash).get_contents()
+    local main = target.character.get_main_inventory().get_contents()
+    local armor = target.character.get_inventory(defines.inventory.character_armor).get_contents()
+    local guns = target.character.get_inventory(defines.inventory.character_guns).get_contents()
+    local ammo = target.character.get_inventory(defines.inventory.character_ammo).get_contents()
+    local trash = target.character.get_inventory(defines.inventory.character_trash).get_contents()
 
     local types = {
         ['Main'] = main,
@@ -314,23 +317,26 @@ local function on_gui_click(event)
     data.last_tab = name
 
     local valid, target = player_opened(player)
+    if not validate_player(target) then
+        return
+    end
 
     if valid then
         local target_inventories = {
             ['Main'] = function()
-                return target.get_main_inventory().get_contents()
+                return target.character.get_main_inventory().get_contents()
             end,
             ['Armor'] = function()
-                return target.get_inventory(defines.inventory.character_armor).get_contents()
+                return target.character.get_inventory(defines.inventory.character_armor).get_contents()
             end,
             ['Guns'] = function()
-                return target.get_inventory(defines.inventory.character_guns).get_contents()
+                return target.character.get_inventory(defines.inventory.character_guns).get_contents()
             end,
             ['Ammo'] = function()
-                return target.get_inventory(defines.inventory.character_ammo).get_contents()
+                return target.character.get_inventory(defines.inventory.character_ammo).get_contents()
             end,
             ['Trash'] = function()
-                return target.get_inventory(defines.inventory.character_trash).get_contents()
+                return target.character.get_inventory(defines.inventory.character_trash).get_contents()
             end,
         }
 
@@ -400,19 +406,19 @@ local function update_gui(event)
     -- of getting all inventories if only some are watched
     local target_inventories = {
         ['Main'] = function()
-            return target.get_main_inventory().get_contents()
+            return target.character.get_main_inventory().get_contents()
         end,
         ['Armor'] = function()
-            return target.get_inventory(defines.inventory.character_armor).get_contents()
+            return target.character.get_inventory(defines.inventory.character_armor).get_contents()
         end,
         ['Guns'] = function()
-            return target.get_inventory(defines.inventory.character_guns).get_contents()
+            return target.character.get_inventory(defines.inventory.character_guns).get_contents()
         end,
         ['Ammo'] = function()
-            return target.get_inventory(defines.inventory.character_ammo).get_contents()
+            return target.character.get_inventory(defines.inventory.character_ammo).get_contents()
         end,
         ['Trash'] = function()
-            return target.get_inventory(defines.inventory.character_trash).get_contents()
+            return target.character.get_inventory(defines.inventory.character_trash).get_contents()
         end,
     }
 
@@ -461,7 +467,7 @@ commands.add_command('inventory', 'Opens a players inventory!', function(cmd)
         local valid, opened = player_opened(player)
         if valid then
             if target_player == opened then
-                return player.print('You are already viewing this players inventory.', Color.warning)
+                return player.print('You are already viewing this players inventory.', { color = Color.warning })
             end
         end
 
@@ -469,7 +475,7 @@ commands.add_command('inventory', 'Opens a players inventory!', function(cmd)
             Sounds.notify_player(player, 'utility/smart_pipette')
             open_inventory(player, target_player)
         else
-            player.print('Please type a name of a player who is connected.', Color.warning)
+            player.print('Please type a name of a player who is connected.', { color = Color.warning })
         end
     else
         return

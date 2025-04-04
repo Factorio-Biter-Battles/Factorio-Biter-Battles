@@ -316,7 +316,11 @@ local function on_gui_click(event)
                 local a, b = string.find(element.caption, ' , ')
                 local x = string.sub(element.caption, 1, a)
                 local y = string.sub(element.caption, b)
-                player.zoom_to_world({ x, y })
+                player.set_controller({
+                    type = defines.controllers.remote,
+                    position = { x, y },
+                })
+
                 return
             end
         end

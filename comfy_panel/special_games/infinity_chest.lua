@@ -1,7 +1,7 @@
 local Color = require('utils.color_presets')
 
 local function generate_infinity_chest(separate_chests, operable, gap, eq)
-    local surface = game.surfaces[global.bb_surface_name]
+    local surface = game.surfaces[storage.bb_surface_name]
     local position_0 = { x = 0, y = -42 }
 
     local objects = surface.find_entities_filtered({ name = 'infinity-chest' })
@@ -9,7 +9,7 @@ local function generate_infinity_chest(separate_chests, operable, gap, eq)
         object.destroy()
     end
 
-    game.print('Special game Infinity chest is being generated!', Color.warning)
+    game.print('Special game Infinity chest is being generated!', { color = Color.warning })
     if operable == 'left' then
         operable = true
     else
@@ -23,11 +23,11 @@ local function generate_infinity_chest(separate_chests, operable, gap, eq)
             force = 'neutral',
             fast_replace = true,
         })
-        chest.minable = false
+        chest.minable_flag = false
         chest.operable = operable
         chest.destructible = false
         for i, v in ipairs(eq) do
-            chest.set_infinity_container_filter(i, { name = v, index = i, count = game.item_prototypes[v].stack_size })
+            chest.set_infinity_container_filter(i, { name = v, index = i, count = prototypes.item[v].stack_size })
         end
         chest.clone({ position = { position_0.x, -position_0.y } })
     elseif separate_chests == 'right' then
@@ -39,20 +39,20 @@ local function generate_infinity_chest(separate_chests, operable, gap, eq)
                 force = 'neutral',
                 fast_replace = true,
             })
-            chest.minable = false
+            chest.minable_flag = false
             chest.operable = operable
             chest.destructible = false
-            chest.set_infinity_container_filter(i, { name = v, index = i, count = game.item_prototypes[v].stack_size })
+            chest.set_infinity_container_filter(i, { name = v, index = i, count = prototypes.item[v].stack_size })
             chest.clone({ position = { position_0.x, -position_0.y } })
             position_0.x = position_0.x + (i * k)
             k = k * -1
         end
     end
-    global.active_special_games['infinity_chest'] = true
-    local special = global.special_games_variables['infinity_chest']
+    storage.active_special_games['infinity_chest'] = true
+    local special = storage.special_games_variables['infinity_chest']
     if not special then
         special = { freebies = {} }
-        global.special_games_variables['infinity_chest'] = special
+        storage.special_games_variables['infinity_chest'] = special
     end
     for i, v in ipairs(eq) do
         special.freebies[v] = true

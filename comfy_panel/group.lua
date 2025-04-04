@@ -269,28 +269,34 @@ local function on_gui_click(event)
         if new_group_name ~= '' and new_group_name ~= 'Name' and new_group_description ~= 'Description' then
             if this.alphanumeric then
                 if alphanumeric(new_group_name) then
-                    player.print('Group name is not valid.', { r = 0.90, g = 0.0, b = 0.0 })
+                    player.print('Group name is not valid.', { color = { r = 0.90, g = 0.0, b = 0.0 } })
                     return
                 end
 
                 if alphanumeric(new_group_description) then
-                    player.print('Group description is not valid.', { r = 0.90, g = 0.0, b = 0.0 })
+                    player.print('Group description is not valid.', { color = { r = 0.90, g = 0.0, b = 0.0 } })
                     return
                 end
             end
 
             if string.len(new_group_name) > 64 then
-                player.print('Group name is too long. 64 characters maximum.', { r = 0.90, g = 0.0, b = 0.0 })
+                player.print(
+                    'Group name is too long. 64 characters maximum.',
+                    { color = { r = 0.90, g = 0.0, b = 0.0 } }
+                )
                 return
             end
 
             if string.len(new_group_description) > 128 then
-                player.print('Description is too long. 128 characters maximum.', { r = 0.90, g = 0.0, b = 0.0 })
+                player.print(
+                    'Description is too long. 128 characters maximum.',
+                    { color = { r = 0.90, g = 0.0, b = 0.0 } }
+                )
                 return
             end
 
             if this.tag_groups[new_group_name] ~= nil then
-                player.print('Group name is taken.', { r = 0.90, g = 0.0, b = 0.0 })
+                player.print('Group name is taken.', { color = { r = 0.90, g = 0.0, b = 0.0 } })
                 return
             end
 
@@ -305,9 +311,9 @@ local function on_gui_click(event)
                 b = player.color.b * 0.7 + 0.3,
                 a = 1,
             }
-            game.print(player.name .. ' has founded a new group!', color)
-            game.print('>> ' .. new_group_name, { r = 0.98, g = 0.66, b = 0.22 })
-            game.print(new_group_description, { r = 0.85, g = 0.85, b = 0.85 })
+            game.print(player.name .. ' has founded a new group!', { color = color })
+            game.print('>> ' .. new_group_name, { color = { r = 0.98, g = 0.66, b = 0.22 } })
+            game.print(new_group_description, { color = { r = 0.85, g = 0.85, b = 0.85 } })
 
             frame.frame2.group_table.new_group_name.text = 'Name'
             frame.frame2.group_table.new_group_description.text = 'Description'
@@ -327,17 +333,17 @@ local function on_gui_click(event)
                 local group_name = Public.convert_from_safe_group_name(safe_group_name)
                 if
                     (
-                        global.active_special_games['captain_mode']
-                        and global.special_games_variables['captain_mode']['pickingPhase']
+                        storage.active_special_games['captain_mode']
+                        and storage.special_games_variables['captain_mode']['pickingPhase']
                         and startswith(group_name, Public.COMFY_PANEL_CAPTAINS_GROUP_PREFIX)
                     )
                     or (
-                        global.active_special_games['captain_mode']
-                        and global.special_games_variables['captain_mode']['pickingPhase']
+                        storage.active_special_games['captain_mode']
+                        and storage.special_games_variables['captain_mode']['pickingPhase']
                         and startswith(player.tag, Public.COMFY_PANEL_CAPTAINS_GROUP_PLAYER_TAG_PREFIX)
                     )
                 then
-                    player.print('You cant join or leave a picking group during picking phase..', Color.red)
+                    player.print('You cant join or leave a picking group during picking phase..', { color = Color.red })
                 else
                     local player_group_tag = '[' .. group_name .. ']'
                     this.player_group[player.name] = group_name
@@ -349,7 +355,7 @@ local function on_gui_click(event)
                             b = player.color.b * 0.7 + 0.3,
                             a = 1,
                         }
-                        game.print(player.name .. ' has joined group "' .. group_name .. '"', color)
+                        game.print(player.name .. ' has joined group "' .. group_name .. '"', { color = color })
                         this.join_spam_protection[player.name] = game.tick
                     end
                     refresh_gui()
@@ -361,11 +367,11 @@ local function on_gui_click(event)
                 local safe_group_name = event.element.parent.name
                 local group_name = Public.convert_from_safe_group_name(safe_group_name)
                 if
-                    global.active_special_games['captain_mode']
-                    and global.special_games_variables['captain_mode']['pickingPhase']
+                    storage.active_special_games['captain_mode']
+                    and storage.special_games_variables['captain_mode']['pickingPhase']
                     and startswith(group_name, Public.COMFY_PANEL_CAPTAINS_GROUP_PREFIX)
                 then
-                    player.print('You cant delete a picking group during picking phase..', Color.red)
+                    player.print('You cant delete a picking group during picking phase..', { color = Color.red })
                 else
                     for _, p in pairs(game.players) do
                         if this.player_group[p.name] then
@@ -384,11 +390,11 @@ local function on_gui_click(event)
 
             if event.element.type == 'button' and event.element.caption == 'Leave' then
                 if
-                    global.active_special_games['captain_mode']
-                    and global.special_games_variables['captain_mode']['pickingPhase']
+                    storage.active_special_games['captain_mode']
+                    and storage.special_games_variables['captain_mode']['pickingPhase']
                     and startswith(player.tag, Public.COMFY_PANEL_CAPTAINS_GROUP_PLAYER_TAG_PREFIX)
                 then
-                    player.print('You cant leave a picking group during picking phase..', Color.red)
+                    player.print('You cant leave a picking group during picking phase..', { color = Color.red })
                 else
                     this.player_group[player.name] = '[Group]'
                     player.tag = ''

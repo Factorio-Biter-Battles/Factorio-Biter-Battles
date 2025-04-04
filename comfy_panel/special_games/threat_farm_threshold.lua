@@ -35,18 +35,18 @@ local Public = {
         }
 
         if not (variables.threat_threshold and variables.excess_threat_send_fraction) then
-            game.print('invalid configuration, only numbers allowed', color_presets.warning)
+            game.print('invalid configuration, only numbers allowed', { color = color_presets.warning })
             return
         end
-        global.active_special_games['threat_farm_threshold'] = true
-        global.special_games_variables['threat_farm_threshold'] = variables
+        storage.active_special_games['threat_farm_threshold'] = true
+        storage.special_games_variables['threat_farm_threshold'] = variables
 
         game.print(
             'Threat threshold enabled! Excess threat below '
                 .. variables.threat_threshold
                 .. ' will be added to opponent with a factor of '
                 .. variables.excess_threat_send_fraction,
-            color_presets.warning
+            { color = color_presets.warning }
         )
     end,
 }

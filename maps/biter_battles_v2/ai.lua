@@ -32,11 +32,11 @@ local threat_values = {
 }
 
 local function get_threat_ratio(biter_force_name)
-    if global.bb_threat[biter_force_name] <= 0 then
+    if storage.bb_threat[biter_force_name] <= 0 then
         return 0
     end
-    local t1 = global.bb_threat['north_biters']
-    local t2 = global.bb_threat['south_biters']
+    local t1 = storage.bb_threat['north_biters']
+    local t2 = storage.bb_threat['south_biters']
     if t1 == 0 and t2 == 0 then
         return 0.5
     end
@@ -47,7 +47,7 @@ local function get_threat_ratio(biter_force_name)
         t2 = 0
     end
     local total_threat = t1 + t2
-    local ratio = global.bb_threat[biter_force_name] / total_threat
+    local ratio = storage.bb_threat[biter_force_name] / total_threat
     return ratio
 end
 
@@ -55,20 +55,20 @@ Public.send_near_biters_to_silo = function()
     if Functions.get_ticks_since_game_start() < 108000 then
         return
     end
-    if not global.rocket_silo['north'] then
+    if not storage.rocket_silo['north'] then
         return
     end
-    if not global.rocket_silo['south'] then
+    if not storage.rocket_silo['south'] then
         return
     end
-    if global.bb_game_won_by_team then
+    if storage.bb_game_won_by_team then
         return
     end
 
-    game.surfaces[global.bb_surface_name].set_multi_command({
+    game.surfaces[storage.bb_surface_name].set_multi_command({
         command = {
             type = defines.command.attack,
-            target = global.rocket_silo['north'],
+            target = storage.rocket_silo['north'],
             distraction = defines.distraction.none,
         },
         unit_count = 8,
@@ -76,10 +76,10 @@ Public.send_near_biters_to_silo = function()
         unit_search_distance = 64,
     })
 
-    game.surfaces[global.bb_surface_name].set_multi_command({
+    game.surfaces[storage.bb_surface_name].set_multi_command({
         command = {
             type = defines.command.attack,
-            target = global.rocket_silo['south'],
+            target = storage.rocket_silo['south'],
             distraction = defines.distraction.none,
         },
         unit_count = 8,
@@ -89,7 +89,7 @@ Public.send_near_biters_to_silo = function()
 end
 
 local function get_random_spawner(biter_force_name)
-    local spawners = global.unit_spawners[biter_force_name]
+    local spawners = storage.unit_spawners[biter_force_name]
     local size_of_spawners = #spawners
 
     for _ = 1, 256, 1 do
@@ -123,13 +123,13 @@ local function spawn_biters(
     -- *1.5 because we add 50% health bonus as it's just one unit.
     -- *20 because one boss is equal of 20 biters in theory
     -- formula because 90% revive chance is 1/(1-0.9) = 10, which means biters needs to be killed 10 times, so *10 . easy fast-check : 50% revive is 2 biters worth, formula matches. 0% revive -> 1 biter worth
-    local health_buff_equivalent_revive = global.biter_health_factor[game.forces[biter_force_name].index]
+    local health_buff_equivalent_revive = storage.biter_health_factor[game.forces[biter_force_name].index]
     if not isItnormalBiters then
         health_buff_equivalent_revive = health_buff_equivalent_revive * 20
     end
     local i = #valid_biters
     for _ = 1, maxLoopIteration, 1 do
-        local unit_name = BiterRaffle.roll(roll_type, global.bb_evolution[biter_force_name])
+        local unit_name = BiterRaffle.roll(roll_type, storage.bb_evolution[biter_force_name])
         if isItnormalBiters and biter_threat < 0 then
             break
         end
@@ -160,7 +160,7 @@ local function spawn_biters(
         end
 
         --Announce New Spawn
-        if isItnormalBiters and global.biter_spawn_unseen[force_name][unit_name] then
+        if isItnormalBiters and storage.biter_spawn_unseen[force_name][unit_name] then
             game.print({
                 '',
                 'A ',
@@ -169,9 +169,9 @@ local function spawn_biters(
                 Functions.team_name_with_color(force_name),
                 '...',
             })
-            global.biter_spawn_unseen[force_name][unit_name] = false
+            storage.biter_spawn_unseen[force_name][unit_name] = false
         end
-        if not isItnormalBiters and global.biter_spawn_unseen[boss_biter_force_name][unit_name] then
+        if not isItnormalBiters and storage.biter_spawn_unseen[boss_biter_force_name][unit_name] then
             game.print({
                 '',
                 'A ',
@@ -180,7 +180,7 @@ local function spawn_biters(
                 Functions.team_name_with_color(force_name),
                 '...',
             })
-            global.biter_spawn_unseen[boss_biter_force_name][unit_name] = false
+            storage.biter_spawn_unseen[boss_biter_force_name][unit_name] = false
         end
     end
 end
@@ -191,7 +191,7 @@ local function on_entity_spawned(event)
         return
     end
     if entity.force.name == 'north_biters' or entity.force.name == 'south_biters' then
-        local health_factor = global.biter_health_factor[entity.force.index]
+        local health_factor = storage.biter_health_factor[entity.force.index]
         if health_factor > 1 then
             BossUnit.add_high_health_unit(entity, health_factor, false)
         end
@@ -207,16 +207,16 @@ local function select_units_around_spawner(spawner, force_name)
     local i = 0
 
     -- Half threat goes to normal biters, half threat goes for bosses, to get half bosses and half normal biters
-    local threat = global.bb_threat[biter_force_name] / 10
+    local threat = storage.bb_threat[biter_force_name] / 10
     local threat_for_normal_biters = threat
 
-    local max_group_size_biters_force = global.max_group_size[biter_force_name]
+    local max_group_size_biters_force = storage.max_group_size[biter_force_name]
 
-    if max_group_size_biters_force ~= global.max_group_size_initial then
+    if max_group_size_biters_force ~= storage.max_group_size_initial then
         threat_for_normal_biters = threat_for_normal_biters / 2
     end
     local threat_for_boss_biters = threat / 2
-    local max_unit_count = math.floor(global.bb_threat[biter_force_name] * 0.25) + math_random(6, 12)
+    local max_unit_count = math.floor(storage.bb_threat[biter_force_name] * 0.25) + math_random(6, 12)
     if max_unit_count > max_group_size_biters_force then
         max_unit_count = max_group_size_biters_force
     end
@@ -234,10 +234,10 @@ local function select_units_around_spawner(spawner, force_name)
     )
 
     --Manual spawning of boss units
-    if max_group_size_biters_force ~= global.max_group_size_initial then
+    if max_group_size_biters_force ~= storage.max_group_size_initial then
         spawn_biters(
             false,
-            math.ceil((global.max_group_size_initial - max_group_size_biters_force) / 20),
+            math.ceil((storage.max_group_size_initial - max_group_size_biters_force) / 20),
             spawner,
             threat_for_boss_biters,
             biter_force_name,
@@ -259,7 +259,7 @@ local function get_unit_group_position(spawner)
     end
     p = spawner.surface.find_non_colliding_position('electric-furnace', p, 256, 1)
     if not p then
-        if global.bb_debug then
+        if storage.bb_debug then
             game.print('No unit_group_position found for force ' .. spawner.force.name)
         end
         return
@@ -291,7 +291,7 @@ local function get_nearby_biter_nest(center, biter_force_name)
 end
 
 local function create_attack_group(surface, force_name, biter_force_name)
-    local threat = global.bb_threat[biter_force_name]
+    local threat = storage.bb_threat[biter_force_name]
     if threat <= 0 then
         return false
     end
@@ -333,50 +333,50 @@ local function create_attack_group(surface, force_name, biter_force_name)
 end
 
 Public.pre_main_attack = function()
-    local force_name = global.next_attack
+    local force_name = storage.next_attack
 
     -- In headless benchmarking, there are no connected_players so we need a global to override this
     if
-        not global.training_mode
-        or (global.training_mode and (global.benchmark_mode or #game.forces[force_name].connected_players > 0))
+        not storage.training_mode
+        or (storage.training_mode and (storage.benchmark_mode or #game.forces[force_name].connected_players > 0))
     then
         local biter_force_name = force_name .. '_biters'
-        global.main_attack_wave_amount = math.ceil(get_threat_ratio(biter_force_name) * 7)
+        storage.main_attack_wave_amount = math.ceil(get_threat_ratio(biter_force_name) * 7)
 
-        if global.bb_debug then
-            game.print(global.main_attack_wave_amount .. ' unit groups designated for ' .. force_name .. ' biters.')
+        if storage.bb_debug then
+            game.print(storage.main_attack_wave_amount .. ' unit groups designated for ' .. force_name .. ' biters.')
         end
     else
-        global.main_attack_wave_amount = 0
+        storage.main_attack_wave_amount = 0
     end
 end
 
 Public.perform_main_attack = function()
-    if global.main_attack_wave_amount > 0 then
-        local surface = game.surfaces[global.bb_surface_name]
-        local force_name = global.next_attack
+    if storage.main_attack_wave_amount > 0 then
+        local surface = game.surfaces[storage.bb_surface_name]
+        local force_name = storage.next_attack
         local biter_force_name = force_name .. '_biters'
 
         create_attack_group(surface, force_name, biter_force_name)
-        global.main_attack_wave_amount = global.main_attack_wave_amount - 1
+        storage.main_attack_wave_amount = storage.main_attack_wave_amount - 1
     end
 end
 
 Public.post_main_attack = function()
-    global.main_attack_wave_amount = 0
-    if global.next_attack == 'north' then
-        global.next_attack = 'south'
+    storage.main_attack_wave_amount = 0
+    if storage.next_attack == 'north' then
+        storage.next_attack = 'south'
     else
-        global.next_attack = 'north'
+        storage.next_attack = 'north'
     end
 end
 
 Public.raise_evo = function()
-    if global.freeze_players then
+    if storage.freeze_players then
         return
     end
     if
-        not global.training_mode
+        not storage.training_mode
         and (#game.forces.north.connected_players == 0 or #game.forces.south.connected_players == 0)
     then
         return
@@ -384,17 +384,17 @@ Public.raise_evo = function()
     if Functions.get_ticks_since_game_start() < 7200 then
         return
     end
-    if global.difficulty_vote_index and 1 <= global.difficulty_vote_index and 3 >= global.difficulty_vote_index then
+    if storage.difficulty_vote_index and 1 <= storage.difficulty_vote_index and 4 >= storage.difficulty_vote_index then
         local x = game.ticks_played / 3600 -- current length of the match in minutes
-        global.difficulty_vote_value = ((x / 470) ^ 3.7) + Tables.difficulties[global.difficulty_vote_index].value
+        storage.difficulty_vote_value = ((x / 470) ^ 3.7) + Tables.difficulties[storage.difficulty_vote_index].value
     end
 
-    local amount = math.ceil(global.evo_raise_counter * 0.75)
+    local amount = math.ceil(storage.evo_raise_counter * 0.75)
 
-    if not global.total_passive_feed_redpotion then
-        global.total_passive_feed_redpotion = 0
+    if not storage.total_passive_feed_redpotion then
+        storage.total_passive_feed_redpotion = 0
     end
-    global.total_passive_feed_redpotion = global.total_passive_feed_redpotion + amount
+    storage.total_passive_feed_redpotion = storage.total_passive_feed_redpotion + amount
 
     local biter_teams = { ['north_biters'] = 'north', ['south_biters'] = 'south' }
     local a_team_has_players = false
@@ -407,25 +407,25 @@ Public.raise_evo = function()
     if not a_team_has_players then
         return
     end
-    global.evo_raise_counter = global.evo_raise_counter + (1 * 0.50)
+    storage.evo_raise_counter = storage.evo_raise_counter + (1 * 0.50)
 end
 
 Public.reset_evo = function()
     -- Shouldn't reset evo if any of the teams fed. Feeding is blocked when voting is in progress.
     -- However, if /difficulty-revote is done late in a game, we don't want to reset evo.
-    if global.science_logs_text then
+    if storage.science_logs_text then
         return
     end
 
-    local amount = global.total_passive_feed_redpotion
+    local amount = storage.total_passive_feed_redpotion
     if amount < 1 then
         return
     end
-    global.total_passive_feed_redpotion = 0
+    storage.total_passive_feed_redpotion = 0
 
     local biter_teams = { ['north_biters'] = 'north', ['south_biters'] = 'south' }
     for bf, _ in pairs(biter_teams) do
-        global.bb_evolution[bf] = 0
+        storage.bb_evolution[bf] = 0
         Feeding.do_raw_feed(amount, 'automation-science-pack', bf)
     end
 end
@@ -446,30 +446,33 @@ function Public.subtract_threat(entity)
         is_boss = true
     end
     if is_boss == true then
-        local health_buff_equivalent_revive = global.biter_health_factor[game.forces[biter_not_boss_force].index]
+        local health_buff_equivalent_revive = storage.biter_health_factor[game.forces[biter_not_boss_force].index]
         factor = bb_config.health_multiplier_boss * health_buff_equivalent_revive
+    elseif entity.type == 'unit-spawner' then
+        local evo = game.forces[biter_not_boss_force].get_evolution_factor(entity.surface.name)
+        factor = 1 + 9 * evo ^ 2.25
     end
-    if global.active_special_games['threat_farm_threshold'] then
+    if storage.active_special_games['threat_farm_threshold'] then
         local threat_value = threat_values[entity.name] * factor
-        local special_variables = global.special_games_variables['threat_farm_threshold']
+        local special_variables = storage.special_games_variables['threat_farm_threshold']
         local threat_below_threshold = special_variables.threat_threshold
-            - (global.bb_threat[biter_not_boss_force] - threat_value)
+            - (storage.bb_threat[biter_not_boss_force] - threat_value)
         local enemy_force
         if threat_below_threshold > 0 then
-            global.bb_threat[biter_not_boss_force] = special_variables.threat_threshold
+            storage.bb_threat[biter_not_boss_force] = special_variables.threat_threshold
             if biter_not_boss_force == 'south_biters' then
                 enemy_force = 'north_biters'
             else
                 enemy_force = 'south_biters'
             end
-            global.bb_threat[enemy_force] = global.bb_threat[enemy_force]
+            storage.bb_threat[enemy_force] = storage.bb_threat[enemy_force]
                 + threat_below_threshold * special_variables.excess_threat_send_fraction
         else
-            global.bb_threat[biter_not_boss_force] = global.bb_threat[biter_not_boss_force] - threat_value
+            storage.bb_threat[biter_not_boss_force] = storage.bb_threat[biter_not_boss_force] - threat_value
         end
         return true
     end
-    global.bb_threat[biter_not_boss_force] = global.bb_threat[biter_not_boss_force]
+    storage.bb_threat[biter_not_boss_force] = storage.bb_threat[biter_not_boss_force]
         - threat_values[entity.name] * factor
     return true
 end

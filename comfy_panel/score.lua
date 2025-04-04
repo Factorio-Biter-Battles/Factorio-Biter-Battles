@@ -1,6 +1,7 @@
 --scoreboard by mewmew
 
 local Event = require('utils.event')
+local Functions = require('maps.biter_battles_v2.functions')
 local Global = require('utils.global')
 local Tabs = require('comfy_panel.main')
 
@@ -20,6 +21,11 @@ local building_and_mining_blacklist = {
     ['entity-ghost'] = true,
     ['item-entity'] = true,
 }
+
+local math_floor = math.floor
+local math_round = function(x)
+    return math_floor(x + 0.5)
+end
 
 function Public.get_table()
     return this
@@ -89,7 +95,7 @@ local biters = {
 local function get_total_biter_killcount(force)
     local count = 0
     for _, biter in pairs(biters) do
-        count = count + force.kill_count_statistics.get_input_count(biter)
+        count = count + force.get_kill_count_statistics(storage.bb_surface_name).get_input_count(biter)
     end
     return count
 end
@@ -121,7 +127,7 @@ local function add_global_stats(frame, player)
     local l = t.add({
         type = 'checkbox',
         caption = 'Show floating numbers',
-        state = global.show_floating_killscore[player.name],
+        state = storage.show_floating_killscore[player.name],
         name = 'show_floating_killscore_texts',
     })
     l.style.font_color = { r = 0.8, g = 0.8, b = 0.8 }
@@ -241,11 +247,11 @@ local function on_player_joined_game(event)
     if not this.sort_by[player.name] then
         this.sort_by[player.name] = { method = 'descending', column = 'killscore' }
     end
-    if not global.show_floating_killscore then
-        global.show_floating_killscore = {}
+    if not storage.show_floating_killscore then
+        storage.show_floating_killscore = {}
     end
-    if not global.show_floating_killscore[player.name] then
-        global.show_floating_killscore[player.name] = false
+    if not storage.show_floating_killscore[player.name] then
+        storage.show_floating_killscore[player.name] = false
     end
 end
 
@@ -273,7 +279,7 @@ local function on_gui_click(event)
 
     -- Handles click on the checkbox, for floating score
     if name == 'show_floating_killscore_texts' then
-        global.show_floating_killscore[player.name] = event.element.state
+        storage.show_floating_killscore[player.name] = event.element.state
         return
     end
 
@@ -370,7 +376,8 @@ local kill_causes = {
 }
 
 local function on_entity_died(event)
-    if not event.entity.valid then
+    local entity = event.entity
+    if not (entity and entity.valid) then
         return
     end
     if not event.cause then
@@ -379,10 +386,10 @@ local function on_entity_died(event)
     if not event.cause.valid then
         return
     end
-    if event.entity.force.index == event.cause.force.index then
+    if entity.force.index == event.cause.force.index then
         return
     end
-    if not entity_score_values[event.entity.name] then
+    if not entity_score_values[entity.name] then
         return
     end
     if not kill_causes[event.cause.type] then
@@ -398,12 +405,18 @@ local function on_entity_died(event)
     for _, player in pairs(players_to_reward) do
         Public.init_player_table(player)
         local score = this.score_table[player.force.name].players[player.name]
-        score.killscore = score.killscore + entity_score_values[event.entity.name]
-        if global.show_floating_killscore[player.name] then
-            event.entity.surface.create_entity({
-                name = 'flying-text',
-                position = event.entity.position,
-                text = tostring(entity_score_values[event.entity.name]),
+        local value = entity_score_values[entity.name]
+        if entity.type == 'unit-spawner' then
+            local evo = game.forces[entity.force.name].get_evolution_factor(entity.surface.name)
+            value = value * (1 + 9 * evo ^ 2.25)
+        end
+        value = math_round(value)
+        score.killscore = score.killscore + value
+        if storage.show_floating_killscore[player.name] then
+            Functions.create_local_flying_text({
+                surface = entity.surface,
+                position = entity.position,
+                text = tostring(value),
                 color = player.chat_color,
             })
         end
@@ -430,10 +443,10 @@ function Public.on_player_mined_entity(entity, player)
 end
 
 local function on_built_entity(event)
-    if not event.created_entity.valid then
+    if not event.entity.valid then
         return
     end
-    if building_and_mining_blacklist[event.created_entity.type] then
+    if building_and_mining_blacklist[event.entity.type] then
         return
     end
     local player = game.get_player(event.player_index)

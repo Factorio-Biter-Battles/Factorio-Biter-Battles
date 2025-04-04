@@ -14,9 +14,9 @@ local safe_wrap_with_player_print = require('utils.utils').safe_wrap_with_player
 
 local Public = {}
 
--- Saves the preferences for each players, i.e. global.shortcuts_ui['Alice'] = { ['send-fish'] = true, ['research_info'] = false }
+-- Saves the preferences for each players, i.e. storage.shortcuts_ui['Alice'] = { ['send-fish'] = true, ['research_info'] = false }
 ---@type table<string, table<string, boolean>>
-global.shortcuts_ui = global.shortcuts_ui or {}
+storage.shortcuts_ui = storage.shortcuts_ui or {}
 
 Public.main_frame_name = 'bb_floating_shortcuts'
 local main_frame_name = Public.main_frame_name
@@ -30,11 +30,11 @@ local function handle_spectator(player)
     return is_spectator
 end
 
-function get_player_preferences(player)
-    local player_preferences = global.shortcuts_ui[player.name]
+local function get_player_preferences(player)
+    local player_preferences = storage.shortcuts_ui[player.name]
     if not player_preferences then
         player_preferences = { enabled = false }
-        global.shortcuts_ui[player.name] = player_preferences
+        storage.shortcuts_ui[player.name] = player_preferences
     end
     return player_preferences
 end
@@ -72,19 +72,19 @@ end
 
 local main_frame_actions = {
     [main_frame_name .. '_send_fish'] = function(player, event)
-        if handle_spectator(player) or global.bb_game_won_by_team then
+        if handle_spectator(player) or storage.bb_game_won_by_team then
             return
         end
         Functions.spy_fish(player, event)
     end,
     [main_frame_name .. '_send_science'] = function(player, event)
-        if handle_spectator(player) or global.bb_game_won_by_team then
+        if handle_spectator(player) or storage.bb_game_won_by_team then
             return
         end
-        if global.active_special_games.disable_sciences then
-            player.print('Disabled by special game', Color.red)
+        if storage.active_special_games.disable_sciences then
+            player.print('Disabled by special game', { color = Color.red })
         elseif Captain_event.captain_is_player_prohibited_to_throw(player) then
-            player.print('You are not allowed to send science, ask your captain', Color.red)
+            player.print('You are not allowed to send science, ask your captain', { color = Color.red })
         else
             Feeding.feed_biters_mixed_from_inventory(player, event.button)
         end
@@ -129,7 +129,7 @@ local shortcut_buttons = {
         name = main_frame_name .. '_team_statistics',
         caption = 'Team statistics',
         sprite = 'utility/side_menu_production_icon',
-        hovered_sprite = 'utility/side_menu_production_hover_icon',
+        -- hovered_sprite = 'utility/side_menu_production_hover_icon',
         tooltip = { 'gui.team_statistics' },
     },
     {
@@ -147,10 +147,11 @@ function Public.get_main_frame(player)
             type = 'frame',
             name = main_frame_name,
             direction = 'vertical',
-            style = 'quick_bar_window_frame',
+            style = 'quick_bar_slot_window_frame',
         })
         main_frame.auto_center = true
         main_frame.visible = false
+        gui_style(main_frame, { minimal_width = 20 })
 
         local title_bar = main_frame.add({
             type = 'flow',
@@ -167,7 +168,7 @@ function Public.get_main_frame(player)
             style = 'frame_title',
             ignored_by_interaction = true,
         })
-        gui_style(title, { top_padding = 2, font = 'heading-3', font_color = { 165, 165, 165 } })
+        gui_style(title, { top_padding = 2, font = 'default-semibold', font_color = { 165, 165, 165 } })
 
         local widget =
             title_bar.add({ type = 'empty-widget', style = 'draggable_space', ignored_by_interaction = true })
@@ -177,7 +178,7 @@ function Public.get_main_frame(player)
             type = 'sprite-button',
             name = main_frame_name .. '_settings',
             style = 'shortcut_bar_expand_button',
-            sprite = 'utility/expand_dots_white',
+            sprite = 'utility/expand_dots',
             hovered_sprite = 'utility/expand_dots',
             clicked_sprite = 'utility/expand_dots',
             tooltip = { 'gui.shortcut_settings' },
@@ -226,7 +227,7 @@ function Public.get_main_frame(player)
         for _, s in pairs(shortcut_buttons) do
             button = table.add({
                 type = 'sprite-button',
-                style = 'quick_bar_slot_button',
+                style = 'slot_button',
                 sprite = s.sprite,
                 hovered_sprite = s.hovered_sprite,
                 name = s.name,
@@ -287,7 +288,7 @@ end)
 
 function Public.refresh()
     for _, force in pairs(game.forces) do
-        local rocket_silo = global.rocket_silo[force.name]
+        local rocket_silo = storage.rocket_silo[force.name]
         if rocket_silo and rocket_silo.valid then
             local health = rocket_silo.get_health_ratio()
             local HP = math_floor(rocket_silo.health)

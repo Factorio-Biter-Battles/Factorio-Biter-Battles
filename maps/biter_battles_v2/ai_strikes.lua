@@ -18,9 +18,10 @@ local math_atan2 = math.atan2
 
 -- these parameters roughly approximate the radius of the average player base
 -- TODO: use some metric to drive adjustments on these values as the game progresses
-local max_strike_distance = 512
-local min_strike_distance = 256
-local strike_target_clearance = 255
+local MAX_STRIKE_DISTANCE = 512
+local MIN_STRIKE_DISTANCE = 256
+local STRIKE_TARGET_CLEARANCE = 255
+local _DEBUG = false
 
 local function calculate_secant_intersections(r, a, b, c)
     local t = a * a + b * b
@@ -100,18 +101,18 @@ local function select_strike_position(source_position, target_position, boundary
     local source_target_dx = source_position.x - target_position.x
     local source_target_dy = source_position.y - target_position.y
     local source_target_distance = math_sqrt(source_target_dx * source_target_dx + source_target_dy * source_target_dy)
-    if source_target_distance < min_strike_distance then
+    if source_target_distance < MIN_STRIKE_DISTANCE then
         return {
             x = source_position.x,
             y = source_position.y,
         }
     end
-    local strike_distance = math_random(min_strike_distance, math_min(source_target_distance, max_strike_distance))
+    local strike_distance = math_random(MIN_STRIKE_DISTANCE, math_min(source_target_distance, MAX_STRIKE_DISTANCE))
     local strike_angle_range = calculate_strike_range(
         source_target_dx,
         source_target_dy,
         source_target_distance,
-        strike_target_clearance,
+        STRIKE_TARGET_CLEARANCE,
         strike_distance
     )
     if boundary_offset > target_position.y - strike_distance then
@@ -132,33 +133,6 @@ local function select_strike_position(source_position, target_position, boundary
     }
 end
 
-local function move(unit_group, position)
-    unit_group.set_command({
-        type = defines.command.go_to_location,
-        destination = position,
-        radius = 32,
-        distraction = defines.distraction.by_enemy,
-    })
-end
-
-local function attack(unit_group, position)
-    unit_group.set_command({
-        type = defines.command.attack_area,
-        destination = position,
-        radius = 32,
-        distraction = defines.distraction.by_enemy,
-    })
-end
-
-local function assassinate(strike, target)
-    strike.target = target
-    strike.unit_group.set_command({
-        type = defines.command.attack,
-        target = target,
-        distraction = defines.distraction.by_damage,
-    })
-end
-
 function Public.calculate_strike_position(unit_group, target_position)
     local source_position = unit_group.position
     local normalized_source_position = { x = source_position.x, y = math_abs(source_position.y) }
@@ -173,61 +147,65 @@ function Public.calculate_strike_position(unit_group, target_position)
 end
 
 function Public.initiate(unit_group, target_force_name, strike_position, target_position)
-    local strike_info = {
-        unit_group = unit_group,
-        target_force_name = target_force_name,
-        target_position = target_position,
-    }
-    if strike_position ~= nil then
-        strike_info.phase = 1
-        move(unit_group, strike_position)
-    else
-        strike_info.phase = 2
-        attack(unit_group, target_position)
-    end
-    global.ai_strikes[unit_group.group_number] = strike_info
-end
-
-function Public.step(group_number, result)
-    if global.bb_game_won_by_team then
+    if storage.bb_game_won_by_team then
         return
     end
-    local strike = global.ai_strikes[group_number]
-    if strike ~= nil then
-        if result == defines.behavior_result.success then
-            strike.phase = strike.phase + 1
-            if strike.phase == 2 then
-                attack(strike.unit_group, strike.target_position)
-            elseif strike.phase == 3 then
-                local rocket_silo = global.rocket_silo[strike.target_force_name]
-                assassinate(strike, rocket_silo)
-            else
-                global.ai_strikes[group_number] = nil
-            end
-        elseif result == defines.behavior_result.fail or result == defines.behavior_result.deleted then
-            local rocket_silo = global.rocket_silo[strike.target_force_name]
-            if not rocket_silo then
-                return
-            end -- helps multi-silo special code
-            local unit_group = strike.unit_group
-            if not unit_group.valid then
-                global.ai_strikes[group_number] = nil
-            elseif strike.phase == 3 and strike.target == rocket_silo then
-                local position = unit_group.position
-                local message = string.format(
-                    'Biter attack group failed to find a path to the silo! [gps=%d,%d,%s]',
-                    position.x,
-                    position.y,
-                    unit_group.surface.name
-                )
-                log(message)
-                game.print(message, Color.red)
-                global.ai_strikes[group_number] = nil
-            else
-                strike.phase = 3
-                assassinate(strike, rocket_silo)
-            end
-        end
+
+    local chain = {
+        {
+            type = defines.command.go_to_location,
+            destination = strike_position,
+            radius = 32,
+            distraction = defines.distraction.by_enemy,
+        },
+        {
+            type = defines.command.wander,
+            radius = 32,
+            ticks_to_wait = 1,
+        },
+        {
+            type = defines.command.attack_area,
+            destination = target_position,
+            radius = 32,
+            distraction = defines.distraction.by_enemy,
+        },
+        {
+            type = defines.command.wander,
+            radius = 32,
+            ticks_to_wait = 1,
+        },
+    }
+
+    local silo = storage.rocket_silo[target_force_name]
+    if silo then -- check for multi-silo special
+        chain[#chain + 1] = {
+            type = defines.command.attack,
+            target = silo,
+            distraction = defines.distraction.by_damage,
+        }
+    end
+
+    unit_group.set_command({
+        type = defines.command.compound,
+        structure_type = defines.compound_command.return_last,
+        commands = chain,
+    })
+end
+
+local BEHAVIOR_RESULT = {
+    [defines.behavior_result.success] = 'success',
+    [defines.behavior_result.fail] = 'fail',
+    [defines.behavior_result.deleted] = 'deleted',
+    [defines.behavior_result.in_progress] = 'in_progress',
+}
+
+function Public.step(id, result)
+    if storage.bb_game_won_by_team then
+        return
+    end
+
+    if _DEBUG then
+        log('ai: ' .. id .. ' ' .. BEHAVIOR_RESULT[result])
     end
 end
 

@@ -22,12 +22,30 @@ local function chat_with_team(message, team)
         local msg = '[To ' .. team .. '] ' .. player_name .. tag .. ' (' .. player.force.name .. '): ' .. message
 
         if not Muted.is_muted(player_name) then
-            Functions.print_message_to_players(game.forces.spectator.players, player_name, msg, color, do_ping)
+            Functions.print_message_to_players(
+                game.forces.spectator.connected_players,
+                player_name,
+                msg,
+                color,
+                do_ping
+            )
             if team == 'north' or player.force.name == 'north' then
-                Functions.print_message_to_players(game.forces.north.players, player_name, msg, color, do_ping)
+                Functions.print_message_to_players(
+                    game.forces.north.connected_players,
+                    player_name,
+                    msg,
+                    color,
+                    do_ping
+                )
             end
             if team == 'south' or player.force.name == 'south' then
-                Functions.print_message_to_players(game.forces.south.players, player_name, msg, color, do_ping)
+                Functions.print_message_to_players(
+                    game.forces.south.connected_players,
+                    player_name,
+                    msg,
+                    color,
+                    do_ping
+                )
             end
         else
             msg = '[muted] ' .. msg

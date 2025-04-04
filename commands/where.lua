@@ -53,9 +53,14 @@ commands.add_command('where', 'Locates a player', function(cmd)
 
         if target_player and validate_player(target_player) then
             Sounds.notify_player(player, 'utility/smart_pipette')
-            create_mini_camera_gui(player, target_player.name, target_player.position, target_player.surface.index)
+            create_mini_camera_gui(
+                player,
+                target_player.name,
+                target_player.physical_position,
+                target_player.physical_surface_index
+            )
         else
-            player.print('Please type a name of a player who is connected.', Color.warning)
+            player.print('Please type a name of a player who is connected.', { color = Color.warning })
         end
     else
         return
@@ -68,7 +73,7 @@ local function do_follow(cmd)
         return
     end
     if player.force.name ~= 'spectator' then
-        player.print('You must be a spectator to use this command.', Color.warning)
+        player.print('You must be a spectator to use this command.', { color = Color.warning })
         return
     end
 
@@ -80,7 +85,8 @@ local function do_follow(cmd)
     if not target_player or not validate_player(target_player) then
         return
     end
-    player.zoom_to_world(target_player.position, nil, target_player.character)
+
+    player.centered_on = target_player.character
 end
 
 commands.add_command('follow', 'Follows a player', function(cmd)

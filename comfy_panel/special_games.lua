@@ -1,10 +1,10 @@
 local Event = require('utils.event')
 local Color = require('utils.color_presets')
 local Public = {}
-global.active_special_games = {}
-global.special_games_variables = {}
-global.next_special_games = {}
-global.next_special_games_variables = {}
+storage.active_special_games = {}
+storage.special_games_variables = {}
+storage.next_special_games = {}
+storage.next_special_games_variables = {}
 
 local valid_special_games = {
     turtle = require('comfy_panel.special_games.turtle'),
@@ -28,16 +28,16 @@ local valid_special_games = {
     ]]
 }
 
-function clear_gui_specials()
+local function clear_gui_specials()
     local captain_event = require('comfy_panel.special_games.captain')
     captain_event.clear_gui_special()
 end
 
 function Public.reset_special_games()
-    global.active_special_games = global.next_special_games
-    global.special_games_variables = global.next_special_games_variables
-    global.next_special_games = {}
-    global.next_special_games_variables = {}
+    storage.active_special_games = storage.next_special_games
+    storage.special_games_variables = storage.next_special_games_variables
+    storage.next_special_games = {}
+    storage.next_special_games_variables = {}
     clear_gui_specials()
     local captain_event = require('comfy_panel.special_games.captain')
     captain_event.reset_special_games()
@@ -128,7 +128,10 @@ local function on_gui_click(event)
         flow.add({ type = 'button', name = 'confirm', caption = 'Confirm' })
         flow.add({ type = 'button', name = 'cancel', caption = 'Cancel' })
         element.visible = false -- hides Apply button
-        player.print('[SPECIAL GAMES] Are you sure? This change will be reversed only on map restart!', Color.cyan)
+        player.print(
+            '[SPECIAL GAMES] Are you sure? This change will be reversed only on map restart!',
+            { color = Color.cyan }
+        )
     elseif valid_special_games[special_game_gui.name]['gui_click'] then
         valid_special_games[special_game_gui.name].gui_click(element, config, player)
     end

@@ -15,13 +15,9 @@ local function on_console_chat(event)
     end
 
     local y_offset = -4
-    if package.loaded['modules.rpg'] then
-        y_offset = -4.5
-    end
-
-    if global.player_floaty_chat[player.index] then
-        rendering.destroy(global.player_floaty_chat[player.index])
-        global.player_floaty_chat[player.index] = nil
+    if storage.player_floaty_chat[player.index] then
+        storage.player_floaty_chat[player.index].destroy()
+        storage.player_floaty_chat[player.index] = nil
     end
 
     local players = {}
@@ -34,11 +30,10 @@ local function on_console_chat(event)
         return
     end
 
-    global.player_floaty_chat[player.index] = rendering.draw_text({
+    storage.player_floaty_chat[player.index] = rendering.draw_text({
         text = event.message,
-        surface = player.surface,
-        target = player.character,
-        target_offset = { -0.05, y_offset },
+        surface = player.character.surface,
+        target = { entity = player.character, offset = { -0.05, y_offset } },
         color = {
             r = player.color.r * 0.6 + 0.25,
             g = player.color.g * 0.6 + 0.25,
@@ -55,7 +50,7 @@ local function on_console_chat(event)
 end
 
 local function on_init(event)
-    global.player_floaty_chat = {}
+    storage.player_floaty_chat = {}
 end
 
 event.on_init(on_init)

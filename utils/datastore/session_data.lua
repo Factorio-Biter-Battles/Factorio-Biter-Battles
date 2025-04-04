@@ -57,15 +57,18 @@ function Public.autotrust_player(playerName)
     local playtimeRequiredForAutoTrust = 5184000 -- 24h
     if
         not trusted[playerName]
-        and global.total_time_online_players[playerName] ~= nil
-        and global.total_time_online_players[playerName] >= playtimeRequiredForAutoTrust
+        and storage.total_time_online_players[playerName] ~= nil
+        and storage.total_time_online_players[playerName] >= playtimeRequiredForAutoTrust
     then
         trusted[playerName] = true
     end
 end
 
 --- Prints out game.tick to real hour/minute
----@param int
+---@param ticks integer
+---@param h boolean
+---@param m boolean
+---@return string?
 function Public.format_time(ticks, h, m)
     local seconds = ticks / 60
     local minutes = math.floor(seconds / 60)

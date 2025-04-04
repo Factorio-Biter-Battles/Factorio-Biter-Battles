@@ -36,12 +36,23 @@ require('maps.biter_battles_v2.commands')
 require('modules.spawners_contain_biters')
 
 local function on_player_joined_game(event)
-    local surface = game.surfaces[global.bb_surface_name]
+    local surface = game.surfaces[storage.bb_surface_name]
     local player = game.get_player(event.player_index)
     if not player then
         return
     end
     if player.online_time == 0 or player.force.name == 'player' then
+        -- When player joins a game for the first time they'll spawn on nauvis.
+        -- Workaround within init_player function will cause player to disassociate
+        -- from character without destroying it. Not destroying it at this point
+        -- will fill nauvis surface with orphaned entities that bring down
+        -- performance. On top of it, check if character is still associated
+        -- as not connected player will be moved to 'player' force during map
+        -- reset without reinitializing their state.
+        if player.character and player.character.valid then
+            player.character.destroy()
+        end
+
         Functions.init_player(player)
     end
     Gui.clear_copy_history(player)
@@ -96,8 +107,6 @@ local function on_research_finished(event)
         force.technologies['kovarex-enrichment-process'].researched = true
     elseif name == 'stone-wall' then
         force.technologies['gate'].researched = true
-    elseif name == 'rocket-silo' then
-        force.technologies['space-science-pack'].researched = true
     end
     game.forces.spectator.print(
         Functions.team_name_with_color(force.name) .. ' completed research [technology=' .. name .. ']'
@@ -120,8 +129,8 @@ end
 
 local clear_pings_token = Token.register(function()
     local tick = game.tick
-    while #global.pings_to_remove > 0 do
-        local ping = global.pings_to_remove[1]
+    while #storage.pings_to_remove > 0 do
+        local ping = storage.pings_to_remove[1]
         if ping.tick <= tick then
             if ping.label.valid then
                 if #ping.label.parent.children == 1 then
@@ -131,7 +140,7 @@ local clear_pings_token = Token.register(function()
                     ping.label.destroy()
                 end
             end
-            table.remove(global.pings_to_remove, 1)
+            table.remove(storage.pings_to_remove, 1)
         else
             break
         end
@@ -142,7 +151,7 @@ end)
 ---@param to_player_name string
 ---@return boolean
 local function ignore_message(from_player_name, to_player_name)
-    local ignore_list = global.ignore_lists[to_player_name]
+    local ignore_list = storage.ignore_lists[to_player_name]
     return ignore_list and ignore_list[from_player_name]
 end
 
@@ -160,9 +169,9 @@ function do_ping(from_player_name, to_player, message)
     if to_player.character and to_player.character.get_health_ratio() > 0.99 then
         to_player.character.damage(0.001, 'player')
     end
-    Sounds.notify_player(to_player, 'utility/blueprint_selection_ended')
+    Sounds.notify_player(to_player, 'utility/undo')
     -- to_player.play_sound({path = "utility/new_objective", volume_modifier = 0.6})
-    -- to_player.surface.create_entity({name = 'big-explosion', position = to_player.position})
+    -- to_player.physical_surface.create_entity({name = 'big-explosion', position = to_player.physical_position})
     local ping_header = to_player.gui.screen['ping_header']
     local uis = to_player.display_scale
     if not ping_header then
@@ -181,8 +190,8 @@ function do_ping(from_player_name, to_player, message)
         line.style.left_margin = -12
         line.style.top_margin = -5
 
-        if global.ping_gui_locations[to_player.name] then
-            local saved_location = global.ping_gui_locations[to_player.name]
+        if storage.ping_gui_locations[to_player.name] then
+            local saved_location = storage.ping_gui_locations[to_player.name]
             saved_location.x = math.min(saved_location.x, to_player.display_resolution.width - 200 * uis)
             saved_location.y = math.min(saved_location.y, to_player.display_resolution.height - 100 * uis)
             ping_header.location = saved_location
@@ -206,7 +215,7 @@ function do_ping(from_player_name, to_player, message)
     label.style.font = 'default-large-semibold'
 
     local remove_delay = 600
-    table.insert(global.pings_to_remove, { player = to_player, label = label, tick = game.tick + remove_delay })
+    table.insert(storage.pings_to_remove, { player = to_player, label = label, tick = game.tick + remove_delay })
     Task.set_timeout_in_ticks(remove_delay, clear_pings_token)
 end
 
@@ -220,7 +229,7 @@ local function on_gui_location_changed(event)
         if not player then
             return
         end
-        global.ping_gui_locations[player.name] = element.location
+        storage.ping_gui_locations[player.name] = element.location
 
         player.gui.screen['ping_messages'].location =
             { x = element.location.x, y = element.location.y + 42 * player.display_scale }
@@ -264,10 +273,16 @@ local function on_console_chat(event)
         return player_force_name == ping_player.force.name
     end)
     if not muted and (player_force_name == 'north' or player_force_name == 'south') then
-        Functions.print_message_to_players(game.forces.spectator.players, player_name, msg, color, do_ping)
+        -- Do not share team's chat with spectators during CPT preparation phase
+        local special = storage.special_games_variables.captain_mode
+        if special and special.prepaPhase then
+            return
+        end
+
+        Functions.print_message_to_players(game.forces.spectator.connected_players, player_name, msg, color, do_ping)
     end
 
-    if global.tournament_mode then
+    if storage.tournament_mode then
         return
     end
 
@@ -283,8 +298,8 @@ local function on_console_chat(event)
         Muted.print_muted_message(player)
     end
     if not muted and player_force_name == 'spectator' then
-        Functions.print_message_to_players(game.forces.north.players, player_name, msg, nil, do_ping)
-        Functions.print_message_to_players(game.forces.south.players, player_name, msg, nil, do_ping)
+        Functions.print_message_to_players(game.forces.north.connected_players, player_name, msg, nil, do_ping)
+        Functions.print_message_to_players(game.forces.south.connected_players, player_name, msg, nil, do_ping)
     end
 
     discord_msg = discord_msg .. player_name .. ' (' .. player_force_name .. '): ' .. event.message
@@ -301,19 +316,19 @@ local function on_console_command(event)
     if cmd == 'ignore' then
         -- verify in argument of command that there is no space, quote, semicolon, backtick, and that it's not just whitespace
         if param and not string.match(param, '[ \'";`]') and not param:match('^%s*$') then
-            if not global.ignore_lists[player.name] then
-                global.ignore_lists[player.name] = {}
+            if not storage.ignore_lists[player.name] then
+                storage.ignore_lists[player.name] = {}
             end
-            if not global.ignore_lists[player.name][param] then
-                global.ignore_lists[player.name][param] = true
-                player.print('You have ignored ' .. param, { r = 0, g = 1, b = 1 })
+            if not storage.ignore_lists[player.name][param] then
+                storage.ignore_lists[player.name][param] = true
+                player.print('You have ignored ' .. param, { color = { r = 0, g = 1, b = 1 } })
             else
-                player.print('You are already ignoring ' .. param, { r = 0, g = 1, b = 1 })
+                player.print('You are already ignoring ' .. param, { color = { r = 0, g = 1, b = 1 } })
             end
         else
             player.print(
                 'Invalid input. Make sure the name contains no spaces, quotes, semicolons, backticks, or any spaces.',
-                { r = 1, g = 0, b = 0 }
+                { color = { r = 1, g = 0, b = 0 } }
             )
         end
     elseif cmd == 'unignore' then
@@ -322,18 +337,18 @@ local function on_console_command(event)
             param
             and not string.match(param, '[ \'";`]')
             and not param:match('^%s*$')
-            and global.ignore_lists[player.name]
+            and storage.ignore_lists[player.name]
         then
-            if global.ignore_lists[player.name][param] then
-                global.ignore_lists[player.name][param] = nil
-                player.print('You have unignored ' .. param, { r = 0, g = 1, b = 1 })
+            if storage.ignore_lists[player.name][param] then
+                storage.ignore_lists[player.name][param] = nil
+                player.print('You have unignored ' .. param, { color = { r = 0, g = 1, b = 1 } })
             else
-                player.print('You are not currently ignoring ' .. param, { r = 0, g = 1, b = 1 })
+                player.print('You are not currently ignoring ' .. param, { color = { r = 0, g = 1, b = 1 } })
             end
         else
             player.print(
                 'Invalid input. Make sure the name contains no spaces, quotes, semicolons, backticks, or any spaces.',
-                { r = 1, g = 0, b = 0 }
+                { color = { r = 1, g = 0, b = 0 } }
             )
         end
     elseif cmd == 'w' or cmd == 'whisper' then
@@ -343,22 +358,25 @@ local function on_console_command(event)
         if to_player then
             do_ping(player.name, to_player, player.name .. ' (whisper): ' .. rest_of_message)
             -- to_player_name is case insensitive, so use to_player.name instead
-            global.reply_target[to_player.name] = player.name
+            storage.reply_target[to_player.name] = player.name
         end
     elseif cmd == 'r' or cmd == 'reply' then
-        local to_player_name = global.reply_target[player.name]
+        local to_player_name = storage.reply_target[player.name]
         if to_player_name then
-            global.reply_target[to_player_name] = player.name
+            storage.reply_target[to_player_name] = player.name
             local to_player = game.get_player(to_player_name)
             if to_player then
                 do_ping(player.name, to_player, player.name .. ' (whisper): ' .. param)
             end
         end
     elseif cmd == 's' or cmd == 'shout' then
-        chatmsg = '[shout] ' .. player.name .. ' (' .. player.force.name .. '): ' .. param
-        possibly_do_pings(chatmsg, player.name, function(ping_player)
-            return true
-        end)
+        possibly_do_pings(
+            table.concat({ '[shout] ', player.name, ' (', player.force.name, '): ', param }),
+            player.name,
+            function(ping_player)
+                return true
+            end
+        )
     end
 end
 
@@ -367,13 +385,13 @@ local function on_built_entity(event)
     Functions.no_landfill_by_untrusted_user(event, Session.get_trusted_table())
     Functions.no_turret_creep(event)
     Terrain.deny_enemy_side_ghosts(event)
-    AiTargets.start_tracking(event.created_entity)
+    AiTargets.start_tracking(event.entity)
 end
 
 local function on_robot_built_entity(event)
     Functions.no_turret_creep(event)
     Terrain.deny_construction_bots(event)
-    AiTargets.start_tracking(event.created_entity)
+    AiTargets.start_tracking(event.entity)
 end
 
 local function on_robot_built_tile(event)
@@ -415,14 +433,14 @@ end
 local function autotagging_outposters()
     for _, p in pairs(game.connected_players) do
         if p.force.name == 'north' or p.force.name == 'south' then
-            if math.abs(p.position.x) < autoTagDistance then
+            if math.abs(p.physical_position.x) < autoTagDistance then
                 if hasOutpostTag(p.tag) then
                     p.tag = p.tag:gsub('%' .. autoTagWestOutpost, '')
                     p.tag = p.tag:gsub('%' .. autoTagEastOutpost, '')
                 end
             else
                 if not hasOutpostTag(p.tag) then
-                    p.tag = p.tag .. getTagOutpostName(p.position.x)
+                    p.tag = p.tag .. getTagOutpostName(p.physical_position.x)
                 end
             end
         end
@@ -474,34 +492,56 @@ local tick_minute_functions = {
     [300 * 4 + 30 * 1] = anti_afk_system,
 }
 
+local on_tick_profilers = {}
+local function profile(profilers, key, fn)
+    local profiler = profilers[key]
+    if not profiler then
+        profiler = { profiler = game.create_profiler(), count = 1 }
+        profilers[key] = profiler
+    else
+        profiler.profiler.restart()
+    end
+    fn()
+    profiler.profiler.stop()
+end
 local function on_tick()
     local tick = game.tick
 
     if tick % 60 == 0 then
-        global.bb_threat['north_biters'] = global.bb_threat['north_biters'] + global.bb_threat_income['north_biters']
-        global.bb_threat['south_biters'] = global.bb_threat['south_biters'] + global.bb_threat_income['south_biters']
+        profile(on_tick_profilers, 'threat', function()
+            storage.bb_threat['north_biters'] = storage.bb_threat['north_biters']
+                + storage.bb_threat_income['north_biters']
+            storage.bb_threat['south_biters'] = storage.bb_threat['south_biters']
+                + storage.bb_threat_income['south_biters']
+        end)
     end
 
     if (tick + 11) % 300 == 0 then
-        Gui.spy_fish()
+        profile(on_tick_profilers, 'fish', function()
+            Gui.spy_fish()
 
-        if global.bb_game_won_by_team then
-            Game_over.reveal_map()
-            Game_over.server_restart()
-        end
+            if storage.bb_game_won_by_team then
+                Game_over.reveal_map()
+                Game_over.server_restart()
+            end
+        end)
     end
 
     if tick % 30 == 0 then
         local key = tick % 3600
         if tick_minute_functions[key] then
-            tick_minute_functions[key]()
+            profile(on_tick_profilers, key, function()
+                tick_minute_functions[key]()
+            end)
         end
     end
 
     if (tick + 5) % 180 == 0 then
-        Gui.refresh()
-        Shortcuts.refresh()
-        ResearchInfo.update_research_info_ui()
+        profile(on_tick_profilers, 'gui', function()
+            Gui.refresh()
+            Shortcuts.refresh()
+            ResearchInfo.update_research_info_ui()
+        end)
     end
 
     --[[
@@ -515,7 +555,15 @@ local function on_tick()
 		plus + 24 ticks as offset to avoid tick_0
 	]]
     if (tick + 24) % 84 == 0 then
-        Init.pop_chunk_request(65)
+        profile(on_tick_profilers, 'pop_chunk_request', function()
+            Init.pop_chunk_request(65)
+        end)
+    end
+    if tick % 3600 == 0 then
+        for key, profiler in pairs(on_tick_profilers) do
+            log({ '', 'on_tick_profilers[', key, ']: ', profiler.count, ' times, ', profiler.profiler })
+        end
+        on_tick_profilers = {}
     end
 end
 
@@ -543,7 +591,7 @@ end
 local function on_player_built_tile(event)
     local player = game.get_player(event.player_index)
     if event.item ~= nil and event.item.name == 'landfill' then
-        Terrain.restrict_landfill(player.surface, player, event.tiles)
+        Terrain.restrict_landfill(player.physical_surface, player, event.tiles)
     end
 end
 
@@ -556,7 +604,7 @@ local function on_chunk_generated(event)
     end
 
     -- Necessary check to ignore nauvis surface.
-    if surface.name ~= global.bb_surface_name then
+    if surface.name ~= storage.bb_surface_name then
         return
     end
 
@@ -564,6 +612,18 @@ local function on_chunk_generated(event)
     local pos = event.area.left_top
     if pos.y < 0 then
         Terrain.generate(event)
+
+        -- If we mirror-clone chunk here it may cause entity truncation on a chunk border
+        -- duo to receiving chunk empty neighbors. Also for some reason additional tile
+        -- correction would be required. So we wait for native generation occurrence,
+        -- and this will guarantee existing of neighboring chunks
+    end
+
+    local opposite_chunk_pos = { event.position.x, -event.position.y - 1 }
+    if surface.is_chunk_generated(opposite_chunk_pos) then
+        -- Notice that this will trigger for both paired chunks if they were force generated together, which is rare.
+        -- Otherwise first chunk will delay cloning until after the second one is generated
+        Mirror_terrain.clone(event)
     end
 
     -- Request chunk for opposite side, maintain the lockstep.
@@ -571,17 +631,9 @@ local function on_chunk_generated(event)
     -- and it will be mirrored. However this window is so tiny - user would
     -- need to fly in god mode and spam entities in partially generated
     -- chunks.
-    local req_pos = { pos.x + 16, -pos.y + 16 }
-    surface.request_to_generate_chunks(req_pos, 0)
-
-    -- Clone from north and south. NOTE: This WILL fire 2 times
-    -- for each chunk due to asynchronus nature of this event.
-    -- Both sides contain arbitary amount of chunks, some positions
-    -- when inverted will be still in process of generation or not
-    -- generated at all. It is important to perform 2 passes to make
-    -- sure everything is cloned properly. Normally we would use mutex
-    -- but this is not reliable in this environment.
-    Mirror_terrain.clone(event)
+    -- Setting position in the middle of a chunk sometimes doesn't
+    -- do a request, but seems to work for the left top corner, maybe an api bug?
+    surface.request_to_generate_chunks({ pos.x, -pos.y - 32 }, 0)
 
     -- The game pregenerate tiles within a radius of 3 chunks from the generated chunk.
     -- Bites can use these tiles for pathing.
@@ -597,7 +649,7 @@ local function on_chunk_generated(event)
     end
 
     -- add decorations only after the south part of the island is generated
-    if event.position.y == 0 and event.position.x == 1 and global.bb_settings['new_year_island'] then
+    if event.position.y == 0 and event.position.x == 1 and storage.bb_settings['new_year_island'] then
         Terrain.add_new_year_island_decorations(surface)
     end
 end
@@ -641,64 +693,16 @@ local function on_area_cloned(event)
     end
 end
 
-local function on_rocket_launch_ordered(event)
-    local vehicles = {
-        ['car'] = true,
-        ['tank'] = true,
-        ['locomotive'] = true,
-        ['cargo-wagon'] = true,
-        ['fluid-wagon'] = true,
-        ['spidertron'] = true,
-    }
-    local inventory = event.rocket.get_inventory(defines.inventory.fuel)
-    local contents = inventory.get_contents()
-    for name, _ in pairs(contents) do
-        if vehicles[name] then
-            inventory.clear()
-        end
-    end
-end
-
-local function clear_corpses(cmd)
-    local player = game.player
-    local trusted = Session.get_trusted_table()
-    local param = tonumber(cmd.parameter)
-
-    if not player or not player.valid then
-        return
-    end
-    if param == nil then
-        player.print('[ERROR] Must specify radius!', Color.fail)
-        return
-    end
-    if not trusted[player.name] and not player.admin and param > 100 then
-        player.print('[ERROR] Value is too big. Max radius is 100', Color.fail)
-        return
-    end
-    if param < 0 then
-        player.print('[ERROR] Value is too low.', Color.fail)
-        return
-    end
-    if param > 500 then
-        player.print('[ERROR] Value is too big.', Color.fail)
-        return
-    end
-
-    Functions.clear_corpses(player, param)
-end
-
 local function on_init()
     Init.tables()
     Init.initial_setup()
     Init.playground_surface()
     Init.forces()
     Init.draw_structures()
-    Init.load_spawn()
     Init.queue_reveal_map()
 end
 
 local Event = require('utils.event')
-Event.add(defines.events.on_rocket_launch_ordered, on_rocket_launch_ordered)
 Event.add(defines.events.on_area_cloned, on_area_cloned)
 Event.add(defines.events.on_entity_cloned, on_entity_cloned)
 Event.add(defines.events.on_built_entity, on_built_entity)
@@ -721,5 +725,3 @@ Event.add(defines.events.on_tick, on_tick)
 Event.on_init(on_init)
 
 require('utils.ui.gui-lite').handle_events()
-
-commands.add_command('clear-corpses', 'Clears all the biter corpses..', clear_corpses)

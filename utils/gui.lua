@@ -5,7 +5,7 @@ local mod_gui = require('__core__/lualib/mod-gui')
 
 local _utils = require('utils.utils')
 local gui_style = _utils.gui_style
-local gui_themes = _utils.gui_themes
+local GUI_THEMES = _utils.GUI_THEMES
 local top_button_style = _utils.top_button_style
 local left_frame_style = _utils.left_frame_style
 
@@ -21,6 +21,9 @@ Gui.token = Global.register({ data = data, element_map = element_map }, function
     data = tbl.data
     element_map = tbl.element_map
 end)
+
+Gui.tag = '__@biter_battles'
+Gui.set_style = gui_style
 
 local top_elements = {}
 local on_visible_handlers = {}
@@ -154,7 +157,7 @@ function Gui.add_top_element(player, frame, style_name)
         return element
     end
     if (frame.type == 'button' or frame.type == 'sprite-button') and frame.style == nil then
-        frame.style = style_name or gui_themes[1].type
+        frame.style = style_name or GUI_THEMES[1].type
     end
     element = mod_gui.get_button_flow(player).add(frame)
     if element.type == 'button' or element.type == 'sprite-button' then
@@ -173,7 +176,7 @@ function Gui.restyle_top_elements(player, new_style)
             for _, attr in pairs(backup_attributes) do
                 custom_styles[attr] = ele.style[attr]
             end
-            ele.style = new_style
+            ele.style = new_style.type
             gui_style(ele, top_button_style())
             gui_style(ele, custom_styles)
         end
@@ -204,7 +207,7 @@ end
 
 ---@param parent LuaGuiElement
 ---@param direction? string, default: horizontal
----@return LuaGuiElement
+---@return LuaGuiElement?
 function Gui.add_pusher(parent, direction)
     if not (parent and parent.valid) then
         return
@@ -255,7 +258,8 @@ local function handler_factory(event_id)
             return
         end
 
-        local handler = handlers[element.name]
+        local tag = element.tags and element.tags[Gui.tag]
+        local handler = handlers[tag or element.name]
         if not handler then
             return
         end

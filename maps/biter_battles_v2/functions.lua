@@ -1,78 +1,72 @@
-local ClosableFrame = require('utils.ui.closable_frame')
-local Config = require('maps.biter_battles_v2.config')
+local _TEST = storage['_TEST'] or false
 local Color = require('utils.color_presets')
-local Gui = require('utils.gui')
 local Tables = require('maps.biter_battles_v2.tables')
-local Server = require('utils.server')
+local ClosableFrame, Config, Gui, Server, simplex_noise
+if not _TEST then
+    ClosableFrame = require('utils.ui.closable_frame')
+    Config = require('maps.biter_battles_v2.config')
+    Gui = require('utils.gui')
+    Server = require('utils.server')
+    simplex_noise = require('utils.simplex_noise').d2
+end
 
-local simplex_noise = require('utils.simplex_noise').d2
 local gui_style = require('utils.utils').gui_style
+
 local math_abs = math.abs
 local math_floor = math.floor
 local math_min = math.min
 local math_random = math.random
 local math_round = math.round
 local string_find = string.find
+local string_format = string.format
 local string_sub = string.sub
 
 local function get_ammo_modifier(ammo_category)
-    local result = 0
-    if Tables.base_ammo_modifiers[ammo_category] then
-        result = Tables.base_ammo_modifiers[ammo_category]
-    end
-    return result
+    return Tables.base_ammo_modifiers[ammo_category] or 0
 end
 local function get_turret_attack_modifier(turret_category)
-    local result = 0
-    if Tables.base_turret_attack_modifiers[turret_category] then
-        result = Tables.base_turret_attack_modifiers[turret_category]
-    end
-    return result
+    return Tables.base_turret_attack_modifiers[turret_category] or 0
 end
 local function get_upgrade_modifier(ammo_category)
-    result = 0
-    if Tables.upgrade_modifiers[ammo_category] then
-        result = Tables.upgrade_modifiers[ammo_category]
-    end
-    return result
+    return Tables.upgrade_modifiers[ammo_category] or 0
 end
 
 -- Only add upgrade research balancing logic in this section
 -- All values should be in tables.lua
 local function proj_buff(current_value, force_name)
-    if not global.combat_balance[force_name].bullet then
-        global.combat_balance[force_name].bullet = get_ammo_modifier('bullet')
+    if not storage.combat_balance[force_name].bullet then
+        storage.combat_balance[force_name].bullet = get_ammo_modifier('bullet')
     end
-    global.combat_balance[force_name].bullet = global.combat_balance[force_name].bullet + current_value
-    game.forces[force_name].set_ammo_damage_modifier('bullet', global.combat_balance[force_name].bullet)
+    storage.combat_balance[force_name].bullet = storage.combat_balance[force_name].bullet + current_value
+    game.forces[force_name].set_ammo_damage_modifier('bullet', storage.combat_balance[force_name].bullet)
 end
 local function laser_buff(current_value, force_name)
-    if not global.combat_balance[force_name].laser_damage then
-        global.combat_balance[force_name].laser_damage = get_turret_attack_modifier('laser-turret')
+    if not storage.combat_balance[force_name].laser_damage then
+        storage.combat_balance[force_name].laser_damage = get_turret_attack_modifier('laser-turret')
     end
-    global.combat_balance[force_name].laser_damage = global.combat_balance[force_name].laser_damage
+    storage.combat_balance[force_name].laser_damage = storage.combat_balance[force_name].laser_damage
         + current_value
         - get_upgrade_modifier('laser-turret')
     game.forces[force_name].set_turret_attack_modifier('laser-turret', current_value)
 end
 local function flamer_buff(current_value_ammo, current_value_turret, force_name)
-    if not global.combat_balance[force_name].flame_damage then
-        global.combat_balance[force_name].flame_damage = get_ammo_modifier('flamethrower')
+    if not storage.combat_balance[force_name].flame_damage then
+        storage.combat_balance[force_name].flame_damage = get_ammo_modifier('flamethrower')
     end
-    global.combat_balance[force_name].flame_damage = global.combat_balance[force_name].flame_damage
+    storage.combat_balance[force_name].flame_damage = storage.combat_balance[force_name].flame_damage
         + current_value_ammo
         - get_upgrade_modifier('flamethrower')
-    game.forces[force_name].set_ammo_damage_modifier('flamethrower', global.combat_balance[force_name].flame_damage)
+    game.forces[force_name].set_ammo_damage_modifier('flamethrower', storage.combat_balance[force_name].flame_damage)
 
-    if not global.combat_balance[force_name].flamethrower_damage then
-        global.combat_balance[force_name].flamethrower_damage = get_turret_attack_modifier('flamethrower-turret')
+    if not storage.combat_balance[force_name].flamethrower_damage then
+        storage.combat_balance[force_name].flamethrower_damage = get_turret_attack_modifier('flamethrower-turret')
     end
-    global.combat_balance[force_name].flamethrower_damage = global.combat_balance[force_name].flamethrower_damage
+    storage.combat_balance[force_name].flamethrower_damage = storage.combat_balance[force_name].flamethrower_damage
         + current_value_turret
         - get_upgrade_modifier('flamethrower-turret')
     game.forces[force_name].set_turret_attack_modifier(
         'flamethrower-turret',
-        global.combat_balance[force_name].flamethrower_damage
+        storage.combat_balance[force_name].flamethrower_damage
     )
 end
 local balance_functions = {
@@ -104,60 +98,60 @@ local balance_functions = {
     ['refined-flammables-7'] = function(force_name)
         flamer_buff(0.06, 0.06, force_name)
     end,
-    ['energy-weapons-damage'] = function(force_name)
+    ['laser-weapons-damage'] = function(force_name)
         laser_buff(get_upgrade_modifier('laser-turret') * 2, force_name)
     end,
-    ['energy-weapons-damage-1'] = function(force_name)
+    ['laser-weapons-damage-1'] = function(force_name)
         laser_buff(0.2, force_name)
     end,
-    ['energy-weapons-damage-2'] = function(force_name)
+    ['laser-weapons-damage-2'] = function(force_name)
         laser_buff(0.2, force_name)
     end,
-    ['energy-weapons-damage-3'] = function(force_name)
+    ['laser-weapons-damage-3'] = function(force_name)
         laser_buff(0.4, force_name)
     end,
-    ['energy-weapons-damage-4'] = function(force_name)
+    ['laser-weapons-damage-4'] = function(force_name)
         laser_buff(0.4, force_name)
     end,
-    ['energy-weapons-damage-5'] = function(force_name)
+    ['laser-weapons-damage-5'] = function(force_name)
         laser_buff(0.4, force_name)
     end,
-    ['energy-weapons-damage-6'] = function(force_name)
+    ['laser-weapons-damage-6'] = function(force_name)
         laser_buff(0.5, force_name)
     end,
-    ['energy-weapons-damage-7'] = function(force_name)
+    ['laser-weapons-damage-7'] = function(force_name)
         laser_buff(0.5, force_name)
     end,
     ['stronger-explosives'] = function(force_name)
-        if not global.combat_balance[force_name].grenade_damage then
-            global.combat_balance[force_name].grenade_damage = get_ammo_modifier('grenade')
+        if not storage.combat_balance[force_name].grenade_damage then
+            storage.combat_balance[force_name].grenade_damage = get_ammo_modifier('grenade')
         end
-        global.combat_balance[force_name].grenade_damage = global.combat_balance[force_name].grenade_damage
+        storage.combat_balance[force_name].grenade_damage = storage.combat_balance[force_name].grenade_damage
             + get_upgrade_modifier('grenade')
-        game.forces[force_name].set_ammo_damage_modifier('grenade', global.combat_balance[force_name].grenade_damage)
+        game.forces[force_name].set_ammo_damage_modifier('grenade', storage.combat_balance[force_name].grenade_damage)
 
-        if not global.combat_balance[force_name].land_mine then
-            global.combat_balance[force_name].land_mine = get_ammo_modifier('landmine')
+        if not storage.combat_balance[force_name].land_mine then
+            storage.combat_balance[force_name].land_mine = get_ammo_modifier('landmine')
         end
-        global.combat_balance[force_name].land_mine = global.combat_balance[force_name].land_mine
+        storage.combat_balance[force_name].land_mine = storage.combat_balance[force_name].land_mine
             + get_upgrade_modifier('landmine')
-        game.forces[force_name].set_ammo_damage_modifier('landmine', global.combat_balance[force_name].land_mine)
+        game.forces[force_name].set_ammo_damage_modifier('landmine', storage.combat_balance[force_name].land_mine)
     end,
     ['stronger-explosives-1'] = function(force_name)
-        if not global.combat_balance[force_name].land_mine then
-            global.combat_balance[force_name].land_mine = get_ammo_modifier('landmine')
+        if not storage.combat_balance[force_name].land_mine then
+            storage.combat_balance[force_name].land_mine = get_ammo_modifier('landmine')
         end
-        global.combat_balance[force_name].land_mine = global.combat_balance[force_name].land_mine
+        storage.combat_balance[force_name].land_mine = storage.combat_balance[force_name].land_mine
             - get_upgrade_modifier('landmine')
-        game.forces[force_name].set_ammo_damage_modifier('landmine', global.combat_balance[force_name].land_mine)
+        game.forces[force_name].set_ammo_damage_modifier('landmine', storage.combat_balance[force_name].land_mine)
     end,
     ['physical-projectile-damage'] = function(force_name)
-        if not global.combat_balance[force_name].shotgun then
-            global.combat_balance[force_name].shotgun = get_ammo_modifier('shotgun-shell')
+        if not storage.combat_balance[force_name].shotgun then
+            storage.combat_balance[force_name].shotgun = get_ammo_modifier('shotgun-shell')
         end
-        global.combat_balance[force_name].shotgun = global.combat_balance[force_name].shotgun
+        storage.combat_balance[force_name].shotgun = storage.combat_balance[force_name].shotgun
             + get_upgrade_modifier('shotgun-shell')
-        game.forces[force_name].set_ammo_damage_modifier('shotgun-shell', global.combat_balance[force_name].shotgun)
+        game.forces[force_name].set_ammo_damage_modifier('shotgun-shell', storage.combat_balance[force_name].shotgun)
         game.forces[force_name].set_turret_attack_modifier('gun-turret', 0)
     end,
     ['physical-projectile-damage-1'] = function(force_name)
@@ -204,7 +198,7 @@ local spawn_r_square = spawn_r ^ 2
 for x = spawn_r * -1, spawn_r, 0.5 do
     for y = spawn_r * -1, spawn_r, 0.5 do
         if x ^ 2 + y ^ 2 < spawn_r_square then
-            table.insert(spawn_positions, { x, y })
+            table.insert(spawn_positions, { x = x, y = y })
         end
     end
 end
@@ -214,7 +208,7 @@ local Functions = {}
 
 ---@param event EventData.on_player_mined_entity|EventData.on_pre_player_crafted_item|EventData.on_player_mined_item
 function Functions.maybe_set_game_start_tick(event)
-    if global.bb_game_start_tick then
+    if storage.bb_game_start_tick then
         return
     end
     if not event.player_index then
@@ -224,14 +218,14 @@ function Functions.maybe_set_game_start_tick(event)
     if player.force.name ~= 'north' and player.force.name ~= 'south' then
         return
     end
-    Functions.set_game_start_tick(event)
+    Functions.set_game_start_tick()
 end
 
 function Functions.set_game_start_tick()
-    if global.bb_game_start_tick then
+    if storage.bb_game_start_tick then
         return
     end
-    global.bb_game_start_tick = game.ticks_played
+    storage.bb_game_start_tick = game.ticks_played
     local message = 'The match has started! '
     Server.to_discord_bold(table.concat({ '*** ', message, ' ***' }))
 end
@@ -247,8 +241,8 @@ function Functions.biters_landfill(entity)
     local surface = entity.surface
     for _, vector in pairs(landfill_biters_vectors) do
         local tile = surface.get_tile({ position.x + vector[1], position.y + vector[2] })
-        if tile.collides_with('resource-layer') then
-            surface.set_tiles({ { name = 'landfill', position = tile.position } })
+        if tile.collides_with('resource') then
+            surface.set_tiles({ { name = 'dirt-1', position = tile.position } })
             local particle_pos = { tile.position.x + 0.5, tile.position.y + 0.5 }
             for _ = 1, 50, 1 do
                 surface.create_particle({
@@ -272,12 +266,22 @@ function Functions.combat_balance(event)
     for b = 1, string.len(research_name), 1 do
         key = string_sub(research_name, 0, b)
         if balance_functions[key] then
-            if not global.combat_balance[force_name] then
-                global.combat_balance[force_name] = {}
+            if not storage.combat_balance[force_name] then
+                storage.combat_balance[force_name] = {}
             end
             balance_functions[key](force_name)
         end
     end
+end
+
+---@param surface LuaSurface
+---Returns non-colliding position on spectator island or hardcoded coordinate
+---of island as a fallback
+local function find_teleport_point(surface)
+    local p = spawn_positions[math_random(1, size_of_spawn_positions)]
+    -- At this point surface has to have several chunks already, but if not fallback
+    -- to random point on the island.
+    return surface.find_non_colliding_position('character', p, 4, 0.5) or p
 end
 
 function Functions.init_player(player)
@@ -288,82 +292,62 @@ function Functions.init_player(player)
         return
     end
 
-    if player.character and player.character.valid then
-        player.character.destroy()
-        player.set_controller({ type = defines.controllers.god })
-        player.create_character()
-    end
-    player.clear_items_inside()
-    player.spectator = true
-    player.force = game.forces.spectator
+    -- If we don't get rid of character, associated construction
+    -- bots will be teleported as well and there is no API to destroy them.
+    -- Leave the character on previous surface, to avoid destroying and
+    -- creating new one for a player in single tick as it might cause
+    -- problem with subsequent assignment. Destruction of character will take
+    -- place in LuaGameScript::delete_surface.
+    player.character = nil
 
-    local surface = game.surfaces[global.bb_surface_name]
-    local p = spawn_positions[math_random(1, size_of_spawn_positions)]
-    if surface.is_chunk_generated({ 0, 0 }) then
-        player.teleport(surface.find_non_colliding_position('character', p, 4, 0.5), surface)
-    else
-        player.teleport(p, surface)
+    local s = game.surfaces[storage.bb_surface_name]
+    local p = find_teleport_point(s)
+    player.teleport(p, s)
+
+    -- Avoid using create_character() as even though it was called, player in
+    -- rare case did not have assigned character.
+    local ch = s.create_entity({
+        name = 'character',
+        position = p,
+    })
+    -- Mark as non-destructible before assigning to controller
+    -- to avoid accessing through LuaPlayer which might be in weird state.
+    ch.destructible = false
+    player.set_controller({
+        type = defines.controllers.character,
+        character = ch,
+    })
+
+    if not player.character then
+        log(
+            'BUG: character assigned for '
+                .. player.name
+                .. ' at { '
+                .. p.x
+                .. ', '
+                .. p.y
+                .. ' } but still not accessible'
+        )
     end
-    if player.character and player.character.valid then
-        player.character.destructible = false
-    end
+
+    player.spectator = true
+    player.show_on_map = false
+    player.force = game.forces.spectator
     game.permissions.get_group('spectator').add_player(player)
 end
 
-function Functions.get_noise(name, pos)
-    local seed = game.surfaces[global.bb_surface_name].map_gen_settings.seed
-    local noise_seed_add = 25000
-    if name == 1 then
-        local noise = simplex_noise(pos.x * 0.0042, pos.y * 0.0042, seed)
-        seed = seed + noise_seed_add
-        noise = noise + simplex_noise(pos.x * 0.031, pos.y * 0.031, seed) * 0.08
-        seed = seed + noise_seed_add
-        noise = noise + simplex_noise(pos.x * 0.1, pos.y * 0.1, seed) * 0.025
-        return noise
-    end
-
-    if name == 2 then
-        local noise = simplex_noise(pos.x * 0.011, pos.y * 0.011, seed)
-        seed = seed + noise_seed_add
-        noise = noise + simplex_noise(pos.x * 0.08, pos.y * 0.08, seed) * 0.2
-        return noise
-    end
-
-    if name == 3 then
-        local noise = simplex_noise(pos.x * 0.005, pos.y * 0.005, seed)
-        noise = noise + simplex_noise(pos.x * 0.02, pos.y * 0.02, seed) * 0.3
-        noise = noise + simplex_noise(pos.x * 0.15, pos.y * 0.15, seed) * 0.025
-        return noise
-    end
-end
-
-function Functions.is_biter_area(position, noise_Enabled)
+function Functions.is_roughly_biter_area(position)
     local bitera_area_distance = Config.bitera_area_distance * -1
     local a = bitera_area_distance - (math_abs(position.x) * Config.biter_area_slope)
-    if position.y - 70 > a then
-        return false
-    end
-    if position.y + 70 < a then
-        return true
-    end
-    if noise_Enabled then
-        if position.y + (Functions.get_noise(3, position) * 64) > a then
-            return false
-        end
-    else
-        if position.y > a then
-            return false
-        end
-    end
-    return true
+    return position.y <= a
 end
 
 function Functions.no_turret_creep(event)
-    local entity = event.created_entity
+    local entity = event.entity
     if not entity.valid then
         return
     end
-    if not no_turret_blacklist[event.created_entity.type] then
+    if not no_turret_blacklist[event.entity.type] then
         return
     end
 
@@ -374,11 +358,11 @@ function Functions.no_turret_creep(event)
     if posEntity.y < 0 then
         posEntity.y = posEntity.y - 100
     end
-    if not Functions.is_biter_area(posEntity, false) then
+    if not Functions.is_roughly_biter_area(posEntity) then
         return
     end
 
-    local surface = event.created_entity.surface
+    local surface = event.entity.surface
     local spawners = surface.find_entities_filtered({
         type = 'unit-spawner',
         area = {
@@ -404,30 +388,33 @@ function Functions.no_turret_creep(event)
     end
 
     if event.player_index then
-        game.get_player(event.player_index).insert({ name = entity.name, count = 1 })
+        local player = game.get_player(event.player_index)
+        player.insert({ name = entity.name, count = 1 })
+        player.create_local_flying_text({
+            position = entity.position,
+            text = 'Turret too close to spawner!',
+            color = { r = 0.98, g = 0.66, b = 0.22 },
+        })
     else
+        -- TODO: Create flying text differently for bots
         local inventory = event.robot.get_inventory(defines.inventory.robot_cargo)
         inventory.insert({ name = entity.name, count = 1 })
     end
-
-    surface.create_entity({
-        name = 'flying-text',
-        position = entity.position,
-        text = 'Turret too close to spawner!',
-        color = { r = 0.98, g = 0.66, b = 0.22 },
-    })
 
     entity.destroy()
 end
 
 function Functions.no_landfill_by_untrusted_user(event, trusted_table)
-    local entity = event.created_entity
+    local entity = event.entity
     if not entity.valid or not event.player_index or entity.name ~= 'tile-ghost' or entity.ghost_name ~= 'landfill' then
         return
     end
     local player = game.get_player(event.player_index)
     if not trusted_table[player.name] then
-        player.print('You have not grown accustomed to this technology yet.', { r = 0.22, g = 0.99, b = 0.99 })
+        player.print(
+            'You have not grown accustomed to this technology yet.',
+            { color = { r = 0.22, g = 0.99, b = 0.99 } }
+        )
         entity.destroy()
         return
     end
@@ -436,7 +423,7 @@ end
 --- Returns the number of ticks since the game started, or 0 if it has not started.
 --- @return integer
 function Functions.get_ticks_since_game_start()
-    local start_tick = global.bb_game_start_tick
+    local start_tick = storage.bb_game_start_tick
     if not start_tick then
         return 0
     end
@@ -444,7 +431,7 @@ function Functions.get_ticks_since_game_start()
 end
 
 function Functions.team_name(force_name)
-    local name = global.tm_custom_name[force_name]
+    local name = storage.tm_custom_name[force_name]
     if name == nil then
         if force_name == 'north' then
             name = Config.north_side_team_name
@@ -488,21 +475,15 @@ end
 function Functions.print_message_to_players(forcePlayerList, playerNameSendingMessage, msgToPrint, colorChosen, ping_fn)
     local possible_pings = Functions.extract_possible_pings(msgToPrint)
     for _, playerOfForce in pairs(forcePlayerList) do
-        if playerOfForce.connected then
-            local player_name = playerOfForce.name
-            if
-                global.ignore_lists[player_name] == nil
-                or not global.ignore_lists[player_name][playerNameSendingMessage]
-            then
-                if ping_fn and possible_pings[player_name] then
-                    ping_fn(playerNameSendingMessage, playerOfForce, msgToPrint)
-                end
-                if colorChosen == nil then
-                    playerOfForce.print(msgToPrint)
-                else
-                    playerOfForce.print(msgToPrint, colorChosen)
-                end
+        local player_name = playerOfForce.name
+        if
+            storage.ignore_lists[player_name] == nil
+            or not storage.ignore_lists[player_name][playerNameSendingMessage]
+        then
+            if ping_fn and possible_pings[player_name] then
+                ping_fn(playerNameSendingMessage, playerOfForce, msgToPrint)
             end
+            playerOfForce.print(msgToPrint, { color = colorChosen })
         end
     end
 end
@@ -517,7 +498,7 @@ function Functions.spy_fish(player, event)
         return
     end
     local duration_per_unit = 2700
-    local i2 = player.get_inventory(defines.inventory.character_main)
+    local i2 = player.character.get_inventory(defines.inventory.character_main)
     if not i2 then
         return
     end
@@ -548,10 +529,10 @@ function Functions.spy_fish(player, event)
         if player.force.name == 'south' then
             enemy_team = 'north'
         end
-        if global.spy_fish_timeout[player.force.name] - game.tick > 0 then
-            global.spy_fish_timeout[player.force.name] = global.spy_fish_timeout[player.force.name]
+        if storage.spy_fish_timeout[player.force.name] - game.tick > 0 then
+            storage.spy_fish_timeout[player.force.name] = storage.spy_fish_timeout[player.force.name]
                 + duration_per_unit * send_amount
-            spy_time_seconds = math_floor((global.spy_fish_timeout[player.force.name] - game.tick) / 60)
+            local spy_time_seconds = math_floor((storage.spy_fish_timeout[player.force.name] - game.tick) / 60)
             if spy_time_seconds > 60 then
                 local minute_label = ' minute and '
                 if spy_time_seconds > 120 then
@@ -562,23 +543,26 @@ function Functions.spy_fish(player, event)
                         .. minute_label
                         .. math_floor(spy_time_seconds % 60)
                         .. ' seconds of enemy vision left.',
-                    { r = 0.98, g = 0.66, b = 0.22 }
+                    { color = { r = 0.98, g = 0.66, b = 0.22 } }
                 )
             else
-                player.print(spy_time_seconds .. ' seconds of enemy vision left.', { r = 0.98, g = 0.66, b = 0.22 })
+                player.print(
+                    spy_time_seconds .. ' seconds of enemy vision left.',
+                    { color = { r = 0.98, g = 0.66, b = 0.22 } }
+                )
             end
         else
             game.print(
                 player.name .. ' sent ' .. send_amount .. ' fish to spy on ' .. enemy_team .. ' team!',
-                { r = 0.98, g = 0.66, b = 0.22 }
+                { color = { r = 0.98, g = 0.66, b = 0.22 } }
             )
-            global.spy_fish_timeout[player.force.name] = game.tick + duration_per_unit * send_amount
+            storage.spy_fish_timeout[player.force.name] = game.tick + duration_per_unit * send_amount
         end
     end
 end
 
 function Functions.create_map_intro_button(player)
-    local b = Gui.add_top_element(player, {
+    Gui.add_top_element(player, {
         type = 'sprite-button',
         sprite = 'utility/custom_tag_icon',
         name = 'map_intro_button',
@@ -612,12 +596,12 @@ function Functions.map_intro_click(player, element)
 end
 
 function Functions.format_ticks_as_time(ticks)
-    local seconds = ticks / 60
-    local hours = math.floor(seconds / 3600)
-    seconds = seconds % 3600
-    local minutes = math.floor(seconds / 60)
-    seconds = seconds % 60
-    return string.format('%d:%02d:%02d', hours, minutes, seconds)
+    local seconds = (ticks - (ticks % 60)) / 60
+    local hour_f = seconds % 3600
+    local hours = (seconds - hour_f) / 3600
+    seconds = hour_f % 60
+    local minutes = (hour_f - seconds) / 60
+    return string_format('%d:%02d:%02d', hours, minutes, seconds)
 end
 
 function Functions.get_entity_contents(entity)
@@ -628,27 +612,45 @@ function Functions.get_entity_contents(entity)
     for i_id = 1, entity.get_max_inventory_index() do
         local inventory = entity.get_inventory(i_id)
         if inventory and inventory.valid and not inventory.is_empty() then
-            for item, amount in pairs(inventory.get_contents()) do
-                totals[item] = (totals[item] or 0) + amount
+            for _, item in pairs(inventory.get_contents()) do
+                totals[item.name] = (totals[item.name] or 0) + item.count
             end
         end
     end
     return totals
 end
 
-function Functions.clear_corpses(player, param)
+---@param player LuaPlayer
+---@param radius number? #radius
+function Functions.clear_corpses(player, radius)
     if not (player and player.valid) then
         return
     end
-    param = param or global.default_clear_corpses_radius
+    radius = radius or storage.default_clear_corpses_radius
     local pos = player.position
-    local radius = { { x = (pos.x + -param), y = (pos.y + -param) }, { x = (pos.x + param), y = (pos.y + param) } }
-    for _, entity in pairs(player.surface.find_entities_filtered({ area = radius, type = 'corpse' })) do
+    -- we could replace area with radius, as find_entities_filtered have radius key
+    local area = { { pos.x + -radius, pos.y + -radius }, { pos.x + radius, pos.y + radius } }
+    for _, entity in pairs(player.surface.find_entities_filtered({ area = area, type = 'corpse' })) do
         if entity.corpse_expires then
             entity.destroy()
         end
     end
-    player.print('Cleared biter-corpses.', Color.success)
+    player.print('Cleared biter-corpses.', { color = Color.success })
+end
+
+--- Will create the text only for those on the same surface
+--- See the docs for LuaPlayer::create_local_flying_text, + surface param
+---@param params {surface: string|integer|LuaSurface}
+function Functions.create_local_flying_text(params)
+    local surface = game.get_surface(params.surface.name or params.surface.index or params.surface)
+    if not surface then
+        return
+    end
+    for _, player in pairs(game.connected_players) do
+        if player.surface_index == surface.index then
+            player.create_local_flying_text(params)
+        end
+    end
 end
 
 return Functions

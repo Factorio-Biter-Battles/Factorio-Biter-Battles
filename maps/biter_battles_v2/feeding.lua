@@ -14,8 +14,8 @@ local safe_wrap_with_player_print = require('utils.utils').safe_wrap_with_player
 local Public = {}
 
 local function update_boss_modifiers(force_name_biter, damage_mod_mult, speed_mod_mult)
-    local damage_mod = math_round(global.bb_evolution[force_name_biter] * 1.0, 3) * damage_mod_mult
-    local speed_mod = math_round(global.bb_evolution[force_name_biter] * 0.25, 3) * speed_mod_mult
+    local damage_mod = math_round(storage.bb_evolution[force_name_biter] * 1.0, 3) * damage_mod_mult
+    local speed_mod = math_round(storage.bb_evolution[force_name_biter] * 0.25, 3) * speed_mod_mult
     local force = game.forces[force_name_biter .. '_boss']
     force.set_ammo_damage_modifier('melee', damage_mod)
     force.set_ammo_damage_modifier('biological', damage_mod)
@@ -28,11 +28,11 @@ local function update_boss_modifiers(force_name_biter, damage_mod_mult, speed_mo
 end
 
 local function set_biter_endgame_modifiers(force)
-    if force.evolution_factor ~= 1 then
+    if force.get_evolution_factor(storage.bb_surface_name) ~= 1 then
         return
     end
 
-    local damage_mod = math_round((global.bb_evolution[force.name] - 1) * 1.0, 3)
+    local damage_mod = math_round((storage.bb_evolution[force.name] - 1) * 1.0, 3)
     force.set_ammo_damage_modifier('melee', damage_mod)
     force.set_ammo_damage_modifier('biological', damage_mod)
     force.set_ammo_damage_modifier('artillery-shell', damage_mod)
@@ -40,7 +40,7 @@ local function set_biter_endgame_modifiers(force)
 end
 
 local function get_enemy_team_of(team)
-    if global.training_mode then
+    if storage.training_mode then
         return team
     else
         return enemy_team_of[team]
@@ -89,7 +89,7 @@ local function print_feeding_msg(player, food, flask_amount)
                 Functions.team_name_with_color(enemy),
                 "'s biters!",
             }),
-            { r = 0.9, g = 0.9, b = 0.9 }
+            { color = { r = 0.9, g = 0.9, b = 0.9 } }
         )
         Server.to_discord_bold(table.concat({
             player.name,
@@ -103,13 +103,13 @@ local function print_feeding_msg(player, food, flask_amount)
         }))
     else
         local target_team_text = 'the enemy'
-        if global.training_mode then
+        if storage.training_mode then
             target_team_text = 'your own'
         end
         if flask_amount == 1 then
             player.print(
                 'You fed one flask of ' .. formatted_food .. ' to ' .. target_team_text .. " team's biters.",
-                { r = 0.98, g = 0.66, b = 0.22 }
+                { color = { r = 0.98, g = 0.66, b = 0.22 } }
             )
         else
             player.print(
@@ -120,7 +120,7 @@ local function print_feeding_msg(player, food, flask_amount)
                     .. ' to '
                     .. target_team_text
                     .. " team's biters.",
-                { r = 0.98, g = 0.66, b = 0.22 }
+                { color = { r = 0.98, g = 0.66, b = 0.22 } }
             )
         end
     end
@@ -175,8 +175,8 @@ function Public.add_feeding_stats(
         local formatted_feed_time = shown_feed_time_hours .. shown_feed_time_mins
         evo_before_science_feed = math_round(evo_before_science_feed * 100, 1)
         threat_before_science_feed = math_round(threat_before_science_feed, 0)
-        local formatted_evo_after_feed = math_round(global.bb_evolution[biter_force_name] * 100, 1)
-        local formatted_threat_after_feed = math_round(global.bb_threat[biter_force_name], 0)
+        local formatted_evo_after_feed = math_round(storage.bb_evolution[biter_force_name] * 100, 1)
+        local formatted_threat_after_feed = math_round(storage.bb_threat[biter_force_name], 0)
         local evo_jump = table.concat({ evo_before_science_feed .. ' to ' .. formatted_evo_after_feed })
         local threat_jump = table.concat({ threat_before_science_feed .. ' to ' .. formatted_threat_after_feed })
         local evo_jump_difference = math_round(formatted_evo_after_feed - evo_before_science_feed, 1)
@@ -185,43 +185,43 @@ function Public.add_feeding_stats(
             table.concat({ formatted_amount .. ' ' .. formatted_food .. ' by ' .. colored_player_name .. ' to ' })
         local team_name_fed_by_science = get_enemy_team_of(feeding_force_name)
 
-        if global.science_logs_total_north == nil then
-            global.science_logs_total_north = { 0 }
-            global.science_logs_total_south = { 0 }
+        if storage.science_logs_total_north == nil then
+            storage.science_logs_total_north = { 0 }
+            storage.science_logs_total_south = { 0 }
             for _ = 1, 7 do
-                table.insert(global.science_logs_total_north, 0)
-                table.insert(global.science_logs_total_south, 0)
+                table.insert(storage.science_logs_total_north, 0)
+                table.insert(storage.science_logs_total_south, 0)
             end
         end
 
         local total_science_of_player_force = nil
         if feeding_force_name == 'north' then
-            total_science_of_player_force = global.science_logs_total_north
+            total_science_of_player_force = storage.science_logs_total_north
         else
-            total_science_of_player_force = global.science_logs_total_south
+            total_science_of_player_force = storage.science_logs_total_south
         end
 
         local indexScience = tables.food_long_to_short[food].indexScience
         total_science_of_player_force[indexScience] = total_science_of_player_force[indexScience] + flask_amount
 
-        if global.science_logs_text then
-            table.insert(global.science_logs_date, 1, formatted_feed_time)
-            table.insert(global.science_logs_text, 1, line_log_stats_to_add)
-            table.insert(global.science_logs_evo_jump, 1, evo_jump)
-            table.insert(global.science_logs_evo_jump_difference, 1, evo_jump_difference)
-            table.insert(global.science_logs_threat, 1, threat_jump)
-            table.insert(global.science_logs_threat_jump_difference, 1, threat_jump_difference)
-            table.insert(global.science_logs_fed_team, 1, team_name_fed_by_science)
-            table.insert(global.science_logs_food_name, 1, food)
+        if storage.science_logs_text then
+            table.insert(storage.science_logs_date, 1, formatted_feed_time)
+            table.insert(storage.science_logs_text, 1, line_log_stats_to_add)
+            table.insert(storage.science_logs_evo_jump, 1, evo_jump)
+            table.insert(storage.science_logs_evo_jump_difference, 1, evo_jump_difference)
+            table.insert(storage.science_logs_threat, 1, threat_jump)
+            table.insert(storage.science_logs_threat_jump_difference, 1, threat_jump_difference)
+            table.insert(storage.science_logs_fed_team, 1, team_name_fed_by_science)
+            table.insert(storage.science_logs_food_name, 1, food)
         else
-            global.science_logs_date = { formatted_feed_time }
-            global.science_logs_text = { line_log_stats_to_add }
-            global.science_logs_evo_jump = { evo_jump }
-            global.science_logs_evo_jump_difference = { evo_jump_difference }
-            global.science_logs_threat = { threat_jump }
-            global.science_logs_threat_jump_difference = { threat_jump_difference }
-            global.science_logs_fed_team = { team_name_fed_by_science }
-            global.science_logs_food_name = { food }
+            storage.science_logs_date = { formatted_feed_time }
+            storage.science_logs_text = { line_log_stats_to_add }
+            storage.science_logs_evo_jump = { evo_jump }
+            storage.science_logs_evo_jump_difference = { evo_jump_difference }
+            storage.science_logs_threat = { threat_jump }
+            storage.science_logs_threat_jump_difference = { threat_jump_difference }
+            storage.science_logs_fed_team = { team_name_fed_by_science }
+            storage.science_logs_food_name = { food }
         end
     end
 end
@@ -230,10 +230,9 @@ function Public.do_raw_feed(flask_amount, food, biter_force_name)
     local force_index = game.forces[biter_force_name].index
     local decimals = 9
 
-    local food_value = food_values[food].value * global.difficulty_vote_value
+    local food_value = food_values[food].value * storage.difficulty_vote_value
 
-    local evo = global.bb_evolution[biter_force_name]
-    local biter_evo = game.forces[biter_force_name].evolution_factor
+    local evo = storage.bb_evolution[biter_force_name]
     local threat = 0.0
 
     local current_player_count = #game.forces.north.connected_players + #game.forces.south.connected_players
@@ -242,41 +241,44 @@ function Public.do_raw_feed(flask_amount, food, biter_force_name)
         food_value,
         flask_amount,
         current_player_count,
-        global.max_reanim_thresh
+        storage.max_reanim_thresh
     )
     evo = evo + effects.evo_increase
-    threat = threat + effects.threat_increase * (global.threat_multiplier or 1)
+    threat = threat + effects.threat_increase * (storage.threat_multiplier or 1)
     evo = math_round(evo, decimals)
-    global.biter_health_factor[force_index] = effects.biter_health_factor
+    storage.biter_health_factor[force_index] = effects.biter_health_factor
 
     --SET THREAT INCOME
-    global.bb_threat_income[biter_force_name] = evo * 25
+    storage.bb_threat_income[biter_force_name] = evo * 25
 
-    game.forces[biter_force_name].evolution_factor = math.min(evo, 1)
-    global.bb_evolution[biter_force_name] = evo
+    game.forces[biter_force_name].set_evolution_factor(math.min(evo, 1), storage.bb_surface_name)
+    storage.bb_evolution[biter_force_name] = evo
     set_biter_endgame_modifiers(game.forces[biter_force_name])
 
     if evo > 1 then
         update_boss_modifiers(biter_force_name, 2, 1)
     end
     if evo > 3.3 then -- 330% evo => 3.3
-        global.max_group_size[biter_force_name] = 50
+        storage.max_group_size[biter_force_name] = 50
     elseif evo > 2.3 then
-        global.max_group_size[biter_force_name] = 75
+        storage.max_group_size[biter_force_name] = 75
     elseif evo > 1.3 then
-        global.max_group_size[biter_force_name] = 100
+        storage.max_group_size[biter_force_name] = 100
     elseif evo > 0.7 then
-        global.max_group_size[biter_force_name] = 200
+        storage.max_group_size[biter_force_name] = 200
     end
 
-    global.bb_threat[biter_force_name] = math_round(global.bb_threat[biter_force_name] + threat, decimals)
+    storage.bb_threat[biter_force_name] = math_round(storage.bb_threat[biter_force_name] + threat, decimals)
 
-    if global.active_special_games['shared_science_throw'] then
+    if storage.active_special_games['shared_science_throw'] then
         local enemyBitersForceName = enemy_team_of[force_translation[biter_force_name]] .. '_biters'
-        game.forces[enemyBitersForceName].evolution_factor = game.forces[biter_force_name].evolution_factor
-        global.bb_evolution[enemyBitersForceName] = global.bb_evolution[biter_force_name]
-        global.bb_threat_income[enemyBitersForceName] = global.bb_threat_income[biter_force_name]
-        global.bb_threat[enemyBitersForceName] = math_round(global.bb_threat[enemyBitersForceName] + threat, decimals)
+        game.forces[enemyBitersForceName].set_evolution_factor(
+            game.forces[biter_force_name].get_evolution_factor(storage.bb_surface_name),
+            storage.bb_surface_name
+        )
+        storage.bb_evolution[enemyBitersForceName] = storage.bb_evolution[biter_force_name]
+        storage.bb_threat_income[enemyBitersForceName] = storage.bb_threat_income[biter_force_name]
+        storage.bb_threat[enemyBitersForceName] = math_round(storage.bb_threat[enemyBitersForceName] + threat, decimals)
     end
 end
 
@@ -284,10 +286,10 @@ end
 --- @param food string
 function Public.feed_biters_from_inventory(player, food)
     local tick = Functions.get_ticks_since_game_start()
-    if global.active_special_games['captain_mode'] then
+    if storage.active_special_games['captain_mode'] then
         tick = game.ticks_played
     end
-    if tick <= global.difficulty_votes_timeout then
+    if tick <= storage.difficulty_votes_timeout then
         player.print('Please wait for voting to finish before feeding')
         return
     end
@@ -297,7 +299,7 @@ function Public.feed_biters_from_inventory(player, food)
 
     local biter_force_name = enemy_force_name .. '_biters'
 
-    local i = player.get_main_inventory()
+    local i = player.character.get_main_inventory()
     if not i then
         return
     end
@@ -305,7 +307,7 @@ function Public.feed_biters_from_inventory(player, food)
     if flask_amount == 0 then
         player.print(
             'You have no ' .. food_values[food].name .. ' flask in your inventory.',
-            { r = 0.98, g = 0.66, b = 0.22 }
+            { color = { r = 0.98, g = 0.66, b = 0.22 } }
         )
         return
     end
@@ -313,8 +315,8 @@ function Public.feed_biters_from_inventory(player, food)
     i.remove({ name = food, count = flask_amount })
 
     print_feeding_msg(player, food, flask_amount)
-    local evolution_before_feed = global.bb_evolution[biter_force_name]
-    local threat_before_feed = global.bb_threat[biter_force_name]
+    local evolution_before_feed = storage.bb_evolution[biter_force_name]
+    local threat_before_feed = storage.bb_threat[biter_force_name]
 
     Public.do_raw_feed(flask_amount, food, biter_force_name)
 
@@ -329,7 +331,7 @@ function Public.feed_biters_from_inventory(player, food)
     )
 
     if food == 'space-science-pack' then
-        global.spy_fish_timeout[player.force.name] = game.tick + 99999999
+        storage.spy_fish_timeout[player.force.name] = game.tick + 99999999
     end
 end
 
@@ -337,10 +339,10 @@ end
 --- @param button defines.mouse_button_type
 function Public.feed_biters_mixed_from_inventory(player, button)
     local tick = Functions.get_ticks_since_game_start()
-    if global.active_special_games['captain_mode'] then
+    if storage.active_special_games['captain_mode'] then
         tick = game.ticks_played
     end
-    if tick <= global.difficulty_votes_timeout then
+    if tick <= storage.difficulty_votes_timeout then
         player.print('Please wait for voting to finish before feeding')
         return
     end
@@ -366,7 +368,7 @@ function Public.feed_biters_mixed_from_inventory(player, button)
             'automation-science-pack',
         }
     end
-    local i = player.get_main_inventory()
+    local i = player.character.get_main_inventory()
     if not i then
         return
     end
@@ -383,8 +385,8 @@ function Public.feed_biters_mixed_from_inventory(player, button)
     })
     local message = { colored_player_name, ' fed ' }
     for k, v in pairs(food) do
-        local evolution_before_feed = global.bb_evolution[biter_force_name]
-        local threat_before_feed = global.bb_threat[biter_force_name]
+        local evolution_before_feed = storage.bb_evolution[biter_force_name]
+        local threat_before_feed = storage.bb_threat[biter_force_name]
         local flask_amount = i.get_item_count(v)
         if flask_amount ~= 0 then
             table.insert(
@@ -413,16 +415,16 @@ function Public.feed_biters_mixed_from_inventory(player, button)
             )
             i.remove({ name = v, count = flask_amount })
             if v == 'space-science-pack' then
-                global.spy_fish_timeout[player.force.name] = game.tick + 99999999
+                storage.spy_fish_timeout[player.force.name] = game.tick + 99999999
             end
         end
     end
     if #message == 2 then
-        player.print('You have no flasks in your inventory', { r = 0.98, g = 0.66, b = 0.22 })
+        player.print('You have no flasks in your inventory', { color = { r = 0.98, g = 0.66, b = 0.22 } })
         return
     end
     table.insert(message, 'to ' .. Functions.team_name_with_color(enemy_force_name) .. "'s biters!")
-    game.print(table.concat(message), { r = 0.9, g = 0.9, b = 0.9 })
+    game.print(table.concat(message), { color = { r = 0.9, g = 0.9, b = 0.9 } })
 end
 
 local function calc_send(cmd)
@@ -435,10 +437,10 @@ local function calc_send(cmd)
         player,
         FeedingCalculations.calc_send_command,
         cmd.parameter,
-        global.difficulty_vote_value,
-        global.bb_evolution,
-        global.max_reanim_thresh,
-        global.training_mode,
+        storage.difficulty_vote_value,
+        storage.bb_evolution,
+        storage.max_reanim_thresh,
+        storage.training_mode,
         player_count,
         player
     )

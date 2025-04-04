@@ -41,7 +41,7 @@ function Public.print_except(msg, player, color)
 
     for _, p in pairs(game.connected_players) do
         if p ~= player then
-            p.print(msg, color)
+            p.print(msg, { color = color })
         end
     end
 end
@@ -51,9 +51,9 @@ function Public.print_to(player_ident, msg, color)
     color = color or Color.yellow
 
     if player then
-        player.print(prefix .. msg, color)
+        player.print(prefix .. msg, { color = color })
     else
-        game.print(prefix .. msg, color)
+        game.print(prefix .. msg, { color = color })
     end
 end
 
@@ -62,9 +62,9 @@ function Public.warning(player_ident, msg, color)
     color = color or Color.comfy
 
     if player then
-        player.print(warning_prefix .. msg, color)
+        player.print(warning_prefix .. msg, { color = color })
     else
-        game.print(warning_prefix .. msg, color)
+        game.print(warning_prefix .. msg, { color = color })
     end
 end
 
@@ -90,7 +90,7 @@ function Public.print_admins(msg, source)
     print(formatted_msg)
     for _, p in pairs(game.connected_players) do
         if p.admin then
-            p.print(formatted_msg, chat_color)
+            p.print(formatted_msg, { color = chat_color })
         end
     end
 end
@@ -240,7 +240,7 @@ end
 -- @param msg <string> The message to print
 -- @param warning_prefix <string> The name of the module/warning
 function Public.action_warning(warning_prefix, msg)
-    game.print(prefix .. msg, Color.yellow)
+    game.print(prefix .. msg, { color = Color.yellow })
     msg = format('%s %s', warning_prefix, msg)
     print(msg)
     Server.to_discord_bold(msg)
@@ -250,7 +250,7 @@ end
 -- @param msg <string> The message to print
 -- @param warning_prefix <string> The name of the module/warning
 function Public.action_warning_embed(warning_prefix, msg)
-    game.print(prefix .. msg, Color.yellow)
+    game.print(prefix .. msg, { color = Color.yellow })
     msg = format('%s %s', warning_prefix, msg)
     print(msg)
     Server.to_discord_embed(msg)
@@ -292,7 +292,7 @@ function Public.validate_player(player_ident)
     local data_type = type(player_ident)
     local player
 
-    if data_type == 'table' and player_ident.valid then
+    if data_type == 'userdata' and player_ident.valid then
         local is_player = player_ident.is_player()
         if is_player then
             player = player_ident
@@ -308,6 +308,11 @@ function Public.validate_player(player_ident)
     end
 
     return player, player.name, player.index
+end
+
+function Public.get_package(path)
+    local path = '__level__/' .. path:gsub('%.', '/') .. '.lua'
+    return package.loaded[path]
 end
 
 -- add utility functions that exist in base factorio/util

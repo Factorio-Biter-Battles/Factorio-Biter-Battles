@@ -3,14 +3,14 @@ local table_insert = table.insert
 local Public = {}
 
 local function get_or_create_dummy_player(playerName)
-    local special = global.special_games_variables.captain_mode
+    local special = storage.special_games_variables.captain_mode
     return game.get_player(playerName)
         or {
             name = playerName,
             color = { r = 255, g = 255, b = 255, a = 1 },
-            force = { name = (global.chosen_team[playerName] or 'spectator') },
+            force = { name = (storage.chosen_team[playerName] or 'spectator') },
             print = function(msg, color)
-                game.print('to player ' .. playerName .. ':' .. msg, color)
+                game.print('to player ' .. playerName .. ':' .. msg, { color = color })
             end,
             tag = special and special.test_players[playerName],
         }

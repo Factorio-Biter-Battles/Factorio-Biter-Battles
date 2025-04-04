@@ -5,8 +5,9 @@ local Event = require('utils.event')
 local Gui = require('utils.gui')
 local gui_style = require('utils.utils').gui_style
 local frame_style = require('utils.utils').left_frame_style
+local table = require('utils.table')
 local concat, insert, remove = table.concat, table.insert, table.remove
-local table_contains = CaptainUtils.table_contains
+local table_contains = table.contains
 local string_sub = string.sub
 
 local CaptainTaskGroup = {}
@@ -26,7 +27,7 @@ function CaptainTaskGroup.get_max_num_organization_groups()
 end
 
 function CaptainTaskGroup.team_organization_can_edit_all(player)
-    return table_contains(global.special_games_variables.captain_mode.captainList, player.name)
+    return table_contains(storage.special_games_variables.captain_mode.captainList, player.name)
 end
 
 function CaptainTaskGroup.team_organization_can_edit_group_name(player, group)
@@ -51,7 +52,7 @@ function CaptainTaskGroup.remove_task_group(player, groupsOrganization)
 end
 
 function CaptainTaskGroup.update_list_of_players_without_task(force)
-    local special = global.special_games_variables.captain_mode
+    local special = storage.special_games_variables.captain_mode
     local groupsOrganization = special.groupsOrganization[force.name]
     if groupsOrganization == nil then
         return
@@ -74,10 +75,10 @@ end
 
 function CaptainTaskGroup.toggle_captain_organization_gui(player)
     if player.gui.screen.captain_organization_gui then
-        global.captain_ui[player.name].captain_organization_gui = false
+        storage.captain_ui[player.name].captain_organization_gui = false
         player.gui.screen.captain_organization_gui.destroy()
     else
-        global.captain_ui[player.name].captain_organization_gui = true
+        storage.captain_ui[player.name].captain_organization_gui = true
         CaptainTaskGroup.draw_captain_organization_gui(player)
     end
 end
@@ -131,9 +132,9 @@ function CaptainTaskGroup.update_captain_organization_gui(player, frame)
     local force = player.force
     local force_name = force.name
     if force_name == 'spectator' then
-        force_name = global.chosen_team[player.name]
+        force_name = storage.chosen_team[player.name]
     end
-    local special = global.special_games_variables.captain_mode
+    local special = storage.special_games_variables.captain_mode
     local groupsOrganization = special.groupsOrganization[force_name] or {}
     if not groupsOrganization then
         frame.destroy()
@@ -205,7 +206,7 @@ local function on_gui_click(event)
     if not (element and element.valid) then
         return
     end
-    local special = global.special_games_variables.captain_mode
+    local special = storage.special_games_variables.captain_mode
     if not special then
         return
     end
@@ -246,12 +247,12 @@ local function on_gui_click(event)
                 player.force.print(player.name .. ' has set task name to ' .. new_name)
                 CaptainTaskGroup.update_all_captain_organization_gui()
             else
-                player.print('You cant set the task name with same one as before !!', Color.warning)
+                player.print('You cant set the task name with same one as before !!', { color = Color.warning })
             end
         end
     elseif name:find('^task_name_field') then
         if #element.text > 40 then
-            player.print('Task name must be 40 characters or less', Color.warning)
+            player.print('Task name must be 40 characters or less', { color = Color.warning })
             element.text = string_sub(element.text, 1, 40)
         end
     end

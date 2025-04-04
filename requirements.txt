@@ -1,0 +1,2 @@
+luaparser==3.3.0
+requests==2.32.3

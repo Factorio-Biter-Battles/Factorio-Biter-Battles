@@ -143,21 +143,21 @@ local function damage_player(player, kill, print_to_all)
         if kill then
             player.character.die('enemy')
             if print_to_all then
-                game.print(player.name .. msg, Color.yellow)
+                game.print(player.name .. msg, { color = Color.yellow })
             end
             return
         end
         player.character.health = player.character.health - math.random(50, 100)
-        player.character.surface.create_entity({ name = 'water-splash', position = player.position })
+        player.character.surface.create_entity({ name = 'water-splash', position = player.character.position })
         local messages = {
             'Ouch.. That hurt! Better be careful now.',
             'Just a fleshwound.',
             'Better keep those hands to yourself or you might loose them.',
         }
-        player.print(messages[math.random(1, #messages)], Color.yellow)
+        player.print(messages[math.random(1, #messages)], { color = Color.yellow })
         if player.character.health <= 0 then
             player.character.die('enemy')
-            game.print(player.name .. msg, Color.yellow)
+            game.print(player.name .. msg, { color = Color.yellow })
             return
         end
     end
@@ -218,6 +218,9 @@ local function on_marked_for_deconstruction(event)
         return
     end
     local player = game.get_player(event.player_index)
+    if not player then
+        return
+    end
     if player.admin then
         return
     end
@@ -314,9 +317,11 @@ local function on_built_entity(event)
     end
     local tracker = session.get_session_table()
     local trusted = session.get_trusted_table()
-    if event.created_entity.type == 'entity-ghost' then
+    if event.entity.type == 'entity-ghost' then
         local player = game.get_player(event.player_index)
-
+        if not player then
+            return
+        end
         if player.admin then
             return
         end
@@ -330,7 +335,7 @@ local function on_built_entity(event)
         end
 
         if playtime < this.required_playtime then
-            event.created_entity.destroy()
+            event.entity.destroy()
             player.print(get_not_trusted_warning(player))
         end
     end
@@ -353,7 +358,7 @@ local function on_player_used_capsule(event)
     local position = { x = math.floor(x), y = math.floor(y) }
     if
         ammo_names[item.name]
-        and player.surface.count_entities_filtered({
+        and player.physical_surface.count_entities_filtered({
                 force = player.force.name .. '_biters',
                 area = { { x - 10, y - 10 }, { x + 10, y + 10 } },
                 limit = 1,
@@ -398,7 +403,6 @@ local function on_entity_died(event)
         }
         if chests[event.entity.type] then
             local inv = event.entity.get_inventory(1)
-            local contents = inv.get_contents()
             data.event = table.concat({ data.event, ' with ', inv.get_item_count(), ' items' })
         end
         this.histories_idx.friendly_fire = this.histories_idx.friendly_fire % size + 1
@@ -591,7 +595,7 @@ local function on_player_cancelled_crafting(event)
     local player = game.get_player(event.player_index)
 
     local crafting_queue_item_count = event.items.get_item_count()
-    local free_slots = player.get_main_inventory().count_empty_stacks()
+    local free_slots = player.character.get_main_inventory().count_empty_stacks()
     local crafted_items = #event.items
 
     if crafted_items > free_slots then
@@ -619,7 +623,7 @@ local function on_player_cancelled_crafting(event)
         local data = {
             player_name = player.name,
             event = crafting_queue_item_count .. ' ' .. event.recipe.name,
-            position = { x = math.floor(player.position.x), y = math.floor(player.position.y) },
+            position = { x = math.floor(player.physical_position.x), y = math.floor(player.physical_position.y) },
             time = game.ticks_played,
             server_time = game.tick,
         }
@@ -635,13 +639,11 @@ local function on_init()
     local branch_version = '0.18.35'
     local sub = string.sub
     local is_branch_18 = sub(branch_version, 3, 4)
-    local get_active_version = sub(game.active_mods.base, 3, 4)
+    local get_active_version = sub(script.active_mods.base, 3, 4)
     local default = game.permissions.get_group('Default')
 
-    game.forces.player.research_queue_enabled = true
-
     is_branch_18 = is_branch_18 .. sub(branch_version, 6, 7)
-    get_active_version = get_active_version .. sub(game.active_mods.base, 6, 7)
+    get_active_version = get_active_version .. sub(script.active_mods.base, 6, 7)
     if get_active_version >= is_branch_18 then
         default.set_allows_action(defines.input_action.flush_opened_entity_fluid, false)
         default.set_allows_action(defines.input_action.flush_opened_entity_specific_fluid, false)
@@ -684,6 +686,11 @@ local function on_permission_group_edited(event)
     if not this.enabled then
         return
     end
+
+    if not event.player_index then
+        return
+    end
+
     local player = game.get_player(event.player_index)
     if not player or not player.valid then
         return
@@ -762,7 +769,7 @@ function Public.reset_tables()
 end
 
 --- Enable this to log when trees are destroyed
----@param value <boolean>
+---@param value boolean
 function Public.log_tree_harvest(value)
     if value then
         this.log_tree_harvest = value
@@ -772,8 +779,8 @@ function Public.log_tree_harvest(value)
 end
 
 --- Add entity type to the whitelist so it gets logged.
----@param key <string>
----@param value <string>
+---@param key string
+---@param value string
 function Public.whitelist_types(key, value)
     if key and value then
         this.whitelist_types[key] = value
@@ -783,7 +790,7 @@ function Public.whitelist_types(key, value)
 end
 
 --- If the event should also check trusted players.
----@param value <string>
+---@param value string
 function Public.do_not_check_trusted(value)
     if value then
         this.do_not_check_trusted = value
@@ -795,7 +802,7 @@ function Public.do_not_check_trusted(value)
 end
 
 --- If ANY actions should be performed when a player misbehaves.
----@param value <string>
+---@param value string
 function Public.enable_capsule_warning(value)
     if value then
         this.enable_capsule_warning = value
@@ -807,7 +814,7 @@ function Public.enable_capsule_warning(value)
 end
 
 --- If ANY actions should be performed when a player misbehaves.
----@param value <string>
+---@param value string
 function Public.enable_capsule_cursor_warning(value)
     if value then
         this.enable_capsule_cursor_warning = value
@@ -819,7 +826,7 @@ function Public.enable_capsule_cursor_warning(value)
 end
 
 --- If the script should jail a person instead of kicking them
----@param value <string>
+---@param value string
 function Public.enable_jail(value)
     if value then
         this.enable_jail = value
@@ -831,7 +838,7 @@ function Public.enable_jail(value)
 end
 
 --- Defines what the threshold for amount of explosives in chest should be - logged or not.
----@param value <string>
+---@param value string
 function Public.explosive_threshold(value)
     if value then
         this.explosive_threshold = value
@@ -841,7 +848,7 @@ function Public.explosive_threshold(value)
 end
 
 --- Defines what the threshold for amount of times before the script should take action.
----@param value <string>
+---@param value string
 function Public.damage_entity_threshold(value)
     if value then
         this.damage_entity_threshold = value
@@ -851,9 +858,9 @@ function Public.damage_entity_threshold(value)
 end
 
 --- This is used for the RPG module, when casting capsules.
----@param player <LuaPlayer>
----@param position <EventPosition>
----@param msg <string>
+---@param player LuaPlayer
+---@param position MapPosition
+---@param msg string
 function Public.insert_into_capsule_history(player, position, msg)
     if not this.capsule_history then
         this.capsule_history = {}
@@ -869,12 +876,12 @@ function Public.insert_into_capsule_history(player, position, msg)
     str = str .. ' Y:'
     str = str .. math.floor(position.y)
     str = str .. ' '
-    str = str .. 'surface:' .. player.surface.index
+    str = str .. 'surface:' .. player.physical_surface_index
     increment(this.capsule_history, str)
 end
 
 --- Returns the table.
----@param key string
+---@param key string?
 function Public.get(key)
     if key then
         return this[key]

@@ -1,9 +1,12 @@
-local gui_style = require('utils.utils').gui_style
 local flui = require('utils.ui.gui-lite')
 local uic = require('utils.ui.fcomponents')
 local Event = require('utils.event')
 local Functions = require('maps.biter_battles_v2.functions')
 local closable_frame = require('utils.ui.closable_frame')
+local string_format = string.format
+local table_sort = table.sort
+local table_concat = table.concat
+local table_insert = table.insert
 
 local MAXHEIGHT_PADDING = 50
 
@@ -118,7 +121,7 @@ local function ui_template()
             },
         })
     end
-    local both_teams = uic.add(container, {
+    uic.add(container, {
         type = 'frame',
         style = 'inside_shallow_frame_with_padding',
         direction = 'vertical',
@@ -160,14 +163,15 @@ local UI = ui_template()
 ---@param south_desc string | nil
 ---@return GuiElemDef
 local function research_item(tech_id, north_desc, south_desc)
-    local tooltip_items = {}
-    table.insert(tooltip_items, 'North: ' .. (north_desc or 'Not started'))
-    table.insert(tooltip_items, 'South: ' .. (south_desc or 'Not started'))
+    local tooltip_items = {
+        'North: ' .. (north_desc or 'Not started'),
+        'South: ' .. (south_desc or 'Not started'),
+    }
     ---@type GuiElemDef
     return {
         type = 'sprite',
         sprite = 'technology/' .. tech_id,
-        tooltip = table.concat(tooltip_items, '\n'),
+        tooltip = table_concat(tooltip_items, '\n'),
         elem_tooltip = { type = 'technology', name = tech_id },
         name = '_' .. tech_id,
         tags = {
@@ -193,8 +197,8 @@ end
 ---@return GuiElemDef
 local function progress_research_item(tech_id, this_progress, is_active, north_desc, south_desc)
     local tooltip_items = {}
-    table.insert(tooltip_items, 'North: ' .. (north_desc or 'Not started'))
-    table.insert(tooltip_items, 'South: ' .. (south_desc or 'Not started'))
+    table_insert(tooltip_items, 'North: ' .. (north_desc or 'Not started'))
+    table_insert(tooltip_items, 'South: ' .. (south_desc or 'Not started'))
     ---@type GuiElemDef
     local el = {
         type = 'flow',
@@ -212,7 +216,7 @@ local function progress_research_item(tech_id, this_progress, is_active, north_d
         {
             type = 'progressbar',
             value = this_progress,
-            tooltip = table.concat(tooltip_items, '\n'),
+            tooltip = table_concat(tooltip_items, '\n'),
             style_mods = {
                 color = is_active and { 0, 1, 0 } or { 1, 1, 0 },
             },
@@ -226,6 +230,9 @@ local ResearchInfo = {}
 ---@param evt GuiEventData
 function ResearchInfo.show_research_info_handler(evt)
     local player = game.get_player(evt.player_index)
+    if not player then
+        return
+    end
     ResearchInfo.show_research_info(player)
 end
 local show_research_info_handler = ResearchInfo.show_research_info_handler
@@ -253,32 +260,33 @@ function ResearchInfo.create_research_info_button(element)
     return button
 end
 
----@param force string
+---@param force LuaForce
 ---@param tech_name string
 function ResearchInfo.research_finished(tech_name, force)
     local force_name = force.name
     if force_name ~= 'north' and force_name ~= 'south' then
         return
     end
-    local tech_info = global.research_info.completed[tech_name]
+    local tech_info = storage.research_info.completed[tech_name]
     if not tech_info then
         tech_info = {}
-        global.research_info.completed[tech_name] = tech_info
+        storage.research_info.completed[tech_name] = tech_info
     end
-    tech_info[force_name] = Functions.get_ticks_since_game_start()
-    global.research_info.current_progress[force_name][tech_name] = nil
+    local ticks = Functions.get_ticks_since_game_start()
+    tech_info[force_name] = Functions.format_ticks_as_time(ticks)
+    storage.research_info.current_progress[force_name][tech_name] = nil
 
     ResearchInfo.update_research_info_ui(true)
 end
 
----@param force string
+---@param force LuaForce
 ---@param tech_name string
 function ResearchInfo.research_started(tech_name, force)
     local force_name = force.name
     if force_name ~= 'north' and force_name ~= 'south' then
         return
     end
-    global.research_info.current_progress[force_name][tech_name] = true
+    storage.research_info.current_progress[force_name][tech_name] = true
     ResearchInfo.update_research_info_ui()
 end
 
@@ -288,7 +296,7 @@ function ResearchInfo.research_reversed(tech_name, force)
     if force.name ~= 'north' and force.name ~= 'south' then
         return
     end
-    local tech_info = global.research_info.completed[tech_name]
+    local tech_info = storage.research_info.completed[tech_name]
     if not tech_info then
         return
     end
@@ -297,13 +305,11 @@ function ResearchInfo.research_reversed(tech_name, force)
 end
 
 local function get_research_info(tech_id)
-    local tech_info = global.research_info.completed[tech_id]
-    local progress = global.research_info.current_progress
+    local tech_info = storage.research_info.completed[tech_id]
 
     ---@param force LuaForce
     ---@return string?, number?, boolean
     local function format(force)
-        local all_technologies = force.technologies
         local force_name = force.name
         ---@type string?
         local result = nil
@@ -311,7 +317,7 @@ local function get_research_info(tech_id)
         local progress
         local active = false
         if tech_info and tech_info[force_name] then
-            result = Functions.format_ticks_as_time(tech_info[force_name])
+            result = tech_info[force_name]
         else
             local current = force.current_research
             ---@type string?
@@ -322,10 +328,10 @@ local function get_research_info(tech_id)
                 active = true
             else
                 type = 'Paused - '
-                progress = force.get_saved_technology_progress(all_technologies[tech_id])
+                progress = force.technologies[tech_id].saved_progress
             end
             if progress then
-                result = type .. string.format('%.0f%% complete', progress * 100)
+                result = type .. string_format('%.0f%% complete', progress * 100)
             end
         end
         return result, progress, active
@@ -352,13 +358,13 @@ end
 local function construct_completed(filter)
     ---@type GuiElemDef[]
     local elements = {}
-    for tech_name, tech_info in pairs(global.research_info.completed) do
+    for tech_name, tech_info in pairs(storage.research_info.completed) do
         if filter(tech_name, tech_info) then
             local info = get_research_info(tech_name)
             elements[#elements + 1] = research_item(tech_name, info.north.desc, info.south.desc)
         end
     end
-    table.sort(elements, function(a, b)
+    table_sort(elements, function(a, b)
         return a.tags.sort_by < b.tags.sort_by
     end)
     if #elements == 0 then
@@ -387,7 +393,7 @@ end
 ---@param force LuaForce
 ---@return GuiElemDef
 local function construct_progress(force)
-    local progress_info = global.research_info.current_progress[force.name]
+    local progress_info = storage.research_info.current_progress[force.name]
     local el = uic.blocks.table(15, 'progress')
     local matches = 0
     for tech_name, _ in pairs(progress_info) do
@@ -495,7 +501,6 @@ end
 
 ---@param player LuaPlayer
 function ResearchInfo.show_research_info(player)
-    local all_technologies = game.forces.spectator.technologies
     local frame = player.gui.screen['research_info_frame']
 
     if frame and frame.valid then

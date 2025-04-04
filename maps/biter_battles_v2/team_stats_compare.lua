@@ -15,13 +15,13 @@ local TeamStatsCompare = {}
 
 ---@alias TeamstatsPreferences {show_hidden: boolean?, show_prev: boolean?}
 
----@param player
+---@param player LuaPlayer
 ---@return TeamstatsPreferences
 local function get_preferences(player)
-    local res = global.teamstats_preferences[player.name]
+    local res = storage.teamstats_preferences[player.name]
     if not res then
         res = {}
-        global.teamstats_preferences[player.name] = res
+        storage.teamstats_preferences[player.name] = res
     end
     return res
 end
@@ -74,30 +74,30 @@ function TeamStatsCompare.show_stats(player)
     local exclude_forces = {}
     ---@type TeamStats
     local stats
-    if not global.prev_game_team_stats then
+    if not storage.prev_game_team_stats then
         show_prev = false
     end
     if show_prev then
-        stats = global.prev_game_team_stats
+        stats = storage.prev_game_team_stats
     else
         stats = TeamStatsCollect.compute_stats()
         -- allow it always in single player, or if the game is over
         local other_force = nil
-        if global.chosen_team[player.name] == 'north' then
+        if storage.chosen_team[player.name] == 'north' then
             other_force = 'south'
-        elseif global.chosen_team[player.name] == 'south' then
+        elseif storage.chosen_team[player.name] == 'south' then
             other_force = 'north'
         end
-        if not global.bb_game_won_by_team then
-            if global.allow_teamstats == 'spectator' then
+        if not storage.bb_game_won_by_team then
+            if storage.allow_teamstats == 'spectator' then
                 if other_force and player.force.name ~= 'spectator' then
                     exclude_forces[other_force] = true
                 end
-            elseif global.allow_teamstats == 'pure-spectator' then
+            elseif storage.allow_teamstats == 'pure-spectator' then
                 if other_force then
                     exclude_forces[other_force] = true
                 end
-            elseif global.allow_teamstats ~= 'always' then
+            elseif storage.allow_teamstats ~= 'always' then
                 if other_force then
                     exclude_forces[other_force] = true
                 else
@@ -402,7 +402,7 @@ function TeamStatsCompare.game_over()
     for _, player in pairs(game.connected_players) do
         safe_wrap_with_player_print(player, TeamStatsCompare.show_stats, player)
     end
-    global.prev_game_team_stats = global.team_stats
+    storage.prev_game_team_stats = storage.team_stats
 end
 
 function TeamStatsCompare.toggle_team_stats(player)

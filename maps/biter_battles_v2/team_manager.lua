@@ -21,17 +21,19 @@ local function get_player_array(force_name)
 end
 
 function Public.freeze_players()
-    if not global.freeze_players then
+    if not storage.freeze_players then
         return
     end
-    global.team_manager_default_permissions = {}
+    storage.team_manager_default_permissions = {}
     local p = game.permissions.get_group('Default')
     for action_name, _ in pairs(defines.input_action) do
-        global.team_manager_default_permissions[action_name] = p.allows_action(defines.input_action[action_name])
+        storage.team_manager_default_permissions[action_name] = p.allows_action(defines.input_action[action_name])
         p.set_allows_action(defines.input_action[action_name], false)
     end
     local defs = {
-        defines.input_action.write_to_console,
+        defines.input_action.delete_custom_tag,
+        defines.input_action.edit_custom_tag,
+        defines.input_action.edit_permission_group,
         defines.input_action.gui_checked_state_changed,
         defines.input_action.gui_click,
         defines.input_action.gui_confirmed,
@@ -42,9 +44,8 @@ function Public.freeze_players()
         defines.input_action.gui_switch_state_changed,
         defines.input_action.gui_text_changed,
         defines.input_action.gui_value_changed,
-        defines.input_action.edit_permission_group,
-        defines.input_action.delete_custom_tag,
-        defines.input_action.edit_custom_tag,
+        defines.input_action.remote_view_surface,
+        defines.input_action.write_to_console,
     }
     for _, d in pairs(defs) do
         p.set_allows_action(d, true)
@@ -54,7 +55,7 @@ end
 function Public.unfreeze_players()
     local p = game.permissions.get_group('Default')
     for action_name, _ in pairs(defines.input_action) do
-        if global.team_manager_default_permissions[action_name] then
+        if storage.team_manager_default_permissions[action_name] then
             p.set_allows_action(defines.input_action[action_name], true)
         end
     end
@@ -66,12 +67,12 @@ local function leave_corpse(player)
     end
 
     local inventories = {
-        player.get_inventory(defines.inventory.character_main),
-        player.get_inventory(defines.inventory.character_guns),
-        player.get_inventory(defines.inventory.character_ammo),
-        player.get_inventory(defines.inventory.character_armor),
-        player.get_inventory(defines.inventory.character_vehicle),
-        player.get_inventory(defines.inventory.character_trash),
+        player.character.get_inventory(defines.inventory.character_main),
+        player.character.get_inventory(defines.inventory.character_guns),
+        player.character.get_inventory(defines.inventory.character_ammo),
+        player.character.get_inventory(defines.inventory.character_armor),
+        player.character.get_inventory(defines.inventory.character_vehicle),
+        player.character.get_inventory(defines.inventory.character_trash),
     }
 
     local corpse = false
@@ -94,16 +95,26 @@ local function leave_corpse(player)
     end
     player.character = nil
     player.set_controller({ type = defines.controllers.god })
+    -- In a situtation when player looks at chunk which was not generated yet
+    -- removing the character and subsequent attempt to create it will fail
+    -- silently. Reposition the view to middle of the surface.
+    player.teleport({ 0, 0 })
     player.create_character()
 end
 
 function Public.switch_force(player_name, force_name)
     if not game.get_player(player_name) then
-        game.print('Team Manager >> Player ' .. player_name .. ' does not exist.', { r = 0.98, g = 0.66, b = 0.22 })
+        game.print(
+            'Team Manager >> Player ' .. player_name .. ' does not exist.',
+            { color = { r = 0.98, g = 0.66, b = 0.22 } }
+        )
         return
     end
     if not game.forces[force_name] then
-        game.print('Team Manager >> Force ' .. force_name .. ' does not exist.', { r = 0.98, g = 0.66, b = 0.22 })
+        game.print(
+            'Team Manager >> Force ' .. force_name .. ' does not exist.',
+            { color = { r = 0.98, g = 0.66, b = 0.22 } }
+        )
         return
     end
 
@@ -112,13 +123,13 @@ function Public.switch_force(player_name, force_name)
 
     game.print(
         player_name .. ' has been switched into ' .. Functions.team_name_with_color(force_name) .. '.',
-        { r = 0.98, g = 0.66, b = 0.22 }
+        { color = { r = 0.98, g = 0.66, b = 0.22 } }
     )
     Server.to_discord_bold(player_name .. ' has joined team ' .. force_name .. '!')
 
     leave_corpse(player)
 
-    global.chosen_team[player_name] = nil
+    storage.chosen_team[player_name] = nil
     if force_name == 'spectator' then
         spectate(player, true)
     else
@@ -151,7 +162,7 @@ local function draw_manager_gui(player)
                 type = 'sprite-button',
                 caption = string.upper(forces[i2].name),
                 name = forces[i2].name,
-                style = 'side_menu_button',
+                style = 'frame_button',
             })
             l.style.minimal_width = 160
             l.style.maximal_width = 160
@@ -194,7 +205,8 @@ local function draw_manager_gui(player)
     flow.style.top_margin = 8
     local t = flow.add({ type = 'table', name = 'team_manager_bottom_buttons', column_count = 3 })
 
-    if global.tournament_mode then
+    local button
+    if storage.tournament_mode then
         button = t.add({
             type = 'button',
             name = 'team_manager_activate_tournament',
@@ -213,7 +225,7 @@ local function draw_manager_gui(player)
     end
     button.style.font = 'heading-2'
 
-    if global.freeze_players then
+    if storage.freeze_players then
         button = t.add({
             type = 'button',
             name = 'team_manager_freeze_players',
@@ -232,7 +244,7 @@ local function draw_manager_gui(player)
     end
     button.style.font = 'heading-2'
 
-    if global.training_mode then
+    if storage.training_mode then
         button = t.add({
             type = 'button',
             name = 'team_manager_activate_training',
@@ -254,14 +266,14 @@ end
 
 local function set_custom_team_name(force_name, team_name)
     if team_name == '' then
-        global.tm_custom_name[force_name] = nil
+        storage.tm_custom_name[force_name] = nil
         return
     end
     if not team_name then
-        global.tm_custom_name[force_name] = nil
+        storage.tm_custom_name[force_name] = nil
         return
     end
-    global.tm_custom_name[force_name] = tostring(team_name)
+    storage.tm_custom_name[force_name] = tostring(team_name)
 end
 
 function Public.custom_team_name_gui(player, force_name)
@@ -283,8 +295,8 @@ end
 
 local function isReferee(player)
     if
-        global.active_special_games['captain_mode']
-        and global.special_games_variables['captain_mode']['refereeName'] == player.name
+        storage.active_special_games['captain_mode']
+        and storage.special_games_variables['captain_mode']['refereeName'] == player.name
     then
         return true
     else
@@ -298,7 +310,7 @@ local function team_manager_gui_click(event)
 
     if game.forces[name] then
         if not player.admin then
-            player.print('Only admins can change team names.', { r = 175, g = 0, b = 0 })
+            player.print('Only admins can change team names.', { color = { r = 175, g = 0, b = 0 } })
             return
         end
         Public.custom_team_name_gui(player, name)
@@ -307,75 +319,78 @@ local function team_manager_gui_click(event)
 
     if name == 'team_manager_activate_tournament' then
         if not player.admin then
-            player.print('Only admins can switch tournament mode.', { r = 175, g = 0, b = 0 })
+            player.print('Only admins can switch tournament mode.', { color = { r = 175, g = 0, b = 0 } })
             return
         end
         if
-            global.active_special_games['captain_mode'] == true
-            and global.special_games_variables['captain_mode']['prepaPhase'] == true
+            storage.active_special_games['captain_mode'] == true
+            and storage.special_games_variables['captain_mode']['prepaPhase'] == true
         then
             player.print(
                 'You cant disable tournament mode during prepa phase of captain event !',
-                { r = 175, g = 0, b = 0 }
+                { color = { r = 175, g = 0, b = 0 } }
             )
             return
         end
-        if global.tournament_mode then
-            global.tournament_mode = false
+        if storage.tournament_mode then
+            storage.tournament_mode = false
             draw_manager_gui(player)
-            game.print('>>> Tournament Mode has been disabled.', { r = 111, g = 111, b = 111 })
+            game.print('>>> Tournament Mode has been disabled.', { color = { r = 111, g = 111, b = 111 } })
             return
         end
-        global.tournament_mode = true
+        storage.tournament_mode = true
         draw_manager_gui(player)
-        game.print('>>> Tournament Mode has been enabled!', { r = 225, g = 0, b = 0 })
+        game.print('>>> Tournament Mode has been enabled!', { color = { r = 225, g = 0, b = 0 } })
         return
     end
 
     if name == 'team_manager_freeze_players' then
-        if global.freeze_players then
+        if storage.freeze_players then
             if not player.admin then
-                player.print('Only admins can unfreeze players.', { r = 175, g = 0, b = 0 })
+                player.print('Only admins can unfreeze players.', { color = { r = 175, g = 0, b = 0 } })
                 return
             end
             if
-                global.active_special_games['captain_mode'] == true
-                and global.special_games_variables['captain_mode']['prepaPhase'] == true
+                storage.active_special_games['captain_mode'] == true
+                and storage.special_games_variables['captain_mode']['prepaPhase'] == true
             then
-                player.print('You cant unfreeze during prepa phase of captain event !', { r = 175, g = 0, b = 0 })
+                player.print(
+                    'You cant unfreeze during prepa phase of captain event !',
+                    { color = { r = 175, g = 0, b = 0 } }
+                )
                 return
             end
-            global.freeze_players = false
+            storage.freeze_players = false
             draw_manager_gui(player)
-            game.print('>>> Players have been unfrozen!', { r = 255, g = 77, b = 77 })
+            game.print('>>> Players have been unfrozen!', { color = { r = 255, g = 77, b = 77 } })
             Public.unfreeze_players()
             return
         end
         if not player.admin then
-            player.print('Only admins can freeze players.', { r = 175, g = 0, b = 0 })
+            player.print('Only admins can freeze players.', { color = { r = 175, g = 0, b = 0 } })
             return
         end
-        global.freeze_players = true
+        storage.freeze_players = true
         draw_manager_gui(player)
-        game.print('>>> Players have been frozen!', { r = 111, g = 111, b = 255 })
+        game.print('>>> Players have been frozen!', { color = { r = 111, g = 111, b = 255 } })
         Public.freeze_players()
         return
     end
 
     if name == 'team_manager_activate_training' then
         if not player.admin then
-            player.print('Only admins can switch training mode.', { r = 175, g = 0, b = 0 })
+            player.print('Only admins can switch training mode.', { color = { r = 175, g = 0, b = 0 } })
             return
         end
-        if global.training_mode then
-            global.training_mode = false
+        if storage.training_mode then
+            storage.training_mode = false
             draw_manager_gui(player)
-            game.print('>>> Training Mode has been disabled.', { r = 111, g = 111, b = 111 })
+            game.print('>>> Training Mode has been disabled.', { color = { r = 111, g = 111, b = 111 } })
             return
         end
-        global.training_mode = true
+        storage.training_mode = true
         draw_manager_gui(player)
-        game.print('>>> Training Mode has been enabled!', { r = 225, g = 0, b = 0 })
+        game.print('>>> Training Mode has been enabled!', { color = { r = 225, g = 0, b = 0 } })
         return
     end
 
@@ -391,7 +406,7 @@ local function team_manager_gui_click(event)
         return
     end
     if not player.admin and not isReferee(player) then
-        player.print('Only admins can manage teams.', { r = 175, g = 0, b = 0 })
+        player.print('Only admins can manage teams.', { color = { r = 175, g = 0, b = 0 } })
         return
     end
 
@@ -399,7 +414,7 @@ local function team_manager_gui_click(event)
         player.gui.screen['team_manager_gui']['team_manager_root_table']['team_manager_list_box_' .. tonumber(name)]
     local selected_index = listbox.selected_index
     if selected_index == 0 then
-        player.print('No player selected.', { r = 175, g = 0, b = 0 })
+        player.print('No player selected.', { color = { r = 175, g = 0, b = 0 } })
         return
     end
     local player_name = listbox.items[selected_index]

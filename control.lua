@@ -6,7 +6,6 @@ require('utils.server_commands')
 require('utils.utils')
 require('utils.table')
 require('utils.sounds')
--- require 'utils.freeplay'
 --require 'utils.datastore.server_ups'
 require('utils.datastore.color_data')
 require('utils.datastore.session_data')
@@ -46,6 +45,7 @@ end
 
 local loaded = _G.package.loaded
 function require(path)
+    local path = '__level__/' .. path:gsub('%.', '/') .. '.lua'
     return loaded[path] or error('Can only require files at runtime that have been required in the control stage.', 2)
 end
 

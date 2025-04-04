@@ -1,4 +1,4 @@
--- This module exists to break the circular dependency between event.lua and global.lua.
+-- This module exists to break the circular dependency between event.lua and storage.lua.
 -- It is not expected that any user code would require this module instead event.lua should be required.
 
 local Public = {}
@@ -8,8 +8,17 @@ local load_event_name = -2
 
 -- map of event_name to handlers[]
 local event_handlers = {}
+---@type table<defines.events, {profiler: LuaProfiler, count: integer}>
+local event_profilers = {}
+
 -- map of nth_tick to handlers[]
 local on_nth_tick_event_handlers = {}
+---@type table<defines.events, {profiler: LuaProfiler, count: integer}>
+local on_nth_tick_event_profilers = {}
+local event_names = {}
+for k, v in pairs(defines.events) do
+    event_names[v] = k
+end
 
 --[[ local interface = {
     get_handler = function()
@@ -20,7 +29,7 @@ local on_nth_tick_event_handlers = {}
 if not remote.interfaces['interface'] then
     remote.add_interface('interface', interface)
 end ]]
-local pcall = pcall
+local xpcall = xpcall
 local debug_getinfo = debug.getinfo
 local log = log
 local script_on_event = script.on_event
@@ -32,24 +41,10 @@ local function errorHandler(err)
     log(debug.traceback())
 end
 
-local call_handlers
-function call_handlers(handlers, event)
-    if not handlers then
-        return log('Handlers was nil!')
-    end
-    local handlers_copy = table.deepcopy(handlers)
-    for i = 1, #handlers do
-        local handler = handlers[i]
-        if handler == nil and handlers_copy[i] ~= nil then
-            if table.contains(handlers, handlers_copy[i]) then
-                handler = handlers_copy[i]
-            end
-        end
-        if handler ~= nil then
-            xpcall(handler, errorHandler, event)
-        else
-            log('nil handler')
-        end
+-- loop backwards to allow handlers to safely self-remove themselves
+local function call_handlers(handlers, event)
+    for i = #handlers, 1, -1 do
+        xpcall(handlers[i], errorHandler, event)
     end
 end
 
@@ -58,7 +53,16 @@ local function on_event(event)
     if not handlers then
         handlers = event_handlers[event.input_name]
     end
+    local profiler = event_profilers[event.name]
+    if not profiler then
+        profiler = { profiler = game.create_profiler(), count = 1 }
+        event_profilers[event.name] = profiler
+    else
+        profiler.profiler.restart()
+        profiler.count = profiler.count + 1
+    end
     call_handlers(handlers, event)
+    profiler.profiler.stop()
 end
 
 local function on_init()
@@ -85,7 +89,16 @@ end
 
 local function on_nth_tick_event(event)
     local handlers = on_nth_tick_event_handlers[event.nth_tick]
+    local profiler = on_nth_tick_event_profilers[event.nth_tick]
+    if not profiler then
+        profiler = { profiler = game.create_profiler(), count = 1 }
+        on_nth_tick_event_profilers[event.nth_tick] = profiler
+    else
+        profiler.profiler.restart()
+        profiler.count = profiler.count + 1
+    end
     call_handlers(handlers, event)
+    profiler.profiler.stop()
 end
 
 --- Do not use this function, use Event.add instead as it has safety checks.
@@ -98,7 +111,7 @@ function Public.add(event_name, handler)
         event_handlers[event_name] = { handler }
         script_on_event(event_name, on_event)
     else
-        table.insert(handlers, handler)
+        table.insert(handlers, 1, handler)
         if #handlers == 1 then
             script_on_event(event_name, on_event)
         end
@@ -112,7 +125,7 @@ function Public.on_init(handler)
         event_handlers[init_event_name] = { handler }
         script.on_init(on_init)
     else
-        table.insert(handlers, handler)
+        table.insert(handlers, 1, handler)
         if #handlers == 1 then
             script.on_init(on_init)
         end
@@ -126,7 +139,7 @@ function Public.on_load(handler)
         event_handlers[load_event_name] = { handler }
         script.on_load(on_load)
     else
-        table.insert(handlers, handler)
+        table.insert(handlers, 1, handler)
         if #handlers == 1 then
             script.on_load(on_load)
         end
@@ -140,7 +153,7 @@ function Public.on_nth_tick(tick, handler)
         on_nth_tick_event_handlers[tick] = { handler }
         script_on_nth_tick(tick, on_nth_tick_event)
     else
-        table.insert(handlers, handler)
+        table.insert(handlers, 1, handler)
         if #handlers == 1 then
             script_on_nth_tick(tick, on_nth_tick_event)
         end
@@ -154,5 +167,20 @@ end
 function Public.get_on_nth_tick_event_handlers()
     return on_nth_tick_event_handlers
 end
+
+local function update_profilers()
+    local profiler
+    for event_name, profiler in pairs(event_profilers) do
+        log({ '', 'event_handlers[', event_names[event_name], ']: ', profiler.count, ' times, ', profiler.profiler })
+    end
+    for nth_tick, profiler in pairs(on_nth_tick_event_profilers) do
+        log({ '', 'on_nth_tick_event_handlers[', nth_tick, ']: ', profiler.count, ' times, ', profiler.profiler })
+    end
+    log('connected players: ' .. #game.connected_players .. ' game speed: ' .. game.speed)
+    event_profilers = {}
+    on_nth_tick_event_profilers = {}
+end
+
+Public.on_nth_tick(60 * 60, update_profilers)
 
 return Public

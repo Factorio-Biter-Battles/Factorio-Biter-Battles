@@ -14,4 +14,8 @@ function Public.position_from_gps_tag(text)
     return nil
 end
 
+function Public.starts_with(text, prefix)
+    return text:find(prefix, 1, true) == 1
+end
+
 return Public

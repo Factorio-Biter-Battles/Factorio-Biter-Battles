@@ -39,7 +39,7 @@ local function createTrollSong(forceName, offset)
         },
     })
     for k, v in pairs(songBuildings) do
-        v.minable = false
+        v.minable_flag = false
         v.destructible = false
         v.operable = false
     end
@@ -73,11 +73,16 @@ function Public.initial_setup()
     game.create_force('south_biters_boss')
     game.create_force('spectator')
 
+    game.forces.spectator.set_surface_hidden('gulag', true)
+    game.forces.north.set_surface_hidden('gulag', true)
+    game.forces.south.set_surface_hidden('gulag', true)
+    game.forces.spectator.set_surface_hidden('nauvis', true)
+    game.forces.north.set_surface_hidden('nauvis', true)
+    game.forces.south.set_surface_hidden('nauvis', true)
     game.forces.spectator.research_all_technologies()
     local defs = {
-        defines.input_action.open_blueprint_library_gui,
         defines.input_action.import_blueprint_string,
-        defines.input_action.launch_rocket,
+        defines.input_action.open_blueprint_library_gui,
     }
     local p = game.permissions.get_group('Default')
     for k, v in pairs(defs) do
@@ -90,11 +95,10 @@ function Public.initial_setup()
     end
 
     defs = {
-        defines.input_action.activate_copy,
-        defines.input_action.activate_cut,
-        defines.input_action.activate_paste,
-        defines.input_action.change_active_quick_bar,
+        defines.input_action.admin_action,
         defines.input_action.change_active_item_group_for_filters,
+        defines.input_action.change_active_quick_bar,
+        defines.input_action.change_multiplayer_config,
         defines.input_action.clear_cursor,
         defines.input_action.edit_permission_group,
         defines.input_action.gui_checked_state_changed,
@@ -107,42 +111,41 @@ function Public.initial_setup()
         defines.input_action.gui_switch_state_changed,
         defines.input_action.gui_text_changed,
         defines.input_action.gui_value_changed,
+        defines.input_action.map_editor_action,
         defines.input_action.open_character_gui,
-        defines.input_action.open_kills_gui,
         defines.input_action.quick_bar_set_selected_page,
         defines.input_action.quick_bar_set_slot,
+        defines.input_action.remote_view_surface,
         defines.input_action.set_filter,
         defines.input_action.set_player_color,
+        defines.input_action.spawn_item,
         defines.input_action.start_walking,
+        defines.input_action.toggle_map_editor,
         defines.input_action.toggle_show_entity_info,
         defines.input_action.write_to_console,
-        defines.input_action.map_editor_action,
-        defines.input_action.toggle_map_editor,
-        defines.input_action.change_multiplayer_config,
-        defines.input_action.admin_action,
     }
     for _, d in pairs(defs) do
         p.set_allows_action(d, true)
     end
 
-    global.suspend_time_limit = 3600
-    global.automatic_captain_time_left = 0
-    global.reroll_time_limit = 45 * 60 -- 45 seconds
-    global.automatic_captain_time_limit = 45 * 60 -- 45 seconds
-    global.automatic_captain_time_to_start_it = 5 * 60 * 60 -- 5 minutes
-    global.automatic_captain_time_remaining_for_start = 5 * 60 * 60 -- 5 minutes
-    global.automatic_captain_prepa_time_to_start_it = 10 * 60 * 60 -- 10 minutes
-    global.automatic_captain_prepa_time_remaining_for_start = 10 * 60 * 60 -- 10 minutes
-    global.automatic_captain_min_connected_players_for_vote = 25
+    storage.suspend_time_limit = 3600
+    storage.automatic_captain_time_left = 0
+    storage.reroll_time_limit = 45 * 60 -- 45 seconds
+    storage.automatic_captain_time_limit = 45 * 60 -- 45 seconds
+    storage.automatic_captain_time_to_start_it = 5 * 60 * 60 -- 5 minutes
+    storage.automatic_captain_time_remaining_for_start = 5 * 60 * 60 -- 5 minutes
+    storage.automatic_captain_prepa_time_to_start_it = 10 * 60 * 60 -- 10 minutes
+    storage.automatic_captain_prepa_time_remaining_for_start = 10 * 60 * 60 -- 10 minutes
+    storage.automatic_captain_min_connected_players_for_vote = 25
 
-    global.chart_queue = Queue.new()
-    global.gui_refresh_delay = 0
-    global.bb_debug = false
-    global.bb_draw_revive_count_text = false
-    global.bb_show_research_info = 'always' -- "always", "spec", nil
-    global.ignore_lists = {}
-    global.reply_target = {}
-    global.bb_settings = {
+    storage.chart_queue = Queue.new()
+    storage.gui_refresh_delay = 0
+    storage.bb_debug = false
+    storage.bb_draw_revive_count_text = false
+    storage.bb_show_research_info = 'always' -- "always", "spec", nil
+    storage.ignore_lists = {}
+    storage.reply_target = {}
+    storage.bb_settings = {
         --TEAM SETTINGS--
         ['team_balancing'] = true, --Should players only be able to join a team that has less or equal members than the opposing team?
         ['only_admins_vote'] = false, --Are only admins able to vote on the global difficulty?
@@ -153,15 +156,20 @@ function Public.initial_setup()
         ['map_reroll'] = true,
         ['burners_balance'] = true,
     }
-    global.gui_theme = {}
-    global.want_pings = {}
-    global.want_pings_default_value = true
-    global.default_clear_corpses_radius = 160
-    global.total_time_online_players = {}
-    global.already_logged_current_session_time_online_players = {}
+    storage.gui_theme = {}
+    storage.want_pings = {}
+    storage.want_pings_default_value = true
+    storage.default_clear_corpses_radius = 160
+    storage.total_time_online_players = {}
+    storage.already_logged_current_session_time_online_players = {}
+    ---Holds information about announcement
+    ---@class AnnouncementData
+    ---@field entity LuaEntity? Reference to speech-bubble entity
+    ---@field text string? Text for speech-bubble
+    storage.announcement = {}
     ---@type table<string, TeamstatsPreferences>
-    global.teamstats_preferences = {}
-    global.allow_teamstats = 'always'
+    storage.teamstats_preferences = {}
+    storage.allow_teamstats = 'always'
     --Disable Nauvis
     local surface = game.surfaces[1]
     local map_gen_settings = surface.map_gen_settings
@@ -179,50 +187,20 @@ end
 --Terrain Playground Surface
 function Public.playground_surface()
     local map_gen_settings = {}
-    map_gen_settings.seed = global.next_map_seed
+    map_gen_settings.seed = storage.next_map_seed
     -- reset next_map_seed for next round
-    global.next_map_seed = 1
-    map_gen_settings.water = global.random_generator(15, 65) * 0.01
-    map_gen_settings.starting_area = 2.5
-    map_gen_settings.terrain_segmentation = global.random_generator(30, 40) * 0.1
-    map_gen_settings.cliff_settings = { cliff_elevation_interval = 0, cliff_elevation_0 = 0 }
-    map_gen_settings.autoplace_controls = {
-        ['coal'] = { frequency = 6.5, size = 0.34, richness = 0.24 },
-        ['stone'] = { frequency = 6, size = 0.385, richness = 0.25 },
-        ['copper-ore'] = { frequency = 8.05, size = 0.352, richness = 0.35 },
-        ['iron-ore'] = { frequency = 8.5, size = 0.8, richness = 0.23 },
-        ['uranium-ore'] = { frequency = 2.2, size = 1, richness = 1 },
-        ['crude-oil'] = { frequency = 8, size = 1.4, richness = 0.45 },
-        ['trees'] = {
-            frequency = global.random_generator(8, 28) * 0.1,
-            size = global.random_generator(6, 14) * 0.1,
-            richness = global.random_generator(2, 4) * 0.1,
-        },
-        ['enemy-base'] = { frequency = 0, size = 0, richness = 0 },
-    }
-    local surface = game.create_surface(global.bb_surface_name, map_gen_settings)
-    surface.request_to_generate_chunks({ x = 0, y = -256 }, 7)
-    surface.force_generate_chunk_requests()
+    storage.next_map_seed = 1
+    Terrain.adjust_map_gen_settings(map_gen_settings)
+    local surface = game.create_surface(storage.bb_surface_name, map_gen_settings)
     surface.brightness_visual_weights = { -1.17, -0.975, -0.52 }
 end
 
 function Public.draw_structures()
-    local surface = game.surfaces[global.bb_surface_name]
-    Terrain.draw_spawn_area(surface)
-    if global.active_special_games['mixed_ore_map'] then
-        Terrain.draw_mixed_ore_spawn_area(surface)
-    else
-        Terrain.clear_ore_in_main(surface)
-        Terrain.generate_spawn_ore(surface)
-    end
-    Terrain.generate_additional_rocks(surface)
-    Terrain.generate_silo(surface)
-    Terrain.draw_spawn_island(surface)
-    --Terrain.generate_spawn_goodies(surface)
+    Terrain.generate_initial_structures(game.surfaces[storage.bb_surface_name])
 end
 
 function Public.queue_reveal_map()
-    local chart_queue = global.chart_queue
+    local chart_queue = storage.chart_queue
     -- important to flush the queue upon resetting a map or chunk requests from previous maps could overlap
     Queue.clear(chart_queue)
 
@@ -248,12 +226,12 @@ end
 
 ---@param max_requests number
 function Public.pop_chunk_request(max_requests)
-    if not global.bb_settings.bb_map_reveal_toggle then
+    if not storage.bb_settings.bb_map_reveal_toggle then
         return
     end
     max_requests = max_requests or 1
-    local chart_queue = global.chart_queue
-    local surface = game.surfaces[global.bb_surface_name]
+    local chart_queue = storage.chart_queue
+    local surface = game.surfaces[storage.bb_surface_name]
     local spectator = game.forces.spectator
 
     while max_requests > 0 and q_size(chart_queue) > 0 do
@@ -265,28 +243,28 @@ end
 function Public.tables()
     local get_score = Score.get_table()
     get_score.score_table = {}
-    global.research_info = { completed = {}, current_progress = { north = {}, south = {} } }
-    global.science_logs_text = nil
-    global.science_logs_total_north = nil
-    global.science_logs_total_south = nil
+    storage.research_info = { completed = {}, current_progress = { north = {}, south = {} } }
+    storage.science_logs_text = nil
+    storage.science_logs_total_north = nil
+    storage.science_logs_total_south = nil
     ---@type TeamStats
-    global.team_stats = {
+    storage.team_stats = {
         forces = {
             north = { items = {}, food = {}, damage_types = {} },
             south = { items = {}, food = {}, damage_types = {} },
         },
     }
-    global.last_teamstats_print_at = 0
+    storage.last_teamstats_print_at = 0
     -- Name of main BB surface within game.surfaces
     -- We hot-swap here between 2 surfaces.
-    if global.bb_surface_name == 'bb0' then
-        global.bb_surface_name = 'bb1'
+    if storage.bb_surface_name == 'bb0' then
+        storage.bb_surface_name = 'bb1'
     else
-        global.bb_surface_name = 'bb0'
+        storage.bb_surface_name = 'bb0'
     end
 
-    global.suspended_time = 36000
-    global.pings_to_remove = {}
+    storage.suspended_time = 36000
+    storage.pings_to_remove = {}
 
     ---@class SuspendTargetInfo
     ---@field suspendee_player_name string
@@ -295,54 +273,48 @@ function Public.tables()
     ---@field suspend_votes_by_player table<string, int>
 
     ---@type SuspendTargetInfo|nil
-    global.suspend_target_info = nil
+    storage.suspend_target_info = nil
     ---Name and tick suspended at
     ---@type table<string, int>
-    global.suspended_players = {}
-    if global.random_generator == nil then
-        global.random_generator = game.create_random_generator()
-    end
-    if global.next_map_seed == nil or global.next_map_seed < 341 then
+    storage.suspended_players = {}
+    if storage.next_map_seed == nil or storage.next_map_seed < 341 then
         -- Seeds 1-341 inclusive are the same
         -- https://lua-api.factorio.com/latest/classes/LuaRandomGenerator.html#re_seed
-        global.next_map_seed = global.random_generator(341, 4294967294)
+        storage.next_map_seed = math.random(341, 4294967294)
     end
-    -- Our terrain gen seed IS the map seed
-    global.random_generator.re_seed(global.next_map_seed)
-    global.reroll_map_voting = {}
-    global.automatic_captain_voting = {}
-    global.bb_evolution = {}
-    global.benchmark_mode = false
-    global.bb_game_won_by_team = nil
-    global.bb_game_start_tick = nil
-    global.bb_threat = {}
-    global.bb_threat_income = {}
-    global.chosen_team = {}
-    global.got_burners = {}
-    global.combat_balance = {}
-    global.difficulty_player_votes = {}
-    global.evo_raise_counter = 1
-    global.force_area = {}
-    global.main_attack_wave_amount = 0
-    global.map_pregen_message_counter = {}
-    global.rocket_silo = {}
-    global.spectator_rejoin_delay = {}
-    global.spy_fish_timeout = {}
-    global.tm_custom_name = {}
-    global.total_passive_feed_redpotion = 0
-    global.unit_spawners = {}
+    storage.reroll_map_voting = {}
+    storage.automatic_captain_voting = {}
+    storage.bb_evolution = {}
+    storage.benchmark_mode = false
+    storage.bb_game_won_by_team = nil
+    storage.bb_game_start_tick = nil
+    storage.bb_threat = {}
+    storage.bb_threat_income = {}
+    storage.chosen_team = {}
+    storage.got_burners = {}
+    storage.combat_balance = {}
+    storage.difficulty_player_votes = {}
+    storage.evo_raise_counter = 1
+    storage.force_area = {}
+    storage.main_attack_wave_amount = 0
+    storage.map_pregen_message_counter = {}
+    storage.rocket_silo = {}
+    storage.spectator_rejoin_delay = {}
+    storage.spy_fish_timeout = {}
+    storage.tm_custom_name = {}
+    storage.total_passive_feed_redpotion = 0
+    storage.unit_spawners = {}
     ---@type table<integer, HighHealthUnit>
-    global.high_health_units = {}
-    global.unit_spawners.north_biters = {}
-    global.unit_spawners.south_biters = {}
-    global.ai_strikes = {}
-    global.ai_targets = {}
-    global.player_data_afk = {}
-    global.max_group_size_initial = 300 --Maximum unit group size for all biters at start, just used as a reference, doesnt change initial group size.
-    global.max_group_size = {}
-    global.max_group_size['north_biters'] = 300 --Maximum unit group size for north biters.
-    global.max_group_size['south_biters'] = 300 --Maximum unit group size for south biters.
-    global.biter_spawn_unseen = {
+    storage.high_health_units = {}
+    storage.unit_spawners.north_biters = {}
+    storage.unit_spawners.south_biters = {}
+    storage.ai_targets = {}
+    storage.player_data_afk = {}
+    storage.max_group_size_initial = 300 --Maximum unit group size for all biters at start, just used as a reference, doesnt change initial group size.
+    storage.max_group_size = {}
+    storage.max_group_size['north_biters'] = 300 --Maximum unit group size for north biters.
+    storage.max_group_size['south_biters'] = 300 --Maximum unit group size for south biters.
+    storage.biter_spawn_unseen = {
         ['north'] = {
             ['medium-spitter'] = true,
             ['medium-biter'] = true,
@@ -376,11 +348,11 @@ function Public.tables()
             ['behemoth-biter'] = true,
         },
     }
-    global.difficulty_vote_value = 0.75
-    global.difficulty_vote_index = 3
+    storage.difficulty_vote_value = 0.75
+    storage.difficulty_vote_index = 4
 
-    global.difficulty_votes_timeout = 36000
-    global.threat_multiplier = nil
+    storage.difficulty_votes_timeout = 36000
+    storage.threat_multiplier = nil
 
     -- Maximum evolution threshold after which biters have 100% chance
     -- to reanimate. The reanimation starts after evolution factor reaches
@@ -388,15 +360,16 @@ function Public.tables()
     -- To reach 100% reanimation chance at 200% evolution, set it to 100.
     -- To reach 100% reanimation chance at 350% evolution, set it to 250.
     -- This is used to calculate biter_health_factor.
-    global.max_reanim_thresh = 250
+    storage.max_reanim_thresh = 250
 
     -- Container for storing health factor, accessed by key with force's index.
     ---@type table<integer, number>
-    global.biter_health_factor = {}
+    storage.biter_health_factor = {}
 
-    global.next_attack = 'north'
-    if global.random_generator(1, 2) == 1 then
-        global.next_attack = 'south'
+    local rng = game.create_random_generator(storage.next_map_seed)
+    storage.next_attack = 'north'
+    if rng(1, 2) == 1 then
+        storage.next_attack = 'south'
     end
 
     -- Clear all ping UIs.  Otherwise, if a map reset happens when a ping is
@@ -413,31 +386,6 @@ function Public.tables()
     end
 end
 
-function Public.load_spawn()
-    local surface = game.surfaces[global.bb_surface_name]
-    surface.request_to_generate_chunks({ x = 0, y = 0 }, 1)
-    surface.force_generate_chunk_requests()
-
-    surface.request_to_generate_chunks({ x = 0, y = 0 }, 2)
-    surface.force_generate_chunk_requests()
-
-    for y = 0, 576, 32 do
-        surface.request_to_generate_chunks({ x = 80, y = y + 16 }, 0)
-        surface.request_to_generate_chunks({ x = 48, y = y + 16 }, 0)
-        surface.request_to_generate_chunks({ x = 16, y = y + 16 }, 0)
-        surface.request_to_generate_chunks({ x = -16, y = y - 16 }, 0)
-        surface.request_to_generate_chunks({ x = -48, y = y - 16 }, 0)
-        surface.request_to_generate_chunks({ x = -80, y = y - 16 }, 0)
-
-        surface.request_to_generate_chunks({ x = 80, y = y * -1 + 16 }, 0)
-        surface.request_to_generate_chunks({ x = 48, y = y * -1 + 16 }, 0)
-        surface.request_to_generate_chunks({ x = 16, y = y * -1 + 16 }, 0)
-        surface.request_to_generate_chunks({ x = -16, y = y * -1 - 16 }, 0)
-        surface.request_to_generate_chunks({ x = -48, y = y * -1 - 16 }, 0)
-        surface.request_to_generate_chunks({ x = -80, y = y * -1 - 16 }, 0)
-    end
-end
-
 function Public.forces()
     for _, force in pairs(game.forces) do
         if force.name ~= 'spectator' then
@@ -446,7 +394,7 @@ function Public.forces()
         end
     end
 
-    local surface = game.surfaces[global.bb_surface_name]
+    local surface = game.surfaces[storage.bb_surface_name]
 
     local f = game.forces['north']
     f.set_spawn_position({ 0, -44 }, surface)
@@ -526,14 +474,13 @@ function Public.forces()
         game.forces[force.name].technologies['atomic-bomb'].enabled = false
         game.forces[force.name].technologies['cliff-explosives'].enabled = false
         game.forces[force.name].technologies['land-mine'].enabled = false
-        game.forces[force.name].research_queue_enabled = true
-        global.ai_targets[force.name] = { available = {}, available_list = {} }
-        global.ai_target_destroyed_map = {}
-        global.spy_fish_timeout[force.name] = 0
-        global.bb_evolution[force.name] = 0
-        global.biter_health_factor[force.index] = 1.0
-        global.bb_threat_income[force.name] = 0
-        global.bb_threat[force.name] = 0
+        storage.ai_targets[force.name] = { available = {}, available_list = {} }
+        storage.ai_target_destroyed_map = {}
+        storage.spy_fish_timeout[force.name] = 0
+        storage.bb_evolution[force.name] = 0
+        storage.biter_health_factor[force.index] = 1.0
+        storage.bb_threat_income[force.name] = 0
+        storage.bb_threat[force.name] = 0
     end
     for _, force in pairs(Tables.ammo_modified_forces_list) do
         for ammo_category, value in pairs(Tables.base_ammo_modifiers) do

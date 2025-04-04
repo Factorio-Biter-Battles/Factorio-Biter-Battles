@@ -40,7 +40,6 @@ local raw_costs = ItemCosts.raw_costs
 local recipe_productivity = {
     ['rocket-part'] = 1.4,
     ['processing-unit'] = 1.08,
-    ['rocket-control-unit'] = 1.08,
     ['production-science-pack'] = 1.08,
     ['utility-science-pack'] = 1.08,
 }
@@ -251,7 +250,7 @@ local function find_all_costs()
         ingredients = {
             { name = 'low-density-structure', amount = 10 },
             { name = 'rocket-fuel', amount = 10 },
-            { name = 'rocket-control-unit', amount = 10 },
+            { name = 'processing-unit', amount = 10 },
         },
         products = { { name = 'rocket-part', amount = 1 } },
         energy = 3, -- Time to craft one rocket part
@@ -271,10 +270,10 @@ end
 ---@param item_name string
 ---@return ProductInfo
 function ItemCosts.get_info(item_name)
-    local item_costs = global.bb_item_costs
+    local item_costs = storage.bb_item_costs
     if not item_costs then
         item_costs = find_all_costs()
-        global.bb_item_costs = item_costs
+        storage.bb_item_costs = item_costs
     end
 
     return item_costs[item_name]

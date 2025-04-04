@@ -154,7 +154,7 @@ local create_gulag_surface = function()
         for _, entity in pairs(walls) do
             local e = surface.create_entity(entity)
             e.destructible = false
-            e.minable = false
+            e.minable_flag = false
         end
 
         rendering.draw_text({
@@ -172,12 +172,14 @@ local create_gulag_surface = function()
     return surface
 end
 
+---@param player LuaPlayer
+---@param action string
 local teleport_player_to_gulag = function(player, action)
     local p_data = get_player_data(player)
 
     local gulag_tp = function(surface)
         get_player_data(player, true)
-        player.teleport(
+        player.character.teleport(
             surface.find_non_colliding_position('character', game.forces.player.get_spawn_position(surface), 128, 1),
             surface.name
         )
@@ -185,11 +187,11 @@ local teleport_player_to_gulag = function(player, action)
 
     if action == 'jail' then
         local gulag = game.surfaces['gulag']
-        p_data.fallback_surface_index = player.surface.index
-        p_data.position = player.position
+        p_data.fallback_surface_index = player.physical_surface_index
+        p_data.position = player.physical_position
         p_data.p_group_id = player.permission_group.group_id
         p_data.locked = true
-        player.teleport(gulag.find_non_colliding_position('character', { 0, 0 }, 128, 1), gulag.name)
+        player.character.teleport(gulag.find_non_colliding_position('character', { 0, 0 }, 128, 1), gulag.name)
         local data = {
             player = player,
         }
@@ -199,13 +201,12 @@ local teleport_player_to_gulag = function(player, action)
         local p = p_data.position
         local p_group = game.permissions.get_group(p_data.p_group_id)
         p_group.add_player(player)
-        local pos = { x = p.x, y = p.y }
-        local get_tile = surface.get_tile(pos)
+        local get_tile = surface.get_tile(p)
         if get_tile.valid and get_tile.name == 'out-of-map' then
             gulag_tp(surface)
         else
             get_player_data(player, true)
-            player.teleport(surface.find_non_colliding_position('character', p, 128, 1), surface.name)
+            player.character.teleport(surface.find_non_colliding_position('character', p, 128, 1), surface.name)
         end
     end
 end
@@ -372,6 +373,7 @@ local jail = function(player, griefer, msg)
     then
         game.get_player(griefer).character.driving = false
     end
+    game.get_player(griefer).driving = false
 
     jailed[griefer] = { jailed = true, actor = player, reason = msg }
     set_data(jailed_data_set, griefer, { jailed = true, actor = player, reason = msg })

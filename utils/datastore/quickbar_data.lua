@@ -24,7 +24,7 @@ local Public = {}
 
 local function is_game_modded()
     local i = 0
-    for k, _ in pairs(game.active_mods) do
+    for k, _ in pairs(script.active_mods) do
         i = i + 1
         if i > 1 then
             return true
@@ -136,7 +136,7 @@ function Public.save_quickbar(player)
     slots[212] = 'IGNOREME' -- Dirty workaround : Needed, otherwise the list format displayed is different depending on how quickbar was set
     if next(slots) then
         set_data(dataset, player.name, slots)
-        player.print('Your quickbar has been saved.', Color.success)
+        player.print('Your quickbar has been saved.', { color = Color.success })
     end
 end
 
@@ -160,7 +160,7 @@ function Public.save_logistics(player)
     end
     if next(slots) then
         set_data(dataset, player.name, slots)
-        player.print('Your personal logistics has been saved.', Color.success)
+        player.print('Your personal logistics has been saved.', { color = Color.success })
     end
 end
 
@@ -175,7 +175,7 @@ function Public.remove_quickbar(player)
     end
 
     set_data(dataset, player.name, nil)
-    player.print('Your quickbar has been removed.', Color.success)
+    player.print('Your quickbar has been removed.', { color = Color.success })
 end
 
 --- Removes the logistics key from the webpanel.
@@ -189,7 +189,7 @@ function Public.remove_logistics(player)
     end
 
     set_data(dataset, player.name, nil)
-    player.print('Your personal logistics has been removed.', Color.success)
+    player.print('Your personal logistics has been removed.', { color = Color.success })
 end
 
 local fetch_quickbar_on_join = Public.fetch_quickbar
@@ -230,7 +230,7 @@ commands.add_command('save-logistics', 'Save your personal logistics preset so i
     end
     local success, _ = pcall(save_logistics, player)
     if not success then
-        player.print('An error occured while trying to save your logistics slots.', Color.warning)
+        player.print('An error occured while trying to save your logistics slots.', { color = Color.warning })
     end
 end)
 
