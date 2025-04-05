@@ -1281,9 +1281,10 @@ function Public.generate_initial_structures(surface)
     request_biters_area_generation(surface)
 end
 
----@param entity LuaEntity
----@param player LuaPlayer
-function Public.minable_wrecks(entity, player)
+---@param event defines.events.on_player_mined_entity
+function Public.minable_wrecks(event)
+    local entity = event.entity
+    local player = game.get_player(event.player_index)
     if not valid_wrecks[entity.name] then
         return
     end
@@ -1301,7 +1302,7 @@ function Public.minable_wrecks(entity, player)
         local amount = stack.count
         local name = stack.name
 
-        local inserted_count = player.insert({ name = name, count = amount })
+        local inserted_count = event.buffer.insert({ name = name, count = amount })
         if inserted_count ~= amount then
             local amount_to_spill = amount - inserted_count
             surface.spill_item_stack({
@@ -1310,12 +1311,6 @@ function Public.minable_wrecks(entity, player)
                 enable_looted = true,
             })
         end
-
-        player.create_local_flying_text({
-            position = { entity.position.x, entity.position.y - 0.5 * k },
-            text = '+' .. amount .. ' [img=item/' .. name .. ']',
-            color = { r = 0.98, g = 0.66, b = 0.22 },
-        })
     end
 end
 
