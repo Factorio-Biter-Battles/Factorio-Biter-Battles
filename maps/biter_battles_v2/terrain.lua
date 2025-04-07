@@ -1283,12 +1283,11 @@ end
 
 ---@param event defines.events.on_player_mined_entity
 function Public.minable_wrecks(event)
-    local entity = event.entity
-    local player = game.get_player(event.player_index)
-    if not valid_wrecks[entity.name] then
+    if not valid_wrecks[event.entity.name] then
         return
     end
-
+    local entity = event.entity
+    local player = game.get_player(event.player_index)
     local surface = entity.surface
 
     local loot_worth = math_floor(math_abs(entity.position.x * 0.02)) + math_random(16, 32)
