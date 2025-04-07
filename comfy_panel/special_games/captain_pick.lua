@@ -243,7 +243,14 @@ Public.disable = function()
     this.north = Public.get_force_settings()
     this.south = Public.get_force_settings()
     this.spectator.list = {}
+    table.clear_table(debounce)
     table.clear_table(favourites)
+    table.clear_table(player_preferences)
+
+    local special = CaptainUtils.get_special()
+    for _, name in pairs(special and special.listPlayers or {}) do
+        CaptainUtils.remove_from_playerList(name)
+    end
 
     if this.enabled then
         this.enabled = false
@@ -446,7 +453,7 @@ Public.perform_auto_picks = function()
         end
     end
 
-    while (side.picks - side.picked > 1) and max_attempts > 0 do
+    while (side.picks - side.picked > 0) and max_attempts > 0 do
         -- Build array of players from favourites, if any
         local candidates = cpt_index and Public.get_favourites_list(cpt_index) or {}
 
@@ -1132,7 +1139,7 @@ Public.draw_settings = function(player)
     }) do
         Gui.set_style(button, {
             maximal_height = 28,
-            minimal_width = 108,
+            minimal_width = 115,
             font_color = (i % 2 == 1) and { 140, 140, 252 } or { 252, 084, 084 },
         })
     end
@@ -1141,7 +1148,13 @@ Public.draw_settings = function(player)
         .add({ type = 'frame', style = 'bordered_frame', direction = 'horizontal', caption = 'Draft Timer settings' })
         .add({ type = 'table', column_count = 2 })
     for i, button in pairs({
-        box_2.add({ type = 'button', style = 'red_back_button', name = draft_timer_disable, caption = 'Disable' }),
+        box_2.add({
+            type = 'button',
+            style = 'red_back_button',
+            name = draft_timer_disable,
+            caption = 'Disable',
+            tooltip = 'Cancel captain game',
+        }),
         box_2.add({
             type = 'button',
             style = 'confirm_button_without_tooltip',
@@ -1182,7 +1195,7 @@ Public.draw_settings = function(player)
     }) do
         Gui.set_style(
             button,
-            { maximal_height = 28, minimal_width = 108, font = 'default-semibold', font_color = { 0, 0, 0 } }
+            { maximal_height = 28, minimal_width = 115, font = 'default-semibold', font_color = { 0, 0, 0 } }
         )
     end
 end
@@ -1318,6 +1331,11 @@ end)
 Gui.on_click(action_cast_vote, function(event)
     event.player.play_sound({ path = 'utility/gui_click' })
 
+    local player = game.get_player(event.player_index)
+    if not player or (player.force.name == 'spectator') then
+        return
+    end
+
     if Public.debounce(event.player) then
         return
     end
@@ -1427,8 +1445,14 @@ Gui.on_click(draft_timer_favor, function(event)
 end)
 
 Gui.on_click(draft_timer_enable, Public.enable)
-Gui.on_click(draft_timer_disable, Public.disable)
+
+Gui.on_click(draft_timer_disable, function(event)
+    Public.disable()
+    Public.force_end_captain_event()
+end)
+
 Gui.on_click(draft_timer_pause, Public.pause)
+
 Gui.on_click(draft_timer_unpause, Public.unpause)
 
 Gui.on_click(draft_timer_change, function(event)
