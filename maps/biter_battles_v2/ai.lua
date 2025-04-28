@@ -386,7 +386,8 @@ Public.raise_evo = function()
     end
     if storage.difficulty_vote_index and 1 <= storage.difficulty_vote_index and 4 >= storage.difficulty_vote_index then
         local matchTimeInMinutes = game.ticks_played / 3600
-        local difficultyRampDelayInMinutes = math.max(0, 30) -- 28 Apr 2025: Delay for 30 minutes
+        local difficultyRampDelayInMinutes = 30 -- 28 Apr 2025: Changed delay from 0 to 30 minutes
+        difficultyRampDelayInMinutes = math.max(0, difficultyRampDelayInMinutes) -- Prevent negative values
         storage.difficulty_vote_value = ((math.max(matchTimeInMinutes - difficultyRampDelayInMinutes, 0) / 470) ^ 3.7) + Tables.difficulties[storage.difficulty_vote_index].value
     end
 
