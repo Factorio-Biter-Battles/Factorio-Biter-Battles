@@ -6,6 +6,9 @@ on:
   pull_request:
     paths:
       - "**.lua"
+  workflow_dispatch: 
+    paths:
+      - "**.lua"
 jobs:
   check_code_format:
     runs-on: ubuntu-latest
