@@ -17,7 +17,6 @@ local duration_slider_max = duration_max / duration_step
 local tick_duration_step = duration_step * 60
 local inv_tick_duration_step = 1 / tick_duration_step
 
-
 local polls = {}
 local polls_counter = { 0 }
 local no_notify_players = {}
@@ -217,16 +216,16 @@ local function redraw_poll_viewer_content(data)
 
     local poll_viewer_top_flow = poll_viewer_content.add({ type = 'table', column_count = 3 })
 
-    local poll_index_label = poll_viewer_top_flow.add({ type = 'label', caption = 'Poll #' .. poll_index .. '/' .. #polls })
+    local poll_index_label =
+        poll_viewer_top_flow.add({ type = 'label', caption = 'Poll #' .. poll_index .. '/' .. #polls })
     gui_style(poll_index_label, {horizontally_stretchable = true})
 
-    local spacer = poll_viewer_top_flow.add({ type = "empty-widget" })
+    local spacer = poll_viewer_top_flow.add({ type = 'empty-widget' })
     spacer.style.horizontally_stretchable = true
     spacer.style.horizontally_squashable = true
 
     local remaining_time_label = poll_viewer_top_flow.add({ type = 'label' })
 
-    data.poll_index_label= poll_index_label
     data.remaining_time_label = remaining_time_label
 
     local poll_enabled = do_remaining_time(poll, remaining_time_label)
@@ -253,13 +252,13 @@ local function redraw_poll_viewer_content(data)
             name = poll_view_vote_name,
             caption = vote_button_caption,
             enabled = poll_enabled,
-            toggled = voters[player.index] == a
+            toggled = voters[player.index] == a,
         })
         gui_style(vote_button, {
             horizontally_stretchable = true,
             top_padding = 6,
             bottom_padding = 6,
-            horizontal_align = 'left'
+            horizontal_align = 'left',
         })
         if need_truncate then
             vote_button.tooltip = a.text
@@ -268,7 +267,7 @@ local function redraw_poll_viewer_content(data)
         local label = grid.add({
             type = 'label',
             caption = a.voted_count .. ternary(a.voted_count == 1, ' vote', ' votes'),
-            tooltip = tooltips[a]
+            tooltip = tooltips[a],
         })
         gui_style(label, {
             left_padding = 6,
@@ -278,7 +277,7 @@ local function redraw_poll_viewer_content(data)
         vote_buttons[i] = vote_button
         vote_labels[i] = label
     end
-    
+
     local bottom_flow = poll_viewer_content.add({ type = 'flow', direction = 'vertical' })
 
     local created_by_player = poll.created_by
@@ -306,7 +305,10 @@ local function redraw_poll_viewer_content(data)
         local edit_text = table.concat(edit_names)
 
         local edited_by_label = bottom_flow.add({ type = 'label', caption = edit_text, tooltip = edit_text })
-        gui_style(edited_by_label, { single_line = false, horizontally_stretchable = false, font = 'default-small', top_margin = -6 })
+        gui_style(
+            edited_by_label,
+            { single_line = false, horizontally_stretchable = false, font = 'default-small', top_margin = -6 }
+        )
     end
 
     if not poll_enabled then
@@ -369,14 +371,14 @@ local function draw_main_frame(player)
         name = poll_view_back_name,
         sprite = 'utility/backward_arrow',
         hovered_sprite = 'utility/backward_arrow_black',
-        style = 'frame_action_button'
+        style = 'frame_action_button',
     })
     local forward_button = subheader.add({
         type = 'sprite-button',
         name = poll_view_forward_name,
         sprite = 'utility/forward_arrow',
         hovered_sprite = 'utility/forward_arrow_black',
-        style = 'frame_action_button'
+        style = 'frame_action_button',
     })
 
     subheader.add({
@@ -423,8 +425,17 @@ local function draw_main_frame(player)
 
     -- == SUBFOOTER ===============================================================
     if player.admin then
-        local subfooter = inner_frame.add({ type = 'frame', name = 'subfooter', style = 'subfooter_frame', direction = 'horizontal' })
-        gui_style(subfooter, { horizontally_stretchable = true, horizontally_squashable = true, maximal_height = 36, vertical_align = 'center' })
+        local subfooter =
+            inner_frame.add({ type = 'frame', name = 'subfooter', style = 'subfooter_frame', direction = 'horizontal' })
+        gui_style(
+            subfooter,
+            {
+                horizontally_stretchable = true,
+                horizontally_squashable = true,
+                maximal_height = 36,
+                vertical_align = 'center'
+            }
+        )
 
         Gui.add_pusher(subfooter)
 
@@ -432,7 +443,8 @@ local function draw_main_frame(player)
         apply_button_style(edit_poll_button)
         gui_style(edit_poll_button, { top_margin = 3 })
 
-        local create_poll_button = subfooter.add({ type = 'button', name = create_poll_button_name, caption = 'Create poll' })
+        local create_poll_button =
+            subfooter.add({ type = 'button', name = create_poll_button_name, caption = 'Create poll' })
         apply_button_style(create_poll_button)
         gui_style(create_poll_button, { top_margin = 3 })
     end
@@ -859,7 +871,8 @@ local function vote(event)
                 local vote_labels = data.vote_labels
                 if previous_vote_answer then
                     local vote_label = vote_labels[previous_vote_index]
-                    vote_label.caption = previous_vote_button_count .. ternary(previous_vote_button_count == '1', ' vote', ' votes')
+                    vote_label.caption = previous_vote_button_count
+                        .. ternary(previous_vote_button_count == '1', ' vote', ' votes')
                     vote_label.tooltip = previous_vote_button_tooltip
 
                     --if p.index == player_index then
