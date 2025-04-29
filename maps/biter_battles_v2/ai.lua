@@ -388,7 +388,8 @@ Public.raise_evo = function()
         local matchTimeInMinutes = game.ticks_played / 3600
         ---@type uint
         local difficultyRampDelayInMinutes = 30
-        storage.difficulty_vote_value = ((math.max(matchTimeInMinutes - difficultyRampDelayInMinutes, 0) / 470) ^ 3.7) + Tables.difficulties[storage.difficulty_vote_index].value
+        storage.difficulty_vote_value = ((math.max(matchTimeInMinutes - difficultyRampDelayInMinutes, 0) / 470) ^ 3.7)
+            + Tables.difficulties[storage.difficulty_vote_index].value        
     end
 
     local amount = math.ceil(storage.evo_raise_counter * 0.75)
