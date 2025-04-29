@@ -218,7 +218,7 @@ local function redraw_poll_viewer_content(data)
 
     local poll_index_label =
         poll_viewer_top_flow.add({ type = 'label', caption = 'Poll #' .. poll_index .. '/' .. #polls })
-    gui_style(poll_index_label, {horizontally_stretchable = true})
+    gui_style(poll_index_label, { horizontally_stretchable = true })
 
     local spacer = poll_viewer_top_flow.add({ type = 'empty-widget' })
     spacer.style.horizontally_stretchable = true
@@ -427,15 +427,12 @@ local function draw_main_frame(player)
     if player.admin then
         local subfooter =
             inner_frame.add({ type = 'frame', name = 'subfooter', style = 'subfooter_frame', direction = 'horizontal' })
-        gui_style(
-            subfooter,
-            {
-                horizontally_stretchable = true,
-                horizontally_squashable = true,
-                maximal_height = 36,
-                vertical_align = 'center'
-            }
-        )
+        gui_style(subfooter, {
+            horizontally_stretchable = true,
+            horizontally_squashable = true,
+            maximal_height = 36,
+            vertical_align = 'center'
+        })
 
         Gui.add_pusher(subfooter)
 
