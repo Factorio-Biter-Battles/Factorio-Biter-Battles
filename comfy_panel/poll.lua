@@ -431,7 +431,7 @@ local function draw_main_frame(player)
             horizontally_stretchable = true,
             horizontally_squashable = true,
             maximal_height = 36,
-            vertical_align = 'center'
+            vertical_align = 'center',
         })
 
         Gui.add_pusher(subfooter)
