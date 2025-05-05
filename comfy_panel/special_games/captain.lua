@@ -163,7 +163,6 @@ local function force_end_captain_event()
     storage.difficulty_votes_timeout = game.ticks_played + 36000
     clear_character_corpses()
 end
-CaptainPick.force_end_captain_event = force_end_captain_event
 
 ---@param player LuaPlayer
 ---@param force_name string
@@ -912,7 +911,7 @@ local function start_captain_event()
 end
 
 local countdown_captain_start_token = Token.register(function()
-    if storage.special_games_variables.captain_mode and storage.special_games_variables.captain_mode.countdown > 0 then
+    if storage.special_games_variables.captain_mode.countdown > 0 then
         for _, player in pairs(game.connected_players) do
             local _sprite = 'file/png/' .. storage.special_games_variables.captain_mode.countdown .. '.png'
             if player.gui.center.bb_captain_countdown then
@@ -1187,7 +1186,7 @@ local function start_picking_phase()
             next_pick_force = math_random() < northThreshold and 'north' or 'south'
             log('Next force to pick: ' .. next_pick_force)
         end
-        if storage.use_old_pick_ui or Functions.get_ticks_since_game_start() > 0 then
+        if Functions.get_ticks_since_game_start() > 0 then
             poll_alternate_picking(Public.get_player_to_make_pick(next_pick_force), next_pick_force)
         else
             CaptainPick.enable({ turn = next_pick_force })
@@ -3465,24 +3464,6 @@ commands.add_command('replaceReferee', 'Admin or referee can decide to change th
     else
         playerOfCommand.print('Usage: /replaceReferee <playerName>', { color = Color.warning })
     end
-end)
-
-commands.add_command('toggleCaptainPickUI', 'Enable/Disable new/old captain pick UI', function(cmd)
-    if not cmd.player_index then
-        return
-    end
-    local playerOfCommand = cpt_get_player(cmd.player_index)
-    if not playerOfCommand then
-        return
-    end
-    if not playerOfCommand.admin then
-        return playerOfCommand.print({ 'captain.cmd_only_admin' }, { color = Color.red })
-    end
-
-    storage.use_old_pick_ui = not storage.use_old_pick_ui
-    local status = storage.use_old_pick_ui and 'disabled' or 'enabled'
-    local color = storage.use_old_pick_ui and 'red' or 'green'
-    playerOfCommand.print(string_format('[color=%s]New Captain Pick UI %s[/color]', color, status))
 end)
 
 commands.add_command(
