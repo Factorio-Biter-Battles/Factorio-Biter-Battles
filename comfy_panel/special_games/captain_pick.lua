@@ -453,7 +453,7 @@ Public.perform_auto_picks = function()
         end
     end
 
-    while (side.picks - side.picked > 0) and max_attempts > 0 do
+    while (side.picks - side.picked > 1) and max_attempts > 0 do
         -- Build array of players from favourites, if any
         local candidates = cpt_index and Public.get_favourites_list(cpt_index) or {}
 
@@ -1330,11 +1330,6 @@ end)
 
 Gui.on_click(action_cast_vote, function(event)
     event.player.play_sound({ path = 'utility/gui_click' })
-
-    local player = game.get_player(event.player_index)
-    if not player or (player.force.name == 'spectator') then
-        return
-    end
 
     if Public.debounce(event.player) then
         return
