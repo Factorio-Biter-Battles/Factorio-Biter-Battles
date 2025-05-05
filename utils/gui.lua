@@ -22,9 +22,6 @@ Gui.token = Global.register({ data = data, element_map = element_map }, function
     element_map = tbl.element_map
 end)
 
-Gui.tag = '__@biter_battles'
-Gui.set_style = gui_style
-
 local top_elements = {}
 local on_visible_handlers = {}
 local on_pre_hidden_handlers = {}
@@ -258,8 +255,7 @@ local function handler_factory(event_id)
             return
         end
 
-        local tag = element.tags and element.tags[Gui.tag]
-        local handler = handlers[tag or element.name]
+        local handler = handlers[element.name]
         if not handler then
             return
         end
