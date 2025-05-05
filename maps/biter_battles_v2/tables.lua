@@ -35,10 +35,10 @@ Public.food_values = {
     ['automation-science-pack'] = { value = 0.0009, name = 'automation science', color = '255, 50, 50' },
     ['logistic-science-pack'] = { value = 0.0023, name = 'logistic science', color = '50, 255, 50' },
     ['military-science-pack'] = { value = 0.0095, name = 'military science', color = '105, 105, 105' },
-    ['chemical-science-pack'] = { value = 0.0260, name = 'chemical science', color = '100, 200, 255' },
-    ['production-science-pack'] = { value = 0.1029, name = 'production science', color = '150, 25, 255' },
-    ['utility-science-pack'] = { value = 0.1713, name = 'utility science', color = '210, 210, 60' },
-    ['space-science-pack'] = { value = 0.3500, name = 'space science', color = '255, 255, 255' },
+    ['chemical-science-pack'] = { value = 0.0265, name = 'chemical science', color = '100, 200, 255' },
+    ['production-science-pack'] = { value = 0.1050, name = 'production science', color = '150, 25, 255' },
+    ['utility-science-pack'] = { value = 0.2100, name = 'utility science', color = '210, 210, 60' },
+    ['space-science-pack'] = { value = 0.4375, name = 'space science', color = '255, 255, 255' },
 }
 
 Public.gui_foods = {}
@@ -133,8 +133,8 @@ Public.difficulties = {
     [1] = {
         name = "I'm Too Young to Die",
         short_name = 'ITYTD',
-        str = '25%',
-        value = 0.25,
+        str = '20%',
+        value = 0.2,
         color = {
             [GUI_VARIANTS.Dark] = { r = 0.00, g = 1.00, b = 0.00 },
             [GUI_VARIANTS.Light] = { r = 0.00, g = 0.50, b = 0.00 },
@@ -143,8 +143,8 @@ Public.difficulties = {
     [2] = {
         name = 'Have a Nice Day',
         short_name = 'HaND',
-        str = '38%',
-        value = 0.38,
+        str = '35%',
+        value = 0.35,
         color = {
             [GUI_VARIANTS.Dark] = { r = 0.33, g = 1.00, b = 0.00 },
             [GUI_VARIANTS.Light] = { r = 0.13, g = 0.40, b = 0.00 },

@@ -42,7 +42,7 @@ function test_feed_effects_3()
     local num_flasks = 4500
     local flask_food_value = Tables.food_values['utility-science-pack'].value * difficulty / 100
     local calc = Functions.calc_feed_effects(evo, flask_food_value, num_flasks, current_player_count, max_reanim_thresh)
-    lunatest.assert_equal('evo_increase: 0.675 threat: 25614', effects_str(calc))
+    lunatest.assert_equal('evo_increase: 0.716 threat: 30166', effects_str(calc))
 end
 
 function test_feed_effects_4()
@@ -53,7 +53,7 @@ function test_feed_effects_4()
     local num_flasks = 23000
     local flask_food_value = Tables.food_values['space-science-pack'].value * difficulty / 100
     local calc = Functions.calc_feed_effects(evo, flask_food_value, num_flasks, current_player_count, max_reanim_thresh)
-    lunatest.assert_equal('evo_increase: 2.203 threat: 1251481', effects_str(calc))
+    lunatest.assert_equal('evo_increase: 2.629 threat: 1884441', effects_str(calc))
 end
 
 function test_feed_effects_5()
@@ -64,7 +64,7 @@ function test_feed_effects_5()
     local num_flasks = 3000
     local flask_food_value = Tables.food_values['space-science-pack'].value * difficulty / 100
     local calc = Functions.calc_feed_effects(evo, flask_food_value, num_flasks, current_player_count, max_reanim_thresh)
-    lunatest.assert_equal('evo_increase: 0.254 threat: 75247', effects_str(calc))
+    lunatest.assert_equal('evo_increase: 0.318 threat: 97441', effects_str(calc))
 end
 
 local function feed_split_up(evo, total_flasks, flask_food_value, num_splits)
