@@ -71,7 +71,7 @@ Event.add(defines.events.on_player_mined_entity, function(event)
     if player and player.valid then
         Antigrief.on_player_mined_entity(entity, player)
         ComfyPanelScore.on_player_mined_entity(entity, player)
-        Terrain.minable_wrecks(entity, player)
+        Terrain.minable_wrecks(event)
     end
 end)
 
