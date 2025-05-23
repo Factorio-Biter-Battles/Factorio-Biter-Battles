@@ -214,15 +214,12 @@ local function redraw_poll_viewer_content(data)
         end
     end
 
-    local poll_viewer_top_flow = poll_viewer_content.add({ type = 'table', column_count = 3 })
+    local poll_viewer_top_flow = poll_viewer_content.add({ type = 'table', column_count = 2 })
+    gui_style(poll_viewer_top_flow, { horizontally_stretchable = true })
 
     local poll_index_label =
         poll_viewer_top_flow.add({ type = 'label', caption = 'Poll #' .. poll_index .. '/' .. #polls })
     gui_style(poll_index_label, { horizontally_stretchable = true })
-
-    local spacer = poll_viewer_top_flow.add({ type = 'empty-widget' })
-    spacer.style.horizontally_stretchable = true
-    spacer.style.horizontally_squashable = true
 
     local remaining_time_label = poll_viewer_top_flow.add({ type = 'label' })
 
@@ -235,22 +232,22 @@ local function redraw_poll_viewer_content(data)
         single_line = false,
         font = 'heading-2',
         font_color = { r = 0.98, g = 0.66, b = 0.22 },
-        top_padding = 6,
+        top_padding = 4,
         bottom_padding = 6,
+        horizontally_stretchable = true,
     })
 
     local grid = poll_viewer_content.add({ type = 'table', column_count = 2 })
+    gui_style(grid, { horizontally_stretchable = true })
 
     local vote_buttons = {}
     local vote_labels = {}
     for i, a in pairs(answers) do
         local vote_button_flow = grid.add({ type = 'flow' })
-        local need_truncate = string.len(a.text) > 30
-        local vote_button_caption = ternary(need_truncate, string.sub(a.text, 0, 30) .. '...', a.text)
         local vote_button = vote_button_flow.add({
             type = 'button',
             name = poll_view_vote_name,
-            caption = vote_button_caption,
+            caption = a.text,
             enabled = poll_enabled,
             toggled = voters[player.index] == a,
         })
@@ -259,10 +256,8 @@ local function redraw_poll_viewer_content(data)
             top_padding = 6,
             bottom_padding = 6,
             horizontal_align = 'left',
+            maximal_width = 300,
         })
-        if need_truncate then
-            vote_button.tooltip = a.text
-        end
 
         local label = grid.add({
             type = 'label',
@@ -364,8 +359,6 @@ local function draw_main_frame(player)
     local label = subheader.add({ type = 'label', caption = 'Polls' })
     gui_style(label, { font = 'default-semibold', font_color = { 165, 165, 165 }, left_margin = 4 })
 
-    Gui.add_pusher(subheader)
-
     local back_button = subheader.add({
         type = 'sprite-button',
         name = poll_view_back_name,
@@ -373,6 +366,8 @@ local function draw_main_frame(player)
         hovered_sprite = 'utility/backward_arrow_black',
         style = 'frame_action_button',
     })
+    gui_style(back_button, { left_margin = 4 })
+
     local forward_button = subheader.add({
         type = 'sprite-button',
         name = poll_view_forward_name,
@@ -380,6 +375,8 @@ local function draw_main_frame(player)
         hovered_sprite = 'utility/forward_arrow_black',
         style = 'frame_action_button',
     })
+
+    Gui.add_pusher(subheader)
 
     subheader.add({
         type = 'sprite-button',
@@ -391,19 +388,15 @@ local function draw_main_frame(player)
     })
 
     -- == MAIN FRAME ================================================================
-    local sp = inner_frame.add({
+    local poll_viewer_content = inner_frame.add({
         type = 'scroll-pane',
         name = 'scroll_pane',
         style = 'scroll_pane_under_subheader',
         direction = 'vertical',
     })
-    gui_style(sp, {
+    gui_style(poll_viewer_content, {
         left_padding = 8,
         right_padding = 8,
-    })
-
-    local poll_viewer_content = sp.add({ type = 'scroll-pane' })
-    gui_style(poll_viewer_content, {
         maximal_height = 520,
         minimal_width = 232,
     })
