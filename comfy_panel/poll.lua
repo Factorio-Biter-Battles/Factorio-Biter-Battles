@@ -853,7 +853,7 @@ local function vote(event)
                     vote_label.tooltip = previous_vote_button_tooltip
 
                     if p.index == player_index then
-                       vote_buttons[previous_vote_index].toggled = false
+                        vote_buttons[previous_vote_index].toggled = false
                     end
                 end
 
