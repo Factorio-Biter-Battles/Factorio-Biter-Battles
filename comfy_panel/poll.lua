@@ -827,20 +827,6 @@ local function vote(event)
 
     voters[player_index] = answer
 
-    local player = game.get_player(event.player_index)
-    if player and player.valid then
-        local poll_flow = Gui.get_left_element(player, poll_flow_name)
-        local frame = poll_flow and poll_flow[main_frame_name]
-        if frame and frame.valid then
-            local data = Gui.get_data(frame)
-            data.vote_buttons[vote_index].toggled = true
-
-            if previous_vote_answer then
-                data.vote_buttons[previous_vote_answer.index].toggled = false
-            end
-        end
-    end
-
     local previous_vote_button_count
     local previous_vote_button_tooltip
     local previous_vote_index
@@ -859,27 +845,24 @@ local function vote(event)
 
             if data.poll_index == poll_index then
                 local vote_labels = data.vote_labels
+                local vote_buttons = data.vote_buttons
                 if previous_vote_answer then
                     local vote_label = vote_labels[previous_vote_index]
                     vote_label.caption = previous_vote_button_count
                         .. ternary(previous_vote_button_count == '1', ' vote', ' votes')
                     vote_label.tooltip = previous_vote_button_tooltip
 
-                    --if p.index == player_index then
-                    --    local vote_button_style = vote_button.style
-                    --    vote_button_style.font_color = normal_color
-                    --    vote_button_style.disabled_font_color = normal_color
-                    --end
+                    if p.index == player_index then
+                       vote_buttons[previous_vote_index].toggled = false
+                    end
                 end
 
                 local vote_label = vote_labels[vote_index]
                 vote_label.caption = vote_button_count .. ternary(vote_button_count == '1', ' vote', ' votes')
                 vote_label.tooltip = vote_button_tooltip
-                -- if p.index == player_index then -- block commented to avoid desync risk
-                --     local vote_button_style = vote_button.style
-                --     vote_button_style.font_color = focus_color
-                --     vote_button_style.disabled_font_color = focus_color
-                -- end
+                if p.index == player_index then
+                    vote_buttons[vote_index].toggled = true
+                end
             end
         end
     end
