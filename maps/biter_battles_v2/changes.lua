@@ -23,7 +23,7 @@ return {
   - [item=production-science-pack] 1029 -> 1050
   - [item=utility-science-pack] 1713 -> 2100
   - [item=space-science-pack] 3500 -> 4375
-  Difficulty increase delayed by 30 minutes]]
+  Difficulty increase delayed by 30 minutes]],
     },
     {
         number = 714,
