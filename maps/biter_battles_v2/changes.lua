@@ -1,5 +1,55 @@
 return {
     {
+        number = 722,
+        date = '2025-05-31',
+        author = 'gabrielchl',
+        comment = [[(#722) Poll UI improvements and fix timer bug]],
+    },
+    {
+        number = 719,
+        date = '2025-05-31',
+        author = 'TheBigZet',
+        comment = [[(#719) Increase malloc function performance]],
+    },
+    {
+        number = 721,
+        date = '2025-05-24',
+        author = 'L4m3ness',
+        comment = [[(#721) Default difficulty changed:
+  - ITYTD 25% -> 20%
+  - HaND 38% -> 35%
+  Mutagen strength changed:
+  - [item=chemical-science-pack] 260 -> 265
+  - [item=production-science-pack] 1029 -> 1050
+  - [item=utility-science-pack] 1713 -> 2100
+  - [item=space-science-pack] 3500 -> 4375
+  Difficulty increase delayed by 30 minutes]]
+    },
+    {
+        number = 714,
+        date = '2025-03-30',
+        author = 'TheBigZet',
+        comment = [[(#714) Optimized destination position calculation for mirroring]],
+    },
+    {
+        number = 713,
+        date = '2025-03-30',
+        author = 'morganc',
+        comment = [[(#713) Enable ctrl-c for spectators]],
+    },
+    {
+        number = 702,
+        date = '2025-03-30',
+        author = 'cogito123',
+        comment = [[(#702) Fix spectate in some cases]],
+    },
+    {
+        number = 708,
+        date = '2025-03-30',
+        author = 'TheBigZet',
+        comment = [[(#708) Clear corpses tweaks]],
+    },
+    {
         number = 707,
         date = '2025-03-14',
         author = 'Max1000',
