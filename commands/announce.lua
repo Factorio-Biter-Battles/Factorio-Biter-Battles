@@ -79,6 +79,8 @@ local function announce(cmd)
         return
     end
 
+    text = text:gsub("\\n", "\n")
+
     storage.announcement.text = '[font=var]' .. text .. '[/font]'
     Core.print_admins(player.name .. ' made an announcement')
     Public.announce_if_any()
