@@ -10,6 +10,8 @@ local enemy_team_of = tables.enemy_team_of
 local math_floor = math.floor
 local math_round = math.round
 local safe_wrap_with_player_print = require('utils.utils').safe_wrap_with_player_print
+local malloc = require('maps.biter_battles_v2.pool').malloc
+local food_long_and_short = tables.food_long_and_short
 
 local Public = {}
 
@@ -186,8 +188,8 @@ function Public.add_feeding_stats(
         local team_name_fed_by_science = get_enemy_team_of(feeding_force_name)
 
         if storage.science_logs_total_north == nil then
-            storage.science_logs_total_north = { 0,0,0,0,0,0,0,0 }
-            storage.science_logs_total_south = { 0,0,0,0,0,0,0,0 }
+            storage.science_logs_total_north = malloc(#food_long_and_short)
+            storage.science_logs_total_south = malloc(#food_long_and_short)
         end
 
         local total_science_of_player_force = nil
