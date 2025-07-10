@@ -99,7 +99,7 @@ local function announce(cmd)
         return
     end
 
-    text = text:gsub("\\n", "\n")
+    text = text:gsub('\\n', '\n')
 
     storage.announcement.text = '[font=var]' .. text .. '[/font]'
     Core.print_admins(player.name .. ' made an announcement')
@@ -123,7 +123,9 @@ local function announce_append(cmd)
     ---@cast player -nil
 
     local text = cmd.parameter
-    if not text then return end
+    if not text then
+        return
+    end
 
     -- In any case, we're going to clear existing announcement if any.
     local removed = try_destroy_bubble(player)
@@ -131,7 +133,7 @@ local function announce_append(cmd)
         return
     end
 
-    text = text:gsub("\\n", "\n")
+    text = text:gsub('\\n', '\n')
 
     if storage.announcement.text then
         storage.announcement.text = storage.announcement.text .. '[font=var]' .. text .. '[/font]'
