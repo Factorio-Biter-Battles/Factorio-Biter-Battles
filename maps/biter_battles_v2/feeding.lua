@@ -76,8 +76,7 @@ local function print_feeding_msg(player, food, flask_amount)
         food,
         ']',
     })
-    local formatted_amount =
-        table.concat({ '[font=heading-1][color=255,255,255]', flask_amount, '[/color][/font]' })
+    local formatted_amount = table.concat({ '[font=heading-1][color=255,255,255]', flask_amount, '[/color][/font]' })
 
     if flask_amount >= 20 then
         game.print(
@@ -159,8 +158,7 @@ function Public.add_feeding_stats(
         })
     end
     local formatted_food = table.concat({ '[color=', food_values[food].color, '][/color]', '[img=item/', food, ']' })
-    local formatted_amount =
-        table.concat({ '[font=heading-1][color=255,255,255]', flask_amount, '[/color][/font]' })
+    local formatted_amount = table.concat({ '[font=heading-1][color=255,255,255]', flask_amount, '[/color][/font]' })
     if flask_amount > 0 then
         local tick = Functions.get_ticks_since_game_start()
         local feed_time_mins = math_round(tick / (60 * 60), 0)
