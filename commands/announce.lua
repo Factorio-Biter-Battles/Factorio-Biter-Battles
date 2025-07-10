@@ -87,14 +87,15 @@ local function announce(cmd)
 
     -- In any case, we're going to clear existing announcement if any.
     local removed = try_destroy_bubble(player)
+    if removed then
+        Core.print_admins(player.name .. ' removed the announcement')
+    else
+        return
+    end
 
     storage.announcement = {}
     local text = cmd.parameter
     if not text then
-        if removed then
-            Core.print_admins(player.name .. ' removed the announcement')
-        end
-
         return
     end
 
@@ -125,7 +126,10 @@ local function announce_append(cmd)
     if not text then return end
 
     -- In any case, we're going to clear existing announcement if any.
-    try_destroy_bubble(player)
+    local removed = try_destroy_bubble(player)
+    if not removed then
+        return
+    end
 
     text = text:gsub("\\n", "\n")
 
