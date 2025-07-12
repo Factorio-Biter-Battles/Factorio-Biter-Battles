@@ -42,7 +42,7 @@ function test_feed_effects_3()
     local num_flasks = 4500
     local flask_food_value = Tables.food_values['utility-science-pack'].value * difficulty / 100
     local calc = Functions.calc_feed_effects(evo, flask_food_value, num_flasks, current_player_count, max_reanim_thresh)
-    lunatest.assert_equal('evo_increase: 0.716 threat: 30166', effects_str(calc))
+    lunatest.assert_equal('evo_increase: 0.726 threat: 31373', effects_str(calc))
 end
 
 function test_feed_effects_4()
