@@ -1,4 +1,26 @@
-return {
+return {    
+    {
+        number = 728,
+        date = '2025-07-12',
+        author = 'developer',
+        comment = [[(#728)
+  Mutagen strength changed:
+  - [item=chemical-science-pack] 265 -> 292
+  - [item=utility-science-pack] 2100 -> 2205
+  Revert difficulty increase delayed by 30 minutes]],
+    },
+    {
+        number = 727,
+        date = '2025-07-12',
+        author = 'TheBigZet',
+        comment = [[(#727) Fixed incorret usages of table.concat]],
+    },
+    {
+        number = 725,
+        date = '2025-07-12',
+        author = 'ness056',
+        comment = [[(#725) Add \n and appending support to announces]],
+    },
     {
         number = 722,
         date = '2025-05-31',
