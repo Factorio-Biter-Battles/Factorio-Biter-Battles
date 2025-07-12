@@ -10,6 +10,8 @@ local enemy_team_of = tables.enemy_team_of
 local math_floor = math.floor
 local math_round = math.round
 local safe_wrap_with_player_print = require('utils.utils').safe_wrap_with_player_print
+local malloc = require('maps.biter_battles_v2.pool').malloc
+local food_long_and_short = tables.food_long_and_short
 
 local Public = {}
 
@@ -74,8 +76,7 @@ local function print_feeding_msg(player, food, flask_amount)
         food,
         ']',
     })
-    local formatted_amount =
-        table.concat({ '[font=heading-1][color=255,255,255]' .. flask_amount .. '[/color][/font]' })
+    local formatted_amount = table.concat({ '[font=heading-1][color=255,255,255]', flask_amount, '[/color][/font]' })
 
     if flask_amount >= 20 then
         game.print(
@@ -157,8 +158,7 @@ function Public.add_feeding_stats(
         })
     end
     local formatted_food = table.concat({ '[color=', food_values[food].color, '][/color]', '[img=item/', food, ']' })
-    local formatted_amount =
-        table.concat({ '[font=heading-1][color=255,255,255]' .. flask_amount .. '[/color][/font]' })
+    local formatted_amount = table.concat({ '[font=heading-1][color=255,255,255]', flask_amount, '[/color][/font]' })
     if flask_amount > 0 then
         local tick = Functions.get_ticks_since_game_start()
         local feed_time_mins = math_round(tick / (60 * 60), 0)
@@ -177,21 +177,17 @@ function Public.add_feeding_stats(
         threat_before_science_feed = math_round(threat_before_science_feed, 0)
         local formatted_evo_after_feed = math_round(storage.bb_evolution[biter_force_name] * 100, 1)
         local formatted_threat_after_feed = math_round(storage.bb_threat[biter_force_name], 0)
-        local evo_jump = table.concat({ evo_before_science_feed .. ' to ' .. formatted_evo_after_feed })
-        local threat_jump = table.concat({ threat_before_science_feed .. ' to ' .. formatted_threat_after_feed })
+        local evo_jump = table.concat({ evo_before_science_feed, ' to ', formatted_evo_after_feed })
+        local threat_jump = table.concat({ threat_before_science_feed, ' to ', formatted_threat_after_feed })
         local evo_jump_difference = math_round(formatted_evo_after_feed - evo_before_science_feed, 1)
         local threat_jump_difference = math_round(formatted_threat_after_feed - threat_before_science_feed, 0)
         local line_log_stats_to_add =
-            table.concat({ formatted_amount .. ' ' .. formatted_food .. ' by ' .. colored_player_name .. ' to ' })
+            table.concat({ formatted_amount, ' ', formatted_food, ' by ', colored_player_name, ' to ' })
         local team_name_fed_by_science = get_enemy_team_of(feeding_force_name)
 
         if storage.science_logs_total_north == nil then
-            storage.science_logs_total_north = { 0 }
-            storage.science_logs_total_south = { 0 }
-            for _ = 1, 7 do
-                table.insert(storage.science_logs_total_north, 0)
-                table.insert(storage.science_logs_total_south, 0)
-            end
+            storage.science_logs_total_north = malloc(#food_long_and_short)
+            storage.science_logs_total_south = malloc(#food_long_and_short)
         end
 
         local total_science_of_player_force = nil
