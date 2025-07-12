@@ -3,8 +3,7 @@ return {
         number = 728,
         date = '2025-07-12',
         author = 'developer',
-        comment = [[(#728)
-  Mutagen strength changed:
+        comment = [[(#728) Mutagen strength changed:
   - [item=chemical-science-pack] 265 -> 292
   - [item=utility-science-pack] 2100 -> 2205
   Revert difficulty increase delayed by 30 minutes]],
