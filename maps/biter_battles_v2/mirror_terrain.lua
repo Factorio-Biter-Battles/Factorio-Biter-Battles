@@ -104,7 +104,9 @@ function Public.invert_entity(event)
         and math.abs(destination.position.y) < 150
         and math.abs(destination.position.x) < 100
     then
-        storage.rocket_silo[destination.force.name] = destination
+        -- NOTE: Silo is mirrored several times to south.
+        -- Likely if silo is on top of chunk border.
+        storage.rocket_silo[destination.force.name] = { destination }
         AiTargets.start_tracking(destination)
     elseif destination.name == 'gun-turret' then
         AiTargets.start_tracking(destination)

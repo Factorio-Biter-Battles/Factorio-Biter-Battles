@@ -298,7 +298,16 @@ function Public.tables()
     storage.force_area = {}
     storage.main_attack_wave_amount = 0
     storage.map_pregen_message_counter = {}
-    storage.rocket_silo = {}
+    ---Refers to primary silos, which is either the silo generated in spawn
+    ---or any that's placed in multi-silo special.
+    storage.rocket_silo = {
+        ---@type LuaEntity[]
+        ---Silos belonging to north
+        north = {},
+        ---@type LuaEntity[]
+        ---Silos belonging to south
+        south = {},
+    }
     storage.spectator_rejoin_delay = {}
     storage.spy_fish_timeout = {}
     storage.tm_custom_name = {}

@@ -418,12 +418,55 @@ local function respawn_silo(event)
     })
     entity.minable_flag = false
     entity.health = 5
-    storage.rocket_silo[force_name] = entity
     AiTargets.start_tracking(entity)
+    return entity
 end
 
 local function log_to_db(message, appendBool)
     helpers.write_file('logToDBgameResult', message, appendBool, 0)
+end
+
+---@param silo LuaEntity
+---@param list LuaEntity[]
+---Go through list of silos and return its index or nil.
+---@return integer|nil
+local function get_silo(silo, list)
+    for index, entry in ipairs(list) do
+        if silo == entry then
+            return index
+        end
+    end
+
+    return nil
+end
+
+---@param silo LuaEntity
+---Searches for position and list where silo is stored.
+---Returns index of a silo in the list and reference to the list.
+---@return [integer, LuaEntity[]]|nil
+local function find_silo_ref(silo)
+    ---@type integer|nil
+    local index = nil
+    ---@type LuaEntity[]|nil
+    local list = nil
+    for _, force in pairs(game.forces) do
+        local f_name = force.name
+        list = storage.rocket_silo[f_name]
+        -- If no list, then not a valid force.
+        if list == nil then
+            goto find_silo_ref_loop
+        end
+
+        -- If silo tracked, break
+        index = get_silo(silo, list)
+        if index ~= nil then
+            return { index, list }
+        end
+
+        ::find_silo_ref_loop::
+    end
+
+    return nil
 end
 
 function Public.silo_death(event)
@@ -437,122 +480,134 @@ function Public.silo_death(event)
     if storage.bb_game_won_by_team then
         return
     end
-    if entity == storage.rocket_silo.south or entity == storage.rocket_silo.north then
-        -- Respawn Silo in case of friendly fire
-        if not biter_killed_the_silo(event) then
-            respawn_silo(event)
-            return
+
+    local ref = find_silo_ref(entity)
+    if ref == nil then
+        return
+    end
+
+    local index, list = ref[1], ref[2]
+    -- If biter wasn't cause of death, then reassign newly spawned silo
+    -- to previous position. The silo is spawned as a anti-grief protection.
+    if not biter_killed_the_silo(event) then
+        list[index] = respawn_silo(event)
+        return
+    end
+    table.remove(list, index)
+    silo_kaboom(entity)
+
+    -- Check if it was last silo. Only relevant in multi-silo special.
+    if #list >= 1 then
+        return
+    end
+
+    storage.bb_game_won_by_team = enemy_team_of[entity.force.name]
+
+    set_victory_time()
+    team_stats_compare.game_over()
+    local north_players = 'NORTH PLAYERS: \\n'
+    local south_players = 'SOUTH PLAYERS: \\n'
+
+    for _, player in pairs(game.connected_players) do
+        player.play_sound({ path = 'utility/game_won', volume_modifier = 1 })
+        local main_frame = Gui.get_left_element(player, 'bb_main_gui')
+        if main_frame then
+            main_frame.visible = false
         end
+        show_endgame_gui(player)
+        if player.force.name == 'south' then
+            south_players = south_players .. player.name .. '   '
+        elseif player.force.name == 'north' then
+            north_players = north_players .. player.name .. '   '
+        end
+    end
 
-        storage.bb_game_won_by_team = enemy_team_of[entity.force.name]
+    storage.spy_fish_timeout.north = game.tick + 999999
+    storage.spy_fish_timeout.south = game.tick + 999999
+    storage.server_restart_timer = 150
 
-        set_victory_time()
-        team_stats_compare.game_over()
-        local north_players = 'NORTH PLAYERS: \\n'
-        local south_players = 'SOUTH PLAYERS: \\n'
+    game.speed = 1
 
-        for _, player in pairs(game.connected_players) do
-            player.play_sound({ path = 'utility/game_won', volume_modifier = 1 })
-            local main_frame = Gui.get_left_element(player, 'bb_main_gui')
-            if main_frame then
-                main_frame.visible = false
+    local north_evo = math.floor(1000 * storage.bb_evolution['north_biters']) * 0.1
+    local north_threat = math.floor(storage.bb_threat['north_biters'])
+    local south_evo = math.floor(1000 * storage.bb_evolution['south_biters']) * 0.1
+    local south_threat = math.floor(storage.bb_threat['south_biters'])
+
+    local discord_message = table.concat({
+        '*** Team ',
+        storage.bb_game_won_by_team,
+        ' has won! ***',
+        '\\n',
+        storage.victory_time,
+        '\\n\\n',
+        'North Evo: ',
+        north_evo,
+        '%\\n',
+        'North Threat: ',
+        north_threat,
+        '\\n\\n',
+        'South Evo: ',
+        south_evo,
+        '%\\n',
+        'South Threat: ',
+        south_threat,
+        '\\n\\n',
+        north_players,
+        '\\n\\n',
+        south_players,
+    })
+
+    Server.to_discord_embed(discord_message)
+    log({ '', '[TEAMSTATS-FINAL]', helpers.table_to_json(storage.team_stats) })
+
+    storage.results_sent_south = false
+    storage.results_sent_north = false
+
+    freeze_all_biters(entity.surface)
+    local special = storage.special_games_variables.captain_mode
+    if special and not special.prepaPhase then
+        storage.tournament_mode = false
+        game.print('Tournament mode is now disabled')
+        game.print('Updating logs for the game')
+        if special.communityPickingMode then
+            Server.send_special_game_state('[COMMUNITY-PICK]')
+        else
+            Server.send_special_game_state('[CAPTAIN-SPECIAL]')
+        end
+        log_to_db('>Game has ended\n', false)
+        log_to_db('[RefereeName]' .. special.stats.InitialReferee .. '\n', true)
+        if special.stats.NorthInitialCaptain then
+            log_to_db('[CaptainNorth]' .. special.stats.NorthInitialCaptain .. '\n', true)
+        end
+        if special.stats.SouthInitialCaptain then
+            log_to_db('[CaptainSouth]' .. special.stats.SouthInitialCaptain .. '\n', true)
+        end
+        local listPicks = table.concat(special.stats.northPicks, ';')
+        log_to_db('[NorthTeam]' .. listPicks .. '\n', true)
+        listPicks = table.concat(special.stats.southPicks, ';')
+        log_to_db('[SouthTeam]' .. listPicks .. '\n', true)
+        log_to_db('[Gamelength]' .. game.ticks_played .. '\n', true)
+        log_to_db('[StartTick]' .. special.stats.tickGameStarting .. '\n', true)
+        log_to_db('[WinnerTeam]' .. storage.bb_game_won_by_team .. '\n', true)
+        log_to_db('[ExtraInfo]' .. special.stats.extrainfo .. '\n', true)
+        log_to_db('[SpecialEnabled]' .. special.stats.specialEnabled .. '\n', true)
+        log_to_db('[CommunityPickMode]' .. tostring(special.communityPickingMode) .. '\n', true)
+        for _, player in pairs(game.players) do
+            if player.connected and (player.force.name == 'north' or player.force.name == 'south') then
+                Captain_special.captain_log_end_time_player(player)
             end
-            show_endgame_gui(player)
-            if player.force.name == 'south' then
-                south_players = south_players .. player.name .. '   '
-            elseif player.force.name == 'north' then
-                north_players = north_players .. player.name .. '   '
+            if special.stats.playerPlaytimes[player.name] ~= nil then
+                log_to_db(
+                    '[Playtime][' .. player.name .. ']' .. special.stats.playerPlaytimes[player.name] .. '\n',
+                    true
+                )
             end
         end
-
-        storage.spy_fish_timeout.north = game.tick + 999999
-        storage.spy_fish_timeout.south = game.tick + 999999
-        storage.server_restart_timer = 150
-
-        game.speed = 1
-
-        local north_evo = math.floor(1000 * storage.bb_evolution['north_biters']) * 0.1
-        local north_threat = math.floor(storage.bb_threat['north_biters'])
-        local south_evo = math.floor(1000 * storage.bb_evolution['south_biters']) * 0.1
-        local south_threat = math.floor(storage.bb_threat['south_biters'])
-
-        local discord_message = table.concat({
-            '*** Team ',
-            storage.bb_game_won_by_team,
-            ' has won! ***',
-            '\\n',
-            storage.victory_time,
-            '\\n\\n',
-            'North Evo: ',
-            north_evo,
-            '%\\n',
-            'North Threat: ',
-            north_threat,
-            '\\n\\n',
-            'South Evo: ',
-            south_evo,
-            '%\\n',
-            'South Threat: ',
-            south_threat,
-            '\\n\\n',
-            north_players,
-            '\\n\\n',
-            south_players,
-        })
-
-        Server.to_discord_embed(discord_message)
-        log({ '', '[TEAMSTATS-FINAL]', helpers.table_to_json(storage.team_stats) })
-
-        storage.results_sent_south = false
-        storage.results_sent_north = false
-        silo_kaboom(entity)
-
-        freeze_all_biters(entity.surface)
-        local special = storage.special_games_variables.captain_mode
-        if special and not special.prepaPhase then
-            storage.tournament_mode = false
-            game.print('Tournament mode is now disabled')
-            game.print('Updating logs for the game')
-            if special.communityPickingMode then
-                Server.send_special_game_state('[COMMUNITY-PICK]')
-            else
-                Server.send_special_game_state('[CAPTAIN-SPECIAL]')
-            end
-            log_to_db('>Game has ended\n', false)
-            log_to_db('[RefereeName]' .. special.stats.InitialReferee .. '\n', true)
-            if special.stats.NorthInitialCaptain then
-                log_to_db('[CaptainNorth]' .. special.stats.NorthInitialCaptain .. '\n', true)
-            end
-            if special.stats.SouthInitialCaptain then
-                log_to_db('[CaptainSouth]' .. special.stats.SouthInitialCaptain .. '\n', true)
-            end
-            local listPicks = table.concat(special.stats.northPicks, ';')
-            log_to_db('[NorthTeam]' .. listPicks .. '\n', true)
-            listPicks = table.concat(special.stats.southPicks, ';')
-            log_to_db('[SouthTeam]' .. listPicks .. '\n', true)
-            log_to_db('[Gamelength]' .. game.ticks_played .. '\n', true)
-            log_to_db('[StartTick]' .. special.stats.tickGameStarting .. '\n', true)
-            log_to_db('[WinnerTeam]' .. storage.bb_game_won_by_team .. '\n', true)
-            log_to_db('[ExtraInfo]' .. special.stats.extrainfo .. '\n', true)
-            log_to_db('[SpecialEnabled]' .. special.stats.specialEnabled .. '\n', true)
-            log_to_db('[CommunityPickMode]' .. tostring(special.communityPickingMode) .. '\n', true)
-            for _, player in pairs(game.players) do
-                if player.connected and (player.force.name == 'north' or player.force.name == 'south') then
-                    Captain_special.captain_log_end_time_player(player)
-                end
-                if special.stats.playerPlaytimes[player.name] ~= nil then
-                    log_to_db(
-                        '[Playtime][' .. player.name .. ']' .. special.stats.playerPlaytimes[player.name] .. '\n',
-                        true
-                    )
-                end
-            end
-            if special.stats.communityPickInfo then
-                log_to_db('[CommunityPickInfo]' .. helpers.table_to_json(special.stats.communityPickInfo) .. '\n', true)
-            end
-            log_to_db('[TeamStats]' .. helpers.table_to_json(storage.team_stats) .. '\n', true)
-            log_to_db('>End of log', true)
+        if special.stats.communityPickInfo then
+            log_to_db('[CommunityPickInfo]' .. helpers.table_to_json(special.stats.communityPickInfo) .. '\n', true)
         end
+        log_to_db('[TeamStats]' .. helpers.table_to_json(storage.team_stats) .. '\n', true)
+        log_to_db('>End of log', true)
     end
 end
 
