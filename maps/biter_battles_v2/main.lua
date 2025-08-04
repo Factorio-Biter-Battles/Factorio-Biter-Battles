@@ -453,6 +453,9 @@ local function autotagging_outposters()
 end
 
 local function afk_kick(player)
+    if player.physical_controller_type == defines.controllers.editor then
+        return
+    end
     local afk_time = math.min(player.afk_time, Functions.get_ticks_since_game_start())
     if afk_time > antiAfkTimeBeforeWarning and afk_time < antiAfkTimeBeforeEnabled then
         player.print(
