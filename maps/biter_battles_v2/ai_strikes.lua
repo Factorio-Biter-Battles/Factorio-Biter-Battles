@@ -176,13 +176,20 @@ function Public.initiate(unit_group, target_force_name, strike_position, target_
         },
     }
 
-    local silo = storage.rocket_silo[target_force_name]
-    if silo then -- check for multi-silo special
-        chain[#chain + 1] = {
-            type = defines.command.attack,
-            target = silo,
-            distraction = defines.distraction.by_damage,
-        }
+    -- Pick a silo at random.
+    local list = storage.rocket_silo[target_force_name]
+    local amount = #list
+    if amount > 0 then
+        local silo = list[math_random(1, #list)]
+        if silo and silo.valid then
+            chain[#chain + 1] = {
+                type = defines.command.attack,
+                target = silo,
+                distraction = defines.distraction.by_damage,
+            }
+        end
+    else
+        log('WARN: initiate: ' .. amount .. ' silos for ' .. target_force_name)
     end
 
     unit_group.set_command({

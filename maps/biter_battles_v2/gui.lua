@@ -16,6 +16,7 @@ local Tables = require('maps.biter_battles_v2.tables')
 local TeamStatsCompare = require('maps.biter_battles_v2.team_stats_compare')
 local gui_style = require('utils.utils').gui_style
 local has_life = require('comfy_panel.special_games.limited_lives').has_life
+local MultiSilo = require('comfy_panel.special_games.multi_silo')
 
 local food_names = Tables.gui_foods
 
@@ -1076,6 +1077,7 @@ function join_team(player, force_name, forced_join, auto_join)
     player.spectator = false
     player.show_on_map = true
     Public.burners_balance(player)
+    MultiSilo.on_player_changed_force(player)
     Public.clear_copy_history(player)
     Public.refresh()
 
@@ -1186,17 +1188,29 @@ end
 local spy_forces = { { 'north', 'south' }, { 'south', 'north' } }
 function Public.spy_fish()
     for _, f in pairs(spy_forces) do
-        if storage.spy_fish_timeout[f[1]] - game.tick > 0 then
+        local friendly = f[1]
+        local enemy = f[2]
+        if storage.spy_fish_timeout[friendly] - game.tick > 0 then
             local r = 96
             local surface = game.surfaces[storage.bb_surface_name]
-            for _, player in pairs(game.forces[f[2]].connected_players) do
-                game.forces[f[1]].chart(surface, {
+            for _, player in pairs(game.forces[enemy].connected_players) do
+                game.forces[friendly].chart(surface, {
                     { player.physical_position.x - r, player.physical_position.y - r },
                     { player.physical_position.x + r, player.physical_position.y + r },
                 })
             end
+
+            if not MultiSilo.is_disabled() then
+                for _, silo in ipairs(storage.rocket_silo[enemy]) do
+                    local pos = silo.position
+                    game.forces[friendly].chart(surface, {
+                        { pos.x - r, pos.y - r },
+                        { pos.x + r, pos.y + r },
+                    })
+                end
+            end
         else
-            storage.spy_fish_timeout[f[1]] = 0
+            storage.spy_fish_timeout[friendly] = 0
         end
     end
 end
@@ -1295,7 +1309,8 @@ local function on_gui_click(event)
     end
 
     if name == 'bb_spectate' then
-        if player.physical_position.y ^ 2 + player.physical_position.x ^ 2 < 12000 then
+        local distance = player.physical_position.y ^ 2 + player.physical_position.x ^ 2
+        if distance < 12000 or MultiSilo.can_spectate(player) then
             spectate(player)
         else
             player.print('You are too far away from spawn to spectate.', { color = { r = 0.98, g = 0.66, b = 0.22 } })

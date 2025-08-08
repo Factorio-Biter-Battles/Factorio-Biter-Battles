@@ -288,7 +288,13 @@ end)
 
 function Public.refresh()
     for _, force in pairs(game.forces) do
-        local rocket_silo = storage.rocket_silo[force.name]
+        local list = storage.rocket_silo[force.name]
+        if list == nil then
+            goto refresh_loop_1
+        end
+
+        -- Only one primary silo is supported.
+        local rocket_silo = list[1]
         if rocket_silo and rocket_silo.valid then
             local health = rocket_silo.get_health_ratio()
             local HP = math_floor(rocket_silo.health)
@@ -311,6 +317,8 @@ function Public.refresh()
                 end
             end
         end
+
+        ::refresh_loop_1::
     end
 end
 

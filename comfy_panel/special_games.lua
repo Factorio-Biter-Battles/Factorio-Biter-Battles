@@ -8,6 +8,7 @@ storage.next_special_games_variables = {}
 
 local valid_special_games = {
     turtle = require('comfy_panel.special_games.turtle'),
+    multi_silo = require('comfy_panel.special_games.multi_silo'),
     infinity_chest = require('comfy_panel.special_games.infinity_chest'),
     disabled_research = require('comfy_panel.special_games.disabled_research'),
     disabled_entities = require('comfy_panel.special_games.disabled_entities'),

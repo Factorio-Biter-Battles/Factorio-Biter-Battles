@@ -1,4 +1,4 @@
-return {    
+return {
     {
         number = 728,
         date = '2025-07-12',

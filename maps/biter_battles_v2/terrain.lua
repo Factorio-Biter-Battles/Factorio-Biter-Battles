@@ -1248,7 +1248,7 @@ local function generate_silo(surface, rng)
         force = 'north',
     })
     silo.minable_flag = false
-    storage.rocket_silo[silo.force.name] = silo
+    table.insert(storage.rocket_silo[silo.force.name], silo)
     AiTargets.start_tracking(silo)
 
     for _, entity in pairs(surface.find_entities({ { pos.x - 4, pos.y - 6 }, { pos.x + 5, pos.y + 5 } })) do
