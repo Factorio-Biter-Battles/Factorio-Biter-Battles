@@ -1,5 +1,11 @@
 return {
     {
+        number = 729,
+        date = '2025-08-08',
+        author = 'cogito123',
+        comment = [[(#729) Add built-in multi silo special]],
+    },
+    {
         number = 728,
         date = '2025-07-12',
         author = 'developer',
