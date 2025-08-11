@@ -1,6 +1,7 @@
 local Event = require('utils.event')
 local AiTargets = require('maps.biter_battles_v2.ai_targets')
 local Color = require('utils.color_presets')
+local Gui = require('utils.gui')
 
 local Public = {
     name = {
@@ -73,6 +74,10 @@ function Public.generate(_, player)
     -- Important to go through all players, not just connected. So that if someone
     -- joins back after game was enabled, they still can get their silo.
     for _, p in pairs(game.players) do
+        if p.connected then
+            Public.update_feature_flag(p)
+        end
+
         if storage.chosen_team[p.name] then
             insert_silo(p)
         end
@@ -83,6 +88,24 @@ function Public.is_disabled()
     -- storage.active_special_games.multi_silo can only be set by clicking a button in admin panel.
     -- storage.server_restart_timer indicates if map is scheduled for a reset.
     return (storage.active_special_games.multi_silo == nil or storage.server_restart_timer)
+end
+
+---Adds silo icon into GUI to indicate that special is enabled.
+function Public.update_feature_flag(player)
+    if Public.is_disabled() then
+        return
+    end
+
+    local t = Gui.get_top_element(player, 'bb_feature_flags')
+    local button = t.add({
+        type = 'sprite',
+        name = 'multisilo_flag',
+        resize_to_sprite = false,
+        sprite = 'technology/rocket-silo',
+    })
+    button.style.height = 15
+    button.style.width = 15
+    button.tooltip = 'Multisilo enabled!'
 end
 
 ---@param player LuaPlayer
