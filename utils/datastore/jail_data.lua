@@ -191,6 +191,8 @@ local teleport_player_to_gulag = function(player, action)
         p_data.position = player.physical_position
         p_data.p_group_id = player.permission_group.group_id
         p_data.locked = true
+        local gulag_group = get_gulag_permission_group()
+        gulag_group.add_player(player)
         player.character.teleport(gulag.find_non_colliding_position('character', { 0, 0 }, 128, 1), gulag.name)
         local data = {
             player = player,
