@@ -411,7 +411,6 @@ local function on_entity_died(event)
     if Functions.biters_landfill(entity) then
         return
     end
-    Game_over.silo_death(event)
 end
 
 local function on_ai_command_completed(event)

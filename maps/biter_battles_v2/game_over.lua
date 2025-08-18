@@ -384,7 +384,7 @@ local function freeze_all_biters(surface)
     end
 end
 
-local function biter_killed_the_silo(event)
+local function biter_damage_source(event)
     local force = event.force
     if force ~= nil then
         return string.find(event.force.name, '_biters')
@@ -397,29 +397,6 @@ local function biter_killed_the_silo(event)
 
     log('Could not determine what destroyed the silo')
     return false
-end
-
-local function respawn_silo(event)
-    local entity = event.entity
-    local surface = entity.surface
-    if surface == nil or not surface.valid then
-        log('Surface ' .. storage.bb_surface_name .. ' invalid - cannot respawn silo')
-        return
-    end
-
-    local force_name = entity.force.name
-    -- Has to be created instead of clone otherwise it will be moved to south.
-    entity = surface.create_entity({
-        name = entity.name,
-        position = entity.position,
-        surface = surface,
-        force = force_name,
-        create_build_effect_smoke = false,
-    })
-    entity.minable_flag = false
-    entity.health = 5
-    AiTargets.start_tracking(entity)
-    return entity
 end
 
 local function log_to_db(message, appendBool)
@@ -469,15 +446,13 @@ local function find_silo_ref(silo)
     return nil
 end
 
-function Public.silo_death(event)
+---@param event LuaOnEntityDamaged
+---Activated on final hit to the rocket-silo. We check if the hit was
+---coming from biter source, if not we add health to entity to keep it
+---alive.
+local function on_entity_damaged(event)
     local entity = event.entity
     if not entity.valid then
-        return
-    end
-    if entity.name ~= 'rocket-silo' then
-        return
-    end
-    if storage.bb_game_won_by_team then
         return
     end
 
@@ -486,13 +461,34 @@ function Public.silo_death(event)
         return
     end
 
-    local index, list = ref[1], ref[2]
-    -- If biter wasn't cause of death, then reassign newly spawned silo
-    -- to previous position. The silo is spawned as a anti-grief protection.
-    if not biter_killed_the_silo(event) then
-        list[index] = respawn_silo(event)
+    -- If biter wasn't cause of damage, then add health to silo as anti griefer mechanism.
+    if not biter_damage_source(event) then
+        entity.health = 5
         return
     end
+end
+
+---@param event LuaOnEntityDied
+---Activated on any rocket-silo death. If the silo is tracked as objective
+---then we explode it and check if it was a last one in given force. If yes
+---then game is concluded.
+local function on_entity_died(event)
+    if storage.bb_game_won_by_team then
+        return
+    end
+
+    local entity = event.entity
+    if not entity.valid then
+        return
+    end
+
+    local ref = find_silo_ref(entity)
+    if ref == nil then
+        return
+    end
+
+    -- The only way to destroy the silo is to make last hit from biter force.
+    local index, list = ref[1], ref[2]
     table.remove(list, index)
     silo_kaboom(entity)
 
@@ -963,4 +959,24 @@ end
 
 Event.add(defines.events.on_console_chat, chat_with_everyone)
 Event.add(defines.events.on_player_joined_game, Public.automatic_captain_draw_buttons)
+script.on_event(defines.events.on_entity_damaged, on_entity_damaged, {
+    {
+        filter = 'name',
+        name = 'rocket-silo',
+    },
+    {
+        filter = 'final-health',
+        comparison = '=',
+        value = 0,
+        mode = 'and',
+    },
+})
+
+script.on_event(defines.events.on_entity_died, on_entity_died, {
+    {
+        filter = 'name',
+        name = 'rocket-silo',
+    },
+})
+
 return Public
