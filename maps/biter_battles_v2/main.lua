@@ -15,6 +15,7 @@ local Muted = require('utils.muted')
 local Team_manager = require('maps.biter_battles_v2.team_manager')
 local Shortcuts = require('maps.biter_battles_v2.shortcuts')
 local Terrain = require('maps.biter_battles_v2.terrain')
+local BossUnit = require('functions.boss_unit')
 local Session = require('utils.datastore.session_data')
 local Server = require('utils.server')
 local Task = require('utils.task')
@@ -400,18 +401,39 @@ local function on_robot_built_tile(event)
     Terrain.deny_bot_landfill(event)
 end
 
-local function on_entity_died(event)
-    local entity = event.entity
-    if not entity.valid then
-        return
-    end
+local function unit_death(entity)
     if Ai.subtract_threat(entity) then
         Gui.refresh_threat()
     end
     if Functions.biters_landfill(entity) then
         return
     end
-    Game_over.silo_death(event)
+end
+
+local function on_entity_died(event)
+    local entity = event.entity
+    if not entity.valid then
+        return
+    end
+
+    if entity.type == 'unit' or entity.type == 'unit-spawner' or entity.type == 'turret' then
+        unit_death(entity)
+    elseif entity.type == 'rocket-silo' then
+        Game_over.on_entity_died(entity)
+    end
+end
+
+local function on_entity_damaged(event)
+    local entity = event.entity
+    if not entity.valid then
+        return
+    end
+
+    if entity.type == 'unit' then
+        BossUnit.on_entity_damaged(entity)
+    elseif entity.type == 'rocket-silo' then
+        Game_over.on_entity_damaged(event)
+    end
 end
 
 local function on_ai_command_completed(event)
@@ -728,5 +750,29 @@ Event.add(defines.events.on_robot_built_entity, on_robot_built_entity)
 Event.add(defines.events.on_robot_built_tile, on_robot_built_tile)
 Event.add(defines.events.on_tick, on_tick)
 Event.on_init(on_init)
+
+script.on_event(defines.events.on_entity_damaged, on_entity_damaged, {
+    {
+        filter = 'type',
+        type = 'unit',
+    },
+    {
+        filter = 'final-health',
+        comparison = '=',
+        value = 0,
+        mode = 'and',
+    },
+    {
+        filter = 'type',
+        type = 'rocket-silo',
+        mode = 'or',
+    },
+    {
+        filter = 'final-health',
+        comparison = '=',
+        value = 0,
+        mode = 'and',
+    },
+})
 
 require('utils.ui.gui-lite').handle_events()
