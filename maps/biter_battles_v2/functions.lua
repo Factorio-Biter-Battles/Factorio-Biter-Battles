@@ -284,6 +284,22 @@ local function find_teleport_point(surface)
     return surface.find_non_colliding_position('character', p, 4, 0.5) or p
 end
 
+---@param player LuaPlayer
+---Sets random bright color for a player that joins the server for
+---the first time. This gets rid of annoying situation where player
+---gets assigned very dark color that is barely readable.
+function Functions.set_random_color(player)
+    local color = {
+        r = math_random(150, 255),
+        g = math_random(150, 255),
+        b = math_random(150, 255),
+        a = math_random(150, 255),
+    }
+
+    player.color = color
+    player.chat_color = color
+end
+
 function Functions.init_player(player)
     if not player.connected then
         if player.force.index ~= 1 then
