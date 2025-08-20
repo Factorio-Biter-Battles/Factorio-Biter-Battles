@@ -1396,6 +1396,7 @@ end
 local function on_player_joined_game(event)
     local player = game.get_player(event.player_index)
     if player.online_time == 0 then
+        Functions.set_random_color(player)
         Functions.show_intro(player)
     end
 
