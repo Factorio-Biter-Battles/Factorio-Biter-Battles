@@ -59,13 +59,17 @@ local function inventory_costs(cmd)
     for _, force in ipairs(forces) do
         local players = inventory_costs_for_force(force)
         if #forces > 1 then
-            player.print(force)
+            player.print('== ' .. force .. ' ==')
         end
         for index, entry in ipairs(players) do
             if index > 10 then
                 break
             end
-            player.print(string.format('%s: %.0f', entry.player.name, entry.cost / 10))
+            local settings = {
+                color = entry.player.color,
+            }
+            local msg = string.format('%s: %.0f', entry.player.name, entry.cost / 10)
+            player.print('• ' .. msg, settings)
         end
     end
 end
