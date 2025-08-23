@@ -450,12 +450,8 @@ end
 ---Activated on final hit to the rocket-silo. We check if the hit was
 ---coming from biter source, if not we add health to entity to keep it
 ---alive.
-local function on_entity_damaged(event)
+function Public.on_entity_damaged(event)
     local entity = event.entity
-    if not entity.valid then
-        return
-    end
-
     local ref = find_silo_ref(entity)
     if ref == nil then
         return
@@ -468,17 +464,12 @@ local function on_entity_damaged(event)
     end
 end
 
----@param event LuaOnEntityDied
+---@param entity LuaEntity
 ---Activated on any rocket-silo death. If the silo is tracked as objective
 ---then we explode it and check if it was a last one in given force. If yes
 ---then game is concluded.
-local function on_entity_died(event)
+function Public.on_entity_died(entity)
     if storage.bb_game_won_by_team then
-        return
-    end
-
-    local entity = event.entity
-    if not entity.valid then
         return
     end
 
@@ -959,24 +950,5 @@ end
 
 Event.add(defines.events.on_console_chat, chat_with_everyone)
 Event.add(defines.events.on_player_joined_game, Public.automatic_captain_draw_buttons)
-script.on_event(defines.events.on_entity_damaged, on_entity_damaged, {
-    {
-        filter = 'name',
-        name = 'rocket-silo',
-    },
-    {
-        filter = 'final-health',
-        comparison = '=',
-        value = 0,
-        mode = 'and',
-    },
-})
-
-script.on_event(defines.events.on_entity_died, on_entity_died, {
-    {
-        filter = 'name',
-        name = 'rocket-silo',
-    },
-})
 
 return Public

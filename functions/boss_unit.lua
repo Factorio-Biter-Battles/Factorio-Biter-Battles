@@ -77,12 +77,8 @@ function Public.add_high_health_unit(entity, health_factor, is_boss)
     storage.high_health_units[entity.unit_number] = unit
 end
 
----@param event EventData.on_entity_damaged
-local function on_entity_damaged(event)
-    local entity = event.entity
-    if not entity.valid then
-        return
-    end
+---@param entity LuaEntity
+function Public.on_entity_damaged(entity)
     ---@type HighHealthUnit
     local unit = storage.high_health_units[entity.unit_number]
     if not unit then
@@ -114,11 +110,5 @@ local function on_entity_damaged(event)
         end
     end
 end
-
-script.on_event(
-    defines.events.on_entity_damaged,
-    on_entity_damaged,
-    { { filter = 'type', type = 'unit' }, { filter = 'final-health', comparison = '=', value = 0, mode = 'and' } }
-)
 
 return Public
