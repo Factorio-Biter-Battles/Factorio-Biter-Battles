@@ -301,6 +301,28 @@ local function get_data_for_refresh_statistics()
         },
     }
 end
+
+---@param player LuaPlayer
+---Creates GUI element that displays flags/icons depicting enabled features
+function Public.create_feature_flags(player)
+    local t = Gui.add_top_element(player, {
+        type = 'table',
+        name = 'bb_feature_flags',
+        column_count = 1,
+    })
+
+    t.style.maximal_width = 25
+    t.style.maximal_height = 25 * 3
+end
+
+---@param player LuaPlayer
+function Public.refresh_feature_flags(player)
+    local t = Gui.get_top_element(player, 'bb_feature_flags')
+    t.clear()
+
+    MultiSilo.update_feature_flag(player)
+end
+
 ---@param player LuaPlayer
 function Public.create_statistics_gui_button(player)
     if Gui.get_top_element(player, 'bb_toggle_statistics') then
