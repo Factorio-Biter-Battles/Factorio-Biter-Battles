@@ -176,7 +176,7 @@ function Public.adjust_map_gen_settings(map_gen_settings)
         },
         ['enemy-base'] = { frequency = 0, size = 0, richness = 0 },
     }
-    map_gen_settings.property_expression_names["control:moisture:bias"] = "0.5"
+    map_gen_settings.property_expression_names['control:moisture:bias'] = '0.5'
     mixed_ore_map_special.adjust_map_gen_settings(map_gen_settings)
 end
 
