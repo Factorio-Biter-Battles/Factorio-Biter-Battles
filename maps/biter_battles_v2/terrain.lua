@@ -155,6 +155,7 @@ function Public.adjust_map_gen_settings(map_gen_settings)
     map_gen_settings.starting_area = 2.5
     map_gen_settings.property_expression_names = {
         ['segmentation_multiplier'] = 0.1,
+        ['control:moisture:bias'] = 0.2,
     }
     map_gen_settings.cliff_settings = { cliff_elevation_interval = 0, cliff_elevation_0 = 0 }
     map_gen_settings.autoplace_controls = {
@@ -176,7 +177,6 @@ function Public.adjust_map_gen_settings(map_gen_settings)
         },
         ['enemy-base'] = { frequency = 0, size = 0, richness = 0 },
     }
-    map_gen_settings.property_expression_names['control:moisture:bias'] = '0.5'
     mixed_ore_map_special.adjust_map_gen_settings(map_gen_settings)
 end
 
