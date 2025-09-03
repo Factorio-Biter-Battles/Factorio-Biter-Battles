@@ -1,6 +1,7 @@
 local AiTargets = require('maps.biter_battles_v2.ai_targets')
 local BBGui = require('maps.biter_battles_v2.gui')
 local Captain_special = require('comfy_panel.special_games.captain')
+local MultiSilo = require('comfy_panel.special_games.multi_silo')
 local Color = require('utils.color_presets')
 local Event = require('utils.event')
 local Functions = require('maps.biter_battles_v2.functions')
@@ -42,6 +43,13 @@ local function drop_fish(surface, origin)
 
     ---Maximum radius around the origin where fish might drop
     local RADIUS = 32
+    -- Lower the radius in case it's multisilo, so that if there are lots of silos placed
+    -- next to each other and they blow up - we don't have to look as intensely for
+    -- non-colliding position to spawn fish.
+    if not MultiSilo.is_disabled() then
+        RADIUS = 12
+    end
+
     local RADIUS_SQ = RADIUS * RADIUS
     ---Controls how quickly density decreases with distance from origin
     local DENSITY_FALLOFF = 1.2
