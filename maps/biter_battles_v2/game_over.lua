@@ -44,27 +44,25 @@ end
 ---@param origin { x: number, y: number }
 ---Spawn fishes around origin point
 local function drop_fish(surface, origin)
-    local drops = {}
+    local req = {
+        position = { 0, 0 },
+        stack = { name = 'raw-fish', count = 1 },
+        enable_looted = false,
+        allow_belts = true,
+    }
+
     for x = -32, 32, 1 do
         for y = -32, 32, 1 do
             local p = { x = origin.x + x, y = origin.y + y }
             local distance_to_silo = math.sqrt((origin.x - p.x) ^ 2 + (origin.y - p.y) ^ 2)
             local count = math.floor((32 - distance_to_silo * 1.2) * 0.28)
             if distance_to_silo < 32 and count > 0 then
-                table.insert(drops, { p, count })
+                for _ = 1, count do
+                    req.position[1] = p.x + math.random(0, 9) * 0.1
+                    req.position[2] = p.y + math.random(0, 9) * 0.1
+                    surface.spill_item_stack(req)
+                end
             end
-        end
-    end
-
-    for _, drop in pairs(drops) do
-        for _ = 1, drop[2], 1 do
-            surface.spill_item_stack({
-                position = { drop[1].x + math.random(0, 9) * 0.1, drop[1].y + math.random(0, 9) * 0.1 },
-                stack = { name = 'raw-fish', count = 1 },
-                enable_looted = false,
-                force = nil,
-                allow_belts = true,
-            })
         end
     end
 end
