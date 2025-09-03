@@ -22,20 +22,6 @@ local math_floor = math.floor
 
 local Public = {}
 
-local gui_values = {
-    ['north'] = { color1 = { r = 0.55, g = 0.55, b = 0.99 } },
-    ['south'] = { color1 = { r = 0.99, g = 0.33, b = 0.33 } },
-}
-
-local function shuffle(tbl)
-    local size = #tbl
-    for i = size, 1, -1 do
-        local rand = math.random(size)
-        tbl[i], tbl[rand] = tbl[rand], tbl[i]
-    end
-    return tbl
-end
-
 function Public.reveal_map()
     for _, f in pairs({ 'north', 'south', 'player', 'spectator' }) do
         local r = 768
