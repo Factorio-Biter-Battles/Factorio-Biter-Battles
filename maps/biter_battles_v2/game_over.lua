@@ -51,15 +51,24 @@ local function drop_fish(surface, origin)
         allow_belts = true,
     }
 
-    for x = -32, 32, 1 do
-        for y = -32, 32, 1 do
+    ---Maximum radius around the origin where fish might drop
+    local RADIUS = 32
+    ---Controls how quickly density decreases with distance from origin
+    local DENSITY_FALLOFF = 1.2
+    ---Scales fish count
+    local SCALING_FACTOR = 0.28
+    ---Random sub-tile jitter, up to 0.9 in steps of 0.1
+    local POSITION_JITTER_MAX = 9
+
+    for x = -RADIUS, RADIUS, 1 do
+        for y = -RADIUS, RADIUS, 1 do
             local p = { x = origin.x + x, y = origin.y + y }
             local distance_to_silo = math.sqrt((origin.x - p.x) ^ 2 + (origin.y - p.y) ^ 2)
-            local count = math.floor((32 - distance_to_silo * 1.2) * 0.28)
-            if distance_to_silo < 32 and count > 0 then
+            local count = math.floor((RADIUS - distance_to_silo * DENSITY_FALLOFF) * SCALING_FACTOR)
+            if distance_to_silo < RADIUS then
                 for _ = 1, count do
-                    req.position[1] = p.x + math.random(0, 9) * 0.1
-                    req.position[2] = p.y + math.random(0, 9) * 0.1
+                    req.position[1] = p.x + math.random(0, POSITION_JITTER_MAX) * 0.1
+                    req.position[2] = p.y + math.random(0, POSITION_JITTER_MAX) * 0.1
                     surface.spill_item_stack(req)
                 end
             end
