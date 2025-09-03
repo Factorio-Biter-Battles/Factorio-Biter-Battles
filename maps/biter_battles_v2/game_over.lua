@@ -14,8 +14,11 @@ local Announce = require('commands.announce')
 local Task = require('utils.task')
 local Token = require('utils.token')
 local team_stats_compare = require('maps.biter_battles_v2.team_stats_compare')
-local math_random = math.random
 local gui_style = require('utils.utils').gui_style
+
+local math_sqrt = math.sqrt
+local math_random = math.random
+local math_floor = math.floor
 
 local Public = {}
 
@@ -53,6 +56,7 @@ local function drop_fish(surface, origin)
 
     ---Maximum radius around the origin where fish might drop
     local RADIUS = 32
+    local RADIUS_SQ = RADIUS * RADIUS
     ---Controls how quickly density decreases with distance from origin
     local DENSITY_FALLOFF = 1.2
     ---Scales fish count
@@ -60,18 +64,30 @@ local function drop_fish(surface, origin)
     ---Random sub-tile jitter, up to 0.9 in steps of 0.1
     local POSITION_JITTER_MAX = 9
 
-    for x = -RADIUS, RADIUS, 1 do
-        for y = -RADIUS, RADIUS, 1 do
-            local p = { x = origin.x + x, y = origin.y + y }
-            local distance_to_silo = math.sqrt((origin.x - p.x) ^ 2 + (origin.y - p.y) ^ 2)
-            local count = math.floor((RADIUS - distance_to_silo * DENSITY_FALLOFF) * SCALING_FACTOR)
-            if distance_to_silo < RADIUS then
-                for _ = 1, count do
-                    req.position[1] = p.x + math.random(0, POSITION_JITTER_MAX) * 0.1
-                    req.position[2] = p.y + math.random(0, POSITION_JITTER_MAX) * 0.1
-                    surface.spill_item_stack(req)
-                end
+    for dx = -RADIUS, RADIUS, 1 do
+        for dy = -RADIUS, RADIUS, 1 do
+            local dist_sq = dx * dx + dy * dy
+            -- Is the point NOT within the radius
+            if dist_sq >= RADIUS_SQ then
+                goto drop_fish_cont
             end
+
+            ---Distance to silo
+            local dist = math_sqrt(dist_sq)
+            ---Amount of fish to scatter
+            local count = math_floor((RADIUS - dist * DENSITY_FALLOFF) * SCALING_FACTOR)
+            if count <= 0 then
+                goto drop_fish_cont
+            end
+
+            local px, py = origin.x + dx, origin.y + dy
+            for _ = 1, count do
+                req.position[1] = px + math_random(0, POSITION_JITTER_MAX) * 0.1
+                req.position[2] = py + math_random(0, POSITION_JITTER_MAX) * 0.1
+                surface.spill_item_stack(req)
+            end
+
+            ::drop_fish_cont::
         end
     end
 end
