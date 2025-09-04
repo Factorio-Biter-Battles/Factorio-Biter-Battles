@@ -89,8 +89,8 @@ end
 local function silo_kaboom(entity)
     local surface = entity.surface
     local center_position = entity.position
-    local force = entity.force
-    surface.create_entity({
+    local force = entity.force.name .. '_biters'
+    local req = {
         name = 'atomic-rocket',
         position = center_position,
         force = force,
@@ -98,8 +98,9 @@ local function silo_kaboom(entity)
         target = center_position,
         max_range = 1,
         speed = 0.1,
-    })
+    }
 
+    surface.create_entity(req)
     drop_fish(surface, center_position)
 end
 
@@ -405,7 +406,9 @@ local function freeze_all_biters(surface)
     }
 
     for _, e in pairs(surface.find_entities_filtered(filter)) do
-        e.active = false
+        if e.name ~= 'atomic-rocket' then
+            e.active = false
+        end
     end
 end
 
