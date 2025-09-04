@@ -61,8 +61,8 @@ function Public.generate(_, player)
         ---How many tiles around placed silo must be void of water.
         safe_placement_radius = 20,
         ---@type { [string]: { x: number, y: number } }
-        ---Holds last death position of a player
-        last_death = {},
+        ---Holds last position of a player transition into death or joining spectator
+        last_transition = {},
     }
 
     local s = game.surfaces[storage.bb_surface_name]
@@ -241,23 +241,28 @@ function Public.can_spectate(player)
     return (silos ~= 0)
 end
 
----@param event LuaOnPlayerRespawnedEvent
----Teleports player to closest silo on their team.
-local function on_player_respawned(event)
+---@param player LuaPlayer
+---@param force LuaForce
+---Finds a spawn/teleport point for a player that was just respawned
+---or comes back from spectator.
+---@return { x: number, y: number }|nil
+function Public.get_spawn_position(player, force)
     if Public.is_disabled() then
-        return
+        return nil
     end
 
-    local player = game.get_player(event.player_index)
-    local f_name = player.force.name
+    local f_name = force.name
     local silos = storage.rocket_silo[f_name]
     local min_dist = 1e9
     ---@type LuaEntity|nil
     local candidate = nil
-    local p_pos = storage.active_special_games.multi_silo.last_death[player.name]
+    local p_pos = storage.active_special_games.multi_silo.last_transition[player.name]
+    if not p_pos then
+        return nil
+    end
 
     --Go through each silo and find the one which is closest to player last
-    --death location
+    --transition location
     for _, silo in ipairs(silos) do
         local silo_pos = silo.position
         local dist = (silo_pos.x - p_pos.x) * (silo_pos.x - p_pos.x) + (silo_pos.y - p_pos.y) * (silo_pos.y - p_pos.y)
@@ -269,19 +274,40 @@ local function on_player_respawned(event)
 
     --No silos remaining
     if not candidate then
-        return
+        return nil
     end
 
     --Find suitable position around the silo and teleport player.
     local surf = candidate.surface
-    local tp_pos = surf.find_non_colliding_position('character', {
+    return surf.find_non_colliding_position('character', {
         x = candidate.position.x,
         y = candidate.position.y + 5,
     }, 20, 0.1)
+end
 
-    if tp_pos then
-        player.teleport(tp_pos)
+---@param player LuaPlayer
+---Saves current player position. This function is invoked when player
+---transitions to different state, like death or spectating. When they
+---join back or respawn, we can find teleport location next to closest
+---silo.
+function Public.save_position(player)
+    if Public.is_disabled() then
+        return
     end
+
+    storage.active_special_games.multi_silo.last_transition[player.name] = player.physical_position
+end
+
+---@param event LuaOnPlayerRespawnedEvent
+---Teleports player to closest silo on their team.
+local function on_player_respawned(event)
+    if Public.is_disabled() then
+        return
+    end
+
+    local player = game.get_player(event.player_index)
+    local p = Public.get_spawn_position(player, player.force)
+    player.character.teleport(p)
 end
 
 ---@param event LuaOnPlayerDiedEvent
@@ -291,7 +317,7 @@ local function on_player_died(event)
     end
 
     local player = game.get_player(event.player_index)
-    storage.active_special_games.multi_silo.last_death[player.name] = player.physical_position
+    Public.save_position(player)
 end
 
 Event.add(defines.events.on_player_respawned, on_player_respawned)

@@ -948,6 +948,52 @@ local function on_player_left_game(event)
     drop_burners(player)
 end
 
+---@param player LuaPlayer
+---Finds a suitable position to put back player into land from spectator in case
+---they were put there by AFK timer.
+---@return { x: number, y: number }|nil
+local function get_stored_position(player, _)
+    local p = nil
+    local surface = player.surface
+    local p_data = get_player_data(player)
+    if p_data and p_data.position then
+        p = surface.find_non_colliding_position('character', p_data.position, 16, 0.5)
+        get_player_data(player, true)
+    end
+
+    return p
+end
+
+---@param player LuaPlayer
+---@param force LuaForce
+---Finds a suitable position to put back player into land from spectator
+---@return { x: number, y: number }|nil
+local function get_spawn_position(player, force)
+    local surface = player.surface
+    return surface.find_non_colliding_position('character', force.get_spawn_position(surface), 16, 0.5)
+end
+
+---@param player LuaPlayer
+---@param force LuaForce
+---Finds a suitable position to teleport player from the island
+---@return { x: number, y: number }|nil
+local function get_teleport_position(player, force)
+    local clbk = {
+        get_stored_position,
+        MultiSilo.get_spawn_position,
+        get_spawn_position,
+    }
+
+    for _, fn in ipairs(clbk) do
+        local position = fn(player, force)
+        if position then
+            return position
+        end
+    end
+
+    return nil
+end
+
 function join_team(player, force_name, forced_join, auto_join)
     if not player.character then
         return
@@ -1033,25 +1079,17 @@ function join_team(player, force_name, forced_join, auto_join)
                 return
             end
         end
-        local p = nil
-        local p_data = get_player_data(player)
-        if p_data and p_data.position then
-            p = surface.find_non_colliding_position('character', p_data.position, 16, 0.5)
-            get_player_data(player, true)
-        else
-            p = surface.find_non_colliding_position(
-                'character',
-                game.forces[force_name].get_spawn_position(surface),
-                16,
-                0.5
-            )
-        end
-        if not p then
-            game.print('No spawn position found for ' .. player.name .. '!', { color = { 255, 0, 0 } })
+        local force = game.forces[force_name]
+        local position = get_teleport_position(player, force)
+        if not position then
+            local msg = 'No spawn position found for ' .. player.name .. '!'
+            game.print(msg, { color = { 255, 0, 0 } })
+            log(msg)
             return
         end
-        player.character.teleport(p, surface)
-        player.force = game.forces[force_name]
+
+        player.character.teleport(position)
+        player.force = force
         player.character.destructible = true
         Public.refresh()
         game.permissions.get_group('Default').add_player(player)
@@ -1178,7 +1216,7 @@ function spectate(player, forced_join, stored_position)
     player.character.driving = false
     player.clear_cursor()
     drop_burners(player, forced_join)
-
+    MultiSilo.save_position(player)
     if stored_position then
         local p_data = get_player_data(player)
         p_data.position = player.physical_position
