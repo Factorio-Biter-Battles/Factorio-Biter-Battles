@@ -150,6 +150,9 @@ local function show_endgame_gui(player)
     local winner_style = { font = 'default-bold', font_color = { r = 0.33, g = 0.66, b = 0.9 } }
 
     local main_frame = Gui.add_left_element(player, { type = 'frame', name = 'mvps', direction = 'vertical' })
+    gui_style(main_frame, {
+        horizontally_stretchable = false,
+    })
     local flow = main_frame.add({ type = 'flow', style = 'vertical_flow', direction = 'vertical' })
     local inner_frame = flow.add({ type = 'frame', style = 'inside_shallow_frame_packed', direction = 'vertical' })
 
