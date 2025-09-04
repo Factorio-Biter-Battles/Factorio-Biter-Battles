@@ -395,16 +395,11 @@ local function set_victory_time()
 end
 
 local function freeze_all_biters(surface)
-    for _, e in pairs(surface.find_entities_filtered({ force = 'north_biters' })) do
-        e.active = false
-    end
-    for _, e in pairs(surface.find_entities_filtered({ force = 'south_biters' })) do
-        e.active = false
-    end
-    for _, e in pairs(surface.find_entities_filtered({ force = 'north_biters_boss' })) do
-        e.active = false
-    end
-    for _, e in pairs(surface.find_entities_filtered({ force = 'south_biters_boss' })) do
+    local filter = {
+        type = { 'unit', 'unit-spawner', 'turret' },
+    }
+
+    for _, e in pairs(surface.find_entities_filtered(filter)) do
         e.active = false
     end
 end
