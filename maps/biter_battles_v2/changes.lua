@@ -1,5 +1,44 @@
 return {
     {
+        number = 734,
+        date = '2025-09-05',
+        author = 'Max1000',
+        comment = [[(#734) Increase map moisture to improve tree spawning]],
+    },
+    {
+        number = 735,
+        date = '2025-09-05',
+        author = 'developer',
+        comment = [[(#735) Prevent the game-over UI from stretching horizontally]],
+    },
+    {
+        number = 731,
+        date = '2025-09-02',
+        author = 'cogito123',
+        comment = [[(#731) Multisilo changes:
+  - Add a small icon in the top-left bar indicating whether multisilo is enabled
+  - Fix biter waves not doing anything after destroying the rocket silo
+  - Improve rocket silo anti-grief protection so it no longer requires respawning]],
+    },
+    {
+        number = 732,
+        date = '2025-09-02',
+        author = 'cogito123',
+        comment = [[(#732) Add player colors to the output of inventory-costs command]],
+    },
+    {
+        number = 733,
+        date = '2025-09-02',
+        author = 'cogito123',
+        comment = [[(#733) Make new players appear in bright colors]],
+    },
+    {
+        number = 730,
+        date = '2025-08-20',
+        author = 'developer',
+        comment = [[(#730) Preserve jailed players' permissions across map resets]],
+    },
+    {
         number = 729,
         date = '2025-08-08',
         author = 'cogito123',
