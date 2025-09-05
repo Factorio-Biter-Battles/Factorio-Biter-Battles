@@ -320,6 +320,93 @@ local function on_player_died(event)
     Public.save_position(player)
 end
 
+---@param silo LuaEntity
+---Goes through all placed silos, finds the reference matching 'silo' and
+---unlinks it from the list so that it doesn't count towards the objective.
+---@return boolean If operation was successful
+local function remove_silo_ref(silo)
+    local removed = false
+    for _, list in pairs(storage.rocket_silo) do
+        -- Abort if it's the last silo remaining in the force
+        if #list <= 1 then
+            goto remove_silo_ref_loop
+        end
+
+        for k, v in pairs(list) do
+            if v == silo then
+                table.remove(list, k)
+                removed = true
+                break
+            end
+        end
+
+        ::remove_silo_ref_loop::
+    end
+
+    return removed
+end
+
+---@param cmd CustomCommandData
+---Remove a silo that is pointed by player selection and drop it on the ground.
+local function remove_silo(cmd)
+    local player = game.get_player(cmd.player_index)
+    if not player.admin then
+        player.print('Only admin can use this command')
+        return
+    end
+
+    if Public.is_disabled() then
+        player.print('Only applicable in multi silo mode')
+        return
+    end
+
+    if storage.server_restart_timer then
+        player.print('Cannot use this command during map reset')
+        return
+    end
+
+    local entity = player.selected
+    if not entity or not entity.valid or entity.name ~= 'rocket-silo' then
+        player.print('You must point your cursor at a rocket silo when using this command')
+        return
+    end
+
+    if not remove_silo_ref(entity) then
+        player.print("It's the only remaining silo, it cannot be removed without ending the game")
+        return
+    end
+
+    -- Mine the silo and drop it on the ground
+    local position = entity.position
+    local surface = entity.surface
+    local gps = entity.gps_tag
+    local req = {
+        inventory = nil,
+        force = true,
+        raise_destroyed = false,
+        ignore_minable = true,
+    }
+    entity.mine(req)
+
+    req = {
+        position = position,
+        stack = { name = 'rocket-silo', count = 1 },
+        enable_looted = false,
+        allow_belts = true,
+    }
+    surface.spill_item_stack(req)
+
+    local msg = 'Rocket silo at ' .. gps .. ' removed by ' .. player.name
+    surface.print(msg, { color = Color.yellow })
+    log(msg)
+end
+
+commands.add_command(
+    'remove-silo',
+    'Removes a silo without explosion and drops it on the ground. Point your cursor at a silo and then execute the command. Applicable with multi silo mode active.',
+    remove_silo
+)
+
 Event.add(defines.events.on_player_respawned, on_player_respawned)
 Event.add(defines.events.on_player_respawned, on_player_respawned)
 Event.add(defines.events.on_built_entity, on_built_entity)
