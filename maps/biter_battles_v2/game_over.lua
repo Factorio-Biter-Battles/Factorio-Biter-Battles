@@ -1,6 +1,7 @@
 local AiTargets = require('maps.biter_battles_v2.ai_targets')
 local BBGui = require('maps.biter_battles_v2.gui')
 local Captain_special = require('comfy_panel.special_games.captain')
+local MultiSilo = require('comfy_panel.special_games.multi_silo')
 local Color = require('utils.color_presets')
 local Event = require('utils.event')
 local Functions = require('maps.biter_battles_v2.functions')
@@ -14,24 +15,13 @@ local Announce = require('commands.announce')
 local Task = require('utils.task')
 local Token = require('utils.token')
 local team_stats_compare = require('maps.biter_battles_v2.team_stats_compare')
-local math_random = math.random
 local gui_style = require('utils.utils').gui_style
 
+local math_sqrt = math.sqrt
+local math_random = math.random
+local math_floor = math.floor
+
 local Public = {}
-
-local gui_values = {
-    ['north'] = { color1 = { r = 0.55, g = 0.55, b = 0.99 } },
-    ['south'] = { color1 = { r = 0.99, g = 0.33, b = 0.33 } },
-}
-
-local function shuffle(tbl)
-    local size = #tbl
-    for i = size, 1, -1 do
-        local rand = math.random(size)
-        tbl[i], tbl[rand] = tbl[rand], tbl[i]
-    end
-    return tbl
-end
 
 function Public.reveal_map()
     for _, f in pairs({ 'north', 'south', 'player', 'spectator' }) do
@@ -40,11 +30,67 @@ function Public.reveal_map()
     end
 end
 
+---@param surface LuaSurface
+---@param origin { x: number, y: number }
+---Spawn fishes around origin point
+local function drop_fish(surface, origin)
+    local req = {
+        position = { 0, 0 },
+        stack = { name = 'raw-fish', count = 1 },
+        enable_looted = false,
+        allow_belts = true,
+    }
+
+    ---Maximum radius around the origin where fish might drop
+    local RADIUS = 32
+    -- Lower the radius in case it's multisilo, so that if there are lots of silos placed
+    -- next to each other and they blow up - we don't have to look as intensely for
+    -- non-colliding position to spawn fish.
+    if not MultiSilo.is_disabled() then
+        RADIUS = 18
+    end
+
+    local RADIUS_SQ = RADIUS * RADIUS
+    ---Controls how quickly density decreases with distance from origin
+    local DENSITY_FALLOFF = 1.2
+    ---Scales fish count
+    local SCALING_FACTOR = 0.28
+    ---Random sub-tile jitter, up to 0.9 in steps of 0.1
+    local POSITION_JITTER_MAX = 9
+
+    for dx = -RADIUS, RADIUS, 1 do
+        for dy = -RADIUS, RADIUS, 1 do
+            local dist_sq = dx * dx + dy * dy
+            -- Is the point NOT within the radius
+            if dist_sq >= RADIUS_SQ then
+                goto drop_fish_cont
+            end
+
+            ---Distance to silo
+            local dist = math_sqrt(dist_sq)
+            ---Amount of fish to scatter
+            local count = math_floor((RADIUS - dist * DENSITY_FALLOFF) * SCALING_FACTOR)
+            if count <= 0 then
+                goto drop_fish_cont
+            end
+
+            local px, py = origin.x + dx, origin.y + dy
+            for _ = 1, count do
+                req.position[1] = px + math_random(0, POSITION_JITTER_MAX) * 0.1
+                req.position[2] = py + math_random(0, POSITION_JITTER_MAX) * 0.1
+                surface.spill_item_stack(req)
+            end
+
+            ::drop_fish_cont::
+        end
+    end
+end
+
 local function silo_kaboom(entity)
     local surface = entity.surface
     local center_position = entity.position
-    local force = entity.force
-    surface.create_entity({
+    local force = entity.force.name .. '_biters'
+    local req = {
         name = 'atomic-rocket',
         position = center_position,
         force = force,
@@ -52,30 +98,10 @@ local function silo_kaboom(entity)
         target = center_position,
         max_range = 1,
         speed = 0.1,
-    })
+    }
 
-    local drops = {}
-    for x = -32, 32, 1 do
-        for y = -32, 32, 1 do
-            local p = { x = center_position.x + x, y = center_position.y + y }
-            local distance_to_silo = math.sqrt((center_position.x - p.x) ^ 2 + (center_position.y - p.y) ^ 2)
-            local count = math.floor((32 - distance_to_silo * 1.2) * 0.28)
-            if distance_to_silo < 32 and count > 0 then
-                table.insert(drops, { p, count })
-            end
-        end
-    end
-    for _, drop in pairs(drops) do
-        for _ = 1, drop[2], 1 do
-            entity.surface.spill_item_stack({
-                position = { drop[1].x + math.random(0, 9) * 0.1, drop[1].y + math.random(0, 9) * 0.1 },
-                stack = { name = 'raw-fish', count = 1 },
-                enable_looted = false,
-                force = nil,
-                allow_belts = true,
-            })
-        end
-    end
+    surface.create_entity(req)
+    drop_fish(surface, center_position)
 end
 
 local function get_sorted_list(column_name, score_list)
@@ -373,16 +399,11 @@ local function set_victory_time()
 end
 
 local function freeze_all_biters(surface)
-    for _, e in pairs(surface.find_entities_filtered({ force = 'north_biters' })) do
-        e.active = false
-    end
-    for _, e in pairs(surface.find_entities_filtered({ force = 'south_biters' })) do
-        e.active = false
-    end
-    for _, e in pairs(surface.find_entities_filtered({ force = 'north_biters_boss' })) do
-        e.active = false
-    end
-    for _, e in pairs(surface.find_entities_filtered({ force = 'south_biters_boss' })) do
+    local filter = {
+        type = { 'unit', 'unit-spawner', 'turret' },
+    }
+
+    for _, e in pairs(surface.find_entities_filtered(filter)) do
         e.active = false
     end
 end
