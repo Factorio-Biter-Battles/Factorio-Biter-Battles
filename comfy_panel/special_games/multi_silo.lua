@@ -61,8 +61,8 @@ function Public.generate(_, player)
         ---How many tiles around placed silo must be void of water.
         safe_placement_radius = 20,
         ---@type { [string]: { x: number, y: number } }
-        ---Holds last death position of a player
-        last_death = {},
+        ---Holds last position of a player transition into death or joining spectator
+        last_transition = {},
     }
 
     local s = game.surfaces[storage.bb_surface_name]
@@ -241,23 +241,27 @@ function Public.can_spectate(player)
     return (silos ~= 0)
 end
 
----@param event LuaOnPlayerRespawnedEvent
----Teleports player to closest silo on their team.
-local function on_player_respawned(event)
+---@param player LuaPlayer
+---Finds a spawn/teleport point for a player that was just respawned
+---or comes back from spectator.
+---@return { x: number, y: number }|nil
+function Public.get_spawn_position(player)
     if Public.is_disabled() then
-        return
+        return nil
     end
 
-    local player = game.get_player(event.player_index)
     local f_name = player.force.name
     local silos = storage.rocket_silo[f_name]
     local min_dist = 1e9
     ---@type LuaEntity|nil
     local candidate = nil
-    local p_pos = storage.active_special_games.multi_silo.last_death[player.name]
+    local p_pos = storage.active_special_games.multi_silo.last_transition[player.name]
+    if not p_pos then
+        return nil
+    end
 
     --Go through each silo and find the one which is closest to player last
-    --death location
+    --transition location
     for _, silo in ipairs(silos) do
         local silo_pos = silo.position
         local dist = (silo_pos.x - p_pos.x) * (silo_pos.x - p_pos.x) + (silo_pos.y - p_pos.y) * (silo_pos.y - p_pos.y)
@@ -269,19 +273,40 @@ local function on_player_respawned(event)
 
     --No silos remaining
     if not candidate then
-        return
+        return nil
     end
 
     --Find suitable position around the silo and teleport player.
     local surf = candidate.surface
-    local tp_pos = surf.find_non_colliding_position('character', {
+    return surf.find_non_colliding_position('character', {
         x = candidate.position.x,
         y = candidate.position.y + 5,
     }, 20, 0.1)
+end
 
-    if tp_pos then
-        player.teleport(tp_pos)
+---@param player LuaPlayer
+---Saves current player position. This function is invoked when player
+---transitions to different state, like death or spectating. When they
+---join back or respawn, we can find teleport location next to closest
+---silo.
+function Public.save_position(player)
+    if Public.is_disabled() then
+        return
     end
+
+    storage.active_special_games.multi_silo.last_transition[player.name] = player.physical_position
+end
+
+---@param event LuaOnPlayerRespawnedEvent
+---Teleports player to closest silo on their team.
+local function on_player_respawned(event)
+    if Public.is_disabled() then
+        return
+    end
+
+    local player = game.get_player(event.player_index)
+    local p = Public.get_spawn_position(player)
+    player.character.teleport(p)
 end
 
 ---@param event LuaOnPlayerDiedEvent
@@ -291,8 +316,100 @@ local function on_player_died(event)
     end
 
     local player = game.get_player(event.player_index)
-    storage.active_special_games.multi_silo.last_death[player.name] = player.physical_position
+    Public.save_position(player)
 end
+
+---@param silo LuaEntity
+---Goes through all placed silos, finds the reference matching 'silo' and
+---unlinks it from the list so that it doesn't count towards the objective.
+---@return boolean If operation was successful
+local function remove_silo_ref(silo)
+    local removed = false
+    for _, list in pairs(storage.rocket_silo) do
+        -- If no list, then not a valid force.
+        if list == nil then
+            goto remove_silo_ref_loop
+        end
+
+        -- Abort if it's the last silo remaining in the force
+        if #list <= 1 then
+            goto remove_silo_ref_loop
+        end
+
+        for k, v in pairs(list) do
+            if v == silo then
+                table.remove(list, k)
+                removed = true
+                break
+            end
+        end
+
+        ::remove_silo_ref_loop::
+    end
+
+    return removed
+end
+
+---@param cmd CustomCommandData
+---Remove a silo that is pointed by player selection and drop it on the ground.
+local function remove_silo(cmd)
+    local player = game.get_player(cmd.player_index)
+    if not player.admin then
+        player.print('Only admin can use this command')
+        return
+    end
+
+    if Public.is_disabled() then
+        player.print('Only applicable in multi silo mode')
+        return
+    end
+
+    if storage.server_restart_timer then
+        player.print('Cannot use this command during map reset')
+        return
+    end
+
+    local entity = player.selected
+    if not entity or not entity.valid or entity.name ~= 'rocket-silo' then
+        player.print('You must point your cursor at a rocket silo when using this command')
+        return
+    end
+
+    if not remove_silo_ref(entity) then
+        player.print("It's the only remaining silo, it cannot be removed without ending the game")
+        return
+    end
+
+    -- Mine the silo and drop it on the ground
+    local position = entity.position
+    local surface = entity.surface
+    local gps = entity.gps_tag
+    local req = {
+        inventory = nil,
+        force = true,
+        raise_destroyed = false,
+        ignore_minable = true,
+    }
+    entity.mine(req)
+
+    req = {
+        position = position,
+        stack = { name = 'rocket-silo', count = 1 },
+        enable_looted = false,
+        allow_belts = true,
+    }
+    surface.spill_item_stack(req)
+
+    local msg = 'Rocket silo at ' .. gps .. ' removed by ' .. player.name
+    surface.print(msg, { color = Color.yellow })
+    log(msg)
+end
+
+commands.add_command(
+    'remove-silo',
+    'Removes a silo without explosion and drops it on the ground. Point your cursor at a silo and then execute the command. Applicable with multi silo mode active.',
+    remove_silo
+)
 
 Event.add(defines.events.on_player_respawned, on_player_respawned)
 Event.add(defines.events.on_player_respawned, on_player_respawned)
