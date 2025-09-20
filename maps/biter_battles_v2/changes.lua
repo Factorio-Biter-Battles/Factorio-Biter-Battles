@@ -1,5 +1,16 @@
 return {
     {
+        number = 736,
+        date = '2025-09-19',
+        author = 'cogito123',
+        comment = [[(#736) Multisilo changes:
+  - Optimized fish spawning during rocket silo explosion
+  - Reduced the number of fish spawned during rocket silo explosion
+  - Added the /remove-silo command
+  - Rocket silo explosion can now destroy all other rocket silos within the blast radius
+  - Fixed an issue where the player wasn’t teleported back to the closest rocket silo when returning from spectator]],
+    },
+    {
         number = 734,
         date = '2025-09-05',
         author = 'Max1000',
