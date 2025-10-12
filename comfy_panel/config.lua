@@ -111,6 +111,15 @@ local functions = {
             game.get_player(event.player_index).disable_flashlight()
         end
     end,
+    ['comfy_panel_inserter_drop'] = function(event)
+        local p_name = game.get_player(event.player_index).name
+        local p_settings = storage.player_settings[p_name]
+        if event.element.switch_state == 'left' then
+            p_settings['inserter_drop'] = true
+        else
+            p_settings['inserter_drop'] = false
+        end
+    end,
     ['comfy_panel_spectator_switch'] = function(event)
         if event.element.switch_state == 'left' then
             game.get_player(event.player_index).spectator = true
@@ -368,6 +377,7 @@ local build_config_gui = function(player, frame)
     local AG = Antigrief.get()
     local switch_state
     local label
+    local p_settings = storage.player_settings[player.name]
 
     local admin = player.admin
     frame.clear()
@@ -388,6 +398,20 @@ local build_config_gui = function(player, frame)
     label.style.vertical_align = 'bottom'
     label.style.font_color = { 0.55, 0.55, 0.99 }
 
+    scroll_pane.add({ type = 'line' })
+
+    switch_state = 'right'
+    if p_settings.inserter_drop then
+        switch_state = 'left'
+    end
+
+    add_switch(
+        scroll_pane,
+        switch_state,
+        'comfy_panel_inserter_drop',
+        'Allow dropping into inserters',
+        "If disabled, then any item dropped into an inserter will be transferred back to player inventory. This setting doesn't impact burner inserters fuel."
+    )
     scroll_pane.add({ type = 'line' })
 
     switch_state = 'right'
