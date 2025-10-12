@@ -622,6 +622,26 @@ local function on_player_built_tile(event)
     end
 end
 
+---Handles inserter drop protection.
+---See init::default_player_settings for more information.
+---@param event LuaOnPlayerDroppedItemIntoEntity
+local function on_player_dropped_item_into_entity(event)
+    local p = game.get_player(event.player_index)
+    local p_settings = storage.player_settings[p.name]
+    if p_settings.inserter_drop then
+        return
+    end
+
+    local entity = event.entity
+    if entity.type ~= 'inserter' then
+        return
+    end
+
+    local stack = entity.held_stack
+    p.get_main_inventory().insert(stack)
+    stack.clear()
+end
+
 local function on_chunk_generated(event)
     local surface = event.surface
 
@@ -748,6 +768,7 @@ Event.add(defines.events.on_research_started, on_research_started)
 Event.add(defines.events.on_research_reversed, on_research_reversed)
 Event.add(defines.events.on_robot_built_entity, on_robot_built_entity)
 Event.add(defines.events.on_robot_built_tile, on_robot_built_tile)
+Event.add(defines.events.on_player_dropped_item_into_entity, on_player_dropped_item_into_entity)
 Event.add(defines.events.on_tick, on_tick)
 Event.on_init(on_init)
 

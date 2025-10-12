@@ -7,6 +7,7 @@ local DifficultyVote = require('maps.biter_battles_v2.difficulty_vote')
 local Event = require('utils.event')
 local Feeding = require('maps.biter_battles_v2.feeding')
 local Functions = require('maps.biter_battles_v2.functions')
+local Init = require('maps.biter_battles_v2.init')
 local Gui = require('utils.gui')
 local PlayerUtils = require('utils.player')
 local ResearchInfo = require('maps.biter_battles_v2.research_info')
@@ -1456,6 +1457,7 @@ end
 local function on_player_joined_game(event)
     local player = game.get_player(event.player_index)
     if player.online_time == 0 then
+        Init.set_default_settings(player)
         Functions.set_random_color(player)
         Functions.show_intro(player)
     end

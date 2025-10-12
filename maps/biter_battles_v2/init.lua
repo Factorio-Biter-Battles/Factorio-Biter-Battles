@@ -2,6 +2,7 @@ local Terrain = require('maps.biter_battles_v2.terrain')
 local Score = require('comfy_panel.score')
 local Tables = require('maps.biter_battles_v2.tables')
 local Blueprint = require('maps.biter_battles_v2.blueprints')
+local Functions = require('maps.biter_battles_v2.functions')
 local Queue = require('utils.queue')
 local q_size = Queue.size
 local q_push = Queue.push
@@ -43,6 +44,24 @@ local function createTrollSong(forceName, offset)
         v.destructible = false
         v.operable = false
     end
+end
+
+---Creates a default settings structure
+local function default_player_settings()
+    return {
+        --If disabled, then any item dropped into an inserter will be transferred
+        --back to player inventory. e.g. Prevents a situation where a player can
+        --accidentally clog a machine whose recipe doesn't accept a particular
+        --ingredient. The setting has no effect on inserting fuel into burner-inserter
+        --By default, setting is set to true as it's a vanilla behavior.
+        ['inserter_drop'] = true,
+    }
+end
+
+---Initializes player settings with defaults.
+---@param player LuaPlayer
+function Public.set_default_settings(player)
+    storage.player_settings[player.name] = default_player_settings()
 end
 
 function Public.initial_setup()
@@ -145,6 +164,8 @@ function Public.initial_setup()
     storage.bb_show_research_info = 'always' -- "always", "spec", nil
     storage.ignore_lists = {}
     storage.reply_target = {}
+    ---Stores player settings that persist through map resets.
+    storage.player_settings = {}
     storage.bb_settings = {
         --TEAM SETTINGS--
         ['team_balancing'] = true, --Should players only be able to join a team that has less or equal members than the opposing team?
