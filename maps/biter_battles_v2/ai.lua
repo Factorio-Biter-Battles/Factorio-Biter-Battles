@@ -390,7 +390,7 @@ Public.raise_evo = function()
         return
     end
     if storage.difficulty_vote_index and 1 <= storage.difficulty_vote_index and 4 >= storage.difficulty_vote_index then
-        local matchTimeInMinutes = game.ticks_played / 3600
+        local matchTimeInMinutes = Functions.get_ticks_since_game_start() / 3600
         storage.difficulty_vote_value = ((matchTimeInMinutes / 470) ^ 3.7)
             + Tables.difficulties[storage.difficulty_vote_index].value
     end
