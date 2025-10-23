@@ -7,6 +7,7 @@ local ResearchInfo = require('maps.biter_battles_v2.research_info')
 local Tables = require('maps.biter_battles_v2.tables')
 local TeamStatsCompare = require('maps.biter_battles_v2.team_stats_compare')
 local Color = require('utils.color_presets')
+local CalcSend = require('commands.quick_calc_send')
 
 local math_floor = math.floor
 local gui_style = require('utils.utils').gui_style
@@ -101,6 +102,9 @@ local main_frame_actions = {
         end
         Functions.clear_corpses(player)
     end,
+    [main_frame_name .. '_calc_send'] = function(player, event)
+        CalcSend.calc_send(player)
+    end,
     [main_frame_name .. '_settings'] = function(player, event)
         toggle_shortcuts_settings(player)
     end,
@@ -137,6 +141,12 @@ local shortcut_buttons = {
         caption = 'Clear corpses',
         sprite = 'entity/behemoth-biter',
         tooltip = { 'gui.clear_corpses' },
+    },
+    {
+        name = main_frame_name .. '_calc_send',
+        caption = 'Calculate sending',
+        sprite = 'item/decider-combinator',
+        tooltip = { 'gui.calc_send' },
     },
 }
 
