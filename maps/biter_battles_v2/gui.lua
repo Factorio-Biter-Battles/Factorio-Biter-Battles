@@ -715,6 +715,15 @@ function Public.create_main_gui(player)
         })
         gui_style(button, { size = 26, left_margin = 4, padding = 6 })
 
+        local button = subfooter.add({
+            type = 'sprite-button',
+            name = 'bb_floating_shortcuts_calc_send',
+            style = 'transparent_slot',
+            sprite = 'utility/check_mark_white',
+            tooltip = { 'gui.calc_send' },
+        })
+        gui_style(button, { size = 26, left_margin = 4 })
+
         Gui.add_pusher(subfooter)
     end
 
