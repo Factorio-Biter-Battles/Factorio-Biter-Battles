@@ -1,5 +1,17 @@
 return {
     {
+        number = 737,
+        date = '2025-10-24',
+        author = 'cogito123',
+        comment = [[(#737) Added player setting to toggle if items can dropped into inserters]],
+    },
+    {
+        number = 738,
+        date = '2025-10-24',
+        author = 'cogito123, Max1000',
+        comment = [[(#738) Difficulty ramp-up now uses match time instead of time since map reset]],
+    },
+    {
         number = 736,
         date = '2025-09-19',
         author = 'cogito123',
