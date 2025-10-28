@@ -566,7 +566,6 @@ local build_config_gui = function(player, frame)
             )
         end
 
-
         scroll_pane.add({ type = 'line' })
         switch_state = 'right'
         if storage.auto_player_mode then
