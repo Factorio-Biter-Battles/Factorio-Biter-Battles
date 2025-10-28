@@ -89,7 +89,7 @@ function Public.print_admins(msg, source)
     local formatted_msg = prefix .. '(ADMIN) ' .. source_name .. ': ' .. msg
     print(formatted_msg)
     for _, p in pairs(game.connected_players) do
-        if p.admin then
+        if is_admin(p) then
             p.print(formatted_msg, { color = chat_color })
         end
     end

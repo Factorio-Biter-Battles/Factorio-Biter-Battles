@@ -32,7 +32,7 @@ end
 
 Module.print_admins = function(msg)
     for _, p in pairs(game.players) do
-        if p.connected and p.admin then
+        if p.connected and is_admin(p) then
             p.print(msg)
         end
     end

@@ -833,7 +833,7 @@ Event.add(defines.events.on_console_command, function(event)
     if not reason then
         return
     end
-    if not player.admin then
+    if not is_admin(player) then
         return
     end
     if cmd == 'ban' then

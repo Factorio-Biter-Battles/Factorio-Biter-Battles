@@ -191,6 +191,7 @@ function Public.initial_setup()
     ---@type table<string, TeamstatsPreferences>
     storage.teamstats_preferences = {}
     storage.allow_teamstats = 'always'
+    storage.auto_player_mode = false
     --Disable Nauvis
     local surface = game.surfaces[1]
     local map_gen_settings = surface.map_gen_settings

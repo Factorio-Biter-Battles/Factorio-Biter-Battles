@@ -15,7 +15,7 @@ local function clear_corpses(cmd)
         return
     end
 
-    if not trusted[player.name] and not player.admin and param > storage.default_clear_corpses_radius then
+    if not trusted[player.name] and not is_admin(player) and param > storage.default_clear_corpses_radius then
         player.print(
             '[INFO] Replaced radius with max allowable value for untrusted players: '
                 .. storage.default_clear_corpses_radius,

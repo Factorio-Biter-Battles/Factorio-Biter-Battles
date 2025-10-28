@@ -1,6 +1,6 @@
 local _DEBUG = false
 
-local bb_config = require('maps.biter_battles_v2.config')
+local Admin = require('utils.admin')
 local Captain_event = require('comfy_panel.special_games.captain')
 local Color = require('utils.color_presets')
 local DifficultyVote = require('maps.biter_battles_v2.difficulty_vote')
@@ -1102,6 +1102,9 @@ function join_team(player, force_name, forced_join, auto_join)
         player.spectator = false
         player.show_on_map = true
         Public.burners_balance(player)
+        if storage.auto_player_mode then
+            Admin.swith_to_player_mode(player, false)
+        end
         return
     end
     local pos =
@@ -1127,6 +1130,11 @@ function join_team(player, force_name, forced_join, auto_join)
 
     local i = player.character.get_inventory(defines.inventory.character_main)
     i.clear()
+
+    if storage.auto_player_mode then
+        Admin.swith_to_player_mode(player, false)
+    end
+
     player.insert({ name = 'pistol', count = 1 })
     player.insert({ name = 'raw-fish', count = 3 })
     player.insert({ name = 'firearm-magazine', count = 32 })

@@ -738,7 +738,7 @@ local function generate_captain_mode(refereeName, autoTrust, captainKick, specia
         )
     end
     for _, player in pairs(game.connected_players) do
-        if player.admin then
+        if is_admin(player) then
             game.print(
                 'Command only allowed for referee or admins to change the current referee : /replaceReferee <playerName>',
                 { color = Color.cyan }
@@ -1406,7 +1406,7 @@ local function change_captain_cmd(cmd, force)
             { color = Color.red }
         )
     end
-    if special.refereeName ~= playerOfCommand.name and not playerOfCommand.admin then
+    if special.refereeName ~= playerOfCommand.name and not is_admin(playerOfCommand) then
         return playerOfCommand.print('Only referee and admins have license to use that command', { color = Color.red })
     end
 
@@ -3508,7 +3508,7 @@ commands.add_command('replaceReferee', 'Admin or referee can decide to change th
     if not special then
         return playerOfCommand.print({ 'captain.cmd_only_captain_mode' }, { color = Color.red })
     end
-    if special.refereeName ~= playerOfCommand.name and not playerOfCommand.admin then
+    if special.refereeName ~= playerOfCommand.name and not is_admin(playerOfCommand) then
         return playerOfCommand.print({ 'captain.cmd_only_admin' }, { color = Color.red })
     end
 
@@ -3570,7 +3570,7 @@ commands.add_command(
         end
         if
             storage.special_games_variables.captain_mode.refereeName ~= playerOfCommand.name
-            and not playerOfCommand.admin
+            and not is_admin(playerOfCommand)
         then
             return playerOfCommand.print({ 'captain.cmd_only_admin' }, { color = Color.red })
         end

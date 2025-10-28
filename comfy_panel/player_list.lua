@@ -450,8 +450,11 @@ local function player_list_show(player, frame, sort_by)
         local tooltip
 
         local player = game.get_player(player_list[i].name)
-        if player.admin then
+        if player.admin then -- full admin red
             trusted = '[color=red][A][/color]'
+            tooltip = 'This player is an admin of this server.\nLeft-click to show this person on map!'
+        elseif is_admin(player) then -- admin in player mode
+            trusted = '[color=gray][A][/color]'
             tooltip = 'This player is an admin of this server.\nLeft-click to show this person on map!'
         elseif jailed[player_list[i].name] then
             trusted = '[color=orange][J][/color]'
@@ -465,7 +468,7 @@ local function player_list_show(player, frame, sort_by)
         end
 
         local caption
-        if this.show_roles_in_list or player.admin then
+        if this.show_roles_in_list or is_admin(player) then
             caption = player_list[i].name .. ' ' .. trusted
         else
             caption = player_list[i].name

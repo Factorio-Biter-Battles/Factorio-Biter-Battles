@@ -309,7 +309,7 @@ local function team_manager_gui_click(event)
     local name = event.element.name
 
     if game.forces[name] then
-        if not player.admin then
+        if not is_admin(player) then
             player.print('Only admins can change team names.', { color = { r = 175, g = 0, b = 0 } })
             return
         end
@@ -318,7 +318,7 @@ local function team_manager_gui_click(event)
     end
 
     if name == 'team_manager_activate_tournament' then
-        if not player.admin then
+        if not is_admin(player) then
             player.print('Only admins can switch tournament mode.', { color = { r = 175, g = 0, b = 0 } })
             return
         end
@@ -346,7 +346,7 @@ local function team_manager_gui_click(event)
 
     if name == 'team_manager_freeze_players' then
         if storage.freeze_players then
-            if not player.admin then
+            if not is_admin(player) then
                 player.print('Only admins can unfreeze players.', { color = { r = 175, g = 0, b = 0 } })
                 return
             end
@@ -366,7 +366,7 @@ local function team_manager_gui_click(event)
             Public.unfreeze_players()
             return
         end
-        if not player.admin then
+        if not is_admin(player) then
             player.print('Only admins can freeze players.', { color = { r = 175, g = 0, b = 0 } })
             return
         end
@@ -378,7 +378,7 @@ local function team_manager_gui_click(event)
     end
 
     if name == 'team_manager_activate_training' then
-        if not player.admin then
+        if not is_admin(player) then
             player.print('Only admins can switch training mode.', { color = { r = 175, g = 0, b = 0 } })
             return
         end
@@ -405,7 +405,7 @@ local function team_manager_gui_click(event)
     if element.name ~= 'team_manager_root_table' then
         return
     end
-    if not player.admin and not isReferee(player) then
+    if not is_admin(player) and not isReferee(player) then
         player.print('Only admins can manage teams.', { color = { r = 175, g = 0, b = 0 } })
         return
     end

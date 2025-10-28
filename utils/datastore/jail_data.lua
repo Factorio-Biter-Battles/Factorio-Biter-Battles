@@ -245,32 +245,32 @@ local validate_args = function(data)
         return false
     end
 
-    if votejail[player.name] and not player.admin then
+    if votejail[player.name] and not is_admin(player) then
         Utils.print_to(player, 'You are currently being investigated since you have griefed.')
         return false
     end
 
-    if votefree[player.name] and not player.admin then
+    if votefree[player.name] and not is_admin(player) then
         Utils.print_to(player, 'You are currently being investigated since you have griefed.')
         return false
     end
 
-    if jailed[player.name] and not player.admin then
+    if jailed[player.name] and not is_admin(player) then
         Utils.print_to(player, 'You are jailed, you can´t run this command.')
         return false
     end
 
-    if player.name == griefer and not player.admin then
+    if player.name == griefer and not is_admin(player) then
         Utils.print_to(player, 'You can´t select yourself.')
         return false
     end
 
-    if game.get_player(griefer).admin and not player.admin then
+    if is_admin(game.get_player(griefer)) and not is_admin(player) then
         Utils.print_to(player, 'You can´t select an admin.')
         return false
     end
 
-    if not trusted and not player.admin or playtime <= settings.playtime_for_vote and not player.admin then
+    if not trusted and not is_admin(player) or playtime <= settings.playtime_for_vote and not is_admin(player) then
         Utils.print_to(player, 'You are not trusted enough to run this command.')
         return false
     end
@@ -561,7 +561,7 @@ Event.add(defines.events.on_console_command, function(event)
             trusted
             and playtime >= settings.playtime_for_vote
             and playtime < settings.playtime_for_instant_jail
-            and not player.admin
+            and not is_admin(player)
         then
             if cmd == 'jail' then
                 vote_to_jail(player, griefer, message)
@@ -572,9 +572,9 @@ Event.add(defines.events.on_console_command, function(event)
             end
         end
 
-        if player.admin or playtime >= settings.playtime_for_instant_jail then
+        if is_admin(player) or playtime >= settings.playtime_for_instant_jail then
             if cmd == 'jail' then
-                if player.admin then
+                if is_admin(player) then
                     Utils.warning(
                         player,
                         'Abusing the jail command will lead to revoked permissions. Jailing someone in case of disagreement is not OK!'

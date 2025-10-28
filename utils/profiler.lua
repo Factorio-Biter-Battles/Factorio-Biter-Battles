@@ -60,7 +60,7 @@ local function startCommand(command)
         log(player.name .. ' has not grown accustomed to this technology yet.')
         return
     end
-    Profiler.Start(command.parameter ~= nil, player.admin, command.tick)
+    Profiler.Start(command.parameter ~= nil, is_admin(player), command.tick)
 end
 local function stopCommand(command)
     Profiler.Stop(command.parameter ~= nil, nil)

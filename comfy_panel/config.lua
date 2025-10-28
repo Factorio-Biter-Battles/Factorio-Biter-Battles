@@ -251,6 +251,15 @@ local poll_function = {
             get_actor(event, '{Poll Mode}', 'has allowed non-trusted people to do polls.')
         end
     end,
+    ['comfy_panel_player_mode_toggle'] = function(event)
+        if event.element.switch_state == 'left' then
+            storage.auto_player_mode = true
+            get_actor(event, '{Switch to player mode}', 'Switch to player mode is enabled', true)
+        else
+            storage.auto_player_mode = false
+            get_actor(event, '{Switch to player mode}', 'Switch to player mode is disabled', true)
+        end
+    end,
     ['comfy_panel_poll_no_notify_toggle'] = function(event)
         local poll = Utils.get_package('comfy_panel.poll')
         local poll_table = poll.get_no_notify_players()
@@ -379,7 +388,7 @@ local build_config_gui = function(player, frame)
     local label
     local p_settings = storage.player_settings[player.name]
 
-    local admin = player.admin
+    local admin = is_admin(player)
     frame.clear()
 
     local scroll_pane = frame.add({
@@ -556,6 +565,20 @@ local build_config_gui = function(player, frame)
                 'Disables non-trusted plebs to create polls.'
             )
         end
+
+
+        scroll_pane.add({ type = 'line' })
+        switch_state = 'right'
+        if storage.auto_player_mode then
+            switch_state = 'left'
+        end
+        add_switch(
+            scroll_pane,
+            switch_state,
+            'comfy_panel_player_mode_toggle',
+            'Switch to player mode',
+            'Switches admins to player mode after joining a team'
+        )
 
         scroll_pane.add({ type = 'line' })
 

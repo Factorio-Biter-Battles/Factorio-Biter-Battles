@@ -80,7 +80,7 @@ commands.add_command('trust', 'Promotes a player to trusted!', function(cmd)
     local player = game.player
 
     if player and player.valid then
-        if not player.admin then
+        if not is_admin(player) then
             player.print("You're not admin!", { color = { r = 1, g = 0.5, b = 0.1 } })
             return
         end
@@ -97,7 +97,7 @@ commands.add_command('trust', 'Promotes a player to trusted!', function(cmd)
             trusted[target_player.name] = true
             game.print(target_player.name .. ' is now a trusted player.', { color = { r = 0.22, g = 0.99, b = 0.99 } })
             for _, a in pairs(game.connected_players) do
-                if a.admin and a.name ~= player.name then
+                if is_admin(a) and a.name ~= player.name then
                     a.print(
                         '[ADMIN]: ' .. player.name .. ' trusted ' .. target_player.name,
                         { color = { r = 1, g = 0.5, b = 0.1 } }
@@ -129,7 +129,7 @@ commands.add_command('untrust', 'Demotes a player from trusted!', function(cmd)
     if player then
         if player ~= nil then
             p = player.print
-            if not player.admin then
+            if not is_admin(player) then
                 p("You're not admin!", { color = { r = 1, g = 0.5, b = 0.1 } })
                 return
             end
@@ -149,7 +149,7 @@ commands.add_command('untrust', 'Demotes a player from trusted!', function(cmd)
             trusted[target_player.name] = false
             game.print(target_player.name .. ' is now untrusted.', { color = { r = 0.22, g = 0.99, b = 0.99 } })
             for _, a in pairs(game.connected_players) do
-                if a.admin == true and a.name ~= player.name then
+                if is_admin(a) and a.name ~= player.name then
                     a.print(
                         '[ADMIN]: ' .. player.name .. ' untrusted ' .. target_player.name,
                         { color = { r = 1, g = 0.5, b = 0.1 } }
@@ -214,7 +214,7 @@ local function on_console_command(event)
         local chatmsg = '[shout] ' .. player.name .. ' (' .. player.force.name .. '): ' .. param
         Server.to_discord_player_chat(chatmsg)
         return
-    elseif not player.admin or not commands[cmd] then
+    elseif not is_admin(player) or not commands[cmd] then
         return
     end
 
@@ -231,7 +231,7 @@ local function on_console_command(event)
 
     if player then
         for _, p in pairs(game.connected_players) do
-            if p.admin == true and p.name ~= player.name then
+            if is_admin(p) and p.name ~= player.name then
                 if param then
                     p.print(
                         player.name .. ' ran: ' .. cmd .. ' "' .. param .. '" ' .. server_time,

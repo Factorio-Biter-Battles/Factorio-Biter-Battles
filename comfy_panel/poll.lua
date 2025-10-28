@@ -417,7 +417,7 @@ local function draw_main_frame(player)
     update_poll_viewer(data)
 
     -- == SUBFOOTER ===============================================================
-    if player.admin then
+    if is_admin(player) then
         local subfooter =
             inner_frame.add({ type = 'frame', name = 'subfooter', style = 'subfooter_frame', direction = 'horizontal' })
         gui_style(subfooter, {

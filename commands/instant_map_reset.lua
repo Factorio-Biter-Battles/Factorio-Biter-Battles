@@ -6,7 +6,12 @@ local Public = {}
 function Public.instant_map_reset(cmd)
     local player = cmd.player_index and game.get_player(cmd.player_index)
     if player then
-        if not player.admin then
+        if not player.admin and is_admin(player) then
+            -- only full admin can use this command because only admin can change user permissions groups
+            -- this command will be called again from on_console_command event handler in utils/admin.lua
+            return
+        end
+        if not is_admin(player) then
             log('not admin player exists')
             player.print("[ERROR] You're not admin!", { color = Color.fail })
             return

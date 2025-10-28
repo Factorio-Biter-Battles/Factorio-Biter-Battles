@@ -10,7 +10,7 @@ local closable_frame = require('utils.ui.closable_frame')
 
 local function admin_only_message(str)
     for _, player in pairs(game.connected_players) do
-        if player.admin == true then
+        if is_admin(player) then
             player.print('Admins-only-message: ' .. str, { color = { r = 0.88, g = 0.88, b = 0.88 } })
         end
     end
@@ -584,7 +584,7 @@ commands.add_command('kill', 'Kill a player. Usage: /kill <name>', function(cmd)
     end
     if cmd.parameter then
         local victim = game.get_player(cmd.parameter)
-        if killer.admin and victim and victim.valid then
+        if is_admin(killer) and victim and victim.valid then
             kill(victim, killer)
         elseif not victim or not victim.valid then
             killer.print('Invalid name', { color = Color.warning })
@@ -606,7 +606,7 @@ commands.add_command('punish', 'Kill and ban a player. Usage: /punish <name> <re
     end
     local t = {}
     local message
-    if punisher.admin and cmd.parameter then
+    if is_admin(punisher) and cmd.parameter then
         for i in string.gmatch(cmd.parameter, '%S+') do
             t[#t + 1] = i
         end
@@ -628,7 +628,7 @@ commands.add_command('punish', 'Kill and ban a player. Usage: /punish <name> <re
         else
             punisher.print('No valid reason given, or reason is too short', { color = Color.warning })
         end
-    elseif not punisher.admin then
+    elseif not is_admin(punisher) then
         punisher.print('This is admin only command', { color = Color.warning })
     else
         punisher.print('Usage: /punish <name> <reason>', { color = Color.warning })

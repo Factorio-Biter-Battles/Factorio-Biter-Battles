@@ -106,7 +106,7 @@ local function main_frame(player)
 
     for name, func in pairs(tabs) do
         if func.admin == true then
-            if player.admin then
+            if is_admin(player) then
                 local tab = tabbed_pane.add({ type = 'tab', caption = name })
                 local flow = tabbed_pane.add({ type = 'flow', name = name, direction = 'vertical' })
                 flow.style.horizontally_stretchable = true
