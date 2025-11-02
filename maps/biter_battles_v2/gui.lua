@@ -1102,8 +1102,8 @@ function join_team(player, force_name, forced_join, auto_join)
         player.spectator = false
         player.show_on_map = true
         Public.burners_balance(player)
-        if storage.auto_player_mode then
-            Admin.swith_to_player_mode(player, false)
+        if storage.quasi_admin_mode then
+            Admin.switch_to_player_mode(player, false)
         end
         return
     end
@@ -1131,8 +1131,8 @@ function join_team(player, force_name, forced_join, auto_join)
     local i = player.character.get_inventory(defines.inventory.character_main)
     i.clear()
 
-    if storage.auto_player_mode then
-        Admin.swith_to_player_mode(player, false)
+    if storage.quasi_admin_mode then
+        Admin.switch_to_player_mode(player, false)
     end
 
     player.insert({ name = 'pistol', count = 1 })
