@@ -19,6 +19,7 @@ local BossUnit = require('functions.boss_unit')
 local Session = require('utils.datastore.session_data')
 local Server = require('utils.server')
 local Task = require('utils.task')
+local String = require('utils.string')
 local Token = require('utils.token')
 local Color = require('utils.color_presets')
 local ResearchInfo = require('maps.biter_battles_v2.research_info')
@@ -289,23 +290,28 @@ local function on_console_chat(event)
         return
     end
 
-    --Skip messages that would spoil coordinates from spectators and don't send gps coord to discord
-    local a, b = string.find(event.message, 'gps=', 1, false)
-    if a then
-        return
-    end
-
     local discord_msg = ''
     if muted then
         discord_msg = mute_tag
         Muted.print_muted_message(player)
     end
-    if not muted and player_force_name == 'spectator' then
+
+    -- Don't pass spectator messages to teams which contain GPS tags or if they
+    -- were created by muted players.
+    local sane_message = String.sanitize_gps_tags(event.message)
+    local gps = String.has_sanitized_gps_tag(sane_message)
+    if not gps and not muted and player_force_name == 'spectator' then
         Functions.print_message_to_players(game.forces.north.connected_players, player_name, msg, nil, do_ping)
         Functions.print_message_to_players(game.forces.south.connected_players, player_name, msg, nil, do_ping)
     end
 
-    discord_msg = discord_msg .. player_name .. ' (' .. player_force_name .. '): ' .. event.message
+    -- Don't pass messages to discord with just a gps tag to avoid spam.
+    if String.only_sanitized_gps_tag(sane_message) then
+        return
+    end
+
+    -- Only pass messages to discord with sanitized gps tags.
+    discord_msg = discord_msg .. player_name .. ' (' .. player_force_name .. '): ' .. sane_message
     Server.to_discord_player_chat(discord_msg)
 end
 
