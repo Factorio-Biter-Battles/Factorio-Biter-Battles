@@ -251,13 +251,13 @@ local poll_function = {
             get_actor(event, '{Poll Mode}', 'has allowed non-trusted people to do polls.')
         end
     end,
-    ['comfy_panel_player_mode_toggle'] = function(event)
+    ['comfy_panel_quasi_admin_mode_toggle'] = function(event)
         if event.element.switch_state == 'left' then
             storage.quasi_admin_mode = true
-            get_actor(event, '{Player/quasi-admin mode}', 'Player/quasi-admin mode is enabled', true)
+            get_actor(event, '{Quasi-admin mode}', 'Quasi-admin mode has been enabled!', true)
         else
             storage.quasi_admin_mode = false
-            get_actor(event, '{Player/quasi-admin mode}', 'Player/quasi-admin mode is disabled', true)
+            get_actor(event, '{Quasi-admin mode}', 'Quasi-admin mode has been disabled!', true)
         end
     end,
     ['comfy_panel_poll_no_notify_toggle'] = function(event)
@@ -574,9 +574,9 @@ local build_config_gui = function(player, frame)
         add_switch(
             scroll_pane,
             switch_state,
-            'comfy_panel_player_mode_toggle',
-            'Player/quasi-admin mode',
-            'Switches admins to "player mode" when joining a team while retaining access to admin UI and bb commands. Useful when need to disabled debug options for admins.'
+            'comfy_panel_quasi_admin_mode_toggle',
+            'Quasi-admin mode',
+            'Switches admins to quasi-admin when joining a team while retaining access to admin UI and bb commands. Useful when need to disabled debug options for admins.'
         )
 
         scroll_pane.add({ type = 'line' })

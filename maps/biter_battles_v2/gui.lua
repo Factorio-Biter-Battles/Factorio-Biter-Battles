@@ -1103,7 +1103,7 @@ function join_team(player, force_name, forced_join, auto_join)
         player.show_on_map = true
         Public.burners_balance(player)
         if storage.quasi_admin_mode then
-            Admin.switch_to_player_mode(player, false)
+            Admin.switch_to_quasi_admin_mode(player, false)
         end
         return
     end
@@ -1132,7 +1132,7 @@ function join_team(player, force_name, forced_join, auto_join)
     i.clear()
 
     if storage.quasi_admin_mode then
-        Admin.switch_to_player_mode(player, false)
+        Admin.switch_to_quasi_admin_mode(player, false)
     end
 
     player.insert({ name = 'pistol', count = 1 })

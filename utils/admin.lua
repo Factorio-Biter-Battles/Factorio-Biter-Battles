@@ -64,34 +64,33 @@ Event.add(defines.events.on_player_demoted, function(event)
     set_data(admin_dataset, player.name, false)
 end)
 
+-- Some build-in command that will switch player to admin mode
+local build_in_commands = {
+    ['ban'] = true,
+    ['unban'] = true,
+    ['kick'] = true,
+    ['promote'] = true,
+    ['demote'] = true,
+    ['editor'] = true,
+    ['sc'] = true,
+    ['c'] = true,
+}
+
 Event.add(defines.events.on_console_command, function(event)
     if not event.player_index then
         return
     end
     local player = game.get_player(event.player_index)
 
-    if not player.admin then
-        -- Some build-in command that will switch player to admin mode
-        local commands = {
-            ['ban'] = true,
-            ['unban'] = true,
-            ['kick'] = true,
-            ['promote'] = true,
-            ['demote'] = true,
-            ['editor'] = true,
-            ['sc'] = true,
-            ['c'] = true,
-        }
-        if commands[event.command] then
-            if admin_names[player.name] then
-                player.admin = true
-                player.print('You are now a full admin. Run the command again to execute it.', { color = Color.red })
-            end
-            return
+    if not player.admin and build_in_commands[event.command] then
+        if admin_names[player.name] then
+            player.admin = true
+            player.print('You are now a full admin. Run the command again to execute it.', { color = Color.red })
         end
+        return
     end
 
-    if event.command == 'mode-admin' then
+    if event.command == 'mode-admin' or event.command == 'ma' then
         if player.admin then
             player.print('You are already an admin', { color = Color.yellow })
             return
@@ -114,28 +113,31 @@ Event.add(defines.events.on_console_command, function(event)
     end
 end)
 
-commands.add_command('mode-admin', 'Switch admin from player mode to admin mode', function(cmd)
+local admin_mode_command = function(cmd)
     --[[ 
         due to the fact that it is not possible to set player.admin = true here, 
         the real handler of this command is in on_console_command event above
     --]]
-end)
+end
+
+commands.add_command('mode-admin', 'Switch admin from quasi-admin to admin mode', admin_mode_command)
+commands.add_command('ma', 'Switch admin from quasi-admin to admin mode', admin_mode_command)
 
 ---@param player LuaPlayer
 ---@param notify boolean
-function Public.switch_to_player_mode(player, notify)
+function Public.switch_to_quasi_admin_mode(player, notify)
     if player.admin then
         ignore_demote_names[player.name] = true
         player.admin = false
         if notify then
-            player.print('You are player now', { color = Color.warning })
+            player.print('You are now in quasi-admin mode', { color = Color.warning })
         end
         return
     end
 
     if admin_names[player.name] then
         if notify then
-            player.print('You are already a player', { color = Color.yellow })
+            player.print('You are already in quasi-admin mode', { color = Color.yellow })
         end
         return
     end
@@ -145,12 +147,15 @@ function Public.switch_to_player_mode(player, notify)
     end
 end
 
-commands.add_command('mode-player', 'Switch admin from admin mode to player mode', function(cmd)
+local quasi_admin_mode_command = function(cmd)
     local player = game.get_player(cmd.player_index)
     if not player then
         return
     end
-    safe_wrap_with_player_print(player, Public.switch_to_player_mode, player, true)
-end)
+    safe_wrap_with_player_print(player, Public.switch_to_quasi_admin_mode, player, true)
+end
+
+commands.add_command('mode-quasi-admin', 'Switch admin to quasi-admin mode', quasi_admin_mode_command)
+commands.add_command('mqa', 'Switch admin to quasi-admin mode', quasi_admin_mode_command)
 
 return Public
