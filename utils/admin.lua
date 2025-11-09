@@ -23,11 +23,20 @@ Global.register({
     ignore_demote_names = tbl.ignore_demote_names
 end)
 
--- @global
+--- Checks whether the given player is an admin or quasi admin
+---@global
 ---@param player LuaPlayer
 ---@return boolean
 function is_admin(player)
     return player.admin or admin_names[player.name] == true
+end
+
+--- Checks whether the given player is only a quasi admin
+---@global
+---@param player LuaPlayer
+---@return boolean
+function is_quasi_admin(player)
+    return not player.admin and admin_names[player.name] == true
 end
 
 -- Used to loads admin names from the database. Triggered by an RCON command.
@@ -64,6 +73,29 @@ Event.add(defines.events.on_player_demoted, function(event)
     set_data(admin_dataset, player.name, false)
 end)
 
+---@param player LuaPlayer
+---@param notify boolean
+function Public.switch_to_admin_mode(player, notify)
+    if player.admin then
+        if notify then
+            player.print('You are already an admin', { color = Color.yellow })
+        end
+        return
+    end
+
+    if admin_names[player.name] then
+        player.admin = true
+        if notify then
+            player.print('You are now a full admin', { color = Color.success })
+        end
+        return
+    end
+
+    if notify then
+        player.print("[ERROR] You're not admin!", { color = Color.fail })
+    end
+end
+
 -- Some build-in command that will switch player to admin mode
 local build_in_commands = {
     ['ban'] = true,
@@ -82,31 +114,19 @@ Event.add(defines.events.on_console_command, function(event)
     end
     local player = game.get_player(event.player_index)
 
-    if not player.admin and build_in_commands[event.command] then
-        if admin_names[player.name] then
+    if build_in_commands[event.command] then
+        if is_quasi_admin(player) then
             player.admin = true
             player.print('You are now a full admin. Run the command again to execute it.', { color = Color.red })
         end
-        return
     end
 
     if event.command == 'mode-admin' or event.command == 'ma' then
-        if player.admin then
-            player.print('You are already an admin', { color = Color.yellow })
-            return
-        end
-
-        if admin_names[player.name] then
-            player.admin = true
-            player.print('You are now a full admin', { color = Color.success })
-            return
-        end
-
-        player.print("[ERROR] You're not admin!", { color = Color.fail })
+        Public.switch_to_admin_mode(player, true)
     end
 
     if event.command == 'instant-map-reset' then
-        if not player.admin and admin_names[player.name] then
+        if is_quasi_admin(player) then
             player.admin = true
             InstantMapReset.instant_map_reset(event)
         end

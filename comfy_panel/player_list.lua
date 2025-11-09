@@ -453,7 +453,7 @@ local function player_list_show(player, frame, sort_by)
         if player.admin then -- full admin
             trusted = '[color=red][A][/color]'
             tooltip = 'This player is an admin of this server.\nLeft-click to show this person on map!'
-        elseif is_admin(player) then -- admin in quasi-admin mode
+        elseif is_quasi_admin(player) then
             trusted = '[color=gray][A][/color]'
             tooltip =
                 'This player is an admin of this server.\nThis admin is in quasi-admin mode.\nLeft-click to show this person on map!'

@@ -1240,6 +1240,7 @@ function spectate(player, forced_join, stored_position)
         Server.to_discord_bold(msg)
     end
     game.permissions.get_group('spectator').add_player(player)
+    Admin.switch_to_admin_mode(player, false)
     storage.spectator_rejoin_delay[player.name] = game.tick
     Public.create_main_gui(player)
     player.spectator = true
