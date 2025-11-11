@@ -32,7 +32,7 @@ commands.add_command('scenario', 'Usable only for admins - controls the scenario
         p = log
     else
         p = player.print
-        if not player.admin then
+        if not is_admin(player) then
             return
         end
     end

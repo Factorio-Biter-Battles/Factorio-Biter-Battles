@@ -1,4 +1,4 @@
-local AiTargets = require('maps.biter_battles_v2.ai_targets')
+local Admin = require('utils.admin')
 local BBGui = require('maps.biter_battles_v2.gui')
 local Captain_special = require('comfy_panel.special_games.captain')
 local MultiSilo = require('comfy_panel.special_games.multi_silo')
@@ -952,6 +952,7 @@ function Public.generate_new_map()
     Announce.announce_if_any()
     for _, player in pairs(game.players) do
         Functions.init_player(player)
+        Admin.switch_to_admin_mode(player, false)
         for _, e in pairs(player.gui.left.children) do
             e.destroy()
         end

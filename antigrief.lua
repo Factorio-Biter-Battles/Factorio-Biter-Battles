@@ -221,7 +221,7 @@ local function on_marked_for_deconstruction(event)
     if not player then
         return
     end
-    if player.admin then
+    if is_admin(player) then
         return
     end
     if trusted[player.name] and this.do_not_check_trusted then
@@ -245,7 +245,7 @@ local function on_player_ammo_inventory_changed(event)
     local tracker = session.get_session_table()
     local trusted = session.get_trusted_table()
     local player = game.get_player(event.player_index)
-    if player.admin then
+    if is_admin(player) then
         return
     end
     if trusted[player.name] and this.do_not_check_trusted then
@@ -322,7 +322,7 @@ local function on_built_entity(event)
         if not player then
             return
         end
-        if player.admin then
+        if is_admin(player) then
             return
         end
         if trusted[player.name] and this.do_not_check_trusted then
@@ -551,7 +551,7 @@ local function on_player_cursor_stack_changed(event)
     local tracker = session.get_session_table()
     local trusted = session.get_trusted_table()
     local player = game.get_player(event.player_index)
-    if player.admin then
+    if is_admin(player) then
         return
     end
     if trusted[player.name] and this.do_not_check_trusted then

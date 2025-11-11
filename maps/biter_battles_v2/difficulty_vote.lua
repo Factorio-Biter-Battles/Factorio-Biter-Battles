@@ -108,7 +108,7 @@ local function poll_difficulty(player)
     end
     if storage.bb_settings.only_admins_vote or storage.tournament_mode then
         if storage.active_special_games['captain_mode'] then
-            if storage.bb_settings.only_admins_vote and not player.admin then
+            if storage.bb_settings.only_admins_vote and not is_admin(player) then
                 return
             end
             if
@@ -122,7 +122,7 @@ local function poll_difficulty(player)
                 return
             end
         else
-            if not player.admin then
+            if not is_admin(player) then
                 return
             end
         end
@@ -207,7 +207,7 @@ local function on_player_joined_game(event)
         if not storage.difficulty_player_votes[player.name] then
             if storage.bb_settings.only_admins_vote or storage.tournament_mode then
                 if storage.active_special_games['captain_mode'] then
-                    if player.admin then
+                    if is_admin(player) then
                         if storage.bb_settings.only_admins_vote then
                             poll_difficulty(player)
                         end
@@ -217,7 +217,7 @@ local function on_player_joined_game(event)
                         end
                     end
                 else
-                    if player.admin then
+                    if is_admin(player) then
                         poll_difficulty(player)
                     end
                 end
@@ -298,7 +298,7 @@ local function on_gui_click(event)
         if storage.bb_settings.only_admins_vote or storage.tournament_mode then
             if storage.active_special_games['captain_mode'] then
                 if storage.bb_settings.only_admins_vote then
-                    if player.admin then
+                    if is_admin(player) then
                         difficulty_voted(player, i)
                     end
                 else
@@ -307,7 +307,7 @@ local function on_gui_click(event)
                     end
                 end
             else
-                if player.admin then
+                if is_admin(player) then
                     difficulty_voted(player, i)
                 end
             end

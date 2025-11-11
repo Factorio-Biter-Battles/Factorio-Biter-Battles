@@ -47,7 +47,7 @@ local function check_player_permission(player_index)
         return false
     end
 
-    if not player.admin then
+    if not is_admin(player) then
         player.print('This command can only be used by admins')
         return false
     end

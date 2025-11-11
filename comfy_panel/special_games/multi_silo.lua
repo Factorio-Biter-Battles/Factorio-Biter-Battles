@@ -350,7 +350,7 @@ end
 ---Remove a silo that is pointed by player selection and drop it on the ground.
 local function remove_silo(cmd)
     local player = game.get_player(cmd.player_index)
-    if not player.admin then
+    if not is_admin(player) then
         player.print('Only admin can use this command')
         return
     end

@@ -951,7 +951,7 @@ if ENABLE_CHUNK_GEN_PROFILING then
     commands.add_command('chunk-profiling-stats', 'Display and log statistics of chunk generation time', function(cmd)
         local caller = cmd.player_index and game.get_player(cmd.player_index)
 
-        if caller and not caller.admin then
+        if caller and not is_admin(caller) then
             caller.print('Only admin may run this command')
             return
         end

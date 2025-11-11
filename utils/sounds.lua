@@ -30,7 +30,7 @@ end
 ---@param sound_path string
 Sounds.notify_admins = function(sound_path)
     for _, player in pairs(game.connected_players) do
-        if player.admin then
+        if is_admin(player) then
             play({ player }, sound_path)
         end
     end

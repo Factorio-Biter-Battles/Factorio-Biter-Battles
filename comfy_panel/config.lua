@@ -251,6 +251,15 @@ local poll_function = {
             get_actor(event, '{Poll Mode}', 'has allowed non-trusted people to do polls.')
         end
     end,
+    ['comfy_panel_quasi_admin_mode_toggle'] = function(event)
+        if event.element.switch_state == 'left' then
+            storage.quasi_admin_mode = true
+            get_actor(event, '{Quasi-admin mode}', 'Quasi-admin mode has been enabled!', true)
+        else
+            storage.quasi_admin_mode = false
+            get_actor(event, '{Quasi-admin mode}', 'Quasi-admin mode has been disabled!', true)
+        end
+    end,
     ['comfy_panel_poll_no_notify_toggle'] = function(event)
         local poll = Utils.get_package('comfy_panel.poll')
         local poll_table = poll.get_no_notify_players()
@@ -379,7 +388,7 @@ local build_config_gui = function(player, frame)
     local label
     local p_settings = storage.player_settings[player.name]
 
-    local admin = player.admin
+    local admin = is_admin(player)
     frame.clear()
 
     local scroll_pane = frame.add({
@@ -556,6 +565,19 @@ local build_config_gui = function(player, frame)
                 'Disables non-trusted plebs to create polls.'
             )
         end
+
+        scroll_pane.add({ type = 'line' })
+        switch_state = 'right'
+        if storage.quasi_admin_mode then
+            switch_state = 'left'
+        end
+        add_switch(
+            scroll_pane,
+            switch_state,
+            'comfy_panel_quasi_admin_mode_toggle',
+            'Quasi-admin mode',
+            'Switches admins to quasi-admin mode when joining a team while retaining access to the admin UI and bb commands. Useful when it is necessary to disable debug options for admins.'
+        )
 
         scroll_pane.add({ type = 'line' })
 

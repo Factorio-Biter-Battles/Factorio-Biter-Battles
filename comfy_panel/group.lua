@@ -137,7 +137,7 @@ local build_group_gui = function(player, frame)
                 b.style.minimal_width = actions_width
                 b.style.maximal_width = actions_width
             end
-            if player.admin == true or group.founder == player.name then
+            if is_admin(player) or group.founder == player.name then
                 local b = tt.add({ type = 'button', caption = 'Delete' })
                 b.style.font = 'default-bold'
                 b.style.minimal_width = actions_width

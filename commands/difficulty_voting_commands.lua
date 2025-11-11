@@ -8,7 +8,7 @@ local function revote()
     local player = game.player
 
     if player and player ~= nil then
-        if not player.admin then
+        if not is_admin(player) then
             player.print('[ERROR] Command is admin-only. Please ask an admin.', { color = Color.warning })
             return
         else
@@ -30,7 +30,7 @@ local function close_difficulty_votes(cmd)
     if not player then
         return
     end
-    if not player.admin then
+    if not is_admin(player) then
         player.print('[ERROR] Command is admin-only. Please ask an admin.', { color = Color.warning })
         return
     end
