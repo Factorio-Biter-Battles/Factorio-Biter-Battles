@@ -576,7 +576,7 @@ local build_config_gui = function(player, frame)
             switch_state,
             'comfy_panel_quasi_admin_mode_toggle',
             'Quasi-admin mode',
-            'Switches admins to quasi-admin when joining a team while retaining access to admin UI and bb commands. Useful when need to disabled debug options for admins.'
+            'Switches admins to quasi-admin mode when joining a team while retaining access to the admin UI and bb commands. Useful when it is necessary to disable debug options for admins.'
         )
 
         scroll_pane.add({ type = 'line' })
