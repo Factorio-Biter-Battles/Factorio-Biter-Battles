@@ -1,9 +1,21 @@
 return {
     {
+        number = 741,
+        date = '2025-11-14',
+        author = 'cogito123',
+        comment = [[(#741) Sanitize GPS tag content instead of dropping messages that contain GPS tags]],
+    },
+    {
+        number = 740,
+        date = '2025-11-11',
+        author = 'developer',
+        comment = [[(#740) Backport quasi-admin mode from the 1v1 BB version]],
+    },
+    {
         number = 737,
         date = '2025-10-24',
         author = 'cogito123',
-        comment = [[(#737) Added player setting to toggle if items can dropped into inserters]],
+        comment = [[(#737) Added player setting to toggle if items can be dropped into inserters]],
     },
     {
         number = 738,
