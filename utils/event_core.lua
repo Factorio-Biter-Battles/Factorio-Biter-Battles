@@ -53,6 +53,12 @@ local function on_event(event)
     if not handlers then
         handlers = event_handlers[event.input_name]
     end
+
+    if not storage.event_profiler_enabled then
+        call_handlers(handlers, event)
+        return
+    end
+
     local profiler = event_profilers[event.name]
     if not profiler then
         profiler = { profiler = game.create_profiler(), count = 1 }
@@ -89,6 +95,12 @@ end
 
 local function on_nth_tick_event(event)
     local handlers = on_nth_tick_event_handlers[event.nth_tick]
+
+    if not storage.event_profiler_enabled then
+        call_handlers(handlers, event)
+        return
+    end
+
     local profiler = on_nth_tick_event_profilers[event.nth_tick]
     if not profiler then
         profiler = { profiler = game.create_profiler(), count = 1 }
