@@ -633,6 +633,19 @@ function Functions.get_entity_contents(entity)
             end
         end
     end
+
+    return totals
+end
+
+---Get fluid contents from entity and round down any decimal point.
+---@param entity LuaEntity
+function Functions.get_entity_fluid_contents(entity)
+    local totals = {}
+    local fluids = entity.get_fluid_contents()
+    for k, v in pairs(fluids) do
+        totals[k] = (totals[k] or 0) + math.floor(v)
+    end
+
     return totals
 end
 

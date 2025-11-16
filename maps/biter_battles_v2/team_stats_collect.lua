@@ -24,7 +24,7 @@ local difficulty_vote = require('maps.biter_battles_v2.difficulty_vote')
 ---@field difficulty string?
 ---@field difficulty_value number?
 
----@type {item: string, placed?: boolean, space_after?: boolean, hide_by_default?: boolean}[]
+---@type {item: string, placed?: boolean, space_after?: boolean, hide_by_default?: boolean, fluid?: boolean}[]
 TeamStatsCollect.items_to_show_summaries_of = {
     { item = 'coal' },
     { item = 'stone' },
@@ -38,6 +38,13 @@ TeamStatsCollect.items_to_show_summaries_of = {
 
     { item = 'rocket-fuel', hide_by_default = true },
     { item = 'low-density-structure', space_after = true, hide_by_default = true },
+
+    { item = 'crude-oil', fluid = true },
+    { item = 'petroleum-gas', fluid = true },
+    { item = 'light-oil', space_after = true, fluid = true },
+    { item = 'heavy-oil', hide_by_default = true, fluid = true },
+    { item = 'lubricant', hide_by_default = true, fluid = true },
+    { item = 'sulfuric-acid', space_after = true, hide_by_default = true, fluid = true },
 
     { item = 'electric-mining-drill', placed = true },
     { item = 'boiler', placed = true, hide_by_default = true },
@@ -73,6 +80,7 @@ TeamStatsCollect.damage_render_info = {
     { 'impact', 'Impact [item=locomotive][item=car][item=tank]' },
 }
 
+---List of entity types.
 local tracked_inventories = {
     ['assembling-machine'] = true,
     ['boiler'] = true,
@@ -92,6 +100,24 @@ local tracked_inventories = {
     ['spider-vehicle'] = true,
 }
 
+---List of entity names that contain any fluid at least partially. A fluid from
+---them can be counted as lost if moved. Note that due to API limitations, fluid
+---lost due to entities marked for deconstruction and recipe changes is not
+---tracked.
+local fluid_inventories = {
+    ['assembling-machine-2'] = true,
+    ['assembling-machine-3'] = true,
+    ['chemical-plant'] = true,
+    ['flamethrower-turret'] = true,
+    ['fluid-wagon'] = true,
+    ['oil-refinery'] = true,
+    ['pipe'] = true,
+    ['pipe-to-ground'] = true,
+    ['pump'] = true,
+    ['pumpjack'] = true,
+    ['storage-tank'] = true,
+}
+
 local force_name_map = {
     north_biters = 'north',
     north_biters_boss = 'north',
@@ -105,6 +131,19 @@ local health_factor_map = {
     south_biters = 1,
     south_biters_boss = 20,
 }
+
+---Check if object is tracked by team stats.
+---@param name string Name of an object.
+---@return boolean
+local function is_tracked_object(name)
+    for _, item_info in ipairs(TeamStatsCollect.items_to_show_summaries_of) do
+        if item_info.item == name then
+            return true
+        end
+    end
+
+    return false
+end
 
 local function update_teamstats()
     local team_stats = storage.team_stats
@@ -138,6 +177,7 @@ local function update_teamstats()
         force_stats.player_ticks = (force_stats.player_ticks or 0) + #force.connected_players * (tick - prev_ticks)
         force_stats.max_players = math.max(force_stats.max_players or 0, #force.connected_players)
         local item_prod = force.get_item_production_statistics(storage.bb_surface_name)
+        local fluid_prod = force.get_fluid_production_statistics(storage.bb_surface_name)
         --local item_prod_inputs = item_prod.input_counts
         --log(serpent.line(item_prod_inputs))
         local build_stat = force.get_entity_build_count_statistics(storage.bb_surface_name)
@@ -149,11 +189,19 @@ local function update_teamstats()
                 item_stat = {}
                 force_stats.items[item] = item_stat
             end
-            item_stat.produced = item_prod.get_input_count(item)
-            item_stat.consumed = item_prod.get_output_count(item)
+
+            if item_info.fluid then
+                item_stat.produced = fluid_prod.get_input_count(item)
+                item_stat.consumed = fluid_prod.get_output_count(item)
+            else
+                item_stat.produced = item_prod.get_input_count(item)
+                item_stat.consumed = item_prod.get_output_count(item)
+            end
+
             if not item_stat.first_at and item_stat.produced and item_stat.produced > 0 then
                 item_stat.first_at = tick
             end
+
             if item_info.placed then
                 local item_build_stat = build_stat.get_input_count(item)
                 if (item_build_stat or 0) > 0 then
@@ -167,6 +215,7 @@ local function update_teamstats()
                 end
             end
         end
+
         local science_logs = storage['science_logs_total_' .. force_name]
         for idx, info in ipairs(tables.food_long_and_short) do
             local item = info.long_name
@@ -301,7 +350,85 @@ function TeamStatsCollect.compute_stats()
     return stats
 end
 
--- Tracks items lost by each team and damage inflicted to enemy biters
+---Counts fluids of mined entities as lost, since it's discarded instead of
+---transferred to any inventory.
+---@param entity LuaEntity
+---@param force string
+local function on_gone_entity(entity, force)
+    local item_stats = storage.team_stats.forces[force].items
+    if not item_stats then
+        item_stats = {}
+        storage.team_stats.forces[force].items = item_stats
+    end
+
+    local fluids = {}
+    -- Fluid turrets contain two buffers.
+    -- - Internal which is filled first. The fluid is locked to an entity and
+    -- when entity is mined or destroyed, the fluid won't be distributed
+    -- throughout the segment.
+    -- - External, which is the fluid box connected to the segment. Unlike
+    -- the internal, this one will be distributed.
+    local internal = entity.prototype.fluid_buffer_size
+    -- Necessary to call get_entity_contents as fluid won't appear
+    -- in event's inventory.
+    for name, amount in pairs(functions.get_entity_fluid_contents(entity)) do
+        if is_tracked_object(name) then
+            -- The 'amount' is a sum of both buffers, so we have to count the
+            -- loss of the internal buffer right here as the rest of the function
+            -- is dedicated to distributed fluid.
+            if internal and internal < amount then
+                item_stats[name] = item_stats[name] or {}
+                item_stats[name].lost = (item_stats[name].lost or 0) + internal
+                amount = amount - internal
+            end
+
+            fluids[name] = amount
+        end
+    end
+
+    -- Each fluidbox is an either fluid input or output of an entity. A fluidbox
+    -- is defined by it's capacity and the contents. It can be connected to a larger
+    -- segment. All elements of such segment are also fluidboxes. We have to cycle
+    -- through each fluidbox of an entity to see how loss of this entity will impact
+    -- the entire segment. When an entity is removed, capacity provided by it's
+    -- fluidboxes is removed and so capacity of an overall connected segment shrinks.
+    -- If a fluid transferred from an entity to segment will exceed it's capacity,
+    -- we count that as a loss.
+    local boxes = #entity.fluidbox
+    for box_id = 1, boxes do
+        -- If the entity is not a part of the segment, it will be nil
+        local seg_fluids = entity.fluidbox.get_fluid_segment_contents(box_id)
+        if not seg_fluids then
+            goto next_fluidbox
+        end
+
+        -- Since we might be mining a part of a segment, we have to subtract
+        -- that lost capacity later in order to check if there is still
+        -- space in the segment.
+        local cap_loss = entity.fluidbox.get_prototype(box_id).volume
+        -- Get capacity and content of an entire pipeline.
+        local cap = entity.fluidbox.get_capacity(box_id) - cap_loss
+        for name, amount in pairs(seg_fluids) do
+            if fluids[name] then
+                -- If the fluid from the segment that is removed will not fit in remaining
+                -- capacity of the pipeline then it can be counted as loss. If it can fit
+                -- then we count it as 0 (no loss) because it will be distributed in rest
+                -- of the segment.
+                local diff = cap - amount
+                fluids[name] = (diff < 0 and -diff) or 0
+            end
+        end
+
+        ::next_fluidbox::
+    end
+
+    for name, amount in pairs(fluids) do
+        item_stats[name] = item_stats[name] or {}
+        item_stats[name].lost = (item_stats[name].lost or 0) + amount
+    end
+end
+
+---Tracks items lost by each team and damage inflicted to enemy biters
 ---@param event EventData.on_entity_died
 local function on_entity_died(event)
     local entity = event.entity
@@ -321,6 +448,11 @@ local function on_entity_died(event)
             item_stats[entity.name] = item_stats[entity.name] or {}
             item_stats[entity.name].kill_count = (item_stats[entity.name].kill_count or 0) + 1
         end
+
+        if fluid_inventories[entity.name] then
+            on_gone_entity(entity, entity_force_name)
+        end
+
         if tracked_inventories[entity.type] then
             for item, amount in pairs(functions.get_entity_contents(entity)) do
                 item_stats[item] = item_stats[item] or {}
@@ -354,6 +486,66 @@ local function on_entity_died(event)
     damage_stats.damage = damage_stats.damage + entity.prototype.get_max_health() * health_factor
 end
 
+---Common handler of mined related events
+---@param event LuaOnPlayerMinedEntity|LuaOnRobotMinedEntity
+local function on_mined_entity(event)
+    local entity = event.entity
+    if not (entity and entity.valid) then
+        return
+    end
+
+    if not fluid_inventories[entity.name] then
+        return
+    end
+
+    local force = entity.force.name
+    if force ~= 'north' and force ~= 'south' then
+        return
+    end
+
+    on_gone_entity(entity, force)
+end
+
+---Handler of on_mined_entity player variant.
+---@param event LuaOnPlayerMinedEntity
+local function on_player_mined_entity(event)
+    on_mined_entity(event)
+end
+
+---Handler of on_mined_entity robot variant.
+---@param event LuaOnRobotMinedEntity
+local function on_robot_mined_entity(event)
+    on_mined_entity(event)
+end
+
+---Counts flushed fluid by player as lost.
+---@param event LuaOnPlayerFlushedFluid
+local function on_player_flushed_fluid(event)
+    local entity = event.entity
+    if not (entity and entity.valid) then
+        return
+    end
+
+    local entity_force_name = (entity.force and entity.force.name) or ''
+    if entity_force_name ~= 'north' and entity_force_name ~= 'south' then
+        return
+    end
+
+    local item_stats = storage.team_stats.forces[entity_force_name].items
+    if not item_stats then
+        item_stats = {}
+        storage.team_stats.forces[entity_force_name].items = item_stats
+    end
+
+    local name = event.fluid
+    if not is_tracked_object(name) then
+        return
+    end
+
+    item_stats[name] = item_stats[name] or {}
+    item_stats[name].lost = (item_stats[name].lost or 0) + event.amount
+end
+
 -- We could theoretically collect just once per minute, but this collection will not be
 -- aligned to game time.  Thus we collect every 16 seconds instead, which will make the
 -- numbers a bit more accurate (i.e. off by at most 16 seconds, instead of off by at
@@ -363,5 +555,8 @@ end
 event.on_nth_tick(60 * 16 - 1, update_teamstats)
 
 event.add(defines.events.on_entity_died, on_entity_died)
+event.add(defines.events.on_player_mined_entity, on_player_mined_entity)
+event.add(defines.events.on_robot_mined_entity, on_robot_mined_entity)
+event.add(defines.events.on_player_flushed_fluid, on_player_flushed_fluid)
 
 return TeamStatsCollect
