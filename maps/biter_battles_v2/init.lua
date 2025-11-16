@@ -194,6 +194,8 @@ function Public.initial_setup()
     --Flag for Player/quasi-admin mode.
     --When enabled, admins will automatically switch to Player/quasi-admin mode on joining a team.
     storage.quasi_admin_mode = false
+    --Enables event profiler and logging
+    storage.event_profiler_enabled = false
     --Disable Nauvis
     local surface = game.surfaces[1]
     local map_gen_settings = surface.map_gen_settings

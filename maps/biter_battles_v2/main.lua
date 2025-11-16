@@ -527,6 +527,11 @@ local tick_minute_functions = {
 
 local on_tick_profilers = {}
 local function profile(profilers, key, fn)
+    if not storage.event_profiler_enabled then
+        fn()
+        return
+    end
+
     local profiler = profilers[key]
     if not profiler then
         profiler = { profiler = game.create_profiler(), count = 1 }
