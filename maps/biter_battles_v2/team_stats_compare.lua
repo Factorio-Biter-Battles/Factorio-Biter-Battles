@@ -13,7 +13,7 @@ local string_format = string.format
 
 local TeamStatsCompare = {}
 
----@alias TeamstatsPreferences {show_hidden: boolean?, show_prev: boolean?}
+---@alias TeamstatsPreferences {show_hidden: boolean?, show_fluids: boolean?, show_prev: boolean?}
 
 ---@param player LuaPlayer
 ---@return TeamstatsPreferences
@@ -69,6 +69,7 @@ end
 function TeamStatsCompare.show_stats(player)
     local preferences = get_preferences(player)
     local show_hidden = preferences.show_hidden and true or false
+    local show_fluids = preferences.show_fluids and true or false
     local show_prev = preferences.show_prev and true or false
     ---@type table<string, boolean>
     local exclude_forces = {}
@@ -285,7 +286,11 @@ function TeamStatsCompare.show_stats(player)
         end
 
         for _, item_info in ipairs(TeamStatsCollect.items_to_show_summaries_of) do
-            if not exclude_forces[force_name] and (show_hidden or not item_info.hide_by_default) then
+            if
+                not exclude_forces[force_name]
+                and (show_hidden or not item_info.hide_by_default)
+                and (show_fluids or not item_info.fluid)
+            then
                 local item_stats = force_stats.items[item_info.item] or {}
                 ---@type number?
                 local killed_or_lost = (item_stats.kill_count or 0) + (item_stats.lost or 0)
@@ -306,10 +311,13 @@ function TeamStatsCompare.show_stats(player)
                     format_with_thousands_sep(item_stats.lost or 0),
                     format_with_thousands_sep(buffered)
                 )
-                local l = add_small_label(
-                    item_table,
-                    { caption = string_format('[item=%s]', item_info.item), tooltip = tooltip }
-                )
+                local fmt = '[item=%s]'
+                if item_info.fluid then
+                    fmt = '[fluid=%s]'
+                end
+
+                local l =
+                    add_small_label(item_table, { caption = string_format(fmt, item_info.item), tooltip = tooltip })
                 if item_info.space_after then
                     l.style.bottom_padding = 12
                 end
@@ -387,8 +395,14 @@ function TeamStatsCompare.show_stats(player)
     checkbox_flow.add({
         type = 'checkbox',
         name = 'teamstats_show_hidden',
-        caption = 'Show more items',
+        caption = 'Show more',
         state = show_hidden,
+    })
+    checkbox_flow.add({
+        type = 'checkbox',
+        name = 'teamstats_show_fluids',
+        caption = 'Show fluids',
+        state = show_fluids,
     })
     checkbox_flow.add({
         type = 'checkbox',
@@ -446,6 +460,9 @@ local function on_gui_checked_state_changed(event)
     end
     if event.element.name == 'teamstats_show_hidden' then
         get_preferences(player).show_hidden = event.element.state
+        safe_wrap_with_player_print(player, TeamStatsCompare.show_stats, player)
+    elseif event.element.name == 'teamstats_show_fluids' then
+        get_preferences(player).show_fluids = event.element.state
         safe_wrap_with_player_print(player, TeamStatsCompare.show_stats, player)
     elseif event.element.name == 'teamstats_show_prev' then
         get_preferences(player).show_prev = event.element.state
