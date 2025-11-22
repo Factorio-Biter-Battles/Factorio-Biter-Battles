@@ -87,7 +87,7 @@ function closable_frame.create_draggable_frame(player, name, caption, options)
         type = 'sprite-button',
         name = 'closable_frame_close',
         sprite = 'utility/close',
-        clicked_sprite = 'utility/close_black',
+        hovered_sprite = 'utility/close_black',
         style = 'close_button',
         tooltip = options and options.close_tooltip or { 'gui.close' },
     })
