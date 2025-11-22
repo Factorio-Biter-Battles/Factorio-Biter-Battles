@@ -69,9 +69,8 @@ function closable_frame.create_draggable_frame(player, name, caption, options)
     local frame = player.gui.screen.add({ type = 'frame', name = name, direction = 'vertical' })
     frame.auto_center = true
 
-    local flow = frame.add({ type = 'flow', direction = 'horizontal' })
-    flow.style.horizontal_spacing = 8
-    flow.style.bottom_padding = 4
+    local flow = frame.add({ type = 'flow', style = 'frame_header_flow', direction = 'horizontal' })
+    flow.drag_target = frame
 
     local title = flow.add({ type = 'label', caption = caption, style = 'frame_title' })
     title.drag_target = frame
