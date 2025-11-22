@@ -193,8 +193,14 @@ local function clear_character_corpses()
     end
 end
 
-local function force_end_captain_event()
-    game.print('Captain event was canceled')
+---@param player LuaPlayer|nil Player that cancelled the event
+local function force_end_captain_event(player)
+    if player then
+        game.print('Captain event was canceled by ' .. player.name)
+    else
+        game.print('Captain event was canceled')
+    end
+
     storage.special_games_variables.captain_mode = nil
     storage.tournament_mode = false
     if storage.freeze_players == true then
@@ -1647,7 +1653,7 @@ local function on_gui_click(event)
             end
         end
     elseif name == 'captain_force_end_event' then
-        force_end_captain_event()
+        force_end_captain_event(player)
     elseif name == 'captain_start_initial_picking' then
         -- This marks the start of a picking phase, so players can no longer volunteer to become captain or play
         if not special.initialPickingPhaseStarted then
@@ -3342,6 +3348,8 @@ function Public.generate(config, player)
     local autoTrustSystem = config.autoTrust.switch_state
     local captainCanKick = config.captainKickPower.switch_state
     local specialEnabled = config.specialEnabled.switch_state
+    game.print('Captain game started by ' .. player.name, { color = Color.red })
+
     generate_captain_mode(refereeName, autoTrustSystem, captainCanKick, specialEnabled)
 end
 
