@@ -102,7 +102,10 @@ local function leave_corpse(player)
     player.create_character()
 end
 
-function Public.switch_force(player_name, force_name)
+---@param player_name Name of the player that will be switched.
+---@param force_name Name of the force where the player will be switched.
+---@param origin LuaPlayer|nil Player that executed the action.
+function Public.switch_force(player_name, force_name, origin)
     if not game.get_player(player_name) then
         game.print(
             'Team Manager >> Player ' .. player_name .. ' does not exist.',
@@ -120,11 +123,15 @@ function Public.switch_force(player_name, force_name)
 
     local player = game.get_player(player_name)
     player.force = game.forces[force_name]
+    local trace
+    if origin then
+        trace = player_name .. ' has been switched by ' .. origin.name .. ' into '
+    else
+        trace = player_name .. ' has been switched into '
+    end
 
-    game.print(
-        player_name .. ' has been switched into ' .. Functions.team_name_with_color(force_name) .. '.',
-        { color = { r = 0.98, g = 0.66, b = 0.22 } }
-    )
+    trace = trace .. Functions.team_name_with_color(force_name) .. '.'
+    game.print(trace, { color = { r = 0.98, g = 0.66, b = 0.22 } })
     Server.to_discord_bold(player_name .. ' has joined team ' .. force_name .. '!')
 
     leave_corpse(player)
@@ -335,12 +342,15 @@ local function team_manager_gui_click(event)
         if storage.tournament_mode then
             storage.tournament_mode = false
             draw_manager_gui(player)
-            game.print('>>> Tournament Mode has been disabled.', { color = { r = 111, g = 111, b = 111 } })
+            game.print(
+                '>>> Tournament Mode has been disabled by ' .. player.name,
+                { color = { r = 111, g = 111, b = 111 } }
+            )
             return
         end
         storage.tournament_mode = true
         draw_manager_gui(player)
-        game.print('>>> Tournament Mode has been enabled!', { color = { r = 225, g = 0, b = 0 } })
+        game.print('>>> Tournament Mode has been enabled by ' .. player.name, { color = { r = 225, g = 0, b = 0 } })
         return
     end
 
@@ -362,7 +372,7 @@ local function team_manager_gui_click(event)
             end
             storage.freeze_players = false
             draw_manager_gui(player)
-            game.print('>>> Players have been unfrozen!', { color = { r = 255, g = 77, b = 77 } })
+            game.print('>>> Players have been unfrozen by ' .. player.name, { color = { r = 255, g = 77, b = 77 } })
             Public.unfreeze_players()
             return
         end
@@ -372,7 +382,7 @@ local function team_manager_gui_click(event)
         end
         storage.freeze_players = true
         draw_manager_gui(player)
-        game.print('>>> Players have been frozen!', { color = { r = 111, g = 111, b = 255 } })
+        game.print('>>> Players have been frozen by ' .. player.name, { color = { r = 111, g = 111, b = 255 } })
         Public.freeze_players()
         return
     end
@@ -385,12 +395,15 @@ local function team_manager_gui_click(event)
         if storage.training_mode then
             storage.training_mode = false
             draw_manager_gui(player)
-            game.print('>>> Training Mode has been disabled.', { color = { r = 111, g = 111, b = 111 } })
+            game.print(
+                '>>> Training Mode has been disabled by ' .. player.name,
+                { color = { r = 111, g = 111, b = 111 } }
+            )
             return
         end
         storage.training_mode = true
         draw_manager_gui(player)
-        game.print('>>> Training Mode has been enabled!', { color = { r = 225, g = 0, b = 0 } })
+        game.print('>>> Training Mode has been enabled by ' .. player.name, { color = { r = 225, g = 0, b = 0 } })
         return
     end
 
@@ -425,7 +438,7 @@ local function team_manager_gui_click(event)
     end
     local force_name = forces[tonumber(name) + m].name
 
-    Public.switch_force(player_name, force_name)
+    Public.switch_force(player_name, force_name, player)
 
     draw_manager_gui(player)
 end
