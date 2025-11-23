@@ -1,5 +1,19 @@
 return {
     {
+        number = 743,
+        date = '2025-11-23',
+        author = 'cogito123',
+        comment = [[(#743) Add fluid tracking to teamstats with some limitations:
+  - Fluid loss for entities marked for deconstruction cannot be tracked. The fluid is removed from an entity before the event is fired.
+  - Fluid loss cannot be tracked when the recipe set on an entity is changed, as there is no event defined to hook into. Changing the recipe clears the fluid from the machine.]],
+    },
+    {
+        number = 742,
+        date = '2025-11-21',
+        author = 'developer',
+        comment = [[(#742) Disable the event profiler and logging by default]],
+    },
+    {
         number = 741,
         date = '2025-11-14',
         author = 'cogito123',
