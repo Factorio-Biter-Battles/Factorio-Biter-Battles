@@ -391,13 +391,13 @@ end
 
 ---@param player LuaPlayer?
 ---@param force_name string
----@param location GuiLocation?
-local function poll_alternate_picking(player, force_name, location)
+local function poll_alternate_picking(player, force_name)
     if not player then
         game.print('Unable to find player to make a picking choice!', { color = Color.red })
         Public.end_of_picking_phase()
         return
     end
+
     pick_player_generator(
         player,
         force_name,
@@ -406,7 +406,7 @@ local function poll_alternate_picking(player, force_name, location)
         'Who do you want to pick ?',
         'Magical1@StringHere',
         'captain_player_picked_Magical1@StringHere',
-        location
+        storage.special_games_variables.captain_mode.ui_picking_location[player.name]
     )
 end
 
@@ -637,6 +637,12 @@ local function generate_captain_mode(refereeName, autoTrust, captainKick, specia
         refereeName = refereeName,
         ---@type string[]
         listPlayers = {},
+        ---Last location of picking UI frame before it was destroyed. Since picking UI is
+        ---destroyed and re-created on any action performed from it, we have to preserve
+        ---location and apply it whenever picking UI is created again. Otherwise the UI will
+        ---keep re-centering.
+        ---@type table<string, GuiLocation>
+        ui_picking_location = {},
         ---@type table<string, string[]>
         communityPickOrder = {},
         ---@type table<string, boolean>
@@ -1695,9 +1701,9 @@ local function on_gui_click(event)
     elseif starts_with(name, 'captain_player_picked_') then
         local playerPicked = name:gsub('^captain_player_picked_', '')
         local forceToGo = element.tags.force --[[@as string]]
-        local location
         if player.gui.screen.captain_poll_alternate_pick_choice_frame then
-            location = player.gui.screen.captain_poll_alternate_pick_choice_frame.location
+            special.ui_picking_location[player.name] =
+                player.gui.screen.captain_poll_alternate_pick_choice_frame.location
             player.gui.screen.captain_poll_alternate_pick_choice_frame.destroy()
         end
         game.print(
@@ -1742,7 +1748,7 @@ local function on_gui_click(event)
                 -- just alternate picking
                 force_to_pick_next = forceToGo == 'south' and 'north' or 'south'
             end
-            poll_alternate_picking(Public.get_player_to_make_pick(force_to_pick_next), force_to_pick_next, location)
+            poll_alternate_picking(Public.get_player_to_make_pick(force_to_pick_next), force_to_pick_next)
         end
         Public.update_all_captain_player_guis()
     elseif name == 'captain_is_ready' then
