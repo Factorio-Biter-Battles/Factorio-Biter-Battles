@@ -3608,13 +3608,26 @@ commands.add_command(
 )
 
 commands.add_command('cpt-test-func', 'Run some test-only code for captains games', function(event)
-    if game.is_multiplayer() then
-        game.print(
-            'This command is only for testing, and should only be run when there is exactly one player in the game.',
-            { color = Color.red }
-        )
+    if not event.player_index then
         return
     end
+
+    local player = game.get_player(event.player_index)
+    if not is_admin(player) then
+        player.print('This command can only be used by an admin!')
+        return
+    end
+
+    if not storage.special_games_variables.captain_mode then
+        player.print('This command can be only called with captain lobby open!')
+        return
+    end
+
+    if not storage.special_games_variables.captain_mode.cpt_test then
+        player.print('This command is only for testing, set captain_mode.cpt_test to true and repeat')
+        return
+    end
+
     local refereeName = game.player.name
     local autoTrustSystem = 'left'
     local captainCanKick = 'left'
