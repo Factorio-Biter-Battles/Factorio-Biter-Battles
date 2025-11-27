@@ -233,7 +233,7 @@ end
 ---@param caption string
 ---@param button1Text string
 ---@param button1Name string
----@param location GuiLocation?
+---@param enabled boolean If the captain can pick/use the picking UI.
 local function pick_player_generator(
     player,
     force_name,
@@ -242,33 +242,39 @@ local function pick_player_generator(
     caption,
     button1Text,
     button1Name,
-    location
+    enabled
 )
-    if player.gui.screen[name] then
-        player.gui.screen[name].destroy()
-        return
-    end
+    local location = storage.special_games_variables.captain_mode.ui_picking_location[player.name]
 
     ---@param parent LuaGuiElement
-    local function create_button(parent, name, caption, wordToPutInstead)
+    ---@param enabled boolean If the button should be enabled
+    local function create_button(parent, name, caption, wordToPutInstead, enabled)
+        local style = 'green_button'
+        local tooltip = 'Click to select'
+        if not enabled then
+            style = 'red_button'
+            tooltip = 'Wait for your turn!'
+        end
+
         local button = parent.add({
             type = 'button',
             name = name:gsub('Magical1@StringHere', wordToPutInstead),
             caption = caption:gsub('Magical1@StringHere', wordToPutInstead),
-            style = 'green_button',
-            tooltip = 'Click to select',
+            style = style,
+            tooltip = tooltip,
+            enabled = enabled,
             tags = { force = force_name },
         })
         gui_style(button, { font = 'default-bold', height = 24, minimal_width = 100, horizontally_stretchable = true })
     end
 
-    local function make_table_row(parent, button_name, button_1_text, player_name, group_name, play_time)
+    ---@param enabled boolean If the button should be enabled
+    local function make_table_row(parent, button_name, button_1_text, player_name, group_name, play_time, enabled)
         local special = storage.special_games_variables.captain_mode
 
-        local l
-        create_button(parent, button_name, button_1_text, player_name)
+        create_button(parent, button_name, button_1_text, player_name, enabled)
 
-        l = parent.add({ type = 'label', caption = group_name, style = 'tooltip_label' })
+        local l = parent.add({ type = 'label', caption = group_name, style = 'tooltip_label' })
         gui_style(l, { minimal_width = 100, font_color = Color.antique_white })
 
         l = parent.add({ type = 'label', caption = play_time, style = 'tooltip_label' })
@@ -356,7 +362,7 @@ local function pick_player_generator(
                         if not listGroupAlreadyDone[playerIterated.tag] then
                             groupName = playerIterated.tag
                             listGroupAlreadyDone[playerIterated.tag] = true
-                            make_table_row(t, button1Name, button1Text, pl, groupName, playtimePlayer)
+                            make_table_row(t, button1Name, button1Text, pl, groupName, playtimePlayer, enabled)
                             for _, plOfGroup in pairs(tableBeingLooped) do
                                 if plOfGroup ~= pl then
                                     local groupNameOtherPlayer = cpt_get_player(plOfGroup).tag
@@ -374,14 +380,15 @@ local function pick_player_generator(
                                             button1Text,
                                             plOfGroup,
                                             groupName,
-                                            playtimePlayer
+                                            playtimePlayer,
+                                            enabled
                                         )
                                     end
                                 end
                             end
                         end
                     else
-                        make_table_row(t, button1Name, button1Text, pl, groupName, playtimePlayer)
+                        make_table_row(t, button1Name, button1Text, pl, groupName, playtimePlayer, enabled)
                     end
                 end
             end
@@ -391,11 +398,17 @@ end
 
 ---@param player LuaPlayer?
 ---@param force_name string
-local function poll_alternate_picking(player, force_name)
+---@param enabled boolean If the captain can pick/use the picking UI.
+local function poll_alternate_picking(player, force_name, enabled)
     if not player then
         game.print('Unable to find player to make a picking choice!', { color = Color.red })
         Public.end_of_picking_phase()
         return
+    end
+
+    local caption = 'Who do you want to pick ?'
+    if not enabled then
+        caption = 'The other captain is picking right now'
     end
 
     pick_player_generator(
@@ -403,11 +416,70 @@ local function poll_alternate_picking(player, force_name)
         force_name,
         storage.special_games_variables.captain_mode.listPlayers,
         'captain_poll_alternate_pick_choice_frame',
-        'Who do you want to pick ?',
+        caption,
         'Magical1@StringHere',
         'captain_player_picked_Magical1@StringHere',
-        storage.special_games_variables.captain_mode.ui_picking_location[player.name]
+        enabled
     )
+end
+
+---Alternates between two captains. This function always returns two captains.
+---The first captain is the one which should get the pick now (next).
+---The second captain is the one which is waiting now for their turn in picking (previous).
+---NOTE: This function must not be called for community picks or after initial
+---picking phase.
+---@param next_force string Force that has a pick now.
+---@return LuaPlayer, LuaPlayer
+local function get_captain_picking_pair(next_force)
+    local special = storage.special_games_variables.captain_mode
+    local next_cpt = special.captainList[next_force == 'north' and 1 or 2]
+    local prev_cpt = special.captainList[next_force ~= 'north' and 1 or 2]
+
+    return cpt_get_player(next_cpt), cpt_get_player(prev_cpt)
+end
+
+---Tries to destroy picking UI for a given player. If picking UI exists,
+---we're also going to save it's location to draw it next time in the same
+---location.
+---@param player LuaPlayer Player for which we're going to destroy picking UI.
+local function try_destroy_picking_ui(player)
+    local name = 'captain_poll_alternate_pick_choice_frame'
+    local special = storage.special_games_variables.captain_mode
+    if player.gui.screen[name] then
+        special.ui_picking_location[player.name] = player.gui.screen[name].location
+        player.gui.screen[name].destroy()
+    end
+end
+
+---Tries to destroy picking UI for a list of players.
+---@param player LuaPlayer[]
+local function try_destroy_picking_ui_for_each(players)
+    for _, p in pairs(players) do
+        try_destroy_picking_ui(p)
+    end
+end
+
+---Display picking UI
+---@param force string Captain of this force gets the next pick.
+local function display_picking_ui(force)
+    local special = storage.special_games_variables.captain_mode
+    try_destroy_picking_ui_for_each(game.players)
+    -- We cannot alternate picking UI in community mode between two captains as
+    -- there might be no captain in one of the teams or players that do the picking
+    -- are always random.
+    if special.communityPickingMode then
+        local cpt_next = Public.get_player_to_make_pick(force)
+        poll_alternate_picking(cpt_next, force, true)
+    else
+        local cpt_next, cpt_prev = get_captain_picking_pair(force)
+        poll_alternate_picking(cpt_next, force, true)
+        -- Start alternating only when there is more than one player to pick.
+        -- This condition will also prevent picking UI to appear when there is only
+        -- one player left.
+        if #special.listPlayers > 1 then
+            poll_alternate_picking(cpt_prev, force, false)
+        end
+    end
 end
 
 local function render_text(textId, textChosen, targetPos, color, scaleChosen, fontChosen)
@@ -628,6 +700,7 @@ local function generate_captain_mode(refereeName, autoTrust, captainKick, specia
 
     local auto_pick_interval_ticks = 5 * 60 * 60 -- 5 minutes
     local special = {
+        ---Holds a maximum of two captain names. Where index '1' denotes north, '2' south.
         ---@type string[]
         captainList = {},
         ---@type table<string, table<string, boolean>>
@@ -1180,6 +1253,9 @@ end)
 function Public.end_of_picking_phase()
     local special = storage.special_games_variables.captain_mode
     special.pickingPhase = false
+
+    -- Destroy any open picking UIs, even for offline captains.
+    try_destroy_picking_ui_for_each(game.players)
     if not special.initialPickingPhaseFinished then
         special.initialPickingPhaseFinished = true
         if special.captainGroupAllowed then
@@ -1295,7 +1371,8 @@ local function start_picking_phase()
             next_pick_force = math_random() < northThreshold and 'north' or 'south'
             log('Next force to pick: ' .. next_pick_force)
         end
-        poll_alternate_picking(Public.get_player_to_make_pick(next_pick_force), next_pick_force)
+
+        display_picking_ui(next_pick_force)
     end
     Public.update_all_captain_player_guis()
 end
@@ -1687,12 +1764,6 @@ local function on_gui_click(event)
     elseif name == 'referee_force_picking_to_stop' then
         if special.pickingPhase then
             Public.end_of_picking_phase()
-            -- destroy any open picking UIs
-            for _, player in pairs(game.connected_players) do
-                if player.gui.screen.captain_poll_alternate_pick_choice_frame then
-                    player.gui.screen.captain_poll_alternate_pick_choice_frame.destroy()
-                end
-            end
             game.print(
                 '[font=default-large-bold]Referee ' .. player.name .. ' has forced the picking phase to stop[/font]',
                 { color = Color.cyan }
@@ -1701,11 +1772,6 @@ local function on_gui_click(event)
     elseif starts_with(name, 'captain_player_picked_') then
         local playerPicked = name:gsub('^captain_player_picked_', '')
         local forceToGo = element.tags.force --[[@as string]]
-        if player.gui.screen.captain_poll_alternate_pick_choice_frame then
-            special.ui_picking_location[player.name] =
-                player.gui.screen.captain_poll_alternate_pick_choice_frame.location
-            player.gui.screen.captain_poll_alternate_pick_choice_frame.destroy()
-        end
         game.print(
             string_format(
                 '%s was picked by%s %s',
@@ -1727,7 +1793,6 @@ local function on_gui_click(event)
             auto_pick_all_of_group(player, playerPicked)
         end
         if #storage.special_games_variables.captain_mode.listPlayers == 0 then
-            special.pickingPhase = false
             Public.end_of_picking_phase()
         else
             local force_to_pick_next
@@ -1748,7 +1813,8 @@ local function on_gui_click(event)
                 -- just alternate picking
                 force_to_pick_next = forceToGo == 'south' and 'north' or 'south'
             end
-            poll_alternate_picking(Public.get_player_to_make_pick(force_to_pick_next), force_to_pick_next)
+
+            display_picking_ui(force_to_pick_next)
         end
         Public.update_all_captain_player_guis()
     elseif name == 'captain_is_ready' then
