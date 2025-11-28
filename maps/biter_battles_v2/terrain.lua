@@ -1448,11 +1448,11 @@ function Public.add_new_year_island_decorations(surface)
     end
 
     draw_sprite_snow({ target = { 0.4, 0.55 }, x_scale = 29.5, y_scale = 29.5 })
-    draw_sprite_snow({ target = { 0.5, 0.5 }, x_scale = 34, y_scale = 34, render_mode="chart" })
+    draw_sprite_snow({ target = { 0.5, 0.5 }, x_scale = 34, y_scale = 34, render_mode = 'chart' })
 
     -- top and bottom corners
     draw_sprite_snow({ target = { 1.8, 0.45 }, x_scale = 10, y_scale = 30 })
-    draw_sprite_snow({ target = { -1.8 + 0.33 ,0.45 }, x_scale = 10, y_scale = 30 })
+    draw_sprite_snow({ target = { -1.8 + 0.33, 0.45 }, x_scale = 10, y_scale = 30 })
 
     -- left and right corners
     draw_sprite_snow({ target = { 0.4, -1.8 + 0.33 }, x_scale = 30, y_scale = 10 })
