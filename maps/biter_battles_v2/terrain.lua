@@ -1009,18 +1009,11 @@ local function draw_spawn_island(surface)
             if is_within_spawn_island(x, y) then
                 local distance_to_center = tile_distance_to_center(x, y)
                 local tile_name = 'refined-concrete'
-                if distance_to_center < 6.3 then
-                    tile_name = 'sand-1'
-                end
-
                 if storage.bb_settings['new_year_island'] then
                     tile_name = 'blue-refined-concrete'
-                    if distance_to_center < 6.3 then
-                        tile_name = 'sand-1'
-                    end
-                    if distance_to_center < 4.9 then
-                        tile_name = 'lab-white'
-                    end
+                end
+                if distance_to_center < 6.3 then
+                    tile_name = 'sand-1'
                 end
 
                 table_insert(tiles, { name = tile_name, position = { x = x, y = y } })
@@ -1445,40 +1438,25 @@ function Public.add_new_year_island_decorations(surface)
     local function draw_sprite_snow(params)
         rendering.draw_sprite({
             surface = surface,
-            sprite = params.sprite,
+            sprite = 'virtual-signal/signal-dot',
             target = params.target,
             render_layer = '3',
             x_scale = params.x_scale,
             y_scale = params.y_scale,
-            orientation = params.orientation or 0,
+            render_mode = params.render_mode,
         })
     end
 
-    -- top and bottom
-    draw_sprite_snow({ sprite = 'virtual-signal/shape-horizontal', target = { 0, 5.22 }, x_scale = 4.6, y_scale = 5 })
-    draw_sprite_snow({ sprite = 'virtual-signal/shape-horizontal', target = { 0, -5.22 }, x_scale = 4.6, y_scale = 5 })
+    draw_sprite_snow({ target = { 0.4, 0.55 }, x_scale = 29.5, y_scale = 29.5 })
+    draw_sprite_snow({ target = { 0.5, 0.5 }, x_scale = 34, y_scale = 34, render_mode="chart" })
 
-    -- sides
-    draw_sprite_snow({ sprite = 'virtual-signal/shape-vertical', target = { -5.25, 0 }, x_scale = 5, y_scale = 4.5 })
-    draw_sprite_snow({ sprite = 'virtual-signal/shape-vertical', target = { 5.25, 0 }, x_scale = 5, y_scale = 4.5 })
+    -- top and bottom corners
+    draw_sprite_snow({ target = { 1.8, 0.45 }, x_scale = 10, y_scale = 30 })
+    draw_sprite_snow({ target = { -1.8 + 0.33 ,0.45 }, x_scale = 10, y_scale = 30 })
 
-    local sprite = 'virtual-signal/shape-diagonal'
-    local scale = 5.75
-    -- bottom-right
-    draw_sprite_snow({ sprite = sprite, target = { 3.48, 3.48 }, x_scale = scale, y_scale = scale })
-    draw_sprite_snow({ sprite = sprite, target = { 3, 3 }, x_scale = scale, y_scale = scale })
-
-    -- bottom-left
-    draw_sprite_snow({ sprite = sprite, target = { -3.48, 3.48 }, x_scale = scale, y_scale = scale, orientation = 0.25 })
-    draw_sprite_snow({ sprite = sprite, target = { -3, 3 }, x_scale = scale, y_scale = scale, orientation = 0.25 })
-
-    -- top-right
-    draw_sprite_snow({ sprite = sprite, target = { 3.48, -3.48 }, x_scale = scale, y_scale = scale, orientation = 0.25 })
-    draw_sprite_snow({ sprite = sprite, target = { 3, -3 }, x_scale = scale, y_scale = scale, orientation = 0.25 })
-
-    -- top-left
-    draw_sprite_snow({ sprite = sprite, target = { -3.48, -3.48 }, x_scale = scale, y_scale = scale })
-    draw_sprite_snow({ sprite = sprite, target = { -3, -3 }, x_scale = scale, y_scale = scale })
+    -- left and right corners
+    draw_sprite_snow({ target = { 0.4, -1.8 + 0.33 }, x_scale = 30, y_scale = 10 })
+    draw_sprite_snow({ target = { 0.4, 1.8 }, x_scale = 30, y_scale = 10 })
 
     for _ = 1, math_random(0, 4) do
         local stump = surface.create_entity({
