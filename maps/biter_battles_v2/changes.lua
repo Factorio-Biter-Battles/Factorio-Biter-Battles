@@ -1,5 +1,19 @@
 return {
     {
+        number = 746,
+        date = '2025-11-29',
+        author = 'cogito123',
+        comment = [[(#746) Changes to captains mode:
+  - Fixed an issue where the picking UI could appear outside the captain's view.
+  - The picking UI is now always visible to the non-picking captain.]],
+    },
+    {
+        number = 744,
+        date = '2025-11-26',
+        author = 'cogito123',
+        comment = [[(#744) Annotate team manager UI messages with the name of the admin who triggered the action.]],
+    },
+    {
         number = 743,
         date = '2025-11-23',
         author = 'cogito123',
