@@ -280,11 +280,10 @@ local function draw_picking_ui_title(frame, caption)
     gui_style(dragger, { height = 24, horizontally_stretchable = true })
 end
 
----Draws picking list that contains entires players.
+---Draws a main table where header and player entires are going to be drawn.
 ---@param frame LuaGuiElement Main picking UI frame
----@param force_name string Tag associated with the pick button.
----@param enabled boolean If the captain can pick/use the picking UI.
-local function draw_picking_ui_list(frame, force_name, enabled)
+---@return LuaGuiElement Table
+local function draw_picking_ui_list_inner(frame)
     local flow = frame.add({ type = 'flow', name = 'flow', style = 'vertical_flow', direction = 'vertical' })
     local inner_frame = flow.add({
         type = 'frame',
@@ -299,28 +298,41 @@ local function draw_picking_ui_list(frame, force_name, enabled)
         direction = 'vertical',
     })
     gui_style(sp, { horizontally_squashable = false, padding = 0 })
-    local t = sp.add({ type = 'table', column_count = 4, style = 'mods_explore_results_table' })
+    return sp.add({ type = 'table', column_count = 4, style = 'mods_explore_results_table' })
+end
+
+---Draws header of picking list containing player entires.
+---@param tab LuaGuiElement Table element.
+local function draw_picking_ui_list_header(tab)
+    local label_style = {
+        font_color = Color.antique_white,
+        font = 'heading-2',
+        minimal_width = 100,
+        top_margin = 4,
+        bottom_margin = 4,
+    }
+    local l = tab.add({ type = 'label', caption = 'Player' })
+    gui_style(l, label_style)
+
+    l = tab.add({ type = 'label', caption = 'Group' })
+    gui_style(l, label_style)
+
+    l = tab.add({ type = 'label', caption = 'Total playtime' })
+    gui_style(l, label_style)
+
+    l = tab.add({ type = 'label', caption = 'Notes' })
+    gui_style(l, label_style)
+end
+
+---Draws picking list that contains entires players.
+---@param frame LuaGuiElement Main picking UI frame
+---@param force_name string Tag associated with the pick button.
+---@param enabled boolean If the captain can pick/use the picking UI.
+local function draw_picking_ui_list(frame, force_name, enabled)
+    local tab = draw_picking_ui_list_inner(frame)
     local tableBeingLooped = storage.special_games_variables.captain_mode.listPlayers
     if tableBeingLooped ~= nil then
-        local label_style = {
-            font_color = Color.antique_white,
-            font = 'heading-2',
-            minimal_width = 100,
-            top_margin = 4,
-            bottom_margin = 4,
-        }
-        local l = t.add({ type = 'label', caption = 'Player' })
-        gui_style(l, label_style)
-
-        l = t.add({ type = 'label', caption = 'Group' })
-        gui_style(l, label_style)
-
-        l = t.add({ type = 'label', caption = 'Total playtime' })
-        gui_style(l, label_style)
-
-        l = t.add({ type = 'label', caption = 'Notes' })
-        gui_style(l, label_style)
-
+        draw_picking_ui_list_header(tab)
         local listGroupAlreadyDone = {}
         for _, pl in pairs(tableBeingLooped) do
             local groupCaptionText = ''
@@ -338,7 +350,7 @@ local function draw_picking_ui_list(frame, force_name, enabled)
                 if not listGroupAlreadyDone[playerIterated.tag] then
                     groupName = playerIterated.tag
                     listGroupAlreadyDone[playerIterated.tag] = true
-                    draw_picking_ui_entry(t, pl, groupName, playtimePlayer, force_name, force_name, enabled)
+                    draw_picking_ui_entry(tab, pl, groupName, playtimePlayer, force_name, enabled)
                     for _, plOfGroup in pairs(tableBeingLooped) do
                         if plOfGroup ~= pl then
                             local groupNameOtherPlayer = cpt_get_player(plOfGroup).tag
@@ -350,13 +362,13 @@ local function draw_picking_ui_list(frame, force_name, enabled)
                                         storage.total_time_online_players[nameOtherPlayer]
                                     )
                                 end
-                                draw_picking_ui_entry(t, plOfGroup, groupName, playtimePlayer, force_name, enabled)
+                                draw_picking_ui_entry(tab, plOfGroup, groupName, playtimePlayer, force_name, enabled)
                             end
                         end
                     end
                 end
             else
-                draw_picking_ui_entry(t, pl, groupName, playtimePlayer, force_name, enabled)
+                draw_picking_ui_entry(tab, pl, groupName, playtimePlayer, force_name, enabled)
             end
         end
     end
