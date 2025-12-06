@@ -227,8 +227,9 @@ local function starts_with(text, prefix)
 end
 
 ---@param parent LuaGuiElement
+---@param player_name string Name of a player that will appear on the button.
 ---@param enabled boolean If the button should be enabled
-local function draw_picking_ui_button(parent, name, caption, wordToPutInstead, force_name, enabled)
+local function draw_picking_ui_button(parent, player_name, force_name, enabled)
     local style = 'green_button'
     local tooltip = 'Click to select'
     if not enabled then
@@ -238,8 +239,8 @@ local function draw_picking_ui_button(parent, name, caption, wordToPutInstead, f
 
     local button = parent.add({
         type = 'button',
-        name = name:gsub('Magical1@StringHere', wordToPutInstead),
-        caption = caption:gsub('Magical1@StringHere', wordToPutInstead),
+        name = 'captain_player_picked_' .. player_name,
+        caption = player_name,
         style = style,
         tooltip = tooltip,
         enabled = enabled,
@@ -249,19 +250,10 @@ local function draw_picking_ui_button(parent, name, caption, wordToPutInstead, f
 end
 
 ---@param enabled boolean If the button should be enabled
-local function draw_picking_ui_entry(
-    parent,
-    button_name,
-    button_1_text,
-    player_name,
-    group_name,
-    play_time,
-    force_name,
-    enabled
-)
+local function draw_picking_ui_entry(parent, player_name, group_name, play_time, force_name, enabled)
     local special = storage.special_games_variables.captain_mode
 
-    draw_picking_ui_button(parent, button_name, button_1_text, player_name, force_name, enabled)
+    draw_picking_ui_button(parent, player_name, force_name, enabled)
 
     local l = parent.add({ type = 'label', caption = group_name, style = 'tooltip_label' })
     gui_style(l, { minimal_width = 100, font_color = Color.antique_white })
@@ -290,12 +282,9 @@ end
 
 ---Draws picking list that contains entires players.
 ---@param frame LuaGuiElement Main picking UI frame
----@param button1Text string
----@param button1Name string
----@param tableBeingLooped string[]
 ---@param force_name string Tag associated with the pick button.
 ---@param enabled boolean If the captain can pick/use the picking UI.
-local function draw_picking_ui_list(frame, button1Text, button1Name, tableBeingLooped, force_name, enabled)
+local function draw_picking_ui_list(frame, force_name, enabled)
     local flow = frame.add({ type = 'flow', name = 'flow', style = 'vertical_flow', direction = 'vertical' })
     local inner_frame = flow.add({
         type = 'frame',
@@ -311,6 +300,7 @@ local function draw_picking_ui_list(frame, button1Text, button1Name, tableBeingL
     })
     gui_style(sp, { horizontally_squashable = false, padding = 0 })
     local t = sp.add({ type = 'table', column_count = 4, style = 'mods_explore_results_table' })
+    local tableBeingLooped = storage.special_games_variables.captain_mode.listPlayers
     if tableBeingLooped ~= nil then
         local label_style = {
             font_color = Color.antique_white,
@@ -333,71 +323,40 @@ local function draw_picking_ui_list(frame, button1Text, button1Name, tableBeingL
 
         local listGroupAlreadyDone = {}
         for _, pl in pairs(tableBeingLooped) do
-            if button1Text ~= nil then
-                local groupCaptionText = ''
-                local groupName = ''
-                local playerIterated = cpt_get_player(pl)
-                local playtimePlayer = '0 minutes'
-                if playerIterated and storage.total_time_online_players[playerIterated.name] then
-                    playtimePlayer = PlayerList.get_formatted_playtime_from_ticks(
-                        storage.total_time_online_players[playerIterated.name]
-                    )
-                end
-                if
-                    playerIterated
-                    and starts_with(playerIterated.tag, ComfyPanelGroup.COMFY_PANEL_CAPTAINS_GROUP_PLAYER_TAG_PREFIX)
-                then
-                    if not listGroupAlreadyDone[playerIterated.tag] then
-                        groupName = playerIterated.tag
-                        listGroupAlreadyDone[playerIterated.tag] = true
-                        draw_picking_ui_entry(
-                            t,
-                            button1Name,
-                            button1Text,
-                            pl,
-                            groupName,
-                            playtimePlayer,
-                            force_name,
-                            force_name,
-                            enabled
-                        )
-                        for _, plOfGroup in pairs(tableBeingLooped) do
-                            if plOfGroup ~= pl then
-                                local groupNameOtherPlayer = cpt_get_player(plOfGroup).tag
-                                if groupNameOtherPlayer ~= '' and groupName == groupNameOtherPlayer then
-                                    playtimePlayer = '0 minutes'
-                                    local nameOtherPlayer = cpt_get_player(plOfGroup).name
-                                    if storage.total_time_online_players[nameOtherPlayer] then
-                                        playtimePlayer = PlayerList.get_formatted_playtime_from_ticks(
-                                            storage.total_time_online_players[nameOtherPlayer]
-                                        )
-                                    end
-                                    draw_picking_ui_entry(
-                                        t,
-                                        button1Name,
-                                        button1Text,
-                                        plOfGroup,
-                                        groupName,
-                                        playtimePlayer,
-                                        force_name,
-                                        enabled
+            local groupCaptionText = ''
+            local groupName = ''
+            local playerIterated = cpt_get_player(pl)
+            local playtimePlayer = '0 minutes'
+            if playerIterated and storage.total_time_online_players[playerIterated.name] then
+                playtimePlayer =
+                    PlayerList.get_formatted_playtime_from_ticks(storage.total_time_online_players[playerIterated.name])
+            end
+            if
+                playerIterated
+                and starts_with(playerIterated.tag, ComfyPanelGroup.COMFY_PANEL_CAPTAINS_GROUP_PLAYER_TAG_PREFIX)
+            then
+                if not listGroupAlreadyDone[playerIterated.tag] then
+                    groupName = playerIterated.tag
+                    listGroupAlreadyDone[playerIterated.tag] = true
+                    draw_picking_ui_entry(t, pl, groupName, playtimePlayer, force_name, force_name, enabled)
+                    for _, plOfGroup in pairs(tableBeingLooped) do
+                        if plOfGroup ~= pl then
+                            local groupNameOtherPlayer = cpt_get_player(plOfGroup).tag
+                            if groupNameOtherPlayer ~= '' and groupName == groupNameOtherPlayer then
+                                playtimePlayer = '0 minutes'
+                                local nameOtherPlayer = cpt_get_player(plOfGroup).name
+                                if storage.total_time_online_players[nameOtherPlayer] then
+                                    playtimePlayer = PlayerList.get_formatted_playtime_from_ticks(
+                                        storage.total_time_online_players[nameOtherPlayer]
                                     )
                                 end
+                                draw_picking_ui_entry(t, plOfGroup, groupName, playtimePlayer, force_name, enabled)
                             end
                         end
                     end
-                else
-                    draw_picking_ui_entry(
-                        t,
-                        button1Name,
-                        button1Text,
-                        pl,
-                        groupName,
-                        playtimePlayer,
-                        force_name,
-                        enabled
-                    )
                 end
+            else
+                draw_picking_ui_entry(t, pl, groupName, playtimePlayer, force_name, enabled)
             end
         end
     end
@@ -405,25 +364,16 @@ end
 
 ---@param player LuaPlayer
 ---@param force_name string
----@param tableBeingLooped string[]
----@param name string
 ---@param caption string
----@param button1Text string
----@param button1Name string
 ---@param enabled boolean If the captain can pick/use the picking UI.
-local function draw_picking_ui_base(
-    player,
-    force_name,
-    tableBeingLooped,
-    name,
-    caption,
-    button1Text,
-    button1Name,
-    enabled
-)
+local function draw_picking_ui_base(player, force_name, caption, enabled)
     local location = storage.special_games_variables.captain_mode.ui_picking_location[player.name]
 
-    local frame = player.gui.screen.add({ type = 'frame', name = name, direction = 'vertical' })
+    local frame = player.gui.screen.add({
+        type = 'frame',
+        name = 'captain_poll_alternate_pick_choice_frame',
+        direction = 'vertical',
+    })
     gui_style(frame, { maximal_width = 900, maximal_height = 800 })
     if location then
         frame.location = location
@@ -432,7 +382,7 @@ local function draw_picking_ui_base(
     end
 
     draw_picking_ui_title(frame, caption)
-    draw_picking_ui_list(frame, button1Text, button1Name, tableBeingLooped, force_name, enabled)
+    draw_picking_ui_list(frame, force_name, enabled)
 end
 
 ---@param player LuaPlayer?
@@ -450,16 +400,7 @@ local function poll_alternate_picking(player, force_name, enabled)
         caption = 'The other captain is picking right now'
     end
 
-    draw_picking_ui_base(
-        player,
-        force_name,
-        storage.special_games_variables.captain_mode.listPlayers,
-        'captain_poll_alternate_pick_choice_frame',
-        caption,
-        'Magical1@StringHere',
-        'captain_player_picked_Magical1@StringHere',
-        enabled
-    )
+    draw_picking_ui_base(player, force_name, caption, enabled)
 end
 
 ---Alternates between two captains. This function always returns two captains.
