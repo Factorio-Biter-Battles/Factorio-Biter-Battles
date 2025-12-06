@@ -228,7 +228,7 @@ end
 
 ---@param parent LuaGuiElement
 ---@param enabled boolean If the button should be enabled
-local function draw_picking_ui_button(parent, name, caption, wordToPutInstead, enabled)
+local function draw_picking_ui_button(parent, name, caption, wordToPutInstead, force_name, enabled)
     local style = 'green_button'
     local tooltip = 'Click to select'
     if not enabled then
@@ -249,10 +249,19 @@ local function draw_picking_ui_button(parent, name, caption, wordToPutInstead, e
 end
 
 ---@param enabled boolean If the button should be enabled
-local function draw_picking_ui_entry(parent, button_name, button_1_text, player_name, group_name, play_time, enabled)
+local function draw_picking_ui_entry(
+    parent,
+    button_name,
+    button_1_text,
+    player_name,
+    group_name,
+    play_time,
+    force_name,
+    enabled
+)
     local special = storage.special_games_variables.captain_mode
 
-    draw_picking_ui_button(parent, button_name, button_1_text, player_name, enabled)
+    draw_picking_ui_button(parent, button_name, button_1_text, player_name, force_name, enabled)
 
     local l = parent.add({ type = 'label', caption = group_name, style = 'tooltip_label' })
     gui_style(l, { minimal_width = 100, font_color = Color.antique_white })
@@ -262,6 +271,136 @@ local function draw_picking_ui_entry(parent, button_name, button_1_text, player_
 
     l = parent.add({ type = 'label', caption = special.player_info[player_name] or '', style = 'tooltip_label' })
     gui_style(l, { minimal_width = 100, single_line = false, maximal_width = 300 })
+end
+
+---Draws the title on top of picking UI.
+---@param frame LuaGuiElement Main picking UI frame
+---@param caption string The title itsel
+local function draw_picking_ui_title(frame, caption)
+    local flow = frame.add({ type = 'flow', direction = 'horizontal' })
+    gui_style(flow, { horizontal_spacing = 8, bottom_padding = 4 })
+
+    local title = flow.add({ type = 'label', caption = caption, style = 'frame_title' })
+    title.drag_target = frame
+
+    local dragger = flow.add({ type = 'empty-widget', style = 'draggable_space_header' })
+    dragger.drag_target = frame
+    gui_style(dragger, { height = 24, horizontally_stretchable = true })
+end
+
+---Draws picking list that contains entires players.
+---@param frame LuaGuiElement Main picking UI frame
+---@param button1Text string
+---@param button1Name string
+---@param tableBeingLooped string[]
+---@param force_name string Tag associated with the pick button.
+---@param enabled boolean If the captain can pick/use the picking UI.
+local function draw_picking_ui_list(frame, button1Text, button1Name, tableBeingLooped, force_name, enabled)
+    local flow = frame.add({ type = 'flow', name = 'flow', style = 'vertical_flow', direction = 'vertical' })
+    local inner_frame = flow.add({
+        type = 'frame',
+        name = 'inner_frame',
+        style = 'inside_shallow_frame_packed',
+        direction = 'vertical',
+    })
+    local sp = inner_frame.add({
+        type = 'scroll-pane',
+        name = 'scroll_pane',
+        style = 'scroll_pane_under_subheader',
+        direction = 'vertical',
+    })
+    gui_style(sp, { horizontally_squashable = false, padding = 0 })
+    local t = sp.add({ type = 'table', column_count = 4, style = 'mods_explore_results_table' })
+    if tableBeingLooped ~= nil then
+        local label_style = {
+            font_color = Color.antique_white,
+            font = 'heading-2',
+            minimal_width = 100,
+            top_margin = 4,
+            bottom_margin = 4,
+        }
+        local l = t.add({ type = 'label', caption = 'Player' })
+        gui_style(l, label_style)
+
+        l = t.add({ type = 'label', caption = 'Group' })
+        gui_style(l, label_style)
+
+        l = t.add({ type = 'label', caption = 'Total playtime' })
+        gui_style(l, label_style)
+
+        l = t.add({ type = 'label', caption = 'Notes' })
+        gui_style(l, label_style)
+
+        local listGroupAlreadyDone = {}
+        for _, pl in pairs(tableBeingLooped) do
+            if button1Text ~= nil then
+                local groupCaptionText = ''
+                local groupName = ''
+                local playerIterated = cpt_get_player(pl)
+                local playtimePlayer = '0 minutes'
+                if playerIterated and storage.total_time_online_players[playerIterated.name] then
+                    playtimePlayer = PlayerList.get_formatted_playtime_from_ticks(
+                        storage.total_time_online_players[playerIterated.name]
+                    )
+                end
+                if
+                    playerIterated
+                    and starts_with(playerIterated.tag, ComfyPanelGroup.COMFY_PANEL_CAPTAINS_GROUP_PLAYER_TAG_PREFIX)
+                then
+                    if not listGroupAlreadyDone[playerIterated.tag] then
+                        groupName = playerIterated.tag
+                        listGroupAlreadyDone[playerIterated.tag] = true
+                        draw_picking_ui_entry(
+                            t,
+                            button1Name,
+                            button1Text,
+                            pl,
+                            groupName,
+                            playtimePlayer,
+                            force_name,
+                            force_name,
+                            enabled
+                        )
+                        for _, plOfGroup in pairs(tableBeingLooped) do
+                            if plOfGroup ~= pl then
+                                local groupNameOtherPlayer = cpt_get_player(plOfGroup).tag
+                                if groupNameOtherPlayer ~= '' and groupName == groupNameOtherPlayer then
+                                    playtimePlayer = '0 minutes'
+                                    local nameOtherPlayer = cpt_get_player(plOfGroup).name
+                                    if storage.total_time_online_players[nameOtherPlayer] then
+                                        playtimePlayer = PlayerList.get_formatted_playtime_from_ticks(
+                                            storage.total_time_online_players[nameOtherPlayer]
+                                        )
+                                    end
+                                    draw_picking_ui_entry(
+                                        t,
+                                        button1Name,
+                                        button1Text,
+                                        plOfGroup,
+                                        groupName,
+                                        playtimePlayer,
+                                        force_name,
+                                        enabled
+                                    )
+                                end
+                            end
+                        end
+                    end
+                else
+                    draw_picking_ui_entry(
+                        t,
+                        button1Name,
+                        button1Text,
+                        pl,
+                        groupName,
+                        playtimePlayer,
+                        force_name,
+                        enabled
+                    )
+                end
+            end
+        end
+    end
 end
 
 ---@param player LuaPlayer
@@ -292,108 +431,8 @@ local function draw_picking_ui_base(
         frame.auto_center = true
     end
 
-    do -- title
-        local flow = frame.add({ type = 'flow', direction = 'horizontal' })
-        gui_style(flow, { horizontal_spacing = 8, bottom_padding = 4 })
-
-        local title = flow.add({ type = 'label', caption = caption, style = 'frame_title' })
-        title.drag_target = frame
-
-        local dragger = flow.add({ type = 'empty-widget', style = 'draggable_space_header' })
-        dragger.drag_target = frame
-        gui_style(dragger, { height = 24, horizontally_stretchable = true })
-    end
-
-    do -- pick table
-        local flow = frame.add({ type = 'flow', name = 'flow', style = 'vertical_flow', direction = 'vertical' })
-        local inner_frame = flow.add({
-            type = 'frame',
-            name = 'inner_frame',
-            style = 'inside_shallow_frame_packed',
-            direction = 'vertical',
-        })
-        local sp = inner_frame.add({
-            type = 'scroll-pane',
-            name = 'scroll_pane',
-            style = 'scroll_pane_under_subheader',
-            direction = 'vertical',
-        })
-        gui_style(sp, { horizontally_squashable = false, padding = 0 })
-        local t = sp.add({ type = 'table', column_count = 4, style = 'mods_explore_results_table' })
-        if tableBeingLooped ~= nil then
-            local label_style = {
-                font_color = Color.antique_white,
-                font = 'heading-2',
-                minimal_width = 100,
-                top_margin = 4,
-                bottom_margin = 4,
-            }
-            local l = t.add({ type = 'label', caption = 'Player' })
-            gui_style(l, label_style)
-
-            l = t.add({ type = 'label', caption = 'Group' })
-            gui_style(l, label_style)
-
-            l = t.add({ type = 'label', caption = 'Total playtime' })
-            gui_style(l, label_style)
-
-            l = t.add({ type = 'label', caption = 'Notes' })
-            gui_style(l, label_style)
-
-            local listGroupAlreadyDone = {}
-            for _, pl in pairs(tableBeingLooped) do
-                if button1Text ~= nil then
-                    local groupCaptionText = ''
-                    local groupName = ''
-                    local playerIterated = cpt_get_player(pl)
-                    local playtimePlayer = '0 minutes'
-                    if playerIterated and storage.total_time_online_players[playerIterated.name] then
-                        playtimePlayer = PlayerList.get_formatted_playtime_from_ticks(
-                            storage.total_time_online_players[playerIterated.name]
-                        )
-                    end
-                    if
-                        playerIterated
-                        and starts_with(
-                            playerIterated.tag,
-                            ComfyPanelGroup.COMFY_PANEL_CAPTAINS_GROUP_PLAYER_TAG_PREFIX
-                        )
-                    then
-                        if not listGroupAlreadyDone[playerIterated.tag] then
-                            groupName = playerIterated.tag
-                            listGroupAlreadyDone[playerIterated.tag] = true
-                            draw_picking_ui_entry(t, button1Name, button1Text, pl, groupName, playtimePlayer, enabled)
-                            for _, plOfGroup in pairs(tableBeingLooped) do
-                                if plOfGroup ~= pl then
-                                    local groupNameOtherPlayer = cpt_get_player(plOfGroup).tag
-                                    if groupNameOtherPlayer ~= '' and groupName == groupNameOtherPlayer then
-                                        playtimePlayer = '0 minutes'
-                                        local nameOtherPlayer = cpt_get_player(plOfGroup).name
-                                        if storage.total_time_online_players[nameOtherPlayer] then
-                                            playtimePlayer = PlayerList.get_formatted_playtime_from_ticks(
-                                                storage.total_time_online_players[nameOtherPlayer]
-                                            )
-                                        end
-                                        draw_picking_ui_entry(
-                                            t,
-                                            button1Name,
-                                            button1Text,
-                                            plOfGroup,
-                                            groupName,
-                                            playtimePlayer,
-                                            enabled
-                                        )
-                                    end
-                                end
-                            end
-                        end
-                    else
-                        draw_picking_ui_entry(t, button1Name, button1Text, pl, groupName, playtimePlayer, enabled)
-                    end
-                end
-            end
-        end
-    end
+    draw_picking_ui_title(frame, caption)
+    draw_picking_ui_list(frame, button1Text, button1Name, tableBeingLooped, force_name, enabled)
 end
 
 ---@param player LuaPlayer?
