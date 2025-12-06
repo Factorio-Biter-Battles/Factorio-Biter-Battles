@@ -226,6 +226,44 @@ local function starts_with(text, prefix)
     return text:find(prefix, 1, true) == 1
 end
 
+---@param parent LuaGuiElement
+---@param enabled boolean If the button should be enabled
+local function draw_picking_ui_button(parent, name, caption, wordToPutInstead, enabled)
+    local style = 'green_button'
+    local tooltip = 'Click to select'
+    if not enabled then
+        style = 'red_button'
+        tooltip = 'Wait for your turn!'
+    end
+
+    local button = parent.add({
+        type = 'button',
+        name = name:gsub('Magical1@StringHere', wordToPutInstead),
+        caption = caption:gsub('Magical1@StringHere', wordToPutInstead),
+        style = style,
+        tooltip = tooltip,
+        enabled = enabled,
+        tags = { force = force_name },
+    })
+    gui_style(button, { font = 'default-bold', height = 24, minimal_width = 100, horizontally_stretchable = true })
+end
+
+---@param enabled boolean If the button should be enabled
+local function draw_picking_ui_entry(parent, button_name, button_1_text, player_name, group_name, play_time, enabled)
+    local special = storage.special_games_variables.captain_mode
+
+    draw_picking_ui_button(parent, button_name, button_1_text, player_name, enabled)
+
+    local l = parent.add({ type = 'label', caption = group_name, style = 'tooltip_label' })
+    gui_style(l, { minimal_width = 100, font_color = Color.antique_white })
+
+    l = parent.add({ type = 'label', caption = play_time, style = 'tooltip_label' })
+    gui_style(l, { minimal_width = 100 })
+
+    l = parent.add({ type = 'label', caption = special.player_info[player_name] or '', style = 'tooltip_label' })
+    gui_style(l, { minimal_width = 100, single_line = false, maximal_width = 300 })
+end
+
 ---@param player LuaPlayer
 ---@param force_name string
 ---@param tableBeingLooped string[]
@@ -234,7 +272,7 @@ end
 ---@param button1Text string
 ---@param button1Name string
 ---@param enabled boolean If the captain can pick/use the picking UI.
-local function pick_player_generator(
+local function draw_picking_ui_base(
     player,
     force_name,
     tableBeingLooped,
@@ -245,44 +283,6 @@ local function pick_player_generator(
     enabled
 )
     local location = storage.special_games_variables.captain_mode.ui_picking_location[player.name]
-
-    ---@param parent LuaGuiElement
-    ---@param enabled boolean If the button should be enabled
-    local function create_button(parent, name, caption, wordToPutInstead, enabled)
-        local style = 'green_button'
-        local tooltip = 'Click to select'
-        if not enabled then
-            style = 'red_button'
-            tooltip = 'Wait for your turn!'
-        end
-
-        local button = parent.add({
-            type = 'button',
-            name = name:gsub('Magical1@StringHere', wordToPutInstead),
-            caption = caption:gsub('Magical1@StringHere', wordToPutInstead),
-            style = style,
-            tooltip = tooltip,
-            enabled = enabled,
-            tags = { force = force_name },
-        })
-        gui_style(button, { font = 'default-bold', height = 24, minimal_width = 100, horizontally_stretchable = true })
-    end
-
-    ---@param enabled boolean If the button should be enabled
-    local function make_table_row(parent, button_name, button_1_text, player_name, group_name, play_time, enabled)
-        local special = storage.special_games_variables.captain_mode
-
-        create_button(parent, button_name, button_1_text, player_name, enabled)
-
-        local l = parent.add({ type = 'label', caption = group_name, style = 'tooltip_label' })
-        gui_style(l, { minimal_width = 100, font_color = Color.antique_white })
-
-        l = parent.add({ type = 'label', caption = play_time, style = 'tooltip_label' })
-        gui_style(l, { minimal_width = 100 })
-
-        l = parent.add({ type = 'label', caption = special.player_info[player_name] or '', style = 'tooltip_label' })
-        gui_style(l, { minimal_width = 100, single_line = false, maximal_width = 300 })
-    end
 
     local frame = player.gui.screen.add({ type = 'frame', name = name, direction = 'vertical' })
     gui_style(frame, { maximal_width = 900, maximal_height = 800 })
@@ -362,7 +362,7 @@ local function pick_player_generator(
                         if not listGroupAlreadyDone[playerIterated.tag] then
                             groupName = playerIterated.tag
                             listGroupAlreadyDone[playerIterated.tag] = true
-                            make_table_row(t, button1Name, button1Text, pl, groupName, playtimePlayer, enabled)
+                            draw_picking_ui_entry(t, button1Name, button1Text, pl, groupName, playtimePlayer, enabled)
                             for _, plOfGroup in pairs(tableBeingLooped) do
                                 if plOfGroup ~= pl then
                                     local groupNameOtherPlayer = cpt_get_player(plOfGroup).tag
@@ -374,7 +374,7 @@ local function pick_player_generator(
                                                 storage.total_time_online_players[nameOtherPlayer]
                                             )
                                         end
-                                        make_table_row(
+                                        draw_picking_ui_entry(
                                             t,
                                             button1Name,
                                             button1Text,
@@ -388,7 +388,7 @@ local function pick_player_generator(
                             end
                         end
                     else
-                        make_table_row(t, button1Name, button1Text, pl, groupName, playtimePlayer, enabled)
+                        draw_picking_ui_entry(t, button1Name, button1Text, pl, groupName, playtimePlayer, enabled)
                     end
                 end
             end
@@ -411,7 +411,7 @@ local function poll_alternate_picking(player, force_name, enabled)
         caption = 'The other captain is picking right now'
     end
 
-    pick_player_generator(
+    draw_picking_ui_base(
         player,
         force_name,
         storage.special_games_variables.captain_mode.listPlayers,
