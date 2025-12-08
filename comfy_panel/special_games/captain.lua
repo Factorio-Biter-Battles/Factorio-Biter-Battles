@@ -367,7 +367,7 @@ local function draw_picking_ui_list(frame, force_name, enabled)
     local tab = draw_picking_ui_list_inner(frame)
     draw_picking_ui_list_header(tab)
 
-    local pick_list = get_sorted_pick_list()
+    local pick_list = storage.special_games_variables.captain_mode.listPlayers
     for _, pl in pairs(pick_list) do
         local playerIterated = cpt_get_player(pl)
         local playtimePlayer = '0 minutes'
@@ -1290,6 +1290,7 @@ end
 local function start_picking_phase()
     local special = storage.special_games_variables.captain_mode
     local is_initial_picking_phase = not special.initialPickingPhaseStarted
+    special.listPlayers = get_sorted_pick_list()
     special.pickingPhase = true
     if not special.initialPickingPhaseStarted then
         close_difficulty_vote()
