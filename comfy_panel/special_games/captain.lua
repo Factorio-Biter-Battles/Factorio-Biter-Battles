@@ -324,21 +324,51 @@ local function draw_picking_ui_list_header(tab)
     gui_style(l, label_style)
 end
 
+---Sorts the pick list by total time, group belonging and nickname.
+---@return string[] List of player names
+local function get_sorted_pick_list()
+    local function sort_fn(a, b)
+        local time_a = storage.total_time_online_players[a] or 0
+        local time_b = storage.total_time_online_players[b] or 0
+        local tag_a = cpt_get_player(a).tag or ''
+        local tag_b = cpt_get_player(b).tag or ''
+        local cpt_a = starts_with(tag_a, ComfyPanelGroup.COMFY_PANEL_CAPTAINS_GROUP_PLAYER_TAG_PREFIX)
+        local cpt_b = starts_with(tag_b, ComfyPanelGroup.COMFY_PANEL_CAPTAINS_GROUP_PLAYER_TAG_PREFIX)
+
+        -- If tag name doesn't start with captain prefix reset
+        -- to default for the purpose of sort
+        tag_a = cpt_a and tag_a or ''
+        tag_b = cpt_b and tag_b or ''
+
+        -- Keeps same-tag players together
+        if tag_a ~= tag_b then
+            return tag_a > tag_b
+        end
+
+        -- Sort by time descending
+        if time_a ~= time_b then
+            return time_a < time_b
+        end
+
+        -- Sort by player name
+        return a:lower() < b:lower()
+    end
+
+    local list = table.deepcopy(storage.special_games_variables.captain_mode.listPlayers)
+    table.sort(list, sort_fn)
+    return list
+end
+
 ---Draws picking list that contains entires players.
 ---@param frame LuaGuiElement Main picking UI frame
 ---@param force_name string Tag associated with the pick button.
 ---@param enabled boolean If the captain can pick/use the picking UI.
 local function draw_picking_ui_list(frame, force_name, enabled)
     local tab = draw_picking_ui_list_inner(frame)
-    local tableBeingLooped = storage.special_games_variables.captain_mode.listPlayers
-    if not tableBeingLooped then
-        return
-    end
-
     draw_picking_ui_list_header(tab)
-    local listGroupAlreadyDone = {}
-    for _, pl in pairs(tableBeingLooped) do
-        local groupName = ''
+
+    local pick_list = get_sorted_pick_list()
+    for _, pl in pairs(pick_list) do
         local playerIterated = cpt_get_player(pl)
         local playtimePlayer = '0 minutes'
         if playerIterated and storage.total_time_online_players[playerIterated.name] then
@@ -346,40 +376,8 @@ local function draw_picking_ui_list(frame, force_name, enabled)
                 PlayerList.get_formatted_playtime_from_ticks(storage.total_time_online_players[playerIterated.name])
         end
 
-        if
-            not (
-                playerIterated
-                and starts_with(playerIterated.tag, ComfyPanelGroup.COMFY_PANEL_CAPTAINS_GROUP_PLAYER_TAG_PREFIX)
-            )
-        then
-            draw_picking_ui_entry(tab, pl, groupName, playtimePlayer, force_name, enabled)
-            goto draw_picking_ui_list_cont
-        end
-
-        if listGroupAlreadyDone[playerIterated.tag] then
-            goto draw_picking_ui_list_cont
-        end
-
-        groupName = playerIterated.tag
-        listGroupAlreadyDone[playerIterated.tag] = true
+        local groupName = playerIterated.tag
         draw_picking_ui_entry(tab, pl, groupName, playtimePlayer, force_name, enabled)
-        for _, plOfGroup in pairs(tableBeingLooped) do
-            if plOfGroup ~= pl then
-                local groupNameOtherPlayer = cpt_get_player(plOfGroup).tag
-                if groupNameOtherPlayer ~= '' and groupName == groupNameOtherPlayer then
-                    playtimePlayer = '0 minutes'
-                    local nameOtherPlayer = cpt_get_player(plOfGroup).name
-                    if storage.total_time_online_players[nameOtherPlayer] then
-                        playtimePlayer = PlayerList.get_formatted_playtime_from_ticks(
-                            storage.total_time_online_players[nameOtherPlayer]
-                        )
-                    end
-                    draw_picking_ui_entry(tab, plOfGroup, groupName, playtimePlayer, force_name, enabled)
-                end
-            end
-        end
-
-        ::draw_picking_ui_list_cont::
     end
 end
 
