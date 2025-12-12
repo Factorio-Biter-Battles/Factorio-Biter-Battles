@@ -176,7 +176,7 @@ local function clear_gui_captain_mode()
             screen.captain_referee_gui,
             screen.captain_manager_gui,
             screen.captain_organization_gui,
-            screen.captain_poll_alternate_pick_choice_frame,
+            screen.captain_picking_ui,
             screen.captain_willingness_vote_frame,
         }) do
             if element then
@@ -390,7 +390,7 @@ local function draw_picking_ui_base(player, force_name, caption, enabled)
 
     local frame = player.gui.screen.add({
         type = 'frame',
-        name = 'captain_poll_alternate_pick_choice_frame',
+        name = 'captain_picking_ui',
         direction = 'vertical',
     })
     gui_style(frame, { maximal_width = 900, maximal_height = 800 })
@@ -407,7 +407,7 @@ end
 ---@param player LuaPlayer?
 ---@param force_name string
 ---@param enabled boolean If the captain can pick/use the picking UI.
-local function poll_alternate_picking(player, force_name, enabled)
+local function draw_picking_ui(player, force_name, enabled)
     if not player then
         game.print('Unable to find player to make a picking choice!', { color = Color.red })
         Public.end_of_picking_phase()
@@ -442,7 +442,7 @@ end
 ---location.
 ---@param player LuaPlayer Player for which we're going to destroy picking UI.
 local function try_destroy_picking_ui(player)
-    local name = 'captain_poll_alternate_pick_choice_frame'
+    local name = 'captain_picking_ui'
     local special = storage.special_games_variables.captain_mode
     if player.gui.screen[name] then
         special.ui_picking_location[player.name] = player.gui.screen[name].location
@@ -462,21 +462,21 @@ end
 ---@param force string Captain of this force gets the next pick.
 local function display_picking_ui(force)
     local special = storage.special_games_variables.captain_mode
-    try_destroy_picking_ui_for_each(game.players)
     -- We cannot alternate picking UI in community mode between two captains as
     -- there might be no captain in one of the teams or players that do the picking
     -- are always random.
     if special.communityPickingMode then
         local cpt_next = Public.get_player_to_make_pick(force)
-        poll_alternate_picking(cpt_next, force, true)
+        try_destroy_picking_ui_for_each(game.players)
+        draw_picking_ui(cpt_next, force, true)
     else
         local cpt_next, cpt_prev = get_captain_picking_pair(force)
-        poll_alternate_picking(cpt_next, force, true)
+        draw_picking_ui(cpt_next, force, true)
         -- Start alternating only when there is more than one player to pick.
         -- This condition will also prevent picking UI to appear when there is only
         -- one player left.
         if #special.listPlayers > 1 then
-            poll_alternate_picking(cpt_prev, force, false)
+            draw_picking_ui(cpt_prev, force, false)
         end
     end
 end
