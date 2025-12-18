@@ -355,7 +355,7 @@ local function get_sorted_pick_list()
 
         -- Sort by time descending
         if time_a ~= time_b then
-            return time_a < time_b
+            return time_a > time_b
         end
 
         -- Sort by player name
