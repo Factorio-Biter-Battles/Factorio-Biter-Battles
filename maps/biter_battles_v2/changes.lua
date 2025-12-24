@@ -1,5 +1,17 @@
 return {
     {
+        number = 745,
+        date = '2025-12-18',
+        author = 'Data-',
+        comment = [[(#745) Add UI for the calc-send command]],
+    },
+    {
+        number = 747,
+        date = '2025-12-18',
+        author = 'cogito123',
+        comment = [[(#747) Refactor captain picking UI code]],
+    },
+    {
         number = 746,
         date = '2025-11-29',
         author = 'cogito123',
