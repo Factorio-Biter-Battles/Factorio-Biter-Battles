@@ -1422,13 +1422,17 @@ local function add_gifts(surface)
         local loot_worth = math_random(1, 35000)
         local item_stacks = LootRaffle.roll(loot_worth, 3, blacklist)
         for k, stack in pairs(item_stacks) do
-            surface.spill_item_stack({
+            local gifts = surface.spill_item_stack({
                 position = { x = math_random(-10, 10) * 0.1, y = math_random(-5, 15) * 0.1 },
                 stack = { name = stack.name, count = 1 },
                 enable_looted = false,
                 force = nil,
                 allow_belts = true,
             })
+
+            for _, g in ipairs(gifts) do
+                g.minable_flag = false
+            end
         end
     end
 end
