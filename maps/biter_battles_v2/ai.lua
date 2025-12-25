@@ -296,6 +296,9 @@ local function get_nearby_biter_nest(center, biter_force_name)
 end
 
 local function create_attack_group(surface, force_name, biter_force_name)
+    if not storage.biters_from_positive_threat then 
+        storage.biters_from_positive_threat = {}
+    end
     local threat = storage.bb_threat[biter_force_name]
     if threat <= 0 then
         return false
@@ -331,6 +334,7 @@ local function create_attack_group(surface, force_name, biter_force_name)
         else
             unit_group.add_member(unit)
         end
+        storage.biters_from_positive_threat[unit.unit_number] = true
     end
     local strike_position = AiStrikes.calculate_strike_position(unit_group, target_position)
     AiStrikes.initiate(unit_group, force_name, strike_position, target_position)
@@ -438,12 +442,18 @@ end
 
 --Biter Threat Value Subtraction
 function Public.subtract_threat(entity)
+    if not storage.biters_from_positive_threat then 
+        storage.biters_from_positive_threat = {}
+    end
     if not threat_values[entity.name] then
         return
     end
     local biter_not_boss_force = entity.force.name
     local is_boss = false
     local factor = 1
+    local from_non_positive_threat_factor = 0.5
+    local is_from_non_positive_threat = not storage.biters_from_positive_threat[entity.unit_number]
+
     if entity.force.name == 'south_biters_boss' then
         biter_not_boss_force = 'south_biters'
         is_boss = true
@@ -478,8 +488,13 @@ function Public.subtract_threat(entity)
         end
         return true
     end
+    
+    if is_from_non_positive_threat and not (string.match(entity.name, 'spawn') or string.match(entity.name, 'worm'))  then
+        factor = factor * from_non_positive_threat_factor
+    end
     storage.bb_threat[biter_not_boss_force] = storage.bb_threat[biter_not_boss_force]
         - threat_values[entity.name] * factor
+    storage.biters_from_positive_threat[entity.unit_number] = nil
     return true
 end
 
