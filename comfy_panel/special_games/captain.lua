@@ -3860,6 +3860,7 @@ commands.add_command('cpt-test-func', 'Run some test-only code for captains game
         end
         special.test_players[playerName] =
             { name = playerName, tag = group_name, color = Color.white, valid = true, connected = true }
+        storage.total_time_online_players[playerName] = math_random(0, 10000000)
         insert(special.listPlayers, playerName)
     end
     special.player_info.alice = 'I am a test player'
