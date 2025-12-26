@@ -227,29 +227,43 @@ local function starts_with(text, prefix)
 end
 
 ---@param parent LuaGuiElement
----@param player_name string Name of a player that will appear on the button.
 ---@param tags Tags Associated data that helps with identification of players.
-local function draw_picking_ui_button(parent, player_name, tags)
+local function draw_picking_ui_button(parent, tags)
     local button = parent.add({
-        type = 'button',
-        name = 'captain_player_picked_' .. player_name,
-        caption = player_name,
+        type = 'sprite-button',
+        name = 'captain_player_picked_' .. tags.name,
+        sprite = 'utility/enter',
         tags = tags,
     })
-    gui_style(button, { font = 'default-bold', height = 24, minimal_width = 100, horizontally_stretchable = true })
+    gui_style(button, { font = 'default-bold', horizontally_stretchable = false })
 end
 
 ---@param enabled boolean If the button should be enabled
 local function draw_picking_ui_entry(parent, player_name, group_name, play_time)
     local special = storage.special_games_variables.captain_mode
-
     local tags = {
         name = player_name,
     }
 
-    draw_picking_ui_button(parent, player_name, tags)
+    -- Horizontal container for button + player name next to it.
+    local flow = parent.add({
+        type = 'flow',
+        direction = 'horizontal',
+        tags = tags,
+    })
+    draw_picking_ui_button(flow, tags)
+    local l = flow.add({
+        type = 'label',
+        caption = player_name,
+        style = 'tooltip_label',
+        tags = tags,
+    })
+    local color = PlayerUtils.get_suitable_ui_color(cpt_get_player(player_name))
+    l.style.font_color = color
+    l.style.minimal_width = 100
+    l.style.horizontal_align = 'center'
 
-    local l = parent.add({
+    l = parent.add({
         type = 'label',
         caption = group_name,
         style = 'tooltip_label',
@@ -454,8 +468,7 @@ end
 local function update_picking_ui_pick_buttons(cpt, enabled)
     ---Updates state of the picking button.
     ---@param button LuaGuiElement Button element
-    ---@param enabled boolean State to apply
-    local function update_state(button, enabled)
+    local function update_state(button)
         local style = 'green_button'
         local tooltip = 'Click to select'
         if not enabled then
@@ -465,15 +478,29 @@ local function update_picking_ui_pick_buttons(cpt, enabled)
 
         button.enabled = enabled
         button.style = style
+        button.style.width = 40
         button.tooltip = tooltip
     end
 
-    local list = cpt.gui.screen['captain_picking_ui']['flow']['inner_frame']['scroll_pane']['picks_list']
-    for _, child in ipairs(list.children) do
-        if child.type == 'button' then
-            update_state(child, enabled)
+    ---Recursive helper function to find deeply nested pick buttons and
+    ---change their state respectively.
+    ---@param widget LuaGuiElement Any element under 'picks_list' parent.
+    local function update_buttons(widget)
+        if #widget.children == 0 then
+            return
+        end
+
+        for _, child in ipairs(widget.children) do
+            if child.type == 'sprite-button' then
+                update_state(child)
+            else
+                update_buttons(child)
+            end
         end
     end
+
+    local list = cpt.gui.screen['captain_picking_ui']['flow']['inner_frame']['scroll_pane']['picks_list']
+    update_buttons(list)
 end
 
 ---Draws entire picking UI. Does nothing if it exists for a given player.

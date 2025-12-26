@@ -16,20 +16,26 @@ local function get_or_create_dummy_player(playerName)
         }
 end
 
+---Return color palette for a player suitable for displaying it in the UI.
+---@param player LuaPlayer
+---@return Color
+function Public.get_suitable_ui_color(player)
+    return {
+        r = player.color.r * 0.6 + 0.4,
+        g = player.color.g * 0.6 + 0.4,
+        b = player.color.b * 0.6 + 0.4,
+    }
+end
+
 ---@param player_list LuaPlayer[]
 ---@return string[]
 function Public.get_colored_player_list(player_list)
     local players_with_colors = {}
     for _, player in pairs(player_list) do
+        local color = Public.get_suitable_ui_color(player)
         table_insert(
             players_with_colors,
-            string.format(
-                '[color=%.2f,%.2f,%.2f]%s[/color]',
-                player.color.r * 0.6 + 0.4,
-                player.color.g * 0.6 + 0.4,
-                player.color.b * 0.6 + 0.4,
-                player.name
-            )
+            string.format('[color=%.2f,%.2f,%.2f]%s[/color]', color.r, color.g, color.b, player.name)
         )
     end
 
