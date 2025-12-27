@@ -296,9 +296,6 @@ local function get_nearby_biter_nest(center, biter_force_name)
 end
 
 local function create_attack_group(surface, force_name, biter_force_name)
-    if not storage.biters_from_positive_threat then 
-        storage.biters_from_positive_threat = {}
-    end
     local threat = storage.bb_threat[biter_force_name]
     if threat <= 0 then
         return false
@@ -442,9 +439,6 @@ end
 
 --Biter Threat Value Subtraction
 function Public.subtract_threat(entity)
-    if not storage.biters_from_positive_threat then 
-        storage.biters_from_positive_threat = {}
-    end
     if not threat_values[entity.name] then
         return
     end
@@ -488,8 +482,10 @@ function Public.subtract_threat(entity)
         end
         return true
     end
-    
-    if is_from_non_positive_threat and not (string.match(entity.name, 'spawn') or string.match(entity.name, 'worm'))  then
+
+    if
+        is_from_non_positive_threat and not (string.match(entity.name, 'spawn') or string.match(entity.name, 'worm'))
+    then
         factor = factor * from_non_positive_threat_factor
     end
     storage.bb_threat[biter_not_boss_force] = storage.bb_threat[biter_not_boss_force]
