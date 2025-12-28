@@ -484,7 +484,7 @@ function Public.subtract_threat(entity)
     end
 
     if
-        is_from_non_positive_threat and not (string.match(entity.name, 'spawn') or string.match(entity.name, 'worm'))
+        entity.type == 'unit' and is_from_non_positive_threat
     then
         factor = factor * from_non_positive_threat_factor
     end
