@@ -419,10 +419,10 @@ function Public.tables()
             ping_header.destroy()
         end
     end
-    -- Threat nerf from non positive biters
-    -- inserted ids of biters are from positive threat generation
-    -- readed when enemy is killed
-    -- cleared when biter this this id dies
+    -- Threat nerf from non positive biters.
+    -- Inserted ids of biters are from positive threat generation.
+    -- Readed when enemy is killed.
+    -- Cleared when biter of this id dies.
     ---@type { [integer]: true }
     storage.biters_from_positive_threat = {}
 end
