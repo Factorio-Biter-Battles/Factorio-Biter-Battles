@@ -483,9 +483,7 @@ function Public.subtract_threat(entity)
         return true
     end
 
-    if
-        entity.type == 'unit' and is_from_non_positive_threat
-    then
+    if entity.type == 'unit' and is_from_non_positive_threat then
         factor = factor * from_non_positive_threat_factor
     end
     storage.bb_threat[biter_not_boss_force] = storage.bb_threat[biter_not_boss_force]
