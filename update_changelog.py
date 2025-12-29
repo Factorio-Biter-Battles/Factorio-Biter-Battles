@@ -19,6 +19,7 @@ GIT_NAME_MAPPING = {
     "outstanding-factorio": "outstanding",
     "morganchristiansson": 'morganc',
     "PlayerNoon": "Max1000",
+    "zer0sun": "Zerosun",
 }
 
 def get_name(login):

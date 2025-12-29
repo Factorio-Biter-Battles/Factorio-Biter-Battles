@@ -1,5 +1,11 @@
 return {
     {
+        number = 749,
+        date = '2025-12-29',
+        author = 'Zerosun',
+        comment = [[(#749) Killing biters and spitters that aren't part of the attack group now generates 50% less negative threat]],
+    },
+    {
         number = 745,
         date = '2025-12-18',
         author = 'Data-',
