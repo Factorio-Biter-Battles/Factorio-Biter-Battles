@@ -41,4 +41,33 @@ function CaptainUtils.pretty_print_player_list(names)
     )
 end
 
+-- Minimum samples before SMA is considered reliable.
+CaptainUtils.SMA_MIN_SAMPLES = 4
+-- Maximum samples to keep in memory. Upper bound increases SMA stability.
+CaptainUtils.SMA_MAX_SAMPLES = 8
+
+---Update SMA tracking for pick duration estimation.
+---@param force string The force name.
+function CaptainUtils.update_pick_sma(force)
+    local special = storage.special_games_variables.captain_mode
+    local time_taken = game.tick
+        - special.captain_pick_timer_sma_last_tick[force]
+        - special.captain_pick_timer_pause_duration
+    local count = special.captain_pick_timer_sma_count[force] + 1
+    special.captain_pick_timer_pause_duration = 0
+
+    special.captain_pick_timer_sma_count[force] = count
+    local id = ((count - 1) % CaptainUtils.SMA_MAX_SAMPLES) + 1
+    special.captain_pick_timer_sma_samples[force][id] = time_taken
+    if count < CaptainUtils.SMA_MIN_SAMPLES then
+        return
+    end
+
+    local sum = 0
+    for _, sample in ipairs(special.captain_pick_timer_sma_samples[force]) do
+        sum = sum + sample
+    end
+    special.captain_pick_timer_sma_sum[force] = sum / math.min(count, CaptainUtils.SMA_MAX_SAMPLES)
+end
+
 return CaptainUtils
