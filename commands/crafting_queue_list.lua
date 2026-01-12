@@ -545,48 +545,6 @@ commands.add_command('crafting_list', 'Toggle Crafting List window', function(cm
     end, cmd)
 end)
 
-commands.add_command('crafting_list_new', 'Open additional Crafting List window', function(cmd)
-    safe_wrap_cmd(cmd, function()
-        local p = game.get_player(cmd.player_index)
-        if p and p.valid then
-            create_window(p)
-        end
-    end, cmd)
-end)
-
-commands.add_command('crafting_list_close_all', 'Close all Crafting List windows', function(cmd)
-    safe_wrap_cmd(cmd, function()
-        local p = game.get_player(cmd.player_index)
-        if not (p and p.valid) then
-            return
-        end
-        local to_close = {}
-        for v_id, ui in pairs(this.ui_frames) do
-            if ui.owner == p.index then
-                to_close[#to_close + 1] = v_id
-            end
-        end
-        for _, v_id in ipairs(to_close) do
-            destroy_window(v_id)
-        end
-    end, cmd)
-end)
-
-commands.add_command('cl_reset', 'Reset Crafting List state', function(cmd)
-    safe_wrap_cmd(cmd, function()
-        for v_id in pairs(this.ui_frames) do
-            destroy_window(v_id)
-        end
-        this.ui_frames = {}
-        this.watchlist = {}
-        this.forces = { north = {}, south = {} }
-        this.view_id_next = 1
-        this.sprite_cache = {}
-        rebuild_forces()
-        game.print('[crafting_list] state reset.')
-    end, cmd)
-end)
-
 Event.add(defines.events.on_player_joined_game, function(ev)
     local p = game.get_player(ev.player_index)
     if p and p.valid then
