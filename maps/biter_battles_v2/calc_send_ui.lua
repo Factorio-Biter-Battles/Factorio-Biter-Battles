@@ -576,7 +576,7 @@ local function on_fill_from_remote_view_clicked(button)
         entity_limit = entity_limit - #entities
         if entity_limit == 0 then
             player.print(
-                "'Fill from the remove view' hit the entity count limit, some values may be inaccurate",
+                "'Fill from the remote view' hit the entity count limit, some values may be inaccurate",
                 { color = Color.yellow }
             )
             break
