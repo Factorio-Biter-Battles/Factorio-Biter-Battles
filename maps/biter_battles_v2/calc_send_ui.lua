@@ -525,9 +525,6 @@ local function visible_area(area, force, surface)
     return result
 end
 
--- side of the square to limit search area
-local FOOD_SEARCH_SPAN = 2 * 32
-
 local ENTITY_LIMIT = 500
 
 ---@param button LuaGuiElement
@@ -539,6 +536,12 @@ local function on_fill_from_remote_view_clicked(button)
         return
     end
 
+    if player.render_mode == defines.render_mode.chart then
+        player.play_sound({ path = 'utility/cannot_build' })
+        player.print('Zoom in to fill from the remote view', { color = { r = 0.88, g = 0.88, b = 0.88 } })
+        return
+    end
+
     local foods = {}
 
     -- notice that we don't care about the type of controller
@@ -547,11 +550,7 @@ local function on_fill_from_remote_view_clicked(button)
         sending_force = player.position.y >= 0 and 'south' or 'north'
     end
 
-    local pos = player.position
-    local dl = FOOD_SEARCH_SPAN / 2
-    local limit = { left_top = { x = pos.x - dl, y = pos.y - dl }, right_bottom = { x = pos.x + dl, y = pos.y + dl } }
-    local search_bbox = intersection(viewport_area(player), limit)
-
+    local search_bbox = viewport_area(player)
     local visible_areas = player.controller_type == defines.controllers.remote
             and visible_area(search_bbox, player.force --[[@as LuaForce]], player.surface)
         or { search_bbox }
