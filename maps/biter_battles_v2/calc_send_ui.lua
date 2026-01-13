@@ -23,12 +23,6 @@ end
 
 ---@param n number
 ---@return number
-local function trim_to_first_decimal_place(n)
-    return (n < 0 and -1 or 1) * math.floor(math.abs(n) * 10) / 10
-end
-
----@param n number
----@return number
 local function round_towards_zero(n)
     return (n < 0 and -1 or 1) * math.floor(math.abs(n))
 end
@@ -170,9 +164,9 @@ local function update_output_table(output_table, recv_force, foods)
     local new_evo_icon, new_evo_color = icon_for_evo(new_evo), color_for_evo(new_evo)
 
     -- normalize fractions to human readable values
-    evo = trim_to_first_decimal_place(evo * 100)
-    new_evo = trim_to_first_decimal_place(new_evo * 100)
-    evo_increase = new_evo - evo -- avoid inconsistent display values due to rounding errors
+    evo = evo * 100
+    new_evo = new_evo * 100
+    evo_increase = new_evo - evo
 
     threat = round_towards_zero(threat)
     threat_increase = math.floor(threat_increase)
@@ -181,9 +175,9 @@ local function update_output_table(output_table, recv_force, foods)
     local output_rows = {
         {
             'Evo:',
-            string.format('%s [color=%s]%s%%[/color]', evo_icon, evo_color, evo),
-            string.format('%s [color=%s]%s%%[/color]', new_evo_icon, new_evo_color, new_evo),
-            string.format('(+%s)', evo_increase),
+            string.format('%s [color=%s]%.1f%%[/color]', evo_icon, evo_color, evo),
+            string.format('%s [color=%s]%.1f%%[/color]', new_evo_icon, new_evo_color, new_evo),
+            string.format('(+%.1f)', evo_increase),
         },
         {
             'Threat:',
