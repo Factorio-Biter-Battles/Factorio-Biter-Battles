@@ -4,6 +4,8 @@ local Color = require('utils.color_presets')
 local FeedingCalculations = require('maps.biter_battles_v2.feeding_calculations')
 local Event = require('utils.event')
 
+local table_concat = table.concat
+
 local Public = {}
 
 local THROTTLE_TICKS = 60 / 3
@@ -564,12 +566,20 @@ local function on_fill_from_remote_view_clicked(button)
             limit = entity_limit,
         })
         for _, e in pairs(entities) do
-            if not processed_entities[e] then
+            -- first attempt was to use `LuaEntity` as the key, but alas equal `LuaEntity`s don't necessary serve as unique keys
+            ---@type integer|string|nil
+            local entity_uid = e.unit_number
+            if not entity_uid then
+                -- corpses don't have a unit number, so we use position as the last resort to distinguish them
+                local pos = e.position
+                entity_uid = table_concat({ pos.x, pos.y }, ' ')
+            end
+            if not processed_entities[entity_uid] then
                 local inventory = e.get_inventory(prototype_to_food_inventory[e.type])
                 if inventory then
                     add_food_from_inventory(inventory, foods)
                 end
-                processed_entities[e] = true
+                processed_entities[entity_uid] = true
             end
         end
         entity_limit = entity_limit - #entities
