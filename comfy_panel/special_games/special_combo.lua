@@ -12,13 +12,13 @@ local function generate_fordeka()
         game.forces[force].technologies['worker-robots-speed-5'].researched = true
         game.forces[force].technologies['worker-robots-speed-6'].level = 15
     end
-    local eq = {  
-        'power-armor-mk2',           
+    local eq = {
+        'power-armor-mk2',
         'battery-mk2-equipment',
-        'fission-reactor-equipment',   
+        'fission-reactor-equipment',
         'exoskeleton-equipment',
         'personal-roboport-mk2-equipment',
-        'construction-robot',        
+        'construction-robot',
         'electric-mining-drill',
     }
     local gap = 3
@@ -56,18 +56,18 @@ local function generate_fordeka()
     end
 
     local texts = {
-        "SPECIAL GAME - mk2 Fordeka ",
-        "Free items, Fast hand mining, Fast bots.",
-        }
-    local position = {0, -30}
-    local area = {{position[1] - 5, position[2] - 5}, {position[1] + 5, position[2] + 5}}
-    local existing_chests = surface.find_entities_filtered{area = area, name = "wooden-chest"}
+        'SPECIAL GAME - mk2 Fordeka ',
+        'Free items, Fast hand mining, Fast bots.',
+    }
+    local position = { 0, -30 }
+    local area = { { position[1] - 5, position[2] - 5 }, { position[1] + 5, position[2] + 5 } }
+    local existing_chests = surface.find_entities_filtered({ area = area, name = 'wooden-chest' })
     if #existing_chests > 0 then
-        game.print("special game text above island has been changed")
+        game.print('special game text above island has been changed')
         existing_chests[1].destroy()
     end
-    
-    local chest = surface.create_entity({name = "wooden-chest", position = {0, -35}})
+
+    local chest = surface.create_entity({ name = 'wooden-chest', position = { 0, -35 } })
 
     chest.destructible = false
     chest.minable_flag = false
@@ -75,17 +75,17 @@ local function generate_fordeka()
     chest.operable = false
 
     for i, text in ipairs(texts) do
-        local color = i % 2 == 0 and {255, 255, 0} or {255, 200, 0}
-        rendering.draw_text {
-        text = text,
-        surface = surface,
-        target = { entity = chest, offset = {0, 2 * i} },
-        color = color,
-        scale = 2.00,
-        font = "heading-1",
-        alignment = "center",
-        scale_with_zoom = false
-        }
+        local color = i % 2 == 0 and { 255, 255, 0 } or { 255, 200, 0 }
+        rendering.draw_text({
+            text = text,
+            surface = surface,
+            target = { entity = chest, offset = { 0, 2 * i } },
+            color = color,
+            scale = 2.00,
+            font = 'heading-1',
+            alignment = 'center',
+            scale_with_zoom = false,
+        })
     end
 end
 
@@ -97,8 +97,8 @@ local Public = {
     },
     config = {},
     button = { name = 'apply', type = 'button', caption = 'Apply' },
-    generate = function(config, player)  
-            generate_fordeka()
+    generate = function(config, player)
+        generate_fordeka()
     end,
 }
 
