@@ -19,7 +19,7 @@ local valid_special_games = {
     send_to_external_server = require('comfy_panel.special_games.send_to_external_server'),
     captain = require('comfy_panel.special_games.captain'),
     threat_farm_threshold = require('comfy_panel.special_games.threat_farm_threshold'),
-    special_combo = require('comfy_panel.special_games.special_combo'),
+    special_combo = require('comfy_panel.special_games.mk2Fordeka'),
     --[[
     Add your special game here.
     Syntax:
