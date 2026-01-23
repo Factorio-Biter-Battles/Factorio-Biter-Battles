@@ -52,13 +52,16 @@ function Public.init_player_table(player)
 end
 
 local function get_score_list(force)
-    local score_force = this.score_table[force]
+    local score_force = {}
+    score_force['north'] = this.score_table['north']
+    score_force['south'] = this.score_table['south']
+    score_force['spectator'] = this.score_table['spectator']
     local score_list = {}
-    for _, p in pairs(game.connected_players) do
-        if score_force.players[p.name] then
-            local score = score_force.players[p.name]
+    for p, _ in pairs(storage.chosen_team) do        
+        if score_force[force].players[p] or force == 'spectator' then
+            local score = score_force[game.players[p].force.name].players[p]
             table.insert(score_list, {
-                name = p.name,
+                name = p,
                 killscore = score.killscore or 0,
                 deaths = score.deaths or 0,
                 built_entities = score.built_entities or 0,
