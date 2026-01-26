@@ -59,7 +59,7 @@ local function get_score_list(force)
     local score_list = {}
     for p, _ in pairs(storage.chosen_team) do
         if score_force[force].players[p] or force == 'spectator' then
-            local score = score_force[game.players[p].force.name].players[p]
+            local score = score_force[storage.chosen_team[p]].players[p]
             table.insert(score_list, {
                 name = p,
                 killscore = score.killscore or 0,
