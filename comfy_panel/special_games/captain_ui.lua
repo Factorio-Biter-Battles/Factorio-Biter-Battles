@@ -20,6 +20,19 @@ local function draw_picking_ui_button(parent, tags)
     gui_style(button, { font = 'default-bold', horizontally_stretchable = false })
 end
 
+---Updates connection status of a player in the picking UI.
+---@param widget LuaGuiElement Widget
+---@param connected boolean If the player is connected.
+local function update_player_status(widget, connected)
+    if connected then
+        widget.sprite = 'utility/status_working'
+        widget.tooltip = 'This player is currently connected'
+    else
+        widget.sprite = 'utility/status_not_working'
+        widget.tooltip = 'This player is currently disconnected'
+    end
+end
+
 ---@param enabled boolean If the button should be enabled
 local function draw_picking_ui_entry(parent, player_name, group_name, play_time)
     local special = storage.special_games_variables.captain_mode
@@ -34,16 +47,36 @@ local function draw_picking_ui_entry(parent, player_name, group_name, play_time)
         tags = tags,
     })
     draw_picking_ui_button(flow, tags)
-    local l = flow.add({
+    local name_flow = flow.add({
+        type = 'flow',
+        direction = 'horizontal',
+        name = 'container',
+        tags = tags,
+    })
+
+    local icon = name_flow.add({
+        type = 'sprite',
+        name = 'online_icon',
+        sprite = 'utility/status_not_working',
+        tooltip = 'This player is currently disconnected',
+    })
+    gui_style(icon, { width = 12, height = 12 })
+
+    local player = cpt_get_player(player_name)
+    local connected = player and player.connected
+    update_player_status(icon, connected)
+
+    -- Inner flow elements don't require tags.
+    local l = name_flow.add({
         type = 'label',
         caption = player_name,
         style = 'tooltip_label',
-        tags = tags,
     })
-    local color = PlayerUtils.get_suitable_ui_color(cpt_get_player(player_name))
+
+    local color = PlayerUtils.get_suitable_ui_color(player)
     l.style.font_color = color
     l.style.minimal_width = 100
-    l.style.horizontal_align = 'center'
+    l.style.horizontal_align = 'left'
 
     l = parent.add({
         type = 'label',
@@ -284,6 +317,62 @@ local function draw_picking_ui_base(player)
     draw_picking_ui_title(frame)
     draw_picking_ui_timer(frame)
     draw_picking_ui_list(frame)
+end
+
+---Finds a child by name in a widget.
+---@param widget LuaGuiElement Widget to search in.
+---@param fn function Function to call that will check if the child matches.
+---@return LuaGuiElement? Child widget.
+local function find_child_with_fn(widget, fn)
+    for _, child in ipairs(widget.children) do
+        if fn(child) then
+            return child
+        end
+
+        if child.children then
+            local res = find_child_with_fn(child, fn)
+            if res then
+                return res
+            end
+        end
+    end
+
+    return nil
+end
+
+---Updates online status of a player in the picking UI.
+---@param cpt LuaPlayer Captain for whom we're updating the list.
+---@param player_name string Name of a player that changed online status.
+function Public.try_update_picking_ui_list_entry(cpt, player_name)
+    ---Checks if a child contains a player tag.
+    ---@param child LuaGuiElement Child widget.
+    ---@return boolean
+    local function is_player_tag(child)
+        return child.tags and child.tags.name == player_name
+    end
+
+    local ui = cpt.gui.screen['captain_picking_ui']
+    if not ui then
+        return
+    end
+
+    local player = cpt_get_player(player_name)
+    local connected = player and player.connected
+    local list = ui['flow']['inner_frame']['scroll_pane']['picks_list']
+    local entry = find_child_with_fn(list, is_player_tag)
+    if entry then
+        update_player_status(entry['container']['online_icon'], connected)
+    end
+end
+
+---Iterate through a list of captains and try to update the picking list.
+---If the picking list doesn't exist for a captain, it does nothing.
+---@param list LuaPlayer[] List of captains
+---@param player string Name of player whose entry we're updating.
+function Public.try_update_picking_ui_list_entry_for_each(list, player)
+    for _, p in pairs(list) do
+        Public.try_update_picking_ui_list_entry(p, player)
+    end
 end
 
 ---Removes a player from the pick list if it exists.
