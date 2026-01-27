@@ -446,7 +446,7 @@ local function auto_pick_all_of_group(playerName)
                 switch_team_of_player(playerName, f)
                 player.print({ 'captain.comms_reminder' }, { color = Color.cyan })
                 table_remove_element(special.listPlayers, playerName)
-                CaptainUI.try_update_picking_ui_list_for_each(special.captainList, playerName)
+                CaptainUI.try_destroy_picking_ui_list_entry_for_each(special.captainList, playerName)
                 special.captain_pick_timer[f] = special.captain_pick_timer[f] + special.captain_pick_timer_gain
             end
         end

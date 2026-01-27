@@ -289,7 +289,7 @@ end
 ---Removes a player from the pick list if it exists.
 ---@param cpt LuaPlayer Captain for whom we're updating the list.
 ---@param player string Name of a player that was just picked.
-function Public.try_update_picking_ui_list(cpt, player)
+function Public.try_destroy_picking_ui_list_entry(cpt, player)
     local ui = cpt.gui.screen['captain_picking_ui']
     if not ui then
         return
@@ -304,14 +304,14 @@ function Public.try_update_picking_ui_list(cpt, player)
     end
 end
 
----Iterate through a list of captains and try to update the picking list.
+---Iterate through a list of captains and try to destroy entry with player.
 ---If the picking list doesn't exist for a captain, it does nothing.
 ---@param names string[] List of captain names
 ---@param player string Name of player that was just picked.
-function Public.try_update_picking_ui_list_for_each(names, player)
+function Public.try_destroy_picking_ui_list_entry_for_each(names, player)
     for _, name in ipairs(names) do
         local cpt = game.get_player(name)
-        Public.try_update_picking_ui_list(cpt, player)
+        Public.try_destroy_picking_ui_list_entry(cpt, player)
     end
 end
 
