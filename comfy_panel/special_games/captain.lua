@@ -2066,6 +2066,10 @@ local function on_player_left_game(event)
                 display_picking_ui(CaptainStates.PICKS.RUNNING)
             end
         end
+    else
+        -- Update for all players, since we could be in community mode and
+        -- we don't know who is currently picking.
+        CaptainUI.try_update_picking_ui_list_entry_for_each(game.players, player.name)
     end
 
     if not special.pickingPhase then
@@ -2096,6 +2100,9 @@ local function on_player_joined_game(event)
         Public.draw_captain_tournament_gui(player)
         Public.draw_captain_player_gui(player)
         Sounds.notify_player(player, 'utility/new_objective')
+        -- Update for all players, since we could be in community mode and
+        -- we don't know who is currently picking.
+        CaptainUI.try_update_picking_ui_list_entry_for_each(game.players, player.name)
     end
     Public.update_all_captain_player_guis()
 end
