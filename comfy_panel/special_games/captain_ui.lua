@@ -254,12 +254,6 @@ end
 ---Some fields are left uninitialized and require calling 'update' functions.
 ---@param player LuaPlayer?
 function Public.draw_picking_ui(player)
-    if not player then
-        game.print('Unable to find player to make a picking choice!', { color = Color.red })
-        Public.end_of_picking_phase()
-        return
-    end
-
     if player.gui.screen['captain_picking_ui'] then
         return
     end
