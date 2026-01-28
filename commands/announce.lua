@@ -87,15 +87,18 @@ local function announce(cmd)
 
     -- In any case, we're going to clear existing announcement if any.
     local removed = try_destroy_bubble(player)
-    if removed then
-        Core.print_admins(player.name .. ' removed the announcement')
-    else
+    if not removed then
         return
     end
 
+    local had_text = storage.announcement.text ~= nil
     storage.announcement = {}
     local text = cmd.parameter
     if not text then
+        if had_text then
+            Core.print_admins(player.name .. ' removed the announcement')
+        end
+
         return
     end
 
