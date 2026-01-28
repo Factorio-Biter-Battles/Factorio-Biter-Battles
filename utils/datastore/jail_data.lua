@@ -296,7 +296,7 @@ local vote_to_jail = function(player, griefer, msg)
             Public.try_ul_data(griefer, true, votejail[griefer].actor, msg)
         end
     else
-        Utils.print_to(player, 'You have already voted to kick ' .. griefer .. '.')
+        Utils.print_to(player, 'You have already voted to jail ' .. griefer .. '.')
     end
 end
 
