@@ -55,7 +55,7 @@ local function get_score_list(force)
     local score_force = this.score_table
     local score_list = {}
     for p, team in pairs(storage.chosen_team) do
-        if force == team  or force == 'spectator' then
+        if force == team or force == 'spectator' then
             local score = score_force[team] and score_force[team].players[p] or {}
             table.insert(score_list, {
                 name = p,
