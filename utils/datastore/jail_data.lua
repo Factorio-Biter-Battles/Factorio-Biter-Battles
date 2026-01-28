@@ -515,77 +515,68 @@ Event.add(defines.events.on_console_command, function(event)
         return
     end
 
+    if not event.player_index then
+        return
+    end
+
+    local player = game.get_player(event.player_index)
+    local playtime = validate_playtime(player)
+    local trusted = validate_trusted(player)
+
     local param = event.parameters
-
-    if event.player_index then
-        local player = game.get_player(event.player_index)
-        local playtime = validate_playtime(player)
-        local trusted = validate_trusted(player)
-
-        if not param then
-            return Utils.print_to(player, 'No valid reason given.')
-        end
-
-        local message
-        local t = {}
-
-        for i in string.gmatch(param, '%S+') do
-            t[#t + 1] = i
-        end
-
-        local griefer = t[1]
-        table.remove(t, 1)
-
-        message = concat(t, ' ')
-
-        local data = {
-            player = player,
-            griefer = griefer,
-            trusted = trusted,
-            playtime = playtime,
-            message = message,
-            cmd = cmd,
-        }
-
-        local success = validate_args(data)
-
-        if not success then
+    if not param then
+        return Utils.print_to(player, 'No valid reason given.')
+    end
+    local message
+    local t = {}
+    for i in string.gmatch(param, '%S+') do
+        t[#t + 1] = i
+    end
+    local griefer = t[1]
+    table.remove(t, 1)
+    message = concat(t, ' ')
+    local data = {
+        player = player,
+        griefer = griefer,
+        trusted = trusted,
+        playtime = playtime,
+        message = message,
+        cmd = cmd,
+    }
+    local success = validate_args(data)
+    if not success then
+        return
+    end
+    if game.get_player(griefer) then
+        griefer = game.get_player(griefer).name
+    end
+    if
+        trusted
+        and playtime >= settings.playtime_for_vote
+        and playtime < settings.playtime_for_instant_jail
+        and not is_admin(player)
+    then
+        if cmd == 'jail' then
+            vote_to_jail(player, griefer, message)
+            return
+        elseif cmd == 'free' then
+            vote_to_free(player, griefer)
             return
         end
-
-        if game.get_player(griefer) then
-            griefer = game.get_player(griefer).name
-        end
-
-        if
-            trusted
-            and playtime >= settings.playtime_for_vote
-            and playtime < settings.playtime_for_instant_jail
-            and not is_admin(player)
-        then
-            if cmd == 'jail' then
-                vote_to_jail(player, griefer, message)
-                return
-            elseif cmd == 'free' then
-                vote_to_free(player, griefer)
-                return
+    end
+    if is_admin(player) or playtime >= settings.playtime_for_instant_jail then
+        if cmd == 'jail' then
+            if is_admin(player) then
+                Utils.warning(
+                    player,
+                    'Abusing the jail command will lead to revoked permissions. Jailing someone in case of disagreement is not OK!'
+                )
             end
-        end
-
-        if is_admin(player) or playtime >= settings.playtime_for_instant_jail then
-            if cmd == 'jail' then
-                if is_admin(player) then
-                    Utils.warning(
-                        player,
-                        'Abusing the jail command will lead to revoked permissions. Jailing someone in case of disagreement is not OK!'
-                    )
-                end
-                Public.try_ul_data(griefer, true, player.name, message)
-                return
-            elseif cmd == 'free' then
-                Public.try_ul_data(griefer, false, player.name)
-                return
-            end
+            Public.try_ul_data(griefer, true, player.name, message)
+            return
+        elseif cmd == 'free' then
+            Public.try_ul_data(griefer, false, player.name)
+            return
         end
     end
 end)
