@@ -234,12 +234,20 @@ end
 
 local validate_args = function(data)
     local player = data.player
-    local griefer = data.griefer
+    local griefer_name = data.griefer
     local trusted = data.trusted
     local playtime = data.playtime
 
-    if not griefer or not game.get_player(griefer) then
+    if not griefer_name then
         Utils.print_to(player, 'Invalid name.')
+        return false
+    end
+
+    -- For non-admins, require the target player to exist in-game
+    -- Admins can jail/free players who haven't joined yet (by name)
+    local griefer = game.get_player(griefer_name)
+    if not griefer and not is_admin(player) then
+        Utils.print_to(player, 'Player not found. Only admins can jail/free players who are not in the game.')
         return false
     end
 
@@ -258,12 +266,13 @@ local validate_args = function(data)
         return false
     end
 
-    if player.name == griefer and not is_admin(player) then
+    if player.name == griefer_name and not is_admin(player) then
         Utils.print_to(player, 'You can´t select yourself.')
         return false
     end
 
-    if is_admin(game.get_player(griefer)) and not is_admin(player) then
+    -- Only check if target is admin when the target player exists in-game
+    if griefer and is_admin(griefer) and not is_admin(player) then
         Utils.print_to(player, 'You can´t select an admin.')
         return false
     end
@@ -338,37 +347,37 @@ local jail = function(player, griefer, msg)
         return
     end
 
-    if not game.get_player(griefer) then
-        return
-    end
-
     local g = game.get_player(griefer)
-    teleport_player_to_gulag(g, 'jail')
+    local connected = g and g.connected
 
-    if g.surface.name == 'gulag' then
-        local gulag = get_gulag_permission_group()
-        gulag.add_player(griefer)
-    end
-    local message = griefer .. ' has been jailed by ' .. player .. '. Cause: ' .. msg
-
-    if
-        game.get_player(griefer).character
-        and game.get_player(griefer).character.valid
-        and game.get_player(griefer).character.driving
-    then
-        game.get_player(griefer).character.driving = false
-    end
-    game.get_player(griefer).driving = false
-
+    -- Always store the jail state first
     jailed[griefer] = { jailed = true, actor = player, reason = msg }
     set_data(jailed_data_set, griefer, { jailed = true, actor = player, reason = msg })
+
+    local griefer_tag = not connected and (griefer .. ' [font=heading-1](not on the map)[/font]') or griefer
+    local message = griefer_tag .. ' has been jailed by ' .. player .. '. Cause: ' .. msg
+
+    -- Only perform teleport and character operations if player is online
+    if connected then
+        teleport_player_to_gulag(g, 'jail')
+
+        if g.surface.name == 'gulag' then
+            local gulag = get_gulag_permission_group()
+            gulag.add_player(griefer)
+        end
+
+        if g.character and g.character.valid and g.character.driving then
+            g.character.driving = false
+        end
+        g.driving = false
+
+        Utils.print_to(griefer, message)
+        g.opened = defines.gui_type.none
+    end
 
     Utils.print_to(nil, message)
     Utils.action_warning_embed('{Jailed}', message)
 
-    game.get_player(griefer).clear_console()
-    Utils.print_to(griefer, message)
-    game.get_player(griefer).opened = defines.gui_type.none
     return true
 end
 
@@ -378,17 +387,17 @@ local free = function(player, griefer)
         return false
     end
 
-    if not game.get_player(griefer) then
-        return
+    local g = game.get_player(griefer)
+    local is_online = g and g.connected
+
+    local griefer_tag = not is_online and (griefer .. ' [font=heading-1](not on the map)[/font]') or griefer
+    local message = griefer_tag .. ' was released from jail by ' .. player .. '.'
+    if is_online then
+        teleport_player_to_gulag(g, 'free')
     end
 
-    local g = game.get_player(griefer)
-    teleport_player_to_gulag(g, 'free')
-
-    local message = griefer .. ' was set free from jail by ' .. player .. '.'
-
+    -- Always clear jail state
     jailed[griefer] = nil
-
     set_data(jailed_data_set, griefer, nil)
 
     if votejail[griefer] then
@@ -419,9 +428,15 @@ local update_jailed = Token.register(function(data)
     local player = data.player or 'script'
     local message = data.message
     if value then
-        jail(player, key, message)
+        local success = jail(player, key, message)
+        if not success and player ~= 'script' then
+            Utils.print_to(player, key .. ' is already jailed.')
+        end
     else
-        free(player, key)
+        local success = free(player, key)
+        if not success and player ~= 'script' then
+            Utils.print_to(player, key .. ' is not jailed.')
+        end
     end
 end)
 
@@ -489,7 +504,56 @@ Event.add(defines.events.on_player_joined_game, function(event)
         return
     end
 
-    Public.try_dl_data(player.name)
+    -- p_data.locked is set when a player is jailed and stores their original position/permissions.
+    -- Its meaning depends on whether jailed[player.name] exists:
+    --   - jailed exists + locked: Player is still jailed, locked holds their restore data
+    --   - jailed nil + locked: Player was freed while offline, locked holds pending restore data
+    local p_data = get_player_data(player)
+    local j_data = jailed[player.name]
+    if j_data then
+        -- Player is currently jailed and rejoining
+        if p_data and p_data.locked then
+            -- Player was jailed in a previous session - their original position is already saved.
+            -- Just teleport to gulag without overwriting p_data, so /free can restore them later.
+            local gulag_surface = game.surfaces['gulag']
+            player.character.teleport(
+                gulag_surface.find_non_colliding_position('character', { 0, 0 }, 128, 1),
+                gulag_surface.name
+            )
+        else
+            -- Player was jailed while offline (first time seeing them) - save their position now
+            teleport_player_to_gulag(player, 'jail')
+        end
+
+        local gulag = get_gulag_permission_group()
+        gulag.add_player(player)
+
+        local reason = j_data.reason or 'unspecified'
+        Utils.print_to(player, 'You are jailed. Reason: ' .. reason)
+        player.opened = defines.gui_type.none
+
+        Task.set_timeout_in_ticks(5, clear_gui, { player = player })
+        return
+    end
+
+    -- Player is NOT jailed, but has pending restore data - they were freed while offline
+    if p_data and p_data.locked then
+        local fallback_surface = game.surfaces[p_data.fallback_surface_index]
+        if fallback_surface and fallback_surface.valid then
+            -- Same game session - restore to original position
+            teleport_player_to_gulag(player, 'free')
+        else
+            -- Different game (map was reset) - send to spectator
+            -- Player is still on gulag; move them to the main surface before spectating
+            local main_surface = game.surfaces[storage.bb_surface_name]
+            local pos = main_surface.find_non_colliding_position('character', { 0, 0 }, 4, 1) or { 0, 0 }
+            player.teleport(pos, main_surface)
+            get_player_data(player, true)
+            spectate(player, true)
+        end
+
+        Utils.print_to(player, 'You have been released from jail.')
+    end
 end)
 
 Event.add(defines.events.on_console_command, function(event)
