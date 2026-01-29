@@ -261,6 +261,8 @@ local function on_console_chat(event)
     local tag = player.tag
     if not tag then
         tag = ''
+    else
+        tag = ' ' .. tag
     end
     local color = player.chat_color
 
