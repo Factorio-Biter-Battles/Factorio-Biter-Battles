@@ -91,6 +91,20 @@ local suspend_buttons_token = Token.register(
     end
 )
 
+---Cancels the current suspend vote, removing GUI and cleaning up state
+local function cancel_suspend_vote()
+    storage.suspend_token_running = false
+    Event.remove_removable(defines.events.on_player_joined_game, suspend_buttons_token)
+    for _, player in pairs(game.players) do
+        local frame = Gui.get_top_element(player, 'suspend_frame')
+        if frame then
+            frame.destroy()
+        end
+    end
+
+    storage.suspend_target_info = nil
+end
+
 local function punish_player(player)
     if player.physical_controller_type == defines.controllers.editor then
         player.toggle_map_editor()
@@ -120,16 +134,6 @@ local function punish_player(player)
 end
 
 local suspend_token = Token.register(function()
-    storage.suspend_token_running = false
-    -- disable suspend buttons creation for joining players
-    Event.remove_removable(defines.events.on_player_joined_game, suspend_buttons_token)
-    -- remove existing buttons
-    for _, player in pairs(game.players) do
-        local frame = Gui.get_top_element(player, 'suspend_frame')
-        if frame then
-            frame.destroy()
-        end
-    end
     -- count votes
     local suspend_info = storage.suspend_target_info
     local result = 0
@@ -140,26 +144,24 @@ local suspend_token = Token.register(function()
                 result = result + vote
             end
             result = math.floor(100 * result / total_votes)
-            if result >= 75 and total_votes > 1 then
-                game.print(suspend_info.suspendee_player_name .. ' suspended... (' .. result .. '%)')
-                Server.to_banned_embed(table.concat({
-                    suspend_info.suspendee_player_name
-                        .. ' was suspended ( '
-                        .. result
-                        .. ' %)'
-                        .. ', vote started by '
-                        .. suspend_info.suspender_player_name,
-                }))
-                storage.suspended_players[suspend_info.suspendee_player_name] = game.ticks_played
-                local playerSuspended = game.get_player(suspend_info.suspendee_player_name)
-                storage.suspend_target_info = nil
-                if playerSuspended and playerSuspended.valid and playerSuspended.physical_surface.name ~= 'gulag' then
-                    punish_player(playerSuspended)
-                end
-                return
-            end
         end
-        if total_votes == 1 and result == 100 then
+
+        if result >= 75 and total_votes > 1 then
+            game.print(suspend_info.suspendee_player_name .. ' suspended... (' .. result .. '%)')
+            Server.to_banned_embed(table.concat({
+                suspend_info.suspendee_player_name
+                    .. ' was suspended ( '
+                    .. result
+                    .. ' %)'
+                    .. ', vote started by '
+                    .. suspend_info.suspender_player_name,
+            }))
+            storage.suspended_players[suspend_info.suspendee_player_name] = game.ticks_played
+            local playerSuspended = game.get_player(suspend_info.suspendee_player_name)
+            if playerSuspended and playerSuspended.valid and playerSuspended.physical_surface.name ~= 'gulag' then
+                punish_player(playerSuspended)
+            end
+        elseif total_votes == 1 and result == 100 then
             game.print(
                 'Vote to suspend '
                     .. suspend_info.suspendee_player_name
@@ -181,8 +183,9 @@ local suspend_token = Token.register(function()
                     .. suspend_info.suspender_player_name,
             }))
         end
-        storage.suspend_target_info = nil
     end
+
+    cancel_suspend_vote()
 end)
 
 local decrement_timer_token = Token.get_counter() + 1 -- predict what the token will look like
@@ -213,7 +216,8 @@ local function suspend_player(cmd)
     if not killer then
         return
     end
-    if storage.suspend_target_info then
+    local admin = is_admin(killer)
+    if storage.suspend_target_info and not admin then
         killer.print(
             'You cant suspend 2 players at same time, wait for previous vote to end',
             { color = Color.warning }
@@ -235,6 +239,23 @@ local function suspend_player(cmd)
                 killer.print('You cant suspend a player while you are in jail', { color = Color.warning })
                 return
             end
+            local victim_name = victim.name
+            local killer_name = killer.name
+
+            -- Admin instant suspend (bypasses vote)
+            if admin then
+                -- Cancel pending vote only if it's for the same player
+                if storage.suspend_target_info and storage.suspend_target_info.suspendee_player_name == victim_name then
+                    cancel_suspend_vote()
+                end
+                -- Instant suspend
+                storage.suspended_players[victim_name] = game.ticks_played
+                punish_player(victim)
+                game.print(killer_name .. ' (admin) has suspended ' .. victim_name, { color = Color.orange })
+                Server.to_banned_embed(victim_name .. ' was suspended by admin ' .. killer_name)
+                return
+            end
+
             if storage.suspend_token_running then
                 killer.print(
                     'A suspend was just started before restart, please wait 60s maximum to avoid bugs',
@@ -242,8 +263,6 @@ local function suspend_player(cmd)
                 )
                 return
             end
-            local victim_name = victim.name
-            local killer_name = killer.name
             storage.suspend_target_info = {
                 suspendee_player_name = victim_name,
                 suspendee_force_name = victim.force.name,
