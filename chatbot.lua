@@ -78,17 +78,67 @@ end
 ---Notify all other connected admins about a trust action.
 ---@param admin_name string The name of the admin performing the action
 ---@param action string The action verb (e.g., "trusted" or "untrusted")
----@param target_name string The name of the player being trusted/untrusted
-local function notify_admins(admin_name, action, target_name)
+---@param target_names string The name(s) of the player(s) being trusted/untrusted
+local function notify_admins(admin_name, action, target_names)
     for _, admin in pairs(game.connected_players) do
         if is_admin(admin) and admin.name ~= admin_name then
-            admin.print('[ADMIN]: ' .. admin_name .. ' ' .. action .. ' ' .. target_name, { color = Color.comfy })
+            admin.print('[ADMIN]: ' .. admin_name .. ' ' .. action .. ' ' .. target_names, { color = Color.comfy })
         end
     end
 end
 
-commands.add_command('trust', 'Promotes a player to trusted!', function(cmd)
+---Parse player names from a command parameter string.
+---@param param string? The command parameter string
+---@return string[] names Array of player names
+local function parse_player_names(param)
+    local names = {}
+    if param then
+        for name in string.gmatch(param, '%S+') do
+            names[#names + 1] = name
+        end
+    end
+    return names
+end
+
+---Set trust status for a single player.
+---@param target_name string The name of the player to trust/untrust
+---@param should_trust boolean true for trust, false for untrust
+---@return boolean success Whether the operation succeeded
+---@return string? error_message Error message if operation failed
+---@return string? player_name The actual player name if found
+local function set_player_trust(target_name, should_trust)
     local trusted = session.get_trusted_table()
+    local target_player = game.get_player(target_name)
+
+    if not target_player then
+        return false, 'Player not found: ' .. target_name, nil
+    end
+
+    local current_trust = trusted[target_player.name] or false
+    if current_trust == should_trust then
+        local status = should_trust and 'trusted' or 'untrusted'
+        return false, target_player.name .. ' is already ' .. status .. '!', nil
+    end
+
+    trusted[target_player.name] = should_trust
+    return true, nil, target_player.name
+end
+
+local trust_commands = {
+    trust = {
+        description = 'Promotes player(s) to trusted!',
+        should_trust = true,
+        verb = 'trusted',
+    },
+    untrust = {
+        description = 'Demotes player(s) from trusted!',
+        should_trust = false,
+        verb = 'untrusted',
+    },
+}
+
+local function handle_trust_command(cmd, cmd_name)
+    local config = trust_commands[cmd_name]
     local player = game.player
 
     -- Admin check (only for in-game players, server console always allowed)
@@ -97,72 +147,43 @@ commands.add_command('trust', 'Promotes a player to trusted!', function(cmd)
         return
     end
 
-    if not cmd.parameter then
+    local names = parse_player_names(cmd.parameter)
+    if #names == 0 then
         if player then
-            player.print('Usage: /trust <player-name>', { color = Color.warning })
+            player.print('Usage: /' .. cmd_name .. ' <player-name> [player-name2] ...', { color = Color.warning })
         end
         return
     end
 
-    local target_player = game.get_player(cmd.parameter)
-    if not target_player then
-        if player then
-            player.print('Player not found: ' .. cmd.parameter, { color = Color.warning })
+    local affected_players = {}
+    for _, name in ipairs(names) do
+        local success, err_msg, player_name = set_player_trust(name, config.should_trust)
+        if success then
+            affected_players[#affected_players + 1] = player_name
+        elseif player then
+            player.print(err_msg, { color = Color.warning })
         end
-        return
     end
 
-    if trusted[target_player.name] then
-        game.print(target_player.name .. ' is already trusted!')
-        return
-    end
+    if #affected_players > 0 then
+        local player_list = table.concat(affected_players, ', ')
+        game.print(
+            player_list .. (#affected_players == 1 and ' is' or ' are') .. ' now ' .. config.verb .. '.',
+            { color = Color.cyan }
+        )
 
-    trusted[target_player.name] = true
-    game.print(target_player.name .. ' is now a trusted player.', { color = Color.cyan })
-
-    -- Notify other admins (only for in-game player actions)
-    if player then
-        notify_admins(player.name, 'trusted', target_player.name)
+        if player then
+            notify_admins(player.name, config.verb, player_list)
+        end
     end
+end
+
+commands.add_command('trust', trust_commands.trust.description, function(cmd)
+    handle_trust_command(cmd, 'trust')
 end)
 
-commands.add_command('untrust', 'Demotes a player from trusted!', function(cmd)
-    local trusted = session.get_trusted_table()
-    local player = game.player
-
-    -- Admin check (only for in-game players, server console always allowed)
-    if player and player.valid and not is_admin(player) then
-        player.print("You're not admin!", { color = Color.comfy })
-        return
-    end
-
-    if not cmd.parameter then
-        if player then
-            player.print('Usage: /untrust <player-name>', { color = Color.warning })
-        end
-        return
-    end
-
-    local target_player = game.get_player(cmd.parameter)
-    if not target_player then
-        if player then
-            player.print('Player not found: ' .. cmd.parameter, { color = Color.warning })
-        end
-        return
-    end
-
-    if not trusted[target_player.name] then
-        game.print(target_player.name .. ' is already untrusted!')
-        return
-    end
-
-    trusted[target_player.name] = false
-    game.print(target_player.name .. ' is now untrusted.', { color = Color.cyan })
-
-    -- Notify other admins (only for in-game player actions)
-    if player then
-        notify_admins(player.name, 'untrusted', target_player.name)
-    end
+commands.add_command('untrust', trust_commands.untrust.description, function(cmd)
+    handle_trust_command(cmd, 'untrust')
 end)
 
 local function process_bot_answers(event)
