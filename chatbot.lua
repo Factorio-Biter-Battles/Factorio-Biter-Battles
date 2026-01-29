@@ -75,101 +75,93 @@ local function on_player_created(event)
     )
 end
 
+---Notify all other connected admins about a trust action.
+---@param admin_name string The name of the admin performing the action
+---@param action string The action verb (e.g., "trusted" or "untrusted")
+---@param target_name string The name of the player being trusted/untrusted
+local function notify_admins(admin_name, action, target_name)
+    for _, admin in pairs(game.connected_players) do
+        if is_admin(admin) and admin.name ~= admin_name then
+            admin.print('[ADMIN]: ' .. admin_name .. ' ' .. action .. ' ' .. target_name, { color = Color.comfy })
+        end
+    end
+end
+
 commands.add_command('trust', 'Promotes a player to trusted!', function(cmd)
     local trusted = session.get_trusted_table()
     local player = game.player
 
-    if player and player.valid then
-        if not is_admin(player) then
-            player.print("You're not admin!", { color = { r = 1, g = 0.5, b = 0.1 } })
-            return
-        end
+    -- Admin check (only for in-game players, server console always allowed)
+    if player and player.valid and not is_admin(player) then
+        player.print("You're not admin!", { color = Color.comfy })
+        return
+    end
 
-        if cmd.parameter == nil then
-            return
+    if not cmd.parameter then
+        if player then
+            player.print('Usage: /trust <player-name>', { color = Color.warning })
         end
-        local target_player = game.get_player(cmd.parameter)
-        if target_player then
-            if trusted[target_player.name] then
-                game.print(target_player.name .. ' is already trusted!')
-                return
-            end
-            trusted[target_player.name] = true
-            game.print(target_player.name .. ' is now a trusted player.', { color = { r = 0.22, g = 0.99, b = 0.99 } })
-            for _, a in pairs(game.connected_players) do
-                if is_admin(a) and a.name ~= player.name then
-                    a.print(
-                        '[ADMIN]: ' .. player.name .. ' trusted ' .. target_player.name,
-                        { color = { r = 1, g = 0.5, b = 0.1 } }
-                    )
-                end
-            end
+        return
+    end
+
+    local target_player = game.get_player(cmd.parameter)
+    if not target_player then
+        if player then
+            player.print('Player not found: ' .. cmd.parameter, { color = Color.warning })
         end
-    else
-        if cmd.parameter == nil then
-            return
-        end
-        local target_player = game.get_player(cmd.parameter)
-        if target_player then
-            if trusted[target_player.name] == true then
-                game.print(target_player.name .. ' is already trusted!')
-                return
-            end
-            trusted[target_player.name] = true
-            game.print(target_player.name .. ' is now a trusted player.', { color = { r = 0.22, g = 0.99, b = 0.99 } })
-        end
+        return
+    end
+
+    if trusted[target_player.name] then
+        game.print(target_player.name .. ' is already trusted!')
+        return
+    end
+
+    trusted[target_player.name] = true
+    game.print(target_player.name .. ' is now a trusted player.', { color = Color.cyan })
+
+    -- Notify other admins (only for in-game player actions)
+    if player then
+        notify_admins(player.name, 'trusted', target_player.name)
     end
 end)
 
 commands.add_command('untrust', 'Demotes a player from trusted!', function(cmd)
     local trusted = session.get_trusted_table()
     local player = game.player
-    local p
 
+    -- Admin check (only for in-game players, server console always allowed)
+    if player and player.valid and not is_admin(player) then
+        player.print("You're not admin!", { color = Color.comfy })
+        return
+    end
+
+    if not cmd.parameter then
+        if player then
+            player.print('Usage: /untrust <player-name>', { color = Color.warning })
+        end
+        return
+    end
+
+    local target_player = game.get_player(cmd.parameter)
+    if not target_player then
+        if player then
+            player.print('Player not found: ' .. cmd.parameter, { color = Color.warning })
+        end
+        return
+    end
+
+    if not trusted[target_player.name] then
+        game.print(target_player.name .. ' is already untrusted!')
+        return
+    end
+
+    trusted[target_player.name] = false
+    game.print(target_player.name .. ' is now untrusted.', { color = Color.cyan })
+
+    -- Notify other admins (only for in-game player actions)
     if player then
-        if player ~= nil then
-            p = player.print
-            if not is_admin(player) then
-                p("You're not admin!", { color = { r = 1, g = 0.5, b = 0.1 } })
-                return
-            end
-        else
-            p = log
-        end
-
-        if cmd.parameter == nil then
-            return
-        end
-        local target_player = game.get_player(cmd.parameter)
-        if target_player then
-            if trusted[target_player.name] == false then
-                game.print(target_player.name .. ' is already untrusted!')
-                return
-            end
-            trusted[target_player.name] = false
-            game.print(target_player.name .. ' is now untrusted.', { color = { r = 0.22, g = 0.99, b = 0.99 } })
-            for _, a in pairs(game.connected_players) do
-                if is_admin(a) and a.name ~= player.name then
-                    a.print(
-                        '[ADMIN]: ' .. player.name .. ' untrusted ' .. target_player.name,
-                        { color = { r = 1, g = 0.5, b = 0.1 } }
-                    )
-                end
-            end
-        end
-    else
-        if cmd.parameter == nil then
-            return
-        end
-        local target_player = game.get_player(cmd.parameter)
-        if target_player then
-            if trusted[target_player.name] == false then
-                game.print(target_player.name .. ' is already untrusted!')
-                return
-            end
-            trusted[target_player.name] = false
-            game.print(target_player.name .. ' is now untrusted.', { color = { r = 0.22, g = 0.99, b = 0.99 } })
-        end
+        notify_admins(player.name, 'untrusted', target_player.name)
     end
 end)
 
