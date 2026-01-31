@@ -1,6 +1,8 @@
 local CaptainCommunityPick = require('comfy_panel.special_games.captain_community_pick')
 local CaptainTaskGroup = require('comfy_panel.special_games.captain_task_group')
 local CaptainUtils = require('comfy_panel.special_games.captain_utils')
+local CaptainUI = require('comfy_panel.special_games.captain_ui')
+local CaptainStates = require('comfy_panel.special_games.captain_states')
 local ClosableFrame = require('utils.ui.closable_frame')
 local Color = require('utils.color_presets')
 local ComfyPanelGroup = require('comfy_panel.group')
@@ -226,112 +228,6 @@ local function starts_with(text, prefix)
     return text:find(prefix, 1, true) == 1
 end
 
----@param parent LuaGuiElement
----@param player_name string Name of a player that will appear on the button.
----@param tags Tags Associated data that helps with identification of players.
-local function draw_picking_ui_button(parent, player_name, tags)
-    local button = parent.add({
-        type = 'button',
-        name = 'captain_player_picked_' .. player_name,
-        caption = player_name,
-        tags = tags,
-    })
-    gui_style(button, { font = 'default-bold', height = 24, minimal_width = 100, horizontally_stretchable = true })
-end
-
----@param enabled boolean If the button should be enabled
-local function draw_picking_ui_entry(parent, player_name, group_name, play_time)
-    local special = storage.special_games_variables.captain_mode
-
-    local tags = {
-        name = player_name,
-    }
-
-    draw_picking_ui_button(parent, player_name, tags)
-
-    local l = parent.add({
-        type = 'label',
-        caption = group_name,
-        style = 'tooltip_label',
-        tags = tags,
-    })
-    gui_style(l, { minimal_width = 100, font_color = Color.antique_white })
-
-    l = parent.add({
-        type = 'label',
-        caption = play_time,
-        style = 'tooltip_label',
-        tags = tags,
-    })
-    gui_style(l, { minimal_width = 100 })
-
-    l = parent.add({
-        type = 'label',
-        caption = special.player_info[player_name] or '',
-        style = 'tooltip_label',
-        tags = tags,
-    })
-    gui_style(l, { minimal_width = 100, single_line = false, maximal_width = 300 })
-end
-
----Draws empty title on top of picking UI.
----@param frame LuaGuiElement Main picking UI frame
-local function draw_picking_ui_title(frame)
-    local flow = frame.add({ type = 'flow', name = 'title_root', direction = 'horizontal' })
-    gui_style(flow, { horizontal_spacing = 8, bottom_padding = 4 })
-
-    local title = flow.add({ type = 'label', name = 'title', style = 'frame_title' })
-    title.drag_target = frame
-
-    local dragger = flow.add({ type = 'empty-widget', style = 'draggable_space_header' })
-    dragger.drag_target = frame
-    gui_style(dragger, { height = 24, horizontally_stretchable = true })
-end
-
----Draws a main table where header and player entires are going to be drawn.
----@param frame LuaGuiElement Main picking UI frame
----@return LuaGuiElement Table
-local function draw_picking_ui_list_inner(frame)
-    local flow = frame.add({ type = 'flow', name = 'flow', style = 'vertical_flow', direction = 'vertical' })
-    local inner_frame = flow.add({
-        type = 'frame',
-        name = 'inner_frame',
-        style = 'inside_shallow_frame_packed',
-        direction = 'vertical',
-    })
-    local sp = inner_frame.add({
-        type = 'scroll-pane',
-        name = 'scroll_pane',
-        style = 'scroll_pane_under_subheader',
-        direction = 'vertical',
-    })
-    gui_style(sp, { horizontally_squashable = false, padding = 0 })
-    return sp.add({ type = 'table', name = 'picks_list', column_count = 4, style = 'mods_explore_results_table' })
-end
-
----Draws header of picking list containing player entires.
----@param tab LuaGuiElement Table element.
-local function draw_picking_ui_list_header(tab)
-    local label_style = {
-        font_color = Color.antique_white,
-        font = 'heading-2',
-        minimal_width = 100,
-        top_margin = 4,
-        bottom_margin = 4,
-    }
-    local l = tab.add({ type = 'label', caption = 'Player' })
-    gui_style(l, label_style)
-
-    l = tab.add({ type = 'label', caption = 'Group' })
-    gui_style(l, label_style)
-
-    l = tab.add({ type = 'label', caption = 'Total playtime' })
-    gui_style(l, label_style)
-
-    l = tab.add({ type = 'label', caption = 'Notes' })
-    gui_style(l, label_style)
-end
-
 ---Sorts the pick list by total time, group belonging and nickname.
 ---@return string[] List of player names
 local function get_sorted_pick_list()
@@ -367,132 +263,6 @@ local function get_sorted_pick_list()
     return list
 end
 
----Draws picking list that contains entires players.
----@param frame LuaGuiElement Main picking UI frame
-local function draw_picking_ui_list(frame)
-    local tab = draw_picking_ui_list_inner(frame)
-    draw_picking_ui_list_header(tab)
-
-    local pick_list = storage.special_games_variables.captain_mode.listPlayers
-    for _, pl in pairs(pick_list) do
-        local playerIterated = cpt_get_player(pl)
-        local playtimePlayer = '0 minutes'
-        if playerIterated and storage.total_time_online_players[playerIterated.name] then
-            playtimePlayer =
-                PlayerList.get_formatted_playtime_from_ticks(storage.total_time_online_players[playerIterated.name])
-        end
-
-        local groupName = playerIterated.tag
-        draw_picking_ui_entry(tab, pl, groupName, playtimePlayer)
-    end
-end
-
----@param player LuaPlayer
-local function draw_picking_ui_base(player)
-    local location = storage.special_games_variables.captain_mode.ui_picking_location[player.name]
-
-    local frame = player.gui.screen.add({
-        type = 'frame',
-        name = 'captain_picking_ui',
-        direction = 'vertical',
-    })
-    gui_style(frame, { maximal_width = 900, maximal_height = 800 })
-    if location then
-        frame.location = location
-    else
-        frame.auto_center = true
-    end
-
-    draw_picking_ui_title(frame)
-    draw_picking_ui_list(frame)
-end
-
----Removes a player from the pick list if it exists.
----@param cpt LuaPlayer Captain for whom we're updating the list.
----@param player string Name of a player that was just picked.
-local function try_update_picking_ui_list(cpt, player)
-    local ui = cpt.gui.screen['captain_picking_ui']
-    if not ui then
-        return
-    end
-
-    local list = ui['flow']['inner_frame']['scroll_pane']['picks_list']
-    for _, child in ipairs(list.children) do
-        local tags = child.tags
-        if tags and tags.name == player then
-            child.destroy()
-        end
-    end
-end
-
----Iterate through a list of captains and try to update the picking list.
----If the picking list doesn't exist for a captain, it does nothing.
----@param names string[] List of captain names
----@param player string Name of player that was just picked.
-local function try_update_picking_ui_list_for_each(names, player)
-    for _, name in ipairs(names) do
-        local cpt = game.get_player(name)
-        try_update_picking_ui_list(cpt, player)
-    end
-end
-
----Updates the title of the picking UI.
----@param cpt LuaPlayer Captain for whom we're going to update it.
----@param picking boolean If this captain is currently picking or not.
-local function update_picking_ui_title(cpt, picking)
-    local title = cpt.gui.screen['captain_picking_ui']['title_root']['title']
-    if picking then
-        title.caption = 'Who do you want to pick?'
-    else
-        title.caption = 'The other captain is picking right now'
-    end
-end
-
----Updates the state of the pick buttons in the picking UI.
----@param cpt LuaPlayer Captain for whom we're going to update it.
----@param enabled boolean New state of buttons
-local function update_picking_ui_pick_buttons(cpt, enabled)
-    ---Updates state of the picking button.
-    ---@param button LuaGuiElement Button element
-    ---@param enabled boolean State to apply
-    local function update_state(button, enabled)
-        local style = 'green_button'
-        local tooltip = 'Click to select'
-        if not enabled then
-            style = 'red_button'
-            tooltip = 'Wait for your turn!'
-        end
-
-        button.enabled = enabled
-        button.style = style
-        button.tooltip = tooltip
-    end
-
-    local list = cpt.gui.screen['captain_picking_ui']['flow']['inner_frame']['scroll_pane']['picks_list']
-    for _, child in ipairs(list.children) do
-        if child.type == 'button' then
-            update_state(child, enabled)
-        end
-    end
-end
-
----Draws entire picking UI. Does nothing if it exists for a given player.
----Some fields are left uninitialized and require calling 'update' functions.
----@param player LuaPlayer?
-local function draw_picking_ui(player)
-    if not player then
-        game.print('Unable to find player to make a picking choice!', { color = Color.red })
-        Public.end_of_picking_phase()
-        return
-    end
-
-    if player.gui.screen['captain_picking_ui'] then
-        return
-    end
-
-    draw_picking_ui_base(player)
-end
-
 ---Alternates between two captains. This function always returns two captains.
 ---The first captain is the one which should get the pick now (next).
 ---The second captain is the one which is waiting now for their turn in picking (previous).
@@ -508,55 +278,45 @@ local function get_captain_picking_pair(next_force)
     return cpt_get_player(next_cpt), cpt_get_player(prev_cpt)
 end
 
----Tries to destroy picking UI for a given player. If picking UI exists,
----we're also going to save it's location to draw it next time in the same
----location.
----@param player LuaPlayer Player for which we're going to destroy picking UI.
-local function try_destroy_picking_ui(player)
-    local name = 'captain_picking_ui'
+---Display picking UI according to user supplied state
+--- If 'state' is RUNNING, then perform nominal update.
+--- If 'state' is PAUSED, then overrule current state and pause UI.
+--- The IDLE 'state' has no effect in this case.
+---@param state integer
+local function display_picking_ui(state)
     local special = storage.special_games_variables.captain_mode
-    if player.gui.screen[name] then
-        special.ui_picking_location[player.name] = player.gui.screen[name].location
-        player.gui.screen[name].destroy()
-    end
-end
-
----Tries to destroy picking UI for a list of players.
----@param player LuaPlayer[]
-local function try_destroy_picking_ui_for_each(players)
-    for _, p in pairs(players) do
-        try_destroy_picking_ui(p)
-    end
-end
-
----Display picking UI
-local function display_picking_ui()
-    local special = storage.special_games_variables.captain_mode
+    local running_or_paused = state == CaptainStates.PICKS.PAUSED and CaptainStates.PICKS.PAUSED
+        or CaptainStates.PICKS.RUNNING
+    local idle_or_paused = state == CaptainStates.PICKS.PAUSED and CaptainStates.PICKS.PAUSED
+        or CaptainStates.PICKS.IDLE
     local force = special.next_pick_force
     -- We cannot alternate picking UI in community mode between two captains as
     -- there might be no captain in one of the teams or players that do the picking
     -- are always random.
     if special.communityPickingMode then
         local cpt_next = Public.get_player_to_make_pick(force)
-        try_destroy_picking_ui_for_each(game.players)
-        draw_picking_ui(cpt_next, true)
-        update_picking_ui_title(cpt_next, true)
-        update_picking_ui_pick_buttons(cpt_next, true)
+        CaptainUI.try_destroy_picking_ui_for_each(game.players)
+        CaptainUI.draw_picking_ui(cpt_next)
+        CaptainUI.update_picking_ui_title(cpt_next, running_or_paused)
+        CaptainUI.update_picking_ui_pick_buttons(cpt_next, running_or_paused)
+        CaptainUI.update_picking_ui_timer(cpt_next)
     else
         local cpt_next, cpt_prev = get_captain_picking_pair(force)
-        draw_picking_ui(cpt_next, true)
-        update_picking_ui_title(cpt_next, true)
-        update_picking_ui_pick_buttons(cpt_next, true)
+        CaptainUI.draw_picking_ui(cpt_next)
+        CaptainUI.update_picking_ui_title(cpt_next, running_or_paused)
+        CaptainUI.update_picking_ui_pick_buttons(cpt_next, running_or_paused)
+        CaptainUI.update_picking_ui_timer(cpt_next)
         -- Start alternating only when there is more than one player to pick.
         -- This condition will also prevent picking UI to appear when there is only
         -- one player left.
         if #special.listPlayers > 1 then
-            draw_picking_ui(cpt_prev, false)
-            update_picking_ui_pick_buttons(cpt_prev, false)
-            update_picking_ui_title(cpt_prev, false)
+            CaptainUI.draw_picking_ui(cpt_prev)
+            CaptainUI.update_picking_ui_pick_buttons(cpt_prev, idle_or_paused)
+            CaptainUI.update_picking_ui_title(cpt_prev, idle_or_paused)
+            CaptainUI.update_picking_ui_timer(cpt_prev)
         else
             -- Nothing left to pick for other/previous captain.
-            try_destroy_picking_ui(cpt_prev)
+            CaptainUI.try_destroy_picking_ui(cpt_prev)
         end
     end
 end
@@ -636,7 +396,7 @@ local function generate_generic_rendering_captain()
     y = y + 2
 end
 
-local function auto_pick_all_of_group(cptPlayer, playerName)
+local function auto_pick_all_of_group(playerName)
     local special = storage.special_games_variables.captain_mode
     if special.captainGroupAllowed and not special.initialPickingPhaseFinished then
         local playerChecked = cpt_get_player(playerName)
@@ -668,10 +428,12 @@ local function auto_pick_all_of_group(cptPlayer, playerName)
             local player = cpt_get_player(playerName)
             if player then
                 game.print(playerName .. ' was automatically picked with group system', { color = Color.cyan })
-                switch_team_of_player(playerName, playerChecked.force.name)
+                local f = playerChecked.force.name
+                switch_team_of_player(playerName, f)
                 player.print({ 'captain.comms_reminder' }, { color = Color.cyan })
                 table_remove_element(special.listPlayers, playerName)
-                try_update_picking_ui_list_for_each(special.captainList, playerName)
+                CaptainUI.try_destroy_picking_ui_list_entry_for_each(special.captainList, playerName)
+                special.captain_pick_timer[f] = special.captain_pick_timer[f] + special.captain_pick_timer_gain
             end
         end
     end
@@ -783,6 +545,27 @@ local function generate_captain_mode(refereeName, autoTrust, captainKick, specia
         ---Holds a maximum of two captain names. Where index '1' denotes north, '2' south.
         ---@type string[]
         captainList = {},
+        ---Each force has an associated timer that is ticking down during pick phase.
+        ---Once timer elapses, some action is performed as a penalty. Indexed by force name
+        ---@type table<string, integer>
+        captain_pick_timer = {},
+        ---Contains a tick value when timer was last updated. This allows us to accurately
+        ---subtract remaining time for each force. Indexed by force name.
+        ---@type integer
+        captain_pick_timer_last_update = 0,
+        ---Default time gained from each picked player, in ticks. (22.5s)
+        ---@type integer
+        captain_pick_timer_gain = (22 * 60) + 30,
+        ---Default base timer allocated to each force, in ticks. (3min)
+        ---@type integer
+        captain_pick_timer_base = 3 * 60 * 60,
+        ---Default extra time allocated to force that picks first, in ticks (15s)
+        ---@type integer
+        captain_pick_timer_extra = 15 * 60,
+        ---If picking timer and entire picking UI is paused.
+        captain_pick_timer_paused = false,
+        ---If picking timer is enabled.
+        captain_pick_timer_enabled = false,
         ---@type table<string, table<string, boolean>>
         viceCaptains = { north = {}, south = {} },
         ---@type table<string, {stop_tick: integer, players: table<LuaPlayer, string>}>
@@ -1338,7 +1121,7 @@ function Public.end_of_picking_phase()
     special.pickingPhase = false
 
     -- Destroy any open picking UIs, even for offline captains.
-    try_destroy_picking_ui_for_each(game.players)
+    CaptainUI.try_destroy_picking_ui_for_each(game.players)
     if not special.initialPickingPhaseFinished then
         special.initialPickingPhaseFinished = true
         if special.captainGroupAllowed then
@@ -1380,6 +1163,13 @@ local function start_picking_phase()
         close_difficulty_vote()
         special.initialPickingPhaseStarted = true
     end
+
+    -- Allocate initial time budget for picks.
+    for _, f in ipairs({ 'north', 'south' }) do
+        special.captain_pick_timer[f] = special.captain_pick_timer_base
+    end
+    special.captain_pick_timer_last_update = game.tick
+
     if special.communityPickingMode and is_initial_picking_phase then
         -- Take only the picks that were "confirmed"
         local final_community_picks = {}
@@ -1456,8 +1246,10 @@ local function start_picking_phase()
             log('Next force to pick: ' .. next_pick_force)
         end
 
+        special.captain_pick_timer[next_pick_force] = special.captain_pick_timer[next_pick_force]
+            + special.captain_pick_timer_extra
         special.next_pick_force = next_pick_force
-        display_picking_ui()
+        display_picking_ui(CaptainStates.PICKS.RUNNING)
     end
     Public.update_all_captain_player_guis()
 end
@@ -1729,6 +1521,67 @@ local function on_gui_selection_state_changed(event)
     end
 end
 
+---Assigns player to force which is currently making a pick. It handles
+---entire logic concerning picking order and ending the pick phase.
+---@param player string Name of a player that is supposed to be assigned.
+local function assign_player(player)
+    local special = storage.special_games_variables.captain_mode
+    local f = special.next_pick_force
+    local listPlayers = special.listPlayers
+    switch_team_of_player(player, f)
+    cpt_get_player(player).print({ '', { 'captain.comms_reminder' } }, { color = Color.cyan })
+    for index, name in pairs(listPlayers) do
+        if name == player then
+            remove(listPlayers, index)
+            break
+        end
+    end
+
+    special.captain_pick_timer[f] = special.captain_pick_timer[f] + special.captain_pick_timer_gain
+    CaptainUI.try_destroy_picking_ui_list_entry_for_each(special.captainList, player)
+
+    if is_player_in_group_system(player) then
+        auto_pick_all_of_group(player)
+    end
+
+    if #listPlayers == 0 then
+        Public.end_of_picking_phase()
+    else
+        local fnext
+        if not special.initialPickingPhaseFinished then
+            -- The logic below defaults to a 1-2-2-2-2-... picking system. However, if large groups
+            -- are picked, then whatever captain is picking gets to keep picking until they have more
+            -- players than the other team, so if there is one group of 3 that is picked first, then
+            -- the picking would go 3-4-2-2-2-...
+            if #special.stats.southPicks > #special.stats.northPicks then
+                fnext = 'north'
+            elseif #special.stats.northPicks > #special.stats.southPicks then
+                fnext = 'south'
+            else
+                -- default to the same force continuing to pick
+                fnext = f
+            end
+        else
+            -- just alternate picking
+            fnext = f == 'south' and 'north' or 'south'
+        end
+
+        special.next_pick_force = fnext
+        display_picking_ui(CaptainStates.PICKS.RUNNING)
+    end
+
+    Public.update_all_captain_player_guis()
+end
+
+---Force assigns player to force which is currently making a pick, because they
+---exceeded their time budget. We take the first player from the pick list,
+---which has either highest online time or belongs to a group.
+local function force_assign_player()
+    local special = storage.special_games_variables.captain_mode
+    local player = special.listPlayers[1]
+    assign_player(player)
+end
+
 ---@param event EventData.on_gui_click
 local function on_gui_click(event)
     local element = event.element
@@ -1856,7 +1709,6 @@ local function on_gui_click(event)
         end
     elseif starts_with(name, 'captain_player_picked_') then
         local playerPicked = element.tags.name
-        local forceToGo = special.next_pick_force
         game.print(
             string_format(
                 '%s was picked by%s %s',
@@ -1865,46 +1717,7 @@ local function on_gui_click(event)
                 player.name
             )
         )
-        local listPlayers = special.listPlayers
-        switch_team_of_player(playerPicked, forceToGo)
-        cpt_get_player(playerPicked).print({ '', { 'captain.comms_reminder' } }, { color = Color.cyan })
-        for index, name in pairs(listPlayers) do
-            if name == playerPicked then
-                remove(listPlayers, index)
-                break
-            end
-        end
-        try_update_picking_ui_list_for_each(special.captainList, playerPicked)
-
-        if is_player_in_group_system(playerPicked) then
-            auto_pick_all_of_group(player, playerPicked)
-        end
-        if #storage.special_games_variables.captain_mode.listPlayers == 0 then
-            Public.end_of_picking_phase()
-        else
-            local force_to_pick_next
-            if not special.initialPickingPhaseFinished then
-                -- The logic below defaults to a 1-2-2-2-2-... picking system. However, if large groups
-                -- are picked, then whatever captain is picking gets to keep picking until they have more
-                -- players than the other team, so if there is one group of 3 that is picked first, then
-                -- the picking would go 3-4-2-2-2-...
-                if #special.stats.southPicks > #special.stats.northPicks then
-                    force_to_pick_next = 'north'
-                elseif #special.stats.northPicks > #special.stats.southPicks then
-                    force_to_pick_next = 'south'
-                else
-                    -- default to the same force continuing to pick
-                    force_to_pick_next = forceToGo
-                end
-            else
-                -- just alternate picking
-                force_to_pick_next = forceToGo == 'south' and 'north' or 'south'
-            end
-
-            special.next_pick_force = force_to_pick_next
-            display_picking_ui()
-        end
-        Public.update_all_captain_player_guis()
+        assign_player(playerPicked)
     elseif name == 'captain_is_ready' then
         if not table_contains(special.listTeamReadyToPlay, player.force.name) then
             game.print(
@@ -1941,6 +1754,18 @@ local function on_gui_click(event)
             )
         end
         Public.update_all_captain_player_guis()
+    elseif name == 'captain_pick_timer_enable' then
+        special.captain_pick_timer_enabled = not special.captain_pick_timer_enabled
+        Public.update_all_captain_player_guis()
+    elseif name == 'captain_pick_timer_pause' then
+        special.captain_pick_timer_paused = not special.captain_pick_timer_paused
+        if special.captain_pick_timer_paused then
+            game.print('Referee ' .. player.name .. ' paused picking', { color = Color.red })
+            display_picking_ui(CaptainStates.PICKS.PAUSED)
+        else
+            game.print('Referee ' .. player.name .. ' resumed picking', { color = Color.red })
+            display_picking_ui(CaptainStates.PICKS.RUNNING)
+        end
     elseif name == 'captain_favor_plus' then
         local force = element.parent.name
         special.nextAutoPicksFavor[force] = special.nextAutoPicksFavor[force] + 1
@@ -2132,6 +1957,28 @@ local function on_gui_click(event)
     end
 end
 
+---@param event LuaOnGuiTextChanged
+local function on_gui_text_changed(event)
+    local element = event.element
+    if not (element and element.valid) then
+        return
+    end
+    local special = storage.special_games_variables.captain_mode
+    if not special then
+        return
+    end
+    local player = cpt_get_player(event.player_index)
+    if not player then
+        return
+    end
+
+    local name = element.name
+    if name == 'captain_pick_timer_base' or name == 'captain_pick_timer_gain' or name == 'captain_pick_timer_extra' then
+        special[name] = tonumber(element.text) * 60 -- In ticks
+        Public.update_all_captain_player_guis()
+    end
+end
+
 local function on_player_changed_force(event)
     local player = game.get_player(event.player_index)
     if not player or not player.valid then
@@ -2178,11 +2025,15 @@ local function on_player_left_game(event)
             if playerChosen ~= nil then
                 -- Captain may leave during late picks. In that case, destroy their UI
                 -- and assign current picking session to newly selected captain.
-                try_destroy_picking_ui(player)
+                CaptainUI.try_destroy_picking_ui(player)
                 Public.change_captain(playerChosen, forceOfCaptain, 'New captain automatic selection')
-                display_picking_ui()
+                display_picking_ui(CaptainStates.PICKS.RUNNING)
             end
         end
+    else
+        -- Update for all players, since we could be in community mode and
+        -- we don't know who is currently picking.
+        CaptainUI.try_update_picking_ui_list_entry_for_each(game.players, player.name)
     end
 
     if not special.pickingPhase then
@@ -2213,6 +2064,9 @@ local function on_player_joined_game(event)
         Public.draw_captain_tournament_gui(player)
         Public.draw_captain_player_gui(player)
         Sounds.notify_player(player, 'utility/new_objective')
+        -- Update for all players, since we could be in community mode and
+        -- we don't know who is currently picking.
+        CaptainUI.try_update_picking_ui_list_entry_for_each(game.players, player.name)
     end
     Public.update_all_captain_player_guis()
 end
@@ -2254,6 +2108,52 @@ local function every_1sec(event)
             end
         end
     end
+end
+
+---Executes picking list timer logic
+---@param event LuaOnTick
+local function on_tick(event)
+    local special = storage.special_games_variables.captain_mode
+    if not special then
+        return
+    end
+
+    if not special.captain_pick_timer_enabled then
+        return
+    end
+
+    local f = special.next_pick_force
+    if not special.pickingPhase or not f then
+        return
+    end
+
+    if event.tick % 60 ~= 0 then
+        return
+    end
+
+    -- If timer paused, refresh last update, but don't subtract any time.
+    -- Also refresh UI.
+    if special.captain_pick_timer_paused then
+        special.captain_pick_timer_last_update = event.tick
+        CaptainUI.try_update_picking_ui_timer(f)
+        return
+    end
+
+    local last = special.captain_pick_timer_last_update
+    local elapsed = event.tick - last
+    special.captain_pick_timer[f] = special.captain_pick_timer[f] - elapsed
+    if special.captain_pick_timer[f] <= 0 then
+        game.print(
+            Functions.team_name(f) .. ' ran out of the time and so the pick was made automatically',
+            { color = Color.yellow }
+        )
+        force_assign_player()
+    end
+
+    special.captain_pick_timer_last_update = event.tick
+    -- Because we don't know who the captain is as we might be dealing with
+    -- community picks, we have to iterate over all players to find picking UI.
+    CaptainUI.try_update_picking_ui_timer(f)
 end
 
 -- == DRAW BUTTONS ============================================================
@@ -2464,6 +2364,7 @@ function Public.draw_captain_player_gui(player, main_frame)
             style = 'label_with_left_padding',
         })
         gui_style(label, { single_line = false })
+        CaptainUI.draw_lobby_ui_estimate(prepa_flow)
         prepa_flow.add({ type = 'line' })
     end
 
@@ -2899,7 +2800,10 @@ function Public.update_captain_player_gui(player, frame)
                     .. '): '
                     .. pretty_print_player_list(special.listPlayers)
             end
+
+            CaptainUI.update_lobby_ui_estimate(prepa_flow)
         end
+
         prepa_flow.visible = special.prepaPhase
     end
 
@@ -3213,6 +3117,7 @@ function Public.update_captain_referee_gui(player, frame)
     -- Technically this would be more efficient if we didn't do the full clear here, and
     -- instead made elements visible/invisible as needed. But this is simpler and I don't
     -- think that performance really matters.
+    -- :skull:
     scroll.clear()
 
     -- if game hasn't started, and at least one captain isn't ready, show a button to force both captains to be ready
@@ -3316,6 +3221,7 @@ function Public.update_captain_referee_gui(player, frame)
             })
             b.style.font = 'heading-2'
         end
+
         scroll.add({
             type = 'switch',
             name = 'captain_enable_groups_switch',
@@ -3377,6 +3283,8 @@ function Public.update_captain_referee_gui(player, frame)
             })
         end
     end
+
+    CaptainUI.draw_referee_ui_pick_timer(scroll)
 end
 
 function Public.update_captain_manager_gui(player, frame)
@@ -3833,6 +3741,7 @@ commands.add_command('cpt-test-func', 'Run some test-only code for captains game
         end
         special.test_players[playerName] =
             { name = playerName, tag = group_name, color = Color.white, valid = true, connected = true }
+        storage.total_time_online_players[playerName] = math_random(0, 10000000)
         insert(special.listPlayers, playerName)
     end
     special.player_info.alice = 'I am a test player'
@@ -3848,9 +3757,11 @@ end)
 -- == HANDLERS ================================================================
 Event.on_nth_tick(300, every_5sec)
 Event.on_nth_tick(60, every_1sec)
+Event.add(defines.events.on_tick, on_tick)
 Event.add(defines.events.on_gui_click, on_gui_click)
 Event.add(defines.events.on_gui_switch_state_changed, on_gui_switch_state_changed)
 Event.add(defines.events.on_gui_value_changed, on_gui_value_changed)
+Event.add(defines.events.on_gui_text_changed, on_gui_text_changed)
 Event.add(defines.events.on_gui_selection_state_changed, on_gui_selection_state_changed)
 Event.add(defines.events.on_player_joined_game, on_player_joined_game)
 Event.add(defines.events.on_player_left_game, on_player_left_game)
