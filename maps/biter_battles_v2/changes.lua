@@ -1,5 +1,26 @@
 return {
     {
+        number = 753,
+        date = '2026-01-29',
+        author = 'Max1000',
+        comment = [[(#753) Fix scoreboard to show offline players and allow spectators to see both teams]],
+    },
+    {
+        number = 750,
+        date = '2026-01-29',
+        author = 'Max1000',
+        comment = [[(#750) Add built-in mk2 fordeka special game]],
+    },
+    {
+        number = 752,
+        date = '2026-01-28',
+        author = 'Data-',
+        comment = [[(#752) Calc send UI fixes:
+  - Fixed "fill from remote view" processing entities on chunk borders multiple times
+  - Removed area limit from "fill from remote view" and disabled it in chart view (zoomed out remote view)
+  - Fixed evolution values displaying with extremely long decimal fractions]],
+    },
+    {
         number = 749,
         date = '2025-12-29',
         author = 'Zerosun',
