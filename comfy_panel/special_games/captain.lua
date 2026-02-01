@@ -235,8 +235,8 @@ local function get_sorted_pick_list()
         local time_b = storage.total_time_online_players[b] or 0
         local tag_a = cpt_get_player(a).tag or ''
         local tag_b = cpt_get_player(b).tag or ''
-        local cpt_a = starts_with(tag_a, ComfyPanelGroup.COMFY_PANEL_CAPTAINS_GROUP_PLAYER_TAG_PREFIX)
-        local cpt_b = starts_with(tag_b, ComfyPanelGroup.COMFY_PANEL_CAPTAINS_GROUP_PLAYER_TAG_PREFIX)
+        local cpt_a = ComfyPanelGroup.is_cpt_group_tag(tag_a)
+        local cpt_b = ComfyPanelGroup.is_cpt_group_tag(tag_b)
 
         -- If tag name doesn't start with captain prefix reset
         -- to default for the purpose of sort
@@ -431,11 +431,7 @@ local function is_player_in_group_system(playerName)
     -- function used to balance team when a team is picked
     if storage.special_games_variables.captain_mode.captainGroupAllowed then
         local playerChecked = cpt_get_player(playerName)
-        if
-            playerChecked
-            and playerChecked.tag ~= ''
-            and starts_with(playerChecked.tag, ComfyPanelGroup.COMFY_PANEL_CAPTAINS_GROUP_PLAYER_TAG_PREFIX)
-        then
+        if playerChecked and playerChecked.tag ~= '' and ComfyPanelGroup.is_cpt_group_tag(playerChecked.tag) then
             return true
         end
     end
