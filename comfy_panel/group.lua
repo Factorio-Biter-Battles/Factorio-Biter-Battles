@@ -174,6 +174,13 @@ local function startswith(text, prefix)
     return text:find(prefix, 1, true) == 1
 end
 
+---Checks if a player tag belongs to a captain picking group.
+---@param tag string Player tag to check
+---@return boolean
+function Public.is_cpt_group_tag(tag)
+    return startswith(tag, Public.COMFY_PANEL_CAPTAINS_GROUP_PLAYER_TAG_PREFIX)
+end
+
 local function refresh_gui()
     for _, p in pairs(game.connected_players) do
         local frame = Tabs.comfy_panel_get_active_frame(p)
@@ -340,7 +347,7 @@ local function on_gui_click(event)
                     or (
                         storage.active_special_games['captain_mode']
                         and storage.special_games_variables['captain_mode']['pickingPhase']
-                        and startswith(player.tag, Public.COMFY_PANEL_CAPTAINS_GROUP_PLAYER_TAG_PREFIX)
+                        and Public.is_cpt_group_tag(player.tag)
                     )
                 then
                     player.print('You cant join or leave a picking group during picking phase..', { color = Color.red })
@@ -392,7 +399,7 @@ local function on_gui_click(event)
                 if
                     storage.active_special_games['captain_mode']
                     and storage.special_games_variables['captain_mode']['pickingPhase']
-                    and startswith(player.tag, Public.COMFY_PANEL_CAPTAINS_GROUP_PLAYER_TAG_PREFIX)
+                    and Public.is_cpt_group_tag(player.tag)
                 then
                     player.print('You cant leave a picking group during picking phase..', { color = Color.red })
                 else

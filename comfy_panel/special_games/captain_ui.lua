@@ -1,5 +1,6 @@
 local CaptainUtils = require('comfy_panel.special_games.captain_utils')
 local Color = require('utils.color_presets')
+local Group = require('comfy_panel.group')
 local PlayerList = require('comfy_panel.player_list')
 local PlayerUtils = require('utils.player')
 local cpt_get_player = CaptainUtils.cpt_get_player
@@ -141,8 +142,9 @@ local function draw_picking_ui_list(frame)
                 PlayerList.get_formatted_playtime_from_ticks(storage.total_time_online_players[playerIterated.name])
         end
 
-        local groupName = playerIterated.tag
-        draw_picking_ui_entry(tab, pl, groupName, playtimePlayer)
+        local tag = playerIterated.tag
+        tag = Group.is_cpt_group_tag(tag) and tag or ''
+        draw_picking_ui_entry(tab, pl, tag, playtimePlayer)
     end
 end
 
