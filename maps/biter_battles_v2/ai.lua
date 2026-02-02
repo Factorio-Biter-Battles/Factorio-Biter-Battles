@@ -93,23 +93,33 @@ Public.send_near_biters_to_silo = function()
     end
 end
 
+--- Remove invalid spawner from the list at given index
+---@param spawners table
+---@param index number
+---@param size number
+---@return number new_size
+local function remove_invalid_spawner(spawners, index, size)
+    table.remove(spawners, index)
+    return size - 1
+end
+
 local function get_random_spawner(biter_force_name)
     local spawners = storage.unit_spawners[biter_force_name]
-    local size_of_spawners = #spawners
+    local size = #spawners
 
     for _ = 1, 256, 1 do
-        if size_of_spawners == 0 then
-            return
+        if size == 0 then
+            return nil
         end
-        local index = math_random(1, size_of_spawners)
+        local index = math_random(1, size)
         local spawner = spawners[index]
         if spawner and spawner.valid then
             return spawner
-        else
-            table.remove(spawners, index)
-            size_of_spawners = size_of_spawners - 1
         end
+        -- Spawner is nil or invalid, remove it from the list
+        size = remove_invalid_spawner(spawners, index, size)
     end
+    return nil
 end
 
 --Manual spawning of units
