@@ -281,6 +281,9 @@ local function get_nearby_biter_nest(center, biter_force_name)
 
     for _ = 1, 16, 1 do
         local new_spawner = get_random_spawner(biter_force_name)
+        if not new_spawner then
+            break
+        end
         local new_distance = (center.x - new_spawner.position.x) ^ 2 + (center.y - new_spawner.position.y) ^ 2
         if new_distance < best_distance then
             spawner = new_spawner
