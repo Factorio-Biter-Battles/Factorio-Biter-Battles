@@ -176,6 +176,7 @@ function Public.initial_setup()
         ['automatic_captain'] = true,
         ['map_reroll'] = true,
         ['burners_balance'] = true,
+        ['daytime_cycle'] = 'always_day',
     }
     storage.gui_theme = {}
     storage.want_pings = {}
@@ -210,6 +211,49 @@ function Public.initial_setup()
     createTrollSong(game.forces.spectator.name, { x = -80, y = 0 })
 end
 
+---Daytime cycle configuration options
+---Each entry contains the key, UI label, and surface settings
+Public.daytime_cycle_options = {
+    {
+        key = 'always_day',
+        label = 'Always Day',
+        always_day = true,
+        freeze_daytime = true,
+        daytime = 0,
+    },
+    {
+        key = 'day_night_cycle',
+        label = 'Day-Night',
+        always_day = false,
+        freeze_daytime = false,
+        daytime = 0,
+    },
+    {
+        key = 'always_night',
+        label = 'Always Night',
+        always_day = false,
+        freeze_daytime = true,
+        daytime = 0.5,
+    },
+}
+
+---Applies daytime settings to a surface based on bb_settings.daytime_cycle
+---@param surface LuaSurface
+function Public.apply_daytime_settings(surface)
+    local setting = storage.bb_settings.daytime_cycle or 'always_day'
+    for _, opt in ipairs(Public.daytime_cycle_options) do
+        if opt.key == setting then
+            surface.always_day = opt.always_day
+            surface.daytime = opt.daytime
+            surface.freeze_daytime = opt.freeze_daytime
+
+            return
+        end
+    end
+    -- Fallback to always_day if setting not found
+    surface.always_day = true
+end
+
 --Terrain Playground Surface
 function Public.playground_surface()
     local map_gen_settings = {}
@@ -219,6 +263,7 @@ function Public.playground_surface()
     Terrain.adjust_map_gen_settings(map_gen_settings)
     local surface = game.create_surface(storage.bb_surface_name, map_gen_settings)
     surface.brightness_visual_weights = { -1.17, -0.975, -0.52 }
+    Public.apply_daytime_settings(surface)
 end
 
 function Public.draw_structures()
