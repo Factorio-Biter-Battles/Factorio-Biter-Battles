@@ -212,4 +212,17 @@ Module.left_frame_style = function()
     }
 end
 
+---Format number with K/M suffix for readability
+---@param n number
+---@return string
+Module.with_km_suffix = function(n)
+    if n >= 1000000 then
+        return string.format('%.1fM', n / 1000000)
+    elseif n >= 1000 then
+        return string.format('%.1fk', n / 1000)
+    else
+        return string.format('%d', n)
+    end
+end
+
 return Module
