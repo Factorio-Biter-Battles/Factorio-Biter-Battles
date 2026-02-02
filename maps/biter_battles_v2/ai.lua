@@ -93,18 +93,21 @@ Public.send_near_biters_to_silo = function()
     end
 end
 
---- Remove invalid spawner from the list at given index
+--- Remove invalid spawner from the list at given index using swap-and-pop.
+--- This is O(1) compared to table.remove which is O(n).
 ---@param spawners table
 ---@param index number
 ---@param size number
 ---@return number new_size
 local function remove_invalid_spawner(spawners, index, size)
-    table.remove(spawners, index)
+    spawners[index] = spawners[size]
+    spawners[size] = nil
     return size - 1
 end
 
 local function get_random_spawner(biter_force_name)
     local spawners = storage.unit_spawners[biter_force_name]
+    -- #spawners works because swap-and-pop maintains array contiguity (no holes)
     local size = #spawners
 
     for _ = 1, 256, 1 do
