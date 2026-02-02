@@ -1,5 +1,7 @@
 local safe_wrap_with_player_print = require('utils.utils').safe_wrap_with_player_print
+local with_km_suffix = require('utils.utils').with_km_suffix
 local Color = require('utils.color_presets')
+local Functions = require('maps.biter_battles_v2.functions')
 
 ---Item category name to list of item names
 ---@type table<string, string[]>
@@ -227,7 +229,7 @@ local function format_items_line(items, category_items)
     for _, item_name in ipairs(category_items) do
         local count = items[item_name]
         if count then
-            table.insert(parts, string.format('[img=item/%s] %d', item_name, count))
+            table.insert(parts, string.format('[img=item/%s] %s', item_name, with_km_suffix(count)))
         end
     end
     return table.concat(parts, ', ')
@@ -276,7 +278,7 @@ local function inventory_scan(cmd)
     for _, force in ipairs(forces) do
         local players = get_players_for_force(force)
         if #forces > 1 then
-            player.print('== ' .. force .. ' ==')
+            player.print('━━ ' .. Functions.team_name_with_color(force) .. ' ━━')
         end
         for _, target_player in ipairs(players) do
             local items = get_player_category_items(target_player, category_items)
