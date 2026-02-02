@@ -212,4 +212,22 @@ Module.left_frame_style = function()
     }
 end
 
+local KM_TIERS = { { 1000000, 'M' }, { 1000, 'k' } }
+
+---Format number with K/M suffix for readability
+---@param n number
+---@return string
+Module.with_km_suffix = function(n)
+    for _, tier in ipairs(KM_TIERS) do
+        local magnitude, suffix = tier[1], tier[2]
+        if n >= magnitude then
+            local v = math.floor(n / (magnitude / 10)) / 10
+            -- avoid trailing ".0" for whole numbers
+            local fmt = v % 1 == 0 and '%d' or '%.1f'
+            return string.format(fmt .. suffix, v)
+        end
+    end
+    return string.format('%d', n)
+end
+
 return Module
