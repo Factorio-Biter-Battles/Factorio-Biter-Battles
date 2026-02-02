@@ -1,4 +1,5 @@
 local Terrain = require('maps.biter_battles_v2.terrain')
+local Daytime = require('maps.biter_battles_v2.daytime')
 local Score = require('comfy_panel.score')
 local Tables = require('maps.biter_battles_v2.tables')
 local Blueprint = require('maps.biter_battles_v2.blueprints')
@@ -176,6 +177,7 @@ function Public.initial_setup()
         ['automatic_captain'] = true,
         ['map_reroll'] = true,
         ['burners_balance'] = true,
+        ['daytime_cycle'] = 'always_day',
     }
     storage.gui_theme = {}
     storage.want_pings = {}
@@ -220,6 +222,7 @@ function Public.playground_surface()
     Terrain.adjust_map_gen_settings(map_gen_settings)
     local surface = game.create_surface(storage.bb_surface_name, map_gen_settings)
     surface.brightness_visual_weights = { -1.17, -0.975, -0.52 }
+    Daytime.apply_daytime_settings(surface)
 end
 
 function Public.draw_structures()
