@@ -44,7 +44,6 @@ local this = {
     players_warned = {},
     damage_history = {},
     punish_cancel_craft = false,
-    log_tree_harvest = false,
     do_not_check_trusted = true,
     enable_autokick = false,
     enable_autoban = false,
@@ -766,16 +765,6 @@ function Public.reset_tables()
         corpse = 0,
         cancel_crafting = 0,
     }
-end
-
---- Enable this to log when trees are destroyed
----@param value boolean
-function Public.log_tree_harvest(value)
-    if value then
-        this.log_tree_harvest = value
-    end
-
-    return this.log_tree_harvest
 end
 
 --- Add entity type to the whitelist so it gets logged.
