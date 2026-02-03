@@ -7,7 +7,6 @@ require('utils.utils')
 require('utils.table')
 require('utils.admin')
 require('utils.sounds')
---require 'utils.datastore.server_ups'
 require('utils.datastore.color_data')
 require('utils.datastore.session_data')
 require('utils.datastore.jail_data')

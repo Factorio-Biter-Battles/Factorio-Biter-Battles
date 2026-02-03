@@ -510,9 +510,4 @@ function Public.get_tech_blacklist(tier)
     return blacklist
 end
 
-function Public.get_item_value(item)
-    local value = item_worths[item]
-    return value
-end
-
 return Public
