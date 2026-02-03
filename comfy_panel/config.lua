@@ -239,6 +239,15 @@ local functions = {
             game.print('Burners balance is disabled!')
         end
     end,
+    ['bb_science_send_restriction_toggle'] = function(event)
+        if event.element.switch_state == 'left' then
+            storage.bb_settings.science_send_score_restriction = true
+            get_actor(event, '{Science Restriction}', 'has enabled science send restriction.')
+        else
+            storage.bb_settings.science_send_score_restriction = false
+            get_actor(event, '{Science Restriction}', 'has disabled science send restriction.')
+        end
+    end,
 }
 
 local poll_function = {
@@ -612,6 +621,23 @@ local build_config_gui = function(player, frame)
             label.style.horizontal_align = 'left'
             label.style.vertical_align = 'bottom'
             label.style.font_color = Color.green
+
+            scroll_pane.add({ type = 'line' })
+
+            local switch_state = 'right'
+            if storage.bb_settings.science_send_score_restriction then
+                switch_state = 'left'
+            end
+            local switch = add_switch(
+                scroll_pane,
+                switch_state,
+                'bb_science_send_restriction_toggle',
+                'Science Send Restriction',
+                'Require minimum build score to send science. Higher difficulty = lower requirement.'
+            )
+            if not admin then
+                switch.ignored_by_interaction = true
+            end
 
             scroll_pane.add({ type = 'line' })
 

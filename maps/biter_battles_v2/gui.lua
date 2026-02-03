@@ -6,6 +6,7 @@ local Color = require('utils.color_presets')
 local DifficultyVote = require('maps.biter_battles_v2.difficulty_vote')
 local Event = require('utils.event')
 local Feeding = require('maps.biter_battles_v2.feeding')
+local FeedingRestriction = require('maps.biter_battles_v2.feeding_restriction')
 local Functions = require('maps.biter_battles_v2.functions')
 local Init = require('maps.biter_battles_v2.init')
 local Gui = require('utils.gui')
@@ -601,7 +602,7 @@ function Public.create_main_gui(player)
             name = 'send_all',
             caption = 'All',
             style = 'slot_button',
-            tooltip = 'LMB - low to high, RMB - high to low',
+            tooltip = { 'info.send_all_tooltip' },
         })
         gui_style(f, { padding = 0, font_color = { r = 0.9, g = 0.9, b = 0.9 } })
         local f = t.add({
@@ -609,7 +610,7 @@ function Public.create_main_gui(player)
             name = 'info',
             style = 'slot_button',
             sprite = 'utility/warning_white',
-            tooltip = "If you don't see a food, it may have been disabled by special game mode, or you have not been authorized by your captain.",
+            tooltip = { 'info.info_button_tooltip' },
         })
         gui_style(f, { padding = 0 })
     end
@@ -809,12 +810,15 @@ function Public.refresh_main_gui(player, data)
             main.science_frame.visible = _DEBUG or false
         else
             main.science_frame.visible = true
-            local table = main.science_frame.flow.table_frame.send_table
+            local t = main.science_frame.flow.table_frame.send_table
             local all_enabled = true
             local button
+            local can_send_science = FeedingRestriction.can_player_send_science(player)
+            local score_restriction_tooltip = { 'info.science_send_restriction' }
             for food_name, tooltip in pairs(food_names) do
-                button = table[food_name]
+                button = t[food_name]
                 button.visible = true
+                button.enabled = true
                 button.tooltip = tooltip
                 if
                     storage.active_special_games.disable_sciences
@@ -825,18 +829,37 @@ function Public.refresh_main_gui(player, data)
                 if Captain_event.captain_is_player_prohibited_to_throw(player) and food_name ~= 'raw-fish' then
                     button.visible = false
                 end
-                all_enabled = all_enabled and button.visible
+                -- Build score restriction: gray out science buttons (fish is always allowed)
+                if not can_send_science and food_name ~= 'raw-fish' then
+                    button.enabled = false
+                    button.tooltip = score_restriction_tooltip
+                end
+                all_enabled = all_enabled and button.visible and button.enabled
             end
-            button = table.send_all
+            button = t.send_all
             button.visible = true
+            button.enabled = true
             if storage.active_special_games.disable_sciences then
                 button.visible = false
             end
             if Captain_event.captain_is_player_prohibited_to_throw(player) then
                 button.visible = false
             end
-            all_enabled = all_enabled and button.visible
-            table.info.visible = not all_enabled
+            -- Build score restriction for send_all button
+            if not can_send_science then
+                button.enabled = false
+                button.tooltip = score_restriction_tooltip
+            else
+                button.tooltip = { 'info.send_all_tooltip' }
+            end
+            all_enabled = all_enabled and button.visible and button.enabled
+            t.info.visible = not all_enabled
+            -- Update info button tooltip based on restriction reason
+            if not can_send_science then
+                t.info.tooltip = { 'info.science_send_restriction_tooltip' }
+            else
+                t.info.tooltip = { 'info.info_button_tooltip' }
+            end
         end
     end
 
