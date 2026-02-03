@@ -811,51 +811,46 @@ function Public.refresh_main_gui(player, data)
         else
             main.science_frame.visible = true
             local t = main.science_frame.flow.table_frame.send_table
-            local all_enabled = true
-            local button
-            local can_send_science = FeedingRestriction.can_player_send_science(player)
-            local score_restriction_tooltip = { 'info.science_send_restriction' }
+
+            -- Calculate restriction states once
+            local is_special_game_restricted = storage.active_special_games.disable_sciences
+            local is_captain_restricted = Captain_event.captain_is_player_prohibited_to_throw(player)
+            local is_score_restricted = not FeedingRestriction.can_player_send_science(player)
+
+            local any_restricted = false
+
+            -- Update food buttons
             for food_name, tooltip in pairs(food_names) do
-                button = t[food_name]
-                button.visible = true
-                button.enabled = true
-                button.tooltip = tooltip
-                if
-                    storage.active_special_games.disable_sciences
-                    and storage.special_games_variables.disabled_food[food_name]
-                then
-                    button.visible = false
-                end
-                if Captain_event.captain_is_player_prohibited_to_throw(player) and food_name ~= 'raw-fish' then
-                    button.visible = false
-                end
-                -- Build score restriction: gray out science buttons (fish is always allowed)
-                if not can_send_science and food_name ~= 'raw-fish' then
-                    button.enabled = false
-                    button.tooltip = score_restriction_tooltip
-                end
-                all_enabled = all_enabled and button.visible and button.enabled
+                local button = t[food_name]
+                local is_fish = food_name == 'raw-fish'
+
+                -- Determine visibility (captain/special game hides buttons)
+                local hidden = (is_special_game_restricted and storage.special_games_variables.disabled_food[food_name])
+                    or (is_captain_restricted and not is_fish)
+                button.visible = not hidden
+
+                -- Determine enabled state (score restriction disables but keeps visible)
+                local disabled = is_score_restricted and not is_fish
+                button.enabled = not disabled
+                button.tooltip = disabled and { 'info.science_send_restriction' } or tooltip
+
+                any_restricted = any_restricted or hidden or disabled
             end
-            button = t.send_all
-            button.visible = true
-            button.enabled = true
-            if storage.active_special_games.disable_sciences then
-                button.visible = false
-            end
-            if Captain_event.captain_is_player_prohibited_to_throw(player) then
-                button.visible = false
-            end
-            -- Build score restriction for send_all button
-            if not can_send_science then
-                button.enabled = false
-                button.tooltip = score_restriction_tooltip
-            else
-                button.tooltip = { 'info.send_all_tooltip' }
-            end
-            all_enabled = all_enabled and button.visible and button.enabled
-            t.info.visible = not all_enabled
-            -- Update info button tooltip based on restriction reason
-            if not can_send_science then
+
+            -- Update send_all button
+            local send_all = t.send_all
+            local hidden = is_special_game_restricted or is_captain_restricted
+            send_all.visible = not hidden
+            send_all.enabled = not is_score_restricted
+            send_all.tooltip = is_score_restricted and { 'info.science_send_restriction' }
+                or { 'info.send_all_tooltip' }
+            any_restricted = any_restricted or hidden or is_score_restricted
+
+            -- Update info button
+            t.info.visible = any_restricted
+            if is_captain_restricted or is_special_game_restricted then
+                t.info.tooltip = { 'info.info_button_tooltip' }
+            elseif is_score_restricted then
                 t.info.tooltip = { 'info.science_send_restriction_tooltip' }
             else
                 t.info.tooltip = { 'info.info_button_tooltip' }
