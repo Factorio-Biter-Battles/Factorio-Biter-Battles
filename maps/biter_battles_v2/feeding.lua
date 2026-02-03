@@ -1,5 +1,6 @@
 local bb_config = require('maps.biter_battles_v2.config')
 local FeedingCalculations = require('maps.biter_battles_v2.feeding_calculations')
+local FeedingRestriction = require('maps.biter_battles_v2.feeding_restriction')
 local Functions = require('maps.biter_battles_v2.functions')
 local Server = require('utils.server')
 
@@ -290,6 +291,12 @@ function Public.feed_biters_from_inventory(player, food)
         return
     end
 
+    -- Build score restriction
+    if not FeedingRestriction.can_player_send_science(player) then
+        player.print({ 'info.science_send_restriction' })
+        return
+    end
+
     local enemy_force_name = get_enemy_team_of(player.force.name) ---------------
     --enemy_force_name = player.force.name
 
@@ -342,6 +349,13 @@ function Public.feed_biters_mixed_from_inventory(player, button)
         player.print('Please wait for voting to finish before feeding')
         return
     end
+
+    -- Build score restriction
+    if not FeedingRestriction.can_player_send_science(player) then
+        player.print({ 'info.science_send_restriction' })
+        return
+    end
+
     local enemy_force_name = get_enemy_team_of(player.force.name)
     local biter_force_name = enemy_force_name .. '_biters'
     local food = {
