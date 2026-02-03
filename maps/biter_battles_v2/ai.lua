@@ -93,23 +93,36 @@ Public.send_near_biters_to_silo = function()
     end
 end
 
+--- Remove invalid spawner from the list at given index using swap-and-pop.
+--- This is O(1) compared to table.remove which is O(n).
+---@param spawners table
+---@param index number
+---@param size number
+---@return number new_size
+local function remove_invalid_spawner(spawners, index, size)
+    spawners[index] = spawners[size]
+    spawners[size] = nil
+    return size - 1
+end
+
 local function get_random_spawner(biter_force_name)
     local spawners = storage.unit_spawners[biter_force_name]
-    local size_of_spawners = #spawners
+    -- #spawners works because swap-and-pop maintains array contiguity (no holes)
+    local size = #spawners
 
     for _ = 1, 256, 1 do
-        if size_of_spawners == 0 then
-            return
+        if size == 0 then
+            return nil
         end
-        local index = math_random(1, size_of_spawners)
+        local index = math_random(1, size)
         local spawner = spawners[index]
         if spawner and spawner.valid then
             return spawner
-        else
-            table.remove(spawners, index)
-            size_of_spawners = size_of_spawners - 1
         end
+        -- Spawner is nil or invalid, remove it from the list
+        size = remove_invalid_spawner(spawners, index, size)
     end
+    return nil
 end
 
 --Manual spawning of units
@@ -281,6 +294,9 @@ local function get_nearby_biter_nest(center, biter_force_name)
 
     for _ = 1, 16, 1 do
         local new_spawner = get_random_spawner(biter_force_name)
+        if not new_spawner then
+            break
+        end
         local new_distance = (center.x - new_spawner.position.x) ^ 2 + (center.y - new_spawner.position.y) ^ 2
         if new_distance < best_distance then
             spawner = new_spawner
