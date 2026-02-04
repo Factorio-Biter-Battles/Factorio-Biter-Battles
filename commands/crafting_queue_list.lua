@@ -38,7 +38,7 @@ local GRAY = { r = 0.8, g = 0.8, b = 0.8 }
 
 ---@class CqlState
 ---@field ui_frames table<integer, CqlUiFrame>
----@field watchlist table<integer, uint[]>
+---@field watchlist table<integer, table<uint, integer>>
 ---@field view_id_next integer
 
 ---@type CqlState
@@ -126,15 +126,28 @@ local function get_watchlist(view_id)
 end
 
 ---@param view_id integer
+---@return uint[]
+local function get_ordered_watchlist(view_id)
+    local wl = get_watchlist(view_id)
+    local entries = {}
+    for p_idx, order in pairs(wl) do
+        entries[#entries + 1] = { p_idx = p_idx, order = order }
+    end
+    table.sort(entries, function(a, b)
+        return a.order < b.order
+    end)
+    local result = {}
+    for i, e in ipairs(entries) do
+        result[i] = e.p_idx
+    end
+    return result
+end
+
+---@param view_id integer
 ---@param p_idx uint
 ---@return boolean
 local function is_watching(view_id, p_idx)
-    for _, id in ipairs(get_watchlist(view_id)) do
-        if id == p_idx then
-            return true
-        end
-    end
-    return false
+    return get_watchlist(view_id)[p_idx] ~= nil
 end
 
 ---@param p_idx uint
@@ -142,11 +155,8 @@ end
 local function get_views_watching(p_idx)
     local views = {}
     for v_id, wl in pairs(this.watchlist) do
-        for _, id in ipairs(wl) do
-            if id == p_idx then
-                views[#views + 1] = v_id
-                break
-            end
+        if wl[p_idx] then
+            views[#views + 1] = v_id
         end
     end
     return views
@@ -335,7 +345,7 @@ local function rebuild_team_rows(view_id, team)
 
     panel.rows.clear()
 
-    local wl = get_watchlist(view_id)
+    local wl = get_ordered_watchlist(view_id)
     local team_players = {}
     for _, p_idx in ipairs(wl) do
         local p = game.get_player(p_idx)
@@ -389,7 +399,7 @@ local function update_player_crafting(p_idx, just_crafted)
 
         local panel = ui.teams[team]
 
-        local wl = get_watchlist(v_id)
+        local wl = get_ordered_watchlist(v_id)
         local row_idx = 0
         for _, id in ipairs(wl) do
             local wp = game.get_player(id)
@@ -432,11 +442,17 @@ end
 ---@param p_idx uint
 ---@return boolean
 local function watchlist_add(view_id, p_idx)
-    if is_watching(view_id, p_idx) then
+    local wl = get_watchlist(view_id)
+    if wl[p_idx] then
         return false
     end
-    local wl = get_watchlist(view_id)
-    wl[#wl + 1] = p_idx
+    local max_order = 0
+    for _, order in pairs(wl) do
+        if order > max_order then
+            max_order = order
+        end
+    end
+    wl[p_idx] = max_order + 1
     return true
 end
 
@@ -445,13 +461,17 @@ end
 ---@return boolean
 local function watchlist_remove(view_id, p_idx)
     local wl = get_watchlist(view_id)
-    for i = #wl, 1, -1 do
-        if wl[i] == p_idx then
-            table.remove(wl, i)
-            return true
+    local removed_order = wl[p_idx]
+    if not removed_order then
+        return false
+    end
+    wl[p_idx] = nil
+    for idx, order in pairs(wl) do
+        if order > removed_order then
+            wl[idx] = order - 1
         end
     end
-    return false
+    return true
 end
 
 ---@param view_id integer
@@ -460,22 +480,23 @@ end
 ---@return boolean
 local function watchlist_move(view_id, p_idx, delta)
     local wl = get_watchlist(view_id)
-    local from
-    for i, id in ipairs(wl) do
-        if id == p_idx then
-            from = i
+    local from_order = wl[p_idx]
+    if not from_order then
+        return false
+    end
+    local to_order = from_order + delta
+    local swap_idx
+    for idx, order in pairs(wl) do
+        if order == to_order then
+            swap_idx = idx
             break
         end
     end
-    if not from then
+    if not swap_idx then
         return false
     end
-
-    local to = from + delta
-    if to < 1 or to > #wl then
-        return false
-    end
-    wl[from], wl[to] = wl[to], wl[from]
+    wl[p_idx] = to_order
+    wl[swap_idx] = from_order
     return true
 end
 
