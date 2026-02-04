@@ -14,6 +14,30 @@ local DIMMED = { r = 0.6, g = 0.6, b = 0.6 }
 local UNDIMMED = { r = 1, g = 1, b = 1 }
 local GRAY = { r = 0.8, g = 0.8, b = 0.8 }
 
+---@class CqlTeamPanel
+---@field frame LuaGuiElement
+---@field dd LuaGuiElement
+---@field dd_map table<integer, uint>
+---@field add_btn LuaGuiElement
+---@field rows LuaGuiElement
+
+---@class CqlUiFrame
+---@field root LuaGuiElement
+---@field owner uint
+---@field teams table<string, CqlTeamPanel>
+
+---@class CqlQueueItem
+---@field sprite string?
+---@field count number
+
+---@class CqlState
+---@field forces table<string, table<uint, boolean>>
+---@field ui_frames table<integer, CqlUiFrame>
+---@field watchlist table<integer, uint[]>
+---@field view_id_next integer
+---@field sprite_cache table<string, string>
+
+---@type CqlState
 local this = {
     forces = { north = {}, south = {} },
     ui_frames = {},
@@ -26,6 +50,9 @@ Global.register(this, function(t)
     this = t
 end)
 
+---@param elem LuaGuiElement
+---@param w number
+---@param h number?
 local function set_size(elem, w, h)
     h = h or w
     elem.style.width, elem.style.height = w, h
@@ -33,17 +60,22 @@ local function set_size(elem, w, h)
     elem.style.maximal_width, elem.style.maximal_height = w, h
 end
 
+---@param fn fun(team: string)
 local function for_each_team(fn)
     for _, team in ipairs(TEAMS) do
         fn(team)
     end
 end
 
+---@param id uint
+---@return LuaPlayer?
 local function get_player(id)
     local p = game.get_player(id)
     return (p and p.valid and p.connected) and p or nil
 end
 
+---@param p_idx uint
+---@return string?
 local function player_team(p_idx)
     for _, team in ipairs(TEAMS) do
         if this.forces[team][p_idx] then
@@ -53,6 +85,9 @@ local function player_team(p_idx)
     return nil
 end
 
+---@param s string?
+---@param n integer
+---@return string
 local function ellipsize(s, n)
     if not s or #s <= n then
         return s or ''
@@ -60,6 +95,8 @@ local function ellipsize(s, n)
     return s:sub(1, n) .. '...'
 end
 
+---@param name string?
+---@return string?
 local function recipe_sprite(name)
     if not name then
         return nil
@@ -73,11 +110,16 @@ local function recipe_sprite(name)
     return cached
 end
 
+---@param view_id integer
+---@return uint[]
 local function get_watchlist(view_id)
     this.watchlist[view_id] = this.watchlist[view_id] or {}
     return this.watchlist[view_id]
 end
 
+---@param view_id integer
+---@param p_idx uint
+---@return boolean
 local function is_watching(view_id, p_idx)
     for _, id in ipairs(get_watchlist(view_id)) do
         if id == p_idx then
@@ -87,6 +129,8 @@ local function is_watching(view_id, p_idx)
     return false
 end
 
+---@param p_idx uint
+---@return integer[]
 local function get_views_watching(p_idx)
     local views = {}
     for v_id, wl in pairs(this.watchlist) do
@@ -100,6 +144,9 @@ local function get_views_watching(p_idx)
     return views
 end
 
+---@param p_idx uint
+---@param just_crafted boolean
+---@return CqlQueueItem[], integer
 local function get_queue_display(p_idx, just_crafted)
     local p = get_player(p_idx)
     local q = p and p.crafting_queue or {}
@@ -143,6 +190,9 @@ local function get_queue_display(p_idx, just_crafted)
     return items, more
 end
 
+---@param team string
+---@param view_id integer
+---@return string[], table<integer, uint>
 local function get_candidates(team, view_id)
     local items, map = {}, {}
     for p_idx in pairs(this.forces[team]) do
@@ -165,6 +215,8 @@ local function get_candidates(team, view_id)
     return names, map
 end
 
+---@param view_id integer
+---@param team string
 local function refresh_dropdown(view_id, team)
     local ui = this.ui_frames[view_id]
     if not ui then
@@ -186,12 +238,19 @@ local function refresh_dropdown(view_id, team)
     end
 end
 
+---@param view_id integer
 local function refresh_all_dropdowns(view_id)
     for_each_team(function(team)
         refresh_dropdown(view_id, team)
     end)
 end
 
+---@param parent LuaGuiElement
+---@param view_id integer
+---@param team string
+---@param p_idx uint
+---@param just_crafted boolean
+---@return {left: LuaGuiElement, grid: LuaGuiElement, label: LuaGuiElement}
 local function create_row(parent, view_id, team, p_idx, just_crafted)
     local p = get_player(p_idx)
     local name = p and p.name or ('#' .. p_idx)
@@ -257,6 +316,8 @@ local function create_row(parent, view_id, team, p_idx, just_crafted)
     return { left = left, grid = grid, label = label }
 end
 
+---@param view_id integer
+---@param team string
 local function rebuild_team_rows(view_id, team)
     local ui = this.ui_frames[view_id]
     if not ui then
@@ -290,12 +351,15 @@ local function rebuild_team_rows(view_id, team)
     end
 end
 
+---@param view_id integer
 local function rebuild_all_rows(view_id)
     for_each_team(function(team)
         rebuild_team_rows(view_id, team)
     end)
 end
 
+---@param p_idx uint
+---@param just_crafted boolean
 local function update_player_crafting(p_idx, just_crafted)
     local team = player_team(p_idx)
     if not team then
@@ -351,6 +415,9 @@ local function update_player_crafting(p_idx, just_crafted)
     end
 end
 
+---@param view_id integer
+---@param p_idx uint
+---@return boolean
 local function watchlist_add(view_id, p_idx)
     if is_watching(view_id, p_idx) then
         return false
@@ -360,6 +427,9 @@ local function watchlist_add(view_id, p_idx)
     return true
 end
 
+---@param view_id integer
+---@param p_idx uint
+---@return boolean
 local function watchlist_remove(view_id, p_idx)
     local wl = get_watchlist(view_id)
     for i = #wl, 1, -1 do
@@ -371,6 +441,10 @@ local function watchlist_remove(view_id, p_idx)
     return false
 end
 
+---@param view_id integer
+---@param p_idx uint
+---@param delta integer
+---@return boolean
 local function watchlist_move(view_id, p_idx, delta)
     local wl = get_watchlist(view_id)
     local from
@@ -392,6 +466,10 @@ local function watchlist_move(view_id, p_idx, delta)
     return true
 end
 
+---@param parent LuaGuiElement
+---@param team string
+---@param view_id integer
+---@return CqlTeamPanel
 local function create_team_panel(parent, team, view_id)
     local frame = parent.add({ type = 'frame', direction = 'vertical' })
     frame.style.padding = 2
@@ -439,6 +517,8 @@ local function create_team_panel(parent, team, view_id)
     }
 end
 
+---@param player LuaPlayer
+---@return {x: number, y: number}
 local function default_location(player)
     local res = player.display_resolution
     local scale = player.display_scale or 1
@@ -446,6 +526,8 @@ local function default_location(player)
     return { x = math.max(8, math.floor(w - 520)), y = 60 }
 end
 
+---@param player LuaPlayer
+---@return integer view_id
 local function create_window(player)
     local v_id = this.view_id_next
     this.view_id_next = this.view_id_next + 1
@@ -494,6 +576,7 @@ local function create_window(player)
     return v_id
 end
 
+---@param view_id integer
 local function destroy_window(view_id)
     local ui = this.ui_frames[view_id]
     if ui and ui.root and ui.root.valid then
@@ -503,6 +586,8 @@ local function destroy_window(view_id)
     this.watchlist[view_id] = nil
 end
 
+---@param player LuaPlayer
+---@return integer?
 local function get_player_view(player)
     for v_id, ui in pairs(this.ui_frames) do
         if ui.owner == player.index then
@@ -512,6 +597,7 @@ local function get_player_view(player)
     return nil
 end
 
+---@param player LuaPlayer
 local function toggle_window(player)
     local existing = get_player_view(player)
     if existing then
