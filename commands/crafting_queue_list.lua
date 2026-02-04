@@ -31,14 +31,12 @@ local GRAY = { r = 0.8, g = 0.8, b = 0.8 }
 ---@field count number
 
 ---@class CqlState
----@field forces table<string, table<uint, boolean>>
 ---@field ui_frames table<integer, CqlUiFrame>
 ---@field watchlist table<integer, uint[]>
 ---@field view_id_next integer
 
 ---@type CqlState
 local this = {
-    forces = { north = {}, south = {} },
     ui_frames = {},
     watchlist = {},
     view_id_next = 1,
@@ -78,10 +76,13 @@ end
 ---@param p_idx uint
 ---@return string?
 local function player_team(p_idx)
-    for _, team in ipairs(TEAMS) do
-        if this.forces[team][p_idx] then
-            return team
-        end
+    local p = game.get_player(p_idx)
+    if not p then
+        return nil
+    end
+    local team = storage.chosen_team[p.name]
+    if team == 'north' or team == 'south' then
+        return team
     end
     return nil
 end
@@ -196,12 +197,9 @@ end
 ---@return string[], table<integer, uint>
 local function get_candidates(team, view_id)
     local items, map = {}, {}
-    for p_idx in pairs(this.forces[team]) do
-        if not is_watching(view_id, p_idx) then
-            local p = get_player(p_idx)
-            if p then
-                items[#items + 1] = { name = p.name, id = p_idx }
-            end
+    for _, p in pairs(game.connected_players) do
+        if storage.chosen_team[p.name] == team and not is_watching(view_id, p.index) then
+            items[#items + 1] = { name = p.name, id = p.index }
         end
     end
     table.sort(items, function(a, b)
@@ -334,7 +332,8 @@ local function rebuild_team_rows(view_id, team)
     local wl = get_watchlist(view_id)
     local team_players = {}
     for _, p_idx in ipairs(wl) do
-        if this.forces[team][p_idx] then
+        local p = game.get_player(p_idx)
+        if p and storage.chosen_team[p.name] == team then
             team_players[#team_players + 1] = p_idx
         end
     end
@@ -387,7 +386,8 @@ local function update_player_crafting(p_idx, just_crafted)
         local wl = get_watchlist(v_id)
         local row_idx = 0
         for _, id in ipairs(wl) do
-            if this.forces[team][id] then
+            local wp = game.get_player(id)
+            if wp and storage.chosen_team[wp.name] == team then
                 row_idx = row_idx + 1
                 if id == p_idx and row_idx <= MAX_ROWS then
                     local left_idx = (row_idx - 1) * 2 + 1
@@ -614,16 +614,7 @@ local function toggle_window(player)
     end
 end
 
-local function rebuild_forces()
-    this.forces = { north = {}, south = {} }
-    for _, p in pairs(game.players) do
-        if p and p.valid then
-            local fname = p.force and p.force.name
-            if fname == 'north' or fname == 'south' then
-                this.forces[fname][p.index] = true
-            end
-        end
-    end
+local function refresh_all_views()
     for v_id in pairs(this.ui_frames) do
         refresh_all_dropdowns(v_id)
     end
@@ -638,19 +629,16 @@ commands.add_command('crafting_list', 'Toggle Crafting List window', function(cm
     end, cmd)
 end)
 
-Event.add(defines.events.on_player_joined_game, function(ev)
-    local p = game.get_player(ev.player_index)
-    if p and p.valid then
-        rebuild_forces()
-    end
+Event.add(defines.events.on_player_joined_game, function()
+    refresh_all_views()
 end)
 
 Event.add(defines.events.on_player_left_game, function()
-    rebuild_forces()
+    refresh_all_views()
 end)
 
-Event.add(defines.events.on_player_changed_force, function(ev)
-    rebuild_forces()
+Event.add(defines.events.on_player_changed_force, function()
+    refresh_all_views()
     for v_id in pairs(this.ui_frames) do
         rebuild_all_rows(v_id)
     end
@@ -745,7 +733,6 @@ function Public.reset_crafting_queue_list()
     end
     this.ui_frames = {}
     this.watchlist = {}
-    this.forces = { north = {}, south = {} }
     this.view_id_next = 1
 end
 
