@@ -30,6 +30,12 @@ local GRAY = { r = 0.8, g = 0.8, b = 0.8 }
 ---@field sprite string?
 ---@field count number
 
+---@class CqlTags
+---@field view_id integer?
+---@field team string?
+---@field p_idx uint?
+---@field delta integer?
+
 ---@class CqlState
 ---@field ui_frames table<integer, CqlUiFrame>
 ---@field watchlist table<integer, uint[]>
@@ -644,76 +650,89 @@ Event.add(defines.events.on_player_changed_force, function()
     end
 end)
 
+---@param tags CqlTags
+local function on_close(tags)
+    if tags.view_id then
+        destroy_window(tags.view_id)
+    end
+end
+
+---@param tags CqlTags
+local function on_add(tags)
+    local view_id, team = tags.view_id, tags.team
+    if not (view_id and team) then
+        return
+    end
+
+    local ui = this.ui_frames[view_id]
+    if not ui then
+        return
+    end
+    local panel = ui.teams[team]
+    if not (panel and panel.dd and panel.dd.valid) then
+        return
+    end
+
+    local idx = panel.dd.selected_index or 0
+    local p_idx = panel.dd_map and panel.dd_map[idx]
+    if not p_idx then
+        return
+    end
+
+    if watchlist_add(view_id, p_idx) then
+        refresh_all_dropdowns(view_id)
+        rebuild_team_rows(view_id, team)
+    end
+end
+
+---@param tags CqlTags
+local function on_remove(tags)
+    local view_id, team, p_idx = tags.view_id, tags.team, tags.p_idx
+    if not (view_id and team and p_idx) then
+        return
+    end
+
+    watchlist_remove(view_id, p_idx)
+    refresh_all_dropdowns(view_id)
+    rebuild_team_rows(view_id, team)
+end
+
+---@param tags CqlTags
+local function on_move(tags)
+    local view_id, team, p_idx = tags.view_id, tags.team, tags.p_idx
+    local delta = tags.delta or 0
+    if not (view_id and team and p_idx and delta ~= 0) then
+        return
+    end
+
+    if watchlist_move(view_id, p_idx, delta) then
+        rebuild_team_rows(view_id, team)
+    end
+end
+
+local click_handlers = {
+    cql_close = on_close,
+    cql_remove = on_remove,
+    cql_move_up = on_move,
+    cql_move_down = on_move,
+}
+
 Event.add(defines.events.on_gui_click, function(ev)
     local e = ev.element
     if not (e and e.valid) then
         return
     end
-    local player = game.get_player(ev.player_index)
-    if not (player and player.valid) then
-        return
-    end
     local name = e.name
-    local tags = e.tags or {}
+    local tags = e.tags or {} ---@cast tags CqlTags
 
-    if name == 'cql_close' then
-        if tags.view_id then
-            destroy_window(tags.view_id)
-        end
+    local handler = click_handlers[name]
+    if handler then
+        handler(tags)
         return
     end
 
     if name:match('^cql_add_') then
-        local view_id, team = tags.view_id, tags.team
-        if not (view_id and team) then
-            return
-        end
-
-        local ui = this.ui_frames[view_id]
-        if not ui then
-            return
-        end
-        local panel = ui.teams[team]
-        if not (panel and panel.dd and panel.dd.valid) then
-            return
-        end
-
-        local idx = panel.dd.selected_index or 0
-        local p_idx = panel.dd_map and panel.dd_map[idx]
-        if not p_idx then
-            return
-        end
-
-        if watchlist_add(view_id, p_idx) then
-            refresh_all_dropdowns(view_id)
-            rebuild_team_rows(view_id, team)
-        end
-        return
-    end
-
-    if name == 'cql_remove' then
-        local view_id, team, p_idx = tags.view_id, tags.team, tags.p_idx
-        if not (view_id and team and p_idx) then
-            return
-        end
-
-        watchlist_remove(view_id, p_idx)
-        refresh_all_dropdowns(view_id)
-        rebuild_team_rows(view_id, team)
-        return
-    end
-
-    if name == 'cql_move_up' or name == 'cql_move_down' then
-        local view_id, team, p_idx = tags.view_id, tags.team, tags.p_idx
-        local delta = tags.delta or 0
-        if not (view_id and team and p_idx and delta ~= 0) then
-            return
-        end
-
-        if watchlist_move(view_id, p_idx, delta) then
-            rebuild_team_rows(view_id, team)
-        end
-        return
+        on_add(tags)
     end
 end)
 
