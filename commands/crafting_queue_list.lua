@@ -366,16 +366,22 @@ local function update_player_crafting(p_idx, just_crafted)
         return
     end
 
-    for _, v_id in ipairs(get_views_watching(p_idx)) do
+    local views = get_views_watching(p_idx)
+    if #views == 0 then
+        return
+    end
+
+    local items, more = get_queue_display(p_idx, just_crafted)
+    local idle = items[1].sprite == nil
+    local max_icons = ICON_COLS * 2
+
+    for _, v_id in ipairs(views) do
         local ui = this.ui_frames[v_id]
         if not (ui and ui.teams[team]) then
             goto continue
         end
 
         local panel = ui.teams[team]
-        local items, more = get_queue_display(p_idx, just_crafted)
-        local idle = items[1].sprite == nil
-        local max_icons = ICON_COLS * 2
 
         local wl = get_watchlist(v_id)
         local row_idx = 0
