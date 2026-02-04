@@ -35,7 +35,6 @@ local GRAY = { r = 0.8, g = 0.8, b = 0.8 }
 ---@field ui_frames table<integer, CqlUiFrame>
 ---@field watchlist table<integer, uint[]>
 ---@field view_id_next integer
----@field sprite_cache table<string, string>
 
 ---@type CqlState
 local this = {
@@ -43,8 +42,10 @@ local this = {
     ui_frames = {},
     watchlist = {},
     view_id_next = 1,
-    sprite_cache = {},
 }
+
+---@type table<string, string>
+local sprite_cache = {}
 
 Global.register(this, function(t)
     this = t
@@ -101,12 +102,12 @@ local function recipe_sprite(name)
     if not name then
         return nil
     end
-    local cached = this.sprite_cache[name]
+    local cached = sprite_cache[name]
     if cached then
         return cached
     end
     cached = 'recipe/' .. name
-    this.sprite_cache[name] = cached
+    sprite_cache[name] = cached
     return cached
 end
 
@@ -746,7 +747,6 @@ function Public.reset_crafting_queue_list()
     this.watchlist = {}
     this.forces = { north = {}, south = {} }
     this.view_id_next = 1
-    this.sprite_cache = {}
 end
 
 return Public
