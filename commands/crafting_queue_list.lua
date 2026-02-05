@@ -10,7 +10,7 @@ local ICON_COLS = 4
 local MAX_ICONS = ICON_COLS * 2
 local ICON_SIZE = 26
 local BTN_SIZE = 20
-local NAME_MAX_CHARS = 6
+local NAME_MAX_CHARS = 10
 local DIMMED = { r = 0.6, g = 0.6, b = 0.6 }
 local UNDIMMED = { r = 1, g = 1, b = 1 }
 local GRAY = { r = 0.8, g = 0.8, b = 0.8 }
@@ -273,18 +273,19 @@ local function create_row(parent, view_id, team, p_idx, just_crafted)
     local items, more = get_queue_display(p_idx, just_crafted)
     local idle = items[1].sprite == nil
 
-    -- name + buttons
-    local left = parent.add({ type = 'flow', direction = 'horizontal' })
-    left.style.vertical_align = 'center'
+    -- name + buttons (stacked vertically)
+    local left = parent.add({ type = 'flow', direction = 'vertical' })
+    left.style.vertical_spacing = 0
 
     local label = left.add({ type = 'label', caption = ellipsize(name, NAME_MAX_CHARS), tooltip = name })
     label.style.font = 'default-small-bold'
     label.style.font_color = idle and DIMMED or UNDIMMED
-    label.style.minimal_width = NAME_MAX_CHARS * 8
-    label.style.maximal_width = NAME_MAX_CHARS * 8
+
+    local btn_row = left.add({ type = 'flow', direction = 'horizontal' })
+    btn_row.style.vertical_align = 'center'
 
     local function make_btn(btn_name, sprite, tooltip, tags)
-        local btn = left.add({
+        local btn = btn_row.add({
             type = 'sprite-button',
             name = btn_name,
             sprite = sprite,
