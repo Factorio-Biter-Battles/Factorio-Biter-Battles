@@ -323,10 +323,15 @@ local function create_attack_group(surface, force_name, biter_force_name)
     end
     local boss_force_name = biter_force_name .. '_boss'
     local unit_group = surface.create_unit_group({ position = unit_group_position, force = biter_force_name })
-    local unit_group_boss = surface.create_unit_group({ position = unit_group_position, force = boss_force_name })
+    local unit_group_boss = nil
+    local has_boss_units = false
     for _, unit in pairs(units) do
         unit.ai_settings.path_resolution_modifier = -1
         if unit.force.name == boss_force_name then
+            if not unit_group_boss then
+                unit_group_boss = surface.create_unit_group({ position = unit_group_position, force = boss_force_name })
+                has_boss_units = true
+            end
             unit_group_boss.add_member(unit)
         else
             unit_group.add_member(unit)
@@ -337,7 +342,9 @@ local function create_attack_group(surface, force_name, biter_force_name)
         return
     end
     AiStrikes.initiate(unit_group, force_name, strike_position, target_position)
-    AiStrikes.initiate(unit_group_boss, force_name, strike_position, target_position)
+    if has_boss_units then
+        AiStrikes.initiate(unit_group_boss, force_name, strike_position, target_position)
+    end
 end
 
 Public.pre_main_attack = function()
