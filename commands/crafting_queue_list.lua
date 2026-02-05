@@ -275,7 +275,7 @@ end
 ---@param team string
 ---@param p_idx uint
 ---@param just_crafted boolean
----@return {left: LuaGuiElement, grid: LuaGuiElement, label: LuaGuiElement}
+---@return {row: LuaGuiElement, grid: LuaGuiElement, label: LuaGuiElement}
 local function create_row(parent, view_id, team, p_idx, just_crafted)
     local p = get_player(p_idx)
     local name = p and p.name or ('#' .. p_idx)
@@ -284,18 +284,21 @@ local function create_row(parent, view_id, team, p_idx, just_crafted)
     local items, more = get_queue_display(p_idx, just_crafted, show_inter)
     local idle = items[1].sprite == nil
 
-    -- name + buttons
-    local left = parent.add({ type = 'flow', direction = 'vertical' })
+    local row = parent.add({ type = 'flow', direction = 'vertical' })
 
-    local label = left.add({ type = 'label', caption = ellipsize(name, NAME_MAX_CHARS), tooltip = name })
+    -- header: name + buttons
+    local header = row.add({ type = 'flow', direction = 'horizontal' })
+    header.style.vertical_align = 'center'
+
+    local label = header.add({ type = 'label', caption = name, tooltip = name })
     label.style.font = 'default-small-bold'
     label.style.font_color = idle and DIMMED or UNDIMMED
 
-    local btn_row = left.add({ type = 'flow', direction = 'horizontal' })
-    btn_row.style.vertical_align = 'center'
+    local spacer = header.add({ type = 'empty-widget' })
+    spacer.style.horizontally_stretchable = true
 
     local function make_btn(btn_name, sprite, tooltip, tags)
-        local btn = btn_row.add({
+        local btn = header.add({
             type = 'sprite-button',
             name = btn_name,
             sprite = sprite,
@@ -321,9 +324,9 @@ local function create_row(parent, view_id, team, p_idx, just_crafted)
     )
     make_btn('cql_remove', 'utility/trash', 'Remove', { view_id = view_id, team = team, p_idx = p_idx })
 
-    -- icons
-    local grid = parent.add({ type = 'table', column_count = ICON_COLS })
-    grid.style.horizontal_spacing, grid.style.vertical_spacing = 1, 0
+    -- icons row
+    local grid = row.add({ type = 'table', column_count = MAX_ICONS })
+    grid.style.horizontal_spacing = 1
 
     for i = 1, MAX_ICONS do
         local it = items[i] or EMPTY_ICON
@@ -331,7 +334,6 @@ local function create_row(parent, view_id, team, p_idx, just_crafted)
         btn.ignored_by_interaction = true
         btn.sprite = it.sprite
         btn.number = it.sprite and it.count or 0
-        -- tint last icon if overflow
         if i == MAX_ICONS and more > 0 then
             btn.style = 'yellow_slot_button'
             btn.tooltip = '+' .. more .. ' more'
@@ -339,7 +341,7 @@ local function create_row(parent, view_id, team, p_idx, just_crafted)
         set_size(btn, ICON_SIZE)
     end
 
-    return { left = left, grid = grid, label = label }
+    return { row = row, grid = grid, label = label }
 end
 
 ---@param view_id integer
@@ -358,9 +360,8 @@ local function rebuild_team_rows(view_id, team)
     if panel.rows and panel.rows.valid then
         panel.rows.destroy()
     end
-    panel.rows = panel.frame.add({ type = 'table', column_count = 2 })
-    panel.rows.style.vertical_spacing = 0
-    panel.rows.style.horizontal_spacing = 2
+    panel.rows = panel.frame.add({ type = 'flow', direction = 'vertical' })
+    panel.rows.style.vertical_spacing = 2
 
     local wl = get_ordered_watchlist(view_id)
     local team_players = {}
@@ -424,17 +425,18 @@ local function update_row_ui(panel, row_idx, items, more, idle)
     if not panel.rows or not panel.rows.valid then
         return
     end
-    local left_idx = (row_idx - 1) * 2 + 1
-    local grid_idx = left_idx + 1
-    local children = panel.rows.children
-    local left = children[left_idx]
-    local grid = children[grid_idx]
-    if not left or not grid then
+    local row = panel.rows.children[row_idx]
+    if not row then
         return
     end
-
-    if left.children[1] then
-        left.children[1].style.font_color = idle and DIMMED or UNDIMMED
+    local header = row.children[1]
+    local grid = row.children[2]
+    if not header or not grid then
+        return
+    end
+    local label = header.children[1]
+    if label then
+        label.style.font_color = idle and DIMMED or UNDIMMED
     end
 
     for i = 1, MAX_ICONS do
@@ -585,9 +587,8 @@ local function create_team_panel(parent, team, view_id)
     add_btn.tags = { team = team, view_id = view_id }
     add_btn.enabled = has_candidates
 
-    local rows = frame.add({ type = 'table', column_count = 2 })
-    rows.style.vertical_spacing = 0
-    rows.style.horizontal_spacing = 2
+    local rows = frame.add({ type = 'flow', direction = 'vertical' })
+    rows.style.vertical_spacing = 2
 
     return {
         frame = frame,
