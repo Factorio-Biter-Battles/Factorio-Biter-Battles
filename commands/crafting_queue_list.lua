@@ -27,6 +27,7 @@ local EMPTY_ICON = { sprite = nil, count = 0 }
 ---@field root LuaGuiElement
 ---@field owner uint
 ---@field teams table<string, CqlTeamPanel>
+---@field show_intermediates boolean
 
 ---@class CqlQueueItem
 ---@field sprite string?
@@ -166,8 +167,9 @@ end
 
 ---@param p_idx uint
 ---@param just_crafted boolean
+---@param show_intermediates boolean?
 ---@return CqlQueueItem[], integer
-local function get_queue_display(p_idx, just_crafted)
+local function get_queue_display(p_idx, just_crafted, show_intermediates)
     local p = get_player(p_idx)
     local q = p and p.crafting_queue or {}
     local items, more = {}, 0
@@ -188,7 +190,7 @@ local function get_queue_display(p_idx, just_crafted)
     local visible = 0
     for qi = 1, total do
         local entry = q[qi]
-        if not entry.prerequisite then
+        if show_intermediates or not entry.prerequisite then
             if skip_first then
                 skip_first = false
             else
@@ -279,7 +281,9 @@ end
 local function create_row(parent, view_id, team, p_idx, just_crafted)
     local p = get_player(p_idx)
     local name = p and p.name or ('#' .. p_idx)
-    local items, more = get_queue_display(p_idx, just_crafted)
+    local ui = this.ui_frames[view_id]
+    local show_inter = ui and ui.show_intermediates or false
+    local items, more = get_queue_display(p_idx, just_crafted, show_inter)
     local idle = items[1].sprite == nil
 
     -- name + buttons
@@ -465,9 +469,6 @@ local function update_player_crafting(p_idx, just_crafted)
         return
     end
 
-    local items, more = get_queue_display(p_idx, just_crafted)
-    local idle = items[1].sprite == nil
-
     for _, v_id in ipairs(views) do
         local ui = this.ui_frames[v_id]
         if not (ui and ui.teams[team]) then
@@ -476,6 +477,9 @@ local function update_player_crafting(p_idx, just_crafted)
 
         local row_idx = find_player_row_index(v_id, team, p_idx)
         if row_idx then
+            local show_inter = ui.show_intermediates or false
+            local items, more = get_queue_display(p_idx, just_crafted, show_inter)
+            local idle = items[1].sprite == nil
             update_row_ui(ui.teams[team], row_idx, items, more, idle)
         end
 
@@ -629,6 +633,15 @@ local function create_window(player)
     drag.style.horizontally_stretchable = true
     drag.drag_target = win
 
+    local inter_cb = titlebar.add({
+        type = 'checkbox',
+        name = 'cql_show_intermediates',
+        caption = 'Int',
+        tooltip = 'Show intermediate products',
+        state = true,
+    })
+    inter_cb.tags = { view_id = v_id }
+
     local close = titlebar.add({
         type = 'sprite-button',
         name = 'cql_close',
@@ -654,6 +667,7 @@ local function create_window(player)
         root = win,
         owner = player.index,
         teams = teams,
+        show_intermediates = true,
     }
     this.watchlist[v_id] = {}
 
@@ -812,6 +826,24 @@ Event.add(defines.events.on_gui_click, function(ev)
     if name:match('^cql_add_') then
         on_add(tags)
     end
+end)
+
+Event.add(defines.events.on_gui_checked_state_changed, function(ev)
+    local e = ev.element
+    if not (e and e.valid and e.name == 'cql_show_intermediates') then
+        return
+    end
+    local tags = e.tags or {} ---@cast tags CqlTags
+    local view_id = tags.view_id
+    if not view_id then
+        return
+    end
+    local ui = this.ui_frames[view_id]
+    if not ui then
+        return
+    end
+    ui.show_intermediates = e.state
+    rebuild_all_rows(view_id)
 end)
 
 Event.add(defines.events.on_pre_player_crafted_item, function(ev)
