@@ -174,32 +174,41 @@ local function get_queue_display(p_idx, just_crafted)
     local total = #q
 
     -- on_player_crafted_item fires before queue updates
-    local offset, dec_head = 0, false
-    if just_crafted and total > 0 then
+    local skip_first, dec_head = false, false
+    if just_crafted and total > 0 and not q[1].prerequisite then
         local head_count = q[1].count or 0
         if head_count == 1 then
-            offset = 1
+            skip_first = true
         elseif head_count > 1 then
             dec_head = true
         end
     end
 
-    local visible = math.max(0, total - offset)
-
-    for i = 1, MAX_ICONS do
-        local qi = i + offset
-        if qi <= total then
-            local entry = q[qi]
-            local rec = entry and entry.recipe
-            local name = rec and (rec.name or rec)
-            local count = entry.count or 0
-            if dec_head and i == 1 and count > 0 then
-                count = count - 1
+    local slot = 0
+    local visible = 0
+    for qi = 1, total do
+        local entry = q[qi]
+        if not entry.prerequisite then
+            if skip_first then
+                skip_first = false
+            else
+                visible = visible + 1
+                if slot < MAX_ICONS then
+                    slot = slot + 1
+                    local rec = entry.recipe
+                    local name = rec and (rec.name or rec)
+                    local count = entry.count or 0
+                    if dec_head and slot == 1 and count > 0 then
+                        count = count - 1
+                    end
+                    items[slot] = { sprite = recipe_sprite(name), count = count }
+                end
             end
-            items[i] = { sprite = recipe_sprite(name), count = count }
-        else
-            items[i] = EMPTY_ICON
         end
+    end
+
+    for i = slot + 1, MAX_ICONS do
+        items[i] = EMPTY_ICON
     end
 
     if visible > MAX_ICONS then
@@ -273,9 +282,8 @@ local function create_row(parent, view_id, team, p_idx, just_crafted)
     local items, more = get_queue_display(p_idx, just_crafted)
     local idle = items[1].sprite == nil
 
-    -- name + buttons (stacked vertically)
+    -- name + buttons
     local left = parent.add({ type = 'flow', direction = 'vertical' })
-    left.style.vertical_spacing = 0
 
     local label = left.add({ type = 'label', caption = ellipsize(name, NAME_MAX_CHARS), tooltip = name })
     label.style.font = 'default-small-bold'
@@ -319,7 +327,6 @@ local function create_row(parent, view_id, team, p_idx, just_crafted)
         local it = items[i] or EMPTY_ICON
         local btn = grid.add({ type = 'sprite-button', style = 'slot_button' })
         btn.ignored_by_interaction = true
-        set_size(btn, ICON_SIZE)
         btn.sprite = it.sprite
         btn.number = it.sprite and it.count or 0
         -- tint last icon if overflow
@@ -327,6 +334,7 @@ local function create_row(parent, view_id, team, p_idx, just_crafted)
             btn.style = 'yellow_slot_button'
             btn.tooltip = '+' .. more .. ' more'
         end
+        set_size(btn, ICON_SIZE)
     end
 
     return { left = left, grid = grid, label = label }
@@ -340,11 +348,17 @@ local function rebuild_team_rows(view_id, team)
         return
     end
     local panel = ui.teams[team]
-    if not panel then
+    if not panel or not panel.frame or not panel.frame.valid then
         return
     end
 
-    panel.rows.clear()
+    -- Destroy and recreate rows container to avoid layout issues
+    if panel.rows and panel.rows.valid then
+        panel.rows.destroy()
+    end
+    panel.rows = panel.frame.add({ type = 'table', column_count = 2 })
+    panel.rows.style.vertical_spacing = 0
+    panel.rows.style.horizontal_spacing = 2
 
     local wl = get_ordered_watchlist(view_id)
     local team_players = {}
@@ -405,6 +419,9 @@ end
 ---@param more integer
 ---@param idle boolean
 local function update_row_ui(panel, row_idx, items, more, idle)
+    if not panel.rows or not panel.rows.valid then
+        return
+    end
     local left_idx = (row_idx - 1) * 2 + 1
     local grid_idx = left_idx + 1
     local children = panel.rows.children
@@ -814,6 +831,19 @@ function Public.reset_crafting_queue_list()
     this.ui_frames = {}
     this.watchlist = {}
     this.view_id_next = 1
+end
+
+function Public.on_team_changed(player)
+    if player then
+        local view_id = get_player_view(player)
+        if view_id then
+            destroy_window(view_id)
+        end
+    end
+    refresh_all_views()
+    for v_id in pairs(this.ui_frames) do
+        rebuild_all_rows(v_id)
+    end
 end
 
 return Public
