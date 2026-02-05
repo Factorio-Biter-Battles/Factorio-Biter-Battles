@@ -622,9 +622,14 @@ local function create_window(player)
     local content = win.add({ type = 'flow', direction = 'vertical' })
     content.style.vertical_spacing = 2
 
+    local viewer_team = storage.chosen_team[player.name]
+    local is_spectator = viewer_team ~= 'north' and viewer_team ~= 'south'
+
     local teams = {}
     for_each_team(function(team)
-        teams[team] = create_team_panel(content, team, v_id)
+        if is_spectator or team == viewer_team then
+            teams[team] = create_team_panel(content, team, v_id)
+        end
     end)
 
     this.ui_frames[v_id] = {
@@ -691,7 +696,14 @@ Event.add(defines.events.on_player_left_game, function()
     refresh_all_views()
 end)
 
-Event.add(defines.events.on_player_changed_force, function()
+Event.add(defines.events.on_player_changed_force, function(ev)
+    local player = game.get_player(ev.player_index)
+    if player then
+        local view_id = get_player_view(player)
+        if view_id then
+            destroy_window(view_id)
+        end
+    end
     refresh_all_views()
     for v_id in pairs(this.ui_frames) do
         rebuild_all_rows(v_id)
