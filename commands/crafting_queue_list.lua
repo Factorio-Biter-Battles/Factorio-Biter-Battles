@@ -374,6 +374,65 @@ local function rebuild_all_rows(view_id)
     end)
 end
 
+---@param panel CqlTeamPanel
+---@param v_id integer
+---@param team string
+---@param p_idx uint
+---@param items CqlQueueItem[]
+---@param more integer
+---@param idle boolean
+---@param max_icons integer
+local function update_player_row(panel, v_id, team, p_idx, items, more, idle, max_icons)
+    local wl = get_ordered_watchlist(v_id)
+    local row_idx = 0
+
+    for _, id in ipairs(wl) do
+        local wp = game.get_player(id)
+        if not wp or storage.chosen_team[wp.name] ~= team then
+            goto next_player
+        end
+
+        row_idx = row_idx + 1
+        if id ~= p_idx or row_idx > MAX_ROWS then
+            goto next_player
+        end
+
+        do
+            local left_idx = (row_idx - 1) * 2 + 1
+            local grid_idx = left_idx + 1
+            local children = panel.rows.children
+            local left = children[left_idx]
+            local grid = children[grid_idx]
+            if not left or not grid then
+                return
+            end
+
+            if left.children[1] then
+                left.children[1].style.font_color = idle and DIMMED or UNDIMMED
+            end
+
+            for i = 1, max_icons do
+                local icon = grid.children[i]
+                if not icon then
+                    goto next_icon
+                end
+                local it = items[i]
+                icon.sprite = it.sprite
+                icon.number = it.sprite and it.count or 0
+                if i == max_icons then
+                    icon.style = more > 0 and 'yellow_slot_button' or 'slot_button'
+                    icon.tooltip = more > 0 and ('+' .. more .. ' more') or ''
+                    set_size(icon, ICON_SIZE)
+                end
+                ::next_icon::
+            end
+            return
+        end
+
+        ::next_player::
+    end
+end
+
 ---@param p_idx uint
 ---@param just_crafted boolean
 local function update_player_crafting(p_idx, just_crafted)
@@ -397,43 +456,8 @@ local function update_player_crafting(p_idx, just_crafted)
             goto continue
         end
 
-        local panel = ui.teams[team]
+        update_player_row(ui.teams[team], v_id, team, p_idx, items, more, idle, max_icons)
 
-        local wl = get_ordered_watchlist(v_id)
-        local row_idx = 0
-        for _, id in ipairs(wl) do
-            local wp = game.get_player(id)
-            if wp and storage.chosen_team[wp.name] == team then
-                row_idx = row_idx + 1
-                if id == p_idx and row_idx <= MAX_ROWS then
-                    local left_idx = (row_idx - 1) * 2 + 1
-                    local grid_idx = left_idx + 1
-                    local children = panel.rows.children
-
-                    if children[left_idx] and children[grid_idx] then
-                        local left = children[left_idx]
-                        if left.children[1] then
-                            left.children[1].style.font_color = idle and DIMMED or UNDIMMED
-                        end
-                        local grid = children[grid_idx]
-                        for i = 1, max_icons do
-                            local it = items[i]
-                            local icon = grid.children[i]
-                            if icon then
-                                icon.sprite = it.sprite
-                                icon.number = it.sprite and it.count or 0
-                                if i == max_icons then
-                                    icon.style = more > 0 and 'yellow_slot_button' or 'slot_button'
-                                    icon.tooltip = more > 0 and ('+' .. more .. ' more') or ''
-                                    set_size(icon, ICON_SIZE)
-                                end
-                            end
-                        end
-                    end
-                    break
-                end
-            end
-        end
         ::continue::
     end
 end
