@@ -7,12 +7,14 @@ local Public = {}
 local TEAMS = { 'north', 'south' }
 local MAX_ROWS = 8
 local ICON_COLS = 4
+local MAX_ICONS = ICON_COLS * 2
 local ICON_SIZE = 26
 local BTN_SIZE = 20
 local NAME_MAX_CHARS = 6
 local DIMMED = { r = 0.6, g = 0.6, b = 0.6 }
 local UNDIMMED = { r = 1, g = 1, b = 1 }
 local GRAY = { r = 0.8, g = 0.8, b = 0.8 }
+local EMPTY_ICON = { sprite = nil, count = 0 }
 
 ---@class CqlTeamPanel
 ---@field frame LuaGuiElement
@@ -183,9 +185,8 @@ local function get_queue_display(p_idx, just_crafted)
     end
 
     local visible = math.max(0, total - offset)
-    local max_icons = ICON_COLS * 2
 
-    for i = 1, max_icons do
+    for i = 1, MAX_ICONS do
         local qi = i + offset
         if qi <= total then
             local entry = q[qi]
@@ -197,12 +198,12 @@ local function get_queue_display(p_idx, just_crafted)
             end
             items[i] = { sprite = recipe_sprite(name), count = count }
         else
-            items[i] = { sprite = nil, count = 0 }
+            items[i] = EMPTY_ICON
         end
     end
 
-    if visible > max_icons then
-        more = visible - max_icons
+    if visible > MAX_ICONS then
+        more = visible - MAX_ICONS
     end
 
     return items, more
@@ -313,16 +314,15 @@ local function create_row(parent, view_id, team, p_idx, just_crafted)
     local grid = parent.add({ type = 'table', column_count = ICON_COLS })
     grid.style.horizontal_spacing, grid.style.vertical_spacing = 1, 0
 
-    local max_icons = ICON_COLS * 2
-    for i = 1, max_icons do
-        local it = items[i]
+    for i = 1, MAX_ICONS do
+        local it = items[i] or EMPTY_ICON
         local btn = grid.add({ type = 'sprite-button', style = 'slot_button' })
         btn.ignored_by_interaction = true
         set_size(btn, ICON_SIZE)
         btn.sprite = it.sprite
         btn.number = it.sprite and it.count or 0
         -- tint last icon if overflow
-        if i == max_icons and more > 0 then
+        if i == MAX_ICONS and more > 0 then
             btn.style = 'yellow_slot_button'
             btn.tooltip = '+' .. more .. ' more'
         end
@@ -403,8 +403,7 @@ end
 ---@param items CqlQueueItem[]
 ---@param more integer
 ---@param idle boolean
----@param max_icons integer
-local function update_row_ui(panel, row_idx, items, more, idle, max_icons)
+local function update_row_ui(panel, row_idx, items, more, idle)
     local left_idx = (row_idx - 1) * 2 + 1
     local grid_idx = left_idx + 1
     local children = panel.rows.children
@@ -418,15 +417,15 @@ local function update_row_ui(panel, row_idx, items, more, idle, max_icons)
         left.children[1].style.font_color = idle and DIMMED or UNDIMMED
     end
 
-    for i = 1, max_icons do
+    for i = 1, MAX_ICONS do
         local icon = grid.children[i]
         if not icon then
             goto next_icon
         end
-        local it = items[i]
+        local it = items[i] or EMPTY_ICON
         icon.sprite = it.sprite
         icon.number = it.sprite and it.count or 0
-        if i == max_icons then
+        if i == MAX_ICONS then
             icon.style = more > 0 and 'yellow_slot_button' or 'slot_button'
             icon.tooltip = more > 0 and ('+' .. more .. ' more') or ''
             set_size(icon, ICON_SIZE)
@@ -450,7 +449,6 @@ local function update_player_crafting(p_idx, just_crafted)
 
     local items, more = get_queue_display(p_idx, just_crafted)
     local idle = items[1].sprite == nil
-    local max_icons = ICON_COLS * 2
 
     for _, v_id in ipairs(views) do
         local ui = this.ui_frames[v_id]
@@ -460,7 +458,7 @@ local function update_player_crafting(p_idx, just_crafted)
 
         local row_idx = find_player_row_index(v_id, team, p_idx)
         if row_idx then
-            update_row_ui(ui.teams[team], row_idx, items, more, idle, max_icons)
+            update_row_ui(ui.teams[team], row_idx, items, more, idle)
         end
 
         ::continue::
@@ -597,7 +595,7 @@ local function create_window(player)
 
     local win = player.gui.screen.add({
         type = 'frame',
-        name = 'cql_window_' .. v_id,
+        name = 'cql_window',
         direction = 'vertical',
     })
     win.location = default_location(player)
@@ -662,9 +660,9 @@ end
 
 ---@param player LuaPlayer
 local function toggle_window(player)
-    local existing = get_player_view(player)
-    if existing then
-        destroy_window(existing)
+    local view_id = get_player_view(player)
+    if view_id then
+        destroy_window(view_id)
     else
         create_window(player)
     end
