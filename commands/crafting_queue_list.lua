@@ -647,7 +647,7 @@ local function refresh_all_views()
     end
 end
 
-commands.add_command('crafting_list', 'Toggle Crafting List window', function(cmd)
+commands.add_command('crafting-list', 'Toggle Crafting List window', function(cmd)
     safe_wrap_cmd(cmd, function()
         local p = game.get_player(cmd.player_index)
         if p and p.valid then
