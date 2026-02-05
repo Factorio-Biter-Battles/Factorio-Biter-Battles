@@ -350,6 +350,9 @@ local function create_attack_group(surface, force_name, biter_force_name)
         storage.biters_from_positive_threat[unit.unit_number] = true
     end
     local strike_position = AiStrikes.calculate_strike_position(unit_group, target_position)
+    if not strike_position then
+        return
+    end
     AiStrikes.initiate(unit_group, force_name, strike_position, target_position)
     AiStrikes.initiate(unit_group_boss, force_name, strike_position, target_position)
 end
