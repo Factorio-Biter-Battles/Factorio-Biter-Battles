@@ -186,27 +186,25 @@ local function get_queue_display(p_idx, just_crafted, show_intermediates)
         end
     end
 
-    local slot = 0
-    local visible = 0
+    local slot, visible = 0, 0
     for qi = 1, total do
         local entry = q[qi]
-        if show_intermediates or not entry.prerequisite then
-            if skip_first then
-                skip_first = false
-            else
-                visible = visible + 1
-                if slot < MAX_ICONS then
-                    slot = slot + 1
-                    local rec = entry.recipe
-                    local name = rec and (rec.name or rec)
-                    local count = entry.count or 0
-                    if dec_head and slot == 1 and count > 0 then
-                        count = count - 1
-                    end
-                    items[slot] = { sprite = recipe_sprite(name), count = count }
-                end
-            end
+        if not show_intermediates and entry.prerequisite then
+            goto next
         end
+        if skip_first then
+            skip_first = false
+            goto next
+        end
+        visible = visible + 1
+        if slot >= MAX_ICONS then
+            goto next
+        end
+        slot = slot + 1
+        local rec = entry.recipe
+        local count = (entry.count or 0) - (dec_head and slot == 1 and 1 or 0)
+        items[slot] = { sprite = recipe_sprite(rec and (rec.name or rec)), count = count }
+        ::next::
     end
 
     for i = slot + 1, MAX_ICONS do
