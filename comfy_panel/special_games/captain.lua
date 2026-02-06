@@ -2063,7 +2063,9 @@ local function on_player_left_game(event)
                 -- and assign current picking session to newly selected captain.
                 CaptainUI.try_destroy_picking_ui(player)
                 Public.change_captain(playerChosen, forceOfCaptain, 'New captain automatic selection')
-                display_picking_ui(CaptainStates.PICKS.RUNNING)
+                if special.pickingPhase then
+                    display_picking_ui(CaptainStates.PICKS.RUNNING)
+                end
             end
         end
     else
