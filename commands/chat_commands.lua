@@ -11,6 +11,8 @@ local function chat_with_team(message, team)
         local tag = player.tag
         if not tag then
             tag = ''
+        else
+            tag = ' ' .. tag
         end
         local color = player.chat_color
 

@@ -409,6 +409,41 @@ local function on_entity_died(event)
     end
 end
 
+---Alerts admins if a player is not trusted and mined specific entity
+---@param player LuaPlayer
+---@param entity LuaEntity
+local function alert_if_not_trusted(player, entity)
+    local trusted = session.get_trusted_table()
+    if trusted[player.name] then
+        return
+    end
+
+    local monitored_types = {
+        ['offshore-pump'] = true,
+        ['nuclear-reactor'] = true,
+        ['rocket-silo'] = true,
+    }
+
+    if not monitored_types[entity.name] then
+        return
+    end
+
+    Utils.print_admins(
+        player.name
+            .. ' mined a [item='
+            .. entity.name
+            .. '] at '
+            .. '[gps='
+            .. entity.position.x
+            .. ','
+            .. entity.position.y
+            .. ','
+            .. entity.surface.name
+            .. ']',
+        nil
+    )
+end
+
 -- Should be pre-checked for entity/player validity
 ---@param entity LuaEntity
 ---@param player LuaPlayer History
@@ -417,20 +452,7 @@ function Public.on_player_mined_entity(entity, player)
         return
     end
 
-    if entity.type == 'offshore-pump' then
-        Utils.print_admins(
-            player.name
-                .. ' mined an offshore pump at'
-                .. '[gps='
-                .. entity.position.x
-                .. ','
-                .. entity.position.y
-                .. ','
-                .. entity.surface.name
-                .. ']',
-            nil
-        )
-    end
+    alert_if_not_trusted(player, entity)
 
     if not entity.force.name == player.force.name then
         return

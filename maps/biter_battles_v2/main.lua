@@ -161,6 +161,15 @@ end
 ---@param to_player LuaPlayer
 ---@param message string
 function do_ping(from_player_name, to_player, message)
+    if Muted.is_muted(from_player_name) then
+        local p = game.get_player(from_player_name)
+        if p then
+            Muted.print_muted_message(p)
+        end
+
+        return
+    end
+
     local to_player_name = to_player.name
     if ignore_message(from_player_name, to_player_name) then
         return
@@ -261,6 +270,8 @@ local function on_console_chat(event)
     local tag = player.tag
     if not tag then
         tag = ''
+    else
+        tag = ' ' .. tag
     end
     local color = player.chat_color
 
