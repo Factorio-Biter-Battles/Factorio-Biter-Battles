@@ -5,6 +5,7 @@ local Color = require('utils.color_presets')
 local Functions = require('maps.biter_battles_v2.functions')
 local SessionData = require('utils.datastore.session_data')
 local Utils = require('utils.core')
+local Init = require('maps.biter_battles_v2.init')
 local Gui = require('utils.gui')
 local GUI_THEMES = require('utils.utils').GUI_THEMES
 local index_of = table.index_of
@@ -285,6 +286,23 @@ local antigrief_functions = {
     end,
 }
 
+local function get_daytime_cycle_labels()
+    local labels = {}
+    for _, opt in ipairs(Init.daytime_cycle_options) do
+        labels[#labels + 1] = opt.label
+    end
+    return labels
+end
+
+local function get_daytime_cycle_label(key)
+    for _, opt in ipairs(Init.daytime_cycle_options) do
+        if opt.key == key then
+            return opt.label
+        end
+    end
+    return nil
+end
+
 local selection_functions = {
     ['comfy_panel_theme_dropdown'] = function(event)
         local player = game.get_player(event.player_index)
@@ -304,6 +322,22 @@ local selection_functions = {
     ['comfy_panel_teamstats_visibility_dropdown'] = function(event)
         local selected_index = event.element.selected_index
         storage.allow_teamstats = event.element.items[selected_index]
+    end,
+    ['bb_daytime_cycle_dropdown'] = function(event)
+        local selected_index = event.element.selected_index
+        local selected = Init.daytime_cycle_options[selected_index]
+        if not selected then
+            return
+        end
+        storage.bb_settings.daytime_cycle = selected.key
+
+        -- Apply immediately to current surface
+        local surface = game.surfaces[storage.bb_surface_name]
+        if surface then
+            Init.apply_daytime_settings(surface)
+        end
+
+        get_actor(event, '{Daytime Cycle}', 'set daytime cycle to ' .. selected.label)
     end,
 }
 
@@ -341,8 +375,9 @@ local function add_switch(element, switch_state, name, description_main, descrip
     return switch
 end
 
-local function add_dropdown(element, caption, selected_item, name, items)
-    local t = element.add({ type = 'table', column_count = 3 })
+local function add_dropdown(element, caption, selected_item, name, items, description)
+    local column_count = description and 4 or 3
+    local t = element.add({ type = 'table', column_count = column_count })
     local label = t.add({
         type = 'label',
         name = 'comfy_panel_theme_label',
@@ -373,6 +408,16 @@ local function add_dropdown(element, caption, selected_item, name, items)
     dropdown.style.natural_width = 200
     dropdown.style.left_margin = 10
     dropdown.style.vertical_align = 'center'
+
+    if description then
+        label = t.add({ type = 'label', caption = description })
+        label.style.padding = 2
+        label.style.left_padding = 10
+        label.style.single_line = false
+        label.style.font = 'default-semibold'
+        label.style.font_color = { 0.85, 0.85, 0.85 }
+    end
+
     return dropdown
 end
 
@@ -708,6 +753,20 @@ local build_config_gui = function(player, frame)
             )
             if not admin then
                 switch.ignored_by_interaction = true
+            end
+
+            scroll_pane.add({ type = 'line' })
+
+            local dropdown = add_dropdown(
+                scroll_pane,
+                'Daytime Cycle',
+                get_daytime_cycle_label(storage.bb_settings.daytime_cycle) or 'Always Day',
+                'bb_daytime_cycle_dropdown',
+                get_daytime_cycle_labels(),
+                'Controls map lighting. Takes effect immediately.'
+            )
+            if not admin then
+                dropdown.ignored_by_interaction = true
             end
 
             scroll_pane.add({ type = 'line' })
