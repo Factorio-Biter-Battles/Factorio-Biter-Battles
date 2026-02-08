@@ -75,20 +75,6 @@ local function for_each_team(fn)
     end
 end
 
----@param p_idx uint
----@return string?
-local function player_team(p_idx)
-    local p = game.get_player(p_idx)
-    if not p then
-        return nil
-    end
-    local team = storage.chosen_team[p.name]
-    if team == 'north' or team == 'south' then
-        return team
-    end
-    return nil
-end
-
 ---@param name string?
 ---@return string?
 local function recipe_sprite(name)
@@ -439,8 +425,12 @@ end
 ---@param p_idx uint
 ---@param just_crafted boolean
 local function update_player_crafting(p_idx, just_crafted)
-    local team = player_team(p_idx)
-    if not team then
+    local player = game.get_player(p_idx)
+    if not player then
+        return
+    end
+    local team = storage.chosen_team[player.name]
+    if team ~= 'north' and team ~= 'south' then
         return
     end
 
@@ -458,7 +448,7 @@ local function update_player_crafting(p_idx, just_crafted)
         local row_idx = find_player_row_index(v_id, team, p_idx)
         if row_idx then
             local show_inter = ui.show_intermediates or false
-            local items, more = get_queue_display(game.get_player(p_idx), just_crafted, show_inter)
+            local items, more = get_queue_display(player, just_crafted, show_inter)
             local idle = items[1].sprite == nil
             update_row_ui(ui.panels[team], row_idx, items, more, idle)
         end
