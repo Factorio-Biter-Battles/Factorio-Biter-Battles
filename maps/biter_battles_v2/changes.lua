@@ -1,5 +1,22 @@
 return {
     {
+        number = 755,
+        date = '2026-02-07',
+        author = 'cogito123',
+        comment = [[(#755) Suppress "Removed announcement" message when /announce overwrites an existing one]],
+    },
+    {
+        number = 754,
+        date = '2026-02-06',
+        author = 'cogito123',
+        comment = [[(#754) Captain mode changes:
+  - Add a toggleable pick timer, controllable by the referee
+  - Display estimated pick phase duration when the timer is active
+  - Add a connection status icon to the player pick list
+  - Reduce button size in the pick list to prevent misclicks
+  - Separate player names from buttons for better readability]],
+    },
+    {
         number = 753,
         date = '2026-01-29',
         author = 'Max1000',
