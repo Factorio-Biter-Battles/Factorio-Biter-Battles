@@ -42,12 +42,14 @@ local EMPTY_ICON = { sprite = nil, count = 0 }
 ---@class CqlState
 ---@field ui_frames table<integer, CqlUiFrame>
 ---@field watchlist table<integer, table<uint, integer>>
+---@field player_views table<uint, table<integer, boolean>>
 ---@field view_id_next integer
 
 ---@type CqlState
 local this = {
     ui_frames = {},
     watchlist = {},
+    player_views = {},
     view_id_next = 1,
 }
 
@@ -156,11 +158,13 @@ end
 ---@param p_idx uint
 ---@return integer[]
 local function get_views_watching(p_idx)
+    local pv = this.player_views[p_idx]
+    if not pv then
+        return {}
+    end
     local views = {}
-    for v_id, wl in pairs(this.watchlist) do
-        if wl[p_idx] then
-            views[#views + 1] = v_id
-        end
+    for v_id in pairs(pv) do
+        views[#views + 1] = v_id
     end
     return views
 end
@@ -502,6 +506,8 @@ local function watchlist_add(view_id, p_idx)
         end
     end
     wl[p_idx] = max_order + 1
+    this.player_views[p_idx] = this.player_views[p_idx] or {}
+    this.player_views[p_idx][view_id] = true
     return true
 end
 
@@ -515,6 +521,9 @@ local function watchlist_remove(view_id, p_idx)
         return false
     end
     wl[p_idx] = nil
+    if this.player_views[p_idx] then
+        this.player_views[p_idx][view_id] = nil
+    end
     for idx, order in pairs(wl) do
         if order > removed_order then
             wl[idx] = order - 1
@@ -678,6 +687,14 @@ local function destroy_window(view_id)
     local ui = this.ui_frames[view_id]
     if ui and ui.root and ui.root.valid then
         ui.root.destroy()
+    end
+    local wl = this.watchlist[view_id]
+    if wl then
+        for p_idx in pairs(wl) do
+            if this.player_views[p_idx] then
+                this.player_views[p_idx][view_id] = nil
+            end
+        end
     end
     this.ui_frames[view_id] = nil
     this.watchlist[view_id] = nil
@@ -861,6 +878,7 @@ function Public.reset_crafting_queue_list()
     end
     this.ui_frames = {}
     this.watchlist = {}
+    this.player_views = {}
     this.view_id_next = 1
 end
 
