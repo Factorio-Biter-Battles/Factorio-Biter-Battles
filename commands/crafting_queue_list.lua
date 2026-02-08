@@ -52,8 +52,8 @@ local this = {
     view_id_next = 1,
 }
 
----@type table<string, string>
-local sprite_cache = {}
+---@type table<string, string>?
+local sprite_cache
 
 Global.register(this, function(t)
     this = t
@@ -103,13 +103,13 @@ local function recipe_sprite(name)
     if not name then
         return nil
     end
-    local cached = sprite_cache[name]
-    if cached then
-        return cached
+    if not sprite_cache then
+        sprite_cache = {}
+        for rname in pairs(prototypes.recipe) do
+            sprite_cache[rname] = 'recipe/' .. rname
+        end
     end
-    cached = 'recipe/' .. name
-    sprite_cache[name] = cached
-    return cached
+    return sprite_cache[name]
 end
 
 ---@param view_id integer
