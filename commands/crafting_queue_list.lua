@@ -75,13 +75,6 @@ local function for_each_team(fn)
     end
 end
 
----@param id uint
----@return LuaPlayer?
-local function get_player(id)
-    local p = game.get_player(id)
-    return (p and p.valid and p.connected) and p or nil
-end
-
 ---@param p_idx uint
 ---@return string?
 local function player_team(p_idx)
@@ -157,13 +150,12 @@ local function get_views_watching(p_idx)
     return views
 end
 
----@param p_idx uint
+---@param player LuaPlayer?
 ---@param just_crafted boolean
 ---@param show_intermediates boolean?
 ---@return CqlQueueItem[], integer
-local function get_queue_display(p_idx, just_crafted, show_intermediates)
-    local p = get_player(p_idx)
-    local q = p and p.crafting_queue or {}
+local function get_queue_display(player, just_crafted, show_intermediates)
+    local q = player and player.crafting_queue or {}
     local items, more = {}, 0
     local total = #q
 
@@ -273,7 +265,7 @@ local function create_row(parent, view_id, team, p_idx, just_crafted)
     local name = gp and gp.name or ('#' .. p_idx)
     local ui = this.ui_frames[view_id]
     local show_inter = ui and ui.show_intermediates or false
-    local items, more = get_queue_display(p_idx, just_crafted, show_inter)
+    local items, more = get_queue_display(gp, just_crafted, show_inter)
     local idle = items[1].sprite == nil
 
     local row = parent.add({ type = 'flow', direction = 'vertical' })
@@ -470,7 +462,7 @@ local function update_player_crafting(p_idx, just_crafted)
         local row_idx = find_player_row_index(v_id, team, p_idx)
         if row_idx then
             local show_inter = ui.show_intermediates or false
-            local items, more = get_queue_display(p_idx, just_crafted, show_inter)
+            local items, more = get_queue_display(game.get_player(p_idx), just_crafted, show_inter)
             local idle = items[1].sprite == nil
             update_row_ui(ui.panels[team], row_idx, items, more, idle)
         end
