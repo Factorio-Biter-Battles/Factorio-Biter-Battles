@@ -25,7 +25,7 @@ local EMPTY_ICON = { sprite = nil, count = 0 }
 ---@class CqlUiFrame
 ---@field root LuaGuiElement
 ---@field owner uint
----@field teams table<string, CqlTeamPanel>
+---@field panels table<string, CqlTeamPanel>
 ---@field show_intermediates boolean
 
 ---@class CqlQueueItem
@@ -240,7 +240,7 @@ local function refresh_dropdown(view_id, team)
     if not ui then
         return
     end
-    local panel = ui.teams[team]
+    local panel = ui.panels[team]
     if not (panel and panel.dd and panel.dd.valid) then
         return
     end
@@ -344,7 +344,7 @@ local function rebuild_team_rows(view_id, team)
     if not ui then
         return
     end
-    local panel = ui.teams[team]
+    local panel = ui.panels[team]
     if not panel or not panel.frame or not panel.frame.valid then
         return
     end
@@ -464,7 +464,7 @@ local function update_player_crafting(p_idx, just_crafted)
 
     for _, v_id in ipairs(views) do
         local ui = this.ui_frames[v_id]
-        if not (ui and ui.teams[team]) then
+        if not (ui and ui.panels[team]) then
             goto continue
         end
 
@@ -473,7 +473,7 @@ local function update_player_crafting(p_idx, just_crafted)
             local show_inter = ui.show_intermediates or false
             local items, more = get_queue_display(p_idx, just_crafted, show_inter)
             local idle = items[1].sprite == nil
-            update_row_ui(ui.teams[team], row_idx, items, more, idle)
+            update_row_ui(ui.panels[team], row_idx, items, more, idle)
         end
 
         ::continue::
@@ -653,17 +653,17 @@ local function create_window(player)
     local viewer_team = storage.chosen_team[player.name]
     local is_spectator = viewer_team ~= 'north' and viewer_team ~= 'south'
 
-    local teams = {}
+    local panels = {}
     for_each_team(function(team)
         if is_spectator or team == viewer_team then
-            teams[team] = create_team_panel(content, team, v_id)
+            panels[team] = create_team_panel(content, team, v_id)
         end
     end)
 
     this.ui_frames[v_id] = {
         root = win,
         owner = player.index,
-        teams = teams,
+        panels = panels,
         show_intermediates = true,
     }
     this.watchlist[v_id] = {}
@@ -751,7 +751,7 @@ local function on_add(tags)
     if not ui then
         return
     end
-    local panel = ui.teams[team]
+    local panel = ui.panels[team]
     if not (panel and panel.dd and panel.dd.valid) then
         return
     end
