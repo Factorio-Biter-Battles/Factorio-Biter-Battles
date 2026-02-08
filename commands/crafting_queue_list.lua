@@ -259,7 +259,6 @@ end
 ---@param team string
 ---@param p_idx uint
 ---@param just_crafted boolean
----@return {row: LuaGuiElement, grid: LuaGuiElement, label: LuaGuiElement}
 local function create_row(parent, view_id, team, p_idx, just_crafted)
     local gp = game.get_player(p_idx)
     local name = gp and gp.name or ('#' .. p_idx)
@@ -291,7 +290,6 @@ local function create_row(parent, view_id, team, p_idx, just_crafted)
         })
         set_size(btn, BTN_SIZE)
         btn.tags = tags
-        return btn
     end
 
     make_btn(
@@ -324,8 +322,6 @@ local function create_row(parent, view_id, team, p_idx, just_crafted)
         end
         set_size(btn, ICON_SIZE)
     end
-
-    return { row = row, grid = grid, label = label }
 end
 
 ---@param view_id integer
