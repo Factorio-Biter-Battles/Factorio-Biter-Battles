@@ -91,7 +91,7 @@ local function recipe_sprite(name)
 end
 
 ---@param view_id integer
----@return uint[]
+---@return table<uint, integer>
 local function get_watchlist(view_id)
     this.watchlist[view_id] = this.watchlist[view_id] or {}
     return this.watchlist[view_id]
@@ -836,6 +836,7 @@ function Public.reset_crafting_queue_list()
     this.view_id_next = 1
 end
 
+---@param player LuaPlayer?
 function Public.on_team_changed(player)
     if player then
         local view_id = get_player_view(player)
