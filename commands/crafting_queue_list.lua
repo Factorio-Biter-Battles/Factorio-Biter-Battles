@@ -181,7 +181,7 @@ local function get_queue_display(p_idx, just_crafted, show_intermediates)
 
     -- on_player_crafted_item fires before queue updates
     local skip_first, dec_head = false, false
-    if just_crafted and total > 0 and not q[1].prerequisite then
+    if just_crafted and total > 0 and (show_intermediates or not q[1].prerequisite) then
         local head_count = q[1].count or 0
         if head_count == 1 then
             skip_first = true
