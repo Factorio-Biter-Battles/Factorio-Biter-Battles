@@ -281,8 +281,8 @@ end
 ---@param just_crafted boolean
 ---@return {row: LuaGuiElement, grid: LuaGuiElement, label: LuaGuiElement}
 local function create_row(parent, view_id, team, p_idx, just_crafted)
-    local p = get_player(p_idx)
-    local name = p and p.name or ('#' .. p_idx)
+    local gp = game.get_player(p_idx)
+    local name = gp and gp.name or ('#' .. p_idx)
     local ui = this.ui_frames[view_id]
     local show_inter = ui and ui.show_intermediates or false
     local items, more = get_queue_display(p_idx, just_crafted, show_inter)
