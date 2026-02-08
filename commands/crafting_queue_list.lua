@@ -10,7 +10,6 @@ local ICON_COLS = 4
 local MAX_ICONS = ICON_COLS * 2
 local ICON_SIZE = 26
 local BTN_SIZE = 20
-local NAME_MAX_CHARS = 10
 local DIMMED = { r = 0.6, g = 0.6, b = 0.6 }
 local UNDIMMED = { r = 1, g = 1, b = 1 }
 local GRAY = { r = 0.8, g = 0.8, b = 0.8 }
@@ -96,16 +95,6 @@ local function player_team(p_idx)
         return team
     end
     return nil
-end
-
----@param s string?
----@param n integer
----@return string
-local function ellipsize(s, n)
-    if not s or #s <= n then
-        return s or ''
-    end
-    return s:sub(1, n) .. '...'
 end
 
 ---@param name string?
