@@ -798,6 +798,8 @@ local click_handlers = {
     cql_remove = on_remove,
     cql_move_up = on_move,
     cql_move_down = on_move,
+    cql_add_north = on_add,
+    cql_add_south = on_add,
 }
 
 Event.add(defines.events.on_gui_click, function(ev)
@@ -811,11 +813,6 @@ Event.add(defines.events.on_gui_click, function(ev)
     local handler = click_handlers[name]
     if handler then
         handler(tags)
-        return
-    end
-
-    if name:match('^cql_add_') then
-        on_add(tags)
     end
 end)
 
