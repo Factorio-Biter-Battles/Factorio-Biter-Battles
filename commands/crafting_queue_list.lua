@@ -23,7 +23,6 @@ local EMPTY_ICON = { sprite = nil, count = 0 }
 ---@field rows LuaGuiElement
 
 ---@class CqlUiFrame
----@field root LuaGuiElement
 ---@field owner uint
 ---@field panels table<string, CqlTeamPanel>
 ---@field show_intermediates boolean
@@ -661,7 +660,6 @@ local function create_window(player)
     end)
 
     this.ui_frames[v_id] = {
-        root = win,
         owner = player.index,
         panels = panels,
         show_intermediates = true,
@@ -674,8 +672,14 @@ end
 ---@param view_id integer
 local function destroy_window(view_id)
     local ui = this.ui_frames[view_id]
-    if ui and ui.root and ui.root.valid then
-        ui.root.destroy()
+    if ui then
+        local player = game.get_player(ui.owner)
+        if player then
+            local win = player.gui.screen.cql_window
+            if win and win.valid then
+                win.destroy()
+            end
+        end
     end
     local wl = this.watchlist[view_id]
     if wl then
