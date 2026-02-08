@@ -744,20 +744,6 @@ Event.add(defines.events.on_player_left_game, function()
     refresh_all_views()
 end)
 
-Event.add(defines.events.on_player_changed_force, function(ev)
-    local player = game.get_player(ev.player_index)
-    if player then
-        local view_id = get_player_view(player)
-        if view_id then
-            destroy_window(view_id)
-        end
-    end
-    refresh_all_views()
-    for v_id in pairs(this.ui_frames) do
-        rebuild_all_rows(v_id)
-    end
-end)
-
 ---@param tags CqlTags
 local function on_close(tags)
     if tags.view_id then
