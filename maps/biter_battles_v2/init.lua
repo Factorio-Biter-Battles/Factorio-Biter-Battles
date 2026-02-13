@@ -80,7 +80,7 @@ function Public.initial_setup()
     game.map_settings.path_finder.short_cache_min_cacheable_distance = 10 -- default 10
     game.map_settings.path_finder.long_cache_min_cacheable_distance = 60 -- default 30
     game.map_settings.path_finder.short_cache_min_algo_steps_to_cache = 50 -- default 50
-    game.map_settings.path_finder.max_clients_to_accept_any_new_request = 4 -- default 10
+    game.map_settings.path_finder.max_clients_to_accept_any_new_request = 10 -- default 10
     game.map_settings.path_finder.max_clients_to_accept_short_new_request = 150 -- default 100
     game.map_settings.path_finder.start_to_goal_cost_multiplier_to_terminate_path_find = 10000 -- default 2000
 
