@@ -339,7 +339,7 @@ local function create_attack_group(surface, force_name, biter_force_name)
     end
     local strike_position = AiStrikes.calculate_strike_position(unit_group, target_position)
     if not strike_position then
-        return
+        log('No strike position found for ' .. biter_force_name .. ', skipping flank')
     end
     AiStrikes.initiate(unit_group, force_name, strike_position, target_position)
     if has_boss_units then

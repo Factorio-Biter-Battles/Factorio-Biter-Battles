@@ -167,29 +167,32 @@ function Public.initiate(unit_group, target_force_name, strike_position, target_
         return
     end
 
-    local chain = {
-        {
+    local chain = {}
+
+    if strike_position then
+        chain[#chain + 1] = {
             type = defines.command.go_to_location,
             destination = strike_position,
             radius = 32,
             distraction = defines.distraction.by_enemy,
-        },
-        {
+        }
+        chain[#chain + 1] = {
             type = defines.command.wander,
             radius = 32,
             ticks_to_wait = 1,
-        },
-        {
-            type = defines.command.attack_area,
-            destination = target_position,
-            radius = 32,
-            distraction = defines.distraction.by_enemy,
-        },
-        {
-            type = defines.command.wander,
-            radius = 32,
-            ticks_to_wait = 1,
-        },
+        }
+    end
+
+    chain[#chain + 1] = {
+        type = defines.command.attack_area,
+        destination = target_position,
+        radius = 32,
+        distraction = defines.distraction.by_enemy,
+    }
+    chain[#chain + 1] = {
+        type = defines.command.wander,
+        radius = 32,
+        ticks_to_wait = 1,
     }
 
     -- Chain all possible silos in random order so biters have always something to do.
