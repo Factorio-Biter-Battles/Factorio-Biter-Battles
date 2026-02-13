@@ -8,6 +8,7 @@ local Functions = require('maps.biter_battles_v2.functions')
 local Tables = require('maps.biter_battles_v2.tables')
 local AiStrikes = require('maps.biter_battles_v2.ai_strikes')
 local AiTargets = require('maps.biter_battles_v2.ai_targets')
+local Pathfinder = require('commands.set_pathfinder')
 local math_random = math.random
 local math_floor = math.floor
 
@@ -348,6 +349,7 @@ local function create_attack_group(surface, force_name, biter_force_name)
 end
 
 Public.pre_main_attack = function()
+    Pathfinder.apply()
     local force_name = storage.next_attack
 
     -- In headless benchmarking, there are no connected_players so we need a global to override this
