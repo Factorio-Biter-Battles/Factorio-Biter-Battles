@@ -18,6 +18,7 @@ local TeamStatsCompare = require('maps.biter_battles_v2.team_stats_compare')
 local gui_style = require('utils.utils').gui_style
 local has_life = require('comfy_panel.special_games.limited_lives').has_life
 local MultiSilo = require('comfy_panel.special_games.multi_silo')
+local CraftingQueueList = require('commands.crafting_queue_list')
 
 local food_names = Tables.gui_foods
 
@@ -1156,6 +1157,7 @@ function join_team(player, force_name, forced_join, auto_join)
     player.show_on_map = true
     Public.burners_balance(player)
     MultiSilo.on_player_changed_force(player)
+    CraftingQueueList.on_team_changed(player)
     Public.clear_copy_history(player)
     Public.refresh()
 
@@ -1254,6 +1256,7 @@ function spectate(player, forced_join, stored_position)
     Public.create_main_gui(player)
     player.spectator = true
     player.show_on_map = false
+    CraftingQueueList.on_team_changed(player)
 end
 
 local function join_gui_click(name, player, auto_join)
