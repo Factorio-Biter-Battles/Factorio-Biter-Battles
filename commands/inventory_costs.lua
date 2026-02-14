@@ -1,5 +1,7 @@
 local ItemCosts = require('maps.biter_battles_v2.item_costs')
 local safe_wrap_with_player_print = require('utils.utils').safe_wrap_with_player_print
+local with_km_suffix = require('utils.utils').with_km_suffix
+local Functions = require('maps.biter_battles_v2.functions')
 
 local function inventory_cost(player)
     local container = nil
@@ -59,7 +61,7 @@ local function inventory_costs(cmd)
     for _, force in ipairs(forces) do
         local players = inventory_costs_for_force(force)
         if #forces > 1 then
-            player.print('== ' .. force .. ' ==')
+            player.print('━━ ' .. Functions.team_name_with_color(force) .. ' ━━')
         end
         for index, entry in ipairs(players) do
             if index > 10 then
@@ -68,7 +70,7 @@ local function inventory_costs(cmd)
             local settings = {
                 color = entry.player.color,
             }
-            local msg = string.format('%s: %.0f', entry.player.name, entry.cost / 10)
+            local msg = string.format('%s: %s', entry.player.name, with_km_suffix(entry.cost / 10))
             player.print('• ' .. msg, settings)
         end
     end
