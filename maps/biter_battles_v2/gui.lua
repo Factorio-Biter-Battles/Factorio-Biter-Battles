@@ -6,6 +6,7 @@ local Color = require('utils.color_presets')
 local DifficultyVote = require('maps.biter_battles_v2.difficulty_vote')
 local Event = require('utils.event')
 local Feeding = require('maps.biter_battles_v2.feeding')
+local FeedingRestriction = require('maps.biter_battles_v2.feeding_restriction')
 local Functions = require('maps.biter_battles_v2.functions')
 local Init = require('maps.biter_battles_v2.init')
 local Gui = require('utils.gui')
@@ -601,7 +602,7 @@ function Public.create_main_gui(player)
             name = 'send_all',
             caption = 'All',
             style = 'slot_button',
-            tooltip = 'LMB - low to high, RMB - high to low',
+            tooltip = { 'info.send_all_tooltip' },
         })
         gui_style(f, { padding = 0, font_color = { r = 0.9, g = 0.9, b = 0.9 } })
         local f = t.add({
@@ -609,7 +610,7 @@ function Public.create_main_gui(player)
             name = 'info',
             style = 'slot_button',
             sprite = 'utility/warning_white',
-            tooltip = "If you don't see a food, it may have been disabled by special game mode, or you have not been authorized by your captain.",
+            tooltip = { 'info.info_button_tooltip' },
         })
         gui_style(f, { padding = 0 })
     end
@@ -809,34 +810,51 @@ function Public.refresh_main_gui(player, data)
             main.science_frame.visible = _DEBUG or false
         else
             main.science_frame.visible = true
-            local table = main.science_frame.flow.table_frame.send_table
-            local all_enabled = true
-            local button
+            local t = main.science_frame.flow.table_frame.send_table
+
+            -- Calculate restriction states once
+            local is_special_game_restricted = storage.active_special_games.disable_sciences
+            local is_captain_restricted = Captain_event.captain_is_player_prohibited_to_throw(player)
+            local is_score_restricted = not FeedingRestriction.can_player_send_science(player)
+
+            local any_restricted = false
+
+            -- Update food buttons
             for food_name, tooltip in pairs(food_names) do
-                button = table[food_name]
-                button.visible = true
-                button.tooltip = tooltip
-                if
-                    storage.active_special_games.disable_sciences
-                    and storage.special_games_variables.disabled_food[food_name]
-                then
-                    button.visible = false
-                end
-                if Captain_event.captain_is_player_prohibited_to_throw(player) and food_name ~= 'raw-fish' then
-                    button.visible = false
-                end
-                all_enabled = all_enabled and button.visible
+                local button = t[food_name]
+                local is_fish = food_name == 'raw-fish'
+
+                -- Determine visibility (captain/special game hides buttons)
+                local hidden = (is_special_game_restricted and storage.special_games_variables.disabled_food[food_name])
+                    or (is_captain_restricted and not is_fish)
+                button.visible = not hidden
+
+                -- Determine enabled state (score restriction disables but keeps visible)
+                local disabled = is_score_restricted and not is_fish
+                button.enabled = not disabled
+                button.tooltip = disabled and { 'info.science_send_restriction' } or tooltip
+
+                any_restricted = any_restricted or hidden or disabled
             end
-            button = table.send_all
-            button.visible = true
-            if storage.active_special_games.disable_sciences then
-                button.visible = false
+
+            -- Update send_all button
+            local send_all = t.send_all
+            local hidden = is_special_game_restricted or is_captain_restricted
+            send_all.visible = not hidden
+            send_all.enabled = not is_score_restricted
+            send_all.tooltip = is_score_restricted and { 'info.science_send_restriction' }
+                or { 'info.send_all_tooltip' }
+            any_restricted = any_restricted or hidden or is_score_restricted
+
+            -- Update info button
+            t.info.visible = any_restricted
+            if is_captain_restricted or is_special_game_restricted then
+                t.info.tooltip = { 'info.info_button_tooltip' }
+            elseif is_score_restricted then
+                t.info.tooltip = { 'info.science_send_restriction_tooltip' }
+            else
+                t.info.tooltip = { 'info.info_button_tooltip' }
             end
-            if Captain_event.captain_is_player_prohibited_to_throw(player) then
-                button.visible = false
-            end
-            all_enabled = all_enabled and button.visible
-            table.info.visible = not all_enabled
         end
     end
 
