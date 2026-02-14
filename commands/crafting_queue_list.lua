@@ -81,12 +81,12 @@ local function for_each_team(fn)
 end
 
 ---@param name string?
----@return string?
+---@return string
 local function recipe_sprite(name)
     if not name then
-        return nil
+        return '[img=recipe/recipe-unknown]'
     end
-    return SPRITE_CACHE[name]
+    return SPRITE_CACHE[name] or '[img=recipe/recipe-unknown]'
 end
 
 ---@param view_id integer
@@ -170,9 +170,11 @@ local function get_queue_display(player, just_crafted, show_intermediates)
             goto next
         end
         slot = slot + 1
-        local rec = entry.recipe
-        local count = (entry.count or 0) - (dec_head and slot == 1 and 1 or 0)
-        items[slot] = { sprite = recipe_sprite(rec and (rec.name or rec)), count = count }
+        do -- stylua: Luau type-cast ambiguity with ::label:: after expression
+            local rec = entry.recipe
+            local count = (entry.count or 0) - (dec_head and slot == 1 and 1 or 0)
+            items[slot] = { sprite = recipe_sprite(rec and (rec.name or rec)), count = count }
+        end
         ::next::
     end
 
@@ -488,6 +490,9 @@ local function watchlist_remove(view_id, p_idx)
     wl[p_idx] = nil
     if this.player_views[p_idx] then
         this.player_views[p_idx][view_id] = nil
+        if next(this.player_views[p_idx]) == nil then
+            this.player_views[p_idx] = nil
+        end
     end
     for idx, order in pairs(wl) do
         if order > removed_order then
@@ -663,6 +668,9 @@ local function destroy_window(view_id)
         for p_idx in pairs(wl) do
             if this.player_views[p_idx] then
                 this.player_views[p_idx][view_id] = nil
+                if next(this.player_views[p_idx]) == nil then
+                    this.player_views[p_idx] = nil
+                end
             end
         end
     end
@@ -770,7 +778,7 @@ local function on_move(tags)
     end
 
     if watchlist_move(view_id, p_idx, delta) then
-        rebuild_team_rows(view_id, team)
+        rebuild_all_rows(view_id)
     end
 end
 
