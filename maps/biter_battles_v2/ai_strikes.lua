@@ -2,6 +2,7 @@ local Public = {}
 
 local bb_config = require('maps.biter_battles_v2.config')
 local Pool = require('maps.biter_battles_v2.pool')
+local MultiSilo = require('comfy_panel.special_games.multi_silo')
 local Color = require('utils.color_presets')
 
 local math_random = math.random
@@ -176,11 +177,6 @@ function Public.initiate(unit_group, target_force_name, strike_position, target_
             radius = 32,
             distraction = defines.distraction.by_enemy,
         }
-        chain[#chain + 1] = {
-            type = defines.command.wander,
-            radius = 32,
-            ticks_to_wait = 1,
-        }
     end
 
     chain[#chain + 1] = {
@@ -189,23 +185,32 @@ function Public.initiate(unit_group, target_force_name, strike_position, target_
         radius = 32,
         distraction = defines.distraction.by_enemy,
     }
-    chain[#chain + 1] = {
-        type = defines.command.wander,
-        radius = 32,
-        ticks_to_wait = 1,
-    }
 
     -- Chain all possible silos in random order so biters have always something to do.
     local list = storage.rocket_silo[target_force_name]
     local indices = shuffle_indices(list)
+
+    -- Chain silo attack commands in shuffled order.
+    -- In multi-silo mode, add position-based attack_area fallbacks
+    -- so the chain survives silo destruction.
+    local multi_silo = not MultiSilo.is_disabled()
     for _, i in ipairs(indices) do
         local silo = list[i]
         if silo and silo.valid then
-            chain[#chain + 1] = {
-                type = defines.command.attack,
-                target = silo,
-                distraction = defines.distraction.by_damage,
-            }
+            if multi_silo then
+                chain[#chain + 1] = {
+                    type = defines.command.attack_area,
+                    destination = silo.position,
+                    radius = 32,
+                    distraction = defines.distraction.by_damage,
+                }
+            else
+                chain[#chain + 1] = {
+                    type = defines.command.attack,
+                    target = silo,
+                    distraction = defines.distraction.by_damage,
+                }
+            end
         end
     end
 
