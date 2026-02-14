@@ -1,5 +1,6 @@
 local Public = {}
 
+local Event = require('utils.event')
 local bb_config = require('maps.biter_battles_v2.config')
 local Pool = require('maps.biter_battles_v2.pool')
 local MultiSilo = require('comfy_panel.special_games.multi_silo')
@@ -24,6 +25,14 @@ local MAX_STRIKE_DISTANCE = 512
 local MIN_STRIKE_DISTANCE = 256
 local STRIKE_TARGET_CLEARANCE = 255
 local _DEBUG = false
+
+-- Infer the target player force from a biter's force name.
+local BITER_FORCE_TO_TARGET = {
+    north_biters = 'north',
+    south_biters = 'south',
+    north_biters_boss = 'north',
+    south_biters_boss = 'south',
+}
 
 local function calculate_secant_intersections(r, a, b, c)
     local t = a * a + b * b
@@ -163,6 +172,40 @@ local function shuffle_indices(list)
     return indices
 end
 
+--- Append shuffled silo attack commands to an existing command chain.
+--- In multi-silo mode, uses position-based attack_area so the chain
+--- survives silo destruction; otherwise targets the silo entity directly.
+---@param chain defines.command[] Compound command list to append to.
+---@param target_force_name string Force name ('north' or 'south').
+---@param distraction defines.distraction Distraction behaviour for the appended commands.
+local function append_silo_commands(chain, target_force_name, distraction)
+    local silos = storage.rocket_silo[target_force_name]
+    if not silos then
+        return
+    end
+    local indices = shuffle_indices(silos)
+    local multi_silo = not MultiSilo.is_disabled()
+    for _, i in ipairs(indices) do
+        local silo = silos[i]
+        if silo and silo.valid then
+            if multi_silo then
+                chain[#chain + 1] = {
+                    type = defines.command.attack_area,
+                    destination = silo.position,
+                    radius = 32,
+                    distraction = distraction,
+                }
+            else
+                chain[#chain + 1] = {
+                    type = defines.command.attack,
+                    target = silo,
+                    distraction = distraction,
+                }
+            end
+        end
+    end
+end
+
 function Public.initiate(unit_group, target_force_name, strike_position, target_position)
     if storage.bb_game_won_by_team then
         return
@@ -186,33 +229,7 @@ function Public.initiate(unit_group, target_force_name, strike_position, target_
         distraction = defines.distraction.by_enemy,
     }
 
-    -- Chain all possible silos in random order so biters have always something to do.
-    local list = storage.rocket_silo[target_force_name]
-    local indices = shuffle_indices(list)
-
-    -- Chain silo attack commands in shuffled order.
-    -- In multi-silo mode, add position-based attack_area fallbacks
-    -- so the chain survives silo destruction.
-    local multi_silo = not MultiSilo.is_disabled()
-    for _, i in ipairs(indices) do
-        local silo = list[i]
-        if silo and silo.valid then
-            if multi_silo then
-                chain[#chain + 1] = {
-                    type = defines.command.attack_area,
-                    destination = silo.position,
-                    radius = 32,
-                    distraction = defines.distraction.by_damage,
-                }
-            else
-                chain[#chain + 1] = {
-                    type = defines.command.attack,
-                    target = silo,
-                    distraction = defines.distraction.by_damage,
-                }
-            end
-        end
-    end
+    append_silo_commands(chain, target_force_name, defines.distraction.by_damage)
 
     unit_group.set_command({
         type = defines.command.compound,
@@ -237,5 +254,37 @@ function Public.step(id, result)
         log('ai: ' .. id .. ' ' .. BEHAVIOR_RESULT[result])
     end
 end
+
+--- When a biter unit is removed from its group (e.g. the group is disbanded
+--- or the unit is separated), this function re-commands the orphaned unit with
+---@param event LuaOnUnitRemovedFromGroup
+local function on_unit_removed_from_group(event)
+    local unit = event.unit
+    if not unit.valid then
+        return
+    end
+
+    -- Infer target from the unit's own biter force name.
+    local target_force_name = BITER_FORCE_TO_TARGET[unit.force.name]
+    local commandable = unit.commandable
+    if not commandable then
+        return
+    end
+
+    local chain = {}
+    append_silo_commands(chain, target_force_name, defines.distraction.by_enemy)
+
+    if #chain > 0 then
+        commandable.set_command({
+            type = defines.command.compound,
+            structure_type = defines.compound_command.return_last,
+            commands = chain,
+        })
+    else
+        log('unit_removed_from_group: no valid silos to chain for force=' .. target_force_name)
+    end
+end
+
+Event.add(defines.events.on_unit_removed_from_group, on_unit_removed_from_group)
 
 return Public
