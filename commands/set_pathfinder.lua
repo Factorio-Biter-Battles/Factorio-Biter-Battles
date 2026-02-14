@@ -17,6 +17,7 @@ local PRESET_BB_DEFAULT = {
     max_clients_to_accept_any_new_request = 4,
     max_clients_to_accept_short_new_request = 150,
     start_to_goal_cost_multiplier_to_terminate_path_find = 10000,
+    unit_group = {},
 }
 
 -- Preset: current BB settings (pathfinder fix attempt)
@@ -33,6 +34,14 @@ local PRESET_BB_NEW = {
     max_clients_to_accept_any_new_request = 10, -- Changed.
     max_clients_to_accept_short_new_request = 150,
     start_to_goal_cost_multiplier_to_terminate_path_find = 10000,
+    -- Unit group cohesion tuning to reduce disbandment from pathfinding issues.
+    -- In BB, groups travel long distances through congested terrain. These
+    -- settings keep groups together better than the vanilla defaults.
+    unit_group = {
+        max_member_speedup_when_behind = 1.6, -- default 1.4; faster catch-up
+        max_group_slowdown_factor = 0.2, -- default 0.3; group slows more for stragglers
+        max_group_member_fallback_factor = 5, -- default 3; more slack before triggering slowdown
+    },
 }
 
 -- Preset: vanilla Factorio engine defaults
@@ -49,6 +58,7 @@ local PRESET_DEFAULT = {
     max_clients_to_accept_any_new_request = 10,
     max_clients_to_accept_short_new_request = 100,
     start_to_goal_cost_multiplier_to_terminate_path_find = 2000,
+    unit_group = {},
 }
 
 local PRESETS = {
@@ -64,14 +74,6 @@ end
 table.sort(PRESET_NAMES)
 local PRESET_NAMES_STR = table.concat(PRESET_NAMES, ' | ')
 
-local function shallow_copy(t)
-    local copy = {}
-    for k, v in pairs(t) do
-        copy[k] = v
-    end
-    return copy
-end
-
 ---Returns a copy of the named preset table.
 ---@param name string
 ---@return table?
@@ -80,18 +82,24 @@ function Public.get_preset(name)
     if not preset then
         return nil
     end
-    return shallow_copy(preset)
+    return table.deepcopy(preset)
 end
 
----Applies storage.bb_pathfinder to game.map_settings.path_finder.
+---Applies storage.bb_pathfinder to game.map_settings.path_finder and
+---game.map_settings.unit_group.
 function Public.apply()
     local settings = storage.bb_pathfinder
     if not settings then
         return
     end
-    local pf = game.map_settings.path_finder
     for k, v in pairs(settings) do
-        pf[k] = v
+        if k == 'unit_group' then
+            for uk, uv in pairs(v) do
+                game.map_settings.unit_group[uk] = uv
+            end
+        else
+            game.map_settings.path_finder[k] = v
+        end
     end
 end
 
