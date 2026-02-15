@@ -4,8 +4,8 @@ local Functions = require('maps.biter_battles_v2.functions')
 local Server = require('utils.server')
 
 local tables = require('maps.biter_battles_v2.tables')
+local Force = require('utils.force')
 local food_values = tables.food_values
-local force_translation = tables.force_translation
 local enemy_team_of = tables.enemy_team_of
 local math_floor = math.floor
 local math_round = math.round
@@ -267,7 +267,7 @@ function Public.do_raw_feed(flask_amount, food, biter_force_name)
     storage.bb_threat[biter_force_name] = math_round(storage.bb_threat[biter_force_name] + threat, decimals)
 
     if storage.active_special_games['shared_science_throw'] then
-        local enemyBitersForceName = enemy_team_of[force_translation[biter_force_name]] .. '_biters'
+        local enemyBitersForceName = enemy_team_of[Force.get_player_force_name(biter_force_name)] .. '_biters'
         game.forces[enemyBitersForceName].set_evolution_factor(
             game.forces[biter_force_name].get_evolution_factor(storage.bb_surface_name),
             storage.bb_surface_name

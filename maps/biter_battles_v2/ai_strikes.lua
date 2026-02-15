@@ -5,6 +5,7 @@ local bb_config = require('maps.biter_battles_v2.config')
 local MultiSilo = require('comfy_panel.special_games.multi_silo')
 local Pool = require('maps.biter_battles_v2.pool')
 local Color = require('utils.color_presets')
+local Force = require('utils.force')
 
 local math_random = math.random
 local math_sqrt = math.sqrt
@@ -25,14 +26,6 @@ local MAX_STRIKE_DISTANCE = 512
 local MIN_STRIKE_DISTANCE = 256
 local STRIKE_TARGET_CLEARANCE = 255
 local _DEBUG = false
-
--- Infer the target player force from a biter's force name.
-local BITER_FORCE_TO_TARGET = {
-    north_biters = 'north',
-    south_biters = 'south',
-    north_biters_boss = 'north',
-    south_biters_boss = 'south',
-}
 
 local function calculate_secant_intersections(r, a, b, c)
     local t = a * a + b * b
@@ -210,7 +203,7 @@ end
 --- No-op if no silos are available.
 ---@param group LuaUnitGroup The unit group to assign a new compound command to.
 local function recommand_group(group)
-    local target = BITER_FORCE_TO_TARGET[group.force.name]
+    local target = Force.get_player_force_name(group.force.name)
     local chain = {}
     Public.append_silo_commands(chain, target, defines.distraction.by_enemy)
     if #chain == 0 then
@@ -307,7 +300,7 @@ local function on_unit_removed_from_group(event)
     end
 
     -- Infer target from the unit's own biter force name.
-    local target_force_name = BITER_FORCE_TO_TARGET[unit.force.name]
+    local target_force_name = Force.get_player_force_name(unit.force.name)
     local commandable = unit.commandable
     if not commandable then
         return
