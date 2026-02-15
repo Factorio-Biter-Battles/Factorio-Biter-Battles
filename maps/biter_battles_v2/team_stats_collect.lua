@@ -4,6 +4,7 @@ local functions = require('maps.biter_battles_v2.functions')
 local tables = require('maps.biter_battles_v2.tables')
 local event = require('utils.event')
 local difficulty_vote = require('maps.biter_battles_v2.difficulty_vote')
+local Force = require('utils.force')
 
 ---@class ForceStats
 ---@field final_evo? number
@@ -116,13 +117,6 @@ local fluid_inventories = {
     ['pump'] = true,
     ['pumpjack'] = true,
     ['storage-tank'] = true,
-}
-
-local force_name_map = {
-    north_biters = 'north',
-    north_biters_boss = 'north',
-    south_biters = 'south',
-    south_biters_boss = 'south',
 }
 
 local health_factor_map = {
@@ -467,7 +461,7 @@ local function on_entity_died(event)
         return
     end
     local health_factor = health_factor_map[entity_force_name]
-    local force_name = force_name_map[entity_force_name]
+    local force_name = Force.get_player_force_name(entity_force_name)
     if not health_factor or not force_name then
         return
     end
