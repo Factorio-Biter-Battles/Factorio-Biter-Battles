@@ -2,8 +2,8 @@ local Public = {}
 
 local Event = require('utils.event')
 local bb_config = require('maps.biter_battles_v2.config')
-local Pool = require('maps.biter_battles_v2.pool')
 local MultiSilo = require('comfy_panel.special_games.multi_silo')
+local Pool = require('maps.biter_battles_v2.pool')
 local Color = require('utils.color_presets')
 
 local math_random = math.random
@@ -172,13 +172,23 @@ local function shuffle_indices(list)
     return indices
 end
 
+--- Returns true if two map positions are identical.
+--- Attack_area command destinations are stored directly from silo.position,
+--- so the values are always bit-for-bit equal to the captured dead silo position.
+---@param a MapPosition
+---@param b MapPosition
+---@return boolean
+local function positions_match(a, b)
+    return a.x == b.x and a.y == b.y
+end
+
 --- Append shuffled silo attack commands to an existing command chain.
 --- In multi-silo mode, uses position-based attack_area so the chain
 --- survives silo destruction; otherwise targets the silo entity directly.
 ---@param chain defines.command[] Compound command list to append to.
 ---@param target_force_name string Force name ('north' or 'south').
 ---@param distraction defines.distraction Distraction behaviour for the appended commands.
-local function append_silo_commands(chain, target_force_name, distraction)
+function Public.append_silo_commands(chain, target_force_name, distraction)
     local silos = storage.rocket_silo[target_force_name]
     if not silos then
         return
@@ -206,6 +216,172 @@ local function append_silo_commands(chain, target_force_name, distraction)
     end
 end
 
+--- Recursively remove attack_area sub-commands whose destination matches
+--- `position` and collect the destinations that survived.  Descends into
+--- nested compound commands and removes any that become empty after pruning.
+--- When position is nil (e.g. called on silo placement), no commands are
+--- removed and only the covered positions are collected.
+---@param commands defines.command[] Sub-commands to prune (mutated in-place).
+---@param position MapPosition? Position of the destroyed silo, or nil to skip pruning.
+---@return MapPosition[] valid_positions Destinations of surviving attack_area commands.
+local function prune_invalid_targets(commands, position)
+    local valid = {}
+    local i = 1
+    while i <= #commands do
+        local cmd = commands[i]
+
+        if cmd.type == defines.command.compound then
+            local nested = prune_invalid_targets(cmd.commands, position)
+            for _, pos in ipairs(nested) do
+                valid[#valid + 1] = pos
+            end
+            if #cmd.commands == 0 then
+                table.remove(commands, i)
+                goto prune_continue
+            end
+            i = i + 1
+            goto prune_continue
+        end
+
+        if cmd.type == defines.command.attack_area then
+            if position and positions_match(cmd.destination, position) then
+                table.remove(commands, i)
+                goto prune_continue
+            end
+            valid[#valid + 1] = cmd.destination
+        end
+
+        i = i + 1
+        ::prune_continue::
+    end
+
+    return valid
+end
+
+--- Append attack_area commands for valid silos whose positions are not already covered.
+--- Only adds commands when multi-silo mode is active.
+---@param commands defines.command[] Sub-commands to append to.
+---@param target_force_name string Force whose silos to check ('north' or 'south').
+---@param covered_positions MapPosition[] Positions already present in the command chain.
+local function append_missing_silos(commands, target_force_name, covered_positions)
+    if MultiSilo.is_disabled() then
+        return
+    end
+
+    local silos = storage.rocket_silo[target_force_name]
+    if not silos then
+        return
+    end
+
+    local indices = shuffle_indices(silos)
+    for _, i in ipairs(indices) do
+        local silo = silos[i]
+        if not (silo and silo.valid) then
+            goto append_missing_silos_cont
+        end
+
+        local already_covered = false
+        for _, pos in ipairs(covered_positions) do
+            if positions_match(silo.position, pos) then
+                already_covered = true
+                break
+            end
+        end
+
+        if not already_covered then
+            commands[#commands + 1] = {
+                type = defines.command.attack_area,
+                destination = silo.position,
+                radius = 32,
+                distraction = defines.distraction.by_enemy,
+            }
+        end
+
+        ::append_missing_silos_cont::
+    end
+end
+
+--- Find the innermost commands array at the tail of a compound command tree.
+--- Silo attack commands are originally appended at the end of the chain, so
+--- after Factorio restructures the compound during execution they end up in
+--- the deepest trailing compound.  Returns nil for non-compound commands.
+---@param cmd defines.command
+---@return defines.command[]?
+local function find_tail_commands(cmd)
+    if cmd.type ~= defines.command.compound or #cmd.commands == 0 then
+        return nil
+    end
+    local last = cmd.commands[#cmd.commands]
+    if last.type == defines.command.compound then
+        return find_tail_commands(last) or cmd.commands
+    end
+    return cmd.commands
+end
+
+--- Re-command a single biter group, preserving its existing command chain while
+--- removing the destroyed silo's attack_area entry and adding any uncovered silos.
+--- Falls back to a fresh silo-only chain when the group has no existing command.
+--- When position is nil, no commands are pruned -- only missing silos are appended.
+---@param group LuaCommandable The group to update.
+---@param position MapPosition? Position of the just-destroyed silo, or nil when appending only.
+local function recommand_group(group, position)
+    local target = BITER_FORCE_TO_TARGET[group.force.name]
+
+    local command = group.command
+    if command.type ~= defines.command.compound then
+        local pos = group.position
+        log(
+            'WARN: recommand_group: unexpected command type '
+                .. tostring(command.type)
+                .. ' for group force='
+                .. tostring(group.force.name)
+                .. ' id='
+                .. tostring(group.unique_id)
+                .. ' pos=('
+                .. tostring(pos.x)
+                .. ','
+                .. tostring(pos.y)
+                .. ')'
+        )
+        return
+    end
+
+    local cmd = table.deepcopy(command)
+    local valid = prune_invalid_targets(cmd.commands, position)
+    local tail = find_tail_commands(cmd) or cmd.commands
+    append_missing_silos(tail, target, valid)
+
+    if #cmd.commands == 0 then
+        return
+    end
+
+    group.set_command(cmd)
+end
+
+--- Re-command all tracked multi-silo biter groups.
+--- Preserves each group's existing command chain; removes the dead silo entry
+--- (if dead_silo_position is given) and appends any silos not yet in the chain.
+--- Called with no argument when a new silo is placed so groups pick it up without
+--- discarding their current route.
+---@param dead_silo_position MapPosition? Position of the just-destroyed silo, or nil when appending only.
+function Public.recommand_all_groups(dead_silo_position)
+    if MultiSilo.is_disabled() or storage.bb_game_won_by_team then
+        return
+    end
+
+    local groups = MultiSilo.get_biter_groups()
+    for i = #groups, 1, -1 do
+        local group = groups[i]
+        if not group.valid or #group.members == 0 then
+            table.remove(groups, i)
+        end
+    end
+
+    for _, group in ipairs(groups) do
+        recommand_group(group, dead_silo_position)
+    end
+end
+
 function Public.initiate(unit_group, target_force_name, strike_position, target_position)
     if storage.bb_game_won_by_team then
         return
@@ -229,7 +405,7 @@ function Public.initiate(unit_group, target_force_name, strike_position, target_
         distraction = defines.distraction.by_enemy,
     }
 
-    append_silo_commands(chain, target_force_name, defines.distraction.by_damage)
+    Public.append_silo_commands(chain, target_force_name, defines.distraction.by_damage)
 
     unit_group.set_command({
         type = defines.command.compound,
@@ -259,6 +435,10 @@ end
 --- or the unit is separated), this function re-commands the orphaned unit with
 ---@param event LuaOnUnitRemovedFromGroup
 local function on_unit_removed_from_group(event)
+    if storage.bb_game_won_by_team then
+        return
+    end
+
     local unit = event.unit
     if not unit.valid then
         return
@@ -272,7 +452,7 @@ local function on_unit_removed_from_group(event)
     end
 
     local chain = {}
-    append_silo_commands(chain, target_force_name, defines.distraction.by_enemy)
+    Public.append_silo_commands(chain, target_force_name, defines.distraction.by_enemy)
 
     if #chain > 0 then
         commandable.set_command({
