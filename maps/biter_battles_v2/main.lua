@@ -426,6 +426,7 @@ local function on_entity_died(event)
         unit_death(entity)
     elseif entity.type == 'rocket-silo' then
         Game_over.on_entity_died(entity)
+        AiStrikes.recommand_all_groups()
     end
 end
 

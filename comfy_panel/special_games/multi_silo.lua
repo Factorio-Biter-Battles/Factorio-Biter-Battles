@@ -63,6 +63,9 @@ function Public.generate(_, player)
         ---@type { [string]: { x: number, y: number } }
         ---Holds last position of a player transition into death or joining spectator
         last_transition = {},
+        ---@type LuaCommandable[]
+        ---Tracks active biter unit groups so idle ones can be re-commanded with fresh silo targets.
+        biter_groups = {},
     }
 
     local s = game.surfaces[storage.bb_surface_name]
@@ -88,6 +91,14 @@ function Public.is_disabled()
     -- storage.active_special_games.multi_silo can only be set by clicking a button in admin panel.
     -- storage.server_restart_timer indicates if map is scheduled for a reset.
     return (storage.active_special_games.multi_silo == nil or storage.server_restart_timer)
+end
+
+---@return LuaUnitGroup[]|nil Active biter groups tracked for multi-silo re-commanding, or nil when multi-silo is disabled.
+function Public.get_biter_groups()
+    if Public.is_disabled() then
+        return nil
+    end
+    return storage.active_special_games.multi_silo.biter_groups
 end
 
 ---Adds silo icon into GUI to indicate that special is enabled.
@@ -401,6 +412,28 @@ local function remove_silo(cmd)
     log(msg)
 end
 
+---@param group LuaCommandable Unit group to track.
+function Public.track_group(group)
+    if Public.is_disabled() then
+        return
+    end
+    table.insert(storage.active_special_games.multi_silo.biter_groups, group)
+end
+
+---Removes unit groups that are no longer valid from the tracked biter_groups list.
+local function cleanup_biter_groups()
+    if Public.is_disabled() then
+        return
+    end
+
+    local groups = storage.active_special_games.multi_silo.biter_groups
+    for i = #groups, 1, -1 do
+        if not groups[i] or not groups[i].valid then
+            table.remove(groups, i)
+        end
+    end
+end
+
 commands.add_command(
     'remove-silo',
     'Removes a silo without explosion and drops it on the ground. Point your cursor at a silo and then execute the command. Applicable with multi silo mode active.',
@@ -408,9 +441,9 @@ commands.add_command(
 )
 
 Event.add(defines.events.on_player_respawned, on_player_respawned)
-Event.add(defines.events.on_player_respawned, on_player_respawned)
 Event.add(defines.events.on_built_entity, on_built_entity)
 Event.add(defines.events.on_robot_built_entity, on_robot_built_entity)
 Event.add(defines.events.on_player_died, on_player_died)
+Event.on_nth_tick(60 * 60, cleanup_biter_groups)
 
 return Public

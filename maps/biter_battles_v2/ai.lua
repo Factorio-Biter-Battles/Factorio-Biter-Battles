@@ -8,6 +8,7 @@ local Functions = require('maps.biter_battles_v2.functions')
 local Tables = require('maps.biter_battles_v2.tables')
 local AiStrikes = require('maps.biter_battles_v2.ai_strikes')
 local AiTargets = require('maps.biter_battles_v2.ai_targets')
+local MultiSilo = require('comfy_panel.special_games.multi_silo')
 local Pathfinder = require('commands.set_pathfinder')
 local math_random = math.random
 local math_floor = math.floor
@@ -343,8 +344,10 @@ local function create_attack_group(surface, force_name, biter_force_name)
         log('No strike position found for ' .. biter_force_name .. ', skipping flank')
     end
     AiStrikes.initiate(unit_group, force_name, strike_position, target_position)
+    MultiSilo.track_group(unit_group)
     if has_boss_units then
         AiStrikes.initiate(unit_group_boss, force_name, strike_position, target_position)
+        MultiSilo.track_group(unit_group_boss)
     end
 end
 

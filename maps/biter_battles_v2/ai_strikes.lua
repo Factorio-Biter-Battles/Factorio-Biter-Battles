@@ -2,8 +2,8 @@ local Public = {}
 
 local Event = require('utils.event')
 local bb_config = require('maps.biter_battles_v2.config')
-local Pool = require('maps.biter_battles_v2.pool')
 local MultiSilo = require('comfy_panel.special_games.multi_silo')
+local Pool = require('maps.biter_battles_v2.pool')
 local Color = require('utils.color_presets')
 
 local math_random = math.random
@@ -178,7 +178,7 @@ end
 ---@param chain defines.command[] Compound command list to append to.
 ---@param target_force_name string Force name ('north' or 'south').
 ---@param distraction defines.distraction Distraction behaviour for the appended commands.
-local function append_silo_commands(chain, target_force_name, distraction)
+function Public.append_silo_commands(chain, target_force_name, distraction)
     local silos = storage.rocket_silo[target_force_name]
     if not silos then
         return
@@ -206,6 +206,44 @@ local function append_silo_commands(chain, target_force_name, distraction)
     end
 end
 
+--- Re-command a single biter group with a fresh silo attack chain.
+--- No-op if no silos are available.
+---@param group LuaUnitGroup The unit group to assign a new compound command to.
+local function recommand_group(group)
+    local target = BITER_FORCE_TO_TARGET[group.force.name]
+    local chain = {}
+    Public.append_silo_commands(chain, target, defines.distraction.by_enemy)
+    if #chain == 0 then
+        return
+    end
+
+    group.set_command({
+        type = defines.command.compound,
+        structure_type = defines.compound_command.return_last,
+        commands = chain,
+    })
+end
+
+--- Re-command all tracked multi-silo biter groups with fresh silo chains.
+--- Called when a silo is destroyed so groups no longer head to the dead silo.
+function Public.recommand_all_groups()
+    if MultiSilo.is_disabled() or storage.bb_game_won_by_team then
+        return
+    end
+
+    local groups = MultiSilo.get_biter_groups()
+    for i = #groups, 1, -1 do
+        local group = groups[i]
+        if not group.valid or #group.members == 0 then
+            table.remove(groups, i)
+        end
+    end
+
+    for _, group in ipairs(groups) do
+        recommand_group(group)
+    end
+end
+
 function Public.initiate(unit_group, target_force_name, strike_position, target_position)
     if storage.bb_game_won_by_team then
         return
@@ -229,7 +267,7 @@ function Public.initiate(unit_group, target_force_name, strike_position, target_
         distraction = defines.distraction.by_enemy,
     }
 
-    append_silo_commands(chain, target_force_name, defines.distraction.by_damage)
+    Public.append_silo_commands(chain, target_force_name, defines.distraction.by_damage)
 
     unit_group.set_command({
         type = defines.command.compound,
@@ -259,6 +297,10 @@ end
 --- or the unit is separated), this function re-commands the orphaned unit with
 ---@param event LuaOnUnitRemovedFromGroup
 local function on_unit_removed_from_group(event)
+    if storage.bb_game_won_by_team then
+        return
+    end
+
     local unit = event.unit
     if not unit.valid then
         return
@@ -272,7 +314,7 @@ local function on_unit_removed_from_group(event)
     end
 
     local chain = {}
-    append_silo_commands(chain, target_force_name, defines.distraction.by_enemy)
+    Public.append_silo_commands(chain, target_force_name, defines.distraction.by_enemy)
 
     if #chain > 0 then
         commandable.set_command({
