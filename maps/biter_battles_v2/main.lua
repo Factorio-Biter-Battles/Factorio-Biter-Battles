@@ -434,7 +434,9 @@ local function on_entity_died(event)
     if entity.type == 'unit' or entity.type == 'unit-spawner' or entity.type == 'turret' then
         unit_death(entity)
     elseif entity.type == 'rocket-silo' then
+        local dead_pos = entity.position
         Game_over.on_entity_died(entity)
+        AiStrikes.recommand_all_groups(dead_pos)
     end
 end
 
