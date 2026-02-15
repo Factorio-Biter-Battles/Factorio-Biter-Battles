@@ -8,7 +8,7 @@ local TEAMS = { 'north', 'south' }
 local MAX_ROWS = 8
 local ICON_COLS = 4
 local MAX_ICONS = ICON_COLS * 2
-local ICON_SIZE = 26
+local ICON_SIZE = 28
 local BTN_SIZE = 20
 local DIMMED = { r = 0.6, g = 0.6, b = 0.6 }
 local UNDIMMED = { r = 1, g = 1, b = 1 }
@@ -69,8 +69,6 @@ end)
 local function set_size(elem, w, h)
     h = h or w
     elem.style.width, elem.style.height = w, h
-    elem.style.minimal_width, elem.style.minimal_height = w, h
-    elem.style.maximal_width, elem.style.maximal_height = w, h
 end
 
 ---@param fn fun(team: string)
@@ -135,12 +133,12 @@ local function get_views_watching(p_idx)
     return views
 end
 
----@param player LuaPlayer?
+---@param player LuaPlayer
 ---@param just_crafted boolean
 ---@param show_intermediates boolean?
 ---@return CqlQueueItem[], integer
 local function get_queue_display(player, just_crafted, show_intermediates)
-    local q = player and player.crafting_queue or {}
+    local q = player.crafting_queue or {}
     local items, more = {}, 0
     local total = #q
 
@@ -171,9 +169,8 @@ local function get_queue_display(player, just_crafted, show_intermediates)
         end
         slot = slot + 1
         do -- stylua: Luau type-cast ambiguity with ::label:: after expression
-            local rec = entry.recipe
-            local count = (entry.count or 0) - (dec_head and slot == 1 and 1 or 0)
-            items[slot] = { sprite = recipe_sprite(rec and (rec.name or rec)), count = count }
+            local count = entry.count - (dec_head and slot == 1 and 1 or 0)
+            items[slot] = { sprite = recipe_sprite(entry.recipe), count = count }
         end
         ::next::
     end
@@ -248,7 +245,9 @@ end
 ---@param just_crafted boolean
 local function create_row(parent, view_id, team, p_idx, just_crafted)
     local gp = game.get_player(p_idx)
-    local name = gp and gp.name or ('#' .. p_idx)
+    if not gp then
+        return
+    end
     local ui = this.ui_frames[view_id]
     local show_inter = ui and ui.show_intermediates or false
     local items, more = get_queue_display(gp, just_crafted, show_inter)
@@ -260,7 +259,7 @@ local function create_row(parent, view_id, team, p_idx, just_crafted)
     local header = row.add({ type = 'flow', direction = 'horizontal' })
     header.style.vertical_align = 'center'
 
-    local label = header.add({ type = 'label', caption = name, tooltip = name })
+    local label = header.add({ type = 'label', caption = gp.name, tooltip = gp.name })
     label.style.font = 'default-small-bold'
     label.style.font_color = idle and DIMMED or UNDIMMED
 
@@ -307,6 +306,7 @@ local function create_row(parent, view_id, team, p_idx, just_crafted)
             btn.style = 'yellow_slot_button'
             btn.tooltip = '+' .. more .. ' more'
         end
+        btn.style.padding = -2
         set_size(btn, ICON_SIZE)
     end
 end
@@ -582,8 +582,8 @@ end
 ---@return {x: number, y: number}
 local function default_location(player)
     local res = player.display_resolution
-    local scale = player.display_scale or 1
-    local w = (res.width or 1280) / scale
+    local scale = player.display_scale
+    local w = res.width / scale
     return { x = math.max(8, math.floor(w - 520)), y = 60 }
 end
 
@@ -598,6 +598,7 @@ local function create_window(player)
         name = 'cql_window',
         direction = 'vertical',
     })
+    win.style.padding = 2
     win.location = default_location(player)
 
     local titlebar = win.add({ type = 'flow', direction = 'horizontal' })
@@ -708,9 +709,22 @@ end
 commands.add_command('crafting-list', 'Toggle Crafting List window', function(cmd)
     safe_wrap_cmd(cmd, function()
         local p = game.get_player(cmd.player_index)
-        if p and p.valid then
-            toggle_window(p)
+        if not (p and p.valid) then
+            return
         end
+        local visibility = storage.allow_crafting_queue_list or 'spectators'
+        if visibility == 'none' then
+            p.print('Crafting queue list is disabled', { color = { r = 1, g = 0.5, b = 0.1 } })
+            return
+        end
+        if visibility == 'spectators' then
+            local team = storage.chosen_team[p.name]
+            if team == 'north' or team == 'south' then
+                p.print('Crafting queue list is only available for spectators', { color = { r = 1, g = 0.5, b = 0.1 } })
+                return
+            end
+        end
+        toggle_window(p)
     end, cmd)
 end)
 
@@ -832,6 +846,12 @@ end)
 Event.add(defines.events.on_player_cancelled_crafting, function(ev)
     update_player_crafting(ev.player_index, false)
 end)
+
+function Public.close_all_windows()
+    for v_id in pairs(this.ui_frames) do
+        destroy_window(v_id)
+    end
+end
 
 function Public.reset_crafting_queue_list()
     for v_id in pairs(this.ui_frames) do
