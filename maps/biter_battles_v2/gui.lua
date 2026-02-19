@@ -1175,6 +1175,7 @@ function join_team(player, force_name, forced_join, auto_join)
     Public.burners_balance(player)
     MultiSilo.on_player_changed_force(player)
     CraftingQueueList.on_team_changed(player)
+    Captain_event.on_player_joined_team(player)
     Public.clear_copy_history(player)
     Public.refresh()
 
