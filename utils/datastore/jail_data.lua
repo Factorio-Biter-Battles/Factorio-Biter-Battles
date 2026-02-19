@@ -201,7 +201,7 @@ local teleport_player_to_gulag = function(player, action)
     elseif action == 'free' then
         local surface = game.surfaces[p_data.fallback_surface_index]
         local p = p_data.position
-        local p_group = game.permissions.get_group(p_data.p_group_id)
+        local p_group = game.permissions.get_group(p_data.p_group_id) or game.permissions.get_group('Default')
         p_group.add_player(player)
         local get_tile = surface.get_tile(p)
         if get_tile.valid and get_tile.name == 'out-of-map' then

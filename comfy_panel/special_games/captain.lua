@@ -131,24 +131,17 @@ end
 -- == RESEARCH PERMISSIONS ====================================================
 -- Uses a 'no_research' permission group (clone of Default minus research
 -- actions) to block tech-tree interactions for non-trusted players.
--- Note: if the blueprint toggle in config.lua fires while research is locked,
--- the no_research group may desync from Default for blueprint permissions.
--- This is intentionally not handled — extremely unlikely during captain games.
 
-local RESEARCH_GROUP = 'no_research'
+local RESEARCH_RESTRICTED_GROUP = 'no_research'
 local RESEARCH_ACTIONS = {
     defines.input_action.start_research,
     defines.input_action.cancel_research,
     defines.input_action.move_research,
 }
 
-local function get_or_create_no_research_group()
-    local group = game.permissions.get_group(RESEARCH_GROUP)
-    if group then
-        return group
-    end
+-- Clone all permissions from Default, then disable research actions.
+local function sync_research_group_permissions(group)
     local default = game.permissions.get_group('Default')
-    group = game.permissions.create_group(RESEARCH_GROUP)
     for action_name, _ in pairs(defines.input_action) do
         local action = defines.input_action[action_name]
         group.set_allows_action(action, default.allows_action(action))
@@ -156,11 +149,20 @@ local function get_or_create_no_research_group()
     for _, action in ipairs(RESEARCH_ACTIONS) do
         group.set_allows_action(action, false)
     end
+end
+
+local function get_or_create_no_research_group()
+    local group = game.permissions.get_group(RESEARCH_RESTRICTED_GROUP)
+    if group then
+        return group
+    end
+    group = game.permissions.create_group(RESEARCH_RESTRICTED_GROUP)
+    sync_research_group_permissions(group)
     return group
 end
 
 local function cleanup_research_permissions()
-    local group = game.permissions.get_group(RESEARCH_GROUP)
+    local group = game.permissions.get_group(RESEARCH_RESTRICTED_GROUP)
     if not group then
         return
     end
@@ -171,21 +173,21 @@ local function cleanup_research_permissions()
     group.destroy()
 end
 
--- Re-sync the no_research group from Default after unfreeze restores permissions.
--- Called when the game starts and players are unfrozen — the no_research group may
--- have been created during the freeze phase with restricted permissions.
+-- Re-sync after unfreeze restores Default permissions. The no_research group
+-- may have been created during freeze phase with restricted permissions.
 local function resync_no_research_group()
-    local group = game.permissions.get_group(RESEARCH_GROUP)
+    local group = game.permissions.get_group(RESEARCH_RESTRICTED_GROUP)
     if not group then
         return
     end
-    local default = game.permissions.get_group('Default')
-    for action_name, _ in pairs(defines.input_action) do
-        local action = defines.input_action[action_name]
-        group.set_allows_action(action, default.allows_action(action))
-    end
-    for _, action in ipairs(RESEARCH_ACTIONS) do
-        group.set_allows_action(action, false)
+    sync_research_group_permissions(group)
+end
+
+local function captain_to_team(special, name)
+    if special.captainList[1] == name then
+        return 'north'
+    elseif special.captainList[2] == name then
+        return 'south'
     end
 end
 
@@ -194,11 +196,7 @@ local function is_research_locked(team)
     if not special then
         return false
     end
-    if team == 'north' then
-        return special.northResearchLocked
-    else
-        return special.southResearchLocked
-    end
+    return special.researchPermissions[team].locked
 end
 
 local function is_on_research_trustlist(team, player_name)
@@ -206,14 +204,22 @@ local function is_on_research_trustlist(team, player_name)
     if not special then
         return false
     end
-    local trustlist = team == 'north' and special.northResearchTrustlist or special.southResearchTrustlist
-    return table_contains(trustlist, player_name)
+    return table_contains(special.researchPermissions[team].trustlist, player_name)
 end
 
 local function lock_team_research(team)
+    local special = storage.special_games_variables.captain_mode
+    if not special then
+        return
+    end
+    special.researchPermissions[team].locked = true
     local group = get_or_create_no_research_group()
-    for _, p in pairs(game.connected_players) do
-        if storage.chosen_team[p.name] == team and not is_on_research_trustlist(team, p.name) then
+    for _, p in pairs(game.forces[team].players) do
+        if
+            not is_on_research_trustlist(team, p.name)
+            and p.permission_group
+            and p.permission_group.name == 'Default'
+        then
             group.add_player(p)
         end
     end
@@ -224,43 +230,20 @@ local function unlock_team_research(team)
     if not special then
         return
     end
-    if team == 'north' then
-        special.northResearchLocked = false
-        special.northResearchTrustlist = {}
-    else
-        special.southResearchLocked = false
-        special.southResearchTrustlist = {}
-    end
+    special.researchPermissions[team].locked = false
+    special.researchPermissions[team].trustlist = {}
     local default = game.permissions.get_group('Default')
-    for _, p in pairs(game.connected_players) do
-        if storage.chosen_team[p.name] == team and p.permission_group and p.permission_group.name == RESEARCH_GROUP then
+    for _, p in pairs(game.forces[team].players) do
+        if p.permission_group and p.permission_group.name == RESEARCH_RESTRICTED_GROUP then
             default.add_player(p)
         end
     end
     -- Delete group if no players remain in it
-    local group = game.permissions.get_group(RESEARCH_GROUP)
+    local group = game.permissions.get_group(RESEARCH_RESTRICTED_GROUP)
     if group and #group.players == 0 then
         group.destroy()
     end
 end
-
--- Delayed callback to re-restrict a player after join_team puts them in Default.
--- on_player_changed_force fires before join_team finishes setting the permission
--- group, so we schedule a 1-tick delay to apply the restriction after.
-local apply_research_restriction_token = Token.register(function(data)
-    local player = game.get_player(data.player_index)
-    if not player or not player.valid then
-        return
-    end
-    local team = player.force.name
-    if
-        (team == 'north' or team == 'south')
-        and is_research_locked(team)
-        and not is_on_research_trustlist(team, player.name)
-    then
-        get_or_create_no_research_group().add_player(player)
-    end
-end)
 
 local function switch_team_of_player(playerName, playerForceName)
     if storage.chosen_team[playerName] then
@@ -278,9 +261,6 @@ local function switch_team_of_player(playerName, playerForceName)
         storage.chosen_team[playerName] = playerForceName
     else
         TeamManager.switch_force(playerName, playerForceName)
-        if is_research_locked(playerForceName) and not is_on_research_trustlist(playerForceName, playerName) then
-            get_or_create_no_research_group().add_player(player)
-        end
     end
     local forcePickName = playerForceName .. 'Picks'
     insert(special.stats[forcePickName], playerName)
@@ -771,10 +751,10 @@ local function generate_captain_mode(refereeName, autoTrust, captainKick, specia
         northThrowPlayersListAllowed = {},
         southEnabledScienceThrow = true,
         southThrowPlayersListAllowed = {},
-        northResearchLocked = false,
-        northResearchTrustlist = {},
-        southResearchLocked = false,
-        southResearchTrustlist = {},
+        researchPermissions = {
+            north = { locked = false, trustlist = {} },
+            south = { locked = false, trustlist = {} },
+        },
         captainGroupAllowed = true,
         groupLimit = 3,
         teamAssignmentSeed = math_random(10000, 100000),
@@ -1511,14 +1491,11 @@ function Public.change_captain(player, force, decider)
         special.captainList[captain_index] = nil
         if force == 'north' then
             special.northEnabledScienceThrow = true
-            if special.northResearchLocked then
-                unlock_team_research('north')
-            end
         else
             special.southEnabledScienceThrow = true
-            if special.southResearchLocked then
-                unlock_team_research('south')
-            end
+        end
+        if special.researchPermissions[force].locked then
+            unlock_team_research(force)
         end
     end
     generate_vs_text_rendering()
@@ -2040,97 +2017,81 @@ local function on_gui_click(event)
             Public.update_all_captain_player_guis()
         end
     elseif name == 'captain_toggle_research_lock' then
-        if special.captainList[1] == player.name then
-            if special.northResearchLocked then
-                unlock_team_research('north')
+        local team = captain_to_team(special, player.name)
+        if team then
+            local perms = special.researchPermissions[team]
+            if perms.locked then
+                unlock_team_research(team)
             else
-                special.northResearchLocked = true
-                lock_team_research('north')
+                lock_team_research(team)
             end
-            game.forces.north.print(
-                'Research locked for your team: ' .. tostring(special.northResearchLocked),
-                { color = Color.yellow }
-            )
-        elseif special.captainList[2] == player.name then
-            if special.southResearchLocked then
-                unlock_team_research('south')
-            else
-                special.southResearchLocked = true
-                lock_team_research('south')
-            end
-            game.forces.south.print(
-                'Research locked for your team: ' .. tostring(special.southResearchLocked),
+            game.forces[team].print(
+                'Research locked for your team: ' .. tostring(perms.locked),
                 { color = Color.yellow }
             )
         end
         Public.update_all_captain_player_guis()
     elseif name == 'captain_add_research_trustlist' then
-        local frame = Public.get_active_tournament_frame(player, 'captain_manager_gui')
-        local playerNameUpdateText =
-            get_dropdown_value(frame.captain_manager_research_trustlist_table.captain_add_research_trustlist_playerlist)
-        if playerNameUpdateText and playerNameUpdateText ~= '' and playerNameUpdateText ~= 'Select Player' then
-            local trustlist = special.northResearchTrustlist
-            local forceForPrint = 'north'
-            if player.name == special.captainList[2] then
-                trustlist = special.southResearchTrustlist
-                forceForPrint = 'south'
-            elseif player.name ~= special.captainList[1] then
-                player.print('You are not a captain', { color = Color.red })
-                return
-            end
-            local playerToAdd = cpt_get_player(playerNameUpdateText)
-            if playerToAdd ~= nil and playerToAdd.valid then
-                if not table_contains(trustlist, playerNameUpdateText) then
-                    insert(trustlist, playerNameUpdateText)
-                    if
-                        is_research_locked(forceForPrint)
-                        and playerToAdd.permission_group
-                        and playerToAdd.permission_group.name == RESEARCH_GROUP
-                    then
-                        game.permissions.get_group('Default').add_player(playerToAdd)
-                    end
-                    game.forces[forceForPrint].print(
-                        playerNameUpdateText .. ' added to research trustlist',
-                        { color = Color.green }
-                    )
-                else
-                    player.print(playerNameUpdateText .. ' is already on the research trustlist', { color = Color.red })
-                end
-                Public.update_all_captain_player_guis()
-            else
-                player.print(playerNameUpdateText .. ' does not exist or is not valid', { color = Color.red })
-            end
+        local team = captain_to_team(special, player.name)
+        if not team then
+            return
         end
-    elseif name == 'captain_remove_research_trustlist' then
         local frame = Public.get_active_tournament_frame(player, 'captain_manager_gui')
-        local playerNameUpdateText = get_dropdown_value(
+        local selected =
+            get_dropdown_value(frame.captain_manager_research_trustlist_table.captain_add_research_trustlist_playerlist)
+        if not selected or selected == '' or selected == 'Select Player' then
+            return
+        end
+        local trustlist = special.researchPermissions[team].trustlist
+        local target = cpt_get_player(selected)
+        if not target or not target.valid then
+            player.print(selected .. ' does not exist or is not valid', { color = Color.red })
+            return
+        end
+        if table_contains(trustlist, selected) then
+            player.print(selected .. ' is already on the research trustlist', { color = Color.red })
+            return
+        end
+        insert(trustlist, selected)
+        if
+            is_research_locked(team)
+            and target.permission_group
+            and target.permission_group.name == RESEARCH_RESTRICTED_GROUP
+        then
+            game.permissions.get_group('Default').add_player(target)
+        end
+        game.forces[team].print(selected .. ' added to research trustlist', { color = Color.green })
+        Public.update_all_captain_player_guis()
+    elseif name == 'captain_remove_research_trustlist' then
+        local team = captain_to_team(special, player.name)
+        if not team then
+            return
+        end
+        local frame = Public.get_active_tournament_frame(player, 'captain_manager_gui')
+        local selected = get_dropdown_value(
             frame.captain_manager_research_trustlist_table.captain_remove_research_trustlist_playerlist
         )
-        if playerNameUpdateText and playerNameUpdateText ~= '' and playerNameUpdateText ~= 'Select Player' then
-            local trustlist = special.northResearchTrustlist
-            local forceForPrint = 'north'
-            if player.name == special.captainList[2] then
-                trustlist = special.southResearchTrustlist
-                forceForPrint = 'south'
-            elseif player.name ~= special.captainList[1] then
-                player.print('You are not a captain', { color = Color.red })
-                return
-            end
-            if table_contains(trustlist, playerNameUpdateText) then
-                table_remove_element(trustlist, playerNameUpdateText)
-                local playerToRemove = cpt_get_player(playerNameUpdateText)
-                if is_research_locked(forceForPrint) and playerToRemove and playerToRemove.valid then
-                    get_or_create_no_research_group().add_player(playerToRemove)
-                end
-                game.forces[forceForPrint].print(
-                    playerNameUpdateText .. ' removed from research trustlist',
-                    { color = Color.green }
-                )
-            else
-                player.print(playerNameUpdateText .. ' is not on the research trustlist', { color = Color.red })
-            end
-            Public.update_all_captain_player_guis()
+        if not selected or selected == '' or selected == 'Select Player' then
+            return
         end
+        local trustlist = special.researchPermissions[team].trustlist
+        if not table_contains(trustlist, selected) then
+            player.print(selected .. ' is not on the research trustlist', { color = Color.red })
+            return
+        end
+        table_remove_element(trustlist, selected)
+        local target = cpt_get_player(selected)
+        if
+            is_research_locked(team)
+            and target
+            and target.valid
+            and target.permission_group
+            and target.permission_group.name == 'Default'
+        then
+            get_or_create_no_research_group().add_player(target)
+        end
+        game.forces[team].print(selected .. ' removed from research trustlist', { color = Color.green })
+        Public.update_all_captain_player_guis()
     elseif name == 'captain_add_vice_captain' then
         if is_player_a_captain(player.name) then
             local frame = Public.get_active_tournament_frame(player, 'captain_manager_gui')
@@ -2256,12 +2217,6 @@ local function on_gui_text_changed(event)
     end
 end
 
--- This event fires mid-way through gui.lua's join_team(). The call order is:
---   join_team() -> player.force = force  (triggers this event)
---              -> game.permissions.get_group('Default').add_player(player)
--- Because join_team sets the permission group to Default AFTER the force
--- change, any permission override we apply here gets immediately overwritten.
--- We use a 1-tick delayed callback so it runs after join_team finishes.
 local function on_player_changed_force(event)
     local player = game.get_player(event.player_index)
     if not player or not player.valid then
@@ -2271,10 +2226,6 @@ local function on_player_changed_force(event)
         Public.captain_log_end_time_player(player)
     else
         captain_log_start_time_player(player)
-        local team = player.force.name
-        if (team == 'north' or team == 'south') and is_research_locked(team) then
-            Task.set_timeout_in_ticks(1, apply_research_restriction_token, { player_index = player.index })
-        end
     end
     Public.update_all_captain_player_guis()
 end
@@ -3681,23 +3632,14 @@ function Public.update_captain_manager_gui(player, frame)
     update_dropdown(t.captain_remove_trustlist_playerlist, allowed_team_players)
 
     -- Research lock UI
-    local researchLocked = special.northResearchLocked
-    if special.captainList[2] == player.name then
-        researchLocked = special.southResearchLocked
-    end
-    frame.captain_toggle_research_lock.caption = researchLocked and 'Click to unlock research for the team'
+    local team = captain_to_team(special, player.name) or 'north'
+    local perms = special.researchPermissions[team]
+    frame.captain_toggle_research_lock.caption = perms.locked and 'Click to unlock research for the team'
         or 'Click to lock research for the team'
     frame.research_lock_label.caption = 'Research locked ? : '
-        .. (researchLocked and '[color=red]YES[/color]' or '[color=green]NO[/color]')
-    local researchTrustlist = special.northResearchTrustlist
-    if player.name == special.captainList[2] then
-        researchTrustlist = special.southResearchTrustlist
-    end
-    frame.trusted_to_research_list_label.caption = 'Players trusted to research : ' .. concat(researchTrustlist, ' | ')
-    local allowed_research_players = {}
-    for _, name in pairs(researchTrustlist) do
-        insert(allowed_research_players, name)
-    end
+        .. (perms.locked and '[color=red]YES[/color]' or '[color=green]NO[/color]')
+    frame.trusted_to_research_list_label.caption = 'Players trusted to research : ' .. concat(perms.trustlist, ' | ')
+    local allowed_research_players = { table.unpack(perms.trustlist) }
     sort(allowed_research_players)
     insert(allowed_research_players, 1, 'Select Player')
     local rt = frame.captain_manager_research_trustlist_table
@@ -3851,7 +3793,21 @@ end
 
 function Public.reset_special_games()
     if storage.active_special_games.captain_mode then
+        cleanup_research_permissions()
         storage.tournament_mode = false
+    end
+end
+
+function Public.on_player_joined_team(player)
+    local team = player.force.name
+    if
+        (team == 'north' or team == 'south')
+        and is_research_locked(team)
+        and not is_on_research_trustlist(team, player.name)
+        and player.permission_group
+        and player.permission_group.name == 'Default'
+    then
+        get_or_create_no_research_group().add_player(player)
     end
 end
 

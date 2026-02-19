@@ -675,6 +675,9 @@ local function on_permission_group_added(event)
     if not this.enabled then
         return
     end
+    if not event.player_index then
+        return
+    end
     local player = game.get_player(event.player_index)
     if not player or not player.valid then
         return
@@ -689,6 +692,9 @@ end
 
 local function on_permission_group_deleted(event)
     if not this.enabled then
+        return
+    end
+    if not event.player_index then
         return
     end
     local player = game.get_player(event.player_index)
