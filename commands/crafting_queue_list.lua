@@ -78,13 +78,10 @@ local function for_each_team(fn)
     end
 end
 
----@param name string?
+---@param name string
 ---@return string
 local function recipe_sprite(name)
-    if not name then
-        return '[img=recipe/recipe-unknown]'
-    end
-    return SPRITE_CACHE[name] or '[img=recipe/recipe-unknown]'
+    return SPRITE_CACHE[name] or 'recipe/recipe-unknown'
 end
 
 ---@param view_id integer
@@ -417,6 +414,7 @@ local function update_row_ui(panel, row_idx, items, more, idle)
         if i == MAX_ICONS then
             icon.style = more > 0 and 'yellow_slot_button' or 'slot_button'
             icon.tooltip = more > 0 and ('+' .. more .. ' more') or ''
+            icon.style.padding = -2
             set_size(icon, ICON_SIZE)
         end
         ::next_icon::
