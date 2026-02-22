@@ -221,7 +221,8 @@ local function select_random_strike_position(source_position, target_position, b
             y = target_position.y + dy,
         }
     end
-    local random_angle_offset = (math_random(0, strike_zone_arc_length) / strike_zone_arc_length) * strike_angle_magnitude
+    local random_angle_offset = (math_random(0, strike_zone_arc_length) / strike_zone_arc_length)
+        * strike_angle_magnitude
     local strike_angle = strike_angle_range.start + random_angle_offset
     local dx = strike_distance * math_cos(strike_angle)
     local dy = strike_distance * math_sin(strike_angle)
@@ -496,7 +497,12 @@ local function build_turret_snapshot(surface, area, enemy_force)
     local entities = surface.find_entities_filtered({ area = area, force = enemy_force })
     local turrets = {}
     for _, entity in pairs(entities) do
-        if entity.valid and entity.prototype and entity.prototype.turret_range and entity.prototype.attack_parameters then
+        if
+            entity.valid
+            and entity.prototype
+            and entity.prototype.turret_range
+            and entity.prototype.attack_parameters
+        then
             local attack_parameters = entity.prototype.attack_parameters
             local range = entity.prototype.turret_range or attack_parameters.range or 0
             local min_range = attack_parameters.min_range or 0
@@ -536,7 +542,13 @@ local function estimate_break_delay_ticks(surface, position, enemy_force, unit)
     })
     local best_hp
     for _, entity in pairs(nearby) do
-        if entity.valid and entity.max_health and entity.max_health > 0 and entity.type ~= 'unit' and entity.type ~= 'character' then
+        if
+            entity.valid
+            and entity.max_health
+            and entity.max_health > 0
+            and entity.type ~= 'unit'
+            and entity.type ~= 'character'
+        then
             local hp = entity.health or entity.max_health
             if not best_hp or hp < best_hp then
                 best_hp = hp
@@ -616,8 +628,12 @@ local function finalize_batch(state, batch)
         end
     elseif storage.bb_debug then
         game.print(
-            ('AI Blitz batch %d score=%.1f waypoints=%d elapsed=%d')
-                :format(batch.batch_id, batch.best_damage, batch.best_waypoints, batch.elapsed_ticks)
+            ('AI Blitz batch %d score=%.1f waypoints=%d elapsed=%d'):format(
+                batch.batch_id,
+                batch.best_damage,
+                batch.best_waypoints,
+                batch.elapsed_ticks
+            )
         )
     end
     Public.initiate_pair(
