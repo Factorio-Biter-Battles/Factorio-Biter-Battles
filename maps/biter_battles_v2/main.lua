@@ -789,6 +789,7 @@ Event.add(defines.events.on_research_reversed, on_research_reversed)
 Event.add(defines.events.on_robot_built_entity, on_robot_built_entity)
 Event.add(defines.events.on_robot_built_tile, on_robot_built_tile)
 Event.add(defines.events.on_player_dropped_item_into_entity, on_player_dropped_item_into_entity)
+Event.add(defines.events.on_script_path_request_finished, AiStrikes.on_script_path_request_finished)
 Event.add(defines.events.on_tick, on_tick)
 Event.on_init(on_init)
 

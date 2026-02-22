@@ -318,6 +318,7 @@ local function create_attack_group(surface, force_name, biter_force_name)
     end
 
     local target_position = AiTargets.get_random_target(force_name)
+
     if not target_position then
         print('No side target found for ' .. force_name .. '.')
         return
@@ -340,18 +341,20 @@ local function create_attack_group(surface, force_name, biter_force_name)
     local boss_force_name = biter_force_name .. '_boss'
     local unit_group = surface.create_unit_group({ position = unit_group_position, force = biter_force_name })
     local unit_group_boss = surface.create_unit_group({ position = unit_group_position, force = boss_force_name })
+    local planner_unit
     for _, unit in pairs(units) do
         unit.ai_settings.path_resolution_modifier = -1
         if unit.force.name == boss_force_name then
             unit_group_boss.add_member(unit)
         else
             unit_group.add_member(unit)
+            if not planner_unit then
+                planner_unit = unit
+            end
         end
         storage.biters_from_positive_threat[unit.unit_number] = true
     end
-    local strike_position = AiStrikes.calculate_strike_position(unit_group, target_position)
-    AiStrikes.initiate(unit_group, force_name, strike_position, target_position)
-    AiStrikes.initiate(unit_group_boss, force_name, strike_position, target_position)
+    AiStrikes.dispatch(unit_group, unit_group_boss, planner_unit, force_name, target_position, game.forces[force_name])
 end
 
 Public.pre_main_attack = function()

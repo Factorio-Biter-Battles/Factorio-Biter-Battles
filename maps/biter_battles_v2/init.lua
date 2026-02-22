@@ -344,6 +344,21 @@ function Public.tables()
     storage.unit_spawners.north_biters = {}
     storage.unit_spawners.south_biters = {}
     storage.ai_targets = {}
+    storage.ai_blitz = {
+        enabled = true,
+        max_starts_per_batch = 8,
+        pending = {},
+        batches = {},
+        next_batch_id = 1,
+        stats = {
+            requested = 0,
+            completed = 0,
+            try_again_later = 0,
+            no_path = 0,
+        },
+        completed_order = {},
+        max_completed_batches = 64,
+    }
     storage.player_data_afk = {}
     storage.max_group_size_initial = 300 --Maximum unit group size for all biters at start, just used as a reference, doesnt change initial group size.
     storage.max_group_size = {}
