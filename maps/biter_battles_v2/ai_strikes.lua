@@ -95,25 +95,6 @@ function Public.set_blitz_enabled(enabled)
     return state.enabled
 end
 
-function Public.get_blitz_status()
-    local state = ensure_state()
-    return {
-        enabled = state.enabled,
-        max_starts_per_batch = state.max_starts_per_batch,
-        pending = table_count(state.pending),
-        batches = table_count(state.batches),
-        requested = state.stats.requested,
-        completed = state.stats.completed,
-        try_again_later = state.stats.try_again_later,
-        no_path = state.stats.no_path,
-    }
-end
-
--- Backward-compatible aliases.
-Public.is_enabled = Public.is_blitz_enabled
-Public.set_enabled = Public.set_blitz_enabled
-Public.get_status = Public.get_blitz_status
-
 local function calculate_secant_intersections(r, a, b, c)
     local t = a * a + b * b
     local x = -a * c / t
@@ -347,7 +328,6 @@ local function build_attack_command_chain(target_force_name, strike_position, ta
             ticks_to_wait = 1,
         }
     end
-
     chain[#chain + 1] = {
         type = defines.command.attack_area,
         destination = target_position,
@@ -359,7 +339,6 @@ local function build_attack_command_chain(target_force_name, strike_position, ta
         radius = 32,
         ticks_to_wait = 1,
     }
-
     -- Chain all possible silos in random order so biters always have something to do.
     local list = storage.rocket_silo[target_force_name]
     if list and #list > 0 then
@@ -375,7 +354,6 @@ local function build_attack_command_chain(target_force_name, strike_position, ta
             end
         end
     end
-
     return {
         type = defines.command.compound,
         structure_type = defines.compound_command.return_last,
