@@ -1,5 +1,6 @@
 local Public = {}
 
+local AiTargets = require('maps.biter_battles_v2.ai_targets')
 local Event = require('utils.event')
 local bb_config = require('maps.biter_battles_v2.config')
 local MultiSilo = require('comfy_panel.special_games.multi_silo')
@@ -307,7 +308,16 @@ local function on_unit_removed_from_group(event)
     end
 
     local chain = {}
-    Public.append_silo_commands(chain, target_force_name, defines.distraction.by_enemy)
+    local target_position = AiTargets.get_random_target(target_force_name)
+    if target_position then
+        chain[#chain + 1] = {
+            type = defines.command.attack_area,
+            destination = target_position,
+            radius = 32,
+            distraction = defines.distraction.by_enemy,
+        }
+    end
+    Public.append_silo_commands(chain, target_force_name, defines.distraction.by_damage)
 
     if #chain > 0 then
         commandable.set_command({
