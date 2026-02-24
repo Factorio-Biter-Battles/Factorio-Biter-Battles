@@ -191,6 +191,7 @@ function Public.initial_setup()
     ---@type table<string, TeamstatsPreferences>
     storage.teamstats_preferences = {}
     storage.allow_teamstats = 'always'
+    storage.allow_crafting_queue_list = 'spectators'
     --Flag for Player/quasi-admin mode.
     --When enabled, admins will automatically switch to Player/quasi-admin mode on joining a team.
     storage.quasi_admin_mode = false

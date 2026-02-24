@@ -2,6 +2,7 @@
 
 local Antigrief = require('antigrief')
 local Color = require('utils.color_presets')
+local CraftingQueueList = require('commands.crafting_queue_list')
 local Functions = require('maps.biter_battles_v2.functions')
 local SessionData = require('utils.datastore.session_data')
 local Utils = require('utils.core')
@@ -305,6 +306,11 @@ local selection_functions = {
         local selected_index = event.element.selected_index
         storage.allow_teamstats = event.element.items[selected_index]
     end,
+    ['comfy_panel_crafting_queue_list_dropdown'] = function(event)
+        local selected_index = event.element.selected_index
+        storage.allow_crafting_queue_list = event.element.items[selected_index]
+        CraftingQueueList.close_all_windows()
+    end,
 }
 
 local function add_switch(element, switch_state, name, description_main, description, tooltip)
@@ -521,6 +527,19 @@ local build_config_gui = function(player, frame)
                 'spectator',
                 'pure-spectator',
                 'never',
+            }
+        )
+        scroll_pane.add({ type = 'line' })
+
+        add_dropdown(
+            scroll_pane,
+            'crafting queue list visibility',
+            storage.allow_crafting_queue_list or 'spectators',
+            'comfy_panel_crafting_queue_list_dropdown',
+            {
+                'spectators',
+                'own-team',
+                'none',
             }
         )
         scroll_pane.add({ type = 'line' })
