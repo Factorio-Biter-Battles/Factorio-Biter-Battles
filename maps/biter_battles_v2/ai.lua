@@ -53,6 +53,25 @@ local function get_threat_ratio(biter_force_name)
     return ratio
 end
 
+---Sends nearby biters from the given force to attack the silo target.
+---@param force_name string Player force name (e.g. 'north', 'south').
+---@param silo LuaEntity|nil Rocket silo entity; no-op if nil or invalid.
+local function send_biters_to_silo_target(force_name, silo)
+    if silo == nil or not silo.valid then
+        return
+    end
+    game.surfaces[storage.bb_surface_name].set_multi_command({
+        command = {
+            type = defines.command.attack,
+            target = silo,
+            distraction = defines.distraction.none,
+        },
+        unit_count = 8,
+        force = force_name .. '_biters',
+        unit_search_distance = 64,
+    })
+end
+
 ---Goes through each valid force and sends direct attack to all rocket silos.
 ---If it's not a multi-silo special, then only the one at a spawn is considered.
 Public.send_near_biters_to_silo = function()
@@ -72,23 +91,7 @@ Public.send_near_biters_to_silo = function()
         end
 
         for _, silo in ipairs(list) do
-            if silo == nil or not silo.valid then
-                -- Strange if we enter here.
-                goto send_biters_silo_loop_2
-            end
-
-            game.surfaces[storage.bb_surface_name].set_multi_command({
-                command = {
-                    type = defines.command.attack,
-                    target = silo,
-                    distraction = defines.distraction.none,
-                },
-                unit_count = 8,
-                force = f_name .. '_biters',
-                unit_search_distance = 64,
-            })
-
-            ::send_biters_silo_loop_2::
+            send_biters_to_silo_target(f_name, silo)
         end
 
         ::send_biters_silo_loop_1::
