@@ -3,6 +3,7 @@ local Score = require('comfy_panel.score')
 local Tables = require('maps.biter_battles_v2.tables')
 local Blueprint = require('maps.biter_battles_v2.blueprints')
 local Functions = require('maps.biter_battles_v2.functions')
+local Pathfinder = require('commands.set_pathfinder')
 local Queue = require('utils.queue')
 local q_size = Queue.size
 local q_push = Queue.push
@@ -71,18 +72,7 @@ function Public.initial_setup()
     game.map_settings.pollution.enabled = false
     game.map_settings.enemy_expansion.enabled = false
 
-    game.map_settings.path_finder.fwd2bwd_ratio = 2 -- default 5
-    game.map_settings.path_finder.goal_pressure_ratio = 3 -- default 2
-    game.map_settings.path_finder.general_entity_collision_penalty = 5 -- default 10
-    game.map_settings.path_finder.general_entity_subsequent_collision_penalty = 1 -- default 3
-    game.map_settings.path_finder.short_cache_size = 30 -- default 5
-    game.map_settings.path_finder.long_cache_size = 50 -- default 25
-    game.map_settings.path_finder.short_cache_min_cacheable_distance = 10 -- default 10
-    game.map_settings.path_finder.long_cache_min_cacheable_distance = 60 -- default 30
-    game.map_settings.path_finder.short_cache_min_algo_steps_to_cache = 50 -- default 50
-    game.map_settings.path_finder.max_clients_to_accept_any_new_request = 4 -- default 10
-    game.map_settings.path_finder.max_clients_to_accept_short_new_request = 150 -- default 100
-    game.map_settings.path_finder.start_to_goal_cost_multiplier_to_terminate_path_find = 10000 -- default 2000
+    Pathfinder.apply()
 
     game.create_force('north')
     game.create_force('south')
@@ -400,6 +390,8 @@ function Public.tables()
     -- Container for storing health factor, accessed by key with force's index.
     ---@type table<integer, number>
     storage.biter_health_factor = {}
+
+    storage.bb_pathfinder = storage.bb_pathfinder or Pathfinder.get_preset('bb-new')
 
     local rng = game.create_random_generator(storage.next_map_seed)
     storage.next_attack = 'north'
