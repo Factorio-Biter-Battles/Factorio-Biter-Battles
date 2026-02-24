@@ -331,7 +331,7 @@ local function create_attack_group(surface, force_name, biter_force_name)
     local unit_group_boss = nil
     local has_boss_units = false
     for _, unit in pairs(units) do
-        unit.ai_settings.path_resolution_modifier = -1
+        unit.ai_settings.path_resolution_modifier = 0
         if unit.force.name == boss_force_name then
             if not unit_group_boss then
                 unit_group_boss = surface.create_unit_group({ position = unit_group_position, force = boss_force_name })
