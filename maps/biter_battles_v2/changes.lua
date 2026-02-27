@@ -1,5 +1,51 @@
 return {
     {
+        number = 751,
+        date = '2026-02-24',
+        author = 'darkenade',
+        comment = [[(#751) Add crafting queue list. Use /crafting-list to access it.]],
+    },
+    {
+        number = 761,
+        date = '2026-02-19',
+        author = 'cogito123',
+        comment = [[(#761) Minor performance improvement in nest selection during wave spawning.]],
+    },
+    {
+        number = 756,
+        date = '2026-02-19',
+        author = 'cogito123',
+        comment = [[(#756) Improvements to jail/free commands:
+  - Admins can now jail or free offline players
+  - Jailing no longer requires a reason (can be omitted)
+  - Fix typo when recasting a vote]],
+    },
+    {
+        number = 760,
+        date = '2026-02-18',
+        author = 'cogito123',
+        comment = [[(#760) Add /inventory-scan command and improve inventory commands readability:
+  - New /inventory-scan (or /i for short) command
+  - Large numbers shown in shorter form for easier reading (e.g. 1.5k, 2M)
+  - Team names shown with colors and clearer formatting]],
+    },
+    {
+        number = 758,
+        date = '2026-02-18',
+        author = 'cogito123',
+        comment = [[(#758) Refactored /trust and /untrust commands to support trusting/untrusting multiple players at once (e.g., /trust player1 player2 player3)]],
+    },
+    {
+        number = 757,
+        date = '2026-02-13',
+        author = 'cogito123',
+        comment = [[(#757) Miscellaneous fixes:
+  - Admins can now bypass the voting system to immediately suspend players. If a vote is already in progress for the same player, it gets cancelled. A vote for other offender will remain pending.
+  - Muted players can no longer ping players.
+  - Mining alerts now only trigger for untrusted players. Expanded monitoring to include nuclear reactors and rocket silos in addition to offshore pumps.
+  - Fix tag spacing in chat messages received by spectators from teams]],
+    },
+    {
         number = 755,
         date = '2026-02-07',
         author = 'cogito123',
