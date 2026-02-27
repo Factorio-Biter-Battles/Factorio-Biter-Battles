@@ -184,9 +184,9 @@ local function resync_no_research_group()
 end
 
 local function captain_to_team(special, name)
-    if special.captainList[1] == name then
+    if special.captainList[1] == name or special.viceCaptains.north[name] then
         return 'north'
-    elseif special.captainList[2] == name then
+    elseif special.captainList[2] == name or special.viceCaptains.south[name] then
         return 'south'
     end
 end
@@ -231,7 +231,6 @@ local function unlock_team_research(team)
         return
     end
     special.researchPermissions[team].locked = false
-    special.researchPermissions[team].trustlist = {}
     local default = game.permissions.get_group('Default')
     for _, p in pairs(game.forces[team].players) do
         if p.permission_group and p.permission_group.name == RESEARCH_RESTRICTED_GROUP then
@@ -2085,6 +2084,7 @@ local function on_gui_click(event)
             is_research_locked(team)
             and target
             and target.valid
+            and target.force.name == team
             and target.permission_group
             and target.permission_group.name == 'Default'
         then
@@ -4063,5 +4063,21 @@ Event.add(defines.events.on_gui_selection_state_changed, on_gui_selection_state_
 Event.add(defines.events.on_player_joined_game, on_player_joined_game)
 Event.add(defines.events.on_player_left_game, on_player_left_game)
 Event.add(defines.events.on_player_changed_force, on_player_changed_force)
+Event.add(defines.events.on_player_changed_surface, function(event)
+    local special = storage.special_games_variables.captain_mode
+    if not special then
+        return
+    end
+    local player = game.get_player(event.player_index)
+    if not player or not player.valid then
+        return
+    end
+    -- when a player leaves gulag (e.g. freed from jail), re-apply research
+    -- restriction if their team has research locked.
+    local gulag = game.surfaces['gulag']
+    if gulag and event.surface_index == gulag.index then
+        Public.on_player_joined_team(player)
+    end
+end)
 
 return Public
