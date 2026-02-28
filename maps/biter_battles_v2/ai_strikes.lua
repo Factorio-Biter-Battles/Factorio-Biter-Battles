@@ -70,6 +70,12 @@ local function ensure_state()
     if not state.max_starts_per_batch then
         state.max_starts_per_batch = 8
     end
+    state.vote = state.vote or {}
+    if state.vote.resolved == nil then
+        state.vote.resolved = false
+    end
+    state.vote.yes_votes = state.vote.yes_votes or 0
+    state.vote.no_votes = state.vote.no_votes or 0
     state.pending = state.pending or {}
     state.batches = state.batches or {}
     state.next_batch_id = state.next_batch_id or 1

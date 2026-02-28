@@ -345,11 +345,19 @@ function Public.tables()
     storage.unit_spawners.south_biters = {}
     storage.ai_targets = {}
     storage.ai_blitz = {
-        enabled = true,
+        enabled = false,
         max_starts_per_batch = 8,
         pending = {},
         batches = {},
         next_batch_id = 1,
+        vote = {
+            poll_id = nil,
+            start_tick = nil,
+            end_tick = nil,
+            resolved = false,
+            yes_votes = 0,
+            no_votes = 0,
+        },
         stats = {
             requested = 0,
             completed = 0,
