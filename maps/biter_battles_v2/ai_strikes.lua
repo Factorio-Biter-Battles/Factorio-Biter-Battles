@@ -422,7 +422,14 @@ function Public.initiate(unit_group, target_force_name, strike_position, target_
     unit_group.set_command(build_attack_command_chain(target_force_name, strike_position, target_position, blitz_mode))
 end
 
-function Public.initiate_pair(unit_group, unit_group_boss, target_force_name, strike_position, target_position, blitz_mode)
+function Public.initiate_pair(
+    unit_group,
+    unit_group_boss,
+    target_force_name,
+    strike_position,
+    target_position,
+    blitz_mode
+)
     Public.initiate(unit_group, target_force_name, strike_position, target_position, blitz_mode)
     Public.initiate(unit_group_boss, target_force_name, strike_position, target_position, blitz_mode)
 end
@@ -602,8 +609,7 @@ local function score_path_damage_ticks(surface, path, meta)
     if meta.blitz_mode and meta.source and meta.start then
         local source_to_start_distance = dist(meta.source, meta.start)
         if source_to_start_distance > 0 then
-            total_damage = total_damage
-                + (source_to_start_distance * CFG.source_to_start_distance_penalty_per_tile)
+            total_damage = total_damage + (source_to_start_distance * CFG.source_to_start_distance_penalty_per_tile)
             local sample_count = math_max(1, math_ceil(source_to_start_distance / CFG.sample_step_tiles))
             local dt_per_sample = (source_to_start_distance / sample_count) / speed_tiles_per_tick
             for s = 1, sample_count, 1 do
@@ -842,7 +848,14 @@ function Public.dispatch(unit_group, unit_group_boss, planner_unit, target_force
         end
     end
     local strike_position = Public.calculate_strike_position(unit_group, target_position)
-    Public.initiate_pair(unit_group, unit_group_boss, target_force_name, strike_position, target_position, blitz_enabled)
+    Public.initiate_pair(
+        unit_group,
+        unit_group_boss,
+        target_force_name,
+        strike_position,
+        target_position,
+        blitz_enabled
+    )
     return false
 end
 
