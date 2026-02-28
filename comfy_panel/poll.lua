@@ -1327,6 +1327,7 @@ function Class.poll(data)
     }
 
     insert(polls, poll_data)
+    polls.running = true
 
     show_new_poll(poll_data)
     send_poll_result_to_discord(poll_data)
@@ -1334,29 +1335,49 @@ function Class.poll(data)
     return true, id
 end
 
+local function get_poll_data_by_id(id)
+    for _, poll_data in pairs(polls) do
+        if poll_data.id == id then
+            return poll_data
+        end
+    end
+end
+
+function Class.get_poll_data(id)
+    if type(id) ~= 'number' then
+        return nil, 'poll-id must be a number'
+    end
+
+    local poll_data = get_poll_data_by_id(id)
+    if poll_data then
+        return poll_data
+    end
+
+    return nil, table.concat({ 'poll #', id, ' not found' })
+end
+
 function Class.poll_result(id)
     if type(id) ~= 'number' then
         return 'poll-id must be a number'
     end
 
-    for _, poll_data in pairs(polls) do
-        if poll_data.id == id then
-            local result = { 'Question: ', poll_data.question, ' Answers: ' }
-            local answers = poll_data.answers
-            local answers_count = #answers
-            for i, a in pairs(answers) do
-                insert(result, '( [')
-                insert(result, a.voted_count)
-                insert(result, '] - ')
-                insert(result, a.text)
-                insert(result, ' )')
-                if i ~= answers_count then
-                    insert(result, ', ')
-                end
+    local poll_data = get_poll_data_by_id(id)
+    if poll_data then
+        local result = { 'Question: ', poll_data.question, ' Answers: ' }
+        local answers = poll_data.answers
+        local answers_count = #answers
+        for i, a in pairs(answers) do
+            insert(result, '( [')
+            insert(result, a.voted_count)
+            insert(result, '] - ')
+            insert(result, a.text)
+            insert(result, ' )')
+            if i ~= answers_count then
+                insert(result, ', ')
             end
-
-            return table.concat(result)
         end
+
+        return table.concat(result)
     end
 
     return table.concat({ 'poll #', id, ' not found' })
@@ -1368,11 +1389,10 @@ function Class.send_poll_result_to_discord(id)
         return
     end
 
-    for _, poll_data in pairs(polls) do
-        if poll_data.id == id then
-            send_poll_result_to_discord(poll_data)
-            return
-        end
+    local poll_data = get_poll_data_by_id(id)
+    if poll_data then
+        send_poll_result_to_discord(poll_data)
+        return
     end
 
     local message = table.concat({ 'poll #', id, ' not found' })
