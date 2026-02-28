@@ -29,6 +29,10 @@ local STRIKE_TARGET_CLEARANCE = 255
 local CFG = {
     sample_step_tiles = 0.5,
     ingress_spacing = 12,
+    max_distance_candidates = 4,
+    start_candidate_oversample = 3,
+    blitz_ingress_radius = 16,
+    source_to_start_distance_penalty_per_tile = 0.05,
     breaker_probe_radius = 2.0,
     min_speed_tiles_per_tick = 0.02,
     effective_dps_by_turret = {
@@ -232,12 +236,65 @@ function Public.calculate_strike_position(unit_group, target_position)
     return unit_group.surface.find_non_colliding_position('stone-furnace', nominal_strike_position, 96, 1)
 end
 
-local function deterministic_strike_distance(source_target_distance)
-    local max_distance = math_min(source_target_distance, MAX_STRIKE_DISTANCE)
-    return (MIN_STRIKE_DISTANCE + max_distance) / 2
+local function build_strike_distance_candidates(max_distance, max_starts)
+    if max_distance <= MIN_STRIKE_DISTANCE then
+        return { max_distance }
+    end
+    local distance_count = 1
+    if max_starts and max_starts > 1 then
+        distance_count = math_max(2, math_min(CFG.max_distance_candidates, math_floor(max_starts / 2)))
+    end
+    if distance_count <= 1 then
+        return { (MIN_STRIKE_DISTANCE + max_distance) / 2 }
+    end
+    local distances = {}
+    local span = max_distance - MIN_STRIKE_DISTANCE
+    for i = 0, distance_count - 1, 1 do
+        local ratio = i / (distance_count - 1)
+        distances[#distances + 1] = MIN_STRIKE_DISTANCE + span * ratio
+    end
+    return distances
 end
 
-local function calculate_blitz_candidate_starts(unit, target_position)
+local function append_starts_for_distance(starts, strike_distance, source_target, max_points_for_distance)
+    local strike_angle_range = calculate_strike_range(
+        source_target.dx,
+        source_target.dy,
+        source_target.distance,
+        STRIKE_TARGET_CLEARANCE,
+        strike_distance
+    )
+    if source_target.boundary_offset > source_target.normalized_target.y - strike_distance then
+        local boundary_angle_range =
+            calculate_boundary_range(source_target.boundary_offset, source_target.normalized_target, strike_distance)
+        strike_angle_range.start = math_max(strike_angle_range.start, boundary_angle_range.start)
+        strike_angle_range.finish = math_min(strike_angle_range.finish, boundary_angle_range.finish)
+    end
+    local magnitude = strike_angle_range.finish - strike_angle_range.start
+    if magnitude <= 0 then
+        return 0
+    end
+    local arc_length = strike_distance * magnitude
+    local max_segments = math_max(0, max_points_for_distance - 1)
+    local segments = math_max(0, math_floor(arc_length / CFG.ingress_spacing))
+    segments = math_min(segments, max_segments)
+    local point_count = segments + 1
+    for i = 0, point_count - 1, 1 do
+        local ratio = point_count == 1 and 0.5 or (i / (point_count - 1))
+        local strike_angle = strike_angle_range.start + magnitude * ratio
+        local point = {
+            x = source_target.normalized_target.x + strike_distance * math_cos(strike_angle),
+            y = source_target.normalized_target.y + strike_distance * math_sin(strike_angle),
+        }
+        if source_target.source_y < 0 then
+            point.y = -point.y
+        end
+        starts[#starts + 1] = point
+    end
+    return point_count
+end
+
+local function calculate_blitz_candidate_starts(unit, target_position, max_starts)
     local source_position = unit.position
     local normalized_source = { x = source_position.x, y = math_abs(source_position.y) }
     local normalized_target = { x = target_position.x, y = math_abs(target_position.y) }
@@ -248,37 +305,21 @@ local function calculate_blitz_candidate_starts(unit, target_position)
     if source_target_distance < MIN_STRIKE_DISTANCE then
         return { { x = source_position.x, y = source_position.y } }
     end
-    local strike_distance = deterministic_strike_distance(source_target_distance)
-    local strike_angle_range = calculate_strike_range(
-        source_target_dx,
-        source_target_dy,
-        source_target_distance,
-        STRIKE_TARGET_CLEARANCE,
-        strike_distance
-    )
-    if boundary_offset > normalized_target.y - strike_distance then
-        local boundary_angle_range = calculate_boundary_range(boundary_offset, normalized_target, strike_distance)
-        strike_angle_range.start = math_max(strike_angle_range.start, boundary_angle_range.start)
-        strike_angle_range.finish = math_min(strike_angle_range.finish, boundary_angle_range.finish)
-    end
-    local magnitude = strike_angle_range.finish - strike_angle_range.start
-    if magnitude <= 0 then
-        return { { x = source_position.x, y = source_position.y } }
-    end
-    local arc_length = strike_distance * magnitude
-    local segments = math_max(1, math_floor(arc_length / CFG.ingress_spacing))
+    local strike_distance_max = math_min(source_target_distance, MAX_STRIKE_DISTANCE)
+    local distance_candidates = build_strike_distance_candidates(strike_distance_max, max_starts)
+    local candidate_budget = math_max(max_starts, max_starts * CFG.start_candidate_oversample)
+    local max_points_for_distance = math_max(1, math_floor(candidate_budget / #distance_candidates))
+    local source_target = {
+        dx = source_target_dx,
+        dy = source_target_dy,
+        distance = source_target_distance,
+        normalized_target = normalized_target,
+        boundary_offset = boundary_offset,
+        source_y = source_position.y,
+    }
     local starts = {}
-    for i = 0, segments, 1 do
-        local ratio = i / segments
-        local strike_angle = strike_angle_range.start + magnitude * ratio
-        local point = {
-            x = normalized_target.x + strike_distance * math_cos(strike_angle),
-            y = normalized_target.y + strike_distance * math_sin(strike_angle),
-        }
-        if source_position.y < 0 then
-            point.y = -point.y
-        end
-        starts[#starts + 1] = point
+    for _, strike_distance in ipairs(distance_candidates) do
+        append_starts_for_distance(starts, strike_distance, source_target, max_points_for_distance)
     end
     if #starts == 0 then
         starts[1] = { x = source_position.x, y = source_position.y }
@@ -320,18 +361,21 @@ local function shuffle_indices(list)
     return indices
 end
 
-local function build_attack_command_chain(target_force_name, strike_position, target_position)
+local function build_attack_command_chain(target_force_name, strike_position, target_position, blitz_mode)
     local chain = {}
+    local ingress_radius = blitz_mode and CFG.blitz_ingress_radius or 32
+    local ingress_distraction = blitz_mode and defines.distraction.by_damage or defines.distraction.by_enemy
+    local target_distraction = blitz_mode and defines.distraction.by_damage or defines.distraction.by_enemy
     if strike_position then
         chain[#chain + 1] = {
             type = defines.command.go_to_location,
             destination = strike_position,
-            radius = 32,
-            distraction = defines.distraction.by_enemy,
+            radius = ingress_radius,
+            distraction = ingress_distraction,
         }
         chain[#chain + 1] = {
             type = defines.command.wander,
-            radius = 32,
+            radius = ingress_radius,
             ticks_to_wait = 1,
         }
     end
@@ -339,7 +383,7 @@ local function build_attack_command_chain(target_force_name, strike_position, ta
         type = defines.command.attack_area,
         destination = target_position,
         radius = 32,
-        distraction = defines.distraction.by_enemy,
+        distraction = target_distraction,
     }
     chain[#chain + 1] = {
         type = defines.command.wander,
@@ -368,19 +412,19 @@ local function build_attack_command_chain(target_force_name, strike_position, ta
     }
 end
 
-function Public.initiate(unit_group, target_force_name, strike_position, target_position)
+function Public.initiate(unit_group, target_force_name, strike_position, target_position, blitz_mode)
     if storage.bb_game_won_by_team then
         return
     end
     if not (unit_group and unit_group.valid and target_position) then
         return
     end
-    unit_group.set_command(build_attack_command_chain(target_force_name, strike_position, target_position))
+    unit_group.set_command(build_attack_command_chain(target_force_name, strike_position, target_position, blitz_mode))
 end
 
-function Public.initiate_pair(unit_group, unit_group_boss, target_force_name, strike_position, target_position)
-    Public.initiate(unit_group, target_force_name, strike_position, target_position)
-    Public.initiate(unit_group_boss, target_force_name, strike_position, target_position)
+function Public.initiate_pair(unit_group, unit_group_boss, target_force_name, strike_position, target_position, blitz_mode)
+    Public.initiate(unit_group, target_force_name, strike_position, target_position, blitz_mode)
+    Public.initiate(unit_group_boss, target_force_name, strike_position, target_position, blitz_mode)
 end
 
 local function vec_sub(a, b)
@@ -555,6 +599,20 @@ local function score_path_damage_ticks(surface, path, meta)
     local turrets = meta.turrets
     local speed_tiles_per_tick = get_unit_speed_tiles_per_tick(unit)
     local total_damage = 0
+    if meta.blitz_mode and meta.source and meta.start then
+        local source_to_start_distance = dist(meta.source, meta.start)
+        if source_to_start_distance > 0 then
+            total_damage = total_damage
+                + (source_to_start_distance * CFG.source_to_start_distance_penalty_per_tile)
+            local sample_count = math_max(1, math_ceil(source_to_start_distance / CFG.sample_step_tiles))
+            local dt_per_sample = (source_to_start_distance / sample_count) / speed_tiles_per_tick
+            for s = 1, sample_count, 1 do
+                local point = lerp(meta.source, meta.start, s / sample_count)
+                local damage_per_tick = incoming_damage_per_tick_at(point, turrets)
+                total_damage = total_damage + damage_per_tick * dt_per_sample
+            end
+        end
+    end
     local previous = meta.start
     for i = 1, #path, 1 do
         local waypoint = path[i]
@@ -625,7 +683,8 @@ local function finalize_batch(state, batch)
         batch.unit_group_boss,
         batch.target_force_name,
         strike_position,
-        batch.target_position
+        batch.target_position,
+        batch.blitz_mode
     )
     batch.unit = nil
     batch.enemy_force = nil
@@ -659,13 +718,14 @@ function Public.request_least_damage_paths(unit, target_position, enemy_force, b
     if not enemy then
         return nil
     end
-    local starts = calculate_blitz_candidate_starts(unit, target_position)
-    if #starts == 0 then
-        return nil
-    end
     local max_starts = state.max_starts_per_batch
     if meta and meta.max_starts and meta.max_starts > 0 then
         max_starts = meta.max_starts
+    end
+    max_starts = math_max(1, math_floor(max_starts or 1))
+    local starts = calculate_blitz_candidate_starts(unit, target_position, max_starts)
+    if #starts == 0 then
+        return nil
     end
     starts = downsample_starts(starts, max_starts)
     local scan_area = expand_bbox(base_bbox or bbox_from_positions(starts, target_position), 64)
@@ -684,6 +744,8 @@ function Public.request_least_damage_paths(unit, target_position, enemy_force, b
         best_start = nil,
         fallback_start = starts[1],
         done = false,
+        source_position = { x = unit.position.x, y = unit.position.y },
+        blitz_mode = meta and meta.blitz_mode or false,
         unit_group = meta and meta.unit_group or nil,
         unit_group_boss = meta and meta.unit_group_boss or nil,
         target_force_name = meta and meta.target_force_name or nil,
@@ -749,8 +811,10 @@ function Public.on_script_path_request_finished(event)
             unit = batch.unit,
             enemy_force = batch.enemy_force,
             turrets = batch.turrets,
+            source = batch.source_position,
             start = request.start,
             goal = request.goal,
+            blitz_mode = batch.blitz_mode,
         })
         if score < batch.best_damage then
             batch.best_damage = score
@@ -764,8 +828,10 @@ function Public.on_script_path_request_finished(event)
 end
 
 function Public.dispatch(unit_group, unit_group_boss, planner_unit, target_force_name, target_position, enemy_force)
-    if Public.is_blitz_enabled() and planner_unit and planner_unit.valid then
+    local blitz_enabled = Public.is_blitz_enabled()
+    if blitz_enabled and planner_unit and planner_unit.valid then
         local ok = Public.request_least_damage_paths(planner_unit, target_position, enemy_force, nil, {
+            blitz_mode = true,
             unit_group = unit_group,
             unit_group_boss = unit_group_boss,
             target_force_name = target_force_name,
@@ -776,7 +842,7 @@ function Public.dispatch(unit_group, unit_group_boss, planner_unit, target_force
         end
     end
     local strike_position = Public.calculate_strike_position(unit_group, target_position)
-    Public.initiate_pair(unit_group, unit_group_boss, target_force_name, strike_position, target_position)
+    Public.initiate_pair(unit_group, unit_group_boss, target_force_name, strike_position, target_position, blitz_enabled)
     return false
 end
 
