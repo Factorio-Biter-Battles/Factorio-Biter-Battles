@@ -2877,6 +2877,10 @@ function Public.draw_captain_manager_gui(player, main_frame)
         type = 'label',
         caption = '[font=heading-1][color=purple]Management for research[/color][/font]',
     })
+    main_frame.add({
+        type = 'label',
+        caption = 'Lock research for your team. Trusted players can still change research. Captains and vice captains can manage this.',
+    })
     main_frame.add({ type = 'button', name = 'captain_toggle_research_lock' })
     local rt = main_frame.add({ type = 'table', name = 'captain_manager_research_trustlist_table', column_count = 2 })
     rt.add({
