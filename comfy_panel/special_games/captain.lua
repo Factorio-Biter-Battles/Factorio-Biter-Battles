@@ -132,6 +132,9 @@ end
 -- Uses a 'no_research' permission group (clone of Default minus research
 -- actions) to block tech-tree interactions for non-trusted players.
 
+-- NOTE: if the blueprint toggle in config.lua fires while research is locked,
+-- the no_research group permissions may go out of sync with Default.
+-- This is unlikely during captain games and not handled here.
 local RESEARCH_RESTRICTED_GROUP = 'no_research'
 local RESEARCH_ACTIONS = {
     defines.input_action.start_research,
@@ -325,6 +328,7 @@ local function force_end_captain_event(player)
     if storage.freeze_players == true then
         storage.freeze_players = false
         TeamManager.unfreeze_players()
+        resync_no_research_group()
         game.print('>>> Players have been unfrozen!', { color = { r = 255, g = 77, b = 77 } })
     end
     storage.active_special_games.captain_mode = false
@@ -853,6 +857,7 @@ local function generate_captain_mode(refereeName, autoTrust, captainKick, specia
     if storage.freeze_players == false or storage.freeze_players == nil then
         storage.freeze_players = true
         TeamManager.freeze_players()
+        resync_no_research_group()
         game.print('>>> Players have been frozen!', { color = { r = 111, g = 111, b = 255 } })
     end
     allow_vote()
@@ -1959,59 +1964,59 @@ local function on_gui_click(event)
         end
     elseif name == 'captain_add_someone_to_throw_trustlist' then
         local frame = Public.get_active_tournament_frame(player, 'captain_manager_gui')
-        local playerNameUpdateText =
+        local selected =
             get_dropdown_value(frame.captain_manager_trustlist_table.captain_add_trustlist_playerlist)
-        if playerNameUpdateText and playerNameUpdateText ~= '' and playerNameUpdateText ~= 'Select Player' then
-            local tableToUpdate = special.northThrowPlayersListAllowed
-            local forceForPrint = 'north'
+        if selected and selected ~= '' and selected ~= 'Select Player' then
+            local trustlist = special.northThrowPlayersListAllowed
+            local team = 'north'
             if player.name == special.captainList[2] then
-                tableToUpdate = special.southThrowPlayersListAllowed
-                forceForPrint = 'south'
+                trustlist = special.southThrowPlayersListAllowed
+                team = 'south'
             elseif player.name ~= special.captainList[1] then
                 player.print('You are not a captain', { color = Color.red })
                 return
             end
-            local playerToAdd = cpt_get_player(playerNameUpdateText)
-            if playerToAdd ~= nil and playerToAdd.valid then
-                if not table_contains(tableToUpdate, playerNameUpdateText) then
-                    insert(tableToUpdate, playerNameUpdateText)
-                    game.forces[forceForPrint].print(
-                        playerNameUpdateText .. ' added to throw trustlist !',
+            local target = cpt_get_player(selected)
+            if target ~= nil and target.valid then
+                if not table_contains(trustlist, selected) then
+                    insert(trustlist, selected)
+                    game.forces[team].print(
+                        selected .. ' added to throw trustlist !',
                         { color = Color.green }
                     )
                 else
                     player.print(
-                        playerNameUpdateText .. ' was already added to throw trustlist !',
+                        selected .. ' was already added to throw trustlist !',
                         { color = Color.red }
                     )
                 end
                 Public.update_all_captain_player_guis()
             else
-                player.print(playerNameUpdateText .. ' does not even exist or not even valid !', { color = Color.red })
+                player.print(selected .. ' does not even exist or not even valid !', { color = Color.red })
             end
         end
     elseif name == 'captain_remove_someone_to_throw_trustlist' then
         local frame = Public.get_active_tournament_frame(player, 'captain_manager_gui')
-        local playerNameUpdateText =
+        local selected =
             get_dropdown_value(frame.captain_manager_trustlist_table.captain_remove_trustlist_playerlist)
-        if playerNameUpdateText and playerNameUpdateText ~= '' and playerNameUpdateText ~= 'Select Player' then
-            local tableToUpdate = special.northThrowPlayersListAllowed
-            local forceForPrint = 'north'
+        if selected and selected ~= '' and selected ~= 'Select Player' then
+            local trustlist = special.northThrowPlayersListAllowed
+            local team = 'north'
             if player.name == special.captainList[2] then
-                tableToUpdate = special.southThrowPlayersListAllowed
-                forceForPrint = 'south'
+                trustlist = special.southThrowPlayersListAllowed
+                team = 'south'
             elseif player.name ~= special.captainList[1] then
                 player.print('You are not a captain', { color = Color.red })
                 return
             end
-            if table_contains(tableToUpdate, playerNameUpdateText) then
-                table_remove_element(tableToUpdate, playerNameUpdateText)
-                game.forces[forceForPrint].print(
-                    playerNameUpdateText .. ' was removed in throw trustlist !',
+            if table_contains(trustlist, selected) then
+                table_remove_element(trustlist, selected)
+                game.forces[team].print(
+                    selected .. ' was removed in throw trustlist !',
                     { color = Color.green }
                 )
             else
-                player.print(playerNameUpdateText .. ' was not found in throw trustlist !', { color = Color.red })
+                player.print(selected .. ' was not found in throw trustlist !', { color = Color.red })
             end
             Public.update_all_captain_player_guis()
         end
@@ -2095,20 +2100,20 @@ local function on_gui_click(event)
     elseif name == 'captain_add_vice_captain' then
         if is_player_a_captain(player.name) then
             local frame = Public.get_active_tournament_frame(player, 'captain_manager_gui')
-            local playerNameUpdateText =
+            local selected =
                 get_dropdown_value(frame.captain_manager_vice_captain_table.captain_add_vice_captain_playerlist)
-            if playerNameUpdateText and playerNameUpdateText ~= '' and playerNameUpdateText ~= 'Select Player' then
-                special.viceCaptains[player.force.name][playerNameUpdateText] = true
+            if selected and selected ~= '' and selected ~= 'Select Player' then
+                special.viceCaptains[player.force.name][selected] = true
                 Public.update_all_captain_player_guis()
             end
         end
     elseif name == 'captain_remove_vice_captain' then
         if is_player_a_captain(player.name) then
             local frame = Public.get_active_tournament_frame(player, 'captain_manager_gui')
-            local playerNameUpdateText =
+            local selected =
                 get_dropdown_value(frame.captain_manager_vice_captain_table.captain_remove_vice_captain_playerlist)
-            if playerNameUpdateText and playerNameUpdateText ~= '' and playerNameUpdateText ~= 'Select Player' then
-                special.viceCaptains[player.force.name][playerNameUpdateText] = nil
+            if selected and selected ~= '' and selected ~= 'Select Player' then
+                special.viceCaptains[player.force.name][selected] = nil
                 Public.update_all_captain_player_guis()
             end
         end
@@ -2877,10 +2882,7 @@ function Public.draw_captain_manager_gui(player, main_frame)
         type = 'label',
         caption = '[font=heading-1][color=purple]Management for research[/color][/font]',
     })
-    main_frame.add({
-        type = 'label',
-        caption = 'Lock research for your team. Trusted players can still change research. Captains and vice captains can manage this.',
-    })
+    main_frame.add({ type = 'label', caption = 'Vice captains can also manage this.' })
     main_frame.add({ type = 'button', name = 'captain_toggle_research_lock' })
     local rt = main_frame.add({ type = 'table', name = 'captain_manager_research_trustlist_table', column_count = 2 })
     rt.add({
@@ -3796,9 +3798,16 @@ function Public.generate_automatic_captain()
 end
 
 function Public.reset_special_games()
-    if storage.active_special_games.captain_mode then
-        cleanup_research_permissions()
+    cleanup_research_permissions()
+    if storage.special_games_variables.captain_mode then
         storage.tournament_mode = false
+    end
+end
+
+function Public.resync_no_research_group()
+    local group = game.permissions.get_group(RESEARCH_RESTRICTED_GROUP)
+    if group then
+        sync_research_group_permissions(group)
     end
 end
 

@@ -1103,6 +1103,7 @@ function join_team(player, force_name, forced_join, auto_join)
         player.character.destructible = true
         Public.refresh()
         game.permissions.get_group('Default').add_player(player)
+        Captain_event.on_player_joined_team(player)
         local msg = table.concat({ 'Team ', player.force.name, ' player ', player.name, ' is no longer spectating.' })
         game.print(msg, { color = { r = 0.98, g = 0.66, b = 0.22 } })
         Sounds.notify_allies(player.force, 'utility/build_blueprint_large')

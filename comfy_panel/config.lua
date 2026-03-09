@@ -147,17 +147,15 @@ local functions = {
         end
     end,
     ['comfy_panel_blueprint_toggle'] = function(event)
-        if event.element.switch_state == 'left' then
-            game.permissions
-                .get_group('Default')
-                .set_allows_action(defines.input_action.open_blueprint_library_gui, true)
-            game.permissions.get_group('Default').set_allows_action(defines.input_action.import_blueprint_string, true)
+        local enabled = event.element.switch_state == 'left'
+        local p = game.permissions.get_group('Default')
+        p.set_allows_action(defines.input_action.open_blueprint_library_gui, enabled)
+        p.set_allows_action(defines.input_action.import_blueprint_string, enabled)
+        local Captain = require('comfy_panel.special_games.captain')
+        Captain.resync_no_research_group()
+        if enabled then
             get_actor(event, '{Blueprints}', 'has enabled blueprints!')
         else
-            game.permissions
-                .get_group('Default')
-                .set_allows_action(defines.input_action.open_blueprint_library_gui, false)
-            game.permissions.get_group('Default').set_allows_action(defines.input_action.import_blueprint_string, false)
             get_actor(event, '{Blueprints}', 'has disabled blueprints!')
         end
     end,
