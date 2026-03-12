@@ -310,9 +310,14 @@ function Public.validate_player(player_ident)
     return player, player.name, player.index
 end
 
+-- Non-erroring module lookup ("soft require").  Returns the module if it was
+-- loaded during the control stage, or nil otherwise.  Useful for optional
+-- dependencies where you want to check presence without triggering an error.
+---@param path string Module path in dot notation (e.g. 'comfy_panel.poll').
+---@return unknown|nil result The loaded module, or nil if not found.
 function Public.get_package(path)
-    local path = '__level__/' .. path:gsub('%.', '/') .. '.lua'
-    return package.loaded[path]
+    local path = '__level__/' .. path:gsub('%.', '/')
+    return package.loaded[path .. '.lua'] or package.loaded[path .. '/init.lua']
 end
 
 -- add utility functions that exist in base factorio/util
