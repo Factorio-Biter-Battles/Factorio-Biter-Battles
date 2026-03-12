@@ -3,6 +3,7 @@
 local Ai = require('maps.biter_battles_v2.ai')
 local AiStrikes = require('maps.biter_battles_v2.ai_strikes')
 local AiTargets = require('maps.biter_battles_v2.ai_targets')
+local MultiSilo = require('comfy_panel.special_games.multi_silo')
 local bb_config = require('maps.biter_battles_v2.config')
 local Functions = require('maps.biter_battles_v2.functions')
 local Game_over = require('maps.biter_battles_v2.game_over')
@@ -436,7 +437,7 @@ local function on_entity_died(event)
     elseif entity.type == 'rocket-silo' then
         local dead_pos = entity.position
         Game_over.on_entity_died(entity)
-        AiStrikes.recommand_all_groups(dead_pos)
+        MultiSilo.recommand_all_groups(dead_pos)
     end
 end
 
