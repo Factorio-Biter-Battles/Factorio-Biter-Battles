@@ -193,7 +193,7 @@ local function on_built_entity(event)
     entity.minable_flag = false
     table.insert(storage.rocket_silo[f_name], entity)
     AiTargets.start_tracking(entity)
-    Biters.recommand_all_groups()
+    Biters.on_silo_added(entity)
 end
 
 ---Does the same as on_built_entity, but for robot.
@@ -220,7 +220,7 @@ local function on_robot_built_entity(event)
     entity.minable_flag = false
     table.insert(storage.rocket_silo[f_name], entity)
     AiTargets.start_tracking(entity)
-    Biters.recommand_all_groups()
+    Biters.on_silo_added(entity)
 end
 
 ---Reacts to player clicking 'spectate', to make it possible to return to island
@@ -420,7 +420,7 @@ Event.add(defines.events.on_robot_built_entity, on_robot_built_entity)
 Event.add(defines.events.on_player_died, on_player_died)
 
 -- Re-exported here so callers only need one require.
-Public.recommand_all_groups = Biters.recommand_all_groups
+Public.on_silo_added = Biters.on_silo_added
 Public.track_group = Biters.track_group
 Public.is_disabled = Shared.is_disabled
 
