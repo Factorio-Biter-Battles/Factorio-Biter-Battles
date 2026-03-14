@@ -314,6 +314,9 @@ local function on_player_respawned(event)
 
     local player = game.get_player(event.player_index)
     local p = Public.get_spawn_position(player, player.force)
+    if not p then
+        p = player.force.get_spawn_position(player.physical_surface)
+    end
     player.character.teleport(p)
 end
 
