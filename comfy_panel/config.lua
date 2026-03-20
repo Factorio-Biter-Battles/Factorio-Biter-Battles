@@ -8,6 +8,7 @@ local SessionData = require('utils.datastore.session_data')
 local Utils = require('utils.core')
 local Gui = require('utils.gui')
 local GUI_THEMES = require('utils.utils').GUI_THEMES
+local AiTargets = require('maps.biter_battles_v2.ai_targets')
 local index_of = table.index_of
 
 local spaghett_entity_blacklist = {
@@ -234,10 +235,22 @@ local functions = {
     ['bb_burners_balance_toggle'] = function(event)
         if event.element.switch_state == 'left' then
             storage.bb_settings.burners_balance = true
+            
             game.print('Burners balance is enabled!')
         else
             storage.bb_settings.burners_balance = false
             game.print('Burners balance is disabled!')
+        end
+    end,
+    ['bb_classic_pathing'] = function(event)
+        if event.element.switch_state == 'left' then
+            storage.bb_settings.classic_pathing = true
+            AiTargets.refresh_target_types()
+            game.print('Classic pathing is enabled!')
+        else
+            storage.bb_settings.classic_pathing = false
+            AiTargets.refresh_target_types()
+            game.print('Complex pathing is enabled!')
         end
     end,
 }
@@ -724,6 +737,23 @@ local build_config_gui = function(player, frame)
                 'bb_burners_balance_toggle',
                 'Burners balance',
                 'Enables Burners balance.'
+            )
+            if not admin then
+                switch.ignored_by_interaction = true
+            end
+            
+            scroll_pane.add({ type = 'line' })
+
+            local switch_state = 'right'
+            if storage.bb_settings.classic_pathing then
+                switch_state = 'left'
+            end
+            local switch = add_switch(
+                scroll_pane,
+                switch_state,
+                'bb_classic_pathing',
+                'Classic attacks',
+                'Enables classic attack pathfinding'
             )
             if not admin then
                 switch.ignored_by_interaction = true

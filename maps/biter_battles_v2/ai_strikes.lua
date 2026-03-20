@@ -24,6 +24,20 @@ local MIN_STRIKE_DISTANCE = 256
 local STRIKE_TARGET_CLEARANCE = 255
 local _DEBUG = false
 
+local vector_radius = 512
+local attack_vectors = {}
+attack_vectors.north = {}
+attack_vectors.south = {}
+--awesomepatrol's pathing  updates
+for p = 0.3, 0.71, 0.1 do
+    local a = math.pi * p
+    local x = vector_radius * math.cos(a)
+    local y = vector_radius * math.sin(a)
+    attack_vectors.north[#attack_vectors.north + 1] = { x, y * -1 }
+    attack_vectors.south[#attack_vectors.south + 1] = { x, y }
+end
+local size_of_vectors = #attack_vectors.north
+
 local function calculate_secant_intersections(r, a, b, c)
     local t = a * a + b * b
     local x = -a * c / t
@@ -162,11 +176,55 @@ local function shuffle_indices(list)
     return indices
 end
 
-function Public.initiate(unit_group, target_force_name, strike_position, target_position)
-    if storage.bb_game_won_by_team then
-        return
+local function handle_classic_pathfinding(unit_group, target_force_name, target_position)
+    local chain = {}
+    local vector = attack_vectors[target_force_name][math_random(1, size_of_vectors)]
+    local distance_modifier = math_random(25, 100) * 0.01
+
+    local position = {
+        target_position.x + (vector[1] * distance_modifier),
+        target_position.y + (vector[2] * distance_modifier)
+    }
+    position = unit_group.surface.find_non_colliding_position("stone-furnace", position, 96, 1)
+    if position then
+        if math_abs(position.y) < math_abs(unit_group.position.y) then
+            chain[#chain + 1] = {
+                type = defines.command.go_to_location,
+                destination = position,
+                radius = 32,
+                distraction = defines.distraction.by_enemy
+            }
+        end
     end
 
+    chain[#chain + 1] = {
+        type = defines.command.attack_area,
+        destination = target_position,
+        radius = 32,
+        distraction = defines.distraction.by_enemy
+    }
+
+    local list = storage.rocket_silo[target_force_name]
+    local indices = shuffle_indices(list)
+    for _, i in ipairs(indices) do
+        local silo = list[i]
+        if silo and silo.valid then
+            chain[#chain + 1] = {
+                type = defines.command.attack,
+                target = silo,
+                distraction = defines.distraction.by_damage,
+            }
+        end
+    end
+
+    unit_group.set_command({
+        type = defines.command.compound,
+        structure_type = defines.compound_command.logical_and,
+        commands = chain
+    })
+end
+
+local function handle_advanced_pathfinding(unit_group, target_force_name, strike_position, target_position)
     local chain = {
         {
             type = defines.command.go_to_location,
@@ -211,6 +269,18 @@ function Public.initiate(unit_group, target_force_name, strike_position, target_
         structure_type = defines.compound_command.return_last,
         commands = chain,
     })
+end
+
+function Public.initiate(unit_group, target_force_name, strike_position, target_position)
+    if storage.bb_game_won_by_team then
+        return
+    end
+
+    if storage.bb_settings.classic_pathing then
+        handle_classic_pathfinding(unit_group, target_force_name, target_position)
+    else
+        handle_advanced_pathfinding(unit_group, target_force_name, strike_position, target_position)
+    end
 end
 
 local BEHAVIOR_RESULT = {

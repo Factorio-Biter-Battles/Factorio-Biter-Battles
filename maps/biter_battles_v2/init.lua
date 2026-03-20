@@ -3,6 +3,7 @@ local Score = require('comfy_panel.score')
 local Tables = require('maps.biter_battles_v2.tables')
 local Blueprint = require('maps.biter_battles_v2.blueprints')
 local Functions = require('maps.biter_battles_v2.functions')
+local AiTargets = require('maps.biter_battles_v2.ai_targets')
 local Queue = require('utils.queue')
 local q_size = Queue.size
 local q_push = Queue.push
@@ -176,6 +177,7 @@ function Public.initial_setup()
         ['automatic_captain'] = true,
         ['map_reroll'] = true,
         ['burners_balance'] = true,
+        ['classic_pathing'] = false,
     }
     storage.gui_theme = {}
     storage.want_pings = {}
@@ -209,6 +211,7 @@ function Public.initial_setup()
     createTrollSong(game.forces.south.name, { x = 6, y = 0 })
     createTrollSong(game.forces.north.name, { x = -40, y = 0 })
     createTrollSong(game.forces.spectator.name, { x = -80, y = 0 })
+    AiTargets.refresh_target_types()
 end
 
 --Terrain Playground Surface
