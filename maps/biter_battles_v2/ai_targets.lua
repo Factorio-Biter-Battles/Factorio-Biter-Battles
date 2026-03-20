@@ -7,32 +7,35 @@ local table_remove = table.remove
 
 -- the current dirt simple "strike" model assumes the target is part of a spherical base with a perimeter less than 256-512
 -- the ideal target entity would lie at the center of that, in the "core" of a base
-local target_entity_type = {
-    ['boiler'] = true,
-    ['reactor'] = true,
-    ['heat-interface'] = true,
-    ['generator'] = true,
-    ['solar-panel'] = true,
-    ['accumulator'] = true,
-    ['mining-drill'] = true,
-    ['offshore-pump'] = true,
-    ['furnace'] = true,
-    ['assembling-machine'] = true,
-    ['beacon'] = true,
-    ['roboport'] = true,
-    ['lab'] = true,
-    ['rocket-silo'] = true,
-    -- the entities below don't make sense to center strike calculations around due to:
-    -- 1. these generally lie at the edge of a base, along with walls.
-    -- 2. they already generate a distraction command for biters when in range. we don't need to increase their chances of an encounter any more
-    -- 3. players spam these mid to late game. they command a disproportionate presence in the current uniform sampling approach
-    -- 4. biter groups should (by chance) avoid turrets/walls during a strike instead of actively picking them as a target and suiciding into them
-    ['ammo-turret'] = false,
-    ['artillery-turret'] = false,
-    ['electric-turret'] = false,
-    ['fluid-turret'] = false,
-    ['radar'] = false,
-}
+local target_entity_type
+function Public.refresh_target_types()
+    target_entity_type = {
+        ['boiler'] = true,
+        ['reactor'] = true,
+        ['heat-interface'] = true,
+        ['generator'] = true,
+        ['solar-panel'] = true,
+        ['accumulator'] = true,
+        ['mining-drill'] = true,
+        ['offshore-pump'] = not storage.bb_settings.classic_pathing,
+        ['furnace'] = true,
+        ['assembling-machine'] = true,
+        ['beacon'] = true,
+        ['roboport'] = true,
+        ['lab'] = true,
+        ['rocket-silo'] = true,
+        -- the entities below don't make sense to center strike calculations around due to:
+        -- 1. these generally lie at the edge of a base, along with walls.
+        -- 2. they already generate a distraction command for biters when in range. we don't need to increase their chances of an encounter any more
+        -- 3. players spam these mid to late game. they command a disproportionate presence in the current uniform sampling approach
+        -- 4. biter groups should (by chance) avoid turrets/walls during a strike instead of actively picking them as a target and suiciding into them
+        ['ammo-turret'] = storage.bb_settings.classic_pathing,
+        ['artillery-turret'] = storage.bb_settings.classic_pathing,
+        ['electric-turret'] = storage.bb_settings.classic_pathing,
+        ['fluid-turret'] = storage.bb_settings.classic_pathing,
+        ['radar'] = storage.bb_settings.classic_pathing,
+    }
+end
 
 local function origin_distance(position)
     local x = position.x

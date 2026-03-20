@@ -813,10 +813,10 @@ decrement_timer_automatic_captain_token = Token.register(function()
             local frame = Gui.get_top_element(player, 'automatic_captain_poll_frame')
             if frame and frame.valid then
                 frame.flow.automatic_captain_table.children[1].caption =
-                    { 'gui.automatic_captain_caption', storage.automatic_captain_time_left }
+                { 'gui.automatic_captain_caption', storage.automatic_captain_time_left }
                 local percent, yes_votes, no_votes = get_automatic_captain_stats()
                 frame.flow.automatic_captain_stats.caption =
-                    { 'gui.automatic_captain_stats', no_votes, yes_votes, percent }
+                { 'gui.automatic_captain_stats', no_votes, yes_votes, percent }
             end
         end
 
@@ -836,10 +836,10 @@ decrement_timer_automatic_captain_token = Token.register(function()
             if yes_votes <= amountVotesRequired then
                 game.print(
                     'At least '
-                        .. amountVotesRequired
-                        .. ' votes voting yes are required, there were only '
-                        .. yes_votes
-                        .. ' yes votes'
+                    .. amountVotesRequired
+                    .. ' votes voting yes are required, there were only '
+                    .. yes_votes
+                    .. ' yes votes'
                 )
             end
             if result < percentRequired then
@@ -870,7 +870,7 @@ local function start_auto_captain_vote()
 end
 
 local reroll_buttons_token = Token.register(
-    -- create buttons for joining players
+-- create buttons for joining players
     function(event)
         local player = game.get_player(event.player_index)
         draw_reroll_gui(player)
@@ -968,6 +968,7 @@ function Public.generate_new_map()
     game.reset_time_played()
     storage.server_restart_timer = nil
     game.delete_surface(prev_surface)
+    game.print('Current pathfinding is ' .. (storage.bb_settings.classic_pathing and 'classic' or 'advanced'))
     start_map_reroll()
 end
 

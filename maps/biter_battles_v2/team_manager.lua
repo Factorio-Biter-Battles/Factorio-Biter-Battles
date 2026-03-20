@@ -351,6 +351,9 @@ local function team_manager_gui_click(event)
         storage.tournament_mode = true
         draw_manager_gui(player)
         game.print('>>> Tournament Mode has been enabled by ' .. player.name, { color = { r = 225, g = 0, b = 0 } })
+        if storage.bb_settings.classic_pathing then 
+            game.print('>>> WARNING: Classic pathfinding is enabled and is not recommended for captain\'s games')
+        end
         return
     end
 
