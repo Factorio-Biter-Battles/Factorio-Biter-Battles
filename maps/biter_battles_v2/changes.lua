@@ -1,5 +1,19 @@
 return {
     {
+        number = 759,
+        date = '2026-03-20',
+        author = 'cogito123',
+        comment = [[(#759) Daytime updates:
+  - Set daytime to always day by default
+  - Add admin option in Comfy panel to toggle between always day, always night or the standard day/night cycle]],
+    },
+    {
+        number = 768,
+        date = '2026-03-20',
+        author = 'darkenade',
+        comment = [[(#768) Fix error in crafting queue when the observed player is dead]],
+    },
+    {
         number = 751,
         date = '2026-02-24',
         author = 'darkenade',
