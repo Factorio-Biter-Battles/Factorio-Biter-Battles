@@ -410,17 +410,22 @@ local enforce_biter_cease_fire_handler = Token.register(
     end
 end
 )
----Disable all biters on game end by setting one-way cease fire from biter forces to their respective team.
----More performant than scanning for all units and disabling them (which scales badly with explored map and number of biters on map)
-local function freeze_all_biters()
+---
+---@param cease_fire boolean
+local function toggle_biter_cease_fire(cease_fire)
     local teams = { game.forces.north, game.forces.south }
     local biter_force 
     for _, team in pairs(teams) do
         biter_force = game.forces[team.name .. '_biters']
-        biter_force.set_cease_fire(team,true)
+        biter_force.set_cease_fire(team,cease_fire)
         biter_force = game.forces[team.name .. '_biters_boss']
-        biter_force.set_cease_fire(team,true)
-    end
+        biter_force.set_cease_fire(team,cease_fire)
+    end 
+end
+---Disable all biters on game end by setting one-way cease fire from biter forces to their respective team.
+---More performant than scanning for all units and disabling them (which scales badly with explored map and number of biters on map)
+local function freeze_all_biters()
+    toggle_biter_cease_fire(true)
     Event.add_removable(defines.events.on_entity_damaged, enforce_biter_cease_fire_handler)
 end
 
@@ -977,6 +982,7 @@ function Public.generate_new_map()
     storage.server_restart_timer = nil
     game.delete_surface(prev_surface)
     Event.remove_removable(defines.events.on_entity_damaged, enforce_biter_cease_fire_handler)
+    toggle_biter_cease_fire(false)
     start_map_reroll()
 end
 
