@@ -19,7 +19,6 @@ local Server = require('utils.server')
 local Task = require('utils.task')
 local String = require('utils.string')
 local Token = require('utils.token')
-local Color = require('utils.color_presets')
 local ResearchInfo = require('maps.biter_battles_v2.research_info')
 local DifficultyVote = require('maps.biter_battles_v2.difficulty_vote')
 local ComfyMain = require('comfy_panel.main')
@@ -29,14 +28,108 @@ local autoTagEastOutpost = '[East]'
 local autoTagDistance = 600
 local antiAfkTimeBeforeEnabled = 60 * 60 * 5 -- in tick : 5 minutes
 local antiAfkTimeBeforeWarning = 60 * 60 * 3 + 60 * 40 -- in tick : 3 minutes 40s
+local blitzPollDurationSeconds = 180
+local blitzPollQuestion = 'Enable the new AI blitz strike planner for this round?'
+local blitzPollAnswers = { 'Yes', 'No' }
+local blitzPollInfoColor = { r = 0.98, g = 0.66, b = 0.22 }
+local blitzPollSuccessColor = { r = 0.20, g = 0.85, b = 0.20 }
+local blitzPollFailColor = { r = 0.95, g = 0.30, b = 0.30 }
 require('maps.biter_battles_v2.sciencelogs_tab')
 require('maps.biter_battles_v2.feed_values_tab')
 require('maps.biter_battles_v2.changelog_tab')
 require('maps.biter_battles_v2.commands')
 require('modules.spawners_contain_biters')
 
+local function maybe_start_blitz_vote()
+    local state = AiStrikes.ensure_state()
+    state.vote = state.vote or {}
+    local vote = state.vote
+    if vote.poll_id or vote.resolved then
+        return false
+    end
+    if #game.connected_players == 0 then
+        return false
+    end
+
+    local ok, poll_id_or_error = ComfyPoll.poll({
+        question = blitzPollQuestion,
+        answers = blitzPollAnswers,
+        duration = blitzPollDurationSeconds,
+    })
+    if not ok then
+        log('ai blitz vote failed to start: ' .. tostring(poll_id_or_error))
+        return false
+    end
+
+    vote.poll_id = poll_id_or_error
+    vote.start_tick = game.tick
+    vote.end_tick = game.tick + blitzPollDurationSeconds * 60
+    vote.resolved = false
+    vote.yes_votes = 0
+    vote.no_votes = 0
+
+    AiStrikes.set_blitz_enabled(false)
+
+    game.print(
+        'Gameplay poll started: enable AI blitz strike planner for this round? Open Polls (speaker icon) to vote.',
+        blitzPollInfoColor
+    )
+    return true
+end
+
+local function resolve_blitz_vote_if_finished()
+    local state = AiStrikes.ensure_state()
+    local vote = state.vote
+    if not vote or vote.resolved or not vote.poll_id or not vote.end_tick then
+        return
+    end
+    if game.tick < vote.end_tick then
+        return
+    end
+
+    vote.resolved = true
+
+    local poll_data, poll_error = ComfyPoll.get_poll_data(vote.poll_id)
+    if not poll_data then
+        AiStrikes.set_blitz_enabled(false)
+        log('ai blitz vote resolution failed: ' .. tostring(poll_error))
+        game.print(
+            'Blitz vote could not be resolved. Blitz planner remains disabled for this round.',
+            blitzPollFailColor
+        )
+        return
+    end
+
+    local yes_votes = poll_data.answers[1] and poll_data.answers[1].voted_count or 0
+    local no_votes = poll_data.answers[2] and poll_data.answers[2].voted_count or 0
+    vote.yes_votes = yes_votes
+    vote.no_votes = no_votes
+
+    local enabled = yes_votes > no_votes
+    AiStrikes.set_blitz_enabled(enabled)
+
+    if enabled then
+        game.print(
+            string.format(
+                'Blitz vote passed (%d yes / %d no). AI blitz strike planner is enabled this round.',
+                yes_votes,
+                no_votes
+            ),
+            blitzPollSuccessColor
+        )
+    else
+        game.print(
+            string.format(
+                'Blitz vote failed (%d yes / %d no). AI blitz strike planner is disabled this round.',
+                yes_votes,
+                no_votes
+            ),
+            blitzPollFailColor
+        )
+    end
+end
+
 local function on_player_joined_game(event)
-    local surface = game.surfaces[storage.bb_surface_name]
     local player = game.get_player(event.player_index)
     if not player then
         return
@@ -78,6 +171,15 @@ local function on_player_joined_game(event)
     local ping_header = player.gui.screen.ping_header
     if ping_header then
         ping_header.destroy()
+    end
+
+    local started_blitz_vote = maybe_start_blitz_vote()
+    local blitz_vote = AiStrikes.ensure_state().vote
+    if not started_blitz_vote and blitz_vote and blitz_vote.poll_id and not blitz_vote.resolved then
+        player.print(
+            'A gameplay poll is active: open Polls (speaker icon) and vote on the AI blitz strike planner.',
+            blitzPollInfoColor
+        )
     end
 
     Gui.burners_balance(player)
@@ -555,6 +657,9 @@ local function on_tick()
     local tick = game.tick
 
     if tick % 60 == 0 then
+        maybe_start_blitz_vote()
+        resolve_blitz_vote_if_finished()
+
         profile(on_tick_profilers, 'threat', function()
             storage.bb_threat['north_biters'] = storage.bb_threat['north_biters']
                 + storage.bb_threat_income['north_biters']
@@ -789,6 +894,7 @@ Event.add(defines.events.on_research_reversed, on_research_reversed)
 Event.add(defines.events.on_robot_built_entity, on_robot_built_entity)
 Event.add(defines.events.on_robot_built_tile, on_robot_built_tile)
 Event.add(defines.events.on_player_dropped_item_into_entity, on_player_dropped_item_into_entity)
+Event.add(defines.events.on_script_path_request_finished, AiStrikes.on_script_path_request_finished)
 Event.add(defines.events.on_tick, on_tick)
 Event.on_init(on_init)
 
