@@ -399,21 +399,29 @@ local function set_victory_time()
         table.concat({ 'Time - ', hours > 0 and (hours .. ' hours and ') or '', minutes, ' minutes' })
 end
 
-local function freeze_all_biters(surface)
-    local filter = {
-        force = {
-            'north_biters',
-            'south_biters',
-            'north_biters_boss',
-            'south_biters_boss',
-        },
-    }
-
-    for _, e in pairs(surface.find_entities_filtered(filter)) do
-        if e.name ~= 'atomic-rocket' then
-            e.active = false
-        end
+---Disable biters that are attacking entities during a ceasefire at the end of the game
+---Needs to be disabled on game start
+local enforce_biter_cease_fire_handler = Token.register(
+---@param event EventData.on_entity_damaged 
+    function (event)
+    local cause = event.cause
+    if cause and cause.valid and cause.type == 'unit' then
+        cause.active = false
     end
+end
+)
+---Disable all biters on game end by setting one-way cease fire from biter forces to their respective team.
+---More performant than scanning for all units and disabling them (which scales badly with explored map and number of biters on map)
+local function freeze_all_biters()
+    local teams = { game.forces.north, game.forces.south }
+    local biter_force 
+    for _, team in pairs(teams) do
+        biter_force = game.forces[team.name .. '_biters']
+        biter_force.set_cease_fire(team,true)
+        biter_force = game.forces[team.name .. '_biters_boss']
+        biter_force.set_cease_fire(team,true)
+    end
+    Event.add_removable(defines.events.on_entity_damaged, enforce_biter_cease_fire_handler)
 end
 
 local function biter_damage_source(event)
@@ -582,7 +590,7 @@ function Public.on_entity_died(entity)
     storage.results_sent_south = false
     storage.results_sent_north = false
 
-    freeze_all_biters(entity.surface)
+    freeze_all_biters()
     local special = storage.special_games_variables.captain_mode
     if special and not special.prepaPhase then
         storage.tournament_mode = false
@@ -968,6 +976,7 @@ function Public.generate_new_map()
     game.reset_time_played()
     storage.server_restart_timer = nil
     game.delete_surface(prev_surface)
+    Event.remove_removable(defines.events.on_entity_damaged, enforce_biter_cease_fire_handler)
     start_map_reroll()
 end
 
