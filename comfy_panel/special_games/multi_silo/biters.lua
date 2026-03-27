@@ -32,15 +32,13 @@ end
 ---@param group LuaCommandable The group to update.
 ---@param silo LuaEntity The silo that was just placed.
 local function recommand_group(group, silo)
-    local target = Force.get_player_force_name(group.force.name)
-
     -- Is there compound command set?
-    local command = group.command
-    if command.type ~= defines.command.compound then
+    local cmd = group.command
+    if not cmd or cmd.type ~= defines.command.compound then
         local pos = group.position
         log(
             'WARN: recommand_group: unexpected command type '
-                .. tostring(command.type)
+                .. tostring(cmd and cmd.type)
                 .. ' for group force='
                 .. tostring(group.force.name)
                 .. ' id='
@@ -54,7 +52,6 @@ local function recommand_group(group, silo)
         return
     end
 
-    local cmd = table.deepcopy(command)
     local tail = find_tail_commands(cmd) or cmd.commands
     tail[#tail + 1] = {
         type = defines.command.attack_area,
