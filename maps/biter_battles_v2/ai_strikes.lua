@@ -245,6 +245,15 @@ local function on_unit_removed_from_group(event)
         return
     end
 
+    -- BUG: During threat farming with poison capsules, biters form
+    -- attack waves that target closest player structures.  This
+    -- happens even with negative threat.  If in that period some
+    -- biters get orphaned, they will trigger this event and acquire
+    -- new command chain, unless we exit early.
+    if storage.bb_threat[unit.force.name] < 0 then
+        return
+    end
+
     -- Infer target from the unit's own biter force name.
     local target_force_name = Force.get_player_force_name(unit.force.name)
     local commandable = unit.commandable
