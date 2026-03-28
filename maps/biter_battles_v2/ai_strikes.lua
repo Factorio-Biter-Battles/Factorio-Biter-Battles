@@ -234,6 +234,8 @@ end
 
 --- When a biter unit is removed from its group (e.g. the group is disbanded
 --- or the unit is separated), this function re-commands the orphaned unit with
+--- the group's current command when available, falling back to a freshly built
+--- chain targeting a random player structure and the rocket silo.
 ---@param event LuaOnUnitRemovedFromGroup
 local function on_unit_removed_from_group(event)
     if storage.bb_game_won_by_team then
@@ -254,14 +256,19 @@ local function on_unit_removed_from_group(event)
         return
     end
 
-    -- Infer target from the unit's own biter force name.
-    local target_force_name = Force.get_player_force_name(unit.force.name)
     local commandable = unit.commandable
     if not commandable then
         return
     end
 
+    local group = event.group
+    if group.valid and group.has_command then
+        commandable.set_command(group.command)
+        return
+    end
+
     local chain = {}
+    local target_force_name = Force.get_player_force_name(unit.force.name)
     local target_position = AiTargets.get_random_target(target_force_name)
     if target_position then
         chain[#chain + 1] = {
