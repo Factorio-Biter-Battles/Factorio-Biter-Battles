@@ -1,37 +1,29 @@
 return {
     {
+        number = 771,
+        date = '2026-03-29',
+        author = 'cogito123',
+        comment = [[(#771) Biter AI changes:
+  - Fixed an issue where orphaned biters would acquire command chains when threat was negative
+  - Orphaned biters will now try to inherit a command chain from their lost parent group before falling back to creating a new one]],
+    },
+    {
         number = 764,
         date = '2026-03-27',
         author = 'cogito123',
         comment = [[(#764) Biter AI and multi-silo changes:
-  - Fixed biter groups getting permanently stuck on small puddles due to a
-      coarse pathfinding grid
-  - Fixed biters permanently idling at the spawner when no flanking position is
-      available in congested areas near river. They now skip the flanking maneuver
-      and take a direct path to the target
-  - Biters that fall behind their group and are removed from it by the game
-      engine now re-engage and acquire a completely new attack chain instead of
-      wandering aimlessly in place. As a result, orphaned biters will exhibit
-      much more unpredictable attack vectors
-  - Improved biter group cohesion so units stick together better when traveling
-      long distances through congested terrain
-  - Increased the pathfinder request capacity from 4 to the engine default of 10,
-      fixing a late-game bottleneck where many biter groups would stall while waiting
-      for pathfinding slots
-  - Boss unit groups are no longer created when there are no boss biters in the
-      attack wave
-  - Multi-silo: biter attack commands now survive silo destruction, so groups no
-      longer lose their targets mid-attack
-  - Multi-silo: when a new silo is placed, all active biter groups automatically
-      add it to their target list
-  - Multi-silo: fixed a crash when respawning with no valid silo positions. Falls
-      back to the default team spawn
-  - Multi-silo: split into a directory module. Biter group commanding logic moved
-      out of ai_strikes.lua into its own file
-  - Added /set-pathfinder admin command for switching between pathfinder presets
-      at runtime. It does not directly impact biter routing or target selection
-  - require() now supports directory modules with init.lua entry points, matching
-      standard Lua resolution behavior]],
+  - Fixed biter groups getting permanently stuck on small puddles due to a coarse pathfinding grid
+  - Fixed biters permanently idling at the spawner when no flanking position is available in congested areas near river. They now skip the flanking maneuver and take a direct path to the target
+  - Biters that fall behind their group and are removed from it by the game engine now re-engage and acquire a completely new attack chain instead of wandering aimlessly in place. As a result, orphaned biters will exhibit much more unpredictable attack vectors
+  - Improved biter group cohesion so units stick together better when traveling long distances through congested terrain
+  - Increased the pathfinder request capacity from 4 to the engine default of 10, fixing a late-game bottleneck where many biter groups would stall while waiting for pathfinding slots
+  - Boss unit groups are no longer created when there are no boss biters in the attack wave
+  - Multi-silo: biter attack commands now survive silo destruction, so groups no longer lose their targets mid-attack
+  - Multi-silo: when a new silo is placed, all active biter groups automatically add it to their target list
+  - Multi-silo: fixed a crash when respawning with no valid silo positions. Falls back to the default team spawn
+  - Multi-silo: split into a directory module. Biter group commanding logic moved out of ai_strikes.lua into its own file
+  - Added /set-pathfinder admin command for switching between pathfinder presets at runtime. It does not directly impact biter routing or target selection
+  - require() now supports directory modules with init.lua entry points, matching standard Lua resolution behavior]],
     },
     {
         number = 759,
