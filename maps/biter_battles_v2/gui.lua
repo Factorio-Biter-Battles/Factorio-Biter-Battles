@@ -305,8 +305,8 @@ local function get_data_for_refresh_statistics()
     }
 end
 
----@param player LuaPlayer
 ---Creates GUI element that displays flags/icons depicting enabled features
+---@param player LuaPlayer
 function Public.create_feature_flags(player)
     local t = Gui.add_top_element(player, {
         type = 'table',
@@ -318,12 +318,10 @@ function Public.create_feature_flags(player)
     t.style.maximal_height = 25 * 3
 end
 
+---Evaluates all registered feature flags and updates the GUI for a given player
 ---@param player LuaPlayer
 function Public.refresh_feature_flags(player)
-    local t = Gui.get_top_element(player, 'bb_feature_flags')
-    t.clear()
-
-    FeatureFlags.update_feature_flag(player)
+    FeatureFlags.evaluate_feature_flags(player)
 end
 
 ---@param player LuaPlayer

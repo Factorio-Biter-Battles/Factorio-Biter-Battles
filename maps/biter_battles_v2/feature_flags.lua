@@ -1,57 +1,69 @@
 local Gui = require('utils.gui')
 
---- Shared utilities for feature flags;
---- currently exposes is_disabled() to guard against
---- inactive or resetting maps.
-
 local Public = {}
+local feature_flags = {}
 
----@return boolean True when multi-silo is not active, classic pathfinding is disabled, or the map is resetting.
-function Public.is_disabled()
-    -- storage.active_special_games.multi_silo can only be set by clicking a button in admin panel.
+---@return boolean True when the map is resetting.
+local function is_disabled()
     -- storage.server_restart_timer indicates if map is scheduled for a reset.
-    return storage.active_special_games.multi_silo == nil
-        and not storage.bb_settings.classic_pathfinding
-        and storage.server_restart_timer ~= nil
-        and storage.server_restart_timer > 0
+    return storage.server_restart_timer ~= nil and storage.server_restart_timer > 0
 end
 
----Adds feature flag icons to the GUI to indicate whether multisilo or classic pathfinding are enabled.
----@param player LuaPlayer
-function Public.update_feature_flag(player)
-    if Public.is_disabled() then
+---Updates the GUI with all feature flags that are enabled
+---@param player LuaPlayer 
+function Public.evaluate_feature_flags(player)
+    if is_disabled() then
         return
     end
 
     local t = Gui.get_top_element(player, 'bb_feature_flags')
     t.clear()
 
-    if storage.active_special_games.multi_silo ~= nil then
-        local button = t.add({
-            type = 'sprite',
-            name = 'multisilo_flag',
-            resize_to_sprite = false,
-            sprite = 'technology/rocket-silo',
-        })
+    for _, flag in pairs(feature_flags) do
+        if flag.active_fn() then
+            local button = t.add({
+                type = 'sprite',
+                name = flag.name,
+                resize_to_sprite = false,
+                sprite = flag.sprite_path,
+            })
 
-        button.style.height = 15
-        button.style.width = 15
-        button.tooltip = 'Multisilo enabled!\n'
-            .. 'You spawn with one free rocket silo, the game ends when all silos on a team are destroyed'
+            button.style.height = 15
+            button.style.width = 15
+            button.tooltip = flag.tooltip
+        end
+    end
+end
+
+---Registers a feature flag. All players are updated following registration. 
+---It is safe to register the same flag multiple times.
+---@param name string the feature name
+---@param sprite_path string
+---@param tooltip string
+---@param active_fn function evaluated to determine whether or not the flag should be rendered
+function Public.register_feature_flag(name, sprite_path, tooltip, active_fn)
+    local existing_flag = nil
+    for _, flag in pairs(feature_flags) do
+        if flag.name == name then
+            existing_flag = flag
+        end
     end
 
-    if storage.bb_settings.classic_pathfinding then
-        local button = t.add({
-            type = 'sprite',
-            name = 'classic_pathfinding_flag',
-            resize_to_sprite = false,
-            sprite = 'item/stone-wall',
-        })
+    if existing_flag == nil then
+        local feature_flag = {
+            name = name,
+            sprite_path = sprite_path,
+            tooltip = tooltip,
+            active_fn = active_fn,
+        }
 
-        button.style.height = 15
-        button.style.width = 15
-        button.tooltip = 'Classic pathfinding enabled!\n'
-            .. 'Classic pathfinding gives attacks simpler paths coming from nests'
+        table.insert(feature_flags, feature_flag)
+    end
+
+    for _, p in pairs(game.players) do
+        if p.connected then
+            Public.evaluate_feature_flags(p)
+        end
     end
 end
 

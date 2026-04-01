@@ -84,14 +84,14 @@ function Public.generate(_, player)
     -- Important to go through all players, not just connected. So that if someone
     -- joins back after game was enabled, they still can get their silo.
     for _, p in pairs(game.players) do
-        if p.connected then
-            FeatureFlags.update_feature_flag(p)
-        end
-
         if storage.chosen_team[p.name] then
             insert_silo(p)
         end
     end
+    
+    FeatureFlags.register_feature_flag("multisilo_flag", "technology/rocket-silo", 'Multisilo enabled!\n'
+            .. 'You spawn with one free rocket silo, the game ends when all silos on a team are destroyed', 
+            function () return not Shared.is_disabled() end)
 end
 
 ---Initialize player inventory when switching force. Note that this is not bound

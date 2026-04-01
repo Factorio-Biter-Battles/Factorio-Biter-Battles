@@ -7,9 +7,8 @@ local table_remove = table.remove
 
 -- the current dirt simple "strike" model assumes the target is part of a spherical base with a perimeter less than 256-512
 -- the ideal target entity would lie at the center of that, in the "core" of a base
-local target_entity_type
 function Public.refresh_target_types()
-    target_entity_type = {
+    storage.target_entity_type = {
         ['boiler'] = true,
         ['reactor'] = true,
         ['heat-interface'] = true,
@@ -65,7 +64,7 @@ function Public.start_tracking(entity)
     if not entity.valid then
         return
     end
-    if target_entity_type[entity.type] and entity.unit_number then
+    if storage.target_entity_type[entity.type] and entity.unit_number then
         local targets = storage.ai_targets[entity.force.name]
         if targets ~= nil then
             local _, id, _ = script.register_on_object_destroyed(entity)

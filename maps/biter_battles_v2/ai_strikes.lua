@@ -204,7 +204,11 @@ end
 ---@param unit_group LuaCommandable
 ---@param target_force_name string
 ---@param target_position MapPosition
-local function handle_classic_pathfinding(unit_group, target_force_name, target_position)
+function Public.initiate_classic_attack(unit_group, target_force_name, target_position)
+    if storage.bb_game_won_by_team then
+        return
+    end
+
     local chain = {}
     local vector = attack_vectors[target_force_name][math_random(1, size_of_vectors)]
     local distance_modifier = math_random(25, 100) * 0.01
@@ -252,6 +256,7 @@ local function handle_classic_pathfinding(unit_group, target_force_name, target_
     })
 end
 
+
 ---Provides the command chain for a new biter group using advanced pathfinding logic, see notes in ai_strikes.lua for an explanation
 ---of the differences between advanced and classic pathfinding.
 ---This biter group will travel to the strike_position before attacking the target_position
@@ -259,7 +264,11 @@ end
 ---@param target_force_name string
 ---@param strike_position MapPosition
 ---@param target_position MapPosition
-local function handle_advanced_pathfinding(unit_group, target_force_name, strike_position, target_position)
+function Public.initiate_advanced_attack(unit_group, target_force_name, strike_position, target_position)
+    if storage.bb_game_won_by_team then
+        return
+    end
+
     local chain = {}
 
     if strike_position then
@@ -285,18 +294,6 @@ local function handle_advanced_pathfinding(unit_group, target_force_name, strike
         structure_type = defines.compound_command.return_last,
         commands = chain,
     })
-end
-
-function Public.initiate(unit_group, target_force_name, strike_position, target_position)
-    if storage.bb_game_won_by_team then
-        return
-    end
-
-    if storage.bb_settings.classic_pathfinding then
-        handle_classic_pathfinding(unit_group, target_force_name, target_position)
-    else
-        handle_advanced_pathfinding(unit_group, target_force_name, strike_position, target_position)
-    end
 end
 
 local BEHAVIOR_RESULT = {

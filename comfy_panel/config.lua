@@ -259,11 +259,14 @@ local functions = {
             log(player.name .. ' has disabled classic pathfinding!')
         end
 
-        for _, p in pairs(game.players) do
-            if p.connected then
-                FeatureFlags.update_feature_flag(p)
+        FeatureFlags.register_feature_flag(
+            'classic_pathfinding_flag',
+            'item/stone-wall',
+            'Classic pathfinding enabled!\n' .. 'Classic pathfinding gives attacks simpler paths coming from nests',
+            function()
+                return storage.bb_settings.classic_pathfinding
             end
-        end
+        )
 
         AiTargets.refresh_target_types()
     end,
