@@ -210,16 +210,16 @@ local function handle_classic_pathfinding(unit_group, target_force_name, target_
 
     local position = {
         target_position.x + (vector[1] * distance_modifier),
-        target_position.y + (vector[2] * distance_modifier)
+        target_position.y + (vector[2] * distance_modifier),
     }
-    position = unit_group.surface.find_non_colliding_position("stone-furnace", position, 96, 1)
+    position = unit_group.surface.find_non_colliding_position('stone-furnace', position, 96, 1)
     if position then
         if math_abs(position.y) < math_abs(unit_group.position.y) then
             chain[#chain + 1] = {
                 type = defines.command.go_to_location,
                 destination = position,
                 radius = 32,
-                distraction = defines.distraction.by_enemy
+                distraction = defines.distraction.by_enemy,
             }
         end
     end
@@ -228,7 +228,7 @@ local function handle_classic_pathfinding(unit_group, target_force_name, target_
         type = defines.command.attack_area,
         destination = target_position,
         radius = 32,
-        distraction = defines.distraction.by_enemy
+        distraction = defines.distraction.by_enemy,
     }
 
     local list = storage.rocket_silo[target_force_name]
@@ -247,7 +247,7 @@ local function handle_classic_pathfinding(unit_group, target_force_name, target_
     unit_group.set_command({
         type = defines.command.compound,
         structure_type = defines.compound_command.logical_and,
-        commands = chain
+        commands = chain,
     })
 end
 

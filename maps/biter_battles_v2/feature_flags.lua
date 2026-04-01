@@ -25,7 +25,7 @@ function Public.update_feature_flag(player)
 
     local t = Gui.get_top_element(player, 'bb_feature_flags')
     t.clear()
-    
+
     if storage.active_special_games.multi_silo ~= nil then
         local button = t.add({
             type = 'sprite',
@@ -33,12 +33,13 @@ function Public.update_feature_flag(player)
             resize_to_sprite = false,
             sprite = 'technology/rocket-silo',
         })
-        
+
         button.style.height = 15
         button.style.width = 15
-        button.tooltip = 'Multisilo enabled!\n' .. 'You spawn with one free rocket silo, the game ends when all silos on a team are destroyed'
+        button.tooltip = 'Multisilo enabled!\n'
+            .. 'You spawn with one free rocket silo, the game ends when all silos on a team are destroyed'
     end
-    
+
     if storage.bb_settings.classic_pathfinding then
         local button = t.add({
             type = 'sprite',
@@ -46,10 +47,11 @@ function Public.update_feature_flag(player)
             resize_to_sprite = false,
             sprite = 'item/stone-wall',
         })
-        
+
         button.style.height = 15
         button.style.width = 15
-        button.tooltip = 'Classic pathfinding enabled!\n' .. 'Classic pathfinding gives attacks simpler paths coming from nests'
+        button.tooltip = 'Classic pathfinding enabled!\n'
+            .. 'Classic pathfinding gives attacks simpler paths coming from nests'
     end
 end
 

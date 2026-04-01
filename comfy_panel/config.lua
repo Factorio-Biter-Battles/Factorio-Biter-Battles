@@ -799,8 +799,8 @@ local build_config_gui = function(player, frame)
                 switch_state,
                 'bb_classic_pathfinding',
                 'Classic attacks',
-                'Classic attacks use simple vectors to make direct attacks on targets and adds all military structures to the potential target list\n' ..
-                'In general, classic pathfinding is significantly easier to defend against'
+                'Classic attacks use simple vectors to make direct attacks on targets and adds all military structures to the potential target list\n'
+                    .. 'In general, classic pathfinding is significantly easier to defend against'
             )
             if not admin then
                 switch.ignored_by_interaction = true
