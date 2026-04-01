@@ -197,6 +197,12 @@ function Public.append_silo_commands(chain, target_force_name, distraction)
     end
 end
 
+---Provides the command chain for a new biter group using classic pathfinding logic, see notes in ai_strikes.lua for an explanation
+---of the differences between advanced and classic pathfinding
+---This biter group will take a direct path to the target_position using classic attack_vectors in ai_strikes.lua
+---@param unit_group any
+---@param target_force_name any
+---@param target_position any
 local function handle_classic_pathfinding(unit_group, target_force_name, target_position)
     local chain = {}
     local vector = attack_vectors[target_force_name][math_random(1, size_of_vectors)]
@@ -245,6 +251,13 @@ local function handle_classic_pathfinding(unit_group, target_force_name, target_
     })
 end
 
+---Provides the command chain for a new biter group using advanced pathfinding logic, see notes in ai_strikes.lua for an explanation
+---of the differences between advanced and classic pathfinding.
+---This biter group will travel to the strike_position before attacking the target_position
+---@param unit_group any
+---@param target_force_name any
+---@param strike_position any
+---@param target_position any
 local function handle_advanced_pathfinding(unit_group, target_force_name, strike_position, target_position)
     local chain = {}
 
@@ -278,7 +291,7 @@ function Public.initiate(unit_group, target_force_name, strike_position, target_
         return
     end
 
-    if storage.bb_settings.classic_pathing then
+    if storage.bb_settings.classic_pathfinding then
         handle_classic_pathfinding(unit_group, target_force_name, target_position)
     else
         handle_advanced_pathfinding(unit_group, target_force_name, strike_position, target_position)

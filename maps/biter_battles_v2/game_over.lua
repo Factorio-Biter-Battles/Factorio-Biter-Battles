@@ -968,7 +968,6 @@ function Public.generate_new_map()
     game.reset_time_played()
     storage.server_restart_timer = nil
     game.delete_surface(prev_surface)
-    game.print('Current pathfinding is ' .. (storage.bb_settings.classic_pathing and 'classic' or 'advanced'))
     start_map_reroll()
 end
 

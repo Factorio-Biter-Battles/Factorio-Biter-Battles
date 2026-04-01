@@ -18,6 +18,7 @@ local TeamStatsCompare = require('maps.biter_battles_v2.team_stats_compare')
 local gui_style = require('utils.utils').gui_style
 local has_life = require('comfy_panel.special_games.limited_lives').has_life
 local MultiSilo = require('comfy_panel.special_games.multi_silo')
+local FeatureFlags = require('maps.biter_battles_v2.feature_flags')
 local CraftingQueueList = require('commands.crafting_queue_list')
 
 local food_names = Tables.gui_foods
@@ -322,7 +323,7 @@ function Public.refresh_feature_flags(player)
     local t = Gui.get_top_element(player, 'bb_feature_flags')
     t.clear()
 
-    MultiSilo.update_feature_flag(player)
+    FeatureFlags.update_feature_flag(player)
 end
 
 ---@param player LuaPlayer
