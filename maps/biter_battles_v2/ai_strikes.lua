@@ -5,6 +5,7 @@ local Event = require('utils.event')
 local bb_config = require('maps.biter_battles_v2.config')
 local Force = require('utils.force')
 local MultiSilo = require('comfy_panel.special_games.multi_silo')
+local Table = require('utils.table')
 
 local math_random = math.random
 local math_sqrt = math.sqrt
@@ -174,7 +175,7 @@ function Public.append_silo_commands(chain, target_force_name, distraction)
     if not silos then
         return
     end
-    local indices = table.shuffle_indices(silos)
+    local indices = Table.shuffle_indices(silos)
     local multi_silo = not MultiSilo.is_disabled()
     for _, i in ipairs(indices) do
         local silo = silos[i]
@@ -232,7 +233,7 @@ local function handle_classic_pathfinding(unit_group, target_force_name, target_
     }
 
     local list = storage.rocket_silo[target_force_name]
-    local indices = shuffle_indices(list)
+    local indices = Table.shuffle_indices(list)
     for _, i in ipairs(indices) do
         local silo = list[i]
         if silo and silo.valid then
