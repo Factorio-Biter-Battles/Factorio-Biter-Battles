@@ -135,7 +135,7 @@ end
 ---@param show_intermediates boolean?
 ---@return CqlQueueItem[], integer
 local function get_queue_display(player, just_crafted, show_intermediates)
-    local q = player.crafting_queue or {}
+    local q = player.character and player.crafting_queue or {}
     local items, more = {}, 0
     local total = #q
 

@@ -8,6 +8,8 @@ local Functions = require('maps.biter_battles_v2.functions')
 local Tables = require('maps.biter_battles_v2.tables')
 local AiStrikes = require('maps.biter_battles_v2.ai_strikes')
 local AiTargets = require('maps.biter_battles_v2.ai_targets')
+local MultiSilo = require('comfy_panel.special_games.multi_silo')
+local Pathfinder = require('commands.set_pathfinder')
 local math_random = math.random
 local math_floor = math.floor
 
@@ -51,6 +53,25 @@ local function get_threat_ratio(biter_force_name)
     return ratio
 end
 
+---Sends nearby biters from the given force to attack the silo target.
+---@param force_name string Player force name (e.g. 'north', 'south').
+---@param silo LuaEntity|nil Rocket silo entity; no-op if nil or invalid.
+local function send_biters_to_silo_target(force_name, silo)
+    if silo == nil or not silo.valid then
+        return
+    end
+    game.surfaces[storage.bb_surface_name].set_multi_command({
+        command = {
+            type = defines.command.attack,
+            target = silo,
+            distraction = defines.distraction.none,
+        },
+        unit_count = 8,
+        force = force_name .. '_biters',
+        unit_search_distance = 64,
+    })
+end
+
 ---Goes through each valid force and sends direct attack to all rocket silos.
 ---If it's not a multi-silo special, then only the one at a spawn is considered.
 Public.send_near_biters_to_silo = function()
@@ -70,23 +91,7 @@ Public.send_near_biters_to_silo = function()
         end
 
         for _, silo in ipairs(list) do
-            if silo == nil or not silo.valid then
-                -- Strange if we enter here.
-                goto send_biters_silo_loop_2
-            end
-
-            game.surfaces[storage.bb_surface_name].set_multi_command({
-                command = {
-                    type = defines.command.attack,
-                    target = silo,
-                    distraction = defines.distraction.none,
-                },
-                unit_count = 8,
-                force = f_name .. '_biters',
-                unit_search_distance = 64,
-            })
-
-            ::send_biters_silo_loop_2::
+            send_biters_to_silo_target(f_name, silo)
         end
 
         ::send_biters_silo_loop_1::
@@ -339,10 +344,15 @@ local function create_attack_group(surface, force_name, biter_force_name)
     end
     local boss_force_name = biter_force_name .. '_boss'
     local unit_group = surface.create_unit_group({ position = unit_group_position, force = biter_force_name })
-    local unit_group_boss = surface.create_unit_group({ position = unit_group_position, force = boss_force_name })
+    local unit_group_boss = nil
+    local has_boss_units = false
     for _, unit in pairs(units) do
-        unit.ai_settings.path_resolution_modifier = -1
+        unit.ai_settings.path_resolution_modifier = 0
         if unit.force.name == boss_force_name then
+            if not unit_group_boss then
+                unit_group_boss = surface.create_unit_group({ position = unit_group_position, force = boss_force_name })
+                has_boss_units = true
+            end
             unit_group_boss.add_member(unit)
         else
             unit_group.add_member(unit)
@@ -350,11 +360,19 @@ local function create_attack_group(surface, force_name, biter_force_name)
         storage.biters_from_positive_threat[unit.unit_number] = true
     end
     local strike_position = AiStrikes.calculate_strike_position(unit_group, target_position)
+    if not strike_position then
+        log('No strike position found for ' .. biter_force_name .. ', skipping flank')
+    end
     AiStrikes.initiate(unit_group, force_name, strike_position, target_position)
-    AiStrikes.initiate(unit_group_boss, force_name, strike_position, target_position)
+    MultiSilo.track_group(unit_group)
+    if has_boss_units then
+        AiStrikes.initiate(unit_group_boss, force_name, strike_position, target_position)
+        MultiSilo.track_group(unit_group_boss)
+    end
 end
 
 Public.pre_main_attack = function()
+    Pathfinder.apply()
     local force_name = storage.next_attack
 
     -- In headless benchmarking, there are no connected_players so we need a global to override this

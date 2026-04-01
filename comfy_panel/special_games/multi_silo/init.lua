@@ -1,7 +1,12 @@
+--- Entry point for the multi-silo special game:
+--- manages silo placement, player transitions, and event wiring.
+
 local Event = require('utils.event')
 local AiTargets = require('maps.biter_battles_v2.ai_targets')
+local Biters = require('comfy_panel.special_games.multi_silo.biters')
 local Color = require('utils.color_presets')
 local Gui = require('utils.gui')
+local Shared = require('comfy_panel.special_games.multi_silo.shared')
 
 local Public = {
     name = {
@@ -17,8 +22,8 @@ local Public = {
     },
 }
 
----@param player LuaPlayer
 ---Inserts silo into player inventory and inform them about it
+---@param player LuaPlayer
 local function insert_silo(player)
     local stack = { name = 'rocket-silo', count = 1 }
     if player.can_insert(stack) then
@@ -44,6 +49,8 @@ local function insert_silo(player)
     end
 end
 
+---@param _ table Config table (unused).
+---@param player LuaPlayer Player who triggered the special game.
 function Public.generate(_, player)
     if storage.active_special_games.multi_silo then
         player.print('Multi silo is enabled already!')
@@ -63,6 +70,9 @@ function Public.generate(_, player)
         ---@type { [string]: { x: number, y: number } }
         ---Holds last position of a player transition into death or joining spectator
         last_transition = {},
+        ---@type LuaCommandable[]
+        ---Tracks active biter unit groups so idle ones can be re-commanded with fresh silo targets.
+        biter_groups = {},
     }
 
     local s = game.surfaces[storage.bb_surface_name]
@@ -84,13 +94,8 @@ function Public.generate(_, player)
     end
 end
 
-function Public.is_disabled()
-    -- storage.active_special_games.multi_silo can only be set by clicking a button in admin panel.
-    -- storage.server_restart_timer indicates if map is scheduled for a reset.
-    return (storage.active_special_games.multi_silo == nil or storage.server_restart_timer)
-end
-
 ---Adds silo icon into GUI to indicate that special is enabled.
+---@param player LuaPlayer
 function Public.update_feature_flag(player)
     if Public.is_disabled() then
         return
@@ -108,9 +113,9 @@ function Public.update_feature_flag(player)
     button.tooltip = 'Multisilo enabled!'
 end
 
----@param player LuaPlayer
 ---Initialize player inventory when switching force. Note that this is not bound
 ---to proper event and has to be called manually from gui::join_team.
+---@param player LuaPlayer
 function Public.on_player_changed_force(player)
     if Public.is_disabled() then
         return
@@ -119,8 +124,8 @@ function Public.on_player_changed_force(player)
     insert_silo(player)
 end
 
----@param entity LuaEntity
 ---Checks if placed silo meets all requirements. If not a warning is returned.
+---@param entity LuaEntity
 ---@return string|nil
 local function silo_position_check(entity)
     local surface = entity.surface
@@ -157,9 +162,9 @@ local function silo_position_check(entity)
     return warning
 end
 
----@param event LuaOnBuiltEntityEvent
 ---Performs checks if silo is placed in valid location - if not, then it's
 ---destroyed and put back into player inventory.
+---@param event LuaOnBuiltEntityEvent
 local function on_built_entity(event)
     if Public.is_disabled() then
         return
@@ -188,10 +193,11 @@ local function on_built_entity(event)
     entity.minable_flag = false
     table.insert(storage.rocket_silo[f_name], entity)
     AiTargets.start_tracking(entity)
+    Biters.on_silo_added(entity)
 end
 
----@param event LuaOnRobotBuiltEntityEvent
 ---Does the same as on_built_entity, but for robot.
+---@param event LuaOnRobotBuiltEntityEvent
 local function on_robot_built_entity(event)
     if Public.is_disabled() then
         return
@@ -214,12 +220,13 @@ local function on_robot_built_entity(event)
     entity.minable_flag = false
     table.insert(storage.rocket_silo[f_name], entity)
     AiTargets.start_tracking(entity)
+    Biters.on_silo_added(entity)
 end
 
----@param player LuaPlayer
 ---Reacts to player clicking 'spectate', to make it possible to return to island
 ---if next to any silo. This prevents a situation where players spawn far away from
 ---typical silo location and have to run back to origin point to use the button.
+---@param player LuaPlayer
 ---@return boolean True if eligible to join spectator.
 function Public.can_spectate(player)
     if Public.is_disabled() then
@@ -241,10 +248,10 @@ function Public.can_spectate(player)
     return (silos ~= 0)
 end
 
----@param player LuaPlayer
----@param force LuaForce
 ---Finds a spawn/teleport point for a player that was just respawned
 ---or comes back from spectator.
+---@param player LuaPlayer
+---@param force LuaForce
 ---@return { x: number, y: number }|nil
 function Public.get_spawn_position(player, force)
     if Public.is_disabled() then
@@ -285,11 +292,11 @@ function Public.get_spawn_position(player, force)
     }, 20, 0.1)
 end
 
----@param player LuaPlayer
 ---Saves current player position. This function is invoked when player
 ---transitions to different state, like death or spectating. When they
 ---join back or respawn, we can find teleport location next to closest
 ---silo.
+---@param player LuaPlayer
 function Public.save_position(player)
     if Public.is_disabled() then
         return
@@ -298,8 +305,8 @@ function Public.save_position(player)
     storage.active_special_games.multi_silo.last_transition[player.name] = player.physical_position
 end
 
+---Teleports player to closest silo on their team
 ---@param event LuaOnPlayerRespawnedEvent
----Teleports player to closest silo on their team.
 local function on_player_respawned(event)
     if Public.is_disabled() then
         return
@@ -307,6 +314,9 @@ local function on_player_respawned(event)
 
     local player = game.get_player(event.player_index)
     local p = Public.get_spawn_position(player, player.force)
+    if not p then
+        p = player.force.get_spawn_position(player.physical_surface)
+    end
     player.character.teleport(p)
 end
 
@@ -320,9 +330,9 @@ local function on_player_died(event)
     Public.save_position(player)
 end
 
----@param silo LuaEntity
 ---Goes through all placed silos, finds the reference matching 'silo' and
 ---unlinks it from the list so that it doesn't count towards the objective.
+---@param silo LuaEntity
 ---@return boolean If operation was successful
 local function remove_silo_ref(silo)
     local removed = false
@@ -346,8 +356,8 @@ local function remove_silo_ref(silo)
     return removed
 end
 
----@param cmd CustomCommandData
 ---Remove a silo that is pointed by player selection and drop it on the ground.
+---@param cmd CustomCommandData
 local function remove_silo(cmd)
     local player = game.get_player(cmd.player_index)
     if not is_admin(player) then
@@ -408,9 +418,13 @@ commands.add_command(
 )
 
 Event.add(defines.events.on_player_respawned, on_player_respawned)
-Event.add(defines.events.on_player_respawned, on_player_respawned)
 Event.add(defines.events.on_built_entity, on_built_entity)
 Event.add(defines.events.on_robot_built_entity, on_robot_built_entity)
 Event.add(defines.events.on_player_died, on_player_died)
+
+-- Re-exported here so callers only need one require.
+Public.on_silo_added = Biters.on_silo_added
+Public.track_group = Biters.track_group
+Public.is_disabled = Shared.is_disabled
 
 return Public

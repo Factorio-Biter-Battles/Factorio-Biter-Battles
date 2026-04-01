@@ -1,8 +1,10 @@
 local Public = {}
 
+local AiTargets = require('maps.biter_battles_v2.ai_targets')
+local Event = require('utils.event')
 local bb_config = require('maps.biter_battles_v2.config')
-local Pool = require('maps.biter_battles_v2.pool')
-local Color = require('utils.color_presets')
+local Force = require('utils.force')
+local MultiSilo = require('comfy_panel.special_games.multi_silo')
 
 local math_random = math.random
 local math_sqrt = math.sqrt
@@ -161,19 +163,38 @@ function Public.calculate_strike_position(unit_group, target_position)
     return unit_group.surface.find_non_colliding_position('stone-furnace', nominal_strike_position, 96, 1)
 end
 
-local function shuffle_indices(list)
-    local indices = Pool.malloc(#list)
-    for i = 1, #list do
-        indices[i] = i
+--- Append shuffled silo attack commands to an existing command chain.
+--- In multi-silo mode, uses position-based attack_area so the chain
+--- survives silo destruction; otherwise targets the silo entity directly.
+---@param chain defines.command[] Compound command list to append to.
+---@param target_force_name string Force name ('north' or 'south').
+---@param distraction defines.distraction Distraction behaviour for the appended commands.
+function Public.append_silo_commands(chain, target_force_name, distraction)
+    local silos = storage.rocket_silo[target_force_name]
+    if not silos then
+        return
     end
-
-    -- Fisher–Yates shuffle
-    for i = #indices, 2, -1 do
-        local j = math_random(i)
-        indices[i], indices[j] = indices[j], indices[i]
+    local indices = table.shuffle_indices(silos)
+    local multi_silo = not MultiSilo.is_disabled()
+    for _, i in ipairs(indices) do
+        local silo = silos[i]
+        if silo and silo.valid then
+            if multi_silo then
+                chain[#chain + 1] = {
+                    type = defines.command.attack_area,
+                    destination = silo.position,
+                    radius = 32,
+                    distraction = distraction,
+                }
+            else
+                chain[#chain + 1] = {
+                    type = defines.command.attack,
+                    target = silo,
+                    distraction = distraction,
+                }
+            end
+        end
     end
-
-    return indices
 end
 
 local function handle_classic_pathfinding(unit_group, target_force_name, target_position)
@@ -225,44 +246,25 @@ local function handle_classic_pathfinding(unit_group, target_force_name, target_
 end
 
 local function handle_advanced_pathfinding(unit_group, target_force_name, strike_position, target_position)
-    local chain = {
-        {
+    local chain = {}
+
+    if strike_position then
+        chain[#chain + 1] = {
             type = defines.command.go_to_location,
             destination = strike_position,
             radius = 32,
             distraction = defines.distraction.by_enemy,
-        },
-        {
-            type = defines.command.wander,
-            radius = 32,
-            ticks_to_wait = 1,
-        },
-        {
-            type = defines.command.attack_area,
-            destination = target_position,
-            radius = 32,
-            distraction = defines.distraction.by_enemy,
-        },
-        {
-            type = defines.command.wander,
-            radius = 32,
-            ticks_to_wait = 1,
-        },
+        }
+    end
+
+    chain[#chain + 1] = {
+        type = defines.command.attack_area,
+        destination = target_position,
+        radius = 32,
+        distraction = defines.distraction.by_enemy,
     }
 
-    -- Chain all possible silos in random order so biters have always something to do.
-    local list = storage.rocket_silo[target_force_name]
-    local indices = shuffle_indices(list)
-    for _, i in ipairs(indices) do
-        local silo = list[i]
-        if silo and silo.valid then
-            chain[#chain + 1] = {
-                type = defines.command.attack,
-                target = silo,
-                distraction = defines.distraction.by_damage,
-            }
-        end
-    end
+    Public.append_silo_commands(chain, target_force_name, defines.distraction.by_damage)
 
     unit_group.set_command({
         type = defines.command.compound,
@@ -299,5 +301,66 @@ function Public.step(id, result)
         log('ai: ' .. id .. ' ' .. BEHAVIOR_RESULT[result])
     end
 end
+
+--- When a biter unit is removed from its group (e.g. the group is disbanded
+--- or the unit is separated), this function re-commands the orphaned unit with
+--- the group's current command when available, falling back to a freshly built
+--- chain targeting a random player structure and the rocket silo.
+---@param event LuaOnUnitRemovedFromGroup
+local function on_unit_removed_from_group(event)
+    if storage.bb_game_won_by_team then
+        return
+    end
+
+    local unit = event.unit
+    if not unit.valid then
+        return
+    end
+
+    -- BUG: During threat farming with poison capsules, biters form
+    -- attack waves that target closest player structures.  This
+    -- happens even with negative threat.  If in that period some
+    -- biters get orphaned, they will trigger this event and acquire
+    -- new command chain, unless we exit early.
+    if storage.bb_threat[unit.force.name] < 0 then
+        return
+    end
+
+    local commandable = unit.commandable
+    if not commandable then
+        return
+    end
+
+    local group = event.group
+    if group.valid and group.has_command then
+        commandable.set_command(group.command)
+        return
+    end
+
+    local chain = {}
+    local target_force_name = Force.get_player_force_name(unit.force.name)
+    local target_position = AiTargets.get_random_target(target_force_name)
+    if target_position then
+        chain[#chain + 1] = {
+            type = defines.command.attack_area,
+            destination = target_position,
+            radius = 32,
+            distraction = defines.distraction.by_enemy,
+        }
+    end
+    Public.append_silo_commands(chain, target_force_name, defines.distraction.by_damage)
+
+    if #chain > 0 then
+        commandable.set_command({
+            type = defines.command.compound,
+            structure_type = defines.compound_command.return_last,
+            commands = chain,
+        })
+    else
+        log('unit_removed_from_group: no valid silos to chain for force=' .. target_force_name)
+    end
+end
+
+Event.add(defines.events.on_unit_removed_from_group, on_unit_removed_from_group)
 
 return Public
