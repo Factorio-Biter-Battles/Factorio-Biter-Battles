@@ -256,7 +256,6 @@ function Public.initiate_classic_attack(unit_group, target_force_name, target_po
     })
 end
 
-
 ---Provides the command chain for a new biter group using advanced pathfinding logic, see notes in ai_strikes.lua for an explanation
 ---of the differences between advanced and classic pathfinding.
 ---This biter group will travel to the strike_position before attacking the target_position
