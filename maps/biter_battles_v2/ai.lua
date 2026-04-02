@@ -378,7 +378,7 @@ local function create_attack_group(surface, force_name, biter_force_name)
         MultiSilo.track_group(unit_group)
 
         if has_boss_units then
-            AiStrikes.initiate_classic_attack(unit_group_boss, force_name, strike_position, target_position)
+            AiStrikes.initiate_advanced_attack(unit_group_boss, force_name, strike_position, target_position)
             MultiSilo.track_group(unit_group_boss)
         end
     end

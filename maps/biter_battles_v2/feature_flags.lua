@@ -34,7 +34,7 @@ function Public.evaluate_feature_flags(player)
     end
 end
 
-function evaluate_all()
+local function evaluate_all()
     for _, p in pairs(game.players) do
         if p.connected then
             Public.evaluate_feature_flags(p)
@@ -54,6 +54,7 @@ function Public.register_feature_flag(name, sprite_path, tooltip, enabled)
     end
     if storage.feature_flags[name] == nil then
         local feature_flag = {
+            name = name,
             sprite_path = sprite_path,
             tooltip = tooltip,
             enabled = enabled,
