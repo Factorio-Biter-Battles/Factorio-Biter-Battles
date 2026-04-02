@@ -316,6 +316,13 @@ function Public.create_feature_flags(player)
 
     t.style.maximal_width = 25
     t.style.maximal_height = 25 * 3
+
+    FeatureFlags.register_feature_flag(
+        'classic_pathfinding_flag',
+        'item/stone-wall',
+        'Classic pathfinding enabled!\n' .. 'Classic pathfinding gives attacks simpler paths coming from nests',
+        storage.bb_settings.classic_pathfinding
+    )
 end
 
 ---Evaluates all registered feature flags and updates the GUI for a given player

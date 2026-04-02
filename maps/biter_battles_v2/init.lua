@@ -150,6 +150,7 @@ function Public.initial_setup()
     storage.automatic_captain_min_connected_players_for_vote = 25
 
     storage.chart_queue = Queue.new()
+    storage.feature_flags = {}
     storage.gui_refresh_delay = 0
     storage.bb_debug = false
     storage.bb_draw_revive_count_text = false
@@ -168,7 +169,7 @@ function Public.initial_setup()
         ['automatic_captain'] = true,
         ['map_reroll'] = true,
         ['burners_balance'] = true,
-        ['classic_pathing'] = true,
+        ['classic_pathfinding'] = true,
         ['daytime_cycle'] = 'always_day',
     }
     storage.gui_theme = {}

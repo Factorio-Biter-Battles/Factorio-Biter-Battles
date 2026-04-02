@@ -88,10 +88,14 @@ function Public.generate(_, player)
             insert_silo(p)
         end
     end
-    
-    FeatureFlags.register_feature_flag("multisilo_flag", "technology/rocket-silo", 'Multisilo enabled!\n'
-            .. 'You spawn with one free rocket silo, the game ends when all silos on a team are destroyed', 
-            function () return not Shared.is_disabled() end)
+
+    FeatureFlags.register_feature_flag(
+        'multisilo_flag',
+        'technology/rocket-silo',
+        'Multisilo enabled!\n'
+            .. 'You spawn with one free rocket silo, the game ends when all silos on a team are destroyed',
+        true
+    )
 end
 
 ---Initialize player inventory when switching force. Note that this is not bound

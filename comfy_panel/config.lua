@@ -249,24 +249,18 @@ local functions = {
         if not player or not player.valid then
             return
         end
+        local flag_name = 'classic_pathfinding_flag'
         if event.element.switch_state == 'left' then
             storage.bb_settings.classic_pathfinding = true
             Utils.action_warning('{ClassicPathfinding}', player.name .. ' has enabled classic pathfinding!')
             log(player.name .. ' has enabled classic pathfinding!')
+            FeatureFlags.enable_feature_flag(flag_name)
         else
             storage.bb_settings.classic_pathfinding = false
             Utils.action_warning('{ClassicPathfinding}', player.name .. ' has disabled classic pathfinding!')
             log(player.name .. ' has disabled classic pathfinding!')
+            FeatureFlags.disable_feature_flag(flag_name)
         end
-
-        FeatureFlags.register_feature_flag(
-            'classic_pathfinding_flag',
-            'item/stone-wall',
-            'Classic pathfinding enabled!\n' .. 'Classic pathfinding gives attacks simpler paths coming from nests',
-            function()
-                return storage.bb_settings.classic_pathfinding
-            end
-        )
 
         AiTargets.refresh_target_types()
     end,

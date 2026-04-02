@@ -1,7 +1,6 @@
 local Gui = require('utils.gui')
 
 local Public = {}
-local feature_flags = {}
 
 ---@return boolean True when the map is resetting.
 local function is_disabled()
@@ -10,7 +9,7 @@ local function is_disabled()
 end
 
 ---Updates the GUI with all feature flags that are enabled
----@param player LuaPlayer 
+---@param player LuaPlayer
 function Public.evaluate_feature_flags(player)
     if is_disabled() then
         return
@@ -19,8 +18,8 @@ function Public.evaluate_feature_flags(player)
     local t = Gui.get_top_element(player, 'bb_feature_flags')
     t.clear()
 
-    for _, flag in pairs(feature_flags) do
-        if flag.active_fn() then
+    for _, flag in pairs(storage.feature_flags) do
+        if flag.enabled then
             local button = t.add({
                 type = 'sprite',
                 name = flag.name,
@@ -35,36 +34,54 @@ function Public.evaluate_feature_flags(player)
     end
 end
 
----Registers a feature flag. All players are updated following registration. 
----It is safe to register the same flag multiple times.
----@param name string the feature name
----@param sprite_path string
----@param tooltip string
----@param active_fn function evaluated to determine whether or not the flag should be rendered
-function Public.register_feature_flag(name, sprite_path, tooltip, active_fn)
-    local existing_flag = nil
-    for _, flag in pairs(feature_flags) do
-        if flag.name == name then
-            existing_flag = flag
-        end
-    end
-
-    if existing_flag == nil then
-        local feature_flag = {
-            name = name,
-            sprite_path = sprite_path,
-            tooltip = tooltip,
-            active_fn = active_fn,
-        }
-
-        table.insert(feature_flags, feature_flag)
-    end
-
+function evaluate_all()
     for _, p in pairs(game.players) do
         if p.connected then
             Public.evaluate_feature_flags(p)
         end
     end
+end
+
+---Registers a feature flag. All players are updated following registration.
+---It is safe to register the same flag multiple times.
+---@param name string the feature name
+---@param sprite_path string
+---@param tooltip string
+---@param enabled boolean
+function Public.register_feature_flag(name, sprite_path, tooltip, enabled)
+    if enabled == nil then
+        enabled = true
+    end
+    if storage.feature_flags[name] == nil then
+        local feature_flag = {
+            sprite_path = sprite_path,
+            tooltip = tooltip,
+            enabled = enabled,
+        }
+        storage.feature_flags[name] = feature_flag
+    end
+
+    evaluate_all()
+end
+
+---Turns on a feature flag which has already been registered
+---@param name string
+function Public.enable_feature_flag(name)
+    if storage.feature_flags[name] ~= nil then
+        storage.feature_flags[name].enabled = true
+    end
+
+    evaluate_all()
+end
+
+---Turns off a feature flag which has already been registered
+---@param name string
+function Public.disable_feature_flag(name)
+    if storage.feature_flags[name] ~= nil then
+        storage.feature_flags[name].enabled = false
+    end
+
+    evaluate_all()
 end
 
 return Public
