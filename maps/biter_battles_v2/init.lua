@@ -7,6 +7,7 @@ local Functions = require('maps.biter_battles_v2.functions')
 local AiTargets = require('maps.biter_battles_v2.ai_targets')
 local Pathfinder = require('commands.set_pathfinder')
 local Queue = require('utils.queue')
+local FeatureFlags = require('maps.biter_battles_v2.feature_flags')
 local q_size = Queue.size
 local q_push = Queue.push
 local q_pop = Queue.pop
@@ -246,6 +247,19 @@ function Public.queue_reveal_map()
         -- spectator island (guarantees sounds to be played during map reveal)
         q_push(chart_queue, { { -16, -16 }, { 16, 16 } })
     end
+end
+
+---Clears all feature flags and registers the classic pathfinding flag
+---when a new game starts.
+function Public.reset_feature_flags()
+    storage.feature_flags = {}
+
+    FeatureFlags.register_feature_flag(
+        'classic_pathfinding_flag',
+        'item/stone-wall',
+        'Classic pathfinding enabled!\n' .. 'Classic pathfinding gives attacks simpler paths coming from nests',
+        storage.bb_settings.classic_pathfinding
+    )
 end
 
 ---@param max_requests number

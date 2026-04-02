@@ -307,7 +307,7 @@ end
 
 ---Creates GUI element that displays flags/icons depicting enabled features
 ---@param player LuaPlayer
-function Public.create_feature_flags(player)
+function Public.create_feature_flags_element(player)
     local t = Gui.add_top_element(player, {
         type = 'table',
         name = 'bb_feature_flags',
@@ -316,13 +316,6 @@ function Public.create_feature_flags(player)
 
     t.style.maximal_width = 25
     t.style.maximal_height = 25 * 3
-
-    FeatureFlags.register_feature_flag(
-        'classic_pathfinding_flag',
-        'item/stone-wall',
-        'Classic pathfinding enabled!\n' .. 'Classic pathfinding gives attacks simpler paths coming from nests',
-        storage.bb_settings.classic_pathfinding
-    )
 end
 
 ---Evaluates all registered feature flags and updates the GUI for a given player
