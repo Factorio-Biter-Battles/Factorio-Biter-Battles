@@ -307,7 +307,7 @@ end
 
 ---Creates GUI element that displays flags/icons depicting enabled features
 ---@param player LuaPlayer
-function Public.create_feature_flags_element(player)
+function Public.create_feature_flags_container(player)
     local t = Gui.add_top_element(player, {
         type = 'table',
         name = 'bb_feature_flags',

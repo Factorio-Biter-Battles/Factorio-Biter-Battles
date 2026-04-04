@@ -59,7 +59,7 @@ local function on_player_joined_game(event)
     Gui.clear_copy_history(player)
 
     -- GUIs
-    Gui.create_feature_flags_element(player)
+    Gui.create_feature_flags_container(player)
     Gui.refresh_feature_flags(player)
     ComfyMain.comfy_panel_add_top_element(player)
     ComfyPoll.create_top_button(player)
