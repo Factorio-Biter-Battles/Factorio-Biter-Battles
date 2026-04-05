@@ -7,32 +7,39 @@ local table_remove = table.remove
 
 -- the current dirt simple "strike" model assumes the target is part of a spherical base with a perimeter less than 256-512
 -- the ideal target entity would lie at the center of that, in the "core" of a base
-local target_entity_type = {
-    ['boiler'] = true,
-    ['reactor'] = true,
-    ['heat-interface'] = true,
-    ['generator'] = true,
-    ['solar-panel'] = true,
-    ['accumulator'] = true,
-    ['mining-drill'] = true,
-    ['offshore-pump'] = true,
-    ['furnace'] = true,
-    ['assembling-machine'] = true,
-    ['beacon'] = true,
-    ['roboport'] = true,
-    ['lab'] = true,
-    ['rocket-silo'] = true,
-    -- the entities below don't make sense to center strike calculations around due to:
-    -- 1. these generally lie at the edge of a base, along with walls.
-    -- 2. they already generate a distraction command for biters when in range. we don't need to increase their chances of an encounter any more
-    -- 3. players spam these mid to late game. they command a disproportionate presence in the current uniform sampling approach
-    -- 4. biter groups should (by chance) avoid turrets/walls during a strike instead of actively picking them as a target and suiciding into them
-    ['ammo-turret'] = false,
-    ['artillery-turret'] = false,
-    ['electric-turret'] = false,
-    ['fluid-turret'] = false,
-    ['radar'] = false,
-}
+function Public.refresh_target_types()
+    storage.target_entity_type = {
+        ['boiler'] = true,
+        ['reactor'] = true,
+        ['heat-interface'] = true,
+        ['generator'] = true,
+        ['solar-panel'] = true,
+        ['accumulator'] = true,
+        ['mining-drill'] = true,
+        ['furnace'] = true,
+        ['assembling-machine'] = true,
+        ['beacon'] = true,
+        ['roboport'] = true,
+        ['lab'] = true,
+        ['rocket-silo'] = true,
+        -- logic forks for entities below for classic and advanced pathfinding based
+        -- offshore pumps were added to the target list with the addition of advanced pathfinding
+        -- all turrets and radars were removed from the target list with advanced pathfinding
+        -- the idea with the changes in advanced pathfinding was to:
+        -- 1) Avoid entities which generate distractions
+        -- 2) Avoid entities (turrets) which are spammed disproportionally late game
+        -- 3) Avoid entities which are placed on the perimeter of bases
+        -- 4) Avoid making biter waves suicide into defenses
+        -- offshore pump was also added to the target list with advanced pathfinding to encourage
+        -- attacks on power
+        ['offshore-pump'] = not storage.bb_settings.classic_pathfinding,
+        ['ammo-turret'] = storage.bb_settings.classic_pathfinding,
+        ['artillery-turret'] = storage.bb_settings.classic_pathfinding,
+        ['electric-turret'] = storage.bb_settings.classic_pathfinding,
+        ['fluid-turret'] = storage.bb_settings.classic_pathfinding,
+        ['radar'] = storage.bb_settings.classic_pathfinding,
+    }
+end
 
 local function origin_distance(position)
     local x = position.x
@@ -57,7 +64,7 @@ function Public.start_tracking(entity)
     if not entity.valid then
         return
     end
-    if target_entity_type[entity.type] and entity.unit_number then
+    if storage.target_entity_type[entity.type] and entity.unit_number then
         local targets = storage.ai_targets[entity.force.name]
         if targets ~= nil then
             local _, id, _ = script.register_on_object_destroyed(entity)

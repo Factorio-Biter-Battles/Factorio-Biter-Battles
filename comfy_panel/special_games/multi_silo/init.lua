@@ -5,8 +5,8 @@ local Event = require('utils.event')
 local AiTargets = require('maps.biter_battles_v2.ai_targets')
 local Biters = require('comfy_panel.special_games.multi_silo.biters')
 local Color = require('utils.color_presets')
-local Gui = require('utils.gui')
 local Shared = require('comfy_panel.special_games.multi_silo.shared')
+local FeatureFlags = require('maps.biter_battles_v2.feature_flags')
 
 local Public = {
     name = {
@@ -84,33 +84,18 @@ function Public.generate(_, player)
     -- Important to go through all players, not just connected. So that if someone
     -- joins back after game was enabled, they still can get their silo.
     for _, p in pairs(game.players) do
-        if p.connected then
-            Public.update_feature_flag(p)
-        end
-
         if storage.chosen_team[p.name] then
             insert_silo(p)
         end
     end
-end
 
----Adds silo icon into GUI to indicate that special is enabled.
----@param player LuaPlayer
-function Public.update_feature_flag(player)
-    if Public.is_disabled() then
-        return
-    end
-
-    local t = Gui.get_top_element(player, 'bb_feature_flags')
-    local button = t.add({
-        type = 'sprite',
-        name = 'multisilo_flag',
-        resize_to_sprite = false,
-        sprite = 'technology/rocket-silo',
-    })
-    button.style.height = 15
-    button.style.width = 15
-    button.tooltip = 'Multisilo enabled!'
+    FeatureFlags.register_feature_flag(
+        'multisilo_flag',
+        'technology/rocket-silo',
+        'Multisilo enabled!\n'
+            .. 'You spawn with one free rocket silo, the game ends when all silos on a team are destroyed',
+        true
+    )
 end
 
 ---Initialize player inventory when switching force. Note that this is not bound

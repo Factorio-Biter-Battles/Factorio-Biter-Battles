@@ -9,6 +9,8 @@ local Utils = require('utils.core')
 local Daytime = require('maps.biter_battles_v2.daytime')
 local Gui = require('utils.gui')
 local GUI_THEMES = require('utils.utils').GUI_THEMES
+local AiTargets = require('maps.biter_battles_v2.ai_targets')
+local FeatureFlags = require('maps.biter_battles_v2.feature_flags')
 local index_of = table.index_of
 
 local spaghett_entity_blacklist = {
@@ -235,11 +237,32 @@ local functions = {
     ['bb_burners_balance_toggle'] = function(event)
         if event.element.switch_state == 'left' then
             storage.bb_settings.burners_balance = true
+
             game.print('Burners balance is enabled!')
         else
             storage.bb_settings.burners_balance = false
             game.print('Burners balance is disabled!')
         end
+    end,
+    ['bb_classic_pathfinding'] = function(event)
+        local player = game.get_player(event.player_index)
+        if not player or not player.valid then
+            return
+        end
+        local flag_name = 'classic_pathfinding_flag'
+        if event.element.switch_state == 'left' then
+            storage.bb_settings.classic_pathfinding = true
+            Utils.action_warning('{ClassicPathfinding}', player.name .. ' has enabled classic pathfinding!')
+            log(player.name .. ' has enabled classic pathfinding!')
+            FeatureFlags.enable_feature_flag(flag_name)
+        else
+            storage.bb_settings.classic_pathfinding = false
+            Utils.action_warning('{ClassicPathfinding}', player.name .. ' has disabled classic pathfinding!')
+            log(player.name .. ' has disabled classic pathfinding!')
+            FeatureFlags.disable_feature_flag(flag_name)
+        end
+
+        AiTargets.refresh_target_types()
     end,
 }
 
@@ -757,6 +780,24 @@ local build_config_gui = function(player, frame)
                 'bb_burners_balance_toggle',
                 'Burners balance',
                 'Enables Burners balance.'
+            )
+            if not admin then
+                switch.ignored_by_interaction = true
+            end
+
+            scroll_pane.add({ type = 'line' })
+
+            local switch_state = 'right'
+            if storage.bb_settings.classic_pathfinding then
+                switch_state = 'left'
+            end
+            local switch = add_switch(
+                scroll_pane,
+                switch_state,
+                'bb_classic_pathfinding',
+                'Classic attacks',
+                'Classic attacks use simple vectors to make direct attacks on targets and adds all military structures to the potential target list\n'
+                    .. 'In general, classic pathfinding is significantly easier to defend against'
             )
             if not admin then
                 switch.ignored_by_interaction = true
