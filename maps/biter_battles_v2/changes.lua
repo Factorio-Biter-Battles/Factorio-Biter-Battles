@@ -1,5 +1,15 @@
 return {
     {
+        number = 769,
+        date = '2026-04-05',
+        author = 'cojito',
+        comment = [[(#769) Add classic pathfinding mode:
+  - New admin toggle in the Comfy panel to switch between classic and advanced biter pathfinding
+  - Classic pathfinding sends biters on simpler, more direct attack paths and includes extra structures [img=item/gun-turret][img=item/laser-turret][img=item/flamethrower-turret][img=item/artillery-turret] and [img=item/radar] in the target list.
+  - Classic pathfinding is enabled by default. A warning is shown when entering captain's mode with it active
+  - Classic pathfinding is indicated by small icon in the top bar]],
+    },
+    {
         number = 771,
         date = '2026-03-29',
         author = 'cogito123',
