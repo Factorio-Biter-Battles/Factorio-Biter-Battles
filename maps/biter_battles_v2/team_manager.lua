@@ -50,6 +50,7 @@ function Public.freeze_players()
     for _, d in pairs(defs) do
         p.set_allows_action(d, true)
     end
+    require('comfy_panel.special_games.captain').resync_no_research_group()
 end
 
 function Public.unfreeze_players()
@@ -59,6 +60,7 @@ function Public.unfreeze_players()
             p.set_allows_action(defines.input_action[action_name], true)
         end
     end
+    require('comfy_panel.special_games.captain').resync_no_research_group()
 end
 
 local function leave_corpse(player)
