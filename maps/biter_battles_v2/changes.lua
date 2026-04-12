@@ -1,5 +1,21 @@
 return {
     {
+        number = 765,
+        date = '2026-04-11',
+        author = 'darkenade',
+        comment = [[(#765) Captains can now lock research queue for their team and whitelist players through the captain manager]],
+    },
+    {
+        number = 763,
+        date = '2026-04-11',
+        author = 'cogito123',
+        comment = [[(#763) Add science send restriction:
+  - New admin toggle in Comfy panel to enable a minimum build score requirement before sending science
+  - Science buttons are grayed out with a warning when the player has not built enough
+  - Higher difficulty lowers the requirement. Fish is always allowed
+  - Required score scales with difficulty: ceil(48 / difficulty_value)]],
+    },
+    {
         number = 769,
         date = '2026-04-05',
         author = 'cojito',
