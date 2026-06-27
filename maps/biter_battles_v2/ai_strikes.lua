@@ -935,7 +935,14 @@ function Public.dispatch(unit_group, unit_group_boss, planner_unit, target_force
     if not strike_position then
         log('No strike position found for ' .. target_force_name .. '_biters, skipping flank')
     end
-    Public.initiate_pair(unit_group, unit_group_boss, target_force_name, strike_position, target_position, blitz_enabled)
+    Public.initiate_pair(
+        unit_group,
+        unit_group_boss,
+        target_force_name,
+        strike_position,
+        target_position,
+        blitz_enabled
+    )
     return false
 end
 
