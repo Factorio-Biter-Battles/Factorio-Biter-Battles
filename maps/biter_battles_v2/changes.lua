@@ -1,5 +1,117 @@
 return {
     {
+        number = 765,
+        date = '2026-04-11',
+        author = 'darkenade',
+        comment = [[(#765) Captains can now lock research queue for their team and whitelist players through the captain manager]],
+    },
+    {
+        number = 763,
+        date = '2026-04-11',
+        author = 'cogito123',
+        comment = [[(#763) Add science send restriction:
+  - New admin toggle in Comfy panel to enable a minimum build score requirement before sending science
+  - Science buttons are grayed out with a warning when the player has not built enough
+  - Higher difficulty lowers the requirement. Fish is always allowed
+  - Required score scales with difficulty: ceil(48 / difficulty_value)]],
+    },
+    {
+        number = 769,
+        date = '2026-04-05',
+        author = 'cojito',
+        comment = [[(#769) Add classic pathfinding mode:
+  - New admin toggle in the Comfy panel to switch between classic and advanced biter pathfinding
+  - Classic pathfinding sends biters on simpler, more direct attack paths and includes extra structures [img=item/gun-turret][img=item/laser-turret][img=item/flamethrower-turret][img=item/artillery-turret] and [img=item/radar] in the target list.
+  - Classic pathfinding is enabled by default. A warning is shown when entering captain's mode with it active
+  - Classic pathfinding is indicated by small icon in the top bar]],
+    },
+    {
+        number = 771,
+        date = '2026-03-29',
+        author = 'cogito123',
+        comment = [[(#771) Biter AI changes:
+  - Fixed an issue where orphaned biters would acquire command chains when threat was negative
+  - Orphaned biters will now try to inherit a command chain from their lost parent group before falling back to creating a new one]],
+    },
+    {
+        number = 764,
+        date = '2026-03-27',
+        author = 'cogito123',
+        comment = [[(#764) Biter AI and multi-silo changes:
+  - Fixed biter groups getting permanently stuck on small puddles due to a coarse pathfinding grid
+  - Fixed biters permanently idling at the spawner when no flanking position is available in congested areas near river. They now skip the flanking maneuver and take a direct path to the target
+  - Biters that fall behind their group and are removed from it by the game engine now re-engage and acquire a completely new attack chain instead of wandering aimlessly in place. As a result, orphaned biters will exhibit much more unpredictable attack vectors
+  - Improved biter group cohesion so units stick together better when traveling long distances through congested terrain
+  - Increased the pathfinder request capacity from 4 to the engine default of 10, fixing a late-game bottleneck where many biter groups would stall while waiting for pathfinding slots
+  - Boss unit groups are no longer created when there are no boss biters in the attack wave
+  - Multi-silo: biter attack commands now survive silo destruction, so groups no longer lose their targets mid-attack
+  - Multi-silo: when a new silo is placed, all active biter groups automatically add it to their target list
+  - Multi-silo: fixed a crash when respawning with no valid silo positions. Falls back to the default team spawn
+  - Multi-silo: split into a directory module. Biter group commanding logic moved out of ai_strikes.lua into its own file
+  - Added /set-pathfinder admin command for switching between pathfinder presets at runtime. It does not directly impact biter routing or target selection
+  - require() now supports directory modules with init.lua entry points, matching standard Lua resolution behavior]],
+    },
+    {
+        number = 759,
+        date = '2026-03-20',
+        author = 'cogito123',
+        comment = [[(#759) Daytime updates:
+  - Set daytime to always day by default
+  - Add admin option in Comfy panel to toggle between always day, always night or the standard day/night cycle]],
+    },
+    {
+        number = 768,
+        date = '2026-03-20',
+        author = 'darkenade',
+        comment = [[(#768) Fix error in crafting queue when the observed player is dead]],
+    },
+    {
+        number = 751,
+        date = '2026-02-24',
+        author = 'darkenade',
+        comment = [[(#751) Add crafting queue list. Use /crafting-list to access it.]],
+    },
+    {
+        number = 761,
+        date = '2026-02-19',
+        author = 'cogito123',
+        comment = [[(#761) Minor performance improvement in nest selection during wave spawning.]],
+    },
+    {
+        number = 756,
+        date = '2026-02-19',
+        author = 'cogito123',
+        comment = [[(#756) Improvements to jail/free commands:
+  - Admins can now jail or free offline players
+  - Jailing no longer requires a reason (can be omitted)
+  - Fix typo when recasting a vote]],
+    },
+    {
+        number = 760,
+        date = '2026-02-18',
+        author = 'cogito123',
+        comment = [[(#760) Add /inventory-scan command and improve inventory commands readability:
+  - New /inventory-scan (or /i for short) command
+  - Large numbers shown in shorter form for easier reading (e.g. 1.5k, 2M)
+  - Team names shown with colors and clearer formatting]],
+    },
+    {
+        number = 758,
+        date = '2026-02-18',
+        author = 'cogito123',
+        comment = [[(#758) Refactored /trust and /untrust commands to support trusting/untrusting multiple players at once (e.g., /trust player1 player2 player3)]],
+    },
+    {
+        number = 757,
+        date = '2026-02-13',
+        author = 'cogito123',
+        comment = [[(#757) Miscellaneous fixes:
+  - Admins can now bypass the voting system to immediately suspend players. If a vote is already in progress for the same player, it gets cancelled. A vote for other offender will remain pending.
+  - Muted players can no longer ping players.
+  - Mining alerts now only trigger for untrusted players. Expanded monitoring to include nuclear reactors and rocket silos in addition to offshore pumps.
+  - Fix tag spacing in chat messages received by spectators from teams]],
+    },
+    {
         number = 755,
         date = '2026-02-07',
         author = 'cogito123',

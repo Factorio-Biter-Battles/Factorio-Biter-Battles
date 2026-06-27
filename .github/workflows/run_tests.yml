@@ -19,3 +19,4 @@ jobs:
           lua tests/test-functions.lua
           lua tests/test-biter_raffle.lua
           lua tests/test-utils.lua
+          lua tests/test-science-restriction.lua

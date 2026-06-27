@@ -204,6 +204,23 @@ function table.shuffle_table(t, rng)
     end
 end
 
+--- Returns a Fisher-Yates shuffled array of indices 1..#list without modifying the original table.
+-- Because this uses math.random, it cannot be used outside of events.
+---@param list any[] Sequential table whose length determines the index range.
+---@return integer[] indices Shuffled array of indices `1..#list`.
+function table.shuffle_indices(list)
+    local n = #list
+    local indices = {}
+    for i = 1, n do
+        indices[i] = i
+    end
+    for i = n, 2, -1 do
+        local j = random(i)
+        indices[i], indices[j] = indices[j], indices[i]
+    end
+    return indices
+end
+
 --- Clears all existing entries in a table
 -- @param t <table> to clear
 -- @param array <boolean> to indicate whether the table is an array or not

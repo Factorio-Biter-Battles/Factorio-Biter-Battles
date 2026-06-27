@@ -1,6 +1,7 @@
 local Captain_event = require('comfy_panel.special_games.captain')
 local Event = require('utils.event')
 local Feeding = require('maps.biter_battles_v2.feeding')
+local FeedingRestriction = require('maps.biter_battles_v2.feeding_restriction')
 local Functions = require('maps.biter_battles_v2.functions')
 local Gui = require('utils.gui')
 local ResearchInfo = require('maps.biter_battles_v2.research_info')
@@ -86,6 +87,8 @@ local main_frame_actions = {
             player.print('Disabled by special game', { color = Color.red })
         elseif Captain_event.captain_is_player_prohibited_to_throw(player) then
             player.print('You are not allowed to send science, ask your captain', { color = Color.red })
+        elseif not FeedingRestriction.can_player_send_science(player) then
+            player.print({ 'info.science_send_restriction' }, { color = Color.red })
         else
             Feeding.feed_biters_mixed_from_inventory(player, event.button)
         end

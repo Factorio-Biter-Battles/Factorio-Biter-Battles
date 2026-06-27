@@ -20,6 +20,8 @@ GIT_NAME_MAPPING = {
     "morganchristiansson": 'morganc',
     "PlayerNoon": "Max1000",
     "zer0sun": "Zerosun",
+    "Darkenkade": "darkenade",
+    "cojito-factorio": "cojito",
 }
 
 def get_name(login):

@@ -314,6 +314,12 @@ local function on_built_entity(event)
     if not this.enabled then
         return
     end
+
+    -- Any other handler can destroy the entity before this handler runs.
+    if not event.entity.valid then
+        return
+    end
+
     local tracker = session.get_session_table()
     local trusted = session.get_trusted_table()
     if event.entity.type == 'entity-ghost' then
@@ -675,6 +681,9 @@ local function on_permission_group_added(event)
     if not this.enabled then
         return
     end
+    if not event.player_index then
+        return
+    end
     local player = game.get_player(event.player_index)
     if not player or not player.valid then
         return
@@ -689,6 +698,9 @@ end
 
 local function on_permission_group_deleted(event)
     if not this.enabled then
+        return
+    end
+    if not event.player_index then
         return
     end
     local player = game.get_player(event.player_index)

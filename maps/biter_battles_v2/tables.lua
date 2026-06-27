@@ -48,11 +48,6 @@ end
 Public.gui_foods['raw-fish'] =
     'Send a fish to spy for 45 seconds.\nLeft Mouse Button: Send one fish.\nRMB: Sends 5 fish.\nShift+LMB: Send all fish.\nShift+RMB: Send half of all fish.'
 
-Public.force_translation = {
-    ['south_biters'] = 'south',
-    ['north_biters'] = 'north',
-}
-
 Public.enemy_team_of = {
     ['north'] = 'south',
     ['south'] = 'north',

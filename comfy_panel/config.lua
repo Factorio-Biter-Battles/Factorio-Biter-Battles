@@ -2,11 +2,15 @@
 
 local Antigrief = require('antigrief')
 local Color = require('utils.color_presets')
+local CraftingQueueList = require('commands.crafting_queue_list')
 local Functions = require('maps.biter_battles_v2.functions')
 local SessionData = require('utils.datastore.session_data')
 local Utils = require('utils.core')
+local Daytime = require('maps.biter_battles_v2.daytime')
 local Gui = require('utils.gui')
 local GUI_THEMES = require('utils.utils').GUI_THEMES
+local AiTargets = require('maps.biter_battles_v2.ai_targets')
+local FeatureFlags = require('maps.biter_battles_v2.feature_flags')
 local index_of = table.index_of
 
 local spaghett_entity_blacklist = {
@@ -147,17 +151,15 @@ local functions = {
         end
     end,
     ['comfy_panel_blueprint_toggle'] = function(event)
-        if event.element.switch_state == 'left' then
-            game.permissions
-                .get_group('Default')
-                .set_allows_action(defines.input_action.open_blueprint_library_gui, true)
-            game.permissions.get_group('Default').set_allows_action(defines.input_action.import_blueprint_string, true)
+        local enabled = event.element.switch_state == 'left'
+        local p = game.permissions.get_group('Default')
+        p.set_allows_action(defines.input_action.open_blueprint_library_gui, enabled)
+        p.set_allows_action(defines.input_action.import_blueprint_string, enabled)
+        local Captain = require('comfy_panel.special_games.captain')
+        Captain.resync_no_research_group()
+        if enabled then
             get_actor(event, '{Blueprints}', 'has enabled blueprints!')
         else
-            game.permissions
-                .get_group('Default')
-                .set_allows_action(defines.input_action.open_blueprint_library_gui, false)
-            game.permissions.get_group('Default').set_allows_action(defines.input_action.import_blueprint_string, false)
             get_actor(event, '{Blueprints}', 'has disabled blueprints!')
         end
     end,
@@ -233,10 +235,47 @@ local functions = {
     ['bb_burners_balance_toggle'] = function(event)
         if event.element.switch_state == 'left' then
             storage.bb_settings.burners_balance = true
+
             game.print('Burners balance is enabled!')
         else
             storage.bb_settings.burners_balance = false
             game.print('Burners balance is disabled!')
+        end
+    end,
+    ['bb_classic_pathfinding'] = function(event)
+        local player = game.get_player(event.player_index)
+        if not player or not player.valid then
+            return
+        end
+        local flag_name = 'classic_pathfinding_flag'
+        if event.element.switch_state == 'left' then
+            storage.bb_settings.classic_pathfinding = true
+            Utils.action_warning('{ClassicPathfinding}', player.name .. ' has enabled classic pathfinding!')
+            log(player.name .. ' has enabled classic pathfinding!')
+            FeatureFlags.enable_feature_flag(flag_name)
+        else
+            storage.bb_settings.classic_pathfinding = false
+            Utils.action_warning('{ClassicPathfinding}', player.name .. ' has disabled classic pathfinding!')
+            log(player.name .. ' has disabled classic pathfinding!')
+            FeatureFlags.disable_feature_flag(flag_name)
+        end
+
+        AiTargets.refresh_target_types()
+    end,
+    ['bb_science_send_restriction_toggle'] = function(event)
+        local player = game.get_player(event.player_index)
+        if not player or not player.valid then
+            return
+        end
+
+        if event.element.switch_state == 'left' then
+            storage.bb_settings.science_send_score_restriction = true
+            get_actor(event, '{Science Restriction}', 'has enabled science send restriction.')
+            log(player.name .. ' has enabled science send restriction.')
+        else
+            storage.bb_settings.science_send_score_restriction = false
+            get_actor(event, '{Science Restriction}', 'has disabled science send restriction.')
+            log(player.name .. ' has disabled science send restriction.')
         end
     end,
 }
@@ -305,6 +344,32 @@ local selection_functions = {
         local selected_index = event.element.selected_index
         storage.allow_teamstats = event.element.items[selected_index]
     end,
+    ['comfy_panel_crafting_queue_list_dropdown'] = function(event)
+        local selected_index = event.element.selected_index
+        storage.allow_crafting_queue_list = event.element.items[selected_index]
+        CraftingQueueList.close_all_windows()
+    end,
+    ['bb_daytime_cycle_dropdown'] = function(event)
+        local selected_index = event.element.selected_index
+        local selected = Daytime.daytime_cycle_options[selected_index]
+        if not selected then
+            return
+        end
+        storage.bb_settings.daytime_cycle = selected.key
+
+        -- Apply immediately to current surface
+        local surface = game.surfaces[storage.bb_surface_name]
+        if surface then
+            Daytime.apply_daytime_settings(surface)
+        end
+
+        local player = game.get_player(event.player_index)
+        if player then
+            log(player.name .. ' set daytime cycle to ' .. selected.label)
+        end
+
+        get_actor(event, '{Daytime Cycle}', 'set daytime cycle to ' .. selected.label)
+    end,
 }
 
 local function add_switch(element, switch_state, name, description_main, description, tooltip)
@@ -341,8 +406,9 @@ local function add_switch(element, switch_state, name, description_main, descrip
     return switch
 end
 
-local function add_dropdown(element, caption, selected_item, name, items)
-    local t = element.add({ type = 'table', column_count = 3 })
+local function add_dropdown(element, caption, selected_item, name, items, description)
+    local column_count = description and 4 or 3
+    local t = element.add({ type = 'table', column_count = column_count })
     local label = t.add({
         type = 'label',
         name = 'comfy_panel_theme_label',
@@ -373,6 +439,16 @@ local function add_dropdown(element, caption, selected_item, name, items)
     dropdown.style.natural_width = 200
     dropdown.style.left_margin = 10
     dropdown.style.vertical_align = 'center'
+
+    if description then
+        label = t.add({ type = 'label', caption = description })
+        label.style.padding = 2
+        label.style.left_padding = 10
+        label.style.single_line = false
+        label.style.font = 'default-semibold'
+        label.style.font_color = { 0.85, 0.85, 0.85 }
+    end
+
     return dropdown
 end
 
@@ -525,6 +601,19 @@ local build_config_gui = function(player, frame)
         )
         scroll_pane.add({ type = 'line' })
 
+        add_dropdown(
+            scroll_pane,
+            'crafting queue list visibility',
+            storage.allow_crafting_queue_list or 'spectators',
+            'comfy_panel_crafting_queue_list_dropdown',
+            {
+                'spectators',
+                'own-team',
+                'none',
+            }
+        )
+        scroll_pane.add({ type = 'line' })
+
         switch_state = 'right'
         if game.permissions.get_group('Default').allows_action(defines.input_action.open_blueprint_library_gui) then
             switch_state = 'left'
@@ -612,6 +701,23 @@ local build_config_gui = function(player, frame)
             label.style.horizontal_align = 'left'
             label.style.vertical_align = 'bottom'
             label.style.font_color = Color.green
+
+            scroll_pane.add({ type = 'line' })
+
+            local switch_state = 'right'
+            if storage.bb_settings.science_send_score_restriction then
+                switch_state = 'left'
+            end
+            local switch = add_switch(
+                scroll_pane,
+                switch_state,
+                'bb_science_send_restriction_toggle',
+                'Science Send Restriction',
+                'Require minimum build score to send science. Higher difficulty = lower requirement.'
+            )
+            if not admin then
+                switch.ignored_by_interaction = true
+            end
 
             scroll_pane.add({ type = 'line' })
 
@@ -708,6 +814,38 @@ local build_config_gui = function(player, frame)
             )
             if not admin then
                 switch.ignored_by_interaction = true
+            end
+
+            scroll_pane.add({ type = 'line' })
+
+            local switch_state = 'right'
+            if storage.bb_settings.classic_pathfinding then
+                switch_state = 'left'
+            end
+            local switch = add_switch(
+                scroll_pane,
+                switch_state,
+                'bb_classic_pathfinding',
+                'Classic attacks',
+                'Classic attacks use simple vectors to make direct attacks on targets and adds all military structures to the potential target list\n'
+                    .. 'In general, classic pathfinding is significantly easier to defend against'
+            )
+            if not admin then
+                switch.ignored_by_interaction = true
+            end
+
+            scroll_pane.add({ type = 'line' })
+
+            local dropdown = add_dropdown(
+                scroll_pane,
+                'Daytime Cycle',
+                Daytime.get_daytime_cycle_label(storage.bb_settings.daytime_cycle) or 'Always Day',
+                'bb_daytime_cycle_dropdown',
+                Daytime.get_daytime_cycle_labels(),
+                'Controls map lighting. Takes effect immediately.'
+            )
+            if not admin then
+                dropdown.ignored_by_interaction = true
             end
 
             scroll_pane.add({ type = 'line' })

@@ -1,9 +1,13 @@
 local Terrain = require('maps.biter_battles_v2.terrain')
+local Daytime = require('maps.biter_battles_v2.daytime')
 local Score = require('comfy_panel.score')
 local Tables = require('maps.biter_battles_v2.tables')
 local Blueprint = require('maps.biter_battles_v2.blueprints')
 local Functions = require('maps.biter_battles_v2.functions')
+local AiTargets = require('maps.biter_battles_v2.ai_targets')
+local Pathfinder = require('commands.set_pathfinder')
 local Queue = require('utils.queue')
+local FeatureFlags = require('maps.biter_battles_v2.feature_flags')
 local q_size = Queue.size
 local q_push = Queue.push
 local q_pop = Queue.pop
@@ -71,18 +75,7 @@ function Public.initial_setup()
     game.map_settings.pollution.enabled = false
     game.map_settings.enemy_expansion.enabled = false
 
-    game.map_settings.path_finder.fwd2bwd_ratio = 2 -- default 5
-    game.map_settings.path_finder.goal_pressure_ratio = 3 -- default 2
-    game.map_settings.path_finder.general_entity_collision_penalty = 5 -- default 10
-    game.map_settings.path_finder.general_entity_subsequent_collision_penalty = 1 -- default 3
-    game.map_settings.path_finder.short_cache_size = 30 -- default 5
-    game.map_settings.path_finder.long_cache_size = 50 -- default 25
-    game.map_settings.path_finder.short_cache_min_cacheable_distance = 10 -- default 10
-    game.map_settings.path_finder.long_cache_min_cacheable_distance = 60 -- default 30
-    game.map_settings.path_finder.short_cache_min_algo_steps_to_cache = 50 -- default 50
-    game.map_settings.path_finder.max_clients_to_accept_any_new_request = 4 -- default 10
-    game.map_settings.path_finder.max_clients_to_accept_short_new_request = 150 -- default 100
-    game.map_settings.path_finder.start_to_goal_cost_multiplier_to_terminate_path_find = 10000 -- default 2000
+    Pathfinder.apply()
 
     game.create_force('north')
     game.create_force('south')
@@ -158,6 +151,7 @@ function Public.initial_setup()
     storage.automatic_captain_min_connected_players_for_vote = 25
 
     storage.chart_queue = Queue.new()
+    storage.feature_flags = {}
     storage.gui_refresh_delay = 0
     storage.bb_debug = false
     storage.bb_draw_revive_count_text = false
@@ -170,12 +164,15 @@ function Public.initial_setup()
         --TEAM SETTINGS--
         ['team_balancing'] = true, --Should players only be able to join a team that has less or equal members than the opposing team?
         ['only_admins_vote'] = false, --Are only admins able to vote on the global difficulty?
+        ['science_send_score_restriction'] = true, --Require minimum build score to send science (scales with difficulty)
         --MAP SETTINGS--
         ['new_year_island'] = false,
         ['bb_map_reveal_toggle'] = true,
         ['automatic_captain'] = true,
         ['map_reroll'] = true,
         ['burners_balance'] = true,
+        ['classic_pathfinding'] = true,
+        ['daytime_cycle'] = 'always_day',
     }
     storage.gui_theme = {}
     storage.want_pings = {}
@@ -191,6 +188,7 @@ function Public.initial_setup()
     ---@type table<string, TeamstatsPreferences>
     storage.teamstats_preferences = {}
     storage.allow_teamstats = 'always'
+    storage.allow_crafting_queue_list = 'spectators'
     --Flag for Player/quasi-admin mode.
     --When enabled, admins will automatically switch to Player/quasi-admin mode on joining a team.
     storage.quasi_admin_mode = false
@@ -208,6 +206,7 @@ function Public.initial_setup()
     createTrollSong(game.forces.south.name, { x = 6, y = 0 })
     createTrollSong(game.forces.north.name, { x = -40, y = 0 })
     createTrollSong(game.forces.spectator.name, { x = -80, y = 0 })
+    AiTargets.refresh_target_types()
 end
 
 --Terrain Playground Surface
@@ -219,6 +218,7 @@ function Public.playground_surface()
     Terrain.adjust_map_gen_settings(map_gen_settings)
     local surface = game.create_surface(storage.bb_surface_name, map_gen_settings)
     surface.brightness_visual_weights = { -1.17, -0.975, -0.52 }
+    Daytime.apply_daytime_settings(surface)
 end
 
 function Public.draw_structures()
@@ -248,6 +248,19 @@ function Public.queue_reveal_map()
         -- spectator island (guarantees sounds to be played during map reveal)
         q_push(chart_queue, { { -16, -16 }, { 16, 16 } })
     end
+end
+
+---Clears all feature flags and registers the classic pathfinding flag
+---when a new game starts.
+function Public.reset_feature_flags()
+    storage.feature_flags = {}
+
+    FeatureFlags.register_feature_flag(
+        'classic_pathfinding_flag',
+        'item/stone-wall',
+        'Classic pathfinding enabled!\n' .. 'Classic pathfinding gives attacks simpler paths coming from nests',
+        storage.bb_settings.classic_pathfinding
+    )
 end
 
 ---@param max_requests number
@@ -423,6 +436,8 @@ function Public.tables()
     -- Container for storing health factor, accessed by key with force's index.
     ---@type table<integer, number>
     storage.biter_health_factor = {}
+
+    storage.bb_pathfinder = storage.bb_pathfinder or Pathfinder.get_preset('bb-new')
 
     local rng = game.create_random_generator(storage.next_map_seed)
     storage.next_attack = 'north'

@@ -50,6 +50,7 @@ function Public.freeze_players()
     for _, d in pairs(defs) do
         p.set_allows_action(d, true)
     end
+    require('comfy_panel.special_games.captain').resync_no_research_group()
 end
 
 function Public.unfreeze_players()
@@ -59,6 +60,7 @@ function Public.unfreeze_players()
             p.set_allows_action(defines.input_action[action_name], true)
         end
     end
+    require('comfy_panel.special_games.captain').resync_no_research_group()
 end
 
 local function leave_corpse(player)
@@ -351,6 +353,9 @@ local function team_manager_gui_click(event)
         storage.tournament_mode = true
         draw_manager_gui(player)
         game.print('>>> Tournament Mode has been enabled by ' .. player.name, { color = { r = 225, g = 0, b = 0 } })
+        if storage.bb_settings.classic_pathfinding then
+            game.print(">>> WARNING: Classic pathfinding is enabled and is not recommended for captain's games")
+        end
         return
     end
 
