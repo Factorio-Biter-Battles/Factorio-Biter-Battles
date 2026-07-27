@@ -107,6 +107,30 @@ local function theme_names()
 end
 local themes = theme_names()
 
+local function set_related_switch_state(element, name, switch_state)
+    local root = element
+    while root.parent do
+        root = root.parent
+    end
+
+    local function find_named_switch(parent)
+        for _, child in pairs(parent.children) do
+            if child.name == name then
+                return child
+            end
+            local found = find_named_switch(child)
+            if found then
+                return found
+            end
+        end
+    end
+
+    local switch = find_named_switch(root)
+    if switch and switch.valid then
+        switch.switch_state = switch_state
+    end
+end
+
 local functions = {
     ['comfy_panel_flashlight'] = function(event)
         if event.element.switch_state == 'left' then
@@ -247,17 +271,49 @@ local functions = {
         if not player or not player.valid then
             return
         end
-        local flag_name = 'classic_pathfinding_flag'
+        local classic_flag_name = 'classic_pathfinding_flag'
         if event.element.switch_state == 'left' then
             storage.bb_settings.classic_pathfinding = true
+            storage.bb_settings.blitz_pathfinding = false
+            set_related_switch_state(event.element, 'bb_blitz_pathfinding', 'right')
             Utils.action_warning('{ClassicPathfinding}', player.name .. ' has enabled classic pathfinding!')
             log(player.name .. ' has enabled classic pathfinding!')
-            FeatureFlags.enable_feature_flag(flag_name)
+            FeatureFlags.enable_feature_flag(classic_flag_name)
+            FeatureFlags.disable_feature_flag('blitz_pathfinding_flag')
         else
             storage.bb_settings.classic_pathfinding = false
             Utils.action_warning('{ClassicPathfinding}', player.name .. ' has disabled classic pathfinding!')
             log(player.name .. ' has disabled classic pathfinding!')
-            FeatureFlags.disable_feature_flag(flag_name)
+            FeatureFlags.disable_feature_flag(classic_flag_name)
+        end
+
+        AiTargets.refresh_target_types()
+    end,
+    ['bb_blitz_pathfinding'] = function(event)
+        local player = game.get_player(event.player_index)
+        if not player or not player.valid then
+            return
+        end
+        local blitz_flag_name = 'blitz_pathfinding_flag'
+        FeatureFlags.register_feature_flag(
+            blitz_flag_name,
+            'item/speed-module-3',
+            'Blitz pathfinding enabled!\n' .. 'Blitz pathfinding selects and commits to the safest attack vector',
+            false
+        )
+        if event.element.switch_state == 'left' then
+            storage.bb_settings.blitz_pathfinding = true
+            storage.bb_settings.classic_pathfinding = false
+            set_related_switch_state(event.element, 'bb_classic_pathfinding', 'right')
+            Utils.action_warning('{BlitzPathfinding}', player.name .. ' has enabled blitz pathfinding!')
+            log(player.name .. ' has enabled blitz pathfinding!')
+            FeatureFlags.enable_feature_flag(blitz_flag_name)
+            FeatureFlags.disable_feature_flag('classic_pathfinding_flag')
+        else
+            storage.bb_settings.blitz_pathfinding = false
+            Utils.action_warning('{BlitzPathfinding}', player.name .. ' has disabled blitz pathfinding!')
+            log(player.name .. ' has disabled blitz pathfinding!')
+            FeatureFlags.disable_feature_flag(blitz_flag_name)
         end
 
         AiTargets.refresh_target_types()
@@ -829,6 +885,24 @@ local build_config_gui = function(player, frame)
                 'Classic attacks',
                 'Classic attacks use simple vectors to make direct attacks on targets and adds all military structures to the potential target list\n'
                     .. 'In general, classic pathfinding is significantly easier to defend against'
+            )
+            if not admin then
+                switch.ignored_by_interaction = true
+            end
+
+            scroll_pane.add({ type = 'line' })
+
+            local switch_state = 'right'
+            if storage.bb_settings.blitz_pathfinding then
+                switch_state = 'left'
+            end
+            local switch = add_switch(
+                scroll_pane,
+                switch_state,
+                'bb_blitz_pathfinding',
+                'Blitz attacks',
+                'Blitz attacks compare multiple ingress routes and commit to the one with the lowest estimated losses.\n'
+                    .. 'Enabling Blitz disables Classic attacks; disabling both uses advanced randomized flanks.'
             )
             if not admin then
                 switch.ignored_by_interaction = true

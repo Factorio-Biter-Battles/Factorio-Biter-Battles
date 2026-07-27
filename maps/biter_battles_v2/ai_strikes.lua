@@ -64,18 +64,9 @@ local _DEBUG = false
 local function ensure_state()
     storage.ai_blitz = storage.ai_blitz or {}
     local state = storage.ai_blitz
-    if state.enabled == nil then
-        state.enabled = false
-    end
     if not state.max_starts_per_batch then
         state.max_starts_per_batch = 8
     end
-    state.vote = state.vote or {}
-    if state.vote.resolved == nil then
-        state.vote.resolved = false
-    end
-    state.vote.yes_votes = state.vote.yes_votes or 0
-    state.vote.no_votes = state.vote.no_votes or 0
     state.pending = state.pending or {}
     state.batches = state.batches or {}
     state.next_batch_id = state.next_batch_id or 1
@@ -92,13 +83,7 @@ end
 Public.ensure_state = ensure_state
 
 function Public.is_blitz_enabled()
-    return ensure_state().enabled
-end
-
-function Public.set_blitz_enabled(enabled)
-    local state = ensure_state()
-    state.enabled = not not enabled
-    return state.enabled
+    return storage.bb_settings and storage.bb_settings.blitz_pathfinding or false
 end
 
 local vector_radius = 512
@@ -562,7 +547,7 @@ local function bbox_from_positions(positions, anchor)
 end
 
 local function get_unit_speed_tiles_per_tick(unit)
-    local speed = unit.effective_speed or unit.speed or 0
+    local speed = unit.speed or unit.effective_speed or 0
     if speed <= 0 then
         return CFG.min_speed_tiles_per_tick
     end
@@ -744,11 +729,18 @@ local function finalize_batch(state, batch)
     batch.done = true
     batch.finished = game.tick
     batch.elapsed_ticks = batch.finished - batch.started
-    local strike_position = batch.best_start or batch.fallback_start
+    local strike_position = batch.best_start
     if batch.best_damage == math_huge then
         batch.best_damage = nil
         batch.best_waypoints = 0
         state.stats.no_path = state.stats.no_path + 1
+        local fallback_group = batch.unit_group
+        if not (fallback_group and fallback_group.valid) then
+            fallback_group = batch.unit_group_boss
+        end
+        if fallback_group and fallback_group.valid then
+            strike_position = Public.calculate_strike_position(fallback_group, batch.target_position)
+        end
         if storage.bb_debug then
             game.print(('AI Blitz batch %d no path'):format(batch.batch_id))
         end
@@ -785,7 +777,7 @@ end
 
 function Public.request_least_damage_paths(unit, target_position, enemy_force, base_bbox, meta)
     local state = ensure_state()
-    if not state.enabled then
+    if not Public.is_blitz_enabled() then
         return nil
     end
     if not (unit and unit.valid and target_position and target_position.x and target_position.y) then
@@ -826,7 +818,6 @@ function Public.request_least_damage_paths(unit, target_position, enemy_force, b
         best_damage = math_huge,
         best_waypoints = 0,
         best_start = nil,
-        fallback_start = starts[1],
         done = false,
         source_position = { x = unit.position.x, y = unit.position.y },
         blitz_mode = meta and meta.blitz_mode or false,

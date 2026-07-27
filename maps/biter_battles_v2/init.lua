@@ -172,6 +172,7 @@ function Public.initial_setup()
         ['map_reroll'] = true,
         ['burners_balance'] = true,
         ['classic_pathfinding'] = true,
+        ['blitz_pathfinding'] = false,
         ['daytime_cycle'] = 'always_day',
     }
     storage.gui_theme = {}
@@ -260,6 +261,12 @@ function Public.reset_feature_flags()
         'item/stone-wall',
         'Classic pathfinding enabled!\n' .. 'Classic pathfinding gives attacks simpler paths coming from nests',
         storage.bb_settings.classic_pathfinding
+    )
+    FeatureFlags.register_feature_flag(
+        'blitz_pathfinding_flag',
+        'item/speed-module-3',
+        'Blitz pathfinding enabled!\n' .. 'Blitz pathfinding selects and commits to the safest attack vector',
+        not not storage.bb_settings.blitz_pathfinding
     )
 end
 
@@ -358,19 +365,10 @@ function Public.tables()
     storage.unit_spawners.south_biters = {}
     storage.ai_targets = {}
     storage.ai_blitz = {
-        enabled = false,
         max_starts_per_batch = 8,
         pending = {},
         batches = {},
         next_batch_id = 1,
-        vote = {
-            poll_id = nil,
-            start_tick = nil,
-            end_tick = nil,
-            resolved = false,
-            yes_votes = 0,
-            no_votes = 0,
-        },
         stats = {
             requested = 0,
             completed = 0,
