@@ -182,6 +182,37 @@ function test_turret_snapshot_indexes_nearby_damage()
     entities = {}
 end
 
+function test_blitz_candidates_are_evenly_spaced_on_one_valid_arc()
+    local unit = {
+        position = { x = 0, y = -700 },
+    }
+    local target = { x = 0, y = -44 }
+    local starts = AiStrikes._test.calculate_blitz_candidate_starts(unit, target, 8)
+
+    lunatest.assert_equal(8, #starts)
+    local previous_chord
+    for index, start in ipairs(starts) do
+        local target_dx = start.x - target.x
+        local target_dy = start.y - target.y
+        local radius = math.sqrt(target_dx * target_dx + target_dy * target_dy)
+        lunatest.assert_equal(384, radius, 0.000001)
+        lunatest.assert_true(start.y <= -22)
+
+        if index > 1 then
+            local previous = starts[index - 1]
+            local chord_dx = start.x - previous.x
+            local chord_dy = start.y - previous.y
+            local chord = math.sqrt(chord_dx * chord_dx + chord_dy * chord_dy)
+            if previous_chord then
+                lunatest.assert_equal(previous_chord, chord, 0.000001)
+            else
+                lunatest.assert_true(chord > 0)
+            end
+            previous_chord = chord
+        end
+    end
+end
+
 function test_blitz_pathfinds_ingress_then_egress_for_every_candidate()
     reset_requests()
     local unit = {

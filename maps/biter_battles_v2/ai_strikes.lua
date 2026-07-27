@@ -34,9 +34,6 @@ local CFG = {
     sample_step_tiles = 4,
     damage_grid_cell_size = 32,
     turret_scan_margin = 128,
-    ingress_spacing = 12,
-    max_distance_candidates = 4,
-    start_candidate_oversample = 3,
     blitz_ingress_radius = 16,
     target_attack_radius = 32,
     ingress_distance_penalty_per_tile = 0.05,
@@ -74,7 +71,7 @@ local function ensure_state()
     storage.ai_blitz = storage.ai_blitz or {}
     local state = storage.ai_blitz
     if not state.max_starts_per_batch then
-        state.max_starts_per_batch = 4
+        state.max_starts_per_batch = 8
     end
     state.pending = state.pending or {}
     state.batches = state.batches or {}
@@ -240,62 +237,9 @@ function Public.calculate_strike_position(unit_group, target_position)
     return unit_group.surface.find_non_colliding_position('stone-furnace', nominal_strike_position, 96, 1)
 end
 
-local function build_strike_distance_candidates(max_distance, max_starts)
-    if max_distance <= MIN_STRIKE_DISTANCE then
-        return { max_distance }
-    end
-    local distance_count = 1
-    if max_starts and max_starts > 1 then
-        distance_count = math_max(2, math_min(CFG.max_distance_candidates, math_floor(max_starts / 2)))
-    end
-    if distance_count <= 1 then
-        return { (MIN_STRIKE_DISTANCE + max_distance) / 2 }
-    end
-    local distances = {}
-    local span = max_distance - MIN_STRIKE_DISTANCE
-    for i = 0, distance_count - 1, 1 do
-        local ratio = i / (distance_count - 1)
-        distances[#distances + 1] = MIN_STRIKE_DISTANCE + span * ratio
-    end
-    return distances
-end
-
-local function append_starts_for_distance(starts, strike_distance, source_target, max_points_for_distance)
-    local strike_angle_range = calculate_strike_range(
-        source_target.dx,
-        source_target.dy,
-        source_target.distance,
-        STRIKE_TARGET_CLEARANCE,
-        strike_distance
-    )
-    if source_target.boundary_offset > source_target.normalized_target.y - strike_distance then
-        local boundary_angle_range =
-            calculate_boundary_range(source_target.boundary_offset, source_target.normalized_target, strike_distance)
-        strike_angle_range.start = math_max(strike_angle_range.start, boundary_angle_range.start)
-        strike_angle_range.finish = math_min(strike_angle_range.finish, boundary_angle_range.finish)
-    end
-    local magnitude = strike_angle_range.finish - strike_angle_range.start
-    if magnitude <= 0 then
-        return 0
-    end
-    local arc_length = strike_distance * magnitude
-    local max_segments = math_max(0, max_points_for_distance - 1)
-    local segments = math_max(0, math_floor(arc_length / CFG.ingress_spacing))
-    segments = math_min(segments, max_segments)
-    local point_count = segments + 1
-    for i = 0, point_count - 1, 1 do
-        local ratio = point_count == 1 and 0.5 or (i / (point_count - 1))
-        local strike_angle = strike_angle_range.start + magnitude * ratio
-        local point = {
-            x = source_target.normalized_target.x + strike_distance * math_cos(strike_angle),
-            y = source_target.normalized_target.y + strike_distance * math_sin(strike_angle),
-        }
-        if source_target.source_y < 0 then
-            point.y = -point.y
-        end
-        starts[#starts + 1] = point
-    end
-    return point_count
+local function deterministic_strike_distance(source_target_distance)
+    local max_distance = math_min(source_target_distance, MAX_STRIKE_DISTANCE)
+    return (MIN_STRIKE_DISTANCE + max_distance) / 2
 end
 
 local function calculate_blitz_candidate_starts(unit, target_position, max_starts)
@@ -309,45 +253,41 @@ local function calculate_blitz_candidate_starts(unit, target_position, max_start
     if source_target_distance < MIN_STRIKE_DISTANCE then
         return { { x = source_position.x, y = source_position.y } }
     end
-    local strike_distance_max = math_min(source_target_distance, MAX_STRIKE_DISTANCE)
-    local distance_candidates = build_strike_distance_candidates(strike_distance_max, max_starts)
-    local candidate_budget = math_max(max_starts, max_starts * CFG.start_candidate_oversample)
-    local max_points_for_distance = math_max(1, math_floor(candidate_budget / #distance_candidates))
-    local source_target = {
-        dx = source_target_dx,
-        dy = source_target_dy,
-        distance = source_target_distance,
-        normalized_target = normalized_target,
-        boundary_offset = boundary_offset,
-        source_y = source_position.y,
-    }
-    local starts = {}
-    for _, strike_distance in ipairs(distance_candidates) do
-        append_starts_for_distance(starts, strike_distance, source_target, max_points_for_distance)
+    local strike_distance = deterministic_strike_distance(source_target_distance)
+    local strike_angle_range = calculate_strike_range(
+        source_target_dx,
+        source_target_dy,
+        source_target_distance,
+        STRIKE_TARGET_CLEARANCE,
+        strike_distance
+    )
+    if boundary_offset > normalized_target.y - strike_distance then
+        local boundary_angle_range = calculate_boundary_range(boundary_offset, normalized_target, strike_distance)
+        strike_angle_range.start = math_max(strike_angle_range.start, boundary_angle_range.start)
+        strike_angle_range.finish = math_min(strike_angle_range.finish, boundary_angle_range.finish)
     end
-    if #starts == 0 then
-        starts[1] = { x = source_position.x, y = source_position.y }
+    local magnitude = strike_angle_range.finish - strike_angle_range.start
+    if magnitude <= 0 then
+        return { { x = source_position.x, y = source_position.y } }
+    end
+
+    local point_count = math_max(1, math_floor(max_starts or 1))
+    local starts = {}
+    for i = 1, point_count, 1 do
+        -- Sample the center of each equal angular sector so every candidate is
+        -- safely inside the legal arc rather than exactly on a tangent boundary.
+        local ratio = (i - 0.5) / point_count
+        local strike_angle = strike_angle_range.start + magnitude * ratio
+        local point = {
+            x = normalized_target.x + strike_distance * math_cos(strike_angle),
+            y = normalized_target.y + strike_distance * math_sin(strike_angle),
+        }
+        if source_position.y < 0 then
+            point.y = -point.y
+        end
+        starts[#starts + 1] = point
     end
     return starts
-end
-
-local function downsample_starts(starts, max_count)
-    local count = #starts
-    if count <= max_count then
-        return starts
-    end
-    local selected = {}
-    local step = count / max_count
-    for i = 1, max_count, 1 do
-        local index = math_floor((i - 0.5) * step) + 1
-        if index < 1 then
-            index = 1
-        elseif index > count then
-            index = count
-        end
-        selected[#selected + 1] = starts[index]
-    end
-    return selected
 end
 
 --- Append shuffled silo attack commands to an existing command chain.
@@ -906,7 +846,6 @@ function Public.request_least_damage_paths(unit, target_position, enemy_force, b
     if #starts == 0 then
         return nil
     end
-    starts = downsample_starts(starts, max_starts)
     local command_source = unit
     if meta and meta.unit_group and meta.unit_group.valid then
         command_source = meta.unit_group
@@ -1158,6 +1097,7 @@ if storage._TEST then
     Public._test = {
         build_attack_command_chain = build_attack_command_chain,
         build_turret_snapshot = build_turret_snapshot,
+        calculate_blitz_candidate_starts = calculate_blitz_candidate_starts,
         incoming_damage_per_tick_at = incoming_damage_per_tick_at,
     }
 end
