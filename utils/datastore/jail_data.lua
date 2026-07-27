@@ -227,7 +227,7 @@ local on_player_changed_surface = function(event)
     end
 
     local surface = game.surfaces['gulag']
-    if player.surface.index ~= surface.index then
+    if player.physical_surface.index ~= surface.index then
         local p_data = get_player_data(player)
         if jailed[player.name] and p_data and p_data.locked then
             teleport_player_to_gulag(player, 'jail')
@@ -363,11 +363,6 @@ local jail = function(player, griefer, msg)
     -- Only perform teleport and character operations if player is online
     if connected then
         teleport_player_to_gulag(g, 'jail')
-
-        if g.surface.name == 'gulag' then
-            local gulag = get_gulag_permission_group()
-            gulag.add_player(griefer)
-        end
 
         if g.character and g.character.valid and g.character.driving then
             g.character.driving = false
