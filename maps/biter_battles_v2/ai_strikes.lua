@@ -31,12 +31,15 @@ local MIN_STRIKE_DISTANCE = 256
 local STRIKE_TARGET_CLEARANCE = 255
 
 local CFG = {
-    sample_step_tiles = 0.5,
+    sample_step_tiles = 4,
+    damage_grid_cell_size = 32,
+    turret_scan_margin = 128,
     ingress_spacing = 12,
     max_distance_candidates = 4,
     start_candidate_oversample = 3,
     blitz_ingress_radius = 16,
-    source_to_start_distance_penalty_per_tile = 0.05,
+    target_attack_radius = 32,
+    ingress_distance_penalty_per_tile = 0.05,
     breaker_probe_radius = 2.0,
     min_speed_tiles_per_tick = 0.02,
     effective_dps_by_turret = {
@@ -44,6 +47,12 @@ local CFG = {
         ['laser-turret'] = 24,
         ['flamethrower-turret'] = 40,
         ['tesla-turret'] = 35,
+    },
+    effective_turret_names = {
+        'gun-turret',
+        'laser-turret',
+        'flamethrower-turret',
+        'tesla-turret',
     },
     structure_dps_by_biter = {
         ['small-biter'] = 7,
@@ -65,7 +74,7 @@ local function ensure_state()
     storage.ai_blitz = storage.ai_blitz or {}
     local state = storage.ai_blitz
     if not state.max_starts_per_batch then
-        state.max_starts_per_batch = 8
+        state.max_starts_per_batch = 4
     end
     state.pending = state.pending or {}
     state.batches = state.batches or {}
@@ -387,24 +396,30 @@ local function build_attack_command_chain(target_force_name, strike_position, ta
             radius = ingress_radius,
             distraction = ingress_distraction,
         }
-        chain[#chain + 1] = {
-            type = defines.command.wander,
-            radius = ingress_radius,
-            ticks_to_wait = 1,
-        }
+        if blitz_mode then
+            chain[#chain + 1] = {
+                type = defines.command.wander,
+                radius = ingress_radius,
+                ticks_to_wait = 1,
+                distraction = defines.distraction.by_damage,
+            }
+        end
     end
 
     chain[#chain + 1] = {
         type = defines.command.attack_area,
         destination = target_position,
-        radius = 32,
+        radius = CFG.target_attack_radius,
         distraction = target_distraction,
     }
-    chain[#chain + 1] = {
-        type = defines.command.wander,
-        radius = 32,
-        ticks_to_wait = 1,
-    }
+    if blitz_mode then
+        chain[#chain + 1] = {
+            type = defines.command.wander,
+            radius = CFG.target_attack_radius,
+            ticks_to_wait = 1,
+            distraction = defines.distraction.by_damage,
+        }
+    end
     Public.append_silo_commands(chain, target_force_name, defines.distraction.by_damage)
 
     return {
@@ -505,12 +520,6 @@ local function vec_len(v)
     return math_sqrt(v.x * v.x + v.y * v.y)
 end
 
-local function dist(a, b)
-    local dx = a.x - b.x
-    local dy = a.y - b.y
-    return math_sqrt(dx * dx + dy * dy)
-end
-
 local function lerp(a, b, t)
     return { x = a.x + (b.x - a.x) * t, y = a.y + (b.y - a.y) * t }
 end
@@ -522,11 +531,30 @@ local function expand_bbox(bbox, margin)
     }
 end
 
-local function bbox_from_positions(positions, anchor)
+local function merge_bbox(first, second)
+    return {
+        left_top = {
+            x = math_min(first.left_top.x, second.left_top.x),
+            y = math_min(first.left_top.y, second.left_top.y),
+        },
+        right_bottom = {
+            x = math_max(first.right_bottom.x, second.right_bottom.x),
+            y = math_max(first.right_bottom.y, second.right_bottom.y),
+        },
+    }
+end
+
+local function bbox_from_positions(positions, anchor, source)
     local min_x = anchor.x
     local max_x = anchor.x
     local min_y = anchor.y
     local max_y = anchor.y
+    if source then
+        min_x = math_min(min_x, source.x)
+        max_x = math_max(max_x, source.x)
+        min_y = math_min(min_y, source.y)
+        max_y = math_max(max_y, source.y)
+    end
     for _, p in ipairs(positions) do
         if p.x < min_x then
             min_x = p.x
@@ -554,8 +582,8 @@ local function get_unit_speed_tiles_per_tick(unit)
     return math_max(speed, CFG.min_speed_tiles_per_tick)
 end
 
-local function get_biter_structure_dps(unit)
-    return CFG.structure_dps_by_biter[unit.name] or 10
+local function get_biter_structure_dps(unit_name)
+    return CFG.structure_dps_by_biter[unit_name] or 10
 end
 
 local function estimate_turret_damage_per_second(turret)
@@ -591,48 +619,112 @@ local function estimate_turret_damage_per_second(turret)
     return dps
 end
 
+local function add_turret_to_damage_grid(cells, cell_x, cell_y, turret)
+    local column = cells[cell_x]
+    if not column then
+        column = {}
+        cells[cell_x] = column
+    end
+    local bucket = column[cell_y]
+    if not bucket then
+        bucket = {}
+        column[cell_y] = bucket
+    end
+    bucket[#bucket + 1] = turret
+end
+
 local function build_turret_snapshot(surface, area, enemy_force)
-    local entities = surface.find_entities_filtered({ area = area, force = enemy_force })
-    local turrets = {}
+    local entities = surface.find_entities_filtered({
+        area = area,
+        force = enemy_force,
+        name = CFG.effective_turret_names,
+    })
+    local cell_size = CFG.damage_grid_cell_size
+    local cells = {}
+    local turret_count = 0
+    local max_range = 0
+    local profile_by_name = {}
     for _, entity in pairs(entities) do
-        if
-            entity.valid
-            and entity.prototype
-            and entity.prototype.turret_range
-            and entity.prototype.attack_parameters
-        then
-            local attack_parameters = entity.prototype.attack_parameters
-            local range = entity.prototype.turret_range or attack_parameters.range or 0
-            local min_range = attack_parameters.min_range or 0
-            local dps = estimate_turret_damage_per_second(entity)
-            if dps > 0 and range > 0 then
-                turrets[#turrets + 1] = {
-                    entity = entity,
-                    pos = { x = entity.position.x, y = entity.position.y },
-                    range = range,
-                    min_range = min_range,
-                    dps = dps,
+        if entity.valid then
+            local turret_name = entity.name
+            local profile = profile_by_name[turret_name]
+            if profile == nil then
+                local prototype = entity.prototype
+                local attack_parameters = prototype and prototype.attack_parameters
+                local range = prototype and (prototype.turret_range or (attack_parameters and attack_parameters.range))
+                    or 0
+                local min_range = attack_parameters and attack_parameters.min_range or 0
+                local dps = estimate_turret_damage_per_second(entity)
+                if dps > 0 and range > 0 then
+                    profile = {
+                        range = range,
+                        range_squared = range * range,
+                        min_range_squared = min_range * min_range,
+                        damage_per_tick = dps / 60.0,
+                    }
+                else
+                    profile = false
+                end
+                profile_by_name[turret_name] = profile
+            end
+            if profile then
+                turret_count = turret_count + 1
+                max_range = math_max(max_range, profile.range)
+                local position = entity.position
+                local turret = {
+                    x = position.x,
+                    y = position.y,
+                    profile = profile,
                 }
+                add_turret_to_damage_grid(
+                    cells,
+                    math_floor(position.x / cell_size),
+                    math_floor(position.y / cell_size),
+                    turret
+                )
             end
         end
     end
-    return turrets
+    return {
+        cells = cells,
+        cell_size = cell_size,
+        max_range = max_range,
+        turret_count = turret_count,
+    }
 end
 
-local function incoming_damage_per_tick_at(position, turrets)
-    local dps_sum = 0
-    for _, turret in pairs(turrets) do
-        if turret.entity.valid then
-            local distance = dist(position, turret.pos)
-            if distance <= turret.range and distance >= turret.min_range then
-                dps_sum = dps_sum + turret.dps
+local function incoming_damage_per_tick_at(position, threat_grid)
+    local cell_size = threat_grid.cell_size
+    local cell_x = math_floor(position.x / cell_size)
+    local cell_y = math_floor(position.y / cell_size)
+    local cell_radius = math_ceil(threat_grid.max_range / cell_size)
+    local damage_per_tick = 0
+    for nearby_x = cell_x - cell_radius, cell_x + cell_radius, 1 do
+        local column = threat_grid.cells[nearby_x]
+        if column then
+            for nearby_y = cell_y - cell_radius, cell_y + cell_radius, 1 do
+                local bucket = column[nearby_y]
+                if bucket then
+                    for _, turret in ipairs(bucket) do
+                        local dx = position.x - turret.x
+                        local dy = position.y - turret.y
+                        local distance_squared = dx * dx + dy * dy
+                        local profile = turret.profile
+                        if
+                            distance_squared <= profile.range_squared
+                            and distance_squared >= profile.min_range_squared
+                        then
+                            damage_per_tick = damage_per_tick + profile.damage_per_tick
+                        end
+                    end
+                end
             end
         end
     end
-    return dps_sum / 60.0
+    return damage_per_tick
 end
 
-local function estimate_break_delay_ticks(surface, position, enemy_force, unit)
+local function estimate_break_delay_ticks(surface, position, enemy_force, structure_dps)
     local nearby = surface.find_entities_filtered({
         position = position,
         radius = CFG.breaker_probe_radius,
@@ -656,32 +748,18 @@ local function estimate_break_delay_ticks(surface, position, enemy_force, unit)
     if not best_hp then
         return 0
     end
-    local dps = math_max(get_biter_structure_dps(unit), 0.1)
+    local dps = math_max(structure_dps, 0.1)
     return best_hp / dps * 60.0
 end
 
 local function score_path_damage_ticks(surface, path, meta)
-    if not path or #path == 0 then
+    if not path then
         return math_huge
     end
-    local unit = meta.unit
     local enemy_force = meta.enemy_force
-    local turrets = meta.turrets
-    local speed_tiles_per_tick = get_unit_speed_tiles_per_tick(unit)
+    local threat_grid = meta.threat_grid
+    local speed_tiles_per_tick = meta.speed_tiles_per_tick
     local total_damage = 0
-    if meta.blitz_mode and meta.source and meta.start then
-        local source_to_start_distance = dist(meta.source, meta.start)
-        if source_to_start_distance > 0 then
-            total_damage = total_damage + (source_to_start_distance * CFG.source_to_start_distance_penalty_per_tile)
-            local sample_count = math_max(1, math_ceil(source_to_start_distance / CFG.sample_step_tiles))
-            local dt_per_sample = (source_to_start_distance / sample_count) / speed_tiles_per_tick
-            for s = 1, sample_count, 1 do
-                local point = lerp(meta.source, meta.start, s / sample_count)
-                local damage_per_tick = incoming_damage_per_tick_at(point, turrets)
-                total_damage = total_damage + damage_per_tick * dt_per_sample
-            end
-        end
-    end
     local previous = meta.start
     for i = 1, #path, 1 do
         local waypoint = path[i]
@@ -689,38 +767,27 @@ local function score_path_damage_ticks(surface, path, meta)
         local segment = vec_sub(current, previous)
         local segment_length = vec_len(segment)
         if segment_length > 0 then
+            if meta.distance_penalty_per_tile then
+                total_damage = total_damage + segment_length * meta.distance_penalty_per_tile
+            end
             local sample_count = math_max(1, math_ceil(segment_length / CFG.sample_step_tiles))
             local dt_per_sample = (segment_length / sample_count) / speed_tiles_per_tick
             for s = 1, sample_count, 1 do
-                local point = lerp(previous, current, s / sample_count)
-                local damage_per_tick = incoming_damage_per_tick_at(point, turrets)
+                local point = lerp(previous, current, (s - 0.5) / sample_count)
+                local damage_per_tick = incoming_damage_per_tick_at(point, threat_grid)
                 total_damage = total_damage + damage_per_tick * dt_per_sample
             end
         end
         if waypoint.needs_destroy_to_reach then
-            local delay_ticks = estimate_break_delay_ticks(surface, current, enemy_force, unit)
+            local delay_ticks = estimate_break_delay_ticks(surface, current, enemy_force, meta.structure_dps)
             if delay_ticks > 0 then
-                local local_damage_per_tick = incoming_damage_per_tick_at(current, turrets)
+                local local_damage_per_tick = incoming_damage_per_tick_at(current, threat_grid)
                 total_damage = total_damage + local_damage_per_tick * delay_ticks
             else
                 total_damage = total_damage + 50
             end
         end
         previous = current
-    end
-    if meta.goal then
-        local current = meta.goal
-        local segment = vec_sub(current, previous)
-        local segment_length = vec_len(segment)
-        if segment_length > 0 then
-            local sample_count = math_max(1, math_ceil(segment_length / CFG.sample_step_tiles))
-            local dt_per_sample = (segment_length / sample_count) / speed_tiles_per_tick
-            for s = 1, sample_count, 1 do
-                local point = lerp(previous, current, s / sample_count)
-                local damage_per_tick = incoming_damage_per_tick_at(point, turrets)
-                total_damage = total_damage + damage_per_tick * dt_per_sample
-            end
-        end
     end
     return total_damage
 end
@@ -762,9 +829,10 @@ local function finalize_batch(state, batch)
         batch.target_position,
         batch.blitz_mode
     )
-    batch.unit = nil
-    batch.enemy_force = nil
-    batch.turrets = nil
+    batch.bounding_box = nil
+    batch.candidates = nil
+    batch.collision_mask = nil
+    batch.threat_grid = nil
     batch.unit_group = nil
     batch.unit_group_boss = nil
     local completed_order = state.completed_order
@@ -773,6 +841,41 @@ local function finalize_batch(state, batch)
         local oldest_batch_id = table_remove(completed_order, 1)
         state.batches[oldest_batch_id] = nil
     end
+end
+
+local function request_path_leg(state, batch, candidate_index, leg, start_position, goal_position, radius)
+    local surface = game.get_surface(batch.surface_index)
+    if not surface or not surface.valid then
+        return nil
+    end
+    local request_id = surface.request_path({
+        bounding_box = batch.bounding_box,
+        collision_mask = batch.collision_mask,
+        start = start_position,
+        goal = goal_position,
+        force = batch.path_force_name,
+        radius = radius,
+        can_open_gates = true,
+        path_resolution_modifier = 0,
+        max_gap_size = 0,
+        pathfind_flags = {
+            cache = false,
+            low_priority = true,
+            prefer_straight_paths = false,
+        },
+    })
+    if not request_id then
+        return nil
+    end
+    state.pending[request_id] = {
+        batch_id = batch.batch_id,
+        candidate_index = candidate_index,
+        leg = leg,
+        start = { x = start_position.x, y = start_position.y },
+    }
+    batch.outstanding = batch.outstanding + 1
+    state.stats.requested = state.stats.requested + 1
+    return request_id
 end
 
 function Public.request_least_damage_paths(unit, target_position, enemy_force, base_bbox, meta)
@@ -804,22 +907,44 @@ function Public.request_least_damage_paths(unit, target_position, enemy_force, b
         return nil
     end
     starts = downsample_starts(starts, max_starts)
-    local scan_area = expand_bbox(base_bbox or bbox_from_positions(starts, target_position), 64)
-    local turrets = build_turret_snapshot(surface, scan_area, enemy)
+    local command_source = unit
+    if meta and meta.unit_group and meta.unit_group.valid then
+        command_source = meta.unit_group
+    end
+    local source_position = { x = command_source.position.x, y = command_source.position.y }
+    local route_bbox = bbox_from_positions(starts, target_position, source_position)
+    if base_bbox then
+        route_bbox = merge_bbox(route_bbox, base_bbox)
+    end
+    local scan_area = expand_bbox(route_bbox, CFG.turret_scan_margin)
+    local threat_grid = build_turret_snapshot(surface, scan_area, enemy)
     local batch_id = state.next_batch_id
     state.next_batch_id = batch_id + 1
+    local candidates = {}
+    for index, start_position in ipairs(starts) do
+        candidates[index] = {
+            start = { x = start_position.x, y = start_position.y },
+            failed = false,
+        }
+    end
     local batch = {
         batch_id = batch_id,
-        unit = unit,
-        enemy_force = enemy,
-        turrets = turrets,
+        bounding_box = unit.prototype.collision_box,
+        candidates = candidates,
+        collision_mask = unit.prototype.collision_mask,
+        enemy_force_name = enemy.name,
+        path_force_name = unit.force.name,
+        speed_tiles_per_tick = get_unit_speed_tiles_per_tick(unit),
+        structure_dps = get_biter_structure_dps(unit.name),
+        surface_index = surface.index,
+        threat_grid = threat_grid,
         started = game.tick,
         outstanding = 0,
         best_damage = math_huge,
         best_waypoints = 0,
         best_start = nil,
         done = false,
-        source_position = { x = unit.position.x, y = unit.position.y },
+        source_position = source_position,
         blitz_mode = meta and meta.blitz_mode or false,
         unit_group = meta and meta.unit_group or nil,
         unit_group_boss = meta and meta.unit_group_boss or nil,
@@ -827,37 +952,16 @@ function Public.request_least_damage_paths(unit, target_position, enemy_force, b
         target_position = meta and meta.target_position or { x = target_position.x, y = target_position.y },
     }
     state.batches[batch_id] = batch
-    local unit_collision_box = unit.prototype.collision_box
-    local collision_mask = unit.prototype.collision_mask
-    for _, start_position in pairs(starts) do
-        if not unit.valid then
-            break
-        end
-        local request_id = surface.request_path({
-            bounding_box = unit_collision_box,
-            collision_mask = collision_mask,
-            start = start_position,
-            goal = target_position,
-            force = unit.force,
-            radius = 0.5,
-            can_open_gates = true,
-            path_resolution_modifier = 0,
-            max_gap_size = 0,
-            pathfind_flags = {
-                cache = false,
-                low_priority = true,
-                prefer_straight_paths = false,
-            },
-        })
-        if request_id then
-            state.pending[request_id] = {
-                batch_id = batch_id,
-                start = start_position,
-                goal = { x = target_position.x, y = target_position.y },
-            }
-            batch.outstanding = batch.outstanding + 1
-            state.stats.requested = state.stats.requested + 1
-        end
+    for candidate_index, candidate in ipairs(candidates) do
+        request_path_leg(
+            state,
+            batch,
+            candidate_index,
+            'ingress',
+            source_position,
+            candidate.start,
+            CFG.blitz_ingress_radius
+        )
     end
     if batch.outstanding == 0 then
         state.batches[batch_id] = nil
@@ -879,23 +983,58 @@ function Public.on_script_path_request_finished(event)
     end
     batch.outstanding = math_max(0, batch.outstanding - 1)
     state.stats.completed = state.stats.completed + 1
+    local candidate = batch.candidates[request.candidate_index]
+    if not candidate or candidate.failed then
+        if batch.outstanding == 0 then
+            finalize_batch(state, batch)
+        end
+        return
+    end
     if event.try_again_later then
         state.stats.try_again_later = state.stats.try_again_later + 1
-    elseif event.path and batch.unit and batch.unit.valid then
-        local score = score_path_damage_ticks(batch.unit.surface, event.path, {
-            unit = batch.unit,
-            enemy_force = batch.enemy_force,
-            turrets = batch.turrets,
-            source = batch.source_position,
-            start = request.start,
-            goal = request.goal,
-            blitz_mode = batch.blitz_mode,
-        })
-        if score < batch.best_damage then
-            batch.best_damage = score
-            batch.best_waypoints = #event.path
-            batch.best_start = request.start
+        candidate.failed = true
+    elseif event.path then
+        local surface = game.get_surface(batch.surface_index)
+        if not surface or not surface.valid then
+            candidate.failed = true
+        else
+            local score = score_path_damage_ticks(surface, event.path, {
+                enemy_force = batch.enemy_force_name,
+                threat_grid = batch.threat_grid,
+                speed_tiles_per_tick = batch.speed_tiles_per_tick,
+                structure_dps = batch.structure_dps,
+                distance_penalty_per_tile = request.leg == 'ingress' and CFG.ingress_distance_penalty_per_tile or nil,
+                start = request.start,
+            })
+            if request.leg == 'ingress' then
+                candidate.ingress_score = score
+                candidate.ingress_waypoints = #event.path
+                local last_waypoint = event.path[#event.path]
+                local egress_start = last_waypoint and last_waypoint.position or request.start
+                if
+                    not request_path_leg(
+                        state,
+                        batch,
+                        request.candidate_index,
+                        'egress',
+                        egress_start,
+                        batch.target_position,
+                        CFG.target_attack_radius
+                    )
+                then
+                    candidate.failed = true
+                end
+            else
+                local total_score = candidate.ingress_score + score
+                if total_score < batch.best_damage then
+                    batch.best_damage = total_score
+                    batch.best_waypoints = candidate.ingress_waypoints + #event.path
+                    batch.best_start = candidate.start
+                end
+            end
         end
+    else
+        candidate.failed = true
     end
     if batch.outstanding == 0 then
         finalize_batch(state, batch)
@@ -1014,5 +1153,13 @@ local function on_unit_removed_from_group(event)
 end
 
 Event.add(defines.events.on_unit_removed_from_group, on_unit_removed_from_group)
+
+if storage._TEST then
+    Public._test = {
+        build_attack_command_chain = build_attack_command_chain,
+        build_turret_snapshot = build_turret_snapshot,
+        incoming_damage_per_tick_at = incoming_damage_per_tick_at,
+    }
+end
 
 return Public

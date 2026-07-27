@@ -57,14 +57,12 @@ local function simple_random_sample(population_list)
     return nil
 end
 
---- Remove target from storage by useful destroy id using swap-and-pop.
 local function remove_target(targets, id)
     local target_list_index = targets.available[id]
     if target_list_index == nil then
         return
     end
     if target_list_index ~= #targets.available_list then
-        -- swap the last element with the element to be removed
         local last = targets.available_list[#targets.available_list]
         targets.available[last.id] = target_list_index
         targets.available_list[target_list_index] = last

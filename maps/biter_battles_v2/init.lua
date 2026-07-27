@@ -365,7 +365,7 @@ function Public.tables()
     storage.unit_spawners.south_biters = {}
     storage.ai_targets = {}
     storage.ai_blitz = {
-        max_starts_per_batch = 8,
+        max_starts_per_batch = 4,
         pending = {},
         batches = {},
         next_batch_id = 1,
