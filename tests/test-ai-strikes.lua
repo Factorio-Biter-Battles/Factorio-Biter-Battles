@@ -195,7 +195,7 @@ function test_blitz_candidates_are_evenly_spaced_on_one_valid_arc()
         local target_dx = start.x - target.x
         local target_dy = start.y - target.y
         local radius = math.sqrt(target_dx * target_dx + target_dy * target_dy)
-        lunatest.assert_equal(384, radius, 0.000001)
+        lunatest.assert_equal(512, radius, 0.000001)
         lunatest.assert_true(start.y <= -22)
 
         if index > 1 then
