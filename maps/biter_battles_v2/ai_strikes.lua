@@ -239,7 +239,7 @@ end
 
 local function deterministic_strike_distance(source_target_distance)
     local max_distance = math_min(source_target_distance, MAX_STRIKE_DISTANCE)
-    return (MIN_STRIKE_DISTANCE + max_distance) / 2
+    return max_distance
 end
 
 local function calculate_blitz_candidate_starts(unit, target_position, max_starts)
