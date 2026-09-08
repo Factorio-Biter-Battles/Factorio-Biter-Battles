@@ -574,11 +574,21 @@ local function add_turret_to_damage_grid(cells, cell_x, cell_y, turret)
 end
 
 local function build_turret_snapshot(surface, area, enemy_force)
-    local entities = surface.find_entities_filtered({
-        area = area,
-        force = enemy_force,
-        name = CFG.effective_turret_names,
-    })
+    -- Optional turrets (such as Space Age's Tesla turret) may not be loaded.
+    local turret_names = {}
+    for _, name in ipairs(CFG.effective_turret_names) do
+        if prototypes.entity[name] then
+            turret_names[#turret_names + 1] = name
+        end
+    end
+    local entities = {}
+    if #turret_names > 0 then
+        entities = surface.find_entities_filtered({
+            area = area,
+            force = enemy_force,
+            name = turret_names,
+        })
+    end
     local cell_size = CFG.damage_grid_cell_size
     local cells = {}
     local turret_count = 0

@@ -82,6 +82,13 @@ package.loaded['utils.table'] = {
 local requests = {}
 local next_request_id = 0
 local entities = {}
+prototypes = {
+    entity = {
+        ['gun-turret'] = {},
+        ['laser-turret'] = {},
+        ['flamethrower-turret'] = {},
+    },
+}
 local surface = {
     index = 1,
     valid = true,
@@ -93,7 +100,21 @@ function surface.request_path(parameters)
     return next_request_id
 end
 
-function surface.find_entities_filtered()
+function surface.find_entities_filtered(parameters)
+    if parameters.name then
+        local names = {}
+        for _, name in ipairs(parameters.name) do
+            assert(prototypes.entity[name], 'Unknown entity name: ' .. name)
+            names[name] = true
+        end
+        local filtered = {}
+        for _, entity in ipairs(entities) do
+            if names[entity.name] then
+                filtered[#filtered + 1] = entity
+            end
+        end
+        return filtered
+    end
     return entities
 end
 
@@ -180,6 +201,47 @@ function test_turret_snapshot_indexes_nearby_damage()
     lunatest.assert_true(AiStrikes._test.incoming_damage_per_tick_at({ x = 15, y = 0 }, snapshot) > 0)
     lunatest.assert_equal(0, AiStrikes._test.incoming_damage_per_tick_at({ x = 60, y = 0 }, snapshot))
     entities = {}
+end
+
+function test_turret_snapshot_includes_tesla_when_prototype_is_loaded()
+    local prototype = { turret_range = 30, attack_parameters = { min_range = 0 } }
+    prototypes.entity['tesla-turret'] = prototype
+    entities = {
+        {
+            valid = true,
+            name = 'tesla-turret',
+            position = { x = 0, y = 0 },
+            prototype = prototype,
+        },
+    }
+
+    local snapshot = AiStrikes._test.build_turret_snapshot(
+        surface,
+        { left_top = { x = -32, y = -32 }, right_bottom = { x = 32, y = 32 } },
+        game.forces.north
+    )
+    prototypes.entity['tesla-turret'] = nil
+    entities = {}
+
+    lunatest.assert_equal(1, snapshot.turret_count)
+    lunatest.assert_true(AiStrikes._test.incoming_damage_per_tick_at({ x = 15, y = 0 }, snapshot) > 0)
+end
+
+function test_turret_snapshot_skips_query_when_no_supported_prototypes_are_loaded()
+    local entity_prototypes = prototypes.entity
+    prototypes.entity = {}
+    local queried = false
+    local snapshot = AiStrikes._test.build_turret_snapshot({
+        find_entities_filtered = function()
+            queried = true
+            return {}
+        end,
+    }, { left_top = { x = -32, y = -32 }, right_bottom = { x = 32, y = 32 } }, game.forces.north)
+    prototypes.entity = entity_prototypes
+
+    lunatest.assert_false(queried)
+    lunatest.assert_equal(0, snapshot.turret_count)
+    lunatest.assert_equal(0, AiStrikes._test.incoming_damage_per_tick_at({ x = 0, y = 0 }, snapshot))
 end
 
 function test_blitz_candidates_are_evenly_spaced_on_one_valid_arc()
