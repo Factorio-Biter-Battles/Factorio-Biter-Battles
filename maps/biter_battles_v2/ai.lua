@@ -323,6 +323,7 @@ local function create_attack_group(surface, force_name, biter_force_name)
     end
 
     local target_position = AiTargets.get_random_target(force_name)
+
     if not target_position then
         print('No side target found for ' .. force_name .. '.')
         return
@@ -346,6 +347,7 @@ local function create_attack_group(surface, force_name, biter_force_name)
     local unit_group = surface.create_unit_group({ position = unit_group_position, force = biter_force_name })
     local unit_group_boss = nil
     local has_boss_units = false
+    local planner_unit
     for _, unit in pairs(units) do
         unit.ai_settings.path_resolution_modifier = 0
         if unit.force.name == boss_force_name then
@@ -356,31 +358,17 @@ local function create_attack_group(surface, force_name, biter_force_name)
             unit_group_boss.add_member(unit)
         else
             unit_group.add_member(unit)
+            if not planner_unit then
+                planner_unit = unit
+            end
         end
         storage.biters_from_positive_threat[unit.unit_number] = true
     end
+    AiStrikes.dispatch(unit_group, unit_group_boss, planner_unit, force_name, target_position, game.forces[force_name])
 
-    if storage.bb_settings.classic_pathfinding then
-        AiStrikes.initiate_classic_attack(unit_group, force_name, target_position)
-        MultiSilo.track_group(unit_group)
-
-        if has_boss_units then
-            AiStrikes.initiate_classic_attack(unit_group_boss, force_name, target_position)
-            MultiSilo.track_group(unit_group_boss)
-        end
-    else
-        local strike_position = AiStrikes.calculate_strike_position(unit_group, target_position)
-        if not strike_position then
-            log('No strike position found for ' .. biter_force_name .. ', skipping flank')
-        end
-
-        AiStrikes.initiate_advanced_attack(unit_group, force_name, strike_position, target_position)
-        MultiSilo.track_group(unit_group)
-
-        if has_boss_units then
-            AiStrikes.initiate_advanced_attack(unit_group_boss, force_name, strike_position, target_position)
-            MultiSilo.track_group(unit_group_boss)
-        end
+    MultiSilo.track_group(unit_group)
+    if has_boss_units then
+        MultiSilo.track_group(unit_group_boss)
     end
 end
 

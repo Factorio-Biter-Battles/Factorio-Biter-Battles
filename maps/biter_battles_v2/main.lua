@@ -20,7 +20,6 @@ local Server = require('utils.server')
 local Task = require('utils.task')
 local String = require('utils.string')
 local Token = require('utils.token')
-local Color = require('utils.color_presets')
 local ResearchInfo = require('maps.biter_battles_v2.research_info')
 local DifficultyVote = require('maps.biter_battles_v2.difficulty_vote')
 local ComfyMain = require('comfy_panel.main')
@@ -37,7 +36,6 @@ require('maps.biter_battles_v2.commands')
 require('modules.spawners_contain_biters')
 
 local function on_player_joined_game(event)
-    local surface = game.surfaces[storage.bb_surface_name]
     local player = game.get_player(event.player_index)
     if not player then
         return
@@ -791,6 +789,7 @@ Event.add(defines.events.on_research_reversed, on_research_reversed)
 Event.add(defines.events.on_robot_built_entity, on_robot_built_entity)
 Event.add(defines.events.on_robot_built_tile, on_robot_built_tile)
 Event.add(defines.events.on_player_dropped_item_into_entity, on_player_dropped_item_into_entity)
+Event.add(defines.events.on_script_path_request_finished, AiStrikes.on_script_path_request_finished)
 Event.add(defines.events.on_tick, on_tick)
 Event.on_init(on_init)
 

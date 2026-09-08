@@ -57,6 +57,20 @@ local function simple_random_sample(population_list)
     return nil
 end
 
+local function remove_target(targets, id)
+    local target_list_index = targets.available[id]
+    if target_list_index == nil then
+        return
+    end
+    if target_list_index ~= #targets.available_list then
+        local last = targets.available_list[#targets.available_list]
+        targets.available[last.id] = target_list_index
+        targets.available_list[target_list_index] = last
+    end
+    table_remove(targets.available_list)
+    targets.available[id] = nil
+end
+
 function Public.start_tracking(entity)
     if not entity then
         return
@@ -65,10 +79,21 @@ function Public.start_tracking(entity)
         return
     end
     if storage.target_entity_type[entity.type] and entity.unit_number then
-        local targets = storage.ai_targets[entity.force.name]
+        local force_name = entity.force.name
+        local targets = storage.ai_targets[force_name]
         if targets ~= nil then
             local _, id, _ = script.register_on_object_destroyed(entity)
-            storage.ai_target_destroyed_map[id] = entity.force.name
+            local tracked_force_name = storage.ai_target_destroyed_map[id]
+            if tracked_force_name == force_name and targets.available[id] then
+                return
+            end
+            if tracked_force_name then
+                local tracked_targets = storage.ai_targets[tracked_force_name]
+                if tracked_targets then
+                    remove_target(tracked_targets, id)
+                end
+            end
+            storage.ai_target_destroyed_map[id] = force_name
             table_insert(targets.available_list, { id = id, position = entity.position })
             targets.available[id] = #targets.available_list
         end
@@ -82,17 +107,7 @@ local function on_object_destroyed(event)
     map[id] = nil
     local targets = storage.ai_targets[force]
     if targets ~= nil then
-        local target_list_index = targets.available[id]
-        if target_list_index ~= nil then
-            if target_list_index ~= #targets.available_list then
-                -- swap the last element with the element to be removed
-                local last = targets.available_list[#targets.available_list]
-                targets.available[last.id] = target_list_index
-                targets.available_list[target_list_index] = last
-            end
-            table_remove(targets.available_list)
-            targets.available[id] = nil
-        end
+        remove_target(targets, id)
     end
 end
 
@@ -100,14 +115,16 @@ script.on_event(defines.events.on_object_destroyed, on_object_destroyed)
 
 function Public.get_random_target(force_name)
     local targets = storage.ai_targets[force_name]
-    local available_list = targets.available_list
-    local first_entity = simple_random_sample(available_list)
-    local second_entity = simple_random_sample(available_list)
-    if not first_entity or not second_entity then
+    if not targets then
         return nil
     end
-    local first = first_entity.position
-    local second = second_entity.position
+    local first_target = simple_random_sample(targets.available_list)
+    local second_target = simple_random_sample(targets.available_list)
+    if not first_target or not second_target then
+        return nil
+    end
+    local first = first_target.position
+    local second = second_target.position
     if origin_distance(first) < origin_distance(second) then
         return first
     else

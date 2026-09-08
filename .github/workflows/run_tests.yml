@@ -20,3 +20,5 @@ jobs:
           lua tests/test-biter_raffle.lua
           lua tests/test-utils.lua
           lua tests/test-science-restriction.lua
+          lua tests/test-ai-targets.lua
+          lua tests/test-ai-strikes.lua
