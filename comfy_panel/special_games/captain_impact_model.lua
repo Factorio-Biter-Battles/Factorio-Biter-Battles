@@ -1,4 +1,5 @@
 local Seed = require('comfy_panel.special_games.captain_impact_seed')
+local RoleSeed = require('comfy_panel.special_games.captain_impact_role_seed')
 
 local Public = {}
 
@@ -43,6 +44,152 @@ local function logistic(x)
     end
     local z = math.exp(x)
     return z / (1 + z)
+end
+
+local function role_profile(player_name)
+    return RoleSeed.players and RoleSeed.players[player_name]
+end
+
+local function main_quality_weight()
+    local special = storage.special_games_variables and storage.special_games_variables.captain_mode
+    local text = special and special.stats and special.stats.extrainfo or ''
+    text = string.lower(tostring(text))
+    if string.find(text, 'piece of cake', 1, true) or string.find(text, 'poc', 1, true)
+        or string.find(text, 'easy', 1, true) or string.find(text, 'itytd', 1, true)
+    then
+        return 1.0
+    end
+    if string.find(text, 'fun and fast', 1, true) or string.find(text, 'fnf', 1, true) then
+        return 0.4
+    end
+    return 0.8
+end
+
+local function role_summary(rows)
+    local annotated = 0
+    for _, row in ipairs(rows or {}) do
+        local name = row.player_name or row.name
+        local profile = role_profile(name)
+        if profile then
+            annotated = annotated + 1
+        end
+    end
+
+    -- Match the historical RoleAwareDraftEngine assignment: a player may fill
+    -- at most one core slot, and slot coverage is preferred over raw utility.
+    -- This prevents a strong annotated player from being counted simultaneously
+    -- as Main and Support in the runtime predictor.
+    local slot_roles = { 'main_builder', 'support', 'support', 'defender' }
+    local slot_weights = { main_quality_weight(), 1.0, 1.0, 1.0 }
+    local names = {}
+    for _, row in ipairs(rows or {}) do
+        names[#names + 1] = row.player_name or row.name
+    end
+    local best = {
+        score = 0,
+        filled = 0,
+        main = 0,
+        support = 0,
+        defender = 0,
+        main_present = 0,
+        support_filled = 0,
+        defender_present = 0,
+    }
+    local used = {}
+    local function visit(slot, filled, quality, main, support, defender, main_count, support_count, defender_count)
+        if slot > #slot_roles then
+            local score = filled * 100 + quality
+            if score > best.score + 1e-12 then
+                best = {
+                    score = score,
+                    filled = filled,
+                    main = main,
+                    support = support,
+                    defender = defender,
+                    main_present = main_count > 0 and 1 or 0,
+                    support_filled = math.min(2, support_count),
+                    defender_present = defender_count > 0 and 1 or 0,
+                }
+            end
+            return
+        end
+        visit(slot + 1, filled, quality, main, support, defender, main_count, support_count, defender_count)
+        local role = slot_roles[slot]
+        local qweight = slot_weights[slot]
+        for index, name in ipairs(names) do
+            if not used[index] then
+                local profile = role_profile(name)
+                if profile and profile[role .. '_capable'] then
+                    used[index] = true
+                    local utility = tonumber(profile[role .. '_utility']) or 0
+                    local weighted = utility * qweight
+                    visit(
+                        slot + 1,
+                        filled + 1,
+                        quality + weighted,
+                        main + (role == 'main_builder' and weighted or 0),
+                        support + (role == 'support' and weighted or 0),
+                        defender + (role == 'defender' and weighted or 0),
+                        main_count + (role == 'main_builder' and 1 or 0),
+                        support_count + (role == 'support' and 1 or 0),
+                        defender_count + (role == 'defender' and 1 or 0)
+                    )
+                    used[index] = nil
+                end
+            end
+        end
+    end
+    visit(1, 0, 0, 0, 0, 0, 0, 0, 0)
+
+    local main_quality = best.main
+    local support_quality = best.support
+    local defender_quality = best.defender
+    local support_filled = best.support_filled
+    local main_present = best.main_present
+    local defender_present = best.defender_present
+    local support_factor = math.min(1, 0.5 * (support_filled / 2) + 0.5 * (support_quality / 2))
+    local size = #(rows or {})
+    return {
+        annotation_coverage = size > 0 and annotated / size or 1,
+        filled_core_slots = best.filled,
+        main_present = main_present,
+        support_filled = support_filled,
+        defender_present = defender_present,
+        main_quality = main_quality,
+        support_quality = support_quality,
+        defender_quality = defender_quality,
+        main_supported_quality = main_quality * support_factor,
+    }
+end
+
+local function role_outcome_adjustment(north_rows, south_rows)
+    local cfg = Seed.role_outcome_calibration
+    local special = storage.special_games_variables and storage.special_games_variables.captain_mode
+    -- Classic Captain Games retain their original predictor exactly.  The
+    -- historical role-composition layer belongs to Impact Dynamic, where role
+    -- selection is part of the match contract and is recorded before lock.
+    if not cfg or not cfg.deployed or not special or special.draftFormat ~= 'impact_dynamic' then
+        return 0, false, {}
+    end
+    local north = role_summary(north_rows)
+    local south = role_summary(south_rows)
+    local min_coverage = tonumber(cfg.min_team_annotation_coverage) or 0.65
+    if math.min(north.annotation_coverage, south.annotation_coverage) < min_coverage then
+        return 0, false, { north = north, south = south }
+    end
+    local main_diff = north.main_quality - south.main_quality
+    local support_diff = north.support_quality - south.support_quality
+    local supported_diff = north.main_supported_quality - south.main_supported_quality
+    local eta = (tonumber(cfg.main_quality_coefficient) or 0) * main_diff
+        + (tonumber(cfg.support_quality_coefficient) or 0) * support_diff
+        + (tonumber(cfg.main_supported_quality_coefficient) or 0) * supported_diff
+    return eta, true, {
+        north = north,
+        south = south,
+        main_quality_diff = main_diff,
+        support_quality_diff = support_diff,
+        main_supported_quality_diff = supported_diff,
+    }
 end
 
 local function experience_basis(prior_games)
@@ -157,6 +304,37 @@ function Public.current_skill_logodds(player_name)
     return Public.base_skill_logodds(player_name) + delta
 end
 
+-- Role evidence is an additive residual on top of the generic player value.
+-- It is intentionally unavailable when no role was recorded, so an unrated
+-- role falls back to the stable generic Impact estimate.
+function Public.role_skill_delta(player_name, role)
+    if type(role) ~= 'string' or role == '' then
+        return 0
+    end
+    local snapshot = active_snapshot()
+    local role_delta = snapshot and snapshot.player_role_skill_delta
+    local values = role_delta and role_delta[player_name]
+    return values and tonumber(values[role]) or 0
+end
+
+function Public.role_skill_component(player_name, primary_role, secondary_role, primary_credit, secondary_credit)
+    local primary = type(primary_role) == 'string' and primary_role ~= '' and primary_role or nil
+    local secondary = type(secondary_role) == 'string' and secondary_role ~= '' and secondary_role or nil
+    if not primary and not secondary then
+        return 0
+    end
+    local p_credit = tonumber(primary_credit) or 1
+    local s_credit = secondary and (tonumber(secondary_credit) or Seed.secondary_role_credit or 1 / 3) or 0
+    local total = p_credit + s_credit
+    if total <= 0 then
+        return 0
+    end
+    return (
+        (primary and Public.role_skill_delta(player_name, primary) or 0) * p_credit
+            + (secondary and Public.role_skill_delta(player_name, secondary) or 0) * s_credit
+    ) / total
+end
+
 function Public.experience_adjustment_logodds(player_name, prior_games)
     local n = prior_games
     if n == nil then
@@ -166,8 +344,9 @@ function Public.experience_adjustment_logodds(player_name, prior_games)
 end
 
 function Public.get_rating_breakdown(player_name)
-    local row, source_name = resolve_player_row(player_name)
+    local row = resolve_player_row(player_name)
     local live_row = active_rating(player_name)
+    local live_snapshot = active_snapshot()
     local games = Public.prior_captain_games(player_name)
     local persistent = Public.current_skill_logodds(player_name)
     local experience = Public.experience_adjustment_logodds(player_name, games)
@@ -175,7 +354,6 @@ function Public.get_rating_breakdown(player_name)
     local reference = Seed.reference_current_skill_logodds or 0
     return {
         player_name = player_name,
-        source_name = source_name,
         games = games,
         persistent_skill_logodds = persistent,
         experience_adjustment_logodds = experience,
@@ -189,6 +367,8 @@ function Public.get_rating_breakdown(player_name)
         rank_low = live_row and live_row.rank_low or row and row.rank_low or nil,
         rank_high = live_row and live_row.rank_high or row and row.rank_high or nil,
         reliability = live_row and live_row.reliability or row and row.reliability or nil,
+        role_skill_delta = (live_snapshot and live_snapshot.player_role_skill_delta
+            and live_snapshot.player_role_skill_delta[player_name]) or {},
     }
 end
 
@@ -309,7 +489,10 @@ function Public.get_model_snapshot()
         end
     end
     snapshot.promoted_model_version = ensure_runtime().promoted_model_version
-    snapshot.role_offset_logodds = 0 -- Roles are recorded; no role model is deployed yet.
+    snapshot.role_seed_version = RoleSeed.model_version
+    snapshot.role_seed_source = RoleSeed.source
+    snapshot.role_seed_policy = RoleSeed.historical_role_annotation_policy
+    snapshot.role_offset_logodds = 0 -- Kept for compatibility; per-player role residuals are below.
     local learned = active_snapshot()
     if learned then
         snapshot.active_learning = {
@@ -319,6 +502,8 @@ function Public.get_model_snapshot()
             promotions = learned.promotions,
             rollbacks = learned.rollbacks,
             live_leaderboard = learned.live_leaderboard,
+            role_skill_delta = table.deepcopy(learned.player_role_skill_delta or {}),
+            role_evidence = table.deepcopy(learned.role_evidence or {}),
         }
     end
     return snapshot
@@ -386,6 +571,54 @@ function Public.predict_names(north_names, south_names, role_offset_logodds)
         count_eta = count_eta,
         player_eta = skill_eta,
         role_eta = role_eta,
+        north_count = #north,
+        south_count = #south,
+    }
+end
+
+function Public.predict_roster_rows(north_rows, south_rows)
+    local north = north_rows or {}
+    local south = south_rows or {}
+    local count_eta = Seed.count_coefficient * (#north - #south)
+    local skill_eta = 0
+    local role_eta = 0
+    local function row_skill(row)
+        local name = row.player_name or row.name
+        return Public.effective_player_logodds(name)
+            + Public.role_skill_component(
+                name,
+                row.primary_role,
+                row.secondary_role,
+                row.primary_role_credit,
+                row.secondary_role_credit
+            )
+    end
+    for _, row in ipairs(north) do
+        local name = row.player_name or row.name
+        local generic = Public.effective_player_logodds(name)
+        local role = row_skill(row) - generic
+        skill_eta = skill_eta + generic + role
+        role_eta = role_eta + role
+    end
+    for _, row in ipairs(south) do
+        local name = row.player_name or row.name
+        local generic = Public.effective_player_logodds(name)
+        local role = row_skill(row) - generic
+        skill_eta = skill_eta - generic - role
+        role_eta = role_eta - role
+    end
+    local historical_role_eta, historical_role_applied, historical_role_features =
+        role_outcome_adjustment(north, south)
+    local eta = count_eta + skill_eta + historical_role_eta
+    return {
+        eta = eta,
+        p_north = logistic(eta),
+        count_eta = count_eta,
+        player_eta = skill_eta,
+        role_eta = role_eta + historical_role_eta,
+        historical_role_eta = historical_role_eta,
+        role_outcome_calibration_applied = historical_role_applied,
+        role_outcome_features = historical_role_features,
         north_count = #north,
         south_count = #south,
     }

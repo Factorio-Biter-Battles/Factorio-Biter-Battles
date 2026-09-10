@@ -5,8 +5,8 @@
 -- Fresh server outcomes may later
 -- update a separate live delta layer without rewriting this table.
 local Seed = {}
-Seed.model_version = "v1-alpha2-amwi-2026-09-09"
-Seed.rating_source = "v0.17 AMWI + v0.18 uncertainty; persistent skill corrected to exclude the shared experience term"
+Seed.model_version = "v1-alpha3-rolling-role-calibration-2026-09-10"
+Seed.rating_source = "v0.17 AMWI + v0.18 uncertainty; persistent skill corrected to exclude the shared experience term; rolling-selected role outcome calibration"
 Seed.count_coefficient = 0.294002288678
 Seed.experience_tau = 80
 Seed.experience_penalty_logodds = 0.385536228609
@@ -19,10 +19,22 @@ Seed.effort_min_multiplier = 0.60
 Seed.effort_policy_version = "self-declared-effort-conservative-v1"
 Seed.primary_role_credit = 1
 Seed.secondary_role_credit = 1 / 3
+Seed.role_calibration_source = "609 verified normal Captain Games; 200 current capability annotations"
+Seed.role_calibration_policy = "stable-capability retrospective prior; actual played roles are learned online"
+Seed.role_outcome_calibration = {
+  deployed = true,
+  feature_set = "simplified_main_support",
+  ridge = 50.0,
+  min_team_annotation_coverage = 0.65,
+  main_quality_coefficient = 0.211676375762,
+  main_supported_quality_coefficient = 0.225066522619,
+  support_quality_coefficient = 0.341466182600,
+  selection_policy = "rolling-mean selection across chronological folds",
+}
 Seed.trust = {
   frozen_outcome_accuracy = 0.622950819672,
-  frozen_outcome_log_loss = 0.63728344,
-  frozen_outcome_brier = 0.22407888,
+  frozen_outcome_log_loss = 0.636824959334,
+  frozen_outcome_brier = 0.223885958792,
   captain_pick_pairwise_accuracy = 0.703267578781,
   captain_pick_pairwise_log_loss = 0.588907531547,
   early_pick_accuracy = 0.834283779896,

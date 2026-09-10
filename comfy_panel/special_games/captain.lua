@@ -1116,6 +1116,19 @@ local function start_captain_event()
         log('Players have been unfrozen! Game starts now!')
     end
     local special = storage.special_games_variables.captain_mode
+    -- Capture the normalized difficulty before the locked roster prediction so
+    -- the Impact Dynamic role prior uses the same Main quality weight as the
+    -- offline calibration.  Classic mode only records this metadata and keeps
+    -- its original predictor path unchanged.
+    local difficulty = DifficultyVote.difficulty_name()
+    if difficulty == "I'm Too Young to Die" then
+        difficulty = 'ITYTD'
+    elseif difficulty == 'Fun and Fast' then
+        difficulty = 'FNF'
+    elseif difficulty == 'Piece of Cake' then
+        difficulty = 'POC'
+    end
+    special.stats.extrainfo = difficulty
     if special.draftFormat == 'impact_dynamic' then
         CaptainRoles.lock_starting_roles()
     end
@@ -1125,15 +1138,6 @@ local function start_captain_event()
     special.stats.NorthInitialCaptain = special.captainList[1]
     special.stats.SouthInitialCaptain = special.captainList[2]
     special.stats.InitialReferee = special.refereeName
-    local difficulty = DifficultyVote.difficulty_name()
-    if 'difficulty' == "I'm Too Young to Die" then
-        difficulty = 'ITYTD'
-    elseif 'difficulty' == 'Fun and Fast' then
-        difficulty = 'FNF'
-    elseif 'difficulty' == 'Piece of Cake' then
-        difficulty = 'POC'
-    end
-    special.stats.extrainfo = difficulty
     storage.bb_threat.north_biters = 0
     storage.bb_threat.south_biters = 0
 

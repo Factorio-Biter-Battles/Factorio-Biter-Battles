@@ -327,7 +327,9 @@ function Public.lock_starting_roster()
     current.roster_locked_tick = game.tick
     current.starting_model_snapshot = Impact.get_model_snapshot()
     current.community_pick_info = table.deepcopy(special.stats.communityPickInfo)
-    current.locked_prediction = Impact.predict_current_rosters(0)
+    -- Roles are submitted before this lock. Use them in the locked outcome
+    -- prediction so the same role evidence is both recorded and learned.
+    current.locked_prediction = Impact.predict_roster_rows(roster.north, roster.south)
     current.locked_draft_prediction = Impact.predict_current_draft_rosters(0)
     current.prediction = current.locked_prediction.p_north
     current.draft_balance_probability = current.locked_draft_prediction.p_north

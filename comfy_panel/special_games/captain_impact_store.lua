@@ -74,7 +74,15 @@ local function canonical(o)
     }
     for _, force in ipairs({ 'north', 'south' }) do
         for _, row in ipairs(o[force]) do
-            clean[force][#clean[force] + 1] = { name = row.name, prior_games = row.prior_games, effort = row.effort }
+            clean[force][#clean[force] + 1] = {
+                name = row.name,
+                prior_games = row.prior_games,
+                effort = row.effort,
+                primary_role = row.primary_role,
+                secondary_role = row.secondary_role,
+                primary_role_credit = row.primary_role_credit,
+                secondary_role_credit = row.secondary_role_credit,
+            }
         end
     end
     return clean

@@ -1,7 +1,7 @@
 -- Deterministic outcome learner. No Factorio objects, network calls or random numbers.
 local Seed = require('comfy_panel.special_games.captain_impact_seed')
 local Public = {}
-Public.VERSION = 'online-outcome-v1'
+Public.VERSION = 'online-outcome-v1-role-residual'
 Public.POLICY = {
     evaluation_games = 24,
     promotion_log_loss_gain = 0.002,
@@ -10,6 +10,13 @@ Public.POLICY = {
     max_player_step = 0.03,
     max_skill_delta = 1,
     shrinkage = 0.002,
+    -- A known role shares part of the outcome residual with that role's
+    -- player-specific residual. The generic delta keeps most of the signal,
+    -- while the role delta is deliberately conservative until it has evidence.
+    role_learning_share = 0.35,
+    role_secondary_credit = 1 / 3,
+    max_role_delta = 0.75,
+    role_shrinkage = 0.01,
     min_duration_ticks = 5 * 60 * 60,
     max_roster_size = 128,
     leaderboard_min_games = 20,
@@ -36,6 +43,36 @@ local function skill(name, delta, games)
         + (delta[name] or 0)
         - Seed.experience_penalty_logodds * math.exp(-games / Seed.experience_tau)
 end
+local function valid_role(role)
+    if role == nil then
+        return false
+    end
+    for _, row in ipairs(Seed.roles or {}) do
+        if row.key == role then
+            return true
+        end
+    end
+    return false
+end
+local function role_component(row, role_delta)
+    if type(row) ~= 'table' or type(role_delta) ~= 'table' then
+        return 0
+    end
+    local primary = valid_role(row.primary_role) and row.primary_role or nil
+    local secondary = valid_role(row.secondary_role) and row.secondary_role or nil
+    if not primary and not secondary then
+        return 0
+    end
+    local primary_credit = tonumber(row.primary_role_credit) or 1
+    local secondary_credit = secondary and (tonumber(row.secondary_role_credit) or Public.POLICY.role_secondary_credit) or 0
+    local total = primary_credit + secondary_credit
+    if total <= 0 then
+        return 0
+    end
+    local values = role_delta[row.name] or {}
+    return ((primary and (values[primary] or 0) or 0) * primary_credit
+        + (secondary and (values[secondary] or 0) or 0) * secondary_credit) / total
+end
 local function fresh_eval()
     return { games = 0, champion_loss = 0, candidate_loss = 0, champion_brier = 0, candidate_brier = 0 }
 end
@@ -47,8 +84,12 @@ function Public.new_state()
         games = 0,
         champion = {},
         candidate = {},
+        role_champion = {},
+        role_candidate = {},
         counts = {},
+        role_counts = {},
         information = {},
+        role_information = {},
         last_seen = {},
         evaluation = fresh_eval(),
         rollback_evaluation = fresh_eval(),
@@ -96,6 +137,12 @@ function Public.validate_observation(o)
                 or not finite(row.effort)
                 or row.effort < 0
                 or row.effort > 100
+                or (row.primary_role ~= nil and not valid_role(row.primary_role))
+                or (row.secondary_role ~= nil and not valid_role(row.secondary_role))
+                or (row.primary_role ~= nil and row.secondary_role == row.primary_role)
+                or (row.secondary_role ~= nil and row.primary_role == nil)
+                or (row.primary_role_credit ~= nil and (not finite(row.primary_role_credit) or row.primary_role_credit < 0))
+                or (row.secondary_role_credit ~= nil and (not finite(row.secondary_role_credit) or row.secondary_role_credit < 0))
                 or (index > 1 and rows[index - 1].name >= row.name)
             then
                 return false, 'invalid/duplicate/unsorted player'
@@ -164,8 +211,15 @@ function Public.observation_from_match(match)
             if not final_names[row.player_name] or row.connected == false then
                 return nil, 'incomplete starting roster exposure'
             end
-            o[force][#o[force] + 1] =
-                { name = row.player_name, prior_games = row.prior_captain_games, effort = row.effort_percent or 100 }
+            o[force][#o[force] + 1] = {
+                name = row.player_name,
+                prior_games = row.prior_captain_games,
+                effort = row.effort_percent or 100,
+                primary_role = row.primary_role,
+                secondary_role = row.secondary_role,
+                primary_role_credit = row.primary_role_credit,
+                secondary_role_credit = row.secondary_role_credit,
+            }
         end
         table.sort(o[force], function(a, b)
             return a.name < b.name
@@ -193,18 +247,19 @@ function Public.fingerprint(o)
         parts[#parts + 1] = force
         for _, row in ipairs(o[force]) do
             parts[#parts + 1] = tostring(#row.name) .. ':' .. row.name .. ':' .. row.prior_games .. ':' .. row.effort
+                .. ':' .. tostring(row.primary_role or '') .. ':' .. tostring(row.secondary_role or '')
         end
     end
     return table.concat(parts, '|')
 end
 
-function Public.predict(delta, o)
+function Public.predict(delta, o, role_delta)
     local eta = Seed.count_coefficient * (#o.north - #o.south)
     for _, row in ipairs(o.north) do
-        eta = eta + skill(row.name, delta, row.prior_games)
+        eta = eta + skill(row.name, delta, row.prior_games) + role_component(row, role_delta)
     end
     for _, row in ipairs(o.south) do
-        eta = eta - skill(row.name, delta, row.prior_games)
+        eta = eta - skill(row.name, delta, row.prior_games) - role_component(row, role_delta)
     end
     return logistic(eta), eta
 end
@@ -239,11 +294,11 @@ function Public.process(state, o)
     local ok, reason = Public.validate_observation(o)
     assert(ok, reason)
     local y = o.winner == 'north' and 1 or 0
-    local champion_p, champion_eta = Public.predict(state.champion, o)
-    local candidate_p = Public.predict(state.candidate, o)
+    local champion_p, champion_eta = Public.predict(state.champion, o, state.role_champion)
+    local candidate_p = Public.predict(state.candidate, o, state.role_candidate)
     evaluate(state.evaluation, champion_p, candidate_p, y)
     if state.previous then
-        evaluate(state.rollback_evaluation, champion_p, Public.predict(state.previous, o), y)
+        evaluate(state.rollback_evaluation, champion_p, Public.predict(state.previous, o, state.previous_role), y)
     end
     state.games = state.games + 1
     local n = #o.north + #o.south
@@ -257,8 +312,10 @@ function Public.process(state, o)
             local old = state.candidate[name] or 0
             local information = state.information[name] or 0
             local rate = Public.POLICY.learning_rate / math.sqrt(n) / math.sqrt(1 + information / 20)
+            local has_role = valid_role(row.primary_role) or valid_role(row.secondary_role)
+            local role_share = has_role and Public.POLICY.role_learning_share or 0
             local step = clamp(
-                rate * (sign * (y - candidate_p) - Public.POLICY.shrinkage * old),
+                rate * (1 - role_share) * (sign * (y - candidate_p) - Public.POLICY.shrinkage * old),
                 -Public.POLICY.max_player_step,
                 Public.POLICY.max_player_step
             )
@@ -266,6 +323,37 @@ function Public.process(state, o)
             state.information[name] = information + candidate_p * (1 - candidate_p)
             state.counts[name] = (state.counts[name] or 0) + 1
             state.last_seen[name] = state.games
+            if has_role then
+                local values = state.role_candidate[name] or {}
+                local primary = valid_role(row.primary_role) and row.primary_role or nil
+                local secondary = valid_role(row.secondary_role) and row.secondary_role or nil
+                local primary_credit = tonumber(row.primary_role_credit) or 1
+                local secondary_credit = secondary
+                        and (tonumber(row.secondary_role_credit) or Public.POLICY.role_secondary_credit)
+                    or 0
+                local total = math.max(primary_credit + secondary_credit, 1)
+                local function learn_role(role, credit)
+                    if not role or credit <= 0 then
+                        return
+                    end
+                    local role_old = values[role] or 0
+                    local role_key = name .. ':' .. role
+                    local role_information = state.role_information[role_key] or 0
+                    local role_rate = Public.POLICY.learning_rate * role_share * credit / total
+                        / math.sqrt(n) / math.sqrt(1 + role_information / 20)
+                    local role_step = clamp(
+                        role_rate * (sign * (y - candidate_p) - Public.POLICY.role_shrinkage * role_old),
+                        -Public.POLICY.max_player_step,
+                        Public.POLICY.max_player_step
+                    )
+                    values[role] = clamp(role_old + role_step, -Public.POLICY.max_role_delta, Public.POLICY.max_role_delta)
+                    state.role_information[role_key] = role_information + candidate_p * (1 - candidate_p) * credit / total
+                    state.role_counts[role_key] = (state.role_counts[role_key] or 0) + credit
+                end
+                learn_role(primary, primary_credit)
+                learn_role(secondary, secondary_credit)
+                state.role_candidate[name] = values
+            end
             local offset = sign * champion_eta
                 - skill(name, state.champion, row.prior_games)
                 + Seed.reference_current_skill_logodds
@@ -281,6 +369,8 @@ function Public.process(state, o)
         then
             state.champion = table.deepcopy(state.previous)
             state.candidate = table.deepcopy(state.previous)
+            state.role_champion = table.deepcopy(state.previous_role or {})
+            state.role_candidate = table.deepcopy(state.previous_role or {})
             state.previous = nil
             state.rollbacks = state.rollbacks + 1
             transition(state, 'rollback', o, rollback)
@@ -296,7 +386,9 @@ function Public.process(state, o)
             and e.candidate_brier <= e.champion_brier
         then
             state.previous = table.deepcopy(state.champion)
+            state.previous_role = table.deepcopy(state.role_champion)
             state.champion = table.deepcopy(state.candidate)
+            state.role_champion = table.deepcopy(state.role_candidate)
             state.promotions = state.promotions + 1
             state.rollback_evaluation = fresh_eval()
             transition(state, 'promotion', o, e)
@@ -328,7 +420,9 @@ function Public.snapshot(state, revision)
         promotions = state.promotions,
         rollbacks = state.rollbacks,
         player_skill_delta = table.deepcopy(state.champion),
+        player_role_skill_delta = table.deepcopy(state.role_champion),
         completed_games_by_player = table.deepcopy(state.counts),
+        role_evidence = table.deepcopy(state.role_counts),
         live_leaderboard = live,
         ratings = {},
         leaderboard = {},
@@ -352,7 +446,22 @@ function Public.snapshot(state, revision)
     for _, name in ipairs(sorted) do
         local seed = Seed.players[name]
         local games = (seed and seed.games or 0) + (state.counts[name] or 0)
-        local row = { player_name = name, games = games, prospective_games = state.counts[name] or 0 }
+        local row = {
+            player_name = name,
+            games = games,
+            prospective_games = state.counts[name] or 0,
+            role_ratings = {},
+        }
+        local role_values = state.role_champion[name] or {}
+        for _, role in ipairs(Seed.roles or {}) do
+            local key = role.key
+            local evidence = state.role_counts[name .. ':' .. key] or 0
+            row.role_ratings[key] = {
+                skill_delta = role_values[key] or 0,
+                games = evidence,
+                eligible = evidence > 0,
+            }
+        end
         if live then
             local advantage = skill(name, state.champion, games) - Seed.reference_current_skill_logodds
             local precision = 4 + 12 * (seed and seed.reliability or 0) + (state.information[name] or 0)

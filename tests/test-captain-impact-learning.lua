@@ -91,6 +91,36 @@ check(
 )
 check(snapshot.version:find('online%-outcome%-v1', 1, false) ~= nil, 'version identifies learning algorithm')
 
+-- Actual role labels must affect the candidate/champion model, not only the
+-- exported match journal.
+local role_state = Learning.new_state()
+for index = 1, 30 do
+    local observation = {
+        schema_version = 1,
+        seed_version = Seed.model_version,
+        match_id = 'role-synthetic-' .. index,
+        order = index,
+        duration_ticks = 18000,
+        draft_regime = 'impact_dynamic',
+        winner = 'north',
+        north = {
+            {
+                name = 'role_north',
+                prior_games = index - 1,
+                effort = 100,
+                primary_role = 'main_builder',
+                primary_role_credit = 1,
+            },
+        },
+        south = { { name = 'role_south', prior_games = index - 1, effort = 100 } },
+    }
+    Learning.process(role_state, observation)
+end
+local role_snapshot = Learning.snapshot(role_state, '30-role-test')
+check(role_snapshot.player_role_skill_delta.role_north.main_builder > 0, 'winning primary role learns a positive residual')
+check(role_snapshot.role_evidence['role_north:main_builder'] > 0, 'role evidence is counted')
+check(role_snapshot.ratings.role_north.role_ratings.main_builder.games > 0, 'role rating is exported')
+
 -- Store accepts only complete real matches, deduplicates immutable IDs and
 -- writes an independent leaderboard file/checkpoint without network access.
 storage = { captain_impact_learning = nil, captain_impact_history = { games = {} } }
