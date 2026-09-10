@@ -1,5 +1,6 @@
 local CaptainUtils = require('comfy_panel.special_games.captain_utils')
 local CaptainStates = require('comfy_panel.special_games.captain_states')
+local CaptainImpact = require('comfy_panel.special_games.captain_impact_model')
 local Color = require('utils.color_presets')
 local Group = require('comfy_panel.group')
 local PlayerList = require('comfy_panel.player_list')
@@ -34,19 +35,24 @@ local function update_player_status(widget, connected)
 end
 
 ---@param enabled boolean If the button should be enabled
-local function draw_picking_ui_entry(parent, player_name, group_name, play_time)
+local function draw_picking_ui_entry(parent, player_name, group_name, play_time, viewer)
     local special = storage.special_games_variables.captain_mode
-    local tags = {
-        name = player_name,
-    }
+    local impact_mode = special.draftFormat == 'impact_dynamic'
+    local tags = { name = player_name }
 
-    -- Horizontal container for button + player name next to it.
+    -- The public Impact draft has the same list for everyone, but pick buttons
+    -- only exist for the two captains. Classic mode keeps the old captain-only UI.
+    local viewer_is_captain = viewer
+        and (special.captainList[1] == viewer.name or special.captainList[2] == viewer.name)
+
     local flow = parent.add({
         type = 'flow',
         direction = 'horizontal',
         tags = tags,
     })
-    draw_picking_ui_button(flow, tags)
+    if not impact_mode or viewer_is_captain then
+        draw_picking_ui_button(flow, tags)
+    end
     local name_flow = flow.add({
         type = 'flow',
         direction = 'horizontal',
@@ -66,7 +72,6 @@ local function draw_picking_ui_entry(parent, player_name, group_name, play_time)
     local connected = player and player.connected
     update_player_status(icon, connected)
 
-    -- Inner flow elements don't require tags.
     local l = name_flow.add({
         type = 'label',
         caption = player_name,
@@ -78,13 +83,57 @@ local function draw_picking_ui_entry(parent, player_name, group_name, play_time)
     l.style.minimal_width = 100
     l.style.horizontal_align = 'left'
 
-    l = parent.add({
-        type = 'label',
-        caption = group_name,
-        style = 'tooltip_label',
-        tags = tags,
-    })
-    gui_style(l, { minimal_width = 100, font_color = Color.antique_white })
+    if impact_mode then
+        local display = CaptainImpact.get_display(player_name)
+        l = parent.add({
+            type = 'label',
+            caption = display.rank,
+            tooltip = display.tooltip,
+            style = 'tooltip_label',
+            tags = tags,
+        })
+        gui_style(l, { minimal_width = 52, horizontal_align = 'center' })
+
+        l = parent.add({
+            type = 'label',
+            caption = display.amwi,
+            tooltip = display.tooltip,
+            style = 'tooltip_label',
+            tags = tags,
+        })
+        gui_style(l, { minimal_width = 82, horizontal_align = 'right' })
+
+        local effort = CaptainImpact.get_effort_percent(player_name)
+        l = parent.add({
+            type = 'label',
+            caption = tostring(effort) .. '%',
+            tooltip = 'Self-declared effort for this match. The provisional policy discounts at most 40%: 100%=100% value and 0%=60% value, never below the minimum-player floor. Permanent Rank and AMWI are unchanged.',
+            style = 'tooltip_label',
+            tags = tags,
+        })
+        gui_style(l, { minimal_width = 64, horizontal_align = 'right' })
+
+        local consequence = CaptainImpact.get_pick_consequence_display(player_name, special.next_pick_force, 0)
+        l = parent.add({
+            type = 'label',
+            caption = consequence.caption,
+            tooltip = consequence.tooltip,
+            style = 'tooltip_label',
+            tags = tags,
+        })
+        gui_style(l, { minimal_width = 118, horizontal_align = 'center' })
+        l.style.font_color = consequence.consequence.keeps_next_pick and Color.light_green or Color.yellow
+    end
+
+    if not impact_mode then
+        l = parent.add({
+            type = 'label',
+            caption = group_name,
+            style = 'tooltip_label',
+            tags = tags,
+        })
+        gui_style(l, { minimal_width = 100, font_color = Color.antique_white })
+    end
 
     l = parent.add({
         type = 'label',
@@ -112,6 +161,16 @@ local function draw_picking_ui_title(frame)
     local title = flow.add({ type = 'label', name = 'title', style = 'frame_title' })
     title.drag_target = frame
 
+    local special = storage.special_games_variables.captain_mode
+    if special and special.draftFormat == 'impact_dynamic' then
+        flow.add({
+            type = 'button',
+            name = 'captain_impact_explain_open',
+            caption = 'How ratings work',
+            tooltip = 'Compact explanation from historical evidence to native skill and AMWI, with a worked Jimmy50 example.',
+        })
+    end
+
     local dragger = flow.add({ type = 'empty-widget', style = 'draggable_space_header' })
     dragger.drag_target = frame
     gui_style(dragger, { height = 24, horizontally_stretchable = true })
@@ -135,12 +194,65 @@ local function draw_picking_ui_list_inner(frame)
         direction = 'vertical',
     })
     gui_style(sp, { horizontally_squashable = false, padding = 0 })
-    return sp.add({ type = 'table', name = 'picks_list', column_count = 4, style = 'mods_explore_results_table' })
+    local special = storage.special_games_variables.captain_mode
+    local columns = special.draftFormat == 'impact_dynamic' and 7 or 4
+    return sp.add({ type = 'table', name = 'picks_list', column_count = columns, style = 'mods_explore_results_table' })
+end
+
+---Returns a viewer-local sort state for the public Impact draft.
+---@param viewer LuaPlayer?
+---@return table?
+local function get_pick_sort_state(viewer)
+    if not viewer then
+        return nil
+    end
+    local special = storage.special_games_variables.captain_mode
+    special.ui_pick_sort = special.ui_pick_sort or {}
+    return special.ui_pick_sort[viewer.name]
+end
+
+local SORT_DEFAULT_DESC = {
+    player = false,
+    rank = false,
+    amwi = true,
+    effort = true,
+    consequence = true,
+    playtime = true,
+    notes = false,
+}
+
+local function sort_header_caption(viewer, key, caption)
+    local state = get_pick_sort_state(viewer)
+    if not state or state.key ~= key then
+        return caption
+    end
+    return caption .. (state.desc and '  ▼' or '  ▲')
+end
+
+local function draw_sort_header(tab, viewer, key, caption, tooltip, width)
+    local button = tab.add({
+        type = 'button',
+        name = 'captain_pick_sort_' .. key,
+        caption = sort_header_caption(viewer, key, caption),
+        tooltip = (tooltip or '') .. ' Click to sort; click again to reverse.',
+    })
+    gui_style(button, {
+        font = 'heading-2',
+        minimal_width = width or 100,
+        top_margin = 1,
+        bottom_margin = 1,
+        left_padding = 4,
+        right_padding = 4,
+    })
+    return button
 end
 
 ---Draws header of picking list containing player entires.
 ---@param tab LuaGuiElement Table element.
-local function draw_picking_ui_list_header(tab)
+---@param viewer LuaPlayer?
+local function draw_picking_ui_list_header(tab, viewer)
+    local special = storage.special_games_variables.captain_mode
+    local impact_mode = special.draftFormat == 'impact_dynamic'
     local label_style = {
         font_color = Color.antique_white,
         font = 'heading-2',
@@ -148,27 +260,147 @@ local function draw_picking_ui_list_header(tab)
         top_margin = 4,
         bottom_margin = 4,
     }
+
+    if impact_mode then
+        draw_sort_header(tab, viewer, 'player', 'Player', 'Player name.', 112)
+        draw_sort_header(
+            tab,
+            viewer,
+            'rank',
+            'Rank',
+            'Current AMWI leaderboard rank. Unrated players remain at the bottom.',
+            60
+        )
+        draw_sort_header(
+            tab,
+            viewer,
+            'amwi',
+            'AMWI',
+            'Average Marginal Win Impact versus the active established-player reference. Unrated players remain at the bottom.',
+            88
+        )
+        draw_sort_header(
+            tab,
+            viewer,
+            'effort',
+            'Effort',
+            'Self-declared effort for this match. Provisional mapping: 100%=100% value, 75%=90%, 50%=80%, 25%=70%, 0%=60%, never below the minimum-player floor. Permanent AMWI is unchanged.',
+            72
+        )
+        draw_sort_header(
+            tab,
+            viewer,
+            'consequence',
+            'If picked',
+            'Sorts by your projected draft-balance share after taking the player. 1 PICK = turn passes; 2+ PICKS = your team remains weaker and keeps the next pick. * means the positive minimum draft-value guardrail applies to that player.',
+            128
+        )
+        draw_sort_header(tab, viewer, 'playtime', 'Total playtime', 'Total BB playtime.', 112)
+        draw_sort_header(tab, viewer, 'notes', 'Notes', 'Player note text.', 110)
+        return
+    end
+
     local l = tab.add({ type = 'label', caption = 'Player' })
     gui_style(l, label_style)
-
     l = tab.add({ type = 'label', caption = 'Group' })
     gui_style(l, label_style)
-
     l = tab.add({ type = 'label', caption = 'Total playtime' })
     gui_style(l, label_style)
-
     l = tab.add({ type = 'label', caption = 'Notes' })
     gui_style(l, label_style)
 end
 
+local function impact_sort_value(player_name, key, special)
+    if key == 'player' then
+        return string.lower(player_name), false
+    elseif key == 'rank' then
+        local rank = CaptainImpact.get_rank(player_name)
+        return rank, rank == nil
+    elseif key == 'amwi' then
+        local amwi = CaptainImpact.get_amwi_pp(player_name)
+        return amwi, amwi == nil
+    elseif key == 'effort' then
+        return CaptainImpact.get_effort_percent(player_name), false
+    elseif key == 'consequence' then
+        local consequence = CaptainImpact.pick_consequence(player_name, special.next_pick_force, 0)
+        return consequence.p_picking_team_after, false
+    elseif key == 'playtime' then
+        return storage.total_time_online_players[player_name] or 0, false
+    elseif key == 'notes' then
+        return string.lower(special.player_info[player_name] or ''), false
+    end
+    return string.lower(player_name), false
+end
+
+local function get_viewer_pick_list(viewer)
+    local special = storage.special_games_variables.captain_mode
+    local result = table.deepcopy(special.listPlayers)
+    if special.draftFormat ~= 'impact_dynamic' then
+        return result
+    end
+    local state = get_pick_sort_state(viewer)
+    if not state or SORT_DEFAULT_DESC[state.key] == nil then
+        return result
+    end
+
+    table.sort(result, function(a, b)
+        local va, na = impact_sort_value(a, state.key, special)
+        local vb, nb = impact_sort_value(b, state.key, special)
+
+        -- Missing Rank/AMWI values stay at the bottom in either direction.
+        if na ~= nb then
+            return not na
+        end
+        if va == vb then
+            return string.lower(a) < string.lower(b)
+        end
+        if state.desc then
+            return va > vb
+        end
+        return va < vb
+    end)
+    return result
+end
+
+---Handles a sortable Impact-draft header click.
+---@param player LuaPlayer
+---@param element LuaGuiElement
+---@return boolean
+function Public.handle_pick_sort_click(player, element)
+    if not (player and element and element.valid) then
+        return false
+    end
+    local prefix = 'captain_pick_sort_'
+    if string.sub(element.name or '', 1, #prefix) ~= prefix then
+        return false
+    end
+    local special = storage.special_games_variables.captain_mode
+    if not special or special.draftFormat ~= 'impact_dynamic' or not special.pickingPhase then
+        return false
+    end
+    local key = string.sub(element.name, #prefix + 1)
+    if SORT_DEFAULT_DESC[key] == nil then
+        return false
+    end
+    special.ui_pick_sort = special.ui_pick_sort or {}
+    local state = special.ui_pick_sort[player.name]
+    if state and state.key == key then
+        state.desc = not state.desc
+    else
+        state = { key = key, desc = SORT_DEFAULT_DESC[key] }
+        special.ui_pick_sort[player.name] = state
+    end
+    return true
+end
+
 ---Draws picking list that contains entires players.
 ---@param frame LuaGuiElement Main picking UI frame
-local function draw_picking_ui_list(frame)
+local function draw_picking_ui_list(frame, viewer)
     local tab = draw_picking_ui_list_inner(frame)
-    draw_picking_ui_list_header(tab)
+    draw_picking_ui_list_header(tab, viewer)
 
-    local pick_list = storage.special_games_variables.captain_mode.listPlayers
-    for _, pl in pairs(pick_list) do
+    local pick_list = get_viewer_pick_list(viewer)
+    for _, pl in ipairs(pick_list) do
         local playerIterated = cpt_get_player(pl)
         local playtimePlayer = '0 minutes'
         if playerIterated and storage.total_time_online_players[playerIterated.name] then
@@ -176,9 +408,9 @@ local function draw_picking_ui_list(frame)
                 PlayerList.get_formatted_playtime_from_ticks(storage.total_time_online_players[playerIterated.name])
         end
 
-        local tag = playerIterated.tag
+        local tag = playerIterated and playerIterated.tag or ''
         tag = Group.is_cpt_group_tag(tag) and tag or ''
-        draw_picking_ui_entry(tab, pl, tag, playtimePlayer)
+        draw_picking_ui_entry(tab, pl, tag, playtimePlayer, viewer)
     end
 end
 
@@ -255,6 +487,9 @@ end
 ---Updates picking UI timer.
 ---@param player LuaPlayer Captain that receives an update.
 function Public.update_picking_ui_timer(player)
+    if not (player and player.valid and player.gui and player.gui.screen['captain_picking_ui']) then
+        return
+    end
     local special = storage.special_games_variables.captain_mode
     if not special.captain_pick_timer_enabled then
         return
@@ -265,12 +500,17 @@ function Public.update_picking_ui_timer(player)
     local ticks = special.captain_pick_timer[special.next_pick_force]
     local timer = ticks_to_seconds(ticks)
     local is_paused = special.captain_pick_timer_paused
+    local is_public_observer = special.draftFormat == 'impact_dynamic'
+        and not (special.captainList[1] == player.name or special.captainList[2] == player.name)
     local is_idle = player.force.name ~= special.next_pick_force
     local caption
     local color
     if is_paused then
         caption = string.format('Picking paused for both teams: Your time: %s', timer)
         color = Color.light_cyan
+    elseif is_public_observer then
+        caption = string.format('%s is picking. Time remaining: %s', string.upper(special.next_pick_force), timer)
+        color = Color.light_steel_blue
     elseif is_idle then
         local idle_force = special.next_pick_force == 'north' and 'south' or 'north'
         local idle_ticks = special.captain_pick_timer[idle_force]
@@ -290,6 +530,15 @@ end
 ---that is performing picks right now and updates the displayed timer.
 ---@param force string Force that does the picking now.
 function Public.try_update_picking_ui_timer(force)
+    local special = storage.special_games_variables.captain_mode
+    if special and special.draftFormat == 'impact_dynamic' then
+        for _, player in ipairs(game.connected_players) do
+            if player.gui.screen['captain_picking_ui'] then
+                Public.update_picking_ui_timer(player)
+            end
+        end
+        return
+    end
     for _, player in ipairs(game.forces[force].connected_players) do
         if player.gui.screen['captain_picking_ui'] then
             Public.update_picking_ui_timer(player)
@@ -307,7 +556,8 @@ local function draw_picking_ui_base(player)
         name = 'captain_picking_ui',
         direction = 'vertical',
     })
-    gui_style(frame, { maximal_width = 900, maximal_height = 800 })
+    local special = storage.special_games_variables.captain_mode
+    gui_style(frame, { maximal_width = special.draftFormat == 'impact_dynamic' and 1250 or 900, maximal_height = 800 })
     if location then
         frame.location = location
     else
@@ -316,7 +566,7 @@ local function draw_picking_ui_base(player)
 
     draw_picking_ui_title(frame)
     draw_picking_ui_timer(frame)
-    draw_picking_ui_list(frame)
+    draw_picking_ui_list(frame, player)
 end
 
 ---Finds a child by name in a widget.
@@ -379,6 +629,9 @@ end
 ---@param cpt LuaPlayer Captain for whom we're updating the list.
 ---@param player string Name of a player that was just picked.
 function Public.try_destroy_picking_ui_list_entry(cpt, player)
+    if not (cpt and cpt.valid and cpt.gui) then
+        return
+    end
     local ui = cpt.gui.screen['captain_picking_ui']
     if not ui then
         return
@@ -398,9 +651,11 @@ end
 ---@param names string[] List of captain names
 ---@param player string Name of player that was just picked.
 function Public.try_destroy_picking_ui_list_entry_for_each(names, player)
-    for _, name in ipairs(names) do
-        local cpt = game.get_player(name)
-        Public.try_destroy_picking_ui_list_entry(cpt, player)
+    for _, item in ipairs(names) do
+        local cpt = type(item) == 'string' and game.get_player(item) or item
+        if cpt and cpt.valid and cpt.gui then
+            Public.try_destroy_picking_ui_list_entry(cpt, player)
+        end
     end
 end
 
@@ -408,7 +663,22 @@ end
 ---@param cpt LuaPlayer Captain for whom we're going to update it.
 ---@param state integer State of UI for this captain
 function Public.update_picking_ui_title(cpt, state)
+    if not (cpt and cpt.valid and cpt.gui and cpt.gui.screen['captain_picking_ui']) then
+        return
+    end
     local title = cpt.gui.screen['captain_picking_ui']['title_root']['title']
+    local special = storage.special_games_variables.captain_mode
+    if special.draftFormat == 'impact_dynamic' then
+        local is_captain = special.captainList[1] == cpt.name or special.captainList[2] == cpt.name
+        if state == CaptainStates.PICKS.PAUSED then
+            title.caption = 'Impact Dynamic draft is paused'
+        elseif is_captain and state == CaptainStates.PICKS.RUNNING then
+            title.caption = 'Impact Dynamic: ' .. string.upper(special.next_pick_force) .. ' picks now'
+        else
+            title.caption = 'Impact Dynamic draft: ' .. string.upper(special.next_pick_force) .. ' is picking'
+        end
+        return
+    end
     if state == CaptainStates.PICKS.RUNNING then
         title.caption = 'Who do you want to pick?'
     elseif state == CaptainStates.PICKS.IDLE then
@@ -422,6 +692,9 @@ end
 ---@param cpt LuaPlayer Captain for whom we're going to update it.
 ---@param state integer State of UI buttons for this captain
 function Public.update_picking_ui_pick_buttons(cpt, state)
+    if not (cpt and cpt.valid and cpt.gui and cpt.gui.screen['captain_picking_ui']) then
+        return
+    end
     ---Updates state of the picking button.
     ---@param button LuaGuiElement Button element
     local function update_state(button)
@@ -469,6 +742,9 @@ end
 ---Some fields are left uninitialized and require calling 'update' functions.
 ---@param player LuaPlayer?
 function Public.draw_picking_ui(player)
+    if not (player and player.valid and player.gui) then
+        return
+    end
     if player.gui.screen['captain_picking_ui'] then
         return
     end
@@ -481,6 +757,9 @@ end
 ---location.
 ---@param player LuaPlayer Player for which we're going to destroy picking UI.
 function Public.try_destroy_picking_ui(player)
+    if not (player and player.valid and player.gui) then
+        return
+    end
     local name = 'captain_picking_ui'
     local special = storage.special_games_variables.captain_mode
     if player.gui.screen[name] then

@@ -37,9 +37,22 @@ Public.COMFY_PANEL_CAPTAINS_SAFE_GROUP_PREFIX =
     Public.convert_to_safe_group_name(Public.COMFY_PANEL_CAPTAINS_GROUP_PREFIX)
 Public.COMFY_PANEL_CAPTAINS_GROUP_PLAYER_TAG_PREFIX = '[' .. Public.COMFY_PANEL_CAPTAINS_GROUP_PREFIX
 
+local function impact_groups_disabled()
+    local special = storage.special_games_variables and storage.special_games_variables.captain_mode
+    return storage.active_special_games
+        and storage.active_special_games.captain_mode
+        and special
+        and special.draftFormat == 'impact_dynamic'
+end
+
 ---@param player LuaPlayer
 ---@param frame LuaGuiElement
 local build_group_gui = function(player, frame)
+    if impact_groups_disabled() then
+        frame.clear()
+        frame.add({ type = 'label', caption = 'Captain Groups are disabled for Impact Dynamic games.' })
+        return
+    end
     local group_name_width = 150
     local description_width = 240
     local members_width = 90
@@ -186,21 +199,25 @@ local function refresh_gui()
         local frame = Tabs.comfy_panel_get_active_frame(p)
         if frame then
             if frame.name == 'Groups' then
-                local new_group_name = frame.frame2.group_table.new_group_name.text
-                local new_group_description = frame.frame2.group_table.new_group_description.text
+                if impact_groups_disabled() or not frame.frame2 then
+                    build_group_gui(p, frame)
+                else
+                    local new_group_name = frame.frame2.group_table.new_group_name.text
+                    local new_group_description = frame.frame2.group_table.new_group_description.text
 
-                if new_group_name:len() > 30 then
-                    new_group_name = string.sub(new_group_name, 1, 30)
+                    if new_group_name:len() > 30 then
+                        new_group_name = string.sub(new_group_name, 1, 30)
+                    end
+
+                    if new_group_description:len() > 60 then
+                        new_group_description = string.sub(new_group_description, 1, 60)
+                    end
+                    build_group_gui(p, frame)
+
+                    local frame = Tabs.comfy_panel_get_active_frame(p)
+                    frame.frame2.group_table.new_group_name.text = new_group_name
+                    frame.frame2.group_table.new_group_description.text = new_group_description
                 end
-
-                if new_group_description:len() > 60 then
-                    new_group_description = string.sub(new_group_description, 1, 60)
-                end
-                build_group_gui(p, frame)
-
-                local frame = Tabs.comfy_panel_get_active_frame(p)
-                frame.frame2.group_table.new_group_name.text = new_group_name
-                frame.frame2.group_table.new_group_description.text = new_group_description
             end
         end
     end
@@ -267,6 +284,12 @@ local function on_gui_click(event)
         return
     end
     if frame.name ~= 'Groups' then
+        return
+    end
+
+    if impact_groups_disabled() then
+        player.print('Groups are disabled for Impact Dynamic games.', { color = Color.red })
+        build_group_gui(player, frame)
         return
     end
 

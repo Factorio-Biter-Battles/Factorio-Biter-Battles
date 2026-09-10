@@ -3,6 +3,11 @@ local CaptainTaskGroup = require('comfy_panel.special_games.captain_task_group')
 local CaptainUtils = require('comfy_panel.special_games.captain_utils')
 local CaptainUI = require('comfy_panel.special_games.captain_ui')
 local CaptainStates = require('comfy_panel.special_games.captain_states')
+local CaptainImpact = require('comfy_panel.special_games.captain_impact_model')
+local CaptainImpactData = require('comfy_panel.special_games.captain_impact_data')
+local CaptainImpactTrust = require('comfy_panel.special_games.captain_impact_trust')
+local CaptainImpactExplain = require('comfy_panel.special_games.captain_impact_explain')
+local CaptainRoles = require('comfy_panel.special_games.captain_roles')
 local ClosableFrame = require('utils.ui.closable_frame')
 local Color = require('utils.color_presets')
 local ComfyPanelGroup = require('comfy_panel.group')
@@ -50,6 +55,14 @@ local Public = {
             switch_state = 'left',
             allow_none_state = false,
             tooltip = 'Captain can eject players from his team : Yes / No',
+        },
+        {
+            name = 'draftFormat',
+            type = 'drop-down',
+            items = { 'Classic 1-2-2', 'Impact Dynamic' },
+            selected_index = 1,
+            tooltip = 'Classic preserves the existing 1-2-2 Captain Game. Impact Dynamic gives the next pick to the currently weaker modeled team and shows Rank/AMWI/pick consequences publicly.',
+            width = 150,
         },
         {
             name = 'specialEnabled',
@@ -251,6 +264,7 @@ local function switch_team_of_player(playerName, playerForceName)
     else
         TeamManager.switch_force(playerName, playerForceName)
     end
+    CaptainImpact.freeze_effort(playerName)
     local forcePickName = playerForceName .. 'Picks'
     insert(special.stats[forcePickName], playerName)
     if not special.playerPickedAtTicks[playerName] then
@@ -310,6 +324,8 @@ local function force_end_captain_event(player)
     end
 
     cleanup_research_permissions()
+    CaptainImpactData.cancel_match(player and ('cancelled_by:' .. player.name) or 'cancelled')
+
     storage.special_games_variables.captain_mode = nil
     storage.tournament_mode = false
     if storage.freeze_players == true then
@@ -340,6 +356,19 @@ end
 ---@return string[] List of player names
 local function get_sorted_pick_list()
     local special = storage.special_games_variables.captain_mode
+
+    if special.draftFormat == 'impact_dynamic' then
+        local players = table.deepcopy(special.listPlayers)
+        table.sort(players, function(a, b)
+            local time_a = storage.total_time_online_players[a] or 0
+            local time_b = storage.total_time_online_players[b] or 0
+            if time_a ~= time_b then
+                return time_a > time_b
+            end
+            return a:lower() < b:lower()
+        end)
+        return players
+    end
 
     -- First pass: count members per group.
     -- During sorting, empty group is implicit (all non-captain group players are in empty group)
@@ -411,9 +440,24 @@ local function display_picking_ui(state)
     local idle_or_paused = state == CaptainStates.PICKS.PAUSED and CaptainStates.PICKS.PAUSED
         or CaptainStates.PICKS.IDLE
     local force = special.next_pick_force
-    -- We cannot alternate picking UI in community mode between two captains as
-    -- there might be no captain in one of the teams or players that do the picking
-    -- are always random.
+
+    -- Impact Dynamic is a public draft: every connected player sees the same
+    -- live table, but CaptainUI only creates pick buttons for the two captains.
+    if special.draftFormat == 'impact_dynamic' and not special.communityPickingMode then
+        CaptainUI.try_destroy_picking_ui_for_each(game.connected_players)
+        local current_captain = special.captainList[force == 'north' and 1 or 2]
+        for _, viewer in pairs(game.connected_players) do
+            CaptainUI.draw_picking_ui(viewer)
+            local is_current = viewer.name == current_captain
+            local viewer_state = is_current and running_or_paused or idle_or_paused
+            CaptainUI.update_picking_ui_title(viewer, viewer_state)
+            CaptainUI.update_picking_ui_pick_buttons(viewer, viewer_state)
+            CaptainUI.update_picking_ui_timer(viewer)
+        end
+        return
+    end
+
+    -- Existing Classic / community behavior remains unchanged.
     if special.communityPickingMode then
         local cpt_next = Public.get_player_to_make_pick(force)
         CaptainUI.try_destroy_picking_ui_for_each(game.players)
@@ -427,16 +471,12 @@ local function display_picking_ui(state)
         CaptainUI.update_picking_ui_title(cpt_next, running_or_paused)
         CaptainUI.update_picking_ui_pick_buttons(cpt_next, running_or_paused)
         CaptainUI.update_picking_ui_timer(cpt_next)
-        -- Start alternating only when there is more than one player to pick.
-        -- This condition will also prevent picking UI to appear when there is only
-        -- one player left.
         if #special.listPlayers > 1 then
             CaptainUI.draw_picking_ui(cpt_prev)
             CaptainUI.update_picking_ui_pick_buttons(cpt_prev, idle_or_paused)
             CaptainUI.update_picking_ui_title(cpt_prev, idle_or_paused)
             CaptainUI.update_picking_ui_timer(cpt_prev)
         else
-            -- Nothing left to pick for other/previous captain.
             CaptainUI.try_destroy_picking_ui(cpt_prev)
         end
     end
@@ -519,7 +559,11 @@ end
 
 local function auto_pick_all_of_group(playerName)
     local special = storage.special_games_variables.captain_mode
-    if special.captainGroupAllowed and not special.initialPickingPhaseFinished then
+    if
+        special.draftFormat ~= 'impact_dynamic'
+        and special.captainGroupAllowed
+        and not special.initialPickingPhaseFinished
+    then
         local playerChecked = cpt_get_player(playerName)
         if not playerChecked then
             return
@@ -550,7 +594,10 @@ local function auto_pick_all_of_group(playerName)
             if player then
                 game.print(playerName .. ' was automatically picked with group system', { color = Color.cyan })
                 local f = playerChecked.force.name
+                local pick = CaptainImpactData.capture_pick_context(f, nil, 'group_auto_pick')
+                pick.trigger_player = playerChecked.name
                 switch_team_of_player(playerName, f)
+                CaptainImpactData.record_pick(playerName, f, pick)
                 player.print({ 'captain.comms_reminder' }, { color = Color.cyan })
                 table_remove_element(special.listPlayers, playerName)
                 CaptainUI.try_destroy_picking_ui_list_entry_for_each(special.captainList, playerName)
@@ -564,7 +611,8 @@ end
 ---@return boolean
 local function is_player_in_group_system(playerName)
     -- function used to balance team when a team is picked
-    if storage.special_games_variables.captain_mode.captainGroupAllowed then
+    local special = storage.special_games_variables.captain_mode
+    if special.draftFormat ~= 'impact_dynamic' and special.captainGroupAllowed then
         local playerChecked = cpt_get_player(playerName)
         if playerChecked and playerChecked.tag ~= '' and ComfyPanelGroup.is_cpt_group_tag(playerChecked.tag) then
             return true
@@ -646,7 +694,7 @@ local function player_has_captain_authority(player)
         or special.viceCaptains[force_name][player]
 end
 
-local function generate_captain_mode(refereeName, autoTrust, captainKick, specialEnabled)
+local function generate_captain_mode(refereeName, autoTrust, captainKick, specialEnabled, draftFormat)
     if Functions.get_ticks_since_game_start() > 0 then
         game.print(
             "Must start the captain event on a fresh map. Enable tournament_mode and do '/instant_map_reset current' to reset to current seed.",
@@ -656,6 +704,7 @@ local function generate_captain_mode(refereeName, autoTrust, captainKick, specia
     end
     captainKick = captainKick == 'left'
     autoTrust = autoTrust == 'left'
+    draftFormat = draftFormat == 'impact_dynamic' and 'impact_dynamic' or 'classic_122'
 
     local auto_pick_interval_ticks = 5 * 60 * 60 -- 5 minutes
     local special = {
@@ -719,9 +768,15 @@ local function generate_captain_mode(refereeName, autoTrust, captainKick, specia
         ---@type table<string, boolean>
         communityPicksConfirmed = {},
         communityPickingMode = false,
+        -- Captain Game variants coexist. Classic keeps the historical behavior;
+        -- Impact Dynamic uses the Lua port of the reviewed player-strength model.
+        draftFormat = draftFormat,
         communityPickingModeCaptainVolunteers = false,
         ---@type table<string, string>
         player_info = {},
+        ---Match-specific self-declared competitive effort (0-100). Does not alter permanent AMWI.
+        ---@type table<string, number>
+        player_effort = {},
         ---@type table<string, boolean>
         kickedPlayers = {},
         listTeamReadyToPlay = {},
@@ -744,7 +799,8 @@ local function generate_captain_mode(refereeName, autoTrust, captainKick, specia
             north = { locked = false, trustlist = {} },
             south = { locked = false, trustlist = {} },
         },
-        captainGroupAllowed = true,
+        captainGroupAllowed = draftFormat ~= 'impact_dynamic',
+
         groupLimit = 3,
         teamAssignmentSeed = math_random(10000, 100000),
         playerPickedAtTicks = {},
@@ -804,6 +860,7 @@ local function generate_captain_mode(refereeName, autoTrust, captainKick, specia
         Sounds.notify_player(player, 'utility/new_objective')
     end
     storage.chosen_team = {}
+    CaptainImpactData.begin_match(special.draftFormat)
     clear_character_corpses()
     if is_it_automatic_captain() then
         game.print('Captain mode started !! Have fun ! No referee')
@@ -816,7 +873,11 @@ local function generate_captain_mode(refereeName, autoTrust, captainKick, specia
     if special.captainKick then
         game.print('Option was enabled : Captains can eject players of their team', { color = Color.cyan })
     end
-    game.print('Picking system : 1-2-2-2-2...', { color = Color.cyan })
+    if special.draftFormat == 'impact_dynamic' then
+        game.print('Picking system : Impact Dynamic (weaker modeled team gets the next pick)', { color = Color.cyan })
+    else
+        game.print('Picking system : Classic 1-2-2-2-2...', { color = Color.cyan })
+    end
 
     if referee and not is_it_automatic_captain() then
         referee.print(
@@ -1055,6 +1116,10 @@ local function start_captain_event()
         log('Players have been unfrozen! Game starts now!')
     end
     local special = storage.special_games_variables.captain_mode
+    if special.draftFormat == 'impact_dynamic' then
+        CaptainRoles.lock_starting_roles()
+    end
+    CaptainImpactData.lock_starting_roster()
     special.prepaPhase = false
     special.stats.tickGameStarting = game.ticks_played
     special.stats.NorthInitialCaptain = special.captainList[1]
@@ -1254,13 +1319,15 @@ end)
 
 function Public.end_of_picking_phase()
     local special = storage.special_games_variables.captain_mode
+    local completed_initial_round = not special.initialPickingPhaseFinished
     special.pickingPhase = false
+    special.draft_effort_snapshot = nil
 
     -- Destroy any open picking UIs, even for offline captains.
     CaptainUI.try_destroy_picking_ui_for_each(game.players)
     if not special.initialPickingPhaseFinished then
         special.initialPickingPhaseFinished = true
-        if special.captainGroupAllowed then
+        if special.draftFormat ~= 'impact_dynamic' and special.captainGroupAllowed then
             game.print(
                 '[font=default-large-bold]Initial Picking Phase done - group picking is now disabled[/font]',
                 { color = Color.cyan }
@@ -1268,6 +1335,9 @@ function Public.end_of_picking_phase()
         end
     end
     special.nextAutoPickTicks = Functions.get_ticks_since_game_start() + special.autoPickIntervalTicks
+    if completed_initial_round and special.draftFormat == 'impact_dynamic' then
+        CaptainRoles.start_initial_selection()
+    end
     if special.prepaPhase then
         game.print(
             '[font=default-large-bold]Time to start preparation for each team ! Once your team is ready, captain, click on yes on top popup[/font]',
@@ -1294,7 +1364,12 @@ local function start_picking_phase()
     local special = storage.special_games_variables.captain_mode
     local is_initial_picking_phase = not special.initialPickingPhaseStarted
     special.listPlayers = get_sorted_pick_list()
+    CaptainImpact.lock_draft_efforts()
+    if special.draftFormat == 'impact_dynamic' then
+        special.captainGroupAllowed = false
+    end
     special.pickingPhase = true
+    CaptainImpactData.record_draft_started()
     if not special.initialPickingPhaseStarted then
         close_difficulty_vote()
         special.initialPickingPhaseStarted = true
@@ -1339,7 +1414,9 @@ local function start_picking_phase()
         for i, team in ipairs(picks) do
             local force_name = i == 1 and 'north' or 'south'
             for _, player in ipairs(team) do
+                local pick = CaptainImpactData.capture_pick_context(force_name, nil, 'community_assignment')
                 switch_team_of_player(player, force_name)
+                CaptainImpactData.record_pick(player, force_name, pick)
                 table_remove_element(special.listPlayers, player)
             end
             if special.communityPickingModeCaptainVolunteers then
@@ -1361,25 +1438,37 @@ local function start_picking_phase()
     else
         special.pickingPhase = true
         local next_pick_force
-        local favor = special.nextAutoPicksFavor
-        for _, force in ipairs({ 'north', 'south' }) do
-            if favor[force] > 0 then
-                favor[force] = favor[force] - 1
-                next_pick_force = force
-                break
+        if special.draftFormat == 'impact_dynamic' and not special.communityPickingMode then
+            local prediction = CaptainImpact.predict_current_draft_rosters(0)
+            if prediction.p_north < 0.5 then
+                next_pick_force = 'north'
+            elseif prediction.p_north > 0.5 then
+                next_pick_force = 'south'
+            else
+                next_pick_force = math_random() < 0.5 and 'north' or 'south'
             end
-        end
-        if next_pick_force == nil then
-            local counts = { north = 0, south = 0 }
-            for _, player in pairs(game.connected_players) do
-                local force = player.force.name
-                if force == 'north' or force == 'south' then -- exclude "spectator"
-                    counts[force] = counts[force] + 1
+            log(string_format('Impact Dynamic first/round pick: %s (North %.3f)', next_pick_force, prediction.p_north))
+        else
+            local favor = special.nextAutoPicksFavor
+            for _, force in ipairs({ 'north', 'south' }) do
+                if favor[force] > 0 then
+                    favor[force] = favor[force] - 1
+                    next_pick_force = force
+                    break
                 end
             end
-            local northThreshold = 0.5 - 0.1 * (counts.north - counts.south)
-            next_pick_force = math_random() < northThreshold and 'north' or 'south'
-            log('Next force to pick: ' .. next_pick_force)
+            if next_pick_force == nil then
+                local counts = { north = 0, south = 0 }
+                for _, player in pairs(game.connected_players) do
+                    local force = player.force.name
+                    if force == 'north' or force == 'south' then
+                        counts[force] = counts[force] + 1
+                    end
+                end
+                local northThreshold = 0.5 - 0.1 * (counts.north - counts.south)
+                next_pick_force = math_random() < northThreshold and 'north' or 'south'
+                log('Next force to pick: ' .. next_pick_force)
+            end
         end
 
         special.captain_pick_timer[next_pick_force] = special.captain_pick_timer[next_pick_force]
@@ -1486,6 +1575,7 @@ function Public.change_captain(player, force, decider)
             unlock_team_research(force)
         end
     end
+    CaptainImpactData.record_captains(decider)
     generate_vs_text_rendering()
     Public.update_all_captain_player_guis()
 end
@@ -1581,8 +1671,22 @@ local function on_gui_switch_state_changed(event)
         return
     end
     local special = storage.special_games_variables.captain_mode
+    if not special then
+        return
+    end
     local name = element.name
     if name == 'captain_community_picking_mode' then
+        if special.draftFormat == 'impact_dynamic' and element.switch_state == 'left' then
+            element.switch_state = 'right'
+            local p = cpt_get_player(event.player_index)
+            if p then
+                p.print(
+                    'Community picking is a separate Classic Captain Game option and is disabled for Impact Dynamic.',
+                    { color = Color.warning }
+                )
+            end
+            return
+        end
         special.communityPickingMode = element.switch_state == 'left'
         special.communityPicksConfirmed = {}
         special.communityPickOrder = {}
@@ -1606,6 +1710,12 @@ local function on_gui_switch_state_changed(event)
     elseif name == 'captain_community_picking_mode_captains' then
         special.communityPickingModeCaptainVolunteers = element.switch_state == 'right'
     elseif name == 'captain_enable_groups_switch' then
+        if special.draftFormat == 'impact_dynamic' then
+            special.captainGroupAllowed = false
+            element.switch_state = 'right'
+            element.enabled = false
+            return
+        end
         if not special.communityPickingMode then
             special.captainGroupAllowed = element.switch_state == 'left'
             Public.update_all_captain_player_guis()
@@ -1640,8 +1750,24 @@ local function on_gui_value_changed(event)
         return
     end
     if element.name == 'captain_group_limit_slider' then
+        if special.draftFormat == 'impact_dynamic' then
+            return
+        end
         special.groupLimit = element.slider_value
         Public.update_all_captain_player_guis()
+    elseif element.name == 'captain_player_effort_slider' then
+        local player = cpt_get_player(event.player_index)
+        if not player then
+            return
+        end
+        CaptainImpact.set_effort_percent(player.name, element.slider_value)
+        local effort = CaptainImpact.get_effort_percent(player.name)
+        element.slider_value = effort
+        element.enabled = CaptainImpact.can_change_effort(player.name)
+        local value_label = element.parent and element.parent.captain_player_effort_value
+        if value_label and value_label.valid then
+            value_label.caption = tostring(effort) .. '%'
+        end
     end
 end
 
@@ -1680,10 +1806,21 @@ end
 ---Assigns player to force which is currently making a pick. It handles
 ---entire logic concerning picking order and ending the pick phase.
 ---@param player string Name of a player that is supposed to be assigned.
-local function assign_player(player)
+local function assign_player(player, picker_name, selection_type)
     local special = storage.special_games_variables.captain_mode
     local f = special.next_pick_force
     local listPlayers = special.listPlayers
+    if special.draftFormat == 'impact_dynamic' then
+        if
+            not special.pickingPhase
+            or special.captain_pick_timer_paused
+            or not table_contains(listPlayers, player)
+            or storage.chosen_team[player]
+        then
+            return
+        end
+    end
+    local pick = CaptainImpactData.capture_pick_context(f, picker_name, selection_type)
     switch_team_of_player(player, f)
     cpt_get_player(player).print({ '', { 'captain.comms_reminder' } }, { color = Color.cyan })
     for index, name in pairs(listPlayers) do
@@ -1695,9 +1832,14 @@ local function assign_player(player)
 
     special.captain_pick_timer[f] = special.captain_pick_timer[f] + special.captain_pick_timer_gain
     CaptainUtils.update_pick_sma(f)
-    CaptainUI.try_destroy_picking_ui_list_entry_for_each(special.captainList, player)
+    CaptainImpactData.record_pick(player, f, pick)
+    if special.draftFormat == 'impact_dynamic' and special.initialPickingPhaseFinished and special.prepaPhase then
+        CaptainRoles.require_player(player)
+    end
+    local ui_receivers = special.draftFormat == 'impact_dynamic' and game.connected_players or special.captainList
+    CaptainUI.try_destroy_picking_ui_list_entry_for_each(ui_receivers, player)
 
-    if is_player_in_group_system(player) then
+    if special.draftFormat ~= 'impact_dynamic' and is_player_in_group_system(player) then
         auto_pick_all_of_group(player)
     end
 
@@ -1705,21 +1847,18 @@ local function assign_player(player)
         Public.end_of_picking_phase()
     else
         local fnext
-        if not special.initialPickingPhaseFinished then
-            -- The logic below defaults to a 1-2-2-2-2-... picking system. However, if large groups
-            -- are picked, then whatever captain is picking gets to keep picking until they have more
-            -- players than the other team, so if there is one group of 3 that is picked first, then
-            -- the picking would go 3-4-2-2-2-...
+        if special.draftFormat == 'impact_dynamic' and not special.communityPickingMode then
+            fnext = CaptainImpact.next_pick_force(f)
+        elseif not special.initialPickingPhaseFinished then
+            -- Existing Classic 1-2-2 logic.
             if #special.stats.southPicks > #special.stats.northPicks then
                 fnext = 'north'
             elseif #special.stats.northPicks > #special.stats.southPicks then
                 fnext = 'south'
             else
-                -- default to the same force continuing to pick
                 fnext = f
             end
         else
-            -- just alternate picking
             fnext = f == 'south' and 'north' or 'south'
         end
 
@@ -1739,7 +1878,7 @@ end
 local function force_assign_player()
     local special = storage.special_games_variables.captain_mode
     local player = special.listPlayers[1]
-    assign_player(player)
+    assign_player(player, nil, 'timeout')
 end
 
 ---@param event EventData.on_gui_click
@@ -1758,9 +1897,28 @@ local function on_gui_click(event)
     end
     local name = element.name
 
+    if CaptainImpactExplain.handle_gui_click(event) then
+        return
+    end
+
+    if CaptainUI.handle_pick_sort_click(player, element) then
+        local state = special.captain_pick_timer_paused and CaptainStates.PICKS.PAUSED or CaptainStates.PICKS.RUNNING
+        display_picking_ui(state)
+        return
+    end
+
+    if CaptainRoles.handle_gui_click(event) then
+        Public.update_all_captain_player_guis()
+        return
+    end
+
     if name == 'captain_player_want_to_play' then
         if not special.pickingPhase then
             if check_if_enough_playtime_to_play(player) then
+                special.player_effort = special.player_effort or {}
+                if special.player_effort[player.name] == nil then
+                    special.player_effort[player.name] = 100
+                end
                 insert_player_by_playtime(player.name)
                 if not special.initialPickingPhaseStarted then
                     -- make players that don't have this player in their pick order already re-confirm their pick order
@@ -1869,6 +2027,23 @@ local function on_gui_click(event)
         end
     elseif starts_with(name, 'captain_player_picked_') then
         local playerPicked = element.tags.name
+        if special.draftFormat == 'impact_dynamic' then
+            if not special.pickingPhase or special.captain_pick_timer_paused or storage.chosen_team[playerPicked] then
+                return
+            end
+            local expected_captain = special.captainList[special.next_pick_force == 'north' and 1 or 2]
+            if player.name ~= expected_captain then
+                player.print(
+                    'You are observing the Impact Dynamic draft; only the current captain can pick.',
+                    { color = Color.warning }
+                )
+                return
+            end
+            if not table_contains(special.listPlayers, playerPicked) then
+                player.print('That player is no longer available to pick.', { color = Color.warning })
+                return
+            end
+        end
         game.print(
             string_format(
                 '%s was picked by%s %s',
@@ -1877,8 +2052,18 @@ local function on_gui_click(event)
                 player.name
             )
         )
-        assign_player(playerPicked)
+        assign_player(playerPicked, player.name, 'manual')
     elseif name == 'captain_is_ready' then
+        if special.draftFormat == 'impact_dynamic' then
+            local roles_ok, missing = CaptainRoles.team_complete(player.force.name)
+            if not roles_ok then
+                player.print(
+                    'Your team cannot be marked ready until ' .. tostring(missing) .. ' selects a primary role.',
+                    { color = Color.warning }
+                )
+                return
+            end
+        end
         if not table_contains(special.listTeamReadyToPlay, player.force.name) then
             game.print(
                 '[font=default-large-bold]Team of captain ' .. player.name .. ' is ready ![/font]',
@@ -1891,6 +2076,16 @@ local function on_gui_click(event)
         end
         Public.update_all_captain_player_guis()
     elseif name == 'captain_force_captains_ready' then
+        if special.draftFormat == 'impact_dynamic' then
+            local roles_ok, missing = CaptainRoles.all_complete()
+            if not roles_ok then
+                player.print(
+                    'Cannot force-start yet: ' .. tostring(missing) .. ' still needs to select a primary role.',
+                    { color = Color.warning }
+                )
+                return
+            end
+        end
         if #special.listTeamReadyToPlay < 2 then
             game.print(
                 '[font=default-large-bold]Referee ' .. player.name .. ' force started the game ![/font]',
@@ -2285,6 +2480,11 @@ local function on_player_joined_game(event)
         -- Update for all players, since we could be in community mode and
         -- we don't know who is currently picking.
         CaptainUI.try_update_picking_ui_list_entry_for_each(game.players, player.name)
+        CaptainRoles.draw_if_needed(player)
+        local special = storage.special_games_variables.captain_mode
+        if special.draftFormat == 'impact_dynamic' and special.pickingPhase then
+            display_picking_ui(CaptainStates.PICKS.RUNNING)
+        end
     end
     Public.update_all_captain_player_guis()
 end
@@ -2663,6 +2863,43 @@ function Public.draw_captain_player_gui(player, main_frame)
         })
         gui_style(label, { single_line = false })
 
+        local effort_flow = info_flow.add({ type = 'flow', name = 'effort_flow', direction = 'horizontal' })
+        effort_flow.visible = special.draftFormat == 'impact_dynamic'
+        gui_style(effort_flow, { vertical_align = 'center', horizontal_spacing = 8, top_margin = 4, bottom_margin = 4 })
+        effort_flow.add({
+            type = 'label',
+            caption = 'Effort for this match:',
+            tooltip = 'Match-specific competitive effort. 100% uses full draft value. Until calibrated from fresh outcomes, 0% still uses 60% of full draft value (and never below the positive player floor). Permanent Rank and AMWI are unchanged.',
+        })
+        local effort = CaptainImpact.get_effort_percent(player.name)
+        local effort_slider = effort_flow.add({
+            type = 'slider',
+            name = 'captain_player_effort_slider',
+            minimum_value = 0,
+            maximum_value = 100,
+            value = effort,
+            value_step = 1,
+            discrete_values = true,
+            tooltip = '100% = full model value. Provisional mapping: 75%=90%, 50%=80%, 25%=70%, 0%=60% of full draft value, never below the minimum-player floor. The declaration is stored so this can later be calibrated from outcomes.',
+        })
+        effort_slider.enabled = CaptainImpact.can_change_effort(player.name)
+        gui_style(effort_slider, { width = 260 })
+        local effort_value = effort_flow.add({
+            type = 'label',
+            name = 'captain_player_effort_value',
+            caption = tostring(effort) .. '%',
+            tooltip = 'Your declared effort for this match.',
+        })
+        gui_style(effort_value, { minimal_width = 44, horizontal_align = 'right', font = 'default-semibold' })
+
+        local effort_help = info_flow.add({
+            type = 'label',
+            name = 'effort_help',
+            caption = 'Declare effort before drafting. It is locked during picking and frozen once assigned. 100% = full value. Provisional: 50% effort = 80% value; 0% effort = 60% value. Permanent AMWI is unchanged and no player can become free.',
+        })
+        effort_help.visible = special.draftFormat == 'impact_dynamic'
+        gui_style(effort_help, { single_line = false, maximal_width = 520, bottom_margin = 4 })
+
         local textbox_flow = info_flow.add({ type = 'flow', name = 'insert', direction = 'horizontal' })
         gui_style(textbox_flow, { horizontal_spacing = 5 })
 
@@ -2991,6 +3228,10 @@ function Public.update_captain_player_gui(player, frame)
         return
     end
     local special = storage.special_games_variables.captain_mode
+    special.player_effort = special.player_effort or {}
+    if special.player_effort[player.name] == nil then
+        special.player_effort[player.name] = 100
+    end
     local waiting_to_be_picked = table_contains(special.listPlayers, player.name)
 
     do -- title flow
@@ -3055,6 +3296,10 @@ function Public.update_captain_player_gui(player, frame)
 
     do -- Status & Join buttons
         local status_strings = {}
+        insert(
+            status_strings,
+            'Draft format: ' .. (special.draftFormat == 'impact_dynamic' and 'Impact Dynamic' or 'Classic 1-2-2')
+        )
 
         local join_table = frame.join_flow.table
         join_table.captain_player_want_to_play.visible = false
@@ -3094,7 +3339,7 @@ function Public.update_captain_player_gui(player, frame)
             join_table.captain_player_do_not_want_to_play.visible = true
             join_table.captain_player_do_not_want_to_play.enabled = waiting_to_be_picked
             if special.prepaPhase and not special.initialPickingPhaseStarted then
-                if special.captainGroupAllowed then
+                if special.draftFormat ~= 'impact_dynamic' and special.captainGroupAllowed then
                     insert(
                         status_strings,
                         string_format(
@@ -3132,10 +3377,31 @@ function Public.update_captain_player_gui(player, frame)
         frame.status_label.caption = concat(status_strings, '\n')
     end
 
-    do -- Player info
+    do -- Player info + match effort
         local info_flow = frame.info_flow
         info_flow.visible = (waiting_to_be_picked and not special.pickingPhase)
         info_flow.display.visible = special.player_info[player.name] ~= nil and #special.player_info[player.name] > 0
+        if info_flow.effort_flow then
+            local impact_effort_visible = special.draftFormat == 'impact_dynamic'
+            info_flow.effort_flow.visible = impact_effort_visible
+            if info_flow.effort_help then
+                info_flow.effort_help.visible = impact_effort_visible
+            end
+            if impact_effort_visible then
+                local effort = CaptainImpact.get_effort_percent(player.name)
+                local slider = info_flow.effort_flow.captain_player_effort_slider
+                if slider and slider.valid then
+                    slider.enabled = CaptainImpact.can_change_effort(player.name)
+                    if math.floor((slider.slider_value or 0) + 0.5) ~= effort then
+                        slider.slider_value = effort
+                    end
+                end
+                local value_label = info_flow.effort_flow.captain_player_effort_value
+                if value_label and value_label.valid then
+                    value_label.caption = tostring(effort) .. '%'
+                end
+            end
+        end
     end
 
     do -- Community pick UI
@@ -3365,6 +3631,18 @@ function Public.update_captain_referee_gui(player, frame)
     -- think that performance really matters.
     -- :skull:
     scroll.clear()
+    scroll.add({
+        type = 'label',
+        caption = 'Draft format: ' .. (special.draftFormat == 'impact_dynamic' and 'Impact Dynamic' or 'Classic 1-2-2'),
+        style = 'semibold_label',
+    })
+    if special.draftFormat == 'impact_dynamic' and special.initialPickingPhaseFinished and special.prepaPhase then
+        local selected_roles, required_roles = CaptainRoles.required_count()
+        scroll.add({
+            type = 'label',
+            caption = string_format('Initial role selections: %d/%d connected players', selected_roles, required_roles),
+        })
+    end
 
     -- if game hasn't started, and at least one captain isn't ready, show a button to force both captains to be ready
     if special.prepaPhase and special.initialPickingPhaseStarted and not special.pickingPhase then
@@ -3471,16 +3749,18 @@ function Public.update_captain_referee_gui(player, frame)
         scroll.add({
             type = 'switch',
             name = 'captain_enable_groups_switch',
-            switch_state = special.captainGroupAllowed and 'left' or 'right',
+            switch_state = special.draftFormat ~= 'impact_dynamic' and special.captainGroupAllowed and 'left'
+                or 'right',
             left_label_caption = 'Groups allowed',
             right_label_caption = 'Groups not allowed',
-            enabled = not special.communityPickingMode,
+            enabled = special.draftFormat ~= 'impact_dynamic' and not special.communityPickingMode,
         })
 
         local flow = scroll.add({ type = 'flow', direction = 'horizontal' })
         flow.add({ type = 'label', caption = string_format('Max players in a group (%d): ', special.groupLimit) })
 
-        local slider = flow.add({
+        flow.visible = special.draftFormat ~= 'impact_dynamic'
+        flow.add({
             type = 'slider',
             name = 'captain_group_limit_slider',
             minimum_value = 2,
@@ -3547,8 +3827,22 @@ function Public.update_captain_manager_gui(player, frame)
     frame.captain_is_ready.visible = false
     if special.prepaPhase and not table_contains(special.listTeamReadyToPlay, force_name) then
         frame.captain_is_ready.visible = true
-        frame.captain_is_ready.caption = 'Team is Ready!'
-        frame.captain_is_ready.style = 'green_button'
+        local roles_ok = true
+        local missing = nil
+        if special.draftFormat == 'impact_dynamic' then
+            roles_ok, missing = CaptainRoles.team_complete(force_name)
+        end
+        if roles_ok then
+            frame.captain_is_ready.caption = 'Team is Ready!'
+            frame.captain_is_ready.style = 'green_button'
+            frame.captain_is_ready.enabled = true
+            frame.captain_is_ready.tooltip = nil
+        else
+            frame.captain_is_ready.caption = 'Waiting for role selections'
+            frame.captain_is_ready.style = 'red_button'
+            frame.captain_is_ready.enabled = false
+            frame.captain_is_ready.tooltip = tostring(missing) .. ' still needs to select a primary role.'
+        end
     end
     local is_captain = is_player_a_captain(player.name)
     frame.captain_manager_replace_captain_table.visible = is_captain
@@ -3682,9 +3976,13 @@ function Public.generate(config, player)
     local autoTrustSystem = config.autoTrust.switch_state
     local captainCanKick = config.captainKickPower.switch_state
     local specialEnabled = config.specialEnabled.switch_state
+    local draftFormat = 'classic_122'
+    if config.draftFormat and config.draftFormat.selected_index == 2 then
+        draftFormat = 'impact_dynamic'
+    end
     game.print('Captain game started by ' .. player.name, { color = Color.red })
 
-    generate_captain_mode(refereeName, autoTrustSystem, captainCanKick, specialEnabled)
+    generate_captain_mode(refereeName, autoTrustSystem, captainCanKick, specialEnabled, draftFormat)
 end
 
 function Public.keep_only_the_captain_with_most_playtime()
@@ -3766,7 +4064,7 @@ end)
 function Public.generate_automatic_captain()
     storage.automatic_captain_time_remaining_for_start = storage.automatic_captain_time_to_start_it
     storage.automatic_captain_prepa_time_remaining_for_start = storage.automatic_captain_prepa_time_to_start_it
-    generate_captain_mode('$@BotReferee', false, true, false)
+    generate_captain_mode('$@BotReferee', false, true, false, 'classic_122')
     Task.set_timeout_in_ticks(60, decrement_timer_captain_start_token)
 end
 
@@ -3949,6 +4247,7 @@ commands.add_command(
             { color = Color.red }
         )
 
+        CaptainImpactData.cancel_match('picking_disabled_by:' .. playerOfCommand.name)
         storage.active_special_games.captain_mode = false
         storage.tournament_mode = false
         game.print({ 'captain.disable_picking_announcement', playerOfCommand.name }, { color = Color.green })
@@ -4035,6 +4334,16 @@ commands.add_command('cpt-test-func', 'Run some test-only code for captains game
     insert(special.captainList, game.player.name)
     insert(special.captainList, game.player.name)
     Public.update_all_captain_player_guis()
+end)
+
+commands.add_command('captainImpactTrust', 'Show the Captain Impact trust dashboard', function(event)
+    if not event.player_index then
+        return
+    end
+    local player = game.get_player(event.player_index)
+    if player then
+        CaptainImpactTrust.print(player)
+    end
 end)
 
 -- == HANDLERS ================================================================
