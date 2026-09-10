@@ -20,3 +20,5 @@ jobs:
           lua tests/test-biter_raffle.lua
           lua tests/test-utils.lua
           lua tests/test-science-restriction.lua
+          lua tests/test-captain-impact.lua
+          lua tests/test-captain-impact-learning.lua

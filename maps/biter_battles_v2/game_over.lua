@@ -1,6 +1,7 @@
 local Admin = require('utils.admin')
 local BBGui = require('maps.biter_battles_v2.gui')
 local Captain_special = require('comfy_panel.special_games.captain')
+local CaptainImpactData = require('comfy_panel.special_games.captain_impact_data')
 local MultiSilo = require('comfy_panel.special_games.multi_silo')
 local Color = require('utils.color_presets')
 local Event = require('utils.event')
@@ -611,6 +612,20 @@ function Public.on_entity_died(entity)
         log_to_db('[ExtraInfo]' .. special.stats.extrainfo .. '\n', true)
         log_to_db('[SpecialEnabled]' .. special.stats.specialEnabled .. '\n', true)
         log_to_db('[CommunityPickMode]' .. tostring(special.communityPickingMode) .. '\n', true)
+        log_to_db('[DraftFormat]' .. tostring(special.draftFormat or 'classic_122') .. '\n', true)
+        local impact_history = storage.captain_impact_history
+        local impact_current = impact_history and impact_history.current
+        if impact_current then
+            if impact_current.prediction then
+                log_to_db('[ImpactPredictionNorth]' .. tostring(impact_current.prediction) .. '\n', true)
+            end
+            if impact_current.roles then
+                log_to_db('[ImpactRoles]' .. helpers.table_to_json(impact_current.roles) .. '\n', true)
+            end
+            if impact_current.picks then
+                log_to_db('[ImpactDraftPicks]' .. helpers.table_to_json(impact_current.picks) .. '\n', true)
+            end
+        end
         for _, player in pairs(game.players) do
             if player.connected and (player.force.name == 'north' or player.force.name == 'south') then
                 Captain_special.captain_log_end_time_player(player)
@@ -627,6 +642,7 @@ function Public.on_entity_died(entity)
         end
         log_to_db('[TeamStats]' .. helpers.table_to_json(storage.team_stats) .. '\n', true)
         log_to_db('>End of log', true)
+        CaptainImpactData.finish_match(storage.bb_game_won_by_team)
     end
 end
 
