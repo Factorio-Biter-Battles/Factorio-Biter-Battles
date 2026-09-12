@@ -2,6 +2,7 @@ local Admin = require('utils.admin')
 local BBGui = require('maps.biter_battles_v2.gui')
 local Captain_special = require('comfy_panel.special_games.captain')
 local CaptainImpactData = require('comfy_panel.special_games.captain_impact_data')
+local CaptainImpactResults = require('comfy_panel.special_games.captain_impact_results')
 local MultiSilo = require('comfy_panel.special_games.multi_silo')
 local Color = require('utils.color_presets')
 local Event = require('utils.event')
@@ -643,8 +644,45 @@ function Public.on_entity_died(entity)
         log_to_db('[TeamStats]' .. helpers.table_to_json(storage.team_stats) .. '\n', true)
         log_to_db('>End of log', true)
         CaptainImpactData.finish_match(storage.bb_game_won_by_team)
+        CaptainImpactResults.open_all()
     end
 end
+
+function Public.test_end_captain_game(winner)
+    local special = storage.special_games_variables and storage.special_games_variables.captain_mode
+    if not (special and special.test_mode and special.manual_impact_test) then
+        return false, 'No manual Impact test is active.'
+    end
+    if winner ~= 'north' and winner ~= 'south' then
+        return false, 'Winner must be north or south.'
+    end
+    local losing_force = enemy_team_of[winner]
+    local silo_list = storage.rocket_silo and storage.rocket_silo[losing_force]
+    local silo = silo_list and silo_list[1]
+    if not (silo and silo.valid) then
+        return false, 'No tracked losing-team silo is available.'
+    end
+    storage.bb_game_won_by_team = nil
+    Public.on_entity_died(silo)
+    return true
+end
+
+commands.add_command('cpt-impact-test-end', 'End the active manual Impact test through the BB game-over path', function(command)
+    if not command.player_index then
+        return
+    end
+    local player = game.get_player(command.player_index)
+    if not (player and player.admin) then
+        if player then
+            player.print('This command can only be used by an admin.', { color = Color.warning })
+        end
+        return
+    end
+    local ok, err = Public.test_end_captain_game(command.parameter)
+    if not ok then
+        player.print(err, { color = Color.warning })
+    end
+end)
 
 local function chat_with_everyone(event)
     if not storage.server_restart_timer then

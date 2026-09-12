@@ -1,4 +1,5 @@
 local Impact = require('comfy_panel.special_games.captain_impact_model')
+local Choice = require('comfy_panel.special_games.captain_impact_choice')
 local Seed = require('comfy_panel.special_games.captain_impact_seed')
 local LearningStore = require('comfy_panel.special_games.captain_impact_store')
 local Server = require('utils.server')
@@ -16,6 +17,7 @@ local function ensure_history()
     history.next_match_number = history.next_match_number or 1
     history.games = history.games or {}
     history.cancelled_games = history.cancelled_games or {}
+    history.test_games = history.test_games or {}
     history.pending_exports = history.pending_exports or {}
     history.failed_events = history.failed_events or {}
     history.persistence_errors = history.persistence_errors or {}
@@ -45,6 +47,10 @@ end
 local function new_event(event_type, payload)
     local event = payload or {}
     local current = ensure_history().current
+    local special = storage.special_games_variables and storage.special_games_variables.captain_mode
+    if (current and current.test_mode) or (special and special.test_mode) then
+        return event
+    end
     event.schema_version = SCHEMA_VERSION
     event.event_type = event_type
     event.tick = game.tick
@@ -70,9 +76,7 @@ function Public.retry_pending_exports()
     table.sort(ids)
     for _, match_id in ipairs(ids) do
         local ok, err = pcall(Server.set_data, DATA_SET, match_id, history.pending_exports[match_id])
-        if ok then
-            history.pending_exports[match_id] = nil
-        else
+        if not ok then
             report_failure('datastore submission', match_id, err)
         end
     end
@@ -218,6 +222,18 @@ function Public.capture_pick_context(force_name, picker_name, selection_type)
     local prediction = Impact.predict_current_rosters(0)
     local draft_prediction = Impact.predict_current_draft_rosters(0)
     local current_captains = captains()
+    local choice_model
+    -- Evaluate the classic-trained model in shadow mode on initial Impact
+    -- drafts. Capture scores now, before assignment, experience changes or
+    -- selection; no score is used to grant a pick or modify AMWI.
+    if current and special.draftFormat == 'impact_dynamic' and not special.initialPickingPhaseFinished then
+        choice_model = Choice.get_metadata()
+        choice_model.pick_index = #current.picks + 1
+        for _, candidate in ipairs(pool) do
+            candidate.historical_choice_score =
+                Choice.score(candidate.player_name, choice_model.pick_index, candidate.prior_captain_games)
+        end
+    end
     return {
         picker = picker_name or false,
         captain = current_captains[force_name] or false,
@@ -227,6 +243,7 @@ function Public.capture_pick_context(force_name, picker_name, selection_type)
             and picker_name ~= nil
             and picker_name == current_captains[force_name],
         available_candidates = pool,
+        historical_choice_model = choice_model,
         rosters_before_pick = roster_names(),
         prediction_before_pick = prediction.p_north,
         draft_balance_before_pick = draft_prediction.p_north,
@@ -251,13 +268,28 @@ function Public.record_pick(player_name, force_name, context)
     local row = table.deepcopy(context)
     local chosen = player_snapshot(player_name)
     -- The chosen record uses exactly the values in the pre-pick alternatives when available.
-    for _, candidate in ipairs(row.available_candidates) do
+    for _, candidate in ipairs(row.available_candidates or {}) do
         if candidate.player_name == player_name then
             chosen = table.deepcopy(candidate)
             break
         end
     end
     row.chosen_player = chosen
+    if row.historical_choice_model and row.captain_choice and not row.community_picking then
+        row.historical_choice_comparisons = {}
+        for _, candidate in ipairs(row.available_candidates or {}) do
+            if candidate.player_name ~= player_name then
+                local probability =
+                    Choice.pair_probability(chosen.historical_choice_score, candidate.historical_choice_score)
+                if probability then
+                    row.historical_choice_comparisons[#row.historical_choice_comparisons + 1] = {
+                        alternative = candidate.player_name,
+                        p_chosen_over_alternative = probability,
+                    }
+                end
+            end
+        end
+    end
     row.player_name = player_name
     row.force = force_name
     row.pick_index = #current.picks + 1
@@ -349,10 +381,18 @@ end
 
 local function archive_match(current, cancelled)
     local history = ensure_history()
-    local games = cancelled and history.cancelled_games or history.games
+    local games
+    if current.test_mode then
+        games = history.test_games
+    else
+        games = cancelled and history.cancelled_games or history.games
+    end
     games[#games + 1] = current
-    history.pending_exports[current.match_id] = table.deepcopy(current)
-    Public.retry_pending_exports()
+    if not current.test_mode then
+        history.pending_exports[current.match_id] = table.deepcopy(current)
+        Public.retry_pending_exports()
+    end
+    history.last_finished_match = cancelled and history.last_finished_match or table.deepcopy(current)
     history.current = nil
 end
 
@@ -390,7 +430,7 @@ function Public.finish_match(winner)
         'captain_game_finished',
         { winner = winner, predicted_north_probability = current.prediction, match = table.deepcopy(current) }
     )
-    if current.starting_roster and not current.test_mode then
+    if current.starting_roster and not current.test_mode and current.draft_regime == 'impact_dynamic' then
         local north, south = {}, {}
         for _, row in ipairs(current.starting_roster.north) do
             north[#north + 1] = row.player_name
@@ -400,22 +440,37 @@ function Public.finish_match(winner)
         end
         Impact.mark_completed_game_players(north, south)
     end
-    local learning_ok, learning_err = pcall(function()
-        local learning_result = LearningStore.queue_match(current)
-        if not learning_result.accepted and not learning_result.duplicate then
-            log(
-                'Captain Impact learning skipped match '
-                    .. tostring(current.match_id)
-                    .. ': '
-                    .. tostring(learning_result.reason)
-            )
+    if not current.test_mode then
+        local learning_ok, learning_err = pcall(function()
+            local learning_result = LearningStore.queue_match(current)
+            if not learning_result.accepted and not learning_result.duplicate then
+                log(
+                    'Captain Impact learning skipped match '
+                        .. tostring(current.match_id)
+                        .. ': '
+                        .. tostring(learning_result.reason)
+                )
+            end
+            LearningStore.advance()
+        end)
+        if not learning_ok then
+            log('Captain Impact learning failed for ' .. tostring(current.match_id) .. ': ' .. tostring(learning_err))
         end
-        LearningStore.advance()
-    end)
-    if not learning_ok then
-        log('Captain Impact learning failed for ' .. tostring(current.match_id) .. ': ' .. tostring(learning_err))
     end
     archive_match(current, false)
+end
+
+function Public.get_last_finished_match()
+    local match = ensure_history().last_finished_match
+    return match and table.deepcopy(match) or nil
+end
+
+function Public.mark_current_as_test()
+    local current = ensure_history().current
+    if current then
+        current.test_mode = true
+        current.non_authoritative = true
+    end
 end
 
 function Public.cancel_match(reason)
@@ -441,6 +496,26 @@ function Public.get_live_metrics()
         brier = m.brier_sum / m.games,
         accuracy = m.correct / m.games,
     }
+end
+
+-- Server.set_data only dispatches a wrapper command.  Clear the durable
+-- pending copy after the server echoes the same record through its change
+-- notification, so a successful pcall cannot silently lose an export.
+if Server.on_data_set_changed then
+    Server.on_data_set_changed(DATA_SET, function(data)
+        if type(data) ~= 'table' or type(data.key) ~= 'string' or type(data.value) ~= 'table' then
+            return
+        end
+        local pending = ensure_history().pending_exports[data.key]
+        local value = data.value
+        if pending
+            and value.match_id == pending.match_id
+            and value.status == pending.status
+            and (value.finished_tick == pending.finished_tick or value.cancelled_tick == pending.cancelled_tick)
+        then
+            ensure_history().pending_exports[data.key] = nil
+        end
+    end)
 end
 
 Event.add(Server.events.on_server_started, Public.retry_pending_exports)

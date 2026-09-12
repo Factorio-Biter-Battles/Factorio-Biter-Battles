@@ -89,7 +89,7 @@ check(
     snapshot.ratings.synthetic_north.amwi_low_pp <= snapshot.ratings.synthetic_north.amwi_high_pp,
     'uncertainty interval ordered'
 )
-check(snapshot.version:find('online%-outcome%-v1', 1, false) ~= nil, 'version identifies learning algorithm')
+check(snapshot.version:find('online%-outcome%-v3', 1, false) ~= nil, 'version identifies learning algorithm')
 
 -- Actual role labels must affect the candidate/champion model, not only the
 -- exported match journal.
@@ -169,10 +169,33 @@ package.loaded['comfy_panel.special_games.captain_impact_store'] = {
 }
 storage = { captain_impact_runtime = {}, special_games_variables = { captain_mode = {} } }
 local Model = require('comfy_panel.special_games.captain_impact_model')
+local live_store = package.loaded['comfy_panel.special_games.captain_impact_store']
+package.loaded['comfy_panel.special_games.captain_impact_store'] = { get_snapshot = function() return nil end }
+storage.special_games_variables.captain_mode.draftFormat = 'impact_dynamic'
+check(Model.get_rank('Jimmy50') == 1, 'Impact uses current-form leaderboard rank')
+check(
+    Model.get_amwi_pp('Jimmy50') == require('comfy_panel.special_games.captain_impact_current_seed').players.Jimmy50.adjusted_amwi_50_50_pp,
+    'Impact uses current-form AMWI seed'
+)
+check(
+    Model.get_rating_breakdown('Arktischerozean').freshness_factor < 0.5,
+    'Impact freshness lowers stale player strength'
+)
+package.loaded['comfy_panel.special_games.captain_impact_store'] = live_store
 check(Model.get_rank('synthetic_north') == snapshot.ratings.synthetic_north.rank, 'model consumes live rank')
 check(Model.get_amwi_pp('synthetic_north') == snapshot.ratings.synthetic_north.amwi_pp, 'model consumes live AMWI')
 check(
     Model.prior_captain_games('synthetic_north') == snapshot.completed_games_by_player.synthetic_north,
     'model consumes shared game count'
+)
+storage.special_games_variables.captain_mode.draftFormat = 'impact_dynamic'
+check(
+    Model.get_player('Jimmy50').skill_logodds == Seed.impact_players.Jimmy50.skill_logodds,
+    'Impact uses temporal candidate seed'
+)
+storage.special_games_variables.captain_mode.draftFormat = 'classic_122'
+check(
+    Model.get_player('Jimmy50').skill_logodds == Seed.players.Jimmy50.skill_logodds,
+    'Classic keeps historical seed'
 )
 print('Captain Impact learning checks passed: ' .. checks)

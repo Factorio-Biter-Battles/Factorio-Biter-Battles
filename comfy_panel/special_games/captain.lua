@@ -7,6 +7,8 @@ local CaptainImpact = require('comfy_panel.special_games.captain_impact_model')
 local CaptainImpactData = require('comfy_panel.special_games.captain_impact_data')
 local CaptainImpactTrust = require('comfy_panel.special_games.captain_impact_trust')
 local CaptainImpactExplain = require('comfy_panel.special_games.captain_impact_explain')
+local CaptainImpactLeaderboard = require('comfy_panel.special_games.captain_impact_leaderboard')
+local CaptainImpactResults = require('comfy_panel.special_games.captain_impact_results')
 local CaptainRoles = require('comfy_panel.special_games.captain_roles')
 local ClosableFrame = require('utils.ui.closable_frame')
 local Color = require('utils.color_presets')
@@ -444,12 +446,16 @@ local function display_picking_ui(state)
     -- Impact Dynamic is a public draft: every connected player sees the same
     -- live table, but CaptainUI only creates pick buttons for the two captains.
     if special.draftFormat == 'impact_dynamic' and not special.communityPickingMode then
-        CaptainUI.try_destroy_picking_ui_for_each(game.connected_players)
         local current_captain = special.captainList[force == 'north' and 1 or 2]
         for _, viewer in pairs(game.connected_players) do
-            CaptainUI.draw_picking_ui(viewer)
-            local is_current = viewer.name == current_captain
+            -- In a solo manual test the admin operates both sides. Keep the
+            -- normal public observer view for everyone else.
+            local is_test_operator = special.manual_impact_test
+                and special.manual_impact_test_admin == viewer.name
+                and viewer.admin
+            local is_current = viewer.name == current_captain or is_test_operator
             local viewer_state = is_current and running_or_paused or idle_or_paused
+            CaptainUI.draw_picking_ui(viewer)
             CaptainUI.update_picking_ui_title(viewer, viewer_state)
             CaptainUI.update_picking_ui_pick_buttons(viewer, viewer_state)
             CaptainUI.update_picking_ui_timer(viewer)
@@ -1443,14 +1449,12 @@ local function start_picking_phase()
         special.pickingPhase = true
         local next_pick_force
         if special.draftFormat == 'impact_dynamic' and not special.communityPickingMode then
-            local prediction = CaptainImpact.predict_current_draft_rosters(0)
-            if prediction.p_north < 0.5 then
-                next_pick_force = 'north'
-            elseif prediction.p_north > 0.5 then
-                next_pick_force = 'south'
-            else
-                next_pick_force = math_random() < 0.5 and 'north' or 'south'
-            end
+            -- Use the same weaker-roster selector for the initial phase and
+            -- every later join draft. The optional tie-break preserves the
+            -- existing random choice when both rosters are even.
+            local tie_break_force = math_random() < 0.5 and 'north' or 'south'
+            local prediction
+            next_pick_force, prediction = CaptainImpact.next_pick_force(nil, tie_break_force)
             log(string_format('Impact Dynamic first/round pick: %s (North %.3f)', next_pick_force, prediction.p_north))
         else
             local favor = special.nextAutoPicksFavor
@@ -1901,6 +1905,23 @@ local function on_gui_click(event)
     end
     local name = element.name
 
+    if name == 'captain_picking_ui_close' then
+        CaptainUI.try_destroy_picking_ui(player)
+        return
+    elseif name == 'captain_picking_ui_reopen' then
+        if special.pickingPhase then
+            local state = special.captain_pick_timer_paused and CaptainStates.PICKS.PAUSED or CaptainStates.PICKS.RUNNING
+            display_picking_ui(state)
+        end
+        return
+    end
+
+    if CaptainImpactLeaderboard.handle_gui_click(event) then
+        return
+    end
+    if CaptainImpactResults.handle_gui_click(event) then
+        return
+    end
     if CaptainImpactExplain.handle_gui_click(event) then
         return
     end
@@ -2036,7 +2057,10 @@ local function on_gui_click(event)
                 return
             end
             local expected_captain = special.captainList[special.next_pick_force == 'north' and 1 or 2]
-            if player.name ~= expected_captain then
+            local dual_test_operator = special.manual_impact_test
+                and special.manual_impact_test_admin == player.name
+                and player.admin
+            if player.name ~= expected_captain and not dual_test_operator then
                 player.print(
                     'You are observing the Impact Dynamic draft; only the current captain can pick.',
                     { color = Color.warning }
@@ -2497,7 +2521,9 @@ local function every_5sec(event)
     local special = storage.special_games_variables.captain_mode
     if special then
         Public.update_all_captain_player_guis()
-        if Functions.get_ticks_since_game_start() >= special.nextAutoPickTicks then
+        CaptainImpactLeaderboard.refresh_all()
+        CaptainImpactResults.refresh_all()
+        if not special.manual_impact_test and Functions.get_ticks_since_game_start() >= special.nextAutoPickTicks then
             if not special.pickingPhase then
                 start_picking_phase()
             end
@@ -2802,6 +2828,22 @@ function Public.draw_captain_player_gui(player, main_frame)
             style = 'label_with_left_padding',
         })
         gui_style(label, { single_line = false })
+        button = main_frame.add({
+            type = 'button',
+            name = 'captain_impact_results_open',
+            caption = 'Effort / Role / Performance',
+            tooltip = 'Open the latest completed Impact Dynamic game results.',
+        })
+        button.visible = special.draftFormat == 'impact_dynamic'
+        if special.draftFormat == 'impact_dynamic' then
+            button = main_frame.add({
+                type = 'button',
+                name = 'captain_picking_ui_reopen',
+                caption = 'Open picking window',
+                tooltip = 'Reopen the picking window without affecting the draft.',
+            })
+            button.visible = special.pickingPhase
+        end
     end
 
     main_frame.add({ type = 'line' })
@@ -3379,11 +3421,19 @@ function Public.update_captain_player_gui(player, frame)
             insert(status_strings, string_format('Next auto picking phase in %ds.', ticks_until_autopick / 60))
         end
         frame.status_label.caption = concat(status_strings, '\n')
+        if frame.captain_impact_results_open then
+            frame.captain_impact_results_open.visible = special.draftFormat == 'impact_dynamic'
+        end
+        if frame.captain_picking_ui_reopen then
+            frame.captain_picking_ui_reopen.visible = special.pickingPhase
+        end
     end
 
     do -- Player info + match effort
         local info_flow = frame.info_flow
-        info_flow.visible = (waiting_to_be_picked and not special.pickingPhase)
+        local is_captain = table_contains(special.captainList, player.name)
+        local is_participant = waiting_to_be_picked or is_captain or storage.chosen_team[player.name] ~= nil
+        info_flow.visible = is_participant and not special.pickingPhase
         info_flow.display.visible = special.player_info[player.name] ~= nil and #special.player_info[player.name] > 0
         if info_flow.effort_flow then
             local impact_effort_visible = special.draftFormat == 'impact_dynamic'
@@ -4258,6 +4308,149 @@ commands.add_command(
         clear_gui_captain_mode()
     end
 )
+
+
+local function manual_impact_test_pool(admin_name)
+    local seed = CaptainImpact.get_seed()
+    local source = seed.impact_players or {}
+    local connected = {}
+    for _, connected_player in pairs(game.connected_players) do
+        connected[connected_player.name] = true
+    end
+    local names = {}
+    for name, row in pairs(source) do
+        if name ~= admin_name and not connected[name] and type(row) == 'table' and (row.games or 0) > 0 then
+            names[#names + 1] = name
+        end
+    end
+    table.sort(names, function(a, b)
+        local av = CaptainImpact.effective_player_logodds(a, CaptainImpact.prior_captain_games(a))
+        local bv = CaptainImpact.effective_player_logodds(b, CaptainImpact.prior_captain_games(b))
+        if av ~= bv then
+            return av > bv
+        end
+        return a:lower() < b:lower()
+    end)
+    local selected, seen = {}, {}
+    local function add_at(position)
+        local index = math.max(1, math.min(#names, math.floor(position + 0.5)))
+        local name = names[index]
+        if name and not seen[name] then
+            seen[name] = true
+            selected[#selected + 1] = name
+        end
+    end
+    for _, fraction in ipairs({ 0.02, 0.08, 0.20, 0.32, 0.45, 0.58, 0.70, 0.82, 0.93, 1.0 }) do
+        add_at(#names * fraction)
+    end
+    return selected
+end
+
+commands.add_command('cpt-impact-manual-test', 'Prepare a manual Impact Dynamic test pool from the current seed', function(event)
+    if not event.player_index then
+        return
+    end
+    local player = game.get_player(event.player_index)
+    if not (player and player.admin) then
+        if player then
+            player.print('This command can only be used by an admin!', { color = Color.warning })
+        end
+        return
+    end
+    local special = storage.special_games_variables.captain_mode
+    if not special or special.draftFormat ~= 'impact_dynamic' or not special.prepaPhase then
+        player.print('Open an Impact Dynamic Captain lobby first.', { color = Color.warning })
+        return
+    end
+    if special.initialPickingPhaseStarted or special.pickingPhase then
+        player.print('Run this before the picking phase starts.', { color = Color.warning })
+        return
+    end
+    local names = manual_impact_test_pool(player.name)
+    if #names < 3 then
+        player.print('The current Impact seed does not contain enough historical players.', { color = Color.warning })
+        return
+    end
+    special.test_mode = true
+    special.manual_impact_test = true
+    special.manual_impact_test_admin = player.name
+    CaptainImpactData.mark_current_as_test()
+    special.refereeName = player.name
+    special.communityPickingMode = false
+    special.captainGroupAllowed = false
+    special.captain_pick_timer_enabled = false
+    special.nextAutoPickTicks = game.tick + 1000000000
+    special.initialPickingPhaseStarted = false
+    special.initialPickingPhaseFinished = false
+    special.pickingPhase = false
+    special.captainList = { player.name, names[1] }
+    special.listPlayers = {}
+    special.test_players = special.test_players or {}
+    special.player_info = special.player_info or {}
+    special.player_effort = special.player_effort or {}
+    special.frozen_player_effort = {}
+    special.draft_effort_snapshot = nil
+    storage.chosen_team = {}
+    local captain_name = special.captainList[2]
+    for index = 1, #names do
+        local name = names[index]
+        special.test_players[name] = { name = name, tag = '', color = Color.white, valid = true, connected = false }
+        storage.total_time_online_players[name] = storage.total_time_online_players[name] or 0
+        special.player_effort[name] = special.player_effort[name] or 100
+        if name ~= captain_name then
+            special.listPlayers[#special.listPlayers + 1] = name
+        end
+    end
+    special.player_effort[player.name] = special.player_effort[player.name] or 100
+    game.print(
+        'Manual Impact test pool ready: ' .. #special.listPlayers .. ' historical candidates plus two captains. No picks were made; start the initial picking phase from the normal referee GUI.',
+        { color = Color.cyan }
+    )
+    Public.update_all_captain_player_guis()
+end)
+
+commands.add_command('cpt-impact-test-start', 'Start or advance the manual Impact Dynamic test using normal readiness rules', function(event)
+    if not event.player_index then
+        return
+    end
+    local player = game.get_player(event.player_index)
+    if not (player and player.admin) then
+        if player then
+            player.print('This command can only be used by an admin!', { color = Color.warning })
+        end
+        return
+    end
+    local special = storage.special_games_variables.captain_mode
+    if not (special and special.manual_impact_test and special.manual_impact_test_admin == player.name) then
+        player.print('Prepare a manual Impact test first with /cpt-impact-manual-test.', { color = Color.warning })
+        return
+    end
+    if not special.initialPickingPhaseStarted then
+        if #special.captainList ~= 2 then
+            player.print('The manual test needs exactly two captains.', { color = Color.warning })
+            return
+        end
+        prepare_for_captain()
+        start_picking_phase()
+        player.print('Manual Impact picking started. Use the pick buttons; no picks are automated.', { color = Color.cyan })
+        return
+    end
+    if special.pickingPhase then
+        player.print('Picking is already active.', { color = Color.warning })
+        return
+    end
+    if special.prepaPhase then
+        local roles_ok, missing = CaptainRoles.all_complete()
+        if not roles_ok then
+            player.print('Select a primary role first: ' .. tostring(missing), { color = Color.warning })
+            return
+        end
+        prepare_start_captain_event()
+        player.print('Manual Impact game countdown started. The normal game start lifecycle is running.', { color = Color.cyan })
+        return
+    end
+    player.print('The manual Impact test is no longer in its lobby/preparation phase.', { color = Color.warning })
+end)
 
 commands.add_command('cpt-test-func', 'Run some test-only code for captains games', function(event)
     if not event.player_index then

@@ -1,0 +1,32 @@
+{
+  "matches": 609,
+  "source_sha256": {
+    "matches": "59d8e3183fbb9c498a1d87b6093b3a921d89f99a352df2d0891030811afd10f7",
+    "rosters": "a2f169c7168dfefcf296d8148afa69fd92052ed13726ba118df9caf0efcd8130",
+    "draft_preferences": "e9642ad08bbab8426baf5127735b3f1aa60de4cdd9eb65086a169eb28788faeb",
+    "global_draft_preferences": "312fc27a217f0f9984b3e567fc69f972aff63e418a44b24fededa1082ce4493b",
+    "draft_sequences": "2ee195c01c023a5e1ef6db854821dd0a8fc5c3cff2b6144473b073968f8a8d90",
+    "global_draft_sequences": "1363a5d479a109f5b30687abf112b65afa0295739da818016dd1736ce5a5f3db"
+  },
+  "tuning_folds": [
+    [
+      260,
+      336
+    ],
+    [
+      336,
+      411
+    ],
+    [
+      411,
+      487
+    ]
+  ],
+  "retrospective_test": [
+    487,
+    609
+  ],
+  "test_status": "previously examined historical data; future evaluation still required",
+  "pair_tie_policy": "half credit",
+  "duplicate_pair_policy": "global replaces local for resolved games"
+}

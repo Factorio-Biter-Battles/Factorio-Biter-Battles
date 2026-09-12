@@ -1,5 +1,7 @@
 local Data = require('comfy_panel.special_games.captain_impact_data')
 local Seed = require('comfy_panel.special_games.captain_impact_seed')
+local CurrentSeed = require('comfy_panel.special_games.captain_impact_current_seed')
+local Choice = require('comfy_panel.special_games.captain_impact_choice')
 local LearningStore = require('comfy_panel.special_games.captain_impact_store')
 
 local Public = {}
@@ -12,19 +14,24 @@ function Public.lines()
     local t = Seed.trust
     local live = Data.get_live_metrics()
     local learning = LearningStore.get_status()
+    local choice = Choice.get_metadata()
     local lines =
         {
             '[font=default-large-bold]BB Captain Impact trust dashboard[/font]',
             'Seed model: ' .. Seed.model_version,
             '',
-            '[font=default-bold]Historical chronological validation[/font]',
+            '[font=default-bold]Retrospective historical comparisons[/font]',
+            'These periods were examined during development; fresh matches are needed to confirm generalization.',
             'Match outcome: accuracy ' .. pct(t.frozen_outcome_accuracy) .. ', log loss ' .. string.format(
                 '%.3f',
                 t.frozen_outcome_log_loss
             ) .. ', Brier ' .. string.format('%.3f', t.frozen_outcome_brier),
-            'Captain pick ordering: ' .. pct(t.captain_pick_pairwise_accuracy) .. ' pairwise accuracy; early ' .. pct(
-                t.early_pick_accuracy
-            ) .. ', late ' .. pct(t.late_pick_accuracy),
+            'Previous pick comparison (ties counted as correct): '
+                .. pct(t.captain_pick_pairwise_accuracy)
+                .. '; early '
+                .. pct(t.early_pick_accuracy)
+                .. ', late '
+                .. pct(t.late_pick_accuracy),
             'AMWI magnitude calibration k: validation '
                 .. string.format('%.2f', t.magnitude_k_validation)
                 .. ', frozen '
@@ -35,7 +42,24 @@ function Public.lines()
                 .. '/'
                 .. tostring(t.bootstrap_attempted)
                 .. ' successful',
-            'Recency/currentness layer deployed: ' .. tostring(t.currentness_deployed),
+            'Historical recency comparison: ' .. tostring(t.currentness_deployed),
+            'Impact current-form layer: ' .. tostring(CurrentSeed.model_version)
+                .. ' (pick half-life '
+                .. tostring(CurrentSeed.pick_half_life_matches)
+                .. ', inactivity half-life '
+                .. tostring(CurrentSeed.inactivity_half_life_matches)
+                .. ' matches)',
+            '',
+            '[font=default-bold]Historical captain-choice model[/font]',
+            'Version: ' .. choice.model_version,
+            'Pairwise accuracy (half credit for ties): '
+                .. pct(choice.validation_accuracy)
+                .. '; log loss '
+                .. string.format('%.3f', choice.validation_log_loss)
+                .. '; Brier '
+                .. string.format('%.3f', choice.validation_brier),
+            'Learned from classic draft history. Impact predictions are recorded for evaluation; they do not set AMWI or pick turns.',
+            'Pick-history tooltips are frozen through ' .. string.sub(choice.last_match_date, 1, 10) .. '.',
             '',
             '[font=default-bold]Automatic outcome learner[/font]',
             'Version: ' .. tostring(learning.version),

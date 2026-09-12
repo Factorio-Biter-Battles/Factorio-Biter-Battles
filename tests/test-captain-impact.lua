@@ -12,7 +12,7 @@ local function deepcopy(value)
 end
 table.deepcopy = deepcopy
 local noop = function() end
-local hooks, messages, events, exports = {}, {}, {}, {}
+local hooks, messages, events, exports, data_handlers = {}, {}, {}, {}, {}
 local fail_file, fail_export = false, false
 local players = {}
 local checks = 0
@@ -84,7 +84,9 @@ package.loaded['utils.server'] = {
     get_time_data_raw = function()
         return { secs = 1789000000, tick = 1 }
     end,
-    on_data_set_changed = noop,
+    on_data_set_changed = function(data_set, handler)
+        data_handlers[data_set] = handler
+    end,
     try_get_all_data = noop,
     set_data = function(data_set, key, value)
         assert(data_set == 'captain_impact_v1_games' and type(key) == 'string' and value.match_id == key)
@@ -92,6 +94,9 @@ package.loaded['utils.server'] = {
             error('injected datastore failure')
         end
         exports[#exports + 1] = deepcopy(value)
+        if data_handlers[data_set] then
+            data_handlers[data_set]({ data_set = data_set, key = key, value = deepcopy(value) })
+        end
     end,
 }
 package.loaded['utils.player'] = stub()
@@ -120,6 +125,7 @@ for _, name in ipairs({
     'comfy_panel.special_games.captain_ui',
     'comfy_panel.special_games.captain_impact_trust',
     'comfy_panel.special_games.captain_impact_explain',
+    'comfy_panel.special_games.captain_impact_results',
     'comfy_panel.special_games.captain_roles',
     'utils.ui.closable_frame',
     'utils.color_presets',
@@ -242,6 +248,11 @@ end
 
 local s = reset()
 check(Impact.get_effort_percent('99Names') == 100, 'default effort')
+check(Impact.constrain_next_pick_force('north', 4, 7) == 'north', 'Impact allows the configured three-player advantage')
+check(Impact.constrain_next_pick_force('south', 4, 7) == 'north', 'Impact prevents exceeding the three-player allowance')
+check(Impact.constrain_next_pick_force('south', 4, 8) == 'north', 'Impact repairs an already oversized roster gap')
+check(Impact.constrain_next_pick_force('north', 11, 15) == 'north', 'Impact allows the rounded 30-percent allowance')
+check(Impact.constrain_next_pick_force('south', 11, 15) == 'north', 'Impact prevents exceeding the 30-percent allowance')
 check(Impact.set_effort_percent('99Names', 0), 'signup effort is editable')
 Impact.lock_draft_efforts()
 s.pickingPhase = true
@@ -262,12 +273,26 @@ check(
     pick.chosen_player.player_name == '99Names' and pick.effort_percent == 0,
     'chosen uses declared effort snapshot including zero'
 )
-check(pick.rank == 33 and pick.amwi_pp == Impact.get_amwi_pp('99Names'), 'rank and AMWI captured')
+check(pick.rank == Impact.get_rank('99Names') and pick.amwi_pp == Impact.get_amwi_pp('99Names'), 'rank and AMWI captured')
 check(
     pick.picker == 'north_captain' and pick.captain == 'north_captain' and pick.captain_choice,
     'manual captain attribution'
 )
 check(pick.captains.south == 'south_captain', 'opposing captain captured')
+check(
+    pick.historical_choice_model.impact_policy == 'shadow_only' and pick.historical_choice_model.pick_index == 1,
+    'choice prediction records its model and current pick before assignment'
+)
+check(#pick.historical_choice_comparisons == 2, 'choice evaluated against both pre-pick alternatives')
+check(
+    pick.chosen_player.historical_choice_score == pick.available_candidates[1].historical_choice_score,
+    'chosen preference uses the frozen pre-pick score'
+)
+local Choice = require('comfy_panel.special_games.captain_impact_choice')
+check(
+    near(pick.chosen_player.historical_choice_score, Choice.score('99Names', 1, 96)),
+    'choice evidence ignores this player zero-effort declaration'
+)
 check(near(pick.draft_balance_before_pick, before), 'pre-pick probability captured before mutation')
 check(
     near(pick.draft_balance_after_pick, Impact.predict_current_draft_rosters(0).p_north),
@@ -302,6 +327,7 @@ check(
     'timeout is not captain-choice evidence'
 )
 check(current.picks[2].draft_round == 2 and current.picks[2].phase == 'in_game', 'later round and phase captured')
+check(current.picks[2].historical_choice_model == nil, 'initial-draft model does not score later joiners')
 
 -- Paused, stopped, duplicate and observer GUI picks must not assign or record.
 local count = #current.picks
@@ -431,6 +457,21 @@ check(next_id ~= current.match_id and #exports == 2, 'distinct match keys and ca
 Data.record_role('late', 'north', 'flexible')
 check(history.current == nil, 'stale role event cannot create a phantom match')
 
+-- Manual test matches are retained locally for the result window but never
+-- enter authoritative history, datastore exports, or live learning metrics.
+s = reset()
+s.test_mode = true
+Data.lock_starting_roster()
+local manual_test_match_id = storage.captain_impact_history.current.match_id
+local manual_event_count = #events
+Data.finish_match('north')
+check(#storage.captain_impact_history.games == 0, 'manual test not added to authoritative history')
+check(#storage.captain_impact_history.test_games == 1, 'manual test retained locally')
+check(storage.captain_impact_history.pending_exports[manual_test_match_id] == nil, 'manual test not queued for datastore')
+check(Data.get_live_metrics().games == 0, 'manual test does not update live metrics')
+check(Data.get_last_finished_match().test_mode == true, 'latest manual result is available to the result window')
+check(#events == manual_event_count, 'manual test does not persist JSONL events')
+
 -- Classic 1-2-2 and later alternating turns, independent of Impact ratings.
 s = reset('classic_122')
 s.captainGroupAllowed = false
@@ -452,6 +493,10 @@ end
 for i, force in ipairs({ 'north', 'south', 'south', 'north', 'north' }) do
     check(s.next_pick_force == force, 'Classic 1-2-2 pick ' .. i)
     assign('classic_' .. i, force .. '_captain', 'manual')
+    check(
+        storage.captain_impact_history.current.picks[i].historical_choice_model == nil,
+        'Classic behavior remains unchanged'
+    )
 end
 s.initialPickingPhaseFinished = true
 assign('classic_6', 'south_captain', 'manual')
@@ -493,6 +538,7 @@ s.pickingPhase = true
 local UI = assert(loadfile('comfy_panel/special_games/captain_ui.lua'))()
 local draw_row = assert(find_upvalue(UI.draw_picking_ui, 'draw_picking_ui_entry'))
 local draw_header = assert(find_upvalue(UI.draw_picking_ui, 'draw_picking_ui_list_header'))
+local draw_title = assert(find_upvalue(UI.draw_picking_ui, 'draw_picking_ui_title'))
 local function widget()
     local w = { children = {}, style = {}, valid = true }
     w.add = function(spec)
@@ -518,15 +564,29 @@ local function widget()
     return w
 end
 local row_ui, header_ui = widget(), widget()
+local title_ui = widget()
+draw_title(title_ui)
+check(
+    title_ui.title_root.captain_impact_explain_open ~= nil
+        and title_ui.title_root.captain_impact_leaderboard_open ~= nil,
+    'Impact picking title exposes explanation and leaderboard buttons'
+)
 draw_row(row_ui, '99Names', '[cpt_same]', '1 minute', players.observer)
 draw_header(header_ui, players.observer)
 check(#row_ui.children == 7 and #header_ui.children == 7, 'Impact table has seven matching columns')
+check(
+    row_ui.children[2].tooltip:find('Average team pick', 1, true),
+    'Impact rating tooltip exposes historical positions'
+)
 check(row_ui.children[1].children[1].name == 'container', 'observer has no pick button')
 check(
     not UI.handle_pick_sort_click(players.observer, { valid = true, name = 'captain_pick_sort_group' }),
     'obsolete group sort rejected'
 )
 s.draftFormat = 'classic_122'
+title_ui = widget()
+draw_title(title_ui)
+check(title_ui.title_root.captain_impact_leaderboard_open == nil, 'Classic title has no Impact leaderboard button')
 row_ui, header_ui = widget(), widget()
 draw_row(row_ui, '99Names', '[cpt_same]', '1 minute', players.north_captain)
 draw_header(header_ui, players.north_captain)

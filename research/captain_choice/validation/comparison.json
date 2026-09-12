@@ -1,0 +1,259 @@
+{
+  "metrics": {
+    "original": {
+      "n": 56945,
+      "weight": 233.99999999999744,
+      "log_loss": 0.6224239970244849,
+      "brier": 0.21612337268658266,
+      "accuracy": 0.6688939472947489
+    },
+    "calibrated_original": {
+      "n": 56945,
+      "weight": 233.99999999999744,
+      "log_loss": 0.5855646533777271,
+      "brier": 0.20320946017853445,
+      "accuracy": 0.6688939472947489
+    },
+    "role_calibrated_logit": {
+      "n": 56945,
+      "weight": 233.99999999999744,
+      "log_loss": 0.5889075315472841,
+      "brier": 0.20387564107535647,
+      "accuracy": 0.6754722455954121
+    },
+    "new": {
+      "n": 56945,
+      "weight": 233.99999999999744,
+      "log_loss": 0.5555913872254558,
+      "brier": 0.19073389967745424,
+      "accuracy": 0.691113499867387
+    }
+  },
+  "paired_match_bootstrap": {
+    "original": {
+      "log_loss": {
+        "candidate_minus_baseline": -0.06683260979902919,
+        "bootstrap_95_percent_interval": [
+          -0.07968535173954018,
+          -0.05161025915462133
+        ]
+      },
+      "brier": {
+        "candidate_minus_baseline": -0.02538947300912841,
+        "bootstrap_95_percent_interval": [
+          -0.02955228871562893,
+          -0.020722640889065565
+        ]
+      },
+      "accuracy": {
+        "candidate_minus_baseline": 0.022219552572638183,
+        "bootstrap_95_percent_interval": [
+          0.012413112587130024,
+          0.03179894543483091
+        ]
+      }
+    },
+    "calibrated_original": {
+      "log_loss": {
+        "candidate_minus_baseline": -0.029973266152271253,
+        "bootstrap_95_percent_interval": [
+          -0.04182507621800383,
+          -0.016604648241326465
+        ]
+      },
+      "brier": {
+        "candidate_minus_baseline": -0.012475560501080212,
+        "bootstrap_95_percent_interval": [
+          -0.01631704170840534,
+          -0.00820010853819357
+        ]
+      },
+      "accuracy": {
+        "candidate_minus_baseline": 0.022219552572638183,
+        "bootstrap_95_percent_interval": [
+          0.012413112587130024,
+          0.03179894543483091
+        ]
+      }
+    },
+    "role_calibrated_logit": {
+      "log_loss": {
+        "candidate_minus_baseline": -0.03331614432182834,
+        "bootstrap_95_percent_interval": [
+          -0.04488711066984495,
+          -0.019946078451233754
+        ]
+      },
+      "brier": {
+        "candidate_minus_baseline": -0.0131417413979022,
+        "bootstrap_95_percent_interval": [
+          -0.017029779468297312,
+          -0.00893438141456259
+        ]
+      },
+      "accuracy": {
+        "candidate_minus_baseline": 0.015641254271974946,
+        "bootstrap_95_percent_interval": [
+          0.0051745064169951595,
+          0.026007689407459327
+        ]
+      }
+    }
+  },
+  "control_grid": [
+    {
+      "fold": [
+        260,
+        336
+      ],
+      "controls": [
+        {
+          "ridge": 0.1,
+          "metrics": {
+            "n": 57621,
+            "weight": 121.99999999999746,
+            "log_loss": 0.6320979753581469,
+            "brier": 0.22377340124113212,
+            "accuracy": 0.6315543136667666
+          }
+        },
+        {
+          "ridge": 1,
+          "metrics": {
+            "n": 57621,
+            "weight": 121.99999999999746,
+            "log_loss": 0.6448658718247805,
+            "brier": 0.2280705018832819,
+            "accuracy": 0.6315543136667666
+          }
+        },
+        {
+          "ridge": 10,
+          "metrics": {
+            "n": 57621,
+            "weight": 121.99999999999746,
+            "log_loss": 0.6771093212120519,
+            "brier": 0.24206261807522586,
+            "accuracy": 0.6315543136667666
+          }
+        }
+      ]
+    },
+    {
+      "fold": [
+        336,
+        411
+      ],
+      "controls": [
+        {
+          "ridge": 0.1,
+          "metrics": {
+            "n": 34510,
+            "weight": 111.99999999999841,
+            "log_loss": 0.6244528946356521,
+            "brier": 0.21959326841643398,
+            "accuracy": 0.6330865095574841
+          }
+        },
+        {
+          "ridge": 1,
+          "metrics": {
+            "n": 34510,
+            "weight": 111.99999999999841,
+            "log_loss": 0.6316493803584584,
+            "brier": 0.22223429307805395,
+            "accuracy": 0.6330865095574841
+          }
+        },
+        {
+          "ridge": 10,
+          "metrics": {
+            "n": 34510,
+            "weight": 111.99999999999841,
+            "log_loss": 0.6633356797558553,
+            "brier": 0.23547771988648977,
+            "accuracy": 0.6330865095574841
+          }
+        }
+      ]
+    },
+    {
+      "fold": [
+        411,
+        487
+      ],
+      "controls": [
+        {
+          "ridge": 0.1,
+          "metrics": {
+            "n": 42847,
+            "weight": 133.99999999999807,
+            "log_loss": 0.6205038084974678,
+            "brier": 0.21580649340520738,
+            "accuracy": 0.6418243136846378
+          }
+        },
+        {
+          "ridge": 1,
+          "metrics": {
+            "n": 42847,
+            "weight": 133.99999999999807,
+            "log_loss": 0.6222596958240167,
+            "brier": 0.21731465372138808,
+            "accuracy": 0.6418243136846378
+          }
+        },
+        {
+          "ridge": 10,
+          "metrics": {
+            "n": 42847,
+            "weight": 133.99999999999807,
+            "log_loss": 0.6506107389964901,
+            "brier": 0.2294765327743801,
+            "accuracy": 0.6418243136846378
+          }
+        }
+      ]
+    },
+    {
+      "fold": [
+        487,
+        609
+      ],
+      "controls": [
+        {
+          "ridge": 0.1,
+          "metrics": {
+            "n": 56945,
+            "weight": 233.99999999999744,
+            "log_loss": 0.5855646533777271,
+            "brier": 0.20320946017853445,
+            "accuracy": 0.6688939472947489
+          }
+        },
+        {
+          "ridge": 1,
+          "metrics": {
+            "n": 56945,
+            "weight": 233.99999999999744,
+            "log_loss": 0.5900400112973637,
+            "brier": 0.20462717505569905,
+            "accuracy": 0.6688939472947489
+          }
+        },
+        {
+          "ridge": 10,
+          "metrics": {
+            "n": 56945,
+            "weight": 233.99999999999744,
+            "log_loss": 0.6243476496700527,
+            "brier": 0.2174997981157205,
+            "accuracy": 0.6688939472947489
+          }
+        }
+      ]
+    }
+  ],
+  "selected_control_ridge": 0.1,
+  "uncertainty_scope": "117 match clusters, fixed fitted predictions; not training/selection uncertainty"
+}

@@ -1,6 +1,7 @@
 local CaptainUtils = require('comfy_panel.special_games.captain_utils')
 local CaptainStates = require('comfy_panel.special_games.captain_states')
 local CaptainImpact = require('comfy_panel.special_games.captain_impact_model')
+local CaptainChoice = require('comfy_panel.special_games.captain_impact_choice')
 local Color = require('utils.color_presets')
 local Group = require('comfy_panel.group')
 local PlayerList = require('comfy_panel.player_list')
@@ -43,7 +44,8 @@ local function draw_picking_ui_entry(parent, player_name, group_name, play_time,
     -- The public Impact draft has the same list for everyone, but pick buttons
     -- only exist for the two captains. Classic mode keeps the old captain-only UI.
     local viewer_is_captain = viewer
-        and (special.captainList[1] == viewer.name or special.captainList[2] == viewer.name)
+        and (special.captainList[1] == viewer.name or special.captainList[2] == viewer.name
+            or (special.manual_impact_test and special.manual_impact_test_admin == viewer.name))
 
     local flow = parent.add({
         type = 'flow',
@@ -85,6 +87,9 @@ local function draw_picking_ui_entry(parent, player_name, group_name, play_time,
 
     if impact_mode then
         local display = CaptainImpact.get_display(player_name)
+        local history_tooltip = CaptainChoice.history_tooltip(player_name)
+        l.tooltip = history_tooltip
+        display.tooltip = display.tooltip .. '\n\n' .. history_tooltip
         l = parent.add({
             type = 'label',
             caption = display.rank,
@@ -168,6 +173,19 @@ local function draw_picking_ui_title(frame)
             name = 'captain_impact_explain_open',
             caption = 'How ratings work',
             tooltip = 'Compact explanation from historical evidence to native skill and AMWI, with a worked Jimmy50 example.',
+        })
+        flow.add({
+            type = 'button',
+            name = 'captain_impact_leaderboard_open',
+            caption = 'Leaderboard',
+            tooltip = 'Open the latest Captain Impact leaderboard, including live prospective updates when available.',
+        })
+        flow.add({
+            type = 'sprite-button',
+            name = 'captain_picking_ui_close',
+            sprite = 'utility/close_black',
+            style = 'tool_button_red',
+            tooltip = 'Close this picking window. The draft continues and you can reopen it from the tournament window.',
         })
     end
 
@@ -268,7 +286,7 @@ local function draw_picking_ui_list_header(tab, viewer)
             viewer,
             'rank',
             'Rank',
-            'Current AMWI leaderboard rank. Unrated players remain at the bottom.',
+            'Current-form AMWI leaderboard rank. Unrated players remain at the bottom.',
             60
         )
         draw_sort_header(
@@ -276,7 +294,7 @@ local function draw_picking_ui_list_header(tab, viewer)
             viewer,
             'amwi',
             'AMWI',
-            'Average Marginal Win Impact versus the active established-player reference. Unrated players remain at the bottom.',
+            'Current-form Average Marginal Win Impact versus the active established-player reference. Unrated players remain at the bottom.',
             88
         )
         draw_sort_header(
@@ -670,9 +688,10 @@ function Public.update_picking_ui_title(cpt, state)
     local special = storage.special_games_variables.captain_mode
     if special.draftFormat == 'impact_dynamic' then
         local is_captain = special.captainList[1] == cpt.name or special.captainList[2] == cpt.name
+        local is_test_operator = special.manual_impact_test and special.manual_impact_test_admin == cpt.name
         if state == CaptainStates.PICKS.PAUSED then
             title.caption = 'Impact Dynamic draft is paused'
-        elseif is_captain and state == CaptainStates.PICKS.RUNNING then
+        elseif (is_captain or is_test_operator) and state == CaptainStates.PICKS.RUNNING then
             title.caption = 'Impact Dynamic: ' .. string.upper(special.next_pick_force) .. ' picks now'
         else
             title.caption = 'Impact Dynamic draft: ' .. string.upper(special.next_pick_force) .. ' is picking'

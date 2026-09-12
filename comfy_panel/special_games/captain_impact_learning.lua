@@ -1,7 +1,8 @@
 -- Deterministic outcome learner. No Factorio objects, network calls or random numbers.
 local Seed = require('comfy_panel.special_games.captain_impact_seed')
+local CurrentSeed = require('comfy_panel.special_games.captain_impact_current_seed')
 local Public = {}
-Public.VERSION = 'online-outcome-v1-role-residual'
+Public.VERSION = 'online-outcome-v3-current-pick-role-residual'
 Public.POLICY = {
     evaluation_games = 24,
     promotion_log_loss_gain = 0.002,
@@ -22,6 +23,7 @@ Public.POLICY = {
     leaderboard_min_games = 20,
     leaderboard_context_games = 20,
     active_window_games = 200,
+    pick_learning_share = 1.0,
 }
 
 local function finite(x)
@@ -37,11 +39,60 @@ local function logistic(x)
     local z = math.exp(x)
     return z / (1 + z)
 end
-local function skill(name, delta, games)
-    local row = Seed.players[name]
-    return (row and row.skill_logodds or Seed.default_skill_logodds)
+local function model_value(key, impact)
+    if impact then
+        local value = Seed['impact_' .. key]
+        if value ~= nil then
+            return value
+        end
+    end
+    return Seed[key]
+end
+local function pick_state_value(state, name)
+    local row = CurrentSeed.players and CurrentSeed.players[name]
+    local half_life = tonumber(CurrentSeed.pick_half_life_matches) or 300
+    local seed_decay = half_life > 0 and 2 ^ (-(state.games or 0) / half_life) or 1
+    local seed_weight = (row and tonumber(row.pick_evidence) or 0) * seed_decay
+    local online_weight = state.pick_weights and state.pick_weights[name] or 0
+    local total = seed_weight + online_weight
+    if total <= 0 then
+        return 0.5, 0
+    end
+    local seed_score = row and tonumber(row.pick_score) or 0.5
+    local online_sum = state.pick_sums and state.pick_sums[name] or 0
+    return (seed_score * seed_weight + online_sum) / total, total
+end
+
+local function idle_matches(state, name)
+    local row = CurrentSeed.players and CurrentSeed.players[name]
+    local historical = tonumber(CurrentSeed.historical_matches) or 0
+    local current_index = historical + (state.games or 0) - 1
+    local last_seen = state.last_seen_match_index and state.last_seen_match_index[name]
+    local last_index
+    if last_seen ~= nil then
+        last_index = historical + last_seen - 1
+    elseif row and row.last_match_index ~= nil then
+        last_index = row.last_match_index
+    end
+    return last_index and math.max(0, current_index - last_index) or 0
+end
+
+local function skill(name, delta, games, impact, state)
+    local players = impact and Seed.impact_players or Seed.players
+    local row = players and players[name]
+    local tau = tonumber(model_value('experience_tau', impact)) or Seed.experience_tau
+    local penalty = tonumber(model_value('experience_penalty_logodds', impact)) or Seed.experience_penalty_logodds
+    local value = (row and row.skill_logodds or Seed.default_skill_logodds)
         + (delta[name] or 0)
-        - Seed.experience_penalty_logodds * math.exp(-games / Seed.experience_tau)
+        - penalty * math.exp(-games / tau)
+    if not impact then
+        return value
+    end
+    local pick_score = pick_state_value(state or { games = 0 }, name)
+    local pick_weight = tonumber(CurrentSeed.direct_pick_weight_logodds) or 0
+    local half_life = tonumber(CurrentSeed.inactivity_half_life_matches) or 15
+    local freshness = half_life > 0 and 2 ^ (-idle_matches(state or { games = 0 }, name) / half_life) or 1
+    return (value + pick_weight * (pick_score - 0.5)) * freshness
 end
 local function valid_role(role)
     if role == nil then
@@ -97,6 +148,9 @@ function Public.new_state()
         promotions = 0,
         rollbacks = 0,
         context_histogram = {},
+        pick_sums = {},
+        pick_weights = {},
+        last_seen_match_index = {},
     }
 end
 
@@ -162,6 +216,27 @@ function Public.validate_observation(o)
     end
     if count > Public.POLICY.max_roster_size then
         return false, 'roster too large'
+    end
+    if o.pick_events ~= nil then
+        if type(o.pick_events) ~= 'table' or #o.pick_events > Public.POLICY.max_roster_size then
+            return false, 'invalid pick events'
+        end
+        local pick_seen = {}
+        for index, event in ipairs(o.pick_events) do
+            if
+                type(event) ~= 'table'
+                or type(event.name) ~= 'string'
+                or #event.name == 0
+                or pick_seen[event.name]
+                or not finite(event.score)
+                or event.score < 0
+                or event.score > 1
+                or (index > 1 and event.score > o.pick_events[index - 1].score + 1e-12)
+            then
+                return false, 'invalid pick event'
+            end
+            pick_seen[event.name] = true
+        end
     end
     return true
 end
@@ -230,6 +305,41 @@ function Public.observation_from_match(match)
             return nil, 'late assignment without exposure model'
         end
     end
+    local final_names, captain_names = {}, {}
+    for _, force in ipairs({ 'north', 'south' }) do
+        for _, name in ipairs(match.final_roster[force] or {}) do
+            final_names[name] = true
+        end
+        local captain = match.starting_captains and match.starting_captains[force]
+        if captain then
+            captain_names[captain] = true
+        end
+    end
+    local picked, pick_names = {}, {}
+    for _, pick in ipairs(match.picks or {}) do
+        local chosen = pick.chosen_player and pick.chosen_player.player_name
+        if
+            pick.historical_choice_model
+            and pick.captain_choice
+            and not pick.community_picking
+            and pick.phase == 'initial'
+            and chosen
+            and final_names[chosen]
+            and not captain_names[chosen]
+            and not picked[chosen]
+        then
+            picked[chosen] = true
+            pick_names[#pick_names + 1] = chosen
+        end
+    end
+    if #pick_names >= 2 then
+        o.pick_events = {}
+        for index, name in ipairs(pick_names) do
+            o.pick_events[index] = { name = name, score = 1 - (index - 1) / (#pick_names - 1) }
+        end
+    else
+        o.pick_events = {}
+    end
     local ok, reason = Public.validate_observation(o)
     return ok and o or nil, reason
 end
@@ -250,16 +360,21 @@ function Public.fingerprint(o)
                 .. ':' .. tostring(row.primary_role or '') .. ':' .. tostring(row.secondary_role or '')
         end
     end
+    for _, event in ipairs(o.pick_events or {}) do
+        parts[#parts + 1] = 'pick:' .. event.name .. ':' .. string.format('%.17g', event.score)
+    end
     return table.concat(parts, '|')
 end
 
 function Public.predict(delta, o, role_delta)
-    local eta = Seed.count_coefficient * (#o.north - #o.south)
+    local impact = o.draft_regime == 'impact_dynamic'
+    local count = tonumber(model_value('count_coefficient', impact)) or Seed.count_coefficient
+    local eta = count * (#o.north - #o.south)
     for _, row in ipairs(o.north) do
-        eta = eta + skill(row.name, delta, row.prior_games) + role_component(row, role_delta)
+        eta = eta + skill(row.name, delta, row.prior_games, impact, o._state) + role_component(row, role_delta)
     end
     for _, row in ipairs(o.south) do
-        eta = eta - skill(row.name, delta, row.prior_games) - role_component(row, role_delta)
+        eta = eta - skill(row.name, delta, row.prior_games, impact, o._state) - role_component(row, role_delta)
     end
     return logistic(eta), eta
 end
@@ -293,14 +408,32 @@ end
 function Public.process(state, o)
     local ok, reason = Public.validate_observation(o)
     assert(ok, reason)
+    -- Older persisted states predate the pick signal and match-index maps.
+    -- Initialize them before replaying a journal entry so upgrades remain safe.
+    state.pick_sums = state.pick_sums or {}
+    state.pick_weights = state.pick_weights or {}
+    state.last_seen_match_index = state.last_seen_match_index or {}
     local y = o.winner == 'north' and 1 or 0
+    o._state = state
     local champion_p, champion_eta = Public.predict(state.champion, o, state.role_champion)
     local candidate_p = Public.predict(state.candidate, o, state.role_candidate)
+    o._state = nil
     evaluate(state.evaluation, champion_p, candidate_p, y)
     if state.previous then
-        evaluate(state.rollback_evaluation, champion_p, Public.predict(state.previous, o, state.previous_role), y)
+        o._state = state
+        local previous_p = Public.predict(state.previous, o, state.previous_role)
+        o._state = nil
+        evaluate(state.rollback_evaluation, champion_p, previous_p, y)
     end
     state.games = state.games + 1
+    local pick_half_life = tonumber(CurrentSeed.pick_half_life_matches) or 300
+    local pick_decay = pick_half_life > 0 and 2 ^ (-1 / pick_half_life) or 1
+    for name, value in pairs(state.pick_sums) do
+        state.pick_sums[name] = value * pick_decay
+    end
+    for name, value in pairs(state.pick_weights) do
+        state.pick_weights[name] = value * pick_decay
+    end
     local n = #o.north + #o.south
     for bin, weight in pairs(state.context_histogram) do
         state.context_histogram[bin] = weight * 0.995
@@ -323,6 +456,7 @@ function Public.process(state, o)
             state.information[name] = information + candidate_p * (1 - candidate_p)
             state.counts[name] = (state.counts[name] or 0) + 1
             state.last_seen[name] = state.games
+            state.last_seen_match_index[name] = state.games
             if has_role then
                 local values = state.role_candidate[name] or {}
                 local primary = valid_role(row.primary_role) and row.primary_role or nil
@@ -355,11 +489,16 @@ function Public.process(state, o)
                 state.role_candidate[name] = values
             end
             local offset = sign * champion_eta
-                - skill(name, state.champion, row.prior_games)
+                - skill(name, state.champion, row.prior_games, o.draft_regime == 'impact_dynamic', state)
                 + Seed.reference_current_skill_logodds
             local bin = clamp(math.floor(offset * 2 + 0.5), -12, 12)
             state.context_histogram[bin] = (state.context_histogram[bin] or 0) + 1 / n
         end
+    end
+    for _, event in ipairs(o.pick_events or {}) do
+        local name = event.name
+        state.pick_sums[name] = (state.pick_sums[name] or 0) + event.score * (Public.POLICY.pick_learning_share or 1)
+        state.pick_weights[name] = (state.pick_weights[name] or 0) + (Public.POLICY.pick_learning_share or 1)
     end
     local rollback = state.rollback_evaluation
     if state.previous and rollback.games >= Public.POLICY.evaluation_games then
@@ -422,17 +561,25 @@ function Public.snapshot(state, revision)
         player_skill_delta = table.deepcopy(state.champion),
         player_role_skill_delta = table.deepcopy(state.role_champion),
         completed_games_by_player = table.deepcopy(state.counts),
+        last_seen_match_index = table.deepcopy(state.last_seen_match_index),
         role_evidence = table.deepcopy(state.role_counts),
+        pick_evidence = table.deepcopy(state.pick_weights),
         live_leaderboard = live,
         ratings = {},
         leaderboard = {},
+        -- A provisional view is kept current from the first completed game.
+        -- It is display-only until the confidence gate promotes the live view.
+        provisional_leaderboard = {},
         transitions = table.deepcopy(state.transitions),
         validation = table.deepcopy(state.last_evaluation or state.evaluation),
         amwi_basis = live and 'prospective replacement contexts v1' or 'historical seed',
         policy = table.deepcopy(Public.POLICY),
     }
     local names = {}
-    for name in pairs(Seed.players) do
+    for name in pairs(Seed.impact_players) do
+        names[name] = true
+    end
+    for name in pairs(CurrentSeed.players or {}) do
         names[name] = true
     end
     for name in pairs(state.counts) do
@@ -444,7 +591,7 @@ function Public.snapshot(state, revision)
     end
     table.sort(sorted)
     for _, name in ipairs(sorted) do
-        local seed = Seed.players[name]
+        local seed = Seed.impact_players[name]
         local games = (seed and seed.games or 0) + (state.counts[name] or 0)
         local row = {
             player_name = name,
@@ -462,8 +609,22 @@ function Public.snapshot(state, revision)
                 eligible = evidence > 0,
             }
         end
+        local pick_score, pick_evidence = pick_state_value(state, name)
+        row.pick_score = pick_score
+        row.pick_evidence = pick_evidence
+        row.idle_matches = idle_matches(state, name)
+        local inactivity_half_life = tonumber(CurrentSeed.inactivity_half_life_matches) or 15
+        row.freshness_factor = inactivity_half_life > 0
+                and 2 ^ (-row.idle_matches / inactivity_half_life)
+            or 1
+        row.effective_skill_logodds = skill(name, state.champion, games, true, state)
+        row.provisional_amwi_pp = amwi(row.effective_skill_logodds - Seed.reference_current_skill_logodds, state.context_histogram)
+        local provisional_eligible = (seed and seed.rank ~= nil) or (state.counts[name] or 0) > 0
+        if provisional_eligible then
+            snapshot.provisional_leaderboard[#snapshot.provisional_leaderboard + 1] = row
+        end
         if live then
-            local advantage = skill(name, state.champion, games) - Seed.reference_current_skill_logodds
+            local advantage = row.effective_skill_logodds - Seed.reference_current_skill_logodds
             local precision = 4 + 12 * (seed and seed.reliability or 0) + (state.information[name] or 0)
             local radius = 1.96 / math.sqrt(precision)
             row.amwi_pp = amwi(advantage, state.context_histogram)
@@ -515,6 +676,15 @@ function Public.snapshot(state, revision)
             end
             row.rank_low, row.rank_high = best, worst
         end
+    end
+    table.sort(snapshot.provisional_leaderboard, function(a, b)
+        if a.provisional_amwi_pp ~= b.provisional_amwi_pp then
+            return a.provisional_amwi_pp > b.provisional_amwi_pp
+        end
+        return a.player_name < b.player_name
+    end)
+    for rank, row in ipairs(snapshot.provisional_leaderboard) do
+        row.provisional_rank = rank
     end
     return snapshot
 end

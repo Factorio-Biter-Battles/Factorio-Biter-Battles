@@ -74,14 +74,14 @@ function Public.open(player)
     add_section(flow, '1. Games -> persistent skill')
     local games = flow.add({
         type = 'label',
-        caption = 'Historical match results are evaluated while accounting for teammate strength, opponent strength, team size and experience. A weak Captain-pick preference signal also contributes. Small samples are pulled toward average.',
+        caption = 'Historical match results are evaluated while accounting for teammate strength, opponent strength, team size and experience. Impact Dynamic also uses a small, recency-weighted captain-pick signal and shrinks stale ratings toward neutral. Small samples are pulled toward average.',
     })
     gui_style(games, { single_line = false, maximal_width = 540 })
 
     add_section(flow, '2. Experience -> current skill')
     local exp = flow.add({
         type = 'label',
-        caption = 'Current skill = persistent skill + the shared experience adjustment. The adjustment fades toward zero with Captain Game experience. No separate recent-form bonus is currently deployed.',
+        caption = 'Current skill starts with persistent skill plus the shared experience adjustment. Impact Dynamic adds the direct pick-position signal, then applies a 15-match inactivity half-life so long-absent players move toward neutral. Classic keeps the original experience-only path.',
     })
     gui_style(exp, { single_line = false, maximal_width = 540 })
 

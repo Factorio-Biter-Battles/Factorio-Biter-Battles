@@ -1,5 +1,6 @@
 local Seed = require('comfy_panel.special_games.captain_impact_seed')
 local RoleSeed = require('comfy_panel.special_games.captain_impact_role_seed')
+local CurrentSeed = require('comfy_panel.special_games.captain_impact_current_seed')
 
 local Public = {}
 
@@ -18,22 +19,45 @@ local function active_snapshot()
     return nil
 end
 
+local function impact_dynamic()
+    local special = storage.special_games_variables and storage.special_games_variables.captain_mode
+    return special and special.draftFormat == 'impact_dynamic'
+end
+
 local function active_rating(player_name)
+    -- Prospective learning belongs to Impact Dynamic. Keep Classic Captain
+    -- displays and draft calculations on their historical seed.
+    if not impact_dynamic() then
+        return nil, nil
+    end
     local snapshot = active_snapshot()
     return snapshot and snapshot.ratings and snapshot.ratings[player_name], snapshot
+end
+
+local function seed_value(key)
+    if impact_dynamic() then
+        local value = Seed['impact_' .. key]
+        if value ~= nil then
+            return value
+        end
+    end
+    return Seed[key]
 end
 
 local function ensure_runtime()
     storage.captain_impact_runtime = storage.captain_impact_runtime or {}
     local runtime = storage.captain_impact_runtime
     runtime.completed_games_by_player = runtime.completed_games_by_player or {}
+    runtime.completed_impact_games = runtime.completed_impact_games or 0
+    runtime.last_seen_match_index = runtime.last_seen_match_index or {}
     runtime.player_skill_delta = runtime.player_skill_delta or {}
     runtime.promoted_model_version = runtime.promoted_model_version or Seed.model_version
     return runtime
 end
 
 local function resolve_player_row(player_name)
-    return Seed.players[player_name], player_name
+    local players = impact_dynamic() and Seed.impact_players or Seed.players
+    return players and players[player_name] or Seed.players[player_name], player_name
 end
 
 local function logistic(x)
@@ -44,6 +68,90 @@ local function logistic(x)
     end
     local z = math.exp(x)
     return z / (1 + z)
+end
+
+local function current_seed_row(player_name)
+    if not impact_dynamic() then
+        return nil
+    end
+    return CurrentSeed.players and CurrentSeed.players[player_name]
+end
+
+-- Impact keeps a separate outcome seed, while the historical rank/AMWI fields
+-- remain in the Classic table.  Merge only those display fields; never use the
+-- Classic skill value in Impact outcome or draft calculations.
+local function display_seed_row(player_name)
+    local row = resolve_player_row(player_name)
+    if not impact_dynamic() then
+        return row
+    end
+    local classic = Seed.players and Seed.players[player_name]
+    if not classic then
+        return row
+    end
+    if not row then
+        return classic
+    end
+    if row.rank ~= nil and row.amwi_pp ~= nil then
+        return row
+    end
+    local merged = table.deepcopy(row)
+    for key, value in pairs(classic) do
+        if merged[key] == nil then
+            merged[key] = value
+        end
+    end
+    return merged
+end
+
+-- The current-form layer is deliberately separate from the historical outcome
+-- seed.  Pick evidence is a small direct term; inactivity shrinks the whole
+-- current estimate toward neutral.  New players have neutral pick evidence and
+-- are considered fresh until they acquire observations.
+local function current_form_details(player_name)
+    if not impact_dynamic() then
+        return {
+            pick_score = 0.5,
+            pick_evidence = 0,
+            pick_component_logodds = 0,
+            idle_matches = 0,
+            freshness_factor = 1,
+        }
+    end
+    local row = current_seed_row(player_name)
+    local snapshot = active_snapshot()
+    local live = snapshot and snapshot.ratings and snapshot.ratings[player_name]
+    local pick_score = (live and live.pick_score) or (row and row.pick_score) or 0.5
+    local pick_evidence = (live and live.pick_evidence) or (row and row.pick_evidence) or 0
+    local weight = tonumber(CurrentSeed.direct_pick_weight_logodds) or 0
+    local pick_component = weight * (pick_score - 0.5)
+    local idle = live and live.idle_matches
+    local freshness = live and live.freshness_factor
+    if idle == nil or freshness == nil then
+        local runtime = ensure_runtime()
+        local online_games = snapshot and snapshot.games or runtime.completed_impact_games or 0
+        local last_seen = snapshot
+                and snapshot.last_seen_match_index
+                and snapshot.last_seen_match_index[player_name]
+            or runtime.last_seen_match_index[player_name]
+        local last_index
+        if last_seen ~= nil then
+            last_index = (tonumber(CurrentSeed.historical_matches) or 0) + last_seen - 1
+        elseif row and row.last_match_index ~= nil then
+            last_index = row.last_match_index
+        end
+        local current_index = (tonumber(CurrentSeed.historical_matches) or 0) + online_games - 1
+        idle = last_index and math.max(0, current_index - last_index) or 0
+        local half_life = tonumber(CurrentSeed.inactivity_half_life_matches) or 15
+        freshness = half_life > 0 and 2 ^ (-idle / half_life) or 1
+    end
+    return {
+        pick_score = pick_score,
+        pick_evidence = pick_evidence,
+        pick_component_logodds = pick_component,
+        idle_matches = idle,
+        freshness_factor = freshness,
+    }
 end
 
 local function role_profile(player_name)
@@ -163,7 +271,7 @@ local function role_summary(rows)
 end
 
 local function role_outcome_adjustment(north_rows, south_rows)
-    local cfg = Seed.role_outcome_calibration
+    local cfg = seed_value('role_outcome_calibration')
     local special = storage.special_games_variables and storage.special_games_variables.captain_mode
     -- Classic Captain Games retain their original predictor exactly.  The
     -- historical role-composition layer belongs to Impact Dynamic, where role
@@ -194,7 +302,7 @@ end
 
 local function experience_basis(prior_games)
     local n = math.max(0, tonumber(prior_games) or 0)
-    return -math.exp(-n / Seed.experience_tau)
+    return -math.exp(-n / (tonumber(seed_value('experience_tau')) or Seed.experience_tau))
 end
 
 function Public.get_seed()
@@ -211,7 +319,11 @@ function Public.get_rank(player_name)
     if row and row.rank then
         return row.rank
     end
-    row = resolve_player_row(player_name)
+    local current = current_seed_row(player_name)
+    if current then
+        return current.experimental_rank
+    end
+    row = display_seed_row(player_name)
     return row and row.rank or nil
 end
 
@@ -220,11 +332,53 @@ function Public.get_amwi_pp(player_name)
     if row and row.amwi_pp ~= nil then
         return row.amwi_pp
     end
-    row = resolve_player_row(player_name)
+    local current = current_seed_row(player_name)
+    if current then
+        return current.adjusted_amwi_50_50_pp
+    end
+    row = display_seed_row(player_name)
     return row and row.amwi_pp or nil
 end
 
 function Public.get_display(player_name)
+    -- Impact Dynamic has one published current-value path. The picker must
+    -- use the same current-form rank/AMWI values as the leaderboard; the
+    -- historical impact_players table is the outcome prior, not the current
+    -- display leaderboard.
+    if impact_dynamic() then
+        local live_row = active_rating(player_name)
+        local rank = Public.get_rank(player_name)
+        local amwi = Public.get_amwi_pp(player_name)
+        local current = current_seed_row(player_name)
+        local breakdown = Public.get_rating_breakdown(player_name)
+        local tooltip
+        if live_row then
+            tooltip = string.format(
+                'Live current-form AMWI %+.2f pp; rank %s; %d eligible games, %d prospective games.\n'
+                    .. 'The If picked consequence uses the same current-form skill with the selected effort.',
+                amwi or 0,
+                rank and tostring(rank) or 'NR',
+                live_row.games or 0,
+                live_row.prospective_games or 0
+            )
+        elseif current then
+            tooltip = string.format(
+                'Current-form seed AMWI %+.2f pp; rank %s; historical games %d; freshness %.3f.\n'
+                    .. 'The If picked consequence uses the same current-form skill with the selected effort.',
+                amwi or 0,
+                rank and tostring(rank) or 'NR',
+                breakdown.games or 0,
+                breakdown.freshness_factor or 1
+            )
+        end
+        return {
+            rank = rank and tostring(rank) or 'NR',
+            amwi = amwi and string.format('%+.1f pp', amwi) or 'Unrated',
+            tooltip = tooltip
+                or 'No current-form seed value. The draft uses the neutral prior plus the experience adjustment.',
+        }
+    end
+
     local live_row = active_rating(player_name)
     if live_row and live_row.amwi_pp ~= nil then
         local rank = live_row.rank and tostring(live_row.rank) or 'NR'
@@ -246,7 +400,7 @@ function Public.get_display(player_name)
             ),
         }
     end
-    local row = resolve_player_row(player_name)
+    local row = display_seed_row(player_name)
     if not row then
         return {
             rank = 'NR',
@@ -254,7 +408,6 @@ function Public.get_display(player_name)
             tooltip = 'No published active-player AMWI rating. The runtime model uses the neutral skill prior plus the experience adjustment.',
         }
     end
-
     local rank = row.rank and tostring(row.rank) or 'NR'
     local amwi = row.amwi_pp and string.format('%+.1f pp', row.amwi_pp) or 'Unrated'
     local tooltip
@@ -273,11 +426,15 @@ function Public.get_display(player_name)
     end
     return { rank = rank, amwi = amwi, tooltip = tooltip }
 end
-
 function Public.prior_captain_games(player_name)
     local runtime = ensure_runtime()
     local row = resolve_player_row(player_name)
     local seed_games = row and row.games or 0
+    -- Impact's prospective journal is a separate rating regime. Do not let
+    -- Impact appearances change Classic's experience adjustment or displays.
+    if not impact_dynamic() then
+        return seed_games
+    end
     local local_games = runtime.completed_games_by_player[player_name] or 0
     local snapshot = active_snapshot()
     local shared_games = snapshot
@@ -297,9 +454,9 @@ end
 
 function Public.current_skill_logodds(player_name)
     local runtime = ensure_runtime()
-    local snapshot = active_snapshot()
+    local snapshot = impact_dynamic() and active_snapshot() or nil
     local delta = snapshot and snapshot.player_skill_delta and snapshot.player_skill_delta[player_name]
-        or runtime.player_skill_delta[player_name]
+        or (impact_dynamic() and runtime.player_skill_delta[player_name])
         or 0
     return Public.base_skill_logodds(player_name) + delta
 end
@@ -308,7 +465,7 @@ end
 -- It is intentionally unavailable when no role was recorded, so an unrated
 -- role falls back to the stable generic Impact estimate.
 function Public.role_skill_delta(player_name, role)
-    if type(role) ~= 'string' or role == '' then
+    if not impact_dynamic() or type(role) ~= 'string' or role == '' then
         return 0
     end
     local snapshot = active_snapshot()
@@ -340,17 +497,19 @@ function Public.experience_adjustment_logodds(player_name, prior_games)
     if n == nil then
         n = Public.prior_captain_games(player_name)
     end
-    return Seed.experience_penalty_logodds * experience_basis(n)
+    return (tonumber(seed_value('experience_penalty_logodds')) or 0) * experience_basis(n)
 end
 
 function Public.get_rating_breakdown(player_name)
-    local row = resolve_player_row(player_name)
+    local row = display_seed_row(player_name)
+    local current_row = current_seed_row(player_name)
     local live_row = active_rating(player_name)
-    local live_snapshot = active_snapshot()
+    local live_snapshot = impact_dynamic() and active_snapshot() or nil
     local games = Public.prior_captain_games(player_name)
     local persistent = Public.current_skill_logodds(player_name)
     local experience = Public.experience_adjustment_logodds(player_name, games)
-    local current = persistent + experience
+    local current_form = current_form_details(player_name)
+    local current = Public.effective_player_logodds(player_name, games)
     local reference = Seed.reference_current_skill_logodds or 0
     return {
         player_name = player_name,
@@ -360,12 +519,19 @@ function Public.get_rating_breakdown(player_name)
         current_skill_logodds = current,
         reference_current_skill_logodds = reference,
         advantage_vs_reference_logodds = current - reference,
-        amwi_pp = live_row and live_row.amwi_pp or row and row.amwi_pp or nil,
-        amwi_low_pp = live_row and live_row.amwi_low_pp or row and row.amwi_low_pp or nil,
-        amwi_high_pp = live_row and live_row.amwi_high_pp or row and row.amwi_high_pp or nil,
-        rank = live_row and live_row.rank or row and row.rank or nil,
-        rank_low = live_row and live_row.rank_low or row and row.rank_low or nil,
-        rank_high = live_row and live_row.rank_high or row and row.rank_high or nil,
+        pick_score = current_form.pick_score,
+        pick_evidence = current_form.pick_evidence,
+        pick_component_logodds = current_form.pick_component_logodds,
+        idle_matches = current_form.idle_matches,
+        freshness_factor = current_form.freshness_factor,
+        current_form_adjustment_logodds = current - persistent - experience,
+        amwi_pp = live_row and live_row.amwi_pp or (current_row and current_row.adjusted_amwi_50_50_pp)
+            or (row and row.amwi_pp) or nil,
+        amwi_low_pp = live_row and live_row.amwi_low_pp or (row and row.amwi_low_pp) or nil,
+        amwi_high_pp = live_row and live_row.amwi_high_pp or (row and row.amwi_high_pp) or nil,
+        rank = live_row and live_row.rank or Public.get_rank(player_name),
+        rank_low = live_row and live_row.rank_low or (row and row.rank_low) or nil,
+        rank_high = live_row and live_row.rank_high or (row and row.rank_high) or nil,
         reliability = live_row and live_row.reliability or row and row.reliability or nil,
         role_skill_delta = (live_snapshot and live_snapshot.player_role_skill_delta
             and live_snapshot.player_role_skill_delta[player_name]) or {},
@@ -377,7 +543,17 @@ function Public.effective_player_logodds(player_name, prior_games)
     if n == nil then
         n = Public.prior_captain_games(player_name)
     end
-    return Public.current_skill_logodds(player_name) + Seed.experience_penalty_logodds * experience_basis(n)
+    local base_current = Public.current_skill_logodds(player_name)
+        + (tonumber(seed_value('experience_penalty_logodds')) or 0) * experience_basis(n)
+    if not impact_dynamic() then
+        return base_current
+    end
+    local live = active_rating(player_name)
+    if live and live.effective_skill_logodds ~= nil then
+        return live.effective_skill_logodds
+    end
+    local current_form = current_form_details(player_name)
+    return (base_current + current_form.pick_component_logodds) * current_form.freshness_factor
 end
 
 -- The historical outcome model decomposes a player's roster contribution into
@@ -390,7 +566,7 @@ end
 -- Impact Dynamic therefore uses a transparent POSITIVE MARGINAL VALUE floor
 -- for turn allocation only.  AMWI and raw outcome prediction remain unchanged.
 function Public.established_average_marginal_logodds()
-    return Seed.count_coefficient + (Seed.reference_current_skill_logodds or 0)
+    return (tonumber(seed_value('count_coefficient')) or 0) + (Seed.reference_current_skill_logodds or 0)
 end
 
 function Public.minimum_draft_marginal_logodds()
@@ -399,13 +575,14 @@ function Public.minimum_draft_marginal_logodds()
     local floor = average * fraction
     -- Defensive fallback in case a future seed changes centering drastically.
     if floor <= 0 then
-        floor = math.max(0.01, Seed.count_coefficient * fraction)
+        floor = math.max(0.01, (tonumber(seed_value('count_coefficient')) or 0) * fraction)
     end
     return floor
 end
 
 function Public.raw_player_marginal_logodds(player_name, prior_games)
-    return Seed.count_coefficient + Public.effective_player_logodds(player_name, prior_games)
+    return (tonumber(seed_value('count_coefficient')) or 0)
+        + Public.effective_player_logodds(player_name, prior_games)
 end
 
 function Public.get_effort_percent(player_name)
@@ -484,16 +661,23 @@ end
 function Public.get_model_snapshot()
     local snapshot = {}
     for key, value in pairs(Seed) do
-        if key ~= 'players' then
+        if key ~= 'players' and key ~= 'impact_players' then
             snapshot[key] = type(value) == 'table' and table.deepcopy(value) or value
         end
     end
+    snapshot.current_form_model_version = CurrentSeed.model_version
+    snapshot.current_form_source_model_version = CurrentSeed.source_model_version
+    snapshot.current_form_policy = {
+        pick_half_life_matches = CurrentSeed.pick_half_life_matches,
+        direct_pick_weight_logodds = CurrentSeed.direct_pick_weight_logodds,
+        inactivity_half_life_matches = CurrentSeed.inactivity_half_life_matches,
+    }
     snapshot.promoted_model_version = ensure_runtime().promoted_model_version
     snapshot.role_seed_version = RoleSeed.model_version
     snapshot.role_seed_source = RoleSeed.source
     snapshot.role_seed_policy = RoleSeed.historical_role_annotation_policy
     snapshot.role_offset_logodds = 0 -- Kept for compatibility; per-player role residuals are below.
-    local learned = active_snapshot()
+    local learned = impact_dynamic() and active_snapshot() or nil
     if learned then
         snapshot.active_learning = {
             version = learned.version,
@@ -555,7 +739,7 @@ end
 function Public.predict_names(north_names, south_names, role_offset_logodds)
     local north = north_names or {}
     local south = south_names or {}
-    local count_eta = Seed.count_coefficient * (#north - #south)
+    local count_eta = (tonumber(seed_value('count_coefficient')) or 0) * (#north - #south)
     local skill_eta = 0
     for _, player_name in ipairs(north) do
         skill_eta = skill_eta + Public.effective_player_logodds(player_name)
@@ -579,7 +763,7 @@ end
 function Public.predict_roster_rows(north_rows, south_rows)
     local north = north_rows or {}
     local south = south_rows or {}
-    local count_eta = Seed.count_coefficient * (#north - #south)
+    local count_eta = (tonumber(seed_value('count_coefficient')) or 0) * (#north - #south)
     local skill_eta = 0
     local role_eta = 0
     local function row_skill(row)
@@ -750,6 +934,10 @@ function Public.pick_consequence(player_name, picking_force, role_offset_logodds
     else
         next_force = picking_force == 'north' and 'south' or 'north'
     end
+    -- Keep the public consequence preview consistent with the actual turn
+    -- selector. The larger roster may be ahead by the configured allowance,
+    -- but the next pick cannot create a larger gap.
+    next_force = Public.constrain_next_pick_force(next_force, after.north_count, after.south_count)
 
     local p_team_after = picking_force == 'north' and after.p_north or (1 - after.p_north)
     local raw_p_team_after = picking_force == 'north' and raw_after.p_north or (1 - raw_after.p_north)
@@ -819,27 +1007,61 @@ function Public.get_pick_consequence_display(player_name, picking_force, role_of
     }
 end
 
--- Dynamic-draft rule: whichever currently assembled team has lower guarded
--- draft-balance share receives the next pick. AMWI itself is NOT summed here.
--- The native additive model is used, with the positive marginal-value floor
--- applied only where the raw lower-tail extrapolation would make a player too cheap.
-function Public.next_pick_force(previous_force)
-    local prediction = Public.predict_current_draft_rosters(0)
-    if prediction.p_north < 0.5 then
-        return 'north', prediction
-    elseif prediction.p_north > 0.5 then
-        return 'south', prediction
+-- Impact Dynamic keeps the weaker modeled roster picking. A strength
+-- correction may create an intentional player-count advantage, but it is
+-- bounded by the larger of three players or 30% of the smaller roster.
+-- The guard is applied before every Impact pick, including later join polls.
+function Public.constrain_next_pick_force(candidate_force, north_count, south_count)
+    if north_count == nil or south_count == nil then
+        north_count = #team_names('north')
+        south_count = #team_names('south')
     end
-    return previous_force == 'north' and 'south' or 'north', prediction
+    local smaller_count = math.min(north_count, south_count)
+    local minimum_gap = tonumber(seed_value('roster_gap_floor')) or 3
+    local gap_fraction = tonumber(seed_value('roster_gap_fraction')) or 0.30
+    local allowed_gap = math.max(minimum_gap, math.ceil(smaller_count * gap_fraction))
+    local gap = north_count - south_count
+    -- If the proposed side is already the larger side at the limit, make the
+    -- smaller side pick instead. This prevents the next assignment from
+    -- exceeding the allowance while still allowing the full permitted gap.
+    if gap >= allowed_gap and candidate_force == 'north' then
+        return 'south'
+    elseif -gap >= allowed_gap and candidate_force == 'south' then
+        return 'north'
+    end
+    return candidate_force
+end
+
+-- The same selector is used for the initial draft and every later join draft.
+-- `tie_break_force` preserves the existing random choice when the rosters are
+-- exactly even at the start of a phase.
+function Public.next_pick_force(previous_force, tie_break_force)
+    local prediction = Public.predict_current_draft_rosters(0)
+    local next_force
+    if prediction.p_north < 0.5 then
+        next_force = 'north'
+    elseif prediction.p_north > 0.5 then
+        next_force = 'south'
+    else
+        next_force = tie_break_force or (previous_force == 'north' and 'south' or 'north')
+    end
+    return Public.constrain_next_pick_force(next_force, prediction.north_count, prediction.south_count), prediction
 end
 
 function Public.mark_completed_game_players(north_names, south_names)
+    if not impact_dynamic() then
+        return
+    end
     local runtime = ensure_runtime()
+    runtime.completed_impact_games = runtime.completed_impact_games + 1
+    local match_index = runtime.completed_impact_games
     for _, player_name in ipairs(north_names or {}) do
         runtime.completed_games_by_player[player_name] = (runtime.completed_games_by_player[player_name] or 0) + 1
+        runtime.last_seen_match_index[player_name] = match_index
     end
     for _, player_name in ipairs(south_names or {}) do
         runtime.completed_games_by_player[player_name] = (runtime.completed_games_by_player[player_name] or 0) + 1
+        runtime.last_seen_match_index[player_name] = match_index
     end
 end
 

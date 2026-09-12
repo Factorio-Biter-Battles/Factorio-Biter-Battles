@@ -450,7 +450,14 @@ local function get_data_for_refresh_main_gui()
 end
 ---@param player LuaPlayer
 function Public.create_main_gui(player)
-    local is_spec = player.force.name == 'spectator' or not storage.chosen_team[player.name]
+    -- A forced captain/test assignment can put a player on a team before the
+    -- normal join helper writes chosen_team. Treat the actual force as the
+    -- fallback so the rejoin/spectate controls remain available.
+    local assigned_team = storage.chosen_team[player.name]
+    if not assigned_team and (player.force.name == 'north' or player.force.name == 'south') then
+        assigned_team = player.force.name
+    end
+    local is_spec = player.force.name == 'spectator' or not assigned_team
 
     local main_frame = Gui.get_left_element(player, 'bb_main_gui')
     if main_frame and main_frame.valid then
@@ -770,7 +777,15 @@ function Public.refresh_main_gui(player, data)
 
     frame = frame.flow.inner_frame
     local header, main, footer = frame.subheader, frame.scroll_pane, frame.subfooter
-    local is_spec = player.force.name == 'spectator' or not storage.chosen_team[player.name]
+    -- Keep the same fallback used when the panel is first created. Captain
+    -- and local test assignments can move a player to a team before the
+    -- normal join helper has written chosen_team; those players are on a
+    -- team and must see the spectate control rather than a false rejoin state.
+    local assigned_team = storage.chosen_team[player.name]
+    if not assigned_team and (player.force.name == 'north' or player.force.name == 'south') then
+        assigned_team = player.force.name
+    end
+    local is_spec = player.force.name == 'spectator' or not assigned_team
 
     -- == SUBHEADER =================================================================
     header.clock.caption = data.clock_caption
@@ -860,8 +875,12 @@ function Public.refresh_main_gui(player, data)
 
     do -- Join/Resume
         local assign, resume = main.join_frame.assign, main.join_frame.resume
-        assign.visible = _DEBUG or (storage.bb_game_won_by_team == nil and storage.chosen_team[player.name] == nil)
-        resume.visible = _DEBUG or (storage.bb_game_won_by_team == nil and storage.chosen_team[player.name] ~= nil)
+        local assigned_team = storage.chosen_team[player.name]
+        if not assigned_team and (player.force.name == 'north' or player.force.name == 'south') then
+            assigned_team = player.force.name
+        end
+        assign.visible = _DEBUG or (storage.bb_game_won_by_team == nil and assigned_team == nil)
+        resume.visible = _DEBUG or (storage.bb_game_won_by_team == nil and assigned_team ~= nil)
         resume.bb_resume.visible = _DEBUG or is_spec
         resume.bb_spectate.visible = _DEBUG or not is_spec
         main.join_frame.visible = assign.visible or resume.visible
@@ -1405,7 +1424,11 @@ local function on_gui_click(event)
     end
 
     if name == 'bb_resume' then
-        join_team(player, storage.chosen_team[player.name])
+        local assigned_team = storage.chosen_team[player.name]
+        if not assigned_team and (player.force.name == 'north' or player.force.name == 'south') then
+            assigned_team = player.force.name
+        end
+        join_team(player, assigned_team)
         return
     end
 

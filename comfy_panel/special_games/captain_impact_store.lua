@@ -71,6 +71,7 @@ local function canonical(o)
         draft_regime = o.draft_regime,
         north = {},
         south = {},
+        pick_events = {},
     }
     for _, force in ipairs({ 'north', 'south' }) do
         for _, row in ipairs(o[force]) do
@@ -84,6 +85,12 @@ local function canonical(o)
                 secondary_role_credit = row.secondary_role_credit,
             }
         end
+    end
+    for _, event in ipairs(o.pick_events or {}) do
+        clean.pick_events[#clean.pick_events + 1] = {
+            name = event.name,
+            score = event.score,
+        }
     end
     return clean
 end
@@ -303,9 +310,7 @@ function Public.flush()
     end
     if s.checkpoint_pending and s.snapshot and s.synced then
         local ok, err = pcall(Server.set_data, MODELS, s.snapshot.version, s.snapshot)
-        if ok then
-            s.checkpoint_pending = false
-        else
+        if not ok then
             failure('Model checkpoint: ' .. tostring(err))
         end
     end
@@ -357,6 +362,19 @@ end
 Server.on_data_set_changed(JOURNAL, function(data)
     if data.value then
         merge(data.key, data.value, true)
+    end
+end)
+Server.on_data_set_changed(MODELS, function(data)
+    if type(data) ~= 'table' or type(data.key) ~= 'string' or type(data.value) ~= 'table' then
+        return
+    end
+    local s = ensure()
+    if s.snapshot
+        and s.checkpoint_pending
+        and data.key == s.snapshot.version
+        and data.value.version == s.snapshot.version
+    then
+        s.checkpoint_pending = false
     end
 end)
 Event.add(Server.events.on_server_started, function()
