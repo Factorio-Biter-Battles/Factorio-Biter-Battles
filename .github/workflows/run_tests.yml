@@ -22,3 +22,4 @@ jobs:
           lua tests/test-science-restriction.lua
           lua tests/test-captain-impact.lua
           lua tests/test-captain-impact-learning.lua
+          lua tests/test-captain-choice.lua

@@ -20,6 +20,32 @@ def lua(value):
     return format(value,'.15g')
 
 
+def compact_rows(players):
+    """Return a compact, column-oriented Lua representation of player rows.
+
+    The scenario still reconstructs the same ``Seed.players`` map, but the
+    generated file stores each field name once instead of repeating fourteen
+    keys for every player.
+    """
+    columns = ['choice_logodds','base_skill_logodds','prior_games','pick_games',
+               'global_pick_games','recent_pick_games','avg_team_pick',
+               'median_team_pick','avg_team_pick_fraction','last_pick_date',
+               'avg_global_pick','avg_global_pick_fraction','recent_avg_team_pick',
+               'recent_avg_team_pick_fraction']
+    names = sorted(players)
+    lines = ['-- stylua: ignore', 'local choice_names = ' + lua(names),
+             '-- stylua: ignore', 'local choice_rows = {']
+    lines += ['{' + ','.join(lua(row.get(key)) for key in columns) + '},'
+              for name in names for row in [players[name]]]
+    lines += ['}', '-- stylua: ignore', 'local choice_columns = ' + lua(columns),
+              'Seed.players = {}', 'for i = 1, #choice_names do',
+              '    local values = choice_rows[i]', '    local row = {}',
+              '    for j, key in ipairs(choice_columns) do',
+              '        if values[j] ~= nil then row[key] = values[j] end',
+              '    end', '    Seed.players[choice_names[i]] = row', 'end']
+    return lines
+
+
 def run(args):
     model=Path(args.model);out=Path(args.out);out.mkdir(exist_ok=True,parents=True)
     context=Path(args.context);data=load_data(model)
@@ -73,9 +99,8 @@ def run(args):
     for k,v in seed.items():
         if k=='source_sha256':lines.append('-- stylua: ignore')
         lines.append('Seed.'+k+' = '+lua(v))
-    lines += ['-- stylua: ignore', 'Seed.players = {']
-    lines += ['    ['+lua(name)+'] = '+lua(row)+',' for name,row in players.items()]
-    lines += ['}','return Seed','']
+    lines += compact_rows(players)
+    lines += ['return Seed','']
     scenario=Path(args.scenario)
     (scenario/'comfy_panel/special_games/captain_impact_choice_seed.lua').write_text('\n'.join(lines),encoding='utf-8')
     (out/'historical-choice-seed.json').write_text(json.dumps(dict(metadata=seed,players=players),ensure_ascii=False,indent=2),encoding='utf-8')
