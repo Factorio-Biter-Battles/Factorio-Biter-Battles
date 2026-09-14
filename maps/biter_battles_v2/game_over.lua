@@ -1,6 +1,7 @@
 local Admin = require('utils.admin')
 local BBGui = require('maps.biter_battles_v2.gui')
 local Captain_special = require('comfy_panel.special_games.captain')
+local SkillDraft = require('comfy_panel.special_games.captains_skill_draft')
 local MultiSilo = require('comfy_panel.special_games.multi_silo')
 local Color = require('utils.color_presets')
 local Event = require('utils.event')
@@ -628,6 +629,8 @@ function Public.on_entity_died(entity)
         log_to_db('[TeamStats]' .. helpers.table_to_json(storage.team_stats) .. '\n', true)
         log_to_db('>End of log', true)
     end
+
+    SkillDraft.on_game_over()
 end
 
 local function chat_with_everyone(event)

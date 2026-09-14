@@ -1,5 +1,6 @@
 local Event = require('utils.event')
 local Color = require('utils.color_presets')
+local Captain_skill_draft = require('comfy_panel.special_games.captains_skill_draft')
 local Public = {}
 storage.active_special_games = {}
 storage.special_games_variables = {}
@@ -33,6 +34,7 @@ local valid_special_games = {
 local function clear_gui_specials()
     local captain_event = require('comfy_panel.special_games.captain')
     captain_event.clear_gui_special()
+    Captain_skill_draft.clear_gui_special()
 end
 
 function Public.reset_special_games()
@@ -43,6 +45,7 @@ function Public.reset_special_games()
     clear_gui_specials()
     local captain_event = require('comfy_panel.special_games.captain')
     captain_event.reset_special_games()
+    Captain_skill_draft.reset_special_games()
 end
 
 local create_special_games_panel = function(player, frame)
@@ -59,6 +62,15 @@ local create_special_games_panel = function(player, frame)
         local config = table.add({ name = k .. '_config', type = 'flow', direction = 'horizontal' })
         config.style.horizontally_stretchable = true
         config.style.left_padding = 3
+        if k == 'captain' then
+            local selector = config.add({
+                type = 'drop-down',
+                name = 'captain_game_mode_selector',
+                items = { 'Legacy Captain event', 'Captains Skill Draft' },
+                selected_index = 1,
+            })
+            selector.style.minimal_width = 190
+        end
         for _, i in ipairs(v.config) do
             config.add(i)
             config[i.name].style.width = i.width
