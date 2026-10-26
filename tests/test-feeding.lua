@@ -3,7 +3,7 @@ local lunatest = require('lunatest')
 bit32 = require('bit32')
 serpent = require('serpent')
 
-local Functions = require('maps.biter_battles_v2.feeding_calculations')
+local FeedingCalculations = require('maps.biter_battles_v2.feeding_calculations')
 local Tables = require('maps.biter_battles_v2.tables')
 
 local max_reanim_thresh = 250
@@ -19,7 +19,7 @@ function test_feed_effects_1()
     local evo = 0.01
     local num_flasks = 100
     local flask_food_value = Tables.food_values['logistic-science-pack'].value * difficulty / 100
-    local calc = Functions.calc_feed_effects(evo, flask_food_value, num_flasks, current_player_count, max_reanim_thresh)
+    local calc = FeedingCalculations.calc_feed_effects(evo, flask_food_value, num_flasks, current_player_count, max_reanim_thresh)
     lunatest.assert_equal('evo_increase: 0.037 threat: 41', effects_str(calc))
 end
 
@@ -30,7 +30,7 @@ function test_feed_effects_2()
     local evo = 0.15
     local num_flasks = 100
     local flask_food_value = Tables.food_values['automation-science-pack'].value * difficulty / 100
-    local calc = Functions.calc_feed_effects(evo, flask_food_value, num_flasks, current_player_count, max_reanim_thresh)
+    local calc = FeedingCalculations.calc_feed_effects(evo, flask_food_value, num_flasks, current_player_count, max_reanim_thresh)
     lunatest.assert_equal('evo_increase: 0.035 threat: 173', effects_str(calc))
 end
 
@@ -41,7 +41,7 @@ function test_feed_effects_3()
     local evo = 0.25
     local num_flasks = 4500
     local flask_food_value = Tables.food_values['utility-science-pack'].value * difficulty / 100
-    local calc = Functions.calc_feed_effects(evo, flask_food_value, num_flasks, current_player_count, max_reanim_thresh)
+    local calc = FeedingCalculations.calc_feed_effects(evo, flask_food_value, num_flasks, current_player_count, max_reanim_thresh)
     lunatest.assert_equal('evo_increase: 0.726 threat: 31373', effects_str(calc))
 end
 
@@ -52,7 +52,7 @@ function test_feed_effects_4()
     local evo = 0.30
     local num_flasks = 23000
     local flask_food_value = Tables.food_values['space-science-pack'].value * difficulty / 100
-    local calc = Functions.calc_feed_effects(evo, flask_food_value, num_flasks, current_player_count, max_reanim_thresh)
+    local calc = FeedingCalculations.calc_feed_effects(evo, flask_food_value, num_flasks, current_player_count, max_reanim_thresh)
     lunatest.assert_equal('evo_increase: 2.629 threat: 1884441', effects_str(calc))
 end
 
@@ -63,7 +63,7 @@ function test_feed_effects_5()
     local evo = 1.20
     local num_flasks = 3000
     local flask_food_value = Tables.food_values['space-science-pack'].value * difficulty / 100
-    local calc = Functions.calc_feed_effects(evo, flask_food_value, num_flasks, current_player_count, max_reanim_thresh)
+    local calc = FeedingCalculations.calc_feed_effects(evo, flask_food_value, num_flasks, current_player_count, max_reanim_thresh)
     lunatest.assert_equal('evo_increase: 0.318 threat: 97441', effects_str(calc))
 end
 
@@ -73,7 +73,7 @@ local function feed_split_up(evo, total_flasks, flask_food_value, num_splits)
     local current_player_count = 4
     local threat = 0
     for i = 1, num_splits, 1 do
-        local calc = Functions.calc_feed_effects(
+        local calc = FeedingCalculations.calc_feed_effects(
             evo,
             flask_food_value,
             total_flasks / num_splits,
@@ -111,7 +111,7 @@ function test_calc_send()
 
     lunatest.assert_match(
         'Invalid parameter: "foo"',
-        Functions.calc_send_command(
+        FeedingCalculations.calc_send_command(
             'foo',
             difficulty_vote_value,
             bb_evolution,
@@ -125,7 +125,7 @@ function test_calc_send()
         '/calc-send evo=20.0 difficulty=30 players=4 color=logistic-science-pack count=1000\n'
             .. 'evo_increase: 3.5 new_evo: 23.5\n'
             .. 'threat_increase: 226',
-        Functions.calc_send_command(
+        FeedingCalculations.calc_send_command(
             'evo=20 color=green count=1000',
             difficulty_vote_value,
             bb_evolution,

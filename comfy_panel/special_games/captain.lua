@@ -12,7 +12,7 @@ local Functions = require('maps.biter_battles_v2.functions')
 local Gui = require('utils.gui')
 local PlayerList = require('comfy_panel.player_list')
 local PlayerUtils = require('utils.player')
-local Session = require('utils.datastore.session_data')
+local SessionData = require('utils.datastore.session_data')
 local Tables = require('maps.biter_battles_v2.tables')
 local Task = require('utils.task')
 local TeamManager = require('maps.biter_battles_v2.team_manager')
@@ -121,7 +121,7 @@ end
 
 local function add_to_trust(playerName)
     if storage.special_games_variables.captain_mode.autoTrust then
-        local trusted = Session.get_trusted_table()
+        local trusted = SessionData.get_trusted_table()
         if not trusted[playerName] then
             trusted[playerName] = true
         end

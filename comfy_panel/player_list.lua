@@ -14,9 +14,9 @@ Minor changes by ~~~Gerkiz~~~
 --]]
 local Event = require('utils.event')
 local Where = require('commands.where')
-local Session = require('utils.datastore.session_data')
-local Jailed = require('utils.datastore.jail_data')
-local Tabs = require('comfy_panel.main')
+local SessionData = require('utils.datastore.session_data')
+local JailData = require('utils.datastore.jail_data')
+local ComfyPanel = require('comfy_panel.main')
 local Global = require('utils.global')
 
 local Public = {}
@@ -311,7 +311,7 @@ local function get_comparator(sort_by)
 end
 
 local function get_sorted_list(sort_by)
-    local play_table = Session.get_session_table()
+    local play_table = SessionData.get_session_table()
     local player_list = {}
     for i, player in pairs(game.connected_players) do
         player_list[i] = {}
@@ -343,8 +343,8 @@ local function player_list_show(player, frame, sort_by)
     -- Frame management
     frame.clear()
     frame.style.padding = 8
-    local play_table = Session.get_trusted_table()
-    local jailed = Jailed.get_jailed_table()
+    local play_table = SessionData.get_trusted_table()
+    local jailed = JailData.get_jailed_table()
 
     -- Header management
     local t = frame.add({ type = 'table', name = 'player_list_panel_header_table', column_count = 5 })
@@ -544,7 +544,7 @@ local function on_gui_click(event)
     end
     local player = game.get_player(event.element.player_index)
 
-    local frame = Tabs.comfy_panel_get_active_frame(player)
+    local frame = ComfyPanel.comfy_panel_get_active_frame(player)
     if not frame then
         return
     end
@@ -628,7 +628,7 @@ end
 
 local function refresh()
     for _, player in pairs(game.connected_players) do
-        local frame = Tabs.comfy_panel_get_active_frame(player)
+        local frame = ComfyPanel.comfy_panel_get_active_frame(player)
         if frame then
             if frame.name ~= 'Players' then
                 return

@@ -1,6 +1,6 @@
 -- science logs tab --
 
-local Tabs = require('comfy_panel.main')
+local ComfyPanel = require('comfy_panel.main')
 local tables = require('maps.biter_battles_v2.tables')
 local Functions = require('maps.biter_battles_v2.functions')
 local event = require('utils.event')
@@ -280,7 +280,7 @@ local function add_science_logs(player, element)
 end
 
 local build_config_gui = function(player)
-    local frame_sciencelogs = Tabs.comfy_panel_get_active_frame(player)
+    local frame_sciencelogs = ComfyPanel.comfy_panel_get_active_frame(player)
     if not frame_sciencelogs then
         return
     end

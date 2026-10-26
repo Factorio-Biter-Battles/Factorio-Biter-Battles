@@ -1,11 +1,11 @@
 local Admin = require('utils.admin')
 local BBGui = require('maps.biter_battles_v2.gui')
-local Captain_special = require('comfy_panel.special_games.captain')
+local Captain = require('comfy_panel.special_games.captain')
 local MultiSilo = require('comfy_panel.special_games.multi_silo')
 local Color = require('utils.color_presets')
 local Event = require('utils.event')
 local Functions = require('maps.biter_battles_v2.functions')
-local CraftingList = require('commands.crafting_queue_list')
+local CraftingQueueList = require('commands.crafting_queue_list')
 local Gui = require('utils.gui')
 local Init = require('maps.biter_battles_v2.init')
 local Score = require('comfy_panel.score')
@@ -613,7 +613,7 @@ function Public.on_entity_died(entity)
         log_to_db('[CommunityPickMode]' .. tostring(special.communityPickingMode) .. '\n', true)
         for _, player in pairs(game.players) do
             if player.connected and (player.force.name == 'north' or player.force.name == 'south') then
-                Captain_special.captain_log_end_time_player(player)
+                Captain.captain_log_end_time_player(player)
             end
             if special.stats.playerPlaytimes[player.name] ~= nil then
                 log_to_db(
@@ -830,7 +830,7 @@ decrement_timer_automatic_captain_token = Token.register(function()
         local percentRequired = 66
         if result >= percentRequired and yes_votes > amountVotesRequired then
             game.print('Vote to start captain event has succeeded (' .. result .. '%)')
-            Captain_special.generate_automatic_captain()
+            Captain.generate_automatic_captain()
         else
             game.print('Vote to start captain event has failed (' .. result .. '%)')
             if yes_votes <= amountVotesRequired then
@@ -952,7 +952,7 @@ function Public.generate_new_map()
     Init.reset_feature_flags()
     Init.queue_reveal_map()
     Announce.announce_if_any()
-    CraftingList.reset_crafting_queue_list()
+    CraftingQueueList.reset_crafting_queue_list()
     for _, player in pairs(game.players) do
         Functions.init_player(player)
         Admin.switch_to_admin_mode(player, false)

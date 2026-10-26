@@ -3,7 +3,7 @@
 local Tables = require('maps.biter_battles_v2.tables')
 local food_values = Tables.food_values
 local food_long_and_short = Tables.food_long_and_short
-local Tabs = require('comfy_panel.main')
+local ComfyPanel = require('comfy_panel.main')
 
 local debug = false
 

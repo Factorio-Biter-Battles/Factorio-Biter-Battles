@@ -1,7 +1,7 @@
 local _DEBUG = false
 
 local Admin = require('utils.admin')
-local Captain_event = require('comfy_panel.special_games.captain')
+local Captain = require('comfy_panel.special_games.captain')
 local Color = require('utils.color_presets')
 local DifficultyVote = require('maps.biter_battles_v2.difficulty_vote')
 local Event = require('utils.event')
@@ -814,7 +814,7 @@ function Public.refresh_main_gui(player, data)
 
             -- Calculate restriction states once
             local is_special_game_restricted = storage.active_special_games.disable_sciences
-            local is_captain_restricted = Captain_event.captain_is_player_prohibited_to_throw(player)
+            local is_captain_restricted = Captain.captain_is_player_prohibited_to_throw(player)
             local is_score_restricted = not FeedingRestriction.can_player_send_science(player)
 
             local any_restricted = false
@@ -1121,7 +1121,7 @@ function join_team(player, force_name, forced_join, auto_join)
         player.character.destructible = true
         Public.refresh()
         game.permissions.get_group('Default').add_player(player)
-        Captain_event.on_player_joined_team(player)
+        Captain.on_player_joined_team(player)
         local msg = table.concat({ 'Team ', player.force.name, ' player ', player.name, ' is no longer spectating.' })
         game.print(msg, { color = { r = 0.98, g = 0.66, b = 0.22 } })
         Sounds.notify_allies(player.force, 'utility/build_blueprint_large')
@@ -1176,7 +1176,7 @@ function join_team(player, force_name, forced_join, auto_join)
     Public.burners_balance(player)
     MultiSilo.on_player_changed_force(player)
     CraftingQueueList.on_team_changed(player)
-    Captain_event.on_player_joined_team(player)
+    Captain.on_player_joined_team(player)
     Public.clear_copy_history(player)
     Public.refresh()
 
@@ -1366,14 +1366,14 @@ local function on_gui_click(event)
     end
 
     if food_names[name] then
-        if not Captain_event.captain_is_player_prohibited_to_throw(player) then
+        if not Captain.captain_is_player_prohibited_to_throw(player) then
             Feeding.feed_biters_from_inventory(player, name)
         end
         return
     end
 
     if name == 'send_all' then
-        if not Captain_event.captain_is_player_prohibited_to_throw(player) then
+        if not Captain.captain_is_player_prohibited_to_throw(player) then
             Feeding.feed_biters_mixed_from_inventory(player, event.button)
         end
         return

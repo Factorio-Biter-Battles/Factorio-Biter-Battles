@@ -1,8 +1,8 @@
 --antigrief things made by mewmew
 
 local Event = require('utils.event')
-local Jailed = require('utils.datastore.jail_data')
-local Tabs = require('comfy_panel.main')
+local JailData = require('utils.datastore.jail_data')
+local ComfyPanel = require('comfy_panel.main')
 local Server = require('utils.server')
 local Color = require('utils.color_presets')
 local lower = string.lower
@@ -20,14 +20,14 @@ local function jail(player, source_player)
     if player.name == source_player.name then
         return player.print("You can't select yourself!", { color = { r = 1, g = 0.5, b = 0.1 } })
     end
-    Jailed.try_ul_data(player.name, true, source_player.name)
+    JailData.try_ul_data(player.name, true, source_player.name)
 end
 
 local function free(player, source_player)
     if player.name == source_player.name then
         return player.print("You can't select yourself!", { color = { r = 1, g = 0.5, b = 0.1 } })
     end
-    Jailed.try_ul_data(player.name, false, source_player.name)
+    JailData.try_ul_data(player.name, false, source_player.name)
 end
 
 local bring_player_messages = {
@@ -484,7 +484,7 @@ end
 
 local function on_gui_click(event)
     local player = game.get_player(event.player_index)
-    local frame = Tabs.comfy_panel_get_active_frame(player)
+    local frame = ComfyPanel.comfy_panel_get_active_frame(player)
     if not frame then
         return
     end
@@ -560,7 +560,7 @@ local function on_gui_selection_state_changed(event)
         end
         storage.admin_panel_selected_player_index[player.name] = event.element.selected_index
 
-        local frame = Tabs.comfy_panel_get_active_frame(player)
+        local frame = ComfyPanel.comfy_panel_get_active_frame(player)
         if not frame then
             return
         end

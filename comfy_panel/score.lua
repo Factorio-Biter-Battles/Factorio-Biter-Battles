@@ -3,7 +3,7 @@
 local Event = require('utils.event')
 local Functions = require('maps.biter_battles_v2.functions')
 local Global = require('utils.global')
-local Tabs = require('comfy_panel.main')
+local ComfyPanel = require('comfy_panel.main')
 
 local Public = {}
 local this = {
@@ -232,7 +232,7 @@ end
 
 local function refresh_score_full()
     for _, player in pairs(game.connected_players) do
-        local frame = Tabs.comfy_panel_get_active_frame(player)
+        local frame = ComfyPanel.comfy_panel_get_active_frame(player)
         if frame then
             if frame.name == 'Scoreboard' then
                 show_score(player, frame)
@@ -267,7 +267,7 @@ local function on_gui_click(event)
     end
 
     local player = game.get_player(event.element.player_index)
-    local frame = Tabs.comfy_panel_get_active_frame(player)
+    local frame = ComfyPanel.comfy_panel_get_active_frame(player)
     if not frame then
         return
     end

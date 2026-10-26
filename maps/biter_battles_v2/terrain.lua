@@ -7,7 +7,7 @@ local multi_octave_noise = require('utils.multi_octave_noise')
 local noise = require('maps.biter_battles_v2.predefined_noise')
 local AiTargets = require('maps.biter_battles_v2.ai_targets')
 local tables = require('maps.biter_battles_v2.tables')
-local session = require('utils.datastore.session_data')
+local SessionData = require('utils.datastore.session_data')
 local biter_texture = require('maps.biter_battles_v2.precomputed.biter_texture')
 local river = require('maps.biter_battles_v2.precomputed.river')
 
@@ -1321,7 +1321,7 @@ function Public.restrict_landfill(surface, user, tiles)
         if check_position.y > 0 then
             check_position = { x = check_position.x, y = (check_position.y * -1) - 1 }
         end
-        local trusted = session.get_trusted_table()
+        local trusted = SessionData.get_trusted_table()
         if is_horizontal_border_river(check_position.x, check_position.y, seed) then
             surface.set_tiles({ { name = t.old_tile.name, position = t.position } }, true)
             if user ~= nil then

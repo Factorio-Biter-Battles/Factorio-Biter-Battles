@@ -3,7 +3,7 @@ local string_rep = string.rep
 local string_format = string.format
 local debug_getinfo = debug and debug.getinfo
 local Event = require('utils.event')
-local session = require('utils.datastore.session_data')
+local SessionData = require('utils.datastore.session_data')
 local admin_autostop = 60 * 60 -- 1 min
 local player_autostop = 60 * 10 -- 10 s
 
@@ -55,7 +55,7 @@ local function startCommand(command)
         return
     end
 
-    local trusted = session.get_trusted_table()
+    local trusted = SessionData.get_trusted_table()
     if not trusted[player.name] then
         log(player.name .. ' has not grown accustomed to this technology yet.')
         return

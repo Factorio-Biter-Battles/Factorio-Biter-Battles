@@ -1,6 +1,6 @@
 -- this script adds a group button to create groups for your players --
 
-local Tabs = require('comfy_panel.main')
+local ComfyPanel = require('comfy_panel.main')
 local Global = require('utils.global')
 local Color = require('utils.color_presets')
 
@@ -183,7 +183,7 @@ end
 
 local function refresh_gui()
     for _, p in pairs(game.connected_players) do
-        local frame = Tabs.comfy_panel_get_active_frame(p)
+        local frame = ComfyPanel.comfy_panel_get_active_frame(p)
         if frame then
             if frame.name == 'Groups' then
                 local new_group_name = frame.frame2.group_table.new_group_name.text
@@ -198,7 +198,7 @@ local function refresh_gui()
                 end
                 build_group_gui(p, frame)
 
-                local frame = Tabs.comfy_panel_get_active_frame(p)
+                local frame = ComfyPanel.comfy_panel_get_active_frame(p)
                 frame.frame2.group_table.new_group_name.text = new_group_name
                 frame.frame2.group_table.new_group_description.text = new_group_description
             end
@@ -262,7 +262,7 @@ local function on_gui_click(event)
 
     local player = game.get_player(event.element.player_index)
     local name = event.element.name
-    local frame = Tabs.comfy_panel_get_active_frame(player)
+    local frame = ComfyPanel.comfy_panel_get_active_frame(player)
     if not frame then
         return
     end

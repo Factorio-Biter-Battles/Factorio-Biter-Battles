@@ -1,5 +1,5 @@
 local Event = require('utils.event')
-local session = require('utils.datastore.session_data')
+local SessionData = require('utils.datastore.session_data')
 local Timestamp = require('utils.timestamp')
 local Server = require('utils.server')
 local Color = require('utils.color_presets')
@@ -107,7 +107,7 @@ end
 ---@return string? error_message Error message if operation failed
 ---@return string? player_name The actual player name if found
 local function set_player_trust(target_name, should_trust)
-    local trusted = session.get_trusted_table()
+    local trusted = SessionData.get_trusted_table()
     local target_player = game.get_player(target_name)
 
     if not target_player then
