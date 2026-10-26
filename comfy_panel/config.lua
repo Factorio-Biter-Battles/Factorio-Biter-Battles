@@ -5,7 +5,7 @@ local Color = require('utils.color_presets')
 local CraftingQueueList = require('commands.crafting_queue_list')
 local Functions = require('maps.biter_battles_v2.functions')
 local SessionData = require('utils.datastore.session_data')
-local Utils = require('utils.core')
+local Core = require('utils.core')
 local Daytime = require('maps.biter_battles_v2.daytime')
 local Gui = require('utils.gui')
 local GUI_THEMES = require('utils.utils').GUI_THEMES
@@ -25,9 +25,9 @@ local function get_actor(event, prefix, msg, admins_only)
         return
     end
     if admins_only then
-        Utils.print_admins(msg, player.name)
+        Core.print_admins(msg, player.name)
     else
-        Utils.action_warning(prefix, player.name .. ' ' .. msg)
+        Core.action_warning(prefix, player.name .. ' ' .. msg)
     end
 end
 
@@ -250,12 +250,12 @@ local functions = {
         local flag_name = 'classic_pathfinding_flag'
         if event.element.switch_state == 'left' then
             storage.bb_settings.classic_pathfinding = true
-            Utils.action_warning('{ClassicPathfinding}', player.name .. ' has enabled classic pathfinding!')
+            Core.action_warning('{ClassicPathfinding}', player.name .. ' has enabled classic pathfinding!')
             log(player.name .. ' has enabled classic pathfinding!')
             FeatureFlags.enable_feature_flag(flag_name)
         else
             storage.bb_settings.classic_pathfinding = false
-            Utils.action_warning('{ClassicPathfinding}', player.name .. ' has disabled classic pathfinding!')
+            Core.action_warning('{ClassicPathfinding}', player.name .. ' has disabled classic pathfinding!')
             log(player.name .. ' has disabled classic pathfinding!')
             FeatureFlags.disable_feature_flag(flag_name)
         end
@@ -300,7 +300,7 @@ local poll_function = {
         end
     end,
     ['comfy_panel_poll_no_notify_toggle'] = function(event)
-        local poll = Utils.get_package('comfy_panel.poll')
+        local poll = Core.get_package('comfy_panel.poll')
         local poll_table = poll.get_no_notify_players()
         if event.element.switch_state == 'left' then
             poll_table[event.player_index] = false
@@ -539,8 +539,8 @@ local build_config_gui = function(player, frame)
         scroll_pane.add({ type = 'line' })
     end
 
-    if Utils.get_package('comfy_panel.poll') then
-        local poll = Utils.get_package('comfy_panel.poll')
+    if Core.get_package('comfy_panel.poll') then
+        local poll = Core.get_package('comfy_panel.poll')
         local poll_table = poll.get_no_notify_players()
         switch_state = 'right'
         if not poll_table[player.index] then
@@ -640,7 +640,7 @@ local build_config_gui = function(player, frame)
             'Disables the Logistic System research.\nRequester, buffer or active-provider containers can not be built.'
         )
 
-        if Utils.get_package('comfy_panel.poll') then
+        if Core.get_package('comfy_panel.poll') then
             scroll_pane.add({ type = 'line' })
             switch_state = 'right'
             if storage.comfy_panel_config.poll_trusted then
@@ -692,7 +692,7 @@ local build_config_gui = function(player, frame)
         )
         scroll_pane.add({ type = 'line' })
 
-        if Utils.get_package('maps.biter_battles_v2.main') then
+        if Core.get_package('maps.biter_battles_v2.main') then
             label = scroll_pane.add({ type = 'label', caption = 'Biter Battles Settings' })
             label.style.font = 'default-bold'
             label.style.padding = 0
@@ -894,7 +894,7 @@ local function on_gui_switch_state_changed(event)
     elseif antigrief_functions[event.element.name] then
         antigrief_functions[event.element.name](event)
         return
-    elseif Utils.get_package('comfy_panel.poll') then
+    elseif Core.get_package('comfy_panel.poll') then
         if poll_function[event.element.name] then
             poll_function[event.element.name](event)
             return

@@ -5,7 +5,7 @@
 local Event = require('utils.event')
 local session = require('utils.datastore.session_data')
 local Global = require('utils.global')
-local Utils = require('utils.core')
+local Core = require('utils.core')
 local Color = require('utils.color_presets')
 local Server = require('utils.server')
 local Jail = require('utils.datastore.jail_data')
@@ -169,7 +169,7 @@ local function do_action(player, prefix, msg, ban_msg, kill)
     kill = kill or false
 
     damage_player(player, kill)
-    Utils.action_warning(prefix, msg)
+    Core.action_warning(prefix, msg)
 
     if this.players_warned[player.index] == 2 then
         if this.enable_autoban then
@@ -259,7 +259,7 @@ local function on_player_ammo_inventory_changed(event)
         if this.enable_capsule_cursor_warning then
             local nukes = player.remove_item({ name = 'atomic-bomb', count = 1000 })
             if nukes > 0 then
-                Utils.action_warning('{Nuke}', player.name .. ' tried to equip nukes but was not trusted.')
+                Core.action_warning('{Nuke}', player.name .. ' tried to equip nukes but was not trusted.')
                 damage_player(player)
             end
         end
@@ -434,7 +434,7 @@ local function alert_if_not_trusted(player, entity)
         return
     end
 
-    Utils.print_admins(
+    Core.print_admins(
         player.name
             .. ' mined a [item='
             .. entity.name
@@ -513,7 +513,7 @@ local function on_gui_opened(event)
     end
 
     if player.name ~= corpse_owner.name then
-        Utils.action_warning('{Corpse}', player.name .. ' is looting ' .. corpse_owner.name .. '´s body.')
+        Core.action_warning('{Corpse}', player.name .. ' is looting ' .. corpse_owner.name .. '´s body.')
         local data = {
             player_name = player.name,
             event = table.concat({ 'opened ', corpse_owner.name, ' body' }),
@@ -558,7 +558,7 @@ local function on_pre_player_mined_item(event)
         return
     end
     if player.name ~= corpse_owner.name then
-        Utils.action_warning('{Corpse}', player.name .. ' has looted ' .. corpse_owner.name .. '´s body.')
+        Core.action_warning('{Corpse}', player.name .. ' has looted ' .. corpse_owner.name .. '´s body.')
         local data = {
             player_name = player.name,
             event = table.concat({ 'looted ', corpse_owner.name, ' body' }),
@@ -607,7 +607,7 @@ local function on_player_cursor_stack_changed(event)
             if ammo_names[name] then
                 local item_to_remove = player.remove_item({ name = name, count = 1000 })
                 if item_to_remove > 0 then
-                    Utils.action_warning('{Capsule}', player.name .. ' equipped ' .. name .. ' but was not trusted.')
+                    Core.action_warning('{Capsule}', player.name .. ' equipped ' .. name .. ' but was not trusted.')
                     damage_player(player)
                 end
             end
@@ -634,7 +634,7 @@ local function on_player_cancelled_crafting(event)
 
             player.character.die('player')
 
-            Utils.action_warning(
+            Core.action_warning(
                 '{Crafting}',
                 player.name
                     .. ' canceled their craft of item '
@@ -692,7 +692,7 @@ local function on_permission_group_added(event)
     local group = event.group
 
     if group then
-        Utils.log_msg('{Permission_Group}', player.name .. ' added ' .. group.name)
+        Core.log_msg('{Permission_Group}', player.name .. ' added ' .. group.name)
     end
 end
 
@@ -711,7 +711,7 @@ local function on_permission_group_deleted(event)
     local name = event.group_name
     local id = event.id
     if name then
-        Utils.log_msg('{Permission_Group}', player.name .. ' deleted ' .. name .. ' with ID: ' .. id)
+        Core.log_msg('{Permission_Group}', player.name .. ' deleted ' .. name .. ' with ID: ' .. id)
     end
 end
 
@@ -737,7 +737,7 @@ local function on_permission_group_edited(event)
                 action = k
             end
         end
-        Utils.log_msg(
+        Core.log_msg(
             '{Permission_Group}',
             player.name .. ' edited ' .. group.name .. ' with type: ' .. event.type .. ' with action: ' .. action
         )
@@ -745,7 +745,7 @@ local function on_permission_group_edited(event)
     if event.other_player_index then
         local other_player = game.get_player(event.other_player_index)
         if other_player and other_player.valid then
-            Utils.log_msg(
+            Core.log_msg(
                 '{Permission_Group}',
                 player.name
                     .. ' moved '
@@ -760,7 +760,7 @@ local function on_permission_group_edited(event)
     local old_name = event.old_name
     local new_name = event.new_name
     if old_name and new_name then
-        Utils.log_msg(
+        Core.log_msg(
             '{Permission_Group}',
             player.name .. ' renamed ' .. group.name .. '. New name: ' .. new_name .. '. Old Name: ' .. old_name
         )
@@ -776,7 +776,7 @@ local function on_permission_string_imported(event)
         return
     end
 
-    Utils.log_msg('{Permission_Group}', player.name .. ' imported a permission string')
+    Core.log_msg('{Permission_Group}', player.name .. ' imported a permission string')
 end
 
 --- This will reset the table of antigrief

@@ -5,7 +5,7 @@ local Token = require('utils.token')
 local Task = require('utils.task')
 local Server = require('utils.server')
 local Event = require('utils.event')
-local Utils = require('utils.core')
+local Core = require('utils.core')
 
 local jailed_data_set = 'jailed'
 local jailed = {}
@@ -242,7 +242,7 @@ local validate_args = function(data)
     local playtime = data.playtime
 
     if not griefer_name then
-        Utils.print_to(player, 'Invalid name.')
+        Core.print_to(player, 'Invalid name.')
         return false
     end
 
@@ -250,38 +250,38 @@ local validate_args = function(data)
     -- Admins can jail/free players who haven't joined yet (by name)
     local griefer = game.get_player(griefer_name)
     if not griefer and not is_admin(player) then
-        Utils.print_to(player, 'Player not found. Only admins can jail/free players who are not in the game.')
+        Core.print_to(player, 'Player not found. Only admins can jail/free players who are not in the game.')
         return false
     end
 
     if votejail[player.name] and not is_admin(player) then
-        Utils.print_to(player, 'You are currently being investigated since you have griefed.')
+        Core.print_to(player, 'You are currently being investigated since you have griefed.')
         return false
     end
 
     if votefree[player.name] and not is_admin(player) then
-        Utils.print_to(player, 'You are currently being investigated since you have griefed.')
+        Core.print_to(player, 'You are currently being investigated since you have griefed.')
         return false
     end
 
     if jailed[player.name] and not is_admin(player) then
-        Utils.print_to(player, 'You are jailed, you can´t run this command.')
+        Core.print_to(player, 'You are jailed, you can´t run this command.')
         return false
     end
 
     if player.name == griefer_name and not is_admin(player) then
-        Utils.print_to(player, 'You can´t select yourself.')
+        Core.print_to(player, 'You can´t select yourself.')
         return false
     end
 
     -- Only check if target is admin when the target player exists in-game
     if griefer and is_admin(griefer) and not is_admin(player) then
-        Utils.print_to(player, 'You can´t select an admin.')
+        Core.print_to(player, 'You can´t select an admin.')
         return false
     end
 
     if not trusted and not is_admin(player) or playtime <= settings.playtime_for_vote and not is_admin(player) then
-        Utils.print_to(player, 'You are not trusted enough to run this command.')
+        Core.print_to(player, 'You are not trusted enough to run this command.')
         return false
     end
 
@@ -292,12 +292,12 @@ local vote_to_jail = function(player, griefer, msg)
     if not votejail[griefer] then
         votejail[griefer] = { index = 0, actor = player.name }
         local message = player.name .. ' has started a vote to jail player ' .. griefer
-        Utils.print_to(nil, message)
+        Core.print_to(nil, message)
     end
     if not votejail[griefer][player.name] then
         votejail[griefer][player.name] = true
         votejail[griefer].index = votejail[griefer].index + 1
-        Utils.print_to(player, 'You have voted to jail player ' .. griefer .. '.')
+        Core.print_to(player, 'You have voted to jail player ' .. griefer .. '.')
         if
             votejail[griefer].index >= settings.votejail_count
             or (
@@ -308,7 +308,7 @@ local vote_to_jail = function(player, griefer, msg)
             Public.try_ul_data(griefer, true, votejail[griefer].actor, msg)
         end
     else
-        Utils.print_to(player, 'You have already voted to jail ' .. griefer .. '.')
+        Core.print_to(player, 'You have already voted to jail ' .. griefer .. '.')
     end
 end
 
@@ -316,13 +316,13 @@ local vote_to_free = function(player, griefer)
     if not votefree[griefer] then
         votefree[griefer] = { index = 0, actor = player.name }
         local message = player.name .. ' has started a vote to free player ' .. griefer
-        Utils.print_to(nil, message)
+        Core.print_to(nil, message)
     end
     if not votefree[griefer][player.name] then
         votefree[griefer][player.name] = true
         votefree[griefer].index = votefree[griefer].index + 1
 
-        Utils.print_to(player, 'You have voted to free player ' .. griefer .. '.')
+        Core.print_to(player, 'You have voted to free player ' .. griefer .. '.')
         if
             votefree[griefer].index >= settings.votejail_count
             or (
@@ -335,7 +335,7 @@ local vote_to_free = function(player, griefer)
             votefree[griefer] = nil
         end
     else
-        Utils.print_to(player, 'You have already voted to free ' .. griefer .. '.')
+        Core.print_to(player, 'You have already voted to free ' .. griefer .. '.')
     end
     return
 end
@@ -369,12 +369,12 @@ local jail = function(player, griefer, msg)
         end
         g.driving = false
 
-        Utils.print_to(griefer, message)
+        Core.print_to(griefer, message)
         g.opened = defines.gui_type.none
     end
 
-    Utils.print_to(nil, message)
-    Utils.action_warning_embed('{Jailed}', message)
+    Core.print_to(nil, message)
+    Core.action_warning_embed('{Jailed}', message)
 
     return true
 end
@@ -405,8 +405,8 @@ local free = function(player, griefer)
         votefree[griefer] = nil
     end
 
-    Utils.print_to(nil, message)
-    Utils.action_warning_embed('{Jailed}', message)
+    Core.print_to(nil, message)
+    Core.action_warning_embed('{Jailed}', message)
     return true
 end
 
@@ -428,12 +428,12 @@ local update_jailed = Token.register(function(data)
     if value then
         local success = jail(player, key, message)
         if not success and player ~= 'script' then
-            Utils.print_to(player, key .. ' is already jailed.')
+            Core.print_to(player, key .. ' is already jailed.')
         end
     else
         local success = free(player, key)
         if not success and player ~= 'script' then
-            Utils.print_to(player, key .. ' is not jailed.')
+            Core.print_to(player, key .. ' is not jailed.')
         end
     end
 end)
@@ -527,7 +527,7 @@ Event.add(defines.events.on_player_joined_game, function(event)
         gulag.add_player(player)
 
         local reason = j_data.reason or 'unspecified'
-        Utils.print_to(player, 'You are jailed. Reason: ' .. reason)
+        Core.print_to(player, 'You are jailed. Reason: ' .. reason)
         player.opened = defines.gui_type.none
 
         Task.set_timeout_in_ticks(5, clear_gui, { player = player })
@@ -550,7 +550,7 @@ Event.add(defines.events.on_player_joined_game, function(event)
             spectate(player, true)
         end
 
-        Utils.print_to(player, 'You have been released from jail.')
+        Core.print_to(player, 'You have been released from jail.')
     end
 end)
 
@@ -607,7 +607,7 @@ Event.add(defines.events.on_console_command, function(event)
     if is_admin(player) or playtime >= settings.playtime_for_instant_jail then
         if cmd == 'jail' then
             if is_admin(player) then
-                Utils.warning(
+                Core.warning(
                     player,
                     'Abusing the jail command will lead to revoked permissions. Jailing someone in case of disagreement is not OK!'
                 )
